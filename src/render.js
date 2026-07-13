@@ -10,7 +10,7 @@ function drawBackground(){
 function draw(){
   const sx=state.camera.shake?rand(-state.camera.shake,state.camera.shake):0,sy=state.camera.shake?rand(-state.camera.shake,state.camera.shake):0;
   ctx.save();ctx.translate(sx,sy);drawBackground();
-  drawWells();drawGems();drawEnemies();drawProjectiles();drawPlayer();drawEffects();ctx.restore();
+  drawWells();drawGems();drawEnemies();drawProjectiles();if(state.mode!=='menu')drawPlayer();drawEffects();ctx.restore();
   const vignette=ctx.createRadialGradient(vw/2,vh/2,Math.min(vw,vh)*.2,vw/2,vh/2,Math.max(vw,vh)*.7);vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(0,0,0,.48)');ctx.fillStyle=vignette;ctx.fillRect(0,0,vw,vh);
   if(state.flash>0){ctx.fillStyle=`rgba(255,255,255,${state.flash*.8})`;ctx.fillRect(0,0,vw,vh);}
 }
@@ -19,7 +19,7 @@ function drawPlayer(){
   const x=vw/2,y=vh/2;
   if(player.shield>0){ctx.strokeStyle=`rgba(116,242,167,${.28+Math.sin(performance.now()/130)*.08})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,player.r+12+Math.sin(performance.now()/220)*3,0,TAU);ctx.stroke();}
   ctx.save();ctx.translate(x,y);if(player.invuln>0&&Math.floor(player.invuln*20)%2===0)ctx.globalAlpha=.35;
-  const glow=ctx.createRadialGradient(0,0,0,0,0,38);glow.addColorStop(0,'rgba(80,231,255,.42)');glow.addColorStop(1,'rgba(80,231,255,0)');ctx.fillStyle=glow;ctx.fillRect(-42,-42,84,84);
+  const glow=ctx.createRadialGradient(0,0,0,0,0,32);glow.addColorStop(0,'rgba(80,231,255,.28)');glow.addColorStop(1,'rgba(80,231,255,0)');ctx.fillStyle=glow;ctx.fillRect(-36,-36,72,72);
   ctx.rotate(performance.now()/1500);ctx.strokeStyle=player.hitPulse?COLORS.red:COLORS.cyan;ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<6;i++){const a=i/6*TAU;const px=Math.cos(a)*17,py=Math.sin(a)*17;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();ctx.stroke();ctx.rotate(-performance.now()/1000);ctx.fillStyle='#eef7ff';ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(8,8);ctx.lineTo(-8,8);ctx.closePath();ctx.fill();ctx.restore();
   const n=weaponCount('blade');if(n){const count=n>=2?2:1,orbit=n>=6?104:77;for(let i=0;i<count;i++){const a=player.angle+i*Math.PI,bx=x+Math.cos(a)*orbit,by=y+Math.sin(a)*orbit;ctx.save();ctx.translate(bx,by);ctx.rotate(a+Math.PI/2);ctx.shadowBlur=n>=6?24:14;ctx.shadowColor=COLORS.cyan;ctx.fillStyle='#bdf7ff';ctx.beginPath();ctx.moveTo(0,-22);ctx.lineTo(6,14);ctx.lineTo(0,20);ctx.lineTo(-6,14);ctx.closePath();ctx.fill();ctx.restore();}}
 }
@@ -52,4 +52,9 @@ ui.joystick.addEventListener('pointermove',e=>{if(e.pointerId===joyPointer)updat
 function releaseJoy(e){if(e.pointerId!==joyPointer)return;joyPointer=null;state.input.touchX=state.input.touchY=0;ui.stick.style.transform='translate(-50%,-50%)';}
 ui.joystick.addEventListener('pointerup',releaseJoy);ui.joystick.addEventListener('pointercancel',releaseJoy);
 
-ui.start.onclick=()=>{audio.init();resetGame();};ui.pause.onclick=()=>togglePause(true);ui.resume.onclick=()=>togglePause(false);ui.restart.onclick=resetGame;ui.retry.onclick=resetGame;
+ui.start.onclick=()=>{audio.init();resetGame();};
+ui.pause.onclick=()=>togglePause(true);
+ui.resume.onclick=()=>togglePause(false);
+ui.restart.onclick=resetGame;
+ui.retry.onclick=resetGame;
+ui.menuBtn.onclick=showMainMenu;
