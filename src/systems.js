@@ -1,18 +1,18 @@
 function spawnEnemy(elite=false) {
-  const a = Math.random()*TAU, radius = Math.min(Math.max(vw,vh)*.5, 640) + rand(20,100);
-  const fastChance = clamp(.14 + state.time/250, .14, .42);
-  const tankChance = clamp((state.time-25)/210, 0, .28);
+  const a = Math.random()*TAU, radius = Math.min(Math.max(vw,vh)*.5, 640) + rand(30,120);
+  const fastChance = clamp(.08 + state.time/300, .08, .38);
+  const tankChance = clamp((state.time-45)/240, 0, .24);
   let type = elite ? 'elite' : Math.random()<tankChance ? 'tank' : Math.random()<fastChance ? 'fast' : 'grunt';
   const cfg = {
-    grunt: { r:13, hp:26, speed:62, damage:10, color:'#7769ff', xp:3 },
-    fast: { r:10, hp:18, speed:105, damage:8, color:'#ff4f9a', xp:3 },
-    tank: { r:21, hp:92, speed:38, damage:16, color:'#ff9f43', xp:8 },
-    elite: { r:29, hp:340, speed:48, damage:22, color:'#ffcc5c', xp:28 },
+    grunt: { r:13, hp:22, speed:50, damage:6, color:'#7769ff', xp:3 },
+    fast: { r:10, hp:16, speed:78, damage:5, color:'#ff4f9a', xp:3 },
+    tank: { r:21, hp:76, speed:32, damage:10, color:'#ff9f43', xp:8 },
+    elite: { r:29, hp:280, speed:40, damage:15, color:'#ffcc5c', xp:28 },
   }[type];
-  const hp = cfg.hp * enemyHpMult() * (elite ? 1 + state.time/140 : 1);
+  const hp = cfg.hp * enemyHpMult() * (elite ? 1 + state.time/180 : 1);
   state.entities.enemies.push({
     id: state.nextId++, type, x:player.x+Math.cos(a)*radius, y:player.y+Math.sin(a)*radius,
-    r:cfg.r, hp, maxHp:hp, speed:cfg.speed*(1+state.time/600), damage:cfg.damage,
+    r:cfg.r, hp, maxHp:hp, speed:cfg.speed*(1+state.time/750), damage:cfg.damage,
     color:cfg.color, xp:cfg.xp, hit:0, dead:false, phase:Math.random()*TAU, pull:0, elite
   });
 }
@@ -57,8 +57,22 @@ function areaDamage(x,y,r,damage,color) {
   for(const e of state.entities.enemies) if(!e.dead && (e.x-x)**2+(e.y-y)**2 < (r+e.r)**2) dealDamage(e,damage,{color,source:'area'});
 }
 
+function spawnCoreShot(target, echoed=false) {
+  if(!target) return;
+  const a=Math.atan2(target.y-player.y,target.x-player.x);
+  state.entities.projectiles.push({x:player.x,y:player.y,vx:Math.cos(a)*440,vy:Math.sin(a)*440,r:4.5,life:1.45,damage:echoed?5.5:8,color:echoed?COLORS.pink:'#d7f8ff',pierce:0,source:echoed?'core-echo':'core'});
+}
+
 function updateWeapons(dt) {
   player.angle += dt * (2.1 + weaponCount('blade')*.12) / hasteMult();
+
+  player.coreCd -= dt;
+  if(player.coreCd<=0){
+    player.coreCd=1.05*hasteMult();
+    const target=nearestEnemy(player.x,player.y);
+    if(target){spawnCoreShot(target);echoTrigger(()=>spawnCoreShot(target,true));}
+  }
+
   const bladeN = weaponCount('blade');
   if (bladeN) {
     player.bladeTick -= dt;
@@ -70,7 +84,7 @@ function updateWeapons(dt) {
         for(let i=0;i<count;i++) {
           const a=player.angle+i*Math.PI, bx=player.x+Math.cos(a)*orbit, by=player.y+Math.sin(a)*orbit;
           if((e.x-bx)**2+(e.y-by)**2 < (e.r+bladeR)**2) {
-            dealDamage(e, 10+bladeN*3.8, {color:COLORS.cyan,source:'blade'});
+            dealDamage(e, 11+bladeN*4, {color:COLORS.cyan,source:'blade'});
             if(bladeN>=4) {
               const dx=e.x-player.x,dy=e.y-player.y,d=Math.hypot(dx,dy)||1;
               state.entities.projectiles.push({x:e.x,y:e.y,vx:dx/d*440,vy:dy/d*440,r:7,life:.25,damage:10+bladeN*2,color:COLORS.cyan,pierce:2,source:'wave'});
@@ -172,9 +186,10 @@ function hurtPlayer(amount, enemy) {
   amount*=1-damageReduction();
   if(player.shield>0){const used=Math.min(player.shield,amount);player.shield-=used;amount-=used;}
   if(amount>0)player.hp-=amount;
-  player.invuln=.72;player.hitPulse=.22;state.camera.shake+=10;state.flash=.15;audio.hurt();
-  spawnParticle(player.x,player.y,COLORS.red,14,210,5);shockwave(player.x,player.y,COLORS.red,85,.28,4);
-  const dx=enemy.x-player.x,dy=enemy.y-player.y,d=Math.hypot(dx,dy)||1;enemy.x+=dx/d*38;enemy.y+=dy/d*38;
+  player.invuln=.9;player.hitPulse=.22;state.camera.shake+=8;state.flash=.11;audio.hurt();
+  spawnParticle(player.x,player.y,COLORS.red,10,170,4);
+  if(weaponCount('bulwark')>0 || stat('armor')>0 || player.shield>0) shockwave(player.x,player.y,COLORS.green,78,.24,3);
+  const dx=enemy.x-player.x,dy=enemy.y-player.y,d=Math.hypot(dx,dy)||1;enemy.x+=dx/d*48;enemy.y+=dy/d*48;
   if(weaponCount('bulwark')>=4) areaDamage(player.x,player.y,115,24+weaponCount('bulwark')*4,COLORS.green);
   if(player.hp<=0) endGame();
 }
@@ -230,7 +245,10 @@ function updateEffects(dt) {
 
 function updateSpawning(dt) {
   state.spawnTimer-=dt;state.eliteTimer-=dt;
-  const rate=Math.max(.11,.62-state.time*.0065);
-  if(state.spawnTimer<=0){state.spawnTimer=rate;const count=1+Math.floor(state.time/70);for(let i=0;i<count;i++)spawnEnemy(false);}
-  if(state.eliteTimer<=0){state.eliteTimer=Math.max(16,28-state.time*.03);spawnEnemy(true);}
+  let rate;
+  if(state.time<20) rate=1.25;
+  else if(state.time<50) rate=.98-(state.time-20)*.008;
+  else rate=Math.max(.18,.74-(state.time-50)*.0045);
+  if(state.spawnTimer<=0){state.spawnTimer=rate;const count=1+Math.floor(state.time/105);for(let i=0;i<count;i++)spawnEnemy(false);}
+  if(state.eliteTimer<=0){state.eliteTimer=Math.max(20,36-state.time*.025);spawnEnemy(true);}
 }
