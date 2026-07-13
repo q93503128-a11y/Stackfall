@@ -1,1 +1,121 @@
-aaahhh
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#080b16" />
+  <meta name="description" content="Stackfall — 장비를 중첩해 공명을 완성하는 웹 생존 로그라이크" />
+  <title>STACKFALL — Resonance Survivor</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app">
+    <canvas id="game" aria-label="Stackfall 게임 화면"></canvas>
+
+    <section id="menu" class="screen active" aria-labelledby="title">
+      <div class="menu-noise"></div>
+      <div class="brand-wrap">
+        <p class="eyebrow">RESONANCE SURVIVOR / WEB PROTOTYPE</p>
+        <h1 id="title"><span>STACK</span><strong>FALL</strong></h1>
+        <p class="tagline">장비를 겹쳐라. 규칙을 부숴라.</p>
+      </div>
+
+      <div class="menu-panel glass">
+        <div class="loadout-preview">
+          <div class="core-glyph"><span></span><span></span><span></span></div>
+          <div>
+            <p class="label">STARTING CORE</p>
+            <h2>펄스 블레이드</h2>
+            <p>주변을 베는 기본 장비. 같은 장비가 쌓일수록 검격의 규칙이 바뀐다.</p>
+          </div>
+        </div>
+        <button id="startBtn" class="primary-btn">
+          <span>RUN START</span>
+          <small>WASD · 방향키 · 터치 조이스틱</small>
+        </button>
+        <div class="menu-features">
+          <span>무기 슬롯 6칸</span><span>패시브 무제한</span><span>2·4·6중첩 공명</span>
+        </div>
+      </div>
+
+      <footer>모든 그래픽과 사운드는 코드로 생성됩니다.</footer>
+    </section>
+
+    <section id="hud" class="hud hidden" aria-live="polite">
+      <div class="top-left glass compact">
+        <div class="hp-line">
+          <span>CORE</span>
+          <div class="bar"><i id="hpBar"></i></div>
+          <b id="hpText">100 / 100</b>
+        </div>
+        <div class="xp-line">
+          <span>LV.<b id="levelText">1</b></span>
+          <div class="bar xp"><i id="xpBar"></i></div>
+        </div>
+      </div>
+
+      <div class="top-center">
+        <b id="timerText">00:00</b>
+        <span id="threatText">THREAT 1</span>
+      </div>
+
+      <button id="pauseBtn" class="icon-btn" aria-label="일시정지">Ⅱ</button>
+
+      <div id="comboBox" class="combo-box">
+        <span>CHAIN</span>
+        <b id="comboText">0</b>
+        <i id="comboBar"></i>
+      </div>
+
+      <div id="weaponSlots" class="weapon-slots"></div>
+      <div id="passiveList" class="passive-list glass compact"></div>
+    </section>
+
+    <section id="choiceScreen" class="overlay hidden" aria-labelledby="choiceTitle">
+      <div class="choice-head">
+        <p id="choiceKicker">SYSTEM OVERRIDE</p>
+        <h2 id="choiceTitle">레벨 업</h2>
+        <span>하나를 선택해 빌드를 확장하세요</span>
+      </div>
+      <div id="choiceCards" class="choice-cards"></div>
+    </section>
+
+    <section id="resonanceBanner" class="resonance-banner hidden">
+      <span>RESONANCE</span>
+      <strong id="resonanceTitle">공명 개방</strong>
+      <p id="resonanceDesc"></p>
+    </section>
+
+    <section id="pauseScreen" class="overlay hidden">
+      <div class="modal glass">
+        <p class="eyebrow">SYSTEM PAUSED</p>
+        <h2>일시정지</h2>
+        <button id="resumeBtn" class="primary-btn"><span>계속하기</span></button>
+        <button id="restartBtn" class="secondary-btn">런 다시 시작</button>
+      </div>
+    </section>
+
+    <section id="gameOverScreen" class="overlay hidden">
+      <div class="modal glass result-modal">
+        <p class="eyebrow">CORE COLLAPSED</p>
+        <h2>런 종료</h2>
+        <div class="result-grid">
+          <div><span>생존 시간</span><b id="resultTime">00:00</b></div>
+          <div><span>처치</span><b id="resultKills">0</b></div>
+          <div><span>최대 체인</span><b id="resultCombo">0</b></div>
+          <div><span>도달 레벨</span><b id="resultLevel">1</b></div>
+        </div>
+        <button id="retryBtn" class="primary-btn"><span>다시 도전</span></button>
+      </div>
+    </section>
+
+    <div id="touchControls" class="touch-controls hidden" aria-hidden="true">
+      <div id="joystick" class="joystick"><div id="stick"></div></div>
+    </div>
+  </main>
+  <script src="src/core.js"></script>
+  <script src="src/systems.js"></script>
+  <script src="src/interface.js"></script>
+  <script src="src/render.js"></script>
+</body>
+</html>
