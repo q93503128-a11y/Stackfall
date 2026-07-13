@@ -5,12 +5,13 @@ const $ = (s) => document.querySelector(s);
 const ui = {
   menu: $('#menu'), hud: $('#hud'), start: $('#startBtn'), pause: $('#pauseBtn'),
   pauseScreen: $('#pauseScreen'), resume: $('#resumeBtn'), restart: $('#restartBtn'),
-  gameOver: $('#gameOverScreen'), retry: $('#retryBtn'), choice: $('#choiceScreen'),
+  gameOver: $('#gameOverScreen'), retry: $('#retryBtn'), menuBtn: $('#menuBtn'), choice: $('#choiceScreen'),
   choiceCards: $('#choiceCards'), choiceTitle: $('#choiceTitle'), choiceKicker: $('#choiceKicker'),
   resonance: $('#resonanceBanner'), resonanceTitle: $('#resonanceTitle'), resonanceDesc: $('#resonanceDesc'),
   hpBar: $('#hpBar'), hpText: $('#hpText'), xpBar: $('#xpBar'), level: $('#levelText'),
   timer: $('#timerText'), threat: $('#threatText'), comboBox: $('#comboBox'), comboText: $('#comboText'), comboBar: $('#comboBar'),
   slots: $('#weaponSlots'), passives: $('#passiveList'), touch: $('#touchControls'), joystick: $('#joystick'), stick: $('#stick'),
+  starterOptions: $('#starterOptions'), starterName: $('#starterName'), starterDesc: $('#starterDesc'),
   resultTime: $('#resultTime'), resultKills: $('#resultKills'), resultCombo: $('#resultCombo'), resultLevel: $('#resultLevel'),
 };
 
@@ -56,7 +57,7 @@ const WEAPONS = {
   },
   bulwark: {
     name: '불워크 드론', icon: '⬡', color: '#74f2a7', role: '방어 / 반격',
-    desc: '주기적으로 보호막을 생성하고 충돌 피해를 줄인다.',
+    desc: '충돌 피해를 줄이고 공명이 쌓이면 보호막을 만든다.',
     resonance: {
       2: ['연결 장갑', '최대 체력과 피해 감소가 증가한다.'],
       4: ['보복 방벽', '피격 시 주변 적에게 충격파를 방출한다.'],
@@ -83,7 +84,7 @@ const WEAPONS = {
   },
   echo: {
     name: '에코 비콘', icon: '⌁', color: '#ff4f9a', role: '지원 / 복제',
-    desc: '다른 장비의 발동을 확률적으로 한 번 더 복제한다.',
+    desc: '다른 장비와 기본 코어 탄환을 확률적으로 복제한다.',
     resonance: {
       2: ['잔향', '복제 확률이 크게 상승한다.'],
       4: ['반향 연쇄', '복제된 효과가 약한 추가 효과를 남긴다.'],
@@ -122,10 +123,10 @@ class AudioKit {
 const audio = new AudioKit();
 
 const state = {
-  mode: 'menu', time: 0, kills: 0, level: 1, xp: 0, xpNeed: 18,
+  mode: 'menu', selectedStarter: 'blade', time: 0, kills: 0, level: 1, xp: 0, xpNeed: 18,
   threat: 1, combo: 0, maxCombo: 0, comboTimer: 0,
   camera: { x:0, y:0, shake:0 }, hitStop: 0, flash: 0,
-  spawnTimer: 0, eliteTimer: 22, weaponSlots: [], weaponStacks: {}, passives: {},
+  spawnTimer: 0, eliteTimer: 45, weaponSlots: [], weaponStacks: {}, passives: {},
   entities: { enemies: [], projectiles: [], particles: [], gems: [], wells: [], texts: [], shockwaves: [] },
   input: { x:0, y:0, keys:new Set(), touchX:0, touchY:0 },
   nextId: 1, echoCharge: 0, globalPulse: 0
@@ -133,21 +134,22 @@ const state = {
 
 const player = {
   x: 0, y: 0, r: 17, hp: 100, maxHp: 100, shield: 0, invuln: 0, speed: 230,
-  angle: 0, bladeTick: 0, emberCd: 0, wellCd: 0, fortressCd: 0, hitPulse: 0
+  angle: 0, coreCd: 0, bladeTick: 0, emberCd: 0, wellCd: 0, fortressCd: 0, hitPulse: 0
 };
 
 function resetGame() {
+  const starter = WEAPONS[state.selectedStarter] ? state.selectedStarter : 'blade';
   state.mode = 'playing'; state.time = 0; state.kills = 0; state.level = 1; state.xp = 0; state.xpNeed = 18;
   state.threat = 1; state.combo = 0; state.maxCombo = 0; state.comboTimer = 0; state.camera.shake = 0;
-  state.hitStop = 0; state.flash = 0; state.spawnTimer = 0; state.eliteTimer = 22;
-  state.weaponSlots = ['blade']; state.weaponStacks = { blade: 1 }; state.passives = {};
+  state.hitStop = 0; state.flash = 0; state.spawnTimer = .8; state.eliteTimer = 45; state.globalPulse = 0;
+  state.weaponSlots = [starter]; state.weaponStacks = { [starter]: 1 }; state.passives = {};
   Object.values(state.entities).forEach(a => a.length = 0);
-  player.x = player.y = 0; player.hp = player.maxHp = 100; player.shield = 0; player.invuln = 0;
-  player.angle = 0; player.bladeTick = 0; player.emberCd = 0; player.wellCd = 0; player.fortressCd = 0;
+  player.x = player.y = 0; player.maxHp = starter === 'bulwark' ? 108 : 100; player.hp = player.maxHp; player.shield = 0; player.invuln = 0;
+  player.angle = 0; player.coreCd = .25; player.bladeTick = 0; player.emberCd = 0; player.wellCd = 0; player.fortressCd = 0; player.hitPulse = 0;
   ui.menu.classList.remove('active'); ui.menu.classList.add('hidden'); ui.hud.classList.remove('hidden');
-  ui.choice.classList.add('hidden'); ui.pauseScreen.classList.add('hidden'); ui.gameOver.classList.add('hidden');
+  ui.choice.classList.add('hidden'); ui.pauseScreen.classList.add('hidden'); ui.gameOver.classList.add('hidden'); ui.resonance.classList.add('hidden');
   if (matchMedia('(pointer: coarse)').matches || innerWidth < 760) ui.touch.classList.remove('hidden');
-  for (let i=0;i<6;i++) spawnEnemy(false);
+  for (let i=0;i<3;i++) spawnEnemy(false);
   renderLoadout(); updateHUD();
 }
 
@@ -155,6 +157,6 @@ function stat(key) { return state.passives[key] || 0; }
 function weaponCount(key) { return state.weaponStacks[key] || 0; }
 function damageMult() { return 1 + stat('power')*.12; }
 function hasteMult() { return Math.max(.35, 1 - stat('haste')*.08); }
-function enemyHpMult() { return (1 + state.time/105) * (1 + stat('greed')*.08); }
+function enemyHpMult() { return (1 + state.time/155) * (1 + stat('greed')*.08); }
 function xpMult() { return 1 + stat('greed')*.18 + (weaponCount('magnet') >= 2 ? .22 : 0); }
 function damageReduction() { return clamp(stat('armor')*.06 + Math.max(0, weaponCount('bulwark')-1)*.035, 0, .68); }
