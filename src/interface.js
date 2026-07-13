@@ -1,3 +1,29 @@
+function renderStarterOptions() {
+  ui.starterOptions.innerHTML='';
+  for(const [key,w] of Object.entries(WEAPONS)){
+    const el=document.createElement('button');
+    el.type='button';
+    el.className='starter-option'+(key===state.selectedStarter?' selected':'');
+    el.style.setProperty('--starter-color',w.color);
+    el.style.setProperty('--starter-glow',hexToRgba(w.color,.15));
+    el.setAttribute('role','radio');
+    el.setAttribute('aria-checked',key===state.selectedStarter?'true':'false');
+    el.title=`${w.name} · ${w.role}`;
+    el.innerHTML=`<span class="starter-icon">${w.icon}</span><span class="starter-label">${w.name}</span>`;
+    el.onclick=()=>selectStarter(key);
+    ui.starterOptions.appendChild(el);
+  }
+  const selected=WEAPONS[state.selectedStarter];
+  ui.starterName.textContent=selected.name;
+  ui.starterDesc.textContent=selected.desc;
+}
+
+function selectStarter(key){
+  if(!WEAPONS[key])return;
+  state.selectedStarter=key;
+  renderStarterOptions();
+}
+
 function openChoices() {
   state.mode='choice';audio.level();ui.choice.classList.remove('hidden');ui.choiceTitle.textContent=`레벨 ${state.level}`;ui.choiceKicker.textContent='SYSTEM OVERRIDE';
   const choices=rollChoices(3);ui.choiceCards.innerHTML='';
@@ -47,7 +73,7 @@ function renderLoadout(){
 function updateHUD(){
   ui.hpBar.style.width=`${clamp(player.hp/player.maxHp*100,0,100)}%`;ui.hpText.textContent=`${Math.ceil(player.hp)} / ${player.maxHp}${player.shield?` +${Math.ceil(player.shield)}`:''}`;
   ui.xpBar.style.width=`${clamp(state.xp/state.xpNeed*100,0,100)}%`;ui.level.textContent=state.level;
-  ui.timer.textContent=formatTime(state.time);state.threat=1+Math.floor(state.time/35);ui.threat.textContent=`THREAT ${state.threat}`;
+  ui.timer.textContent=formatTime(state.time);state.threat=1+Math.floor(state.time/45);ui.threat.textContent=`THREAT ${state.threat}`;
   ui.comboText.textContent=state.combo;ui.comboBox.classList.toggle('active',state.combo>2);ui.comboBar.style.transform=`scaleX(${clamp(state.comboTimer/(2.15*(1+stat('chain')*.15)),0,1)})`;
 }
 function formatTime(t){const m=Math.floor(t/60),s=Math.floor(t%60);return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}
@@ -55,3 +81,12 @@ function hexToRgba(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${n>>16
 
 function endGame(){state.mode='gameover';ui.gameOver.classList.remove('hidden');ui.touch.classList.add('hidden');ui.resultTime.textContent=formatTime(state.time);ui.resultKills.textContent=state.kills;ui.resultCombo.textContent=state.maxCombo;ui.resultLevel.textContent=state.level;state.camera.shake=18;}
 function togglePause(force){if(state.mode==='choice'||state.mode==='gameover'||state.mode==='menu')return;const pause=force??state.mode==='playing';state.mode=pause?'paused':'playing';ui.pauseScreen.classList.toggle('hidden',!pause);}
+function showMainMenu(){
+  state.mode='menu';state.input.keys.clear();state.input.touchX=state.input.touchY=0;
+  Object.values(state.entities).forEach(a=>a.length=0);
+  ui.hud.classList.add('hidden');ui.touch.classList.add('hidden');ui.choice.classList.add('hidden');ui.pauseScreen.classList.add('hidden');ui.gameOver.classList.add('hidden');ui.resonance.classList.add('hidden');
+  ui.menu.classList.remove('hidden');ui.menu.classList.add('active');
+  renderStarterOptions();
+}
+
+renderStarterOptions();
