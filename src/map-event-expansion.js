@@ -14,11 +14,23 @@
 
   const INTERVALS={vault:[55,78],crash:[95,135],void:[170,230]};
   const FIRST={vault:42,crash:78,void:132};
-  function initState(){state.entities.mapEvents=state.entities.mapEvents||[];state.mapEventActive=state.mapEventActive||null;state.eventClocks=state.eventClocks||{...FIRST};state.nebulaBoosts=state.nebulaBoosts||{power:0,haste:0,magnet:0};state.nebulaExtras=state.nebulaExtras||{vital:0,navigation:0,photon:0,ward:0,chain:0};state.salvageHullStacks=state.salvageHullStacks||0;state.salvageBarrierStacks=state.salvageBarrierStacks||0;state.salvageBarrierTimer=state.salvageBarrierTimer||0;state.voidImprintStacks=state.voidImprintStacks||0;}
-  function resetMapEvents(){initState();state.entities.mapEvents.length=0;state.mapEventActive=null;state.eventClocks={...FIRST};state.nebulaBoosts={power:0,haste:0,magnet:0};state.nebulaExtras={vital:0,navigation:0,photon:0,ward:0,chain:0};state.salvageHullStacks=0;state.salvageBarrierStacks=0;state.salvageBarrierTimer=0;state.voidImprintStacks=0;overlay.classList.add('hidden');}
+  const EVENT_GAP=32;
+  function initState(){
+    state.entities.mapEvents=state.entities.mapEvents||[];state.mapEventActive=state.mapEventActive||null;state.eventClocks=state.eventClocks||{...FIRST};
+    state.eventGlobalCooldown=Number.isFinite(state.eventGlobalCooldown)?Math.max(0,state.eventGlobalCooldown):0;
+    state.lastMapEventType=state.lastMapEventType||null;
+    state.nebulaBoosts=state.nebulaBoosts||{power:0,haste:0,magnet:0};state.nebulaExtras=state.nebulaExtras||{vital:0,navigation:0,photon:0,ward:0,chain:0};
+    state.salvageHullStacks=state.salvageHullStacks||0;state.salvageBarrierStacks=state.salvageBarrierStacks||0;state.salvageBarrierTimer=state.salvageBarrierTimer||0;state.voidImprintStacks=state.voidImprintStacks||0;
+  }
+  function resetMapEvents(){initState();state.entities.mapEvents.length=0;state.mapEventActive=null;state.eventClocks={...FIRST};state.eventGlobalCooldown=0;state.lastMapEventType=null;state.nebulaBoosts={power:0,haste:0,magnet:0};state.nebulaExtras={vital:0,navigation:0,photon:0,ward:0,chain:0};state.salvageHullStacks=0;state.salvageBarrierStacks=0;state.salvageBarrierTimer=0;state.voidImprintStacks=0;overlay.classList.add('hidden');}
   window.resetMapEvents=resetMapEvents;window.closeMapEventOverlays=()=>overlay.classList.add('hidden');
   function scheduleType(type,min,max){const [a,b]=INTERVALS[type];state.eventClocks[type]=rand(min??a,max??b);state.mapEventActive=null;state.entities.mapEvents.length=0;}
-  function dueType(){return Object.entries(state.eventClocks).filter(([,v])=>v<=0).sort((a,b)=>a[1]-b[1])[0]?.[0]||null;}
+  function dueType(){
+    const due=Object.entries(state.eventClocks).filter(([,v])=>v<=0).sort((a,b)=>a[1]-b[1]);
+    if(!due.length)return null;
+    if(!state.lastMapEventType)return due[0][0];
+    return due.find(([type])=>type!==state.lastMapEventType)?.[0]||null;
+  }
   function spawnMarker(type){const a=Math.random()*TAU,d=rand(720,930);state.entities.mapEvents=[{type,x:player.x+Math.cos(a)*d,y:player.y+Math.sin(a)*d,pulse:0}];}
   function meta(type){if(type==='void')return{name:tx('voidName'),desc:tx('voidDesc'),color:'#b36bff',icon:'◉'};if(type==='crash')return{name:tx('crashName'),desc:tx('crashDesc'),color:'#ff9a62',icon:'⌁'};return{name:tx('vaultName'),desc:tx('vaultDesc'),color:'#75eaff',icon:'◇'};}
   function card(icon,name,desc,color,action){return{icon,name,desc,color,action};}
@@ -38,8 +50,18 @@
   function spawnCrashUnit(){const e=spawnEnemy('normal');if(!e)return false;e.eventKind='crash';e.eventVariant=e.type==='fast'?'interceptor':e.type==='tank'?'siege':'guardian';e.color=e.type==='fast'?'#ff6d8c':e.type==='tank'?'#ffad5f':'#ff8c6a';e.hp*=e.type==='tank'?1.62:e.type==='fast'?1.28:1.42;e.maxHp=e.hp;e.damage*=e.type==='tank'?1.34:e.type==='fast'?1.28:1.20;e.speed*=e.type==='tank'?.96:e.type==='fast'?1.13:1.07;e.xp*=1.35;const ev=state.mapEventActive,a=Math.random()*TAU;e.x=ev.arena.x+Math.cos(a)*(ev.arena.r-35);e.y=ev.arena.y+Math.sin(a)*(ev.arena.r-35);return true;}
   function startCrash(){const base=7+Math.min(5,Math.floor(state.time/150)),r=compact()?310:455;state.entities.enemies=state.entities.enemies.filter(e=>e.type==='boss'||e.type==='mini');state.mapEventActive={type:'crash',wave:0,waves:[base,base+2,base+4],remaining:base,spawnCd:0,between:0,arena:{x:player.x,y:player.y,r}};showBossNotice(tx('crashName'),tx('crashWave'));shockwave(player.x,player.y,'#ff9a62',r,.85,5);}
   function updateCrash(dt){const ev=state.mapEventActive;if(!ev||ev.type!=='crash')return;const alive=state.entities.enemies.filter(e=>!e.dead&&e.eventKind==='crash').length;if(ev.remaining>0){ev.spawnCd-=dt;if(ev.spawnCd<=0){ev.spawnCd=.16;if(spawnCrashUnit())ev.remaining--;}}else if(alive===0){ev.between-=dt;if(ev.between<=0){ev.wave++;if(ev.wave>=ev.waves.length){state.mapEventActive=null;openSalvage();return;}ev.remaining=ev.waves[ev.wave];ev.between=1.35;showBossNotice(`${tx('crashName')} ${ev.wave+1}/3`,tx('crashWave'));}}}
-  function trigger(marker){if(state.entities.enemies.some(e=>!e.dead&&(e.type==='mini'||e.type==='boss')))return;state.entities.mapEvents.length=0;if(marker.type==='void')openVoidChoice();else if(marker.type==='crash')startCrash();else openVault();}
-  function updateMapEvents(dt){initState();updateCrash(dt);if(state.mode!=='playing'||state.mapEventActive)return;for(const key of Object.keys(state.eventClocks))state.eventClocks[key]-=dt;if(!state.entities.mapEvents.length&&!state.entities.enemies.some(e=>!e.dead&&(e.type==='mini'||e.type==='boss'))){const type=dueType();if(type)spawnMarker(type);}for(const marker of state.entities.mapEvents){marker.pulse+=dt;if(Math.hypot(marker.x-player.x,marker.y-player.y)<55+player.r){trigger(marker);break;}}}
+  function trigger(marker){
+    if(state.entities.enemies.some(e=>!e.dead&&(e.type==='mini'||e.type==='boss')))return;
+    state.entities.mapEvents.length=0;state.lastMapEventType=marker.type;state.eventGlobalCooldown=EVENT_GAP;
+    if(marker.type==='void')openVoidChoice();else if(marker.type==='crash')startCrash();else openVault();
+  }
+  function updateMapEvents(dt){
+    initState();updateCrash(dt);if(state.mode!=='playing'||state.mapEventActive)return;
+    state.eventGlobalCooldown=Math.max(0,state.eventGlobalCooldown-dt);
+    for(const key of Object.keys(state.eventClocks))state.eventClocks[key]-=dt;
+    if(state.eventGlobalCooldown<=0&&!state.entities.mapEvents.length&&!state.entities.enemies.some(e=>!e.dead&&(e.type==='mini'||e.type==='boss'))){const type=dueType();if(type)spawnMarker(type);}
+    for(const marker of state.entities.mapEvents){marker.pulse+=dt;if(Math.hypot(marker.x-player.x,marker.y-player.y)<55+player.r){trigger(marker);break;}}
+  }
   function updateMapEventPlayer(){const ev=state.mapEventActive;if(ev?.type!=='crash'||!ev.arena)return;const dx=player.x-ev.arena.x,dy=player.y-ev.arena.y,d=Math.hypot(dx,dy)||1,limit=ev.arena.r-player.r-12;if(d>limit){player.x=ev.arena.x+dx/d*limit;player.y=ev.arena.y+dy/d*limit;}}
   function worldEventBlocksSpawning(){return !!(state.mapEventActive&&(state.mapEventActive.type==='crash'||state.mapEventActive.type==='void'));}
   window.updateMapEvents=updateMapEvents;window.updateMapEventPlayer=updateMapEventPlayer;window.worldEventBlocksSpawning=worldEventBlocksSpawning;
