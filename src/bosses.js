@@ -3,7 +3,36 @@ function updateEnemies(dt){const gravWells=state.entities.wells,chronoN=weaponCo
 function hurtPlayer(amount,source){const hadDefense=weaponCount('bulwark')>0||stat('armor')>0||player.shield>0;amount*=1-damageReduction();if(player.shield>0){const used=Math.min(player.shield,amount);player.shield-=used;amount-=used;}if(amount>0)player.hp-=amount;player.invuln=.9;player.hitPulse=.22;state.camera.shake=Math.max(state.camera.shake,3.5);state.flash=Math.max(state.flash,.07);audio.hurt();spawnParticle(player.x,player.y,COLORS.red,10,170,4);if(hadDefense)shockwave(player.x,player.y,COLORS.green,78,.24,3);if(source&&state.entities.enemies.includes(source)){const dx=source.x-player.x,dy=source.y-player.y,d=Math.hypot(dx,dy)||1,f=enemyControlFactor(source);source.x+=dx/d*48*f;source.y+=dy/d*48*f;}if(weaponCount('bulwark')>=4)areaDamage(player.x,player.y,115,24+weaponCount('bulwark')*4,COLORS.green);if(player.hp<=0)endGame();}
 function updateEnemyProjectiles(dt){for(const p of state.entities.enemyProjectiles){if(!Number.isFinite(p.x)||!Number.isFinite(p.y)||!Number.isFinite(p.life)){p.life=0;continue;}p.vx=Number.isFinite(p.vx)?p.vx:0;p.vy=Number.isFinite(p.vy)?p.vy:0;p.r=Number.isFinite(p.r)?p.r:5;p.phase=Number.isFinite(p.phase)?p.phase+dt*4:0;p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;const d=Math.hypot(player.x-p.x,player.y-p.y);if(d<player.r+p.r&&player.invuln<=0){p.life=0;hurtPlayer(p.damage,p);}if(d>1900)p.life=0;}state.entities.enemyProjectiles=state.entities.enemyProjectiles.filter(p=>p.life>0);trimOldest(state.entities.enemyProjectiles,entityCap('enemyProjectiles'));}
 function lineDistance(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1,l=dx*dx+dy*dy||1,t=clamp(((px-x1)*dx+(py-y1)*dy)/l,0,1);return Math.hypot(px-(x1+dx*t),py-(y1+dy*t));}
-function updateTelegraphs(dt){for(const t of state.entities.telegraphs){t.life-=dt;if(t.life<=0&&!t.triggered){t.triggered=true;if(t.type==='circle'){shockwave(t.x,t.y,t.color,t.r,.35,6);if(Math.hypot(player.x-t.x,player.y-t.y)<t.r+player.r&&player.invuln<=0)hurtPlayer(t.damage,t);}else if(t.type==='line'){const x2=t.x+Math.cos(t.a)*t.length,y2=t.y+Math.sin(t.a)*t.length;shockwave(x2,y2,t.color,36,.22,3);if(lineDistance(player.x,player.y,t.x,t.y,x2,y2)<t.width*.55+player.r&&player.invuln<=0)hurtPlayer(t.damage,t);}}}state.entities.telegraphs=state.entities.telegraphs.filter(t=>t.life>-.12);trimOldest(state.entities.telegraphs,entityCap('telegraphs'));}
+function triggerNullGridImpact(t,x2,y2){
+  state.entities.beams.push({x1:t.x,y1:t.y,x2,y2,life:.24,max:.24,color:t.color,width:t.width*1.45});
+  const steps=6;
+  for(let i=0;i<=steps;i++){
+    const p=i/steps,x=lerp(t.x,x2,p),y=lerp(t.y,y2,p);
+    if(i%2===0)shockwave(x,y,t.color,38,.22,2.2);
+    spawnParticle(x,y,t.color,2,115,3.2);
+  }
+  const now=performance.now();
+  if(now-(state.nullGridImpactAt||0)>90){
+    state.nullGridImpactAt=now;state.camera.shake=Math.max(state.camera.shake,6.5);state.flash=Math.max(state.flash,.14);audio.hit(true);
+  }
+}
+function updateTelegraphs(dt){
+  for(const t of state.entities.telegraphs){
+    t.life-=dt;
+    if(t.life<=0&&!t.triggered){
+      t.triggered=true;
+      if(t.type==='circle'){
+        shockwave(t.x,t.y,t.color,t.r,.35,6);
+        if(Math.hypot(player.x-t.x,player.y-t.y)<t.r+player.r&&player.invuln<=0)hurtPlayer(t.damage,t);
+      }else if(t.type==='line'){
+        const x2=t.x+Math.cos(t.a)*t.length,y2=t.y+Math.sin(t.a)*t.length;
+        if(t.impactStyle==='null-grid')triggerNullGridImpact(t,x2,y2);else shockwave(x2,y2,t.color,36,.22,3);
+        if(lineDistance(player.x,player.y,t.x,t.y,x2,y2)<t.width*.55+player.r&&player.invuln<=0)hurtPlayer(t.damage,t);
+      }
+    }
+  }
+  state.entities.telegraphs=state.entities.telegraphs.filter(t=>t.life>-.24);trimOldest(state.entities.telegraphs,entityCap('telegraphs'));
+}
 function apexTheme(form){return BOSS_STATS[form]?.theme||'space';}
 function cancelWorldEventForApex(){document.querySelector('#worldEventScreen')?.classList.add('hidden');state.entities.mapEvents?.splice(0);state.mapEventActive=null;if(state.eventClocks){state.eventClocks.vault=Math.max(state.eventClocks.vault||0,65);state.eventClocks.crash=Math.max(state.eventClocks.crash||0,110);state.eventClocks.void=Math.max(state.eventClocks.void||0,185);}if(state.mode==='worldEvent')state.mode='playing';}
 function clearFieldForApex(){cancelWorldEventForApex();const visible=state.entities.enemies.filter(e=>!e.dead).slice(0,36);for(const e of visible){spawnParticle(e.x,e.y,e.color||COLORS.violet,e.type==='boss'?18:e.type==='mini'?12:5,e.type==='boss'?260:150,e.type==='boss'?7:4);shockwave(e.x,e.y,e.color||COLORS.violet,e.type==='boss'?135:58,.34,e.type==='boss'?5:2);}state.entities.enemies.length=0;state.entities.enemyProjectiles.length=0;state.entities.telegraphs.length=0;state.entities.projectiles.length=0;state.entities.curves?.splice(0);state.entities.beams?.splice(0);state.entities.wells.length=0;state.bossActiveId=null;ui.bossBar.classList.add('hidden');state.camera.shake=0;state.flash=0;}
