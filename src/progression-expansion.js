@@ -56,7 +56,7 @@
   const legacyChainDamageBonus=()=>Math.min(.30,Math.floor(currentChain()/5)*.03);
   function scaledChainDamageBonus(){
     const stacks=stat('chain'),tiers=Math.floor(currentChain()/5);
-    return stacks&&tiers?Math.min(.48,tiers*(.007+stacks*.004)):0;
+    return tiers?Math.min(.48,tiers*(.02+stacks*.003)):0;
   }
   function scaledChainDurationMultiplier(){
     const stacks=stat('chain'),combo=currentChain(),nebula=state.nebulaExtras?.chain||0;
