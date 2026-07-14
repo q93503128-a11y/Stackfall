@@ -1,3 +1,4 @@
+const APEX_INTERVAL_SECONDS=600;
 const BOSS_NAMES={
   eclipse:{ko:'일식의 군주',en:'Lord of Eclipse'},seraph:{ko:'성운의 세라프',en:'Nebula Seraph'},pulsar:{ko:'맥동성의 심장',en:'Heart of the Pulsar'},leviathan:{ko:'성간의 레비아탄',en:'Interstellar Leviathan'},archivist:{ko:'무한 기록자',en:'Infinite Archivist'},heliarch:{ko:'태양관의 군주',en:'Heliarch'},tempest:{ko:'성뢰의 여왕',en:'Queen of Astral Storms'},nullengine:{ko:'무효기관 제로',en:'Null Engine Zero'},
   knight:{ko:'균열의 기사',en:'Rift Knight'},warden:{ko:'초신성 감시자',en:'Nova Warden'},executioner:{ko:'궤도 집행자',en:'Orbital Executioner'},colossus:{ko:'결정 거상',en:'Crystal Colossus'},harvester:{ko:'성운 수확자',en:'Nebula Harvester'},mirror:{ko:'쌍성의 거울',en:'Twin-Star Mirror'},
@@ -16,19 +17,26 @@ const BOSS_STATS={
   chronophage:{color:'#79ffe1',hp:1.55,speed:.86,damage:1.08,r:1.28,theme:'apex-chrono'},starforge:{color:'#ffb04e',hp:1.72,speed:.72,damage:1.16,r:1.34,theme:'apex-forge'},lastconstellation:{color:'#b7c9ff',hp:1.62,speed:.80,damage:1.12,r:1.30,theme:'apex-constellation'}
 };
 function bossBag(kind){state.bossBags=state.bossBags||{};const pool=BOSS_POOLS[kind]||BOSS_POOLS.boss;let bag=state.bossBags[kind];if(!bag?.length){bag=[...pool].sort(()=>Math.random()-.5);state.bossBags[kind]=bag;}return bag.pop();}
-function resetBossSystems(){state.bossBags={};state.nextApexAt=1200;state.apexCount=0;state.apexActiveId=null;state.apexBoons={};state.apexBoonTimers={chrono:24,forge:18,constellation:12};}
+function resetBossSystems(){state.bossBags={};state.nextApexAt=APEX_INTERVAL_SECONDS;state.apexCount=0;state.apexActiveId=null;state.apexBoons={};state.apexBoonTimers={chrono:24,forge:18,constellation:12};}
 function configureElite(enemy,kind){
   const category=kind==='mini'?'mini':kind==='void'?'void':kind==='apex'?'apex':'boss',form=category==='apex'&&state.pendingApexForm?state.pendingApexForm:bossBag(category),s=BOSS_STATS[form],t=state.time||0;
   enemy.eliteCategory=category;enemy.eliteForm=form;enemy.name=bossName(form);enemy.color=s.color;enemy.r*=s.r;enemy.hp*=s.hp;enemy.speed*=s.speed;enemy.damage*=s.damage;
   if(category==='void')enemy.eventKind='void';
-  if(category==='apex'){const cycle=Math.max(0,t/1200-1),hpScale=1+cycle*.55,damageScale=1+cycle*.24,speedScale=1+Math.min(.18,cycle*.04),cooldownScale=Math.max(.72,1-cycle*.05);enemy.eventKind='apex';enemy.apexForm=form;enemy.xp*=2.4+cycle*.35;enemy.apexPhase=1;enemy.hp*=hpScale;enemy.damage*=damageScale;enemy.speed*=speedScale;enemy.skillCd*=cooldownScale;enemy.burstCd*=cooldownScale;enemy.pulseCd*=cooldownScale;}
-  else{const isBoss=enemy.type==='boss',f=clamp((t-110)/520,0,1);enemy.hp*=lerp(isBoss?.56:.74,isBoss?.95:.99,f);enemy.damage*=lerp(isBoss?.66:.80,.98,clamp((t-110)/440,0,1));enemy.speed*=lerp(isBoss?.88:.94,1,clamp((t-110)/360,0,1));enemy.skillCd+=(isBoss?1.25:.65)*(1-f);enemy.burstCd+=(isBoss?1.45:.8)*(1-f);}
+  if(category==='apex'){
+    const cycle=Math.max(0,t/APEX_INTERVAL_SECONDS-1),hpScale=1+cycle*.55,damageScale=1+cycle*.24,speedScale=1+Math.min(.18,cycle*.04),cooldownScale=Math.max(.72,1-cycle*.05);
+    enemy.eventKind='apex';enemy.apexForm=form;enemy.xp*=2.4+cycle*.35;enemy.apexPhase=1;enemy.hp*=hpScale;enemy.damage*=damageScale;enemy.speed*=speedScale;enemy.skillCd*=cooldownScale;enemy.burstCd*=cooldownScale;enemy.pulseCd*=cooldownScale;
+  }else{
+    const isBoss=enemy.type==='boss',f=clamp((t-110)/520,0,1);enemy.hp*=lerp(isBoss?.56:.74,isBoss?.95:.99,f);enemy.damage*=lerp(isBoss?.66:.80,.98,clamp((t-110)/440,0,1));enemy.speed*=lerp(isBoss?.88:.94,1,clamp((t-110)/360,0,1));enemy.skillCd+=(isBoss?1.25:.65)*(1-f);enemy.burstCd+=(isBoss?1.45:.8)*(1-f);
+  }
+  if(category!=='mini'){
+    enemy.hp*=2;enemy.damage*=1.75;enemy.skillCd*=.82;enemy.burstCd*=.82;enemy.pulseCd*=.82;
+  }
   enemy.maxHp=enemy.hp;
 }
 function enemyControlFactor(e){const radius=Math.max(10,e?.r||10);let f=clamp(22/radius,.18,1);if(e?.type==='tank')f*=.78;if(e?.type==='mini')f*=.52;if(e?.type==='boss')f*=.28;if(e?.kind==='apex')f*=.55;return clamp(f,.08,1);}
 function fireFan(e,count,spread,speed,damage,color,r=5.5){const base=Math.atan2(player.y-e.y,player.x-e.x);for(let i=0;i<count;i++)spawnEnemyProjectile(e.x,e.y,base+(i-(count-1)/2)*spread,speed,damage,color,r,6);}
 function fireRing(e,count,speed,damage,color,offset=0,r=5.2){for(let i=0;i<count;i++)spawnEnemyProjectile(e.x,e.y,i/count*TAU+offset,speed,damage,color,r,6.4);}
-function addCircle(x,y,r,damage,color,life=1.1){if(state.entities.telegraphs.length>=entityCap('telegraphs'))state.entities.telegraphs.shift();state.entities.telegraphs.push({type:'circle',x,y,r,life,max:life,damage,color});}
-function addLine(e,a,length,width,damage,color,life=.8){if(state.entities.telegraphs.length>=entityCap('telegraphs'))state.entities.telegraphs.shift();state.entities.telegraphs.push({type:'line',x:e.x,y:e.y,a,length,width,life,max:life,damage,color});}
+function addCircle(x,y,r,damage,color,life=1.1){if(state.entities.telegraphs.length>=entityCap('telegraphs'))state.entities.telegraphs.shift();state.entities.telegraphs.push({type:'circle',x,y,r,life,max:life,damage,color,impactStyle:'boss-circle',phase:Math.random()*TAU});}
+function addLine(e,a,length,width,damage,color,life=.8){if(state.entities.telegraphs.length>=entityCap('telegraphs'))state.entities.telegraphs.shift();state.entities.telegraphs.push({type:'line',x:e.x,y:e.y,a,length,width,life,max:life,damage,color,impactStyle:'boss-line',phase:Math.random()*TAU});}
 function summonMinions(e,count=4,kind='grunt'){for(let i=0;i<count;i++){const m=spawnEnemy('normal');if(!m)continue;m.type=kind;m.x=e.x+Math.cos(i/count*TAU)*rand(100,170);m.y=e.y+Math.sin(i/count*TAU)*rand(100,170);m.hp*=1.18;m.maxHp=m.hp;m.damage*=1.06;m.color=e.color;m.eventKind=e.eventKind==='void'?'void-minion':m.eventKind;}}
 function skillScale(e){return e.kind==='apex'&&e.hp/e.maxHp<.55?.72:1;}
