@@ -8,9 +8,18 @@
   STACK_EFFECTS.gravity=[['특이점 씨앗','중력 우물 주기적 생성.'],['조석 고정','흡입 반경과 흡입력 증가.'],['장수 특이점','중력 우물 지속시간 증가.'],['붕괴핵','중심부 지속 피해.'],['압축 붕괴','중심 피해와 흡입력 추가 증가.'],['쌍둥이 특이점','우물 개수 +1.']];
 
   const baseTexts={
-    magnet:['자석 코어','결정 흡수 범위 +34'],echo:['에코 비콘','발사·설치형 장비 발동을 복제하고 지속형 칼날에 잔상 타격 추가.'],power:['출력 증폭','모든 피해 +16%'],haste:['가속 회로','공격 주기 10% 단축'],vitality:['재생 장갑','최대 체력 +20, 즉시 체력 30 회복'],speed:['벡터 부스터','이동 속도 +9%'],crit:['취약점 해석','치명타 확률 +6%'],chain:['연쇄 과부하','처치 연쇄 유지시간 +25%. 연쇄 5회마다 피해 +3%, 최대 +30%.'],greed:['개척 계약','적 체력 +4%, 경험치 +22%'],armor:['충격 흡수재','받는 피해 -7.5%']
+    magnet:{ko:['자석 코어','결정 흡수 범위 +34'],en:['Magnet Core','Pickup range +34']},
+    echo:{ko:['에코 비콘','발사·설치형 장비 발동을 복제하고 지속형 칼날에 잔상 타격 추가.'],en:['Echo Beacon','Repeats fired and deployed equipment activations; persistent blades gain echo strikes.']},
+    power:{ko:['출력 증폭','모든 피해 +16%'],en:['Power Amplifier','All damage +16%']},
+    haste:{ko:['가속 회로','공격 주기 10% 단축'],en:['Acceleration Circuit','Attack interval -10%']},
+    vitality:{ko:['재생 장갑','최대 체력 +20, 즉시 체력 30 회복'],en:['Regenerative Plating','Max health +20 and immediately restore 30 health']},
+    speed:{ko:['벡터 부스터','이동 속도 +9%'],en:['Vector Booster','Move speed +9%']},
+    crit:{ko:['취약점 해석','치명타 확률 +6%'],en:['Weakness Analysis','Critical chance +6%']},
+    chain:{ko:['연쇄 과부하','처치 연쇄 유지시간 +25%. 연쇄 5회마다 피해 +3%, 최대 +30%.'],en:['Chain Overload','Kill-chain duration +25%. Every 5 chain grants +3% damage, up to +30%.']},
+    greed:{ko:['개척 계약','적 체력 +4%, 경험치 +22%'],en:['Frontier Contract','Enemy health +4%, experience +22%']},
+    armor:{ko:['충격 흡수재','받는 피해 -7.5%'],en:['Impact Absorber','Damage taken -7.5%']}
   };
-  for(const[key,row]of Object.entries(baseTexts)){if(PASSIVE_TEXT[key]){PASSIVE_TEXT[key].ko=row;PASSIVE_TEXT[key].en=[row[0],row[1]];}if(PASSIVES[key])PASSIVES[key].desc=row[1];}
+  for(const[key,rows]of Object.entries(baseTexts)){if(PASSIVE_TEXT[key]){PASSIVE_TEXT[key].ko=rows.ko;PASSIVE_TEXT[key].en=rows.en;}if(PASSIVES[key])PASSIVES[key].desc=rows.ko[1];}
 
   const NEW_PASSIVES={chainDrive:{name:'연쇄 추진기',icon:'»',color:'#7ce8ff',desc:'연쇄 10 이상일 때 공격 주기 -7%',max:6},chainBurst:{name:'연쇄 폭심',icon:'✹',color:'#ff7b9e',desc:'연쇄 15회마다 광역 폭발',max:6},chainRecovery:{name:'연쇄 회수',icon:'✚',color:'#74f2a7',desc:'연쇄 20회마다 최대 체력 회복',max:5},chainField:{name:'전리품 공명',icon:'⊙',color:'#ffcc5c',desc:'연쇄에 비례한 자석 범위 증가',max:6},eliteHunter:{name:'거성 사냥꾼',icon:'♜',color:'#e6b2ff',desc:'중간보스와 보스 피해 +12%',max:6},pierce:{name:'관통 렌즈',icon:'⇢',color:'#b5f5ff',desc:'투사체 관통 +1',max:4},regen:{name:'자가 복원',icon:'♻',color:'#88f0ad',desc:'4초마다 체력 2.5 회복',max:6},wisdom:{name:'성운 통찰',icon:'✧',color:'#bba6ff',desc:'경험치 획득량 +10%',max:8},overdrive:{name:'임계 과출력',icon:'▲',color:'#ff806f',desc:'체력 45% 미만일 때 피해 +14%',max:5},projectileSize:{name:'광자 팽창',icon:'◉',color:'#8fe9ff',desc:'플레이어 투사체 크기 +10%',max:6}};
   Object.assign(PASSIVES,NEW_PASSIVES);
