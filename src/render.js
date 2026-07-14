@@ -11,21 +11,25 @@ function sanitizeRuntimeState(){
   state.entities.texts=state.entities.texts.filter(t=>finiteXY(t)&&Number.isFinite(t.life));
   state.entities.shockwaves=state.entities.shockwaves.filter(s=>finiteXY(s)&&Number.isFinite(s.life)&&Number.isFinite(s.r));
   state.entities.telegraphs=state.entities.telegraphs.filter(t=>t&&Number.isFinite(t.life));
-  state.entities.curves=state.entities.curves?.filter(c=>finiteXY(c)&&Number.isFinite(c.elapsed)&&Number.isFinite(c.duration))||[];
+  state.entities.curves=state.entities.curves?.filter(c=>finiteXY(c)&&(Number.isFinite(c.elapsed)||Number.isFinite(c.stageTime)))||[];
   state.entities.beams=state.entities.beams?.filter(b=>b&&Number.isFinite(b.x1)&&Number.isFinite(b.y1)&&Number.isFinite(b.x2)&&Number.isFinite(b.y2)&&Number.isFinite(b.life))||[];
 }
 function runRuntimeStage(name,fn){try{return fn();}catch(error){if(!runtimeErrorLog.has(name)){runtimeErrorLog.add(name);console.error(`[Stackfall] ${name} failed`,error);}sanitizeRuntimeState();return undefined;}}
 function runDrawStage(name,fn){ctx.save();try{return runRuntimeStage(name,fn);}finally{ctx.restore();}}
 function draw(){
-  const shake=GAME_SETTINGS.screenShake===false?0:state.camera.shake,sx=shake?rand(-shake,shake):0,sy=shake?rand(-shake,shake):0;
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.setLineDash([]);
+  runDrawStage('drawBackground',drawBackground);
+  const rawShake=GAME_SETTINGS.screenShake===false?0:Math.max(0,state.camera.shake||0),shake=rawShake>=7?Math.min(15,rawShake*.72):0;
+  const sx=shake?rand(-shake,shake):0,sy=shake?rand(-shake,shake):0;
   ctx.save();ctx.translate(sx,sy);
-  runDrawStage('drawBackground',drawBackground);runDrawStage('drawTelegraphs',drawTelegraphs);runDrawStage('drawWells',drawWells);runDrawStage('drawGems',drawGems);
+  runDrawStage('drawTelegraphs',drawTelegraphs);runDrawStage('drawWells',drawWells);runDrawStage('drawGems',drawGems);
   if(typeof drawMapEvents==='function')runDrawStage('drawMapEvents',drawMapEvents);
   runDrawStage('drawEnemies',drawEnemies);runDrawStage('drawProjectiles',drawProjectiles);runDrawStage('drawEnemyProjectiles',drawEnemyProjectiles);
   if(state.mode!=='menu'){runDrawStage('drawMagnetField',drawMagnetField);runDrawStage('drawChronoField',drawChronoField);runDrawStage('drawPlayer',drawPlayer);}
   runDrawStage('drawEffects',drawEffects);ctx.restore();
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.setLineDash([]);
   const vignette=ctx.createRadialGradient(vw/2,vh/2,Math.min(vw,vh)*.18,vw/2,vh/2,Math.max(vw,vh)*.74);vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(0,1,8,.58)');ctx.fillStyle=vignette;ctx.fillRect(0,0,vw,vh);
-  if(state.flash>0){ctx.fillStyle=`rgba(225,242,255,${state.flash*.72})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlay',drawRealmCinematicOverlay);
+  if(state.flash>0){ctx.fillStyle=`rgba(225,242,255,${Math.min(.42,state.flash*.72)})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlay',drawRealmCinematicOverlay);
 }
 let last=performance.now(),hudRefresh=0;
 function loop(now){
@@ -41,6 +45,7 @@ function loop(now){
       if(typeof updateRealmTransition==='function')runRuntimeStage('updateRealmTransition',()=>updateRealmTransition(dt));runRuntimeStage('updateEffectsCinematic',()=>updateEffects(dt*.35));shouldDraw=true;
     }
     if(state.mode==='choice'&&ui.choice.classList.contains('hidden')){state.choiceLocked=false;state.mode='playing';}
+    if(typeof syncAbilityLedgerVisibility==='function')syncAbilityLedgerVisibility();
     if(shouldDraw)runRuntimeStage('drawFrame',draw);
   }finally{requestAnimationFrame(loop);}
 }
