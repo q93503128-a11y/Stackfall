@@ -6,17 +6,22 @@
 }
 .settings-icon-btn:hover{transform:translateY(-2px);border-color:rgba(124,232,255,.55);box-shadow:0 0 24px rgba(124,232,255,.13)}
 .settings-overlay{z-index:80;background:radial-gradient(circle,rgba(38,48,95,.68),rgba(2,4,12,.94));}
-.settings-modal{width:min(520px,92vw);border-radius:24px;padding:24px;}
+.settings-modal{width:min(560px,92vw);max-height:92vh;overflow:auto;border-radius:24px;padding:24px;}
 .settings-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .settings-heading h2{margin:0;font:38px/1 "Black Han Sans",sans-serif}
 .settings-heading button{width:38px;height:38px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-size:24px}
-.settings-row{min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:10px 4px;border-bottom:1px solid rgba(255,255,255,.07);color:#dbe4ff;font-size:13px;font-weight:700;cursor:pointer}
-.settings-row input{position:absolute;opacity:0;pointer-events:none}
-.settings-row i{position:relative;width:48px;height:27px;flex:0 0 auto;border-radius:99px;background:rgba(255,255,255,.10);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);transition:.18s}
-.settings-row i:after{content:"";position:absolute;left:4px;top:4px;width:19px;height:19px;border-radius:50%;background:#aeb7d2;transition:.18s;box-shadow:0 3px 8px rgba(0,0,0,.35)}
-.settings-row input:checked+i{background:linear-gradient(90deg,#6adfff,#9e79ff);box-shadow:0 0 16px rgba(124,232,255,.22)}
-.settings-row input:checked+i:after{left:25px;background:#fff}
+.settings-row{min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:9px 4px;border-bottom:1px solid rgba(255,255,255,.07);color:#dbe4ff;font-size:13px;font-weight:700;cursor:pointer}
+.settings-row>input[type="checkbox"]{position:absolute;opacity:0;pointer-events:none}
+.settings-row>i{position:relative;width:48px;height:27px;flex:0 0 auto;border-radius:99px;background:rgba(255,255,255,.10);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);transition:.18s}
+.settings-row>i:after{content:"";position:absolute;left:4px;top:4px;width:19px;height:19px;border-radius:50%;background:#aeb7d2;transition:.18s;box-shadow:0 3px 8px rgba(0,0,0,.35)}
+.settings-row>input[type="checkbox"]:checked+i{background:linear-gradient(90deg,#6adfff,#9e79ff);box-shadow:0 0 16px rgba(124,232,255,.22)}
+.settings-row>input[type="checkbox"]:checked+i:after{left:25px;background:#fff}
 .select-row{cursor:default}.select-row select{min-width:160px;padding:10px 12px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:#10172f;color:#f4f7ff;font:inherit;outline:none}
+.volume-row{cursor:default;display:grid;grid-template-columns:minmax(105px,1fr) minmax(170px,2fr) 44px;gap:12px}
+.volume-row input[type="range"]{position:static;opacity:1;pointer-events:auto;width:100%;height:22px;margin:0;accent-color:#82e7ff;background:transparent;cursor:pointer}
+.volume-row input[type="range"]::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:linear-gradient(90deg,rgba(124,232,255,.8),rgba(158,121,255,.75));box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.volume-row input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;margin-top:-5.5px;border-radius:50%;border:2px solid #fff;background:#88eaff;box-shadow:0 0 14px rgba(124,232,255,.75)}
+.volume-row output{text-align:right;color:#95edff;font-variant-numeric:tabular-nums;font-size:11px}
 .settings-modal>.primary-btn{margin-top:20px}
 
 #menu{gap:clamp(18px,3vh,32px)}
@@ -41,6 +46,7 @@
   .settings-modal{padding:20px}
   .settings-heading h2{font-size:31px}
   .select-row select{min-width:130px}
+  .volume-row{grid-template-columns:100px 1fr 38px;gap:8px}
 }
 @media(max-height:680px) and (min-width:700px){
   #menu{justify-content:flex-start;overflow-y:auto;padding-top:28px;gap:14px}
