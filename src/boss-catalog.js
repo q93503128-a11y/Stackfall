@@ -7,12 +7,12 @@ const BOSS_NAMES={
 Object.assign(TEXT.ko,{'pause.restart':'게임 다시 시작','gameover.title':'게임 오버'});Object.assign(TEXT.en,{'pause.restart':'RESTART GAME','gameover.title':'GAME OVER'});Object.assign(TEXT.ja,{'pause.restart':'ゲームをやり直す','gameover.title':'ゲームオーバー'});if(TEXT['zh-CN'])Object.assign(TEXT['zh-CN'],{'gameover.title':'游戏结束'});
 const bossLang=()=>GAME_SETTINGS?.language||'ko';
 const bossName=id=>BOSS_NAMES[id]?.[bossLang()]||BOSS_NAMES[id]?.en||id;
-bossDisplayName=function(enemy){if(!enemy)return'';if(enemy.eliteForm)return bossName(enemy.eliteForm);return enemy.name||'';};
+bossDisplayName=function(enemy){if(!enemy)return'';let name=enemy.eliteForm?bossName(enemy.eliteForm):(enemy.name||'');if(enemy.twinGroup)name+=enemy.twinSide<0?' α':' β';return name;};
 const BOSS_POOLS={boss:['eclipse','seraph','pulsar','leviathan','archivist','heliarch','tempest','nullengine'],mini:['knight','warden','executioner','colossus','harvester','mirror'],void:['maw','oracle','weaver','grave','paradox'],apex:['chronophage','starforge','lastconstellation']};
 const BOSS_STATS={
   eclipse:{color:'#ff72cb',hp:1,speed:1,damage:1,r:1},seraph:{color:'#91ffe7',hp:.90,speed:1.10,damage:.92,r:.96},pulsar:{color:'#67b7ff',hp:1.08,speed:.92,damage:1.02,r:1.04},leviathan:{color:'#ff9b68',hp:1.22,speed:.76,damage:1.12,r:1.13},archivist:{color:'#d7b0ff',hp:.97,speed:.88,damage:.96,r:1.02},heliarch:{color:'#ffd66f',hp:1.05,speed:.94,damage:1.06,r:1.06},tempest:{color:'#76d9ff',hp:.94,speed:1.14,damage:.98,r:.96},nullengine:{color:'#a9b4d8',hp:1.16,speed:.82,damage:1.08,r:1.10},
-  knight:{color:'#d4a6ff',hp:1,speed:1,damage:1,r:1},warden:{color:'#70e5ff',hp:.92,speed:1.10,damage:.94,r:.96},executioner:{color:'#ff7db6',hp:.86,speed:1.18,damage:1.06,r:.92},colossus:{color:'#ffd07b',hp:1.30,speed:.74,damage:1.12,r:1.16},harvester:{color:'#ff9c7d',hp:1.04,speed:.96,damage:1.08,r:1.05},mirror:{color:'#b6a2ff',hp:.96,speed:1.04,damage:.97,r:.98},
-  maw:{color:'#9b5cff',hp:1,speed:.94,damage:.96,r:1.10},oracle:{color:'#c58aff',hp:.90,speed:1.08,damage:.92,r:.92},weaver:{color:'#7446c8',hp:1.08,speed:.88,damage:1.03,r:1.07},grave:{color:'#6960ad',hp:1.20,speed:.76,damage:1.08,r:1.16},paradox:{color:'#d69cff',hp:.98,speed:1.05,damage:1,r:1},
+  knight:{color:'#d4a6ff',hp:1,speed:1,damage:1,r:1},warden:{color:'#70e5ff',hp:.92,speed:1.10,damage:.94,r:.96},executioner:{color:'#ff7db6',hp:.86,speed:1.18,damage:1.06,r:.92},colossus:{color:'#ffd07b',hp:1.30,speed:.74,damage:1.12,r:1.16},harvester:{color:'#ff9c7d',hp:1.04,speed:.96,damage:1.08,r:1.05},mirror:{color:'#b6a2ff',hp:1.02,speed:1.07,damage:.99,r:.96},
+  maw:{color:'#9b5cff',hp:1,speed:.94,damage:.96,r:1.10},oracle:{color:'#c58aff',hp:.90,speed:1.08,damage:.92,r:.92},weaver:{color:'#7446c8',hp:1.08,speed:.88,damage:1.03,r:1.07},grave:{color:'#6960ad',hp:1.20,speed:.76,damage:1.08,r:1.16},paradox:{color:'#d69cff',hp:1.04,speed:1.07,damage:1.02,r:.96},
   chronophage:{color:'#79ffe1',hp:1.55,speed:.86,damage:1.08,r:1.28,theme:'apex-chrono'},starforge:{color:'#ffb04e',hp:1.72,speed:.72,damage:1.16,r:1.34,theme:'apex-forge'},lastconstellation:{color:'#b7c9ff',hp:1.62,speed:.80,damage:1.12,r:1.30,theme:'apex-constellation'}
 };
 function bossBag(kind){state.bossBags=state.bossBags||{};const pool=BOSS_POOLS[kind]||BOSS_POOLS.boss;let bag=state.bossBags[kind];if(!bag?.length){bag=[...pool].sort(()=>Math.random()-.5);state.bossBags[kind]=bag;}return bag.pop();}
@@ -21,12 +21,8 @@ function configureElite(enemy,kind){
   const category=kind==='mini'?'mini':kind==='void'?'void':kind==='apex'?'apex':'boss',form=category==='apex'&&state.pendingApexForm?state.pendingApexForm:bossBag(category),s=BOSS_STATS[form],t=state.time||0;
   enemy.eliteCategory=category;enemy.eliteForm=form;enemy.name=bossName(form);enemy.color=s.color;enemy.r*=s.r;enemy.hp*=s.hp;enemy.speed*=s.speed;enemy.damage*=s.damage;
   if(category==='void')enemy.eventKind='void';
-  if(category==='apex'){
-    const cycle=Math.max(0,t/1200-1),hpScale=1+cycle*.55,damageScale=1+cycle*.24,speedScale=1+Math.min(.18,cycle*.04),cooldownScale=Math.max(.72,1-cycle*.05);
-    enemy.eventKind='apex';enemy.apexForm=form;enemy.xp*=2.4+cycle*.35;enemy.apexPhase=1;enemy.hp*=hpScale;enemy.damage*=damageScale;enemy.speed*=speedScale;enemy.skillCd*=cooldownScale;enemy.burstCd*=cooldownScale;enemy.pulseCd*=cooldownScale;
-  }else{
-    const isBoss=enemy.type==='boss',f=clamp((t-110)/520,0,1);enemy.hp*=lerp(isBoss?.54:.72,isBoss?.92:.97,f);enemy.damage*=lerp(isBoss?.66:.80,.96,clamp((t-110)/440,0,1));enemy.speed*=lerp(isBoss?.88:.94,1,clamp((t-110)/360,0,1));enemy.skillCd+=(isBoss?1.25:.65)*(1-f);enemy.burstCd+=(isBoss?1.45:.8)*(1-f);
-  }
+  if(category==='apex'){const cycle=Math.max(0,t/1200-1),hpScale=1+cycle*.55,damageScale=1+cycle*.24,speedScale=1+Math.min(.18,cycle*.04),cooldownScale=Math.max(.72,1-cycle*.05);enemy.eventKind='apex';enemy.apexForm=form;enemy.xp*=2.4+cycle*.35;enemy.apexPhase=1;enemy.hp*=hpScale;enemy.damage*=damageScale;enemy.speed*=speedScale;enemy.skillCd*=cooldownScale;enemy.burstCd*=cooldownScale;enemy.pulseCd*=cooldownScale;}
+  else{const isBoss=enemy.type==='boss',f=clamp((t-110)/520,0,1);enemy.hp*=lerp(isBoss?.56:.74,isBoss?.95:.99,f);enemy.damage*=lerp(isBoss?.66:.80,.98,clamp((t-110)/440,0,1));enemy.speed*=lerp(isBoss?.88:.94,1,clamp((t-110)/360,0,1));enemy.skillCd+=(isBoss?1.25:.65)*(1-f);enemy.burstCd+=(isBoss?1.45:.8)*(1-f);}
   enemy.maxHp=enemy.hp;
 }
 function enemyControlFactor(e){const radius=Math.max(10,e?.r||10);let f=clamp(22/radius,.18,1);if(e?.type==='tank')f*=.78;if(e?.type==='mini')f*=.52;if(e?.type==='boss')f*=.28;if(e?.kind==='apex')f*=.55;return clamp(f,.08,1);}
