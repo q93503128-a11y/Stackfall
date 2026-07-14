@@ -5,13 +5,15 @@ function draw(){
   const vignette=ctx.createRadialGradient(vw/2,vh/2,Math.min(vw,vh)*.18,vw/2,vh/2,Math.max(vw,vh)*.74);vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(0,1,8,.58)');ctx.fillStyle=vignette;ctx.fillRect(0,0,vw,vh);
   if(state.flash>0){ctx.fillStyle=`rgba(225,242,255,${state.flash*.72})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')drawRealmCinematicOverlay();
 }
-let last=performance.now();
+let last=performance.now(),hudRefresh=0;
 function loop(now){
   let dt=Math.min(.033,(now-last)/1000);last=now;let shouldDraw=state.mode==='menu';
   if(state.mode==='playing'){
     if(state.hitStop>0){state.hitStop-=dt;dt=0;}
     state.time+=dt;state.comboTimer-=dt;if(state.comboTimer<=0)state.combo=0;
-    updatePlayer(dt);updateSpawning(dt);updateWeapons(dt);updateEnemies(dt);updateProjectiles(dt);updateEnemyProjectiles(dt);updateTelegraphs(dt);updateWells(dt);updateGems(dt);if(typeof updateMapEvents==='function')updateMapEvents(dt);updateEffects(dt);updateHUD();shouldDraw=true;
+    updatePlayer(dt);updateSpawning(dt);updateWeapons(dt);updateEnemies(dt);updateProjectiles(dt);updateEnemyProjectiles(dt);updateTelegraphs(dt);updateWells(dt);updateGems(dt);if(typeof updateMapEvents==='function')updateMapEvents(dt);updateEffects(dt);
+    hudRefresh-=dt;if(hudRefresh<=0){hudRefresh=.08;updateHUD();}
+    shouldDraw=true;
   }else if(state.mode==='cinematic'){
     if(typeof updateRealmTransition==='function')updateRealmTransition(dt);updateEffects(dt*.35);shouldDraw=true;
   }
