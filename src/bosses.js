@@ -1,103 +1,19 @@
-function bossSkill(enemy, dt) {
-  enemy.skillCd-=dt; enemy.burstCd-=dt; enemy.pulseCd-=dt;
-  if(enemy.type==='mini') {
-    if(enemy.skillCd<=0) {
-      enemy.skillCd=3.4;
-      for(let i=0;i<7;i++) spawnEnemyProjectile(enemy.x,enemy.y,i/7*TAU+enemy.phase*.15,145,7,'#c79cff',5,5);
-      shockwave(enemy.x,enemy.y,'#c79cff',100,.45,3);
-    }
-    if(enemy.burstCd<=0) {
-      enemy.burstCd=6.4;
-      const a=Math.atan2(player.y-enemy.y,player.x-enemy.x);
-      enemy.dash=.55; enemy.dashX=Math.cos(a)*360; enemy.dashY=Math.sin(a)*360;
-      state.entities.telegraphs.push({type:'line',x:enemy.x,y:enemy.y,a,length:260,width:26,life:.55,max:.55,color:'#e7c4ff'});
-    }
-    return;
-  }
-  if(enemy.type!=='boss') return;
-  if(enemy.skillCd<=0) {
-    enemy.skillCd=enemy.variant==='seraph'?2.2:2.8;
-    const base=Math.atan2(player.y-enemy.y,player.x-enemy.x);
-    const shots=enemy.variant==='seraph'?7:5;
-    for(let i=0;i<shots;i++) {
-      const spread=(i-(shots-1)/2)*(enemy.variant==='seraph'?.16:.12);
-      spawnEnemyProjectile(enemy.x,enemy.y,base+spread,215,9,enemy.variant==='seraph'?'#9fffea':'#ff72cb',6,5);
-    }
-  }
-  if(enemy.burstCd<=0) {
-    enemy.burstCd=enemy.variant==='seraph'?4.6:5.4;
-    const count=enemy.variant==='seraph'?18:14;
-    for(let i=0;i<count;i++) {
-      const a=i/count*TAU+enemy.phase*.2;
-      spawnEnemyProjectile(enemy.x,enemy.y,a,enemy.variant==='seraph'?175:150,8,enemy.variant==='seraph'?'#b8fff0':'#c78cff',5.5,6);
-    }
-    shockwave(enemy.x,enemy.y,enemy.color,180,.7,5);
-  }
-  if(enemy.pulseCd<=0) {
-    enemy.pulseCd=8.0;
-    const tx=player.x+rand(-45,45),ty=player.y+rand(-45,45);
-    state.entities.telegraphs.push({type:'circle',x:tx,y:ty,r:105,life:1.15,max:1.15,damage:18,color:'#ff72cb'});
-  }
-}
+function bossSkill(enemy,dt){if(enemy.type==='mini')return miniSkill(enemy,dt);if(enemy.type!=='boss')return;if(enemy.kind==='apex')return apexBossSkill(enemy,dt);if(enemy.kind==='void'||enemy.eventKind==='void')return voidBossSkill(enemy,dt);return normalBossSkill(enemy,dt);}
 
-function updateEnemies(dt) {
-  const gravWells=state.entities.wells;
-  const chronoN=weaponCount('chrono');
-  const chronoRadius=145+chronoN*18;
-  for(const e of state.entities.enemies) {
-    if(e.dead)continue;
-    e.hit=Math.max(0,e.hit-dt); e.phase+=dt*3;
-    bossSkill(e,dt);
-    let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;
-    let speed=e.speed;
-    if(chronoN&&d<chronoRadius) speed*=Math.max(.32,1-(.10+chronoN*.07));
-    let vx=dx/d*speed,vy=dy/d*speed;
-    for(const w of gravWells) {
-      const wx=w.x-e.x,wy=w.y-e.y,wd=Math.hypot(wx,wy)||1;
-      if(wd<w.r){const f=(1-wd/w.r)*w.strength;vx+=wx/wd*f;vy+=wy/wd*f;}
-    }
-    if(e.dash>0){e.dash-=dt;vx+=e.dashX;vy+=e.dashY;}
-    e.x+=vx*dt; e.y+=vy*dt;
-    if(d<player.r+e.r+2 && player.invuln<=0) hurtPlayer(e.damage,e);
-  }
+function updateEnemies(dt){const gravWells=state.entities.wells,chronoN=weaponCount('chrono'),chronoRadius=145+chronoN*18;
+  for(const e of state.entities.enemies){if(e.dead)continue;e.hit=Math.max(0,e.hit-dt);e.phase+=dt*3;bossSkill(e,dt);let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1,speed=e.speed;if(chronoN&&d<chronoRadius)speed*=Math.max(.32,1-(.10+chronoN*.07));if((e.timeLock||0)>0){e.timeLock=Math.max(0,e.timeLock-dt);speed*=e.type==='boss'?.26:e.type==='mini'?.12:.025;}let vx=dx/d*speed,vy=dy/d*speed;const control=enemyControlFactor(e);for(const w of gravWells){const wx=w.x-e.x,wy=w.y-e.y,wd=Math.hypot(wx,wy)||1;if(wd<w.r){const force=(1-wd/w.r)*w.strength*control;vx+=wx/wd*force;vy+=wy/wd*force;}}if(e.dash>0){e.dash-=dt;vx+=e.dashX;vy+=e.dashY;}e.x+=vx*dt;e.y+=vy*dt;if(d<player.r+e.r+2&&player.invuln<=0)hurtPlayer(e.damage,e);}
   state.entities.enemies=state.entities.enemies.filter(e=>!e.dead);
 }
 
-function hurtPlayer(amount, source) {
-  const hadDefense = weaponCount('bulwark')>0 || stat('armor')>0 || player.shield>0;
-  amount*=1-damageReduction();
-  if(player.shield>0){const used=Math.min(player.shield,amount);player.shield-=used;amount-=used;}
-  if(amount>0)player.hp-=amount;
-  player.invuln=.9; player.hitPulse=.22; state.camera.shake+=8; state.flash=.11; audio.hurt();
-  spawnParticle(player.x,player.y,COLORS.red,10,170,4);
-  if(hadDefense) shockwave(player.x,player.y,COLORS.green,78,.24,3);
-  if(source&&Number.isFinite(source.x)&&Number.isFinite(source.y)) {
-    const dx=source.x-player.x,dy=source.y-player.y,d=Math.hypot(dx,dy)||1;
-    if(source.type&&state.entities.enemies.includes(source)){source.x+=dx/d*48;source.y+=dy/d*48;}
-  }
-  if(weaponCount('bulwark')>=4) areaDamage(player.x,player.y,115,24+weaponCount('bulwark')*4,COLORS.green);
-  if(player.hp<=0) endGame();
-}
+function hurtPlayer(amount,source){const hadDefense=weaponCount('bulwark')>0||stat('armor')>0||player.shield>0;amount*=1-damageReduction();if(player.shield>0){const used=Math.min(player.shield,amount);player.shield-=used;amount-=used;}if(amount>0)player.hp-=amount;player.invuln=.9;player.hitPulse=.22;state.camera.shake+=8;state.flash=.11;audio.hurt();spawnParticle(player.x,player.y,COLORS.red,10,170,4);if(hadDefense)shockwave(player.x,player.y,COLORS.green,78,.24,3);if(source&&state.entities.enemies.includes(source)){const dx=source.x-player.x,dy=source.y-player.y,d=Math.hypot(dx,dy)||1,f=enemyControlFactor(source);source.x+=dx/d*48*f;source.y+=dy/d*48*f;}if(weaponCount('bulwark')>=4)areaDamage(player.x,player.y,115,24+weaponCount('bulwark')*4,COLORS.green);if(player.hp<=0)endGame();}
+function updateEnemyProjectiles(dt){for(const p of state.entities.enemyProjectiles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.phase+=dt*4;const d=Math.hypot(player.x-p.x,player.y-p.y);if(d<player.r+p.r&&player.invuln<=0){p.life=0;hurtPlayer(p.damage,p);}}state.entities.enemyProjectiles=state.entities.enemyProjectiles.filter(p=>p.life>0);}
+function lineDistance(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1,l=dx*dx+dy*dy||1,t=clamp(((px-x1)*dx+(py-y1)*dy)/l,0,1);return Math.hypot(px-(x1+dx*t),py-(y1+dy*t));}
+function updateTelegraphs(dt){for(const t of state.entities.telegraphs){t.life-=dt;if(t.life<=0&&!t.triggered){t.triggered=true;if(t.type==='circle'){shockwave(t.x,t.y,t.color,t.r,.35,6);if(Math.hypot(player.x-t.x,player.y-t.y)<t.r+player.r&&player.invuln<=0)hurtPlayer(t.damage,t);}else if(t.type==='line'){const x2=t.x+Math.cos(t.a)*t.length,y2=t.y+Math.sin(t.a)*t.length;shockwave(x2,y2,t.color,36,.22,3);if(lineDistance(player.x,player.y,t.x,t.y,x2,y2)<t.width*.55+player.r&&player.invuln<=0)hurtPlayer(t.damage,t);}}}state.entities.telegraphs=state.entities.telegraphs.filter(t=>t.life>-.12);}
 
-function updateEnemyProjectiles(dt) {
-  for(const p of state.entities.enemyProjectiles) {
-    p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.phase+=dt*4;
-    const d=Math.hypot(player.x-p.x,player.y-p.y);
-    if(d<player.r+p.r&&player.invuln<=0){p.life=0;hurtPlayer(p.damage,p);}
-  }
-  state.entities.enemyProjectiles=state.entities.enemyProjectiles.filter(p=>p.life>0);
-}
-
-function updateTelegraphs(dt) {
-  for(const t of state.entities.telegraphs) {
-    t.life-=dt;
-    if(t.life<=0&&!t.triggered){
-      t.triggered=true;
-      if(t.type==='circle'){
-        shockwave(t.x,t.y,t.color,t.r,.35,6);
-        if(Math.hypot(player.x-t.x,player.y-t.y)<t.r+player.r&&player.invuln<=0) hurtPlayer(t.damage,t);
-      }
-    }
-  }
-  state.entities.telegraphs=state.entities.telegraphs.filter(t=>t.life>-.12);
-}
+function apexTheme(form){return BOSS_STATS[form]?.theme||'space';}
+function beginApexEncounter(){if(state.apexActiveId||state.realmTransition)return;const form=bossBag('apex');state.pendingApexForm=form;state.entities.enemyProjectiles.length=0;state.entities.telegraphs.length=0;state.entities.enemies=state.entities.enemies.filter(e=>e.type==='boss'||e.type==='mini');const title=bossName(form);startRealmTransition(apexTheme(form),{duration:2.8,title,subtitle:'APEX THREAT',onMidpoint:()=>{const e=spawnEnemy('apex');if(e){e.eliteForm=form;e.name=title;const s=BOSS_STATS[form];e.color=s.color;e.apexForm=form;state.apexActiveId=e.id;state.apexCount++;}},onComplete:()=>{state.pendingApexForm=null;}});}
+function updateApexSystems(dt){state.apexBoonTimers=state.apexBoonTimers||{chrono:24,forge:18,constellation:12};if(state.apexBoons?.chronophage){state.apexBoonTimers.chrono-=dt;if(state.apexBoonTimers.chrono<=0){state.apexBoonTimers.chrono=28;shockwave(player.x,player.y,'#79ffe1',300,.65,4);for(const e of state.entities.enemies)if(!e.dead)e.timeLock=Math.max(e.timeLock||0,e.type==='boss'?.7:1.8);}}if(state.apexBoons?.starforge){state.apexBoonTimers.forge-=dt;if(state.apexBoonTimers.forge<=0){state.apexBoonTimers.forge=20;areaDamage(player.x,player.y,220,40+state.level*2,'#ffb04e');}}if(state.apexBoons?.lastconstellation){state.apexBoonTimers.constellation-=dt;if(state.apexBoonTimers.constellation<=0){state.apexBoonTimers.constellation=12;player.shield=Math.min(90,player.shield+20);shockwave(player.x,player.y,'#b7c9ff',145,.45,4);}}
+  if(state.mode!=='playing'||state.apexActiveId||state.mapEventActive||state.entities.enemies.some(e=>!e.dead&&(e.type==='boss'||e.type==='mini')))return false;state.apexTimer=(state.apexTimer??720)-dt;if(state.apexTimer<=0){beginApexEncounter();return true;}return false;}
+function applyApexReward(form){state.apexBoons=state.apexBoons||{};state.apexBoons[form]=(state.apexBoons[form]||0)+1;if(form==='chronophage'){state.passives.haste=Math.min(PASSIVES.haste.max,stat('haste')+2);}else if(form==='starforge'){state.passives.power=Math.min(PASSIVES.power.max,stat('power')+2);if(PASSIVES.projectileSize)state.passives.projectileSize=Math.min(PASSIVES.projectileSize.max,stat('projectileSize')+1);}else{player.maxHp=Math.round(player.maxHp*1.20);player.hp=player.maxHp;player.shield=Math.max(player.shield,35);}ui.resonanceTitle.textContent=bossName(form);ui.resonanceDesc.textContent=form==='chronophage'?'시간 제어 능력 획득.':form==='starforge'?'항성 화력 능력 획득.':'성좌 방벽 능력 획득.';ui.resonance.classList.remove('hidden');setTimeout(()=>ui.resonance.classList.add('hidden'),2800);}
+function handleAnyEnemyKill(enemy){if(state.apexBoons?.starforge&&state.combo>0&&state.combo%30===0)areaDamage(enemy.x,enemy.y,130,26+state.level*1.4,'#ffb04e');}
+function handleEliteDeath(enemy){if(enemy.kind==='apex'){applyApexReward(enemy.apexForm||enemy.eliteForm);state.apexActiveId=null;state.apexTimer=Math.max(420,540-state.apexCount*20);startRealmTransition('space',{duration:2.2,title:'초월체 격파',subtitle:'SURVIVAL CONTINUES'});}else if(enemy.eventKind==='void'&&typeof handleVoidBossDefeated==='function')handleVoidBossDefeated(enemy);}
