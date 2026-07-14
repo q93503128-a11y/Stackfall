@@ -1,4 +1,4 @@
-function rawLine(x1,y1,x2,y2,width,damage,color,life=.9){if(state.entities.telegraphs.length>=entityCap('telegraphs'))state.entities.telegraphs.shift();state.entities.telegraphs.push({type:'line',x:x1,y:y1,a:Math.atan2(y2-y1,x2-x1),length:Math.hypot(x2-x1,y2-y1),width,life,max:life,damage,color});}
+function rawLine(x1,y1,x2,y2,width,damage,color,life=.9,impactStyle=null){if(state.entities.telegraphs.length>=entityCap('telegraphs'))state.entities.telegraphs.shift();state.entities.telegraphs.push({type:'line',x:x1,y:y1,a:Math.atan2(y2-y1,x2-x1),length:Math.hypot(x2-x1,y2-y1),width,life,max:life,damage,color,impactStyle});}
 function predictedPlayer(distance=130){let x=0,y=0;if(state.input.keys.has('KeyA')||state.input.keys.has('ArrowLeft'))x--;if(state.input.keys.has('KeyD')||state.input.keys.has('ArrowRight'))x++;if(state.input.keys.has('KeyW')||state.input.keys.has('ArrowUp'))y--;if(state.input.keys.has('KeyS')||state.input.keys.has('ArrowDown'))y++;x+=state.input.touchX||0;y+=state.input.touchY||0;const d=Math.hypot(x,y)||1;return{x:player.x+x/d*distance,y:player.y+y/d*distance};}
 function nearbyTwin(e){return e.twinGroup?state.entities.enemies.find(other=>other!==e&&!other.dead&&other.twinGroup===e.twinGroup):null;}
 function placeMines(e,count,color,damage){const base=Math.atan2(player.y-e.y,player.x-e.x);for(let i=0;i<count;i++){const a=base+(i-(count-1)/2)*.25,dist=90+i*48;spawnEnemyProjectile(e.x+Math.cos(a)*dist,e.y+Math.sin(a)*dist,0,0,damage,color,7,4.2);}}
@@ -57,7 +57,15 @@ function normalBossSkill(e,dt){const k=skillScale(e);e.skillCd-=dt/k;e.burstCd-=
     if(e.pulseCd<=0){e.pulseCd=8.1;fireRing(e,18,210,d*.62,'#d5f5ff',-e.phase*.3,4.5);}
   }else if(f==='nullengine'){
     if(e.skillCd<=0){e.skillCd=3.4;let converted=0;for(const p of state.entities.projectiles){if(converted>=10)break;if(Math.hypot(p.x-e.x,p.y-e.y)<290){p.life=0;const a=Math.atan2(player.y-e.y,player.x-e.x)+rand(-.35,.35);spawnEnemyProjectile(e.x,e.y,a,190,d*.72,'#a9b4d8',5.5,6);converted++;}}shockwave(e.x,e.y,'#a9b4d8',290,.52,4);}
-    if(e.burstCd<=0){e.burstCd=6.2;for(let i=-2;i<=2;i++){rawLine(player.x-310,player.y+i*72,player.x+310,player.y+i*72,16,d*.82,'#cbd5f2',1.05);rawLine(player.x+i*72,player.y-310,player.x+i*72,player.y+310,16,d*.82,'#7f8bad',1.05);}}
+    if(e.burstCd<=0){
+      e.burstCd=6.2;
+      const spacing=96,span=390,lineWidth=14,warning=1.22;
+      for(let i=-2;i<=2;i++){
+        rawLine(player.x-span,player.y+i*spacing,player.x+span,player.y+i*spacing,lineWidth,d*.82,'#eaf1ff',warning,'null-grid');
+        rawLine(player.x+i*spacing,player.y-span,player.x+i*spacing,player.y+span,lineWidth,d*.82,'#8799c9',warning,'null-grid');
+      }
+      shockwave(player.x,player.y,'#b9c9ef',235,.48,2.5);state.flash=Math.max(state.flash,.08);
+    }
     if(e.pulseCd<=0){e.pulseCd=9.0;fireRing(e,12,105,d*.82,'#6d789d',e.phase*.12,7);}
   }else{
     if(e.skillCd<=0){e.skillCd=2.9;fireFan(e,5,.12,210,d,'#ff72cb');}
