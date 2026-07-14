@@ -1,6 +1,7 @@
 function renderStarterOptions() {
   ui.starterOptions.innerHTML='';
   for(const [key,w] of Object.entries(WEAPONS)){
+    const text=weaponText(key);
     const el=document.createElement('button');
     el.type='button';
     el.className='starter-option'+(key===state.selectedStarter?' selected':'');
@@ -8,12 +9,13 @@ function renderStarterOptions() {
     el.style.setProperty('--starter-glow',hexToRgba(w.color,.16));
     el.setAttribute('role','radio');
     el.setAttribute('aria-checked',key===state.selectedStarter?'true':'false');
-    el.title=`${w.name} · ${w.role}`;
-    el.innerHTML=`<span class="starter-icon">${w.icon}</span><span class="starter-label">${w.name}</span>`;
+    el.title=`${text.name} · ${text.role}`;
+    el.innerHTML=`<span class="starter-icon">${w.icon}</span><span class="starter-label">${text.name}</span>`;
     el.onclick=()=>selectStarter(key);
     ui.starterOptions.appendChild(el);
   }
-  const selected=WEAPONS[state.selectedStarter] || WEAPONS.blade;
+  const key=WEAPONS[state.selectedStarter]?state.selectedStarter:'blade';
+  const selected=weaponText(key);
   ui.starterName.textContent=selected.name;
   ui.starterDesc.textContent=selected.desc;
 }
@@ -26,19 +28,23 @@ function selectStarter(key){
 
 function openChoices() {
   state.mode='choice';audio.level();ui.choice.classList.remove('hidden');
-  ui.choiceTitle.textContent=`레벨 ${state.level}`;ui.choiceKicker.textContent='SYSTEM OVERRIDE';
+  ui.choiceTitle.textContent=`${tr('choice.title')} ${state.level}`;
+  ui.choiceKicker.textContent=tr('choice.kicker');
   const choices=rollChoices(3);ui.choiceCards.innerHTML='';
   choices.forEach(c=>{
     const el=document.createElement('button');el.className='choice-card';
     el.style.setProperty('--card-accent',c.color);el.style.setProperty('--card-glow',hexToRgba(c.color,.22));
-    const next=c.kind==='weapon'?nextResonance(c.key):null;
-    const stackText=c.kind==='weapon'?`중첩 ${weaponCount(c.key)} → ${weaponCount(c.key)+1}`:`보유 ${stat(c.key)} → ${stat(c.key)+1}`;
+    const isWeapon=c.kind==='weapon';
+    const text=isWeapon?weaponText(c.key):passiveText(c.key);
+    const current=isWeapon?weaponCount(c.key):stat(c.key);
+    const next=isWeapon?stackEffectText(c.key,current+1):null;
+    const stackLabel=isWeapon?tr('choice.stack'):tr('choice.owned');
     el.innerHTML=`
-      <span class="type">${c.kind==='weapon'?'EQUIPMENT':'PASSIVE'}</span>
-      <span class="stack-info">${stackText}</span>
+      <span class="type">${isWeapon?tr('choice.equipment'):tr('choice.passive')}</span>
+      <span class="stack-info">${stackLabel} ${current} → ${current+1}</span>
       <div class="big-icon">${c.icon}</div>
-      <h3>${c.name}</h3><p>${c.desc}</p>
-      ${next?`<div class="resonance-preview"><b>${next.at}중첩 공명</b> · ${next.name}</div>`:''}`;
+      <h3>${text.name}</h3><p>${text.desc}</p>
+      ${next?`<div class="resonance-preview"><b>${current+1} · ${next.name}</b><span>${next.desc}</span></div>`:''}`;
     el.onclick=()=>selectChoice(c);ui.choiceCards.appendChild(el);
   });
 }
@@ -50,7 +56,7 @@ function rollChoices(n) {
     if(count<6&&(has||slots<6))pool.push({kind:'weapon',key,...w,weight:has?1.34:1});
   }
   for(const [key,p] of Object.entries(PASSIVES)){
-    if(stat(key)<p.max) pool.push({kind:'passive',key,...p,weight:key==='magnet'||key==='echo'?1.3:1.18});
+    if(stat(key)<p.max)pool.push({kind:'passive',key,...p,weight:key==='magnet'||key==='echo'?1.3:1.18});
   }
   const out=[];
   while(out.length<n&&pool.length){
@@ -63,9 +69,10 @@ function rollChoices(n) {
 
 function selectChoice(c) {
   if(c.kind==='weapon'){
-    const before=weaponCount(c.key);state.weaponStacks[c.key]=before+1;
+    const before=weaponCount(c.key),after=before+1;
+    state.weaponStacks[c.key]=after;
     if(before===0)state.weaponSlots.push(c.key);
-    const after=before+1;if([2,4,6].includes(after))showResonance(c.key,after);
+    showStackEffect(c.key,after);
     if(c.key==='bulwark'){player.maxHp+=8;player.hp=Math.min(player.maxHp,player.hp+8);}
   }else{
     state.passives[c.key]=stat(c.key)+1;
@@ -74,19 +81,26 @@ function selectChoice(c) {
   ui.choice.classList.add('hidden');state.mode='playing';renderLoadout();updateHUD();
 }
 
-function nextResonance(key){
-  const n=weaponCount(key);
-  for(const at of [2,4,6])if(n<at)return{at,name:WEAPONS[key].resonance[at][0]};
-  return null;
-}
-function showResonance(key,at){
-  const [name,desc]=WEAPONS[key].resonance[at];
-  ui.resonanceTitle.textContent=`${WEAPONS[key].name} · ${name}`;ui.resonanceDesc.textContent=desc;
+function showStackEffect(key,stack){
+  const text=weaponText(key),effect=stackEffectText(key,stack);
+  const resonance=[2,4,6].includes(stack);
+  const kicker=document.querySelector('#resonanceKicker');
+  if(kicker)kicker.textContent=resonance?tr('banner.resonance'):tr('banner.stack');
+  ui.resonanceTitle.textContent=`${text.name} · ${effect.name}`;
+  ui.resonanceDesc.textContent=effect.desc;
   ui.resonance.classList.remove('hidden');ui.resonance.style.animation='none';void ui.resonance.offsetWidth;ui.resonance.style.animation='';
-  setTimeout(()=>ui.resonance.classList.add('hidden'),2400);state.flash=.28;state.camera.shake+=8;audio.resonance();
+  setTimeout(()=>ui.resonance.classList.add('hidden'),resonance?2400:1900);
+  state.flash=resonance?.28:.12;state.camera.shake+=resonance?8:3;
+  if(resonance)audio.resonance();else audio.pickup();
 }
+
 function showBossNotice(name,kicker){
-  ui.bossNoticeKicker.textContent=kicker;ui.bossNoticeName.textContent=name;
+  let localizedName=name;
+  if(name==='성운의 세라프')localizedName=tr('boss.seraph');
+  else if(name==='일식의 군주')localizedName=tr('boss.eclipse');
+  else if(name==='균열의 기사')localizedName=tr('boss.mini');
+  const localizedKicker=kicker==='BOSS APPROACHING'?tr('boss.approaching'):kicker==='RIFT DETECTED'?tr('boss.rift'):kicker;
+  ui.bossNoticeKicker.textContent=localizedKicker;ui.bossNoticeName.textContent=localizedName;
   ui.bossNotice.classList.remove('hidden');ui.bossNotice.style.animation='none';void ui.bossNotice.offsetWidth;ui.bossNotice.style.animation='';
   setTimeout(()=>ui.bossNotice.classList.add('hidden'),2600);
 }
@@ -96,25 +110,31 @@ function renderLoadout(){
   for(let i=0;i<6;i++){
     const key=state.weaponSlots[i],el=document.createElement('div');
     el.className='weapon-slot'+(!key?' empty':'')+(key&&weaponCount(key)>=2?' resonant':'');
-    if(key){const w=WEAPONS[key];el.style.setProperty('--slot-color',hexToRgba(w.color,.18));el.innerHTML=`<div class="icon">${w.icon}</div><div class="name">${w.name}</div><b class="stack">${weaponCount(key)}</b>`;}
-    else el.innerHTML='<div class="icon">+</div><div class="name">EMPTY</div>';
+    if(key){
+      const w=WEAPONS[key],text=weaponText(key);
+      el.style.setProperty('--slot-color',hexToRgba(w.color,.18));
+      el.title=stackEffectText(key,weaponCount(key)).desc;
+      el.innerHTML=`<div class="icon">${w.icon}</div><div class="name">${text.name}</div><b class="stack">${weaponCount(key)}</b>`;
+    }else el.innerHTML=`<div class="icon">+</div><div class="name">${tr('empty')}</div>`;
     ui.slots.appendChild(el);
   }
-  ui.passives.innerHTML=Object.entries(state.passives)
-    .map(([k,v])=>`<div class="passive-row"><span><i style="color:${PASSIVES[k].color}">${PASSIVES[k].icon}</i>${PASSIVES[k].name}</span><b>×${v}</b></div>`).join('');
+  ui.passives.innerHTML=Object.entries(state.passives).map(([k,v])=>{
+    const text=passiveText(k),p=PASSIVES[k];
+    return `<div class="passive-row"><span><i style="color:${p.color}">${p.icon}</i>${text.name}</span><b>×${v}</b></div>`;
+  }).join('');
 }
 
 function updateHUD(){
   ui.hpBar.style.width=`${clamp(player.hp/player.maxHp*100,0,100)}%`;
   ui.hpText.textContent=`${Math.ceil(player.hp)} / ${player.maxHp}${player.shield?` +${Math.ceil(player.shield)}`:''}`;
   ui.xpBar.style.width=`${clamp(state.xp/state.xpNeed*100,0,100)}%`;ui.level.textContent=state.level;
-  ui.timer.textContent=formatTime(state.time);state.threat=1+Math.floor(state.time/45);ui.threat.textContent=`THREAT ${state.threat}`;
+  ui.timer.textContent=formatTime(state.time);state.threat=1+Math.floor(state.time/45);ui.threat.textContent=`${tr('hud.threat')} ${state.threat}`;
   ui.comboText.textContent=state.combo;ui.comboBox.classList.toggle('active',state.combo>2);
   ui.comboBar.style.transform=`scaleX(${clamp(state.comboTimer/(2.15*(1+stat('chain')*.15)),0,1)})`;
   const boss=state.entities.enemies.find(e=>!e.dead&&(e.type==='boss'||e.type==='mini'));
   if(boss){
     ui.bossBar.classList.remove('hidden');ui.bossBar.classList.toggle('mini',boss.type==='mini');
-    ui.bossName.textContent=boss.name;ui.bossHpBar.style.width=`${clamp(boss.hp/boss.maxHp*100,0,100)}%`;
+    ui.bossName.textContent=bossDisplayName(boss);ui.bossHpBar.style.width=`${clamp(boss.hp/boss.maxHp*100,0,100)}%`;
   }else ui.bossBar.classList.add('hidden');
 }
 
