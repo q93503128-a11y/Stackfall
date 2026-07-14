@@ -18,7 +18,6 @@
         <h1 id="title"><span>STACK</span><strong>FALL</strong></h1>
         <p class="tagline">장비를 겹쳐라. 규칙을 부숴라.</p>
       </div>
-
       <div class="menu-panel glass">
         <div class="starter-head">
           <span>시작 장비</span>
@@ -48,6 +47,11 @@
         <span id="threatText">THREAT 1</span>
       </div>
 
+      <div id="bossBar" class="boss-bar hidden">
+        <span id="bossName">공허의 집행자</span>
+        <div><i id="bossHpBar"></i></div>
+      </div>
+
       <button id="pauseBtn" class="icon-btn" aria-label="일시정지">Ⅱ</button>
 
       <div id="comboBox" class="combo-box">
@@ -73,6 +77,11 @@
       <span>RESONANCE</span>
       <strong id="resonanceTitle">공명 개방</strong>
       <p id="resonanceDesc"></p>
+    </section>
+
+    <section id="bossNotice" class="boss-notice hidden">
+      <span id="bossNoticeKicker">WARNING</span>
+      <strong id="bossNoticeName">공허의 집행자</strong>
     </section>
 
     <section id="pauseScreen" class="overlay hidden">
@@ -103,8 +112,13 @@
     </div>
   </main>
   <script src="src/core.js"></script>
+  <script src="src/systems-base.js"></script>
+  <script src="src/weapons.js"></script>
+  <script src="src/bosses.js"></script>
   <script src="src/systems.js"></script>
   <script src="src/interface.js"></script>
+  <script src="src/render-space.js"></script>
+  <script src="src/render-entities.js"></script>
   <script src="src/render.js"></script>
 </body>
 </html>
