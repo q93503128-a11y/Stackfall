@@ -16,6 +16,14 @@ function sanitizeRuntimeState(){
 }
 function runRuntimeStage(name,fn){try{return fn();}catch(error){if(!runtimeErrorLog.has(name)){runtimeErrorLog.add(name);console.error(`[Stackfall] ${name} failed`,error);}sanitizeRuntimeState();return undefined;}}
 function runDrawStage(name,fn){ctx.save();try{return runRuntimeStage(name,fn);}finally{ctx.restore();}}
+updateSpawning=function updateSpawningAccelerated(dt){
+  if(typeof updateApexSystems==='function'&&updateApexSystems(dt))return;
+  if(typeof worldEventBlocksSpawning==='function'&&worldEventBlocksSpawning())return;
+  state.spawnTimer-=dt;
+  const elapsed=Math.max(0,state.time||0),compact=compactDevice(),rate=Math.max(compact?.46:.38,1.58/(1+elapsed/130));
+  if(state.spawnTimer<=0){state.spawnTimer=rate;const count=1+Math.min(compact?2:3,Math.floor(elapsed/120));for(let i=0;i<count;i++)spawnEnemy('normal');}
+  if(typeof updateEncounterDirector==='function')updateEncounterDirector(dt);
+};
 function draw(){
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.setLineDash([]);
   runDrawStage('drawBackground',drawBackground);
