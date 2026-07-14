@@ -59,3 +59,13 @@ audio.syncAmbient = function(){
   }
   this.ambientNodes.push(master);
 };
+
+const baseResetGame=resetGame;
+resetGame=function resetConfiguredGame(){
+  player.bulwarkCd=0;
+  player.emberVolley=0;
+  baseResetGame();
+  player.bulwarkCd=0;
+  player.emberVolley=0;
+  audio.syncAmbient();
+};
