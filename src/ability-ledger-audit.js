@@ -21,7 +21,7 @@
     state.weaponSlots=Array.isArray(state.weaponSlots)?state.weaponSlots:[];
     const valid=[];
     for(const key of state.weaponSlots)if(key!=='core'&&WEAPONS[key]&&weaponCount(key)>0&&!valid.includes(key))valid.push(key);
-    for(const [key,count] of Object.entries(state.weaponStacks||{}))if(key!=='core'&&count>0&&WEAPONS[key]&&!valid.includes(key))valid.push(key);
+    for(const[key,count]of Object.entries(state.weaponStacks||{}))if(key!=='core'&&count>0&&WEAPONS[key]&&!valid.includes(key))valid.push(key);
     state.weaponSlots=valid.slice(0,6);
     if(!Number.isFinite(state.weaponStacks?.core)||state.weaponStacks.core<1)state.weaponStacks.core=1;
   }
@@ -36,7 +36,9 @@
   function apexDescription(key,stack){if(key==='chronophage')return`중첩마다 시간 정지 주기 감소, 범위·지속 증가. 현재 ${Math.max(14,30-stack*3)}초 주기.`;if(key==='starforge')return`중첩마다 항성 폭발 주기·범위·화력 증가. 현재 ${Math.max(10,22-stack*2)}초 주기.`;return`중첩마다 성좌 방벽 주기와 보호막량 증가. 현재 ${Math.max(7,13-stack*1.25).toFixed(1)}초 주기.`;}
   function renderLedger(){
     reconcileWeaponSlots();updateButton();$('#ledgerKicker').textContent=l('summary');$('#ledgerTitle').textContent=l('title');$('#ledgerSubtitle').textContent=l('subtitle');$('#ledgerCloseBtn span').textContent=l('close');
-    const regen=stat('regen')*.625,projSpeed=(1+stat('projectileSpeed')*.10)*(1+(state.nebulaExtras?.photon||0)*.12)-1,projSize=(1+stat('projectileSize')*.10)*(1+(state.nebulaExtras?.photon||0)*.08)-1,chainTime=(1+stat('chain')*.25)*(1+(state.nebulaExtras?.chain||0)*.28)-1,chainDamage=Math.min(10,Math.floor((state.combo||0)/5))*.03;
+    const regen=stat('regen')*.625,projSpeed=(1+stat('projectileSpeed')*.10)*(1+(state.nebulaExtras?.photon||0)*.12)-1,projSize=(1+stat('projectileSize')*.10)*(1+(state.nebulaExtras?.photon||0)*.08)-1;
+    const chainTime=(typeof chainDurationMultiplier==='function'?chainDurationMultiplier():(1+stat('chain')*.25)*(1+(state.nebulaExtras?.chain||0)*.28))-1;
+    const chainDamage=typeof chainDamageBonus==='function'?chainDamageBonus():Math.min(10,Math.floor((state.combo||0)/5))*.03;
     const stats=[[l('summary'),`LV.${state.level} · ${state.kills} KILLS`,'hero'],[l('damage'),`×${damageMult().toFixed(2)}`],[l('cdr'),pct(Math.max(0,1-hasteMult()))],[l('speed'),Math.round(player.speed*(1+stat('speed')*.09)*(1+(state.nebulaExtras?.navigation||0)*.08))],[l('magnet'),Math.round(magnetRange())],[l('crit'),pct(clamp(.05+stat('crit')*.06,.05,.68))],[l('reduction'),pct(damageReduction())],[l('maxHp'),Math.round(player.maxHp)],[l('regen'),regen.toFixed(1)],[l('xp'),pct(Math.max(0,xpMult()-1))],[l('projSpeed'),pct(projSpeed)],[l('projSize'),pct(projSize)],[l('pierce'),`+${stat('pierce')}`],[l('elite'),pct(stat('eliteHunter')*.12)],[l('shield'),shieldText()],[l('chainTime'),pct(chainTime)],[l('chainDamage'),pct(chainDamage)],[l('orbit'),pct(stat('projectileSpeed')*.08)]];
     $('#ledgerSummary').innerHTML=stats.map(([n,v,c])=>`<div class="ledger-stat ${c||''}"><small>${n}</small><b>${v}</b></div>`).join('');
     const weapons=Object.entries(state.weaponStacks||{}).filter(([,v])=>v>0).map(([k,v])=>{const w=WEAPONS[k],m=w?[w.icon,w.color]:(weaponMeta[k]||['✦','#aeeeff']),t=ledgerWeaponText(k),e=stackEffectText(k,v),effect=[e.name,e.desc].filter(Boolean).join(' · ');return card(m[0],m[1],t.name,effect||t.desc,`×${v}`);});
@@ -64,8 +66,30 @@
   function closeLedger(force=false){overlay.classList.add('hidden');if(force){syncVisibility();return;}if(state.mode!=='abilityView')return;state.mode=returnMode;if(returnMode==='paused')ui.pauseScreen.classList.remove('hidden');else if(compact())ui.touch.classList.remove('hidden');updateHUD();syncVisibility();}
   window.closeAbilityLedger=closeLedger;window.resetAbilityLedger=()=>{overlay.classList.add('hidden');queueMicrotask(updateButton);};
   button.onclick=openLedger;pauseButton.onclick=openLedger;$('#ledgerCloseX').onclick=()=>closeLedger();$('#ledgerCloseBtn').onclick=()=>closeLedger();window.addEventListener('keydown',e=>{if((e.code==='Tab'||e.code==='KeyI')&&!e.repeat){e.preventDefault();state.mode==='abilityView'?closeLedger():openLedger();}});
-  const baseRenderLoadout=renderLoadout;renderLoadout=function(){reconcileWeaponSlots();baseRenderLoadout();updateButton();};
-  const baseUpdateHUD=updateHUD;updateHUD=function(){reconcileWeaponSlots();baseUpdateHUD();syncVisibility();};
-  const baseApplyLanguage=applyLanguage;applyLanguage=function(){baseApplyLanguage();updateButton();if(state.mode==='abilityView')renderLedger();};
-  updateButton();
+
+  const baseRenderLoadout=renderLoadout;
+  let lastLoadoutSignature='';
+  function loadoutSignature(){
+    const slots=(state.weaponSlots||[]).map(key=>[key,weaponCount(key)]);
+    const passives=Object.entries(state.passives||{}).sort(([a],[b])=>a.localeCompare(b));
+    return JSON.stringify([weaponCount('core'),slots,passives]);
+  }
+  function renderSyncedLoadout(force=false){
+    reconcileWeaponSlots();
+    const signature=loadoutSignature();
+    if(force||signature!==lastLoadoutSignature){baseRenderLoadout();lastLoadoutSignature=signature;}
+  }
+  renderLoadout=function(){renderSyncedLoadout(true);updateButton();};
+  const baseUpdateHUD=updateHUD;
+  updateHUD=function(){
+    renderSyncedLoadout(false);baseUpdateHUD();
+    const duration=2.15*(typeof chainDurationMultiplier==='function'?chainDurationMultiplier():(1+stat('chain')*.25));
+    ui.comboBar.style.transform=`scaleX(${clamp(state.comboTimer/Math.max(.001,duration),0,1)})`;
+    const comboBonusEl=document.querySelector('#comboBonusText'),bonus=typeof chainDamageBonus==='function'?chainDamageBonus():0;
+    if(comboBonusEl)comboBonusEl.textContent=bonus>0?`+${Math.round(bonus*100)}% ${locale()==='ko'?'피해':'DMG'}`:'';
+    syncVisibility();
+  };
+  const baseApplyLanguage=applyLanguage;
+  applyLanguage=function(){baseApplyLanguage();lastLoadoutSignature='';renderSyncedLoadout(true);updateButton();if(state.mode==='abilityView')renderLedger();};
+  renderSyncedLoadout(true);updateButton();
 })();
