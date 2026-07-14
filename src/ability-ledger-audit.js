@@ -9,6 +9,8 @@
   const augmentMeta={core:['✷','#eafcff','항성 연사'],blade:['◒','#7ce8ff','공간 절개'],ember:['✦','#ff7b9e','연쇄 성화'],bulwark:['◈','#74f2a7','반사 장벽'],gravity:['◉','#9e79ff','종말 붕괴'],comet:['⟐','#b5f5ff','혜성 편대'],prism:['✧','#c2a7ff','교차 성선'],chrono:['◎','#8fffe0','시간 파쇄'],arc:['☾','#69ffe0','귀환 파편']};
   const nebulaMeta={power:['▲','#ff7f9f','출력 보정','모든 피해 +10%'],haste:['◎','#8fffe0','시간 보정','공격 주기 -8%'],magnet:['⊕','#ffdc75','중력 보정','자석 범위 +45'],vital:['✚','#ff9eaf','생명 성운','최대 체력 +10%'],navigation:['➤','#9fb4ff','항행 성운','이동 속도 +8%'],photon:['✦','#83e9ff','광자 성운','투사체 속도 +12%, 크기 +8%'],ward:['⬢','#7df0c4','방벽 성운','더 강한 주기적 보호막 충전'],chain:['⌁','#ff83c4','연쇄 성운','연쇄 유지시간 +28%']};
   const apexMeta={chronophage:['⌛','#79ffe1','시간포식자의 잔향'],starforge:['☀','#ffb04e','종말 항성의 용광로'],lastconstellation:['✶','#b7c9ff','마지막 성좌의 가호']};
+  const weaponMeta={core:['✷','#eafcff']};
+  function ledgerWeaponText(key){if(key!=='core')return weaponText(key);return locale()==='ko'?{name:'코어 펄스',desc:'가까운 적을 자동 추적하는 기본 광자 무기.'}:{name:'Core Pulse',desc:'An automatic photon weapon that tracks the nearest enemy.'};}
 
   const button=document.createElement('button');button.id='abilityLedgerBtn';button.type='button';button.title='I / Tab';button.className='hidden';button.innerHTML='<span class="ledger-glyph">✦</span><b></b><em>I / TAB</em><i>0</i>';document.querySelector('#app').appendChild(button);
   const pauseModal=document.querySelector('#pauseScreen .modal'),pauseButton=document.createElement('button');pauseButton.id='pauseAbilityBtn';pauseButton.className='secondary-btn hidden';pauseButton.type='button';pauseModal?.insertBefore(pauseButton,document.querySelector('#pauseSettingsBtn'));
@@ -37,16 +39,28 @@
     const regen=stat('regen')*.625,projSpeed=(1+stat('projectileSpeed')*.10)*(1+(state.nebulaExtras?.photon||0)*.12)-1,projSize=(1+stat('projectileSize')*.10)*(1+(state.nebulaExtras?.photon||0)*.08)-1,chainTime=(1+stat('chain')*.25)*(1+(state.nebulaExtras?.chain||0)*.28)-1,chainDamage=Math.min(10,Math.floor((state.combo||0)/5))*.03;
     const stats=[[l('summary'),`LV.${state.level} · ${state.kills} KILLS`,'hero'],[l('damage'),`×${damageMult().toFixed(2)}`],[l('cdr'),pct(Math.max(0,1-hasteMult()))],[l('speed'),Math.round(player.speed*(1+stat('speed')*.09)*(1+(state.nebulaExtras?.navigation||0)*.08))],[l('magnet'),Math.round(magnetRange())],[l('crit'),pct(clamp(.05+stat('crit')*.06,.05,.68))],[l('reduction'),pct(damageReduction())],[l('maxHp'),Math.round(player.maxHp)],[l('regen'),regen.toFixed(1)],[l('xp'),pct(Math.max(0,xpMult()-1))],[l('projSpeed'),pct(projSpeed)],[l('projSize'),pct(projSize)],[l('pierce'),`+${stat('pierce')}`],[l('elite'),pct(stat('eliteHunter')*.12)],[l('shield'),shieldText()],[l('chainTime'),pct(chainTime)],[l('chainDamage'),pct(chainDamage)],[l('orbit'),pct(stat('projectileSpeed')*.08)]];
     $('#ledgerSummary').innerHTML=stats.map(([n,v,c])=>`<div class="ledger-stat ${c||''}"><small>${n}</small><b>${v}</b></div>`).join('');
-    const weapons=Object.entries(state.weaponStacks||{}).filter(([,v])=>v>0).map(([k,v])=>{const w=WEAPONS[k],t=weaponText(k),e=stackEffectText(k,v);return card(w.icon,w.color,t.name,`${e.name} · ${e.desc}`,`×${v}`);});
-    const passives=Object.entries(state.passives||{}).filter(([,v])=>v>0).map(([k,v])=>{const p=PASSIVES[k],t=passiveText(k);return card(p.icon,p.color,t.name,t.desc,`×${v}`);});
+    const weapons=Object.entries(state.weaponStacks||{}).filter(([,v])=>v>0).map(([k,v])=>{const w=WEAPONS[k],m=w?[w.icon,w.color]:(weaponMeta[k]||['✦','#aeeeff']),t=ledgerWeaponText(k),e=stackEffectText(k,v),effect=[e.name,e.desc].filter(Boolean).join(' · ');return card(m[0],m[1],t.name,effect||t.desc,`×${v}`);});
+    const passives=Object.entries(state.passives||{}).filter(([,v])=>v>0).map(([k,v])=>{const p=PASSIVES[k]||{icon:'✦',color:'#ffd98f'},t=passiveText(k);return card(p.icon,p.color,t.name,t.desc,`×${v}`);});
     const traits=Object.entries(state.bossTraits||{}).filter(([,v])=>v).map(([k])=>{const m=traitMeta[k]||['✦','#ffd98f',k,''];return card(m[0],m[1],m[2],m[3],l('active'));});
-    const augments=Object.entries(state.weaponAugments||{}).filter(([,v])=>v).map(([k])=>{const m=augmentMeta[k]||['✦','#aeeeff',k],wt=WEAPONS[k]?weaponText(k).name:k;return card(m[0],m[1],m[2],wt,l('active'));});
+    const augments=Object.entries(state.weaponAugments||{}).filter(([,v])=>v).map(([k])=>{const m=augmentMeta[k]||['✦','#aeeeff',k],wt=ledgerWeaponText(k).name||k;return card(m[0],m[1],m[2],wt,l('active'));});
     const nebula=[];for(const[k,v]of Object.entries(state.nebulaBoosts||{}))if(v>0&&nebulaMeta[k]){const m=nebulaMeta[k];nebula.push(card(m[0],m[1],m[2],m[3],`×${v}`));}for(const[k,v]of Object.entries(state.nebulaExtras||{}))if(v>0&&nebulaMeta[k]){const m=nebulaMeta[k];nebula.push(card(m[0],m[1],m[2],m[3],`×${v}`));}if(state.salvageHullStacks)nebula.push(card('✚','#ff9eaf','강화 선체','최대 체력 10% 증가.',`×${state.salvageHullStacks}`));if(state.salvageBarrierStacks)nebula.push(card('⬢','#78f0c2','자동 방벽 발생기','일정 시간마다 보호막 재충전.',`×${state.salvageBarrierStacks}`));if(state.voidImprintStacks)nebula.push(card('◈','#c37aff','공허 각인','피해와 공격 주기를 함께 강화.',`×${state.voidImprintStacks}`));
     const apex=Object.entries(state.apexBoons||{}).filter(([,v])=>v).map(([k,v])=>{const m=apexMeta[k]||['✶','#fff',k];return card(m[0],m[1],m[2],apexDescription(k,v),`×${v}`);});
     $('#ledgerBody').innerHTML=section(l('weapons'),'#79e6ff',weapons)+section(l('passives'),'#ffcb70',passives)+section(l('traits'),'#e7b0ff',traits)+section(l('augments'),'#ff75ad',augments)+section(l('nebula'),'#77f0d6',nebula)+section(l('apex'),'#fff2a6',apex);
   }
   let returnMode='playing';
-  function openLedger(){if(!['playing','paused'].includes(state.mode))return;returnMode=state.mode;if(returnMode==='paused')ui.pauseScreen.classList.add('hidden');state.mode='abilityView';ui.touch.classList.add('hidden');renderLedger();overlay.classList.remove('hidden');syncVisibility();}
+  function openLedger(){
+    if(!['playing','paused'].includes(state.mode))return;
+    const previous=state.mode;
+    try{
+      renderLedger();returnMode=previous;
+      if(previous==='paused')ui.pauseScreen.classList.add('hidden');
+      state.mode='abilityView';ui.touch.classList.add('hidden');overlay.classList.remove('hidden');syncVisibility();
+    }catch(error){
+      state.mode=previous;overlay.classList.add('hidden');
+      if(previous==='paused')ui.pauseScreen.classList.remove('hidden');
+      console.error('[Stackfall] ability ledger failed',error);syncVisibility();
+    }
+  }
   function closeLedger(force=false){overlay.classList.add('hidden');if(force){syncVisibility();return;}if(state.mode!=='abilityView')return;state.mode=returnMode;if(returnMode==='paused')ui.pauseScreen.classList.remove('hidden');else if(compact())ui.touch.classList.remove('hidden');updateHUD();syncVisibility();}
   window.closeAbilityLedger=closeLedger;window.resetAbilityLedger=()=>{overlay.classList.add('hidden');queueMicrotask(updateButton);};
   button.onclick=openLedger;pauseButton.onclick=openLedger;$('#ledgerCloseX').onclick=()=>closeLedger();$('#ledgerCloseBtn').onclick=()=>closeLedger();window.addEventListener('keydown',e=>{if((e.code==='Tab'||e.code==='KeyI')&&!e.repeat){e.preventDefault();state.mode==='abilityView'?closeLedger():openLedger();}});
