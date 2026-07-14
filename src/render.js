@@ -9,12 +9,16 @@ function draw(){
 
 let last=performance.now();
 function loop(now){
-  let dt=Math.min(.033,(now-last)/1000);last=now;if(state.hitStop>0){state.hitStop-=dt;dt=0;}
+  let dt=Math.min(.033,(now-last)/1000);last=now;
+  let shouldDraw=state.mode==='menu';
   if(state.mode==='playing'){
+    if(state.hitStop>0){state.hitStop-=dt;dt=0;}
     state.time+=dt;state.comboTimer-=dt;if(state.comboTimer<=0)state.combo=0;
     updatePlayer(dt);updateSpawning(dt);updateWeapons(dt);updateEnemies(dt);updateProjectiles(dt);updateEnemyProjectiles(dt);updateTelegraphs(dt);updateWells(dt);updateGems(dt);updateEffects(dt);updateHUD();
-  }else if(state.mode!=='menu')updateEffects(dt*.45);
-  draw();requestAnimationFrame(loop);
+    shouldDraw=true;
+  }
+  if(shouldDraw)draw();
+  requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 
