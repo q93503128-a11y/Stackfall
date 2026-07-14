@@ -1,5 +1,6 @@
 function draw(){
-  const sx=state.camera.shake?rand(-state.camera.shake,state.camera.shake):0,sy=state.camera.shake?rand(-state.camera.shake,state.camera.shake):0;
+  const shake=GAME_SETTINGS.screenShake===false?0:state.camera.shake;
+  const sx=shake?rand(-shake,shake):0,sy=shake?rand(-shake,shake):0;
   ctx.save();ctx.translate(sx,sy);drawBackground();drawTelegraphs();drawWells();drawGems();if(typeof drawMapEvents==='function')drawMapEvents();drawEnemies();drawProjectiles();drawEnemyProjectiles();if(state.mode!=='menu'){drawMagnetField();drawChronoField();drawPlayer();}drawEffects();ctx.restore();
   const vignette=ctx.createRadialGradient(vw/2,vh/2,Math.min(vw,vh)*.18,vw/2,vh/2,Math.max(vw,vh)*.74);vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(0,1,8,.58)');ctx.fillStyle=vignette;ctx.fillRect(0,0,vw,vh);
   if(state.flash>0){ctx.fillStyle=`rgba(225,242,255,${state.flash*.72})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')drawRealmCinematicOverlay();
