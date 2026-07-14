@@ -1,3 +1,17 @@
+if(!WEAPONS.core){
+  WEAPONS.core={
+    name:'코어 펄스',icon:'✷',color:'#eafcff',role:'기본 무기',desc:'가까운 적을 자동 추적하는 기본 광자 무기.',
+    starter:false,basic:true,resonance:{}
+  };
+}
+WEAPON_TEXT.core={
+  ko:['코어 펄스','기본 무기','가까운 적을 자동 추적하는 기본 광자 무기.'],
+  en:['Core Pulse','Basic Weapon','An automatic photon weapon that tracks the nearest enemy.'],
+  ja:['コアパルス','基本武器','最も近い敵を自動追尾する基本光子武器。'],
+  'zh-CN':['核心脉冲','基础武器','自动追踪最近敌人的基础光子武器。'],
+  es:['Pulso del Núcleo','Arma básica','Arma fotónica básica que rastrea automáticamente al enemigo más cercano.'],
+  fr:['Impulsion du Noyau','Arme de base','Arme photonique de base qui suit automatiquement l’ennemi le plus proche.']
+};
 WEAPONS.comet.icon='⟐';
 state.entities.beams=state.entities.beams||[];
 player.bulwarkCd=0;
