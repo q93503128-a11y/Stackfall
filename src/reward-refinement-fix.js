@@ -11,8 +11,12 @@ if(STACK_DESC_EN)STACK_DESC_EN.bulwark=['A radiant barrier that reduces incoming
 if(STACK_EFFECTS_JA)STACK_EFFECTS_JA.bulwark=['星光皮膜','重光障壁','再充填障壁','報復波動','要塞帳幕','天体城壁'];
 if(STACK_DESC_JA)STACK_DESC_JA.bulwark=['被ダメージを軽減する基本星光障壁。','最大HPと軽減率が増える二重障壁。','一定時間ごとにシールドを回復する障壁。','被弾時に周囲を押し返す反撃波。','シールド容量と充填量が増える要塞帳幕。','定期的に強力なシールドを充填する天体城壁。'];
 
-const rewardFixEnd=endGame;
-endGame=function endGameWithoutPendingRewards(){
-  state.rewardQueue=[];
-  return rewardFixEnd();
+const rewardFixKill=killEnemy;
+killEnemy=function killEnemyWithoutDuplicateApexReward(enemy,opts={}){
+  const before=state.rewardQueue?.length||0,isApex=enemy?.kind==='apex';
+  const result=rewardFixKill(enemy,opts);
+  if(isApex&&state.rewardQueue?.length>before)state.rewardQueue.splice(before);
+  return result;
 };
+const rewardFixEnd=endGame;
+endGame=function endGameWithoutPendingRewards(){state.rewardQueue=[];return rewardFixEnd();};
