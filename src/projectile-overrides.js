@@ -1,3 +1,13 @@
+function updateHomingProjectile(p,dt){
+  if(!p.homingTargetId&&!p.homingReacquire)return;
+  let target=p.homingTargetId?state.entities.enemies.find(e=>e.id===p.homingTargetId&&!e.dead):null;
+  if(!target&&p.homingReacquire!==false){target=nearestEnemy(p.x,p.y);p.homingTargetId=target?.id||null;}
+  if(!target)return;
+  const speed=Math.max(1,Math.hypot(p.vx,p.vy)),current=Math.atan2(p.vy,p.vx),desired=Math.atan2(target.y-p.y,target.x-p.x);
+  const delta=Math.atan2(Math.sin(desired-current),Math.cos(desired-current)),turn=Math.max(.1,Number(p.homingTurn)||6.4),next=current+clamp(delta,-turn*dt,turn*dt);
+  p.vx=Math.cos(next)*speed;p.vy=Math.sin(next)*speed;
+}
+
 updateEnemies=function updateEnemiesWithTemporalLock(dt){
   const gravWells=state.entities.wells,chronoN=weaponCount('chrono'),chronoRadius=145+chronoN*18;
   for(const e of state.entities.enemies){
@@ -17,9 +27,9 @@ updateProjectiles=function updateProjectilesWithStackEffects(dt){
   const spawned=[],particleCap=entityCap('particles');
   for(const p of state.entities.projectiles){
     if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y)||!Number.isFinite(p.life)){if(p)p.life=0;continue;}if(p.life<=0)continue;p.vx=Number.isFinite(p.vx)?p.vx:0;p.vy=Number.isFinite(p.vy)?p.vy:0;p.r=Number.isFinite(p.r)?Math.max(.5,p.r):3;p.damage=Number.isFinite(p.damage)?p.damage:0;
-    p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.trailTick=(p.trailTick||0)-dt;const source=String(p.source||'');p.source=source;
-    const trailSource=['ember','echo-star','comet','echo-comet','core','core-echo','star-spark','wave'].includes(source);
-    if(p.trailTick<=0&&trailSource&&state.entities.particles.length<particleCap){p.trailTick=compactDevice()?.055:source.includes('comet')?.024:.042;state.entities.particles.push({x:p.x-p.vx*.018,y:p.y-p.vy*.018,vx:rand(-14,14),vy:rand(-14,14),life:source.includes('comet')?.42:.25,max:source.includes('comet')?.42:.25,size:source.includes('comet')?rand(2.2,5.2):rand(1.2,3.2),color:p.color||COLORS.white,star:true});}
+    updateHomingProjectile(p,dt);p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.trailTick=(p.trailTick||0)-dt;const source=String(p.source||'');p.source=source;
+    const cometTrail=source.includes('comet'),trailSource=cometTrail||['ember','echo-star','core','core-echo','star-spark','wave'].includes(source);
+    if(p.trailTick<=0&&trailSource&&state.entities.particles.length<particleCap){p.trailTick=compactDevice()?.055:cometTrail?.024:.042;state.entities.particles.push({x:p.x-p.vx*.018,y:p.y-p.vy*.018,vx:rand(-14,14),vy:rand(-14,14),life:cometTrail?.42:.25,max:cometTrail?.42:.25,size:cometTrail?rand(2.2,5.2):rand(1.2,3.2),color:p.color||COLORS.white,star:true});}
     if(p.trailDamage){p.trailDamageCd=(p.trailDamageCd||0)-dt;if(p.trailDamageCd<=0){p.trailDamageCd=.18;const rr=25+weaponCount('comet')*2;for(const e of state.entities.enemies)if(!e.dead&&(e.x-p.x)**2+(e.y-p.y)**2<(e.r+rr)**2)dealDamage(e,3+weaponCount('comet')*1.2,{color:COLORS.comet,source:'comet-trail',canCrit:false});shockwave(p.x,p.y,'rgba(181,245,255,.55)',rr,.20,1.2);}}
     if(p.life>0)for(const e of state.entities.enemies){if(e.dead||p.hitIds?.has(e.id))continue;if((e.x-p.x)**2+(e.y-p.y)**2<(e.r+p.r)**2){dealDamage(e,p.damage,{color:p.color,source});if(!p.hitIds)p.hitIds=new Set();p.hitIds.add(e.id);if(p.split)for(let i=0;i<3;i++){const a=Math.atan2(p.vy,p.vx)+(i-1)*.58;spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*350,vy:Math.sin(a)*350,r:3.2,life:.62,damage:p.damage*.34,color:'#ffb3d0',pierce:0,source:'star-spark'});}if(p.fragment)for(let i=0;i<4;i++){const a=i/4*TAU+Math.atan2(p.vy,p.vx);spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*285,vy:Math.sin(a)*285,r:3.5,life:.65,damage:p.damage*.25,color:'#d9fbff',pierce:0,source:'comet-fragment'});}if(p.pierce>0)p.pierce--;else{p.life=0;break;}}}
     if(p.life<=0&&p.explode&&!p.exploded){p.exploded=true;areaDamage(p.x,p.y,125,24+weaponCount('comet')*4.5,COLORS.comet);}
