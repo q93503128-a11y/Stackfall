@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/stackfall-final-gameplay-polish
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
