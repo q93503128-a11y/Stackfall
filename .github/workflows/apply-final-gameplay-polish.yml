@@ -30,15 +30,12 @@ jobs:
         run: |
           cat .github/patch-parts/* | base64 -d | gzip -d > /tmp/apply.py
           python -m py_compile /tmp/apply.py
-          test "$(sha256sum /tmp/apply.py | cut -d' ' -f1)" = "baf1a394f3ea2dcbc47308a1515eb281c029ebf7c601500c7e98ef3dbdb0e631"
+          test "$(sha256sum /tmp/apply.py | cut -d' ' -f1)" = "15bef22e58dcc7c5cbabb115645c99bb62ce24dfe0f18050566da194cecb40cf"
           python - <<'PY'
           from pathlib import Path
           p=Path('/tmp/apply.py')
           text=p.read_text()
           replacements=[]
-          replacements.append(("if 'projectileTexture' in read('src/gpu-renderer.js'):\n    raise RuntimeError('legacy projectileTexture reference remains')","if re.search(r'(?<![A-Za-z0-9_$])projectileTexture(?![A-Za-z0-9_$])',read('src/gpu-renderer.js')):\n    raise RuntimeError('legacy projectileTexture reference remains')"))
-          replacements.append(('''replace_js_function('src/render-space.js','startRealmTransition',"""function startRealmTransition(target,options={}){clearPendingCombatActions();state.realmTransition={from:state.realmTheme||'space',to:target,elapsed:0,duration:options.duration||2.2,title:options.title||'',subtitle:options.subtitle||'',introStyle:options.introStyle||null,seed:Math.random()*TAU,onMidpoint:options.onMidpoint||null,onComplete:options.onComplete||null,midpointDone:false};state.mode='cinematic';ui.touch.classList.add('hidden');state.hitStop=0;state.camera.shake=0;}""")''','''replace_once('src/render-space.js',"function startRealmTransition(target,options={}){clearPendingCombatActions();state.realmTransition={from:state.realmTheme||'space',to:target,elapsed:0,duration:options.duration||2.2,title:options.title||'',subtitle:options.subtitle||'',onMidpoint:options.onMidpoint||null,onComplete:options.onComplete||null,midpointDone:false};state.mode='cinematic';ui.touch.classList.add('hidden');state.hitStop=0;state.camera.shake=0;}","function startRealmTransition(target,options={}){clearPendingCombatActions();state.realmTransition={from:state.realmTheme||'space',to:target,elapsed:0,duration:options.duration||2.2,title:options.title||'',subtitle:options.subtitle||'',introStyle:options.introStyle||null,seed:Math.random()*TAU,onMidpoint:options.onMidpoint||null,onComplete:options.onComplete||null,midpointDone:false};state.mode='cinematic';ui.touch.classList.add('hidden');state.hitStop=0;state.camera.shake=0;}")'''))
-          replacements.append(("text=text.rstrip()+append_design+'\\n'","text=text.rstrip()+'\\n'+append_design.strip()+'\\n'"))
           replacements.append(("clearFieldForApex(form);const radius=compactDevice()?318:486;state.apexArena={x:player.x,y:player.y,r:radius,form,createdAt:state.apexClock||0};const title=bossName(form),duration=form==='starforge'?3.75:form==='chronophage'?3.35:3.55;","clearFieldForApex(form);const radius=compactDevice()?318:486,apexArena={x:player.x,y:player.y,r:radius,form,createdAt:state.apexClock||0};const title=bossName(form),duration=form==='starforge'?3.75:form==='chronophage'?3.35:3.55;"))
           old_call="startRealmTransition(apexTheme(form),{duration,title,subtitle:form==='chronophage'?'CHRONOLOGY OVERRIDDEN':form==='starforge'?'TERMINAL FURNACE IGNITION':'THE SKY FORGETS ITS NAME',introStyle:form,onMidpoint:()=>{const e=spawnEnemy('apex');if(!e)return;const arena=state.apexArena;e.eliteForm=form;e.apexForm=form;e.name=title;e.color=BOSS_STATS[form].color;e.timeLock=0;if(form==='starforge'){e.speed=0;e.x=arena.x;e.y=arena.y-arena.r*.24;}else if(form==='chronophage'){e.speed*=.82;e.x=arena.x+arena.r*.24;e.y=arena.y-arena.r*.10;}else{e.speed=Math.max(72,e.speed*1.65);e.x=arena.x-arena.r*.42;e.y=arena.y;}state.apexActiveId=e.id;state.apexCount++;state.nextApexAt=(state.apexCount+1)*APEX_INTERVAL_SECONDS;},onComplete:()=>{state.pendingApexForm=null;}});return true;"
           new_call="startRealmTransition(apexTheme(form),{duration,title,subtitle:form==='chronophage'?'CHRONOLOGY OVERRIDDEN':form==='starforge'?'TERMINAL FURNACE IGNITION':'THE SKY FORGETS ITS NAME',introStyle:form,onMidpoint:()=>{const e=spawnEnemy('apex');if(!e)return;const arena=state.apexArena;e.eliteForm=form;e.apexForm=form;e.name=title;e.color=BOSS_STATS[form].color;e.timeLock=0;if(form==='starforge'){e.speed=0;e.x=arena.x;e.y=arena.y-arena.r*.24;}else if(form==='chronophage'){e.speed*=.82;e.x=arena.x+arena.r*.24;e.y=arena.y-arena.r*.10;}else{e.speed=Math.max(72,e.speed*1.65);e.x=arena.x-arena.r*.42;e.y=arena.y;}state.apexActiveId=e.id;state.apexCount++;state.nextApexAt=(state.apexCount+1)*APEX_INTERVAL_SECONDS;},onComplete:()=>{state.pendingApexForm=null;}});state.apexArena=apexArena;return true;"
@@ -48,7 +45,7 @@ jobs:
           replacements.append((old_update,new_update))
           for old,new in replacements:
               if old not in text:
-                  raise SystemExit('expected patch repair target not found')
+                  raise SystemExit('expected Apex patch repair target not found')
               text=text.replace(old,new,1)
           p.write_text(text)
           PY
