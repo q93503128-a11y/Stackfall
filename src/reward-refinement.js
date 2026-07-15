@@ -166,6 +166,7 @@
     if(!state.rewardQueue.length)return;
     if(state.mode!=='playing'){setTimeout(tryOpenReward,120);return;}
     const choices=chooseRewards();if(!choices.length){state.rewardQueue.shift();return;}
+    if(typeof closeAbilityLedger==='function')closeAbilityLedger(true);
     state.mode='bossReward';ui.touch.classList.add('hidden');rewardScreen.classList.remove('hidden');
     document.querySelector('#rewardKicker').textContent=tr('boss.warning');document.querySelector('#rewardTitle').textContent=tr('reward.title');document.querySelector('#rewardPrompt').textContent=tr('reward.prompt');
     const cards=document.querySelector('#rewardCards');cards.innerHTML='';

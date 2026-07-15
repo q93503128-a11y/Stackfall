@@ -97,37 +97,4 @@
     return{ratio:clamp(remaining/Math.max(.001,max),0,1),remaining:Math.max(0,remaining)};
   };
 
-  function installLiveLedgerFix(){
-    const screen=document.querySelector('#abilityLedgerScreen'),button=document.querySelector('#abilityLedgerBtn'),pauseButton=document.querySelector('#pauseAbilityBtn'),closeX=document.querySelector('#ledgerCloseX'),closeButton=document.querySelector('#ledgerCloseBtn');
-    if(!screen||!button||typeof button.onclick!=='function')return;
-    const originalOpen=button.onclick,originalSync=window.syncAbilityLedgerVisibility,originalReset=window.resetAbilityLedger;
-    let open=false,openedFromPause=false;
-    function closeLedger(){
-      if(!open&&screen.classList.contains('hidden'))return;
-      open=false;screen.classList.add('hidden');screen.querySelector('.ledger-detail-layer')?.classList.add('hidden');
-      if(openedFromPause&&state.mode==='paused')ui.pauseScreen.classList.remove('hidden');
-      openedFromPause=false;if(typeof originalSync==='function')originalSync();
-    }
-    function openLedger(){
-      if(!['playing','paused'].includes(state.mode))return;
-      const mode=state.mode;state.input.keys.clear();state.input.touchX=state.input.touchY=0;originalOpen();
-      if(screen.classList.contains('hidden'))return;
-      open=true;openedFromPause=mode==='paused';state.mode=mode;
-      if(mode==='paused')ui.pauseScreen.classList.add('hidden');
-      if(typeof originalSync==='function')originalSync();
-    }
-    button.onclick=openLedger;if(pauseButton)pauseButton.onclick=openLedger;if(closeX)closeX.onclick=closeLedger;if(closeButton)closeButton.onclick=closeLedger;
-    window.closeAbilityLedger=force=>{closeLedger();if(force)screen.classList.add('hidden');};
-    window.resetAbilityLedger=()=>{open=false;openedFromPause=false;screen.classList.add('hidden');if(typeof originalReset==='function')originalReset();};
-    window.syncAbilityLedgerVisibility=function(){
-      if(open&&screen.classList.contains('hidden')){open=false;openedFromPause=false;}
-      if(open&&!['playing','paused'].includes(state.mode))closeLedger();
-      if(typeof originalSync==='function')originalSync();
-    };
-    window.addEventListener('keydown',event=>{
-      if((event.code==='Tab'||event.code==='KeyI')&&!event.repeat){event.preventDefault();event.stopImmediatePropagation();open?closeLedger():openLedger();}
-      else if(event.code==='Escape'&&open){event.preventDefault();event.stopImmediatePropagation();closeLedger();}
-    },true);
-  }
-  installLiveLedgerFix();
 })();

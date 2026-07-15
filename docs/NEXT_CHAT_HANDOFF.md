@@ -68,7 +68,7 @@
 32. `build-audit-ui.js`
 33. `performance-guard.js`
 
-후반 파일이 앞선 함수를 감싸거나 교체한다. 특히 `performance-guard.js`가 최종 쿨다운 정보, 공전 장비 렌더링, 능력 탭 입력 보정을 담당한다.
+후반 파일이 앞선 함수를 감싸거나 교체한다. `performance-guard.js`는 최종 쿨다운 정보와 공전 장비 렌더링을 담당한다. 능력 탭 상태는 `ability-ledger-audit.js`, 키보드 입력은 `render.js`가 단독으로 담당하며 후반 guard가 다시 덮어쓰지 않는다.
 
 ## 4. 핵심 게임 규칙
 
@@ -193,21 +193,22 @@
 
 - 단축키: `I`, `Tab`
 - 닫기: `I`, `Tab`, `Escape`, X 버튼, 닫기 버튼
-- 플레이 중 능력 탭을 열어도 `state.mode='abilityView'`에 고정하지 않는다.
-- 원래 능력 탭 렌더 함수를 호출한 뒤 기존 `playing` 또는 `paused` 모드를 복원한다.
+- 능력 탭은 자체 `ledgerOpen` 상태만 바꾸고 `state.mode`는 쓰지 않는다.
 - 플레이 중에는 전투와 렌더링이 계속된다.
 - 일시정지에서 열면 일시정지 상태는 유지한다.
 - 열 때 키 입력과 터치 이동 입력을 초기화한다.
-- 캡처 단계 키 이벤트에서 기존 중복 리스너를 차단한다.
+- `render.js`의 캡처 단계 키 이벤트가 유일한 `I`/`Tab` 진입점이다.
 - 레벨업, 보스 보상, 월드 이벤트 등 다른 모달 상태가 시작되면 자동으로 닫는다.
 - 재시작과 메뉴 이동 후 내부 `open` 상태가 남지 않는다.
+- `build-audit-ui.js`는 `stackfall:ledger-rendered` 이벤트를 받아 상세 카드만 연결하며 DOM `MutationObserver`를 사용하지 않는다.
+- 모바일 요약은 가로 스크롤, 능력 목록은 세로 스크롤이며 닫은 뒤 터치 조작을 복구한다.
 
 능력 탭이 다시 화면만 멈추고 안 보이는 경우 다음을 검사한다.
 
-1. 후반 파일이 `state.mode='abilityView'`를 다시 쓰는지
-2. 키 이벤트가 두 리스너에서 동시에 처리되는지
-3. `resetAbilityLedger()`가 열림 상태를 초기화하는지
-4. `render.js`가 현재 모드를 그리는지
+1. `render.js` 외의 파일이 `I`/`Tab`을 처리하는지
+2. `resetAbilityLedger()`가 `ledgerOpen`과 pause 출처를 초기화하는지
+3. `stackfall:ledger-rendered` 처리기가 감시 루프 없이 한 번만 실행되는지
+4. 다른 모달 진입 함수가 `closeAbilityLedger(true)`를 호출하는지
 
 ## 9. 지연 공격 안정성
 
@@ -292,8 +293,9 @@
 ## 15. 구조적 위험
 
 - 후반 파일의 함수 재대입이 많다.
-- `updateWeapons`, `sf2CooldownInfo`, `drawEquippedOrbits`, `drawPlayer`, `drawWells`, `killEnemy`, `closeAbilityLedger`는 로딩 순서상 최종 함수를 확인한다.
+- `updateWeapons`, `sf2CooldownInfo`, `drawEquippedOrbits`, `drawPlayer`, `drawWells`, `killEnemy`는 로딩 순서상 최종 함수를 확인한다.
 - `build-audit-ui.js` 뒤에 `performance-guard.js`가 로드된다.
+- 능력 탭을 고치기 위한 별도 guard 파일을 다시 추가하지 않는다.
 - 신규 장비를 추가할 때 다음을 한꺼번에 처리한다.
   - `WEAPONS`
   - `WEAPON_TEXT`
@@ -374,11 +376,19 @@
 - 이온 사슬·초신성 코일·유성 드론의 하단 쿨다운 표시 수정
 - 성간 레일·은하 나선·반사 성좌 추가
 - 공전 장비의 동적 비중첩 궤도 도입
-- 능력 탭이 게임 루프를 멈추는 `abilityView` 상태 문제 수정
-- 능력 탭 키 이벤트 중복과 재시작 후 상태 잔류 방지
+- 능력 탭의 게임 모드 변경과 후반 guard 보정을 제거하고 순수 UI 상태로 통합
+- ledger 렌더 직후 자기 DOM을 다시 쓰던 감시 루프 제거
+- 능력 탭 키 이벤트를 `render.js` 한 곳으로 통합하고 재시작 후 상태 잔류 방지
+- 레벨업·보스 보상·월드 이벤트·게임 오버의 모달 우선순위 명시
+- 기존 7종에도 시작 무기 메타데이터를 명시해 14종 판별 기준 통일
+- 레일·은하 나선·반사 성좌의 능력 상세 실시간 수치 추가
+- 모바일 능력 탭 폭 넘침과 본문 압축 수정, 확대 제한 제거
+- 잘못된 발사체 색상으로 Canvas 렌더가 반복 실패하는 경계 보강
 - 이전 런의 예약 공격이 새 런에서 실행되는 문제 방지
 - 신규 무기 탄환을 성능 예산과 파티클 규칙에 편입
 - 문서 3종 동기화
+
+최근 자동 검증은 스크립트 33개 문법, 능력 탭 입력·설정·모달·모바일, 장비 15종 1·6중첩, 40초 전 무기 스트레스, 10분 초월체 경계, WCAG A/AA, 콘솔·리소스 오류를 포함해 100개 항목을 통과했다. HTML 정적 검증도 오류 0건이다. 배포본 검증은 새 커밋이 Cloudflare Pages에 반영된 뒤 다시 수행한다.
 
 ---
 

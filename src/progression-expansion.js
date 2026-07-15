@@ -211,6 +211,7 @@
   }
   openChoices=function openChoicesStable(){
     if(state.choiceOpening||state.choiceLocked||state.mode==='gameover'||state.mode==='menu')return;
+    if(typeof closeAbilityLedger==='function')closeAbilityLedger(true);
     state.choiceOpening=true;ui.choice.classList.add('hidden');ui.choiceCards.innerHTML='';
     try{
       const choices=collectChoices(3);

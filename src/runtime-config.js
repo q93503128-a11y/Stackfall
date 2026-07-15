@@ -25,7 +25,7 @@ function weaponSizeMultiplier(){return(1+stat('projectileSize')*.10)*(1+(state.n
 const ORBIT_EQUIPMENT_ORDER=['bulwark','blade','prism','drone'];
 function orbitHalfExtent(key){const size=weaponSizeMultiplier();if(key==='blade'){const n=weaponCount('blade');return(n>=6?31:n>=3?25:22)*size;}if(key==='prism')return 11*size;if(key==='drone')return 12;return 9;}
 function orbitRadiusFor(key){let edge=30;for(const candidate of ORBIT_EQUIPMENT_ORDER){if(weaponCount(candidate)<=0)continue;const half=orbitHalfExtent(candidate),radius=edge+half+5;if(candidate===key)return radius;edge=radius+half+7;}return{bulwark:44,blade:78,prism:112,drone:146}[key]||78;}
-function scheduleWeaponAction(delay,action){const run=state.runSerial||0;setTimeout(()=>{if((state.mode==='playing'||state.mode==='abilityView')&&(state.runSerial||0)===run)action();},delay);}
+function scheduleWeaponAction(delay,action){const run=state.runSerial||0;setTimeout(()=>{if(state.mode==='playing'&&(state.runSerial||0)===run)action();},delay);}
 for(const[key,weapon]of Object.entries(WEAPONS)){weapon.key=key;weapon.stackEffects=STACK_EFFECTS[key]||[];}
 for(const[key,passive]of Object.entries(PASSIVES))passive.key=key;
 const runtimeDamageBase=damageMult;

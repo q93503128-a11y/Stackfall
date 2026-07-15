@@ -61,8 +61,9 @@ function syncSettingsControls() {
   settingsUi.screenShake.checked=GAME_SETTINGS.screenShake!==false;
 }
 
-function openSettings(){syncSettingsControls();settingsUi.screen.classList.remove('hidden');try{audio.init();}catch{}}
-function closeSettings(){settingsUi.screen.classList.add('hidden');}
+let settingsReturnFocus=null;
+function openSettings(){settingsReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;if(typeof closeAbilityLedger==='function')closeAbilityLedger(true);syncSettingsControls();settingsUi.screen.classList.remove('hidden');settingsUi.closeX.focus();if(typeof syncAbilityLedgerVisibility==='function')syncAbilityLedgerVisibility();try{audio.init();}catch{}}
+function closeSettings(){settingsUi.screen.classList.add('hidden');if(typeof syncAbilityLedgerVisibility==='function')syncAbilityLedgerVisibility();if(settingsReturnFocus?.isConnected)settingsReturnFocus.focus();settingsReturnFocus=null;}
 
 function updateAudioSetting(key,value){GAME_SETTINGS.audio[key]=value;saveGameSettings();if(key==='master'||key==='ambient')audio.syncAmbient();if(key==='ui'&&value)audio.pickup();}
 function updateAudioVolume(key,input){

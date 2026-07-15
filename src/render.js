@@ -43,7 +43,7 @@ let last=performance.now(),hudRefresh=0;
 function loop(now){
   let dt=Math.min(.033,Math.max(0,(now-last)/1000));last=now;let shouldDraw=state.mode==='menu';
   try{
-    const liveGameplay=state.mode==='playing'||state.mode==='abilityView';
+    const liveGameplay=state.mode==='playing';
     if(liveGameplay){
       if(state.hitStop>0){state.hitStop-=dt;dt=0;}
       state.time+=dt;state.comboTimer-=dt;if(state.comboTimer<=0)state.combo=0;
@@ -59,7 +59,17 @@ function loop(now){
   }finally{requestAnimationFrame(loop);}
 }
 requestAnimationFrame(loop);
-window.addEventListener('keydown',e=>{state.input.keys.add(e.code);if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','Tab'].includes(e.code))e.preventDefault();if(e.code==='Escape')togglePause();});
+window.addEventListener('keydown',e=>{
+  const ledgerKey=e.code==='Tab'||e.code==='KeyI';
+  if(ledgerKey){
+    const ledgerOpen=typeof isAbilityLedgerOpen==='function'&&isAbilityLedgerOpen(),settingsOpen=!document.querySelector('#settingsScreen')?.classList.contains('hidden'),canToggle=ledgerOpen||['playing','paused'].includes(state.mode)&&!settingsOpen;
+    if(canToggle)e.preventDefault();
+    if(!e.repeat&&canToggle){e.stopImmediatePropagation();toggleAbilityLedger();}
+    return;
+  }
+  if(e.code==='Escape'&&typeof isAbilityLedgerOpen==='function'&&isAbilityLedgerOpen()){e.preventDefault();e.stopImmediatePropagation();closeAbilityLedger();return;}
+  state.input.keys.add(e.code);if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.code==='Escape')togglePause();
+},true);
 window.addEventListener('keyup',e=>state.input.keys.delete(e.code));
 let joyPointer=null;function updateJoy(e){const r=ui.joystick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const max=r.width*.31,d=Math.hypot(dx,dy)||1,k=Math.min(1,max/d);dx*=k;dy*=k;state.input.touchX=dx/max;state.input.touchY=dy/max;ui.stick.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;}
 ui.joystick.addEventListener('pointerdown',e=>{joyPointer=e.pointerId;ui.joystick.setPointerCapture(e.pointerId);updateJoy(e);});ui.joystick.addEventListener('pointermove',e=>{if(e.pointerId===joyPointer)updateJoy(e);});function releaseJoy(e){if(e.pointerId!==joyPointer)return;joyPointer=null;state.input.touchX=state.input.touchY=0;ui.stick.style.transform='translate(-50%,-50%)';}ui.joystick.addEventListener('pointerup',releaseJoy);ui.joystick.addEventListener('pointercancel',releaseJoy);
