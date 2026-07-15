@@ -5,7 +5,8 @@
   const previousEnsureOutput=audio.ensureOutput.bind(audio);
   audio.ensureOutput=function ensureHeavierOutput(){
     previousEnsureOutput();
-    if(this.outputNode)this.outputNode.gain.value=1.62;
+    // Centralized +6 dB boost: preserve every channel mix while doubling perceived game output.
+    if(this.outputNode)this.outputNode.gain.value=3.24;
     const compressor=this.fxNodes?.[0];
     if(compressor?.threshold){compressor.threshold.value=-20;compressor.knee.value=22;compressor.ratio.value=4.5;compressor.attack.value=.004;compressor.release.value=.34;}
   };
@@ -50,9 +51,9 @@
   audio.apexIntro=function apexIntro(form){
     const root=form==='starforge'?46:form==='chronophage'?39:43;
     this.playChannel('combat',root,1.35,'sawtooth',.082,16,0);
-    setTimeout(()=>this.playChannel('combat',root*1.5,.92,'triangle',.055,-12,-.24),420);
-    setTimeout(()=>this.playChannel('combat',root*3,.68,'sine',.030,-root,.24),920);
-    setTimeout(()=>this.enemyImpact?.(1.65),1650);
+    scheduleUiAction(420,()=>this.playChannel('combat',root*1.5,.92,'triangle',.055,-12,-.24));
+    scheduleUiAction(920,()=>this.playChannel('combat',root*3,.68,'sine',.030,-root,.24));
+    scheduleUiAction(1650,()=>this.enemyImpact?.(1.65));
   };
 
   // Mark copied wells so the visual language matches other Echo Beacon copies.
@@ -165,7 +166,7 @@
     ctx.save();ctx.translate(x,y);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.shadowBlur=30;ctx.shadowColor=color;
     if(form==='chronophage'){for(let ring=0;ring<4;ring++){ctx.save();ctx.rotate((ring%2?1:-1)*t*(.48+ring*.09));ctx.lineWidth=2.4-ring*.35;ctx.setLineDash([12+ring*3,7]);ctx.beginPath();ctx.arc(0,0,58+ring*23,0,TAU);ctx.stroke();ctx.restore();}ctx.setLineDash([]);for(let i=0;i<12;i++){const a=i/12*TAU;ctx.beginPath();ctx.moveTo(Math.cos(a)*45,Math.sin(a)*45);ctx.lineTo(Math.cos(a)*78,Math.sin(a)*78);ctx.stroke();}}
     else if(form==='starforge'){const g=ctx.createRadialGradient(0,0,5,0,0,108);g.addColorStop(0,'#fff');g.addColorStop(.20,'#ffd36f');g.addColorStop(.57,'rgba(255,102,35,.72)');g.addColorStop(1,'rgba(255,45,20,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,108*(.92+.08*Math.sin(t*4)),0,TAU);ctx.fill();ctx.fillStyle='#020107';ctx.beginPath();ctx.arc(0,0,35,0,TAU);ctx.fill();for(let i=0;i<20;i++){ctx.save();ctx.rotate(i/20*TAU+t*.08);ctx.globalAlpha=.24+(i%4)*.12;ctx.fillStyle=color;ctx.fillRect(55,-1.5,105+Math.sin(t*3+i)*18,3);ctx.restore();}}
-    else{const pts=[];for(let i=0;i<9;i++){const a=i/9*TAU-t*.08,rr=i%3===0?112:i%2?78:92;pts.push({x:Math.cos(a)*rr,y:Math.sin(a)*rr});}ctx.lineWidth=1.7;ctx.beginPath();for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+3)%pts.length];ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}ctx.stroke();for(const pt of pts){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(pt.x,pt.y,3.8,0,TAU);ctx.fill();}}
+    else{const pts=[];for(let i=0;i<9;i++){const a=i/9*TAU-t*.08,rr=i%3===0?112:i%2?78:92;pts.push({x:Math.cos(a)*rr,y:Math.sin(a)*rr});}ctx.lineWidth=1.7;ctx.beginPath();for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+3) % pts.length];ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}ctx.stroke();for(const pt of pts){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(pt.x,pt.y,3.8,0,TAU);ctx.fill();}}
     ctx.restore();
   }
   drawRealmCinematicOverlay=function drawDistinctApexOverlay(){

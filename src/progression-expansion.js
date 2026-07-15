@@ -1,18 +1,4 @@
 (function(){
-  const numericTexts={
-    magnet:{ko:['자석 코어','결정 흡수 범위 +34.'],en:['Magnet Core','Pickup range +34.']},
-    echo:{ko:['에코 비콘','발사·설치형 장비 복제 확률 +7.5%.'],en:['Echo Beacon','Repeat chance for fired and deployed equipment +7.5%.']},
-    power:{ko:['출력 증폭','모든 피해 +10%.'],en:['Power Amplifier','All damage +10%.']},
-    haste:{ko:['가속 회로','장비 발동 주기 -10%.'],en:['Acceleration Circuit','Equipment interval -10%.']},
-    vitality:{ko:['재생 장갑','최대 체력 +20, 즉시 체력 30 회복.'],en:['Regenerative Plating','Max health +20 and restore 30 health.']},
-    speed:{ko:['벡터 부스터','이동 속도 +9%.'],en:['Vector Booster','Move speed +9%.']},
-    crit:{ko:['취약점 해석','치명타 확률 +6%.'],en:['Weakness Analysis','Critical chance +6%.']},
-    chain:{ko:['연쇄 과부하','연쇄 유지시간 +7%, 연쇄 피해 효율 증가.'],en:['Chain Overload','Chain duration +7%; chain damage efficiency increases.']},
-    greed:{ko:['개척 계약','적 체력 +10%, 경험치 획득량 +30%.'],en:['Frontier Contract','Enemy health +10%, experience gained +30%.']},
-    armor:{ko:['충격 흡수재','받는 피해 -7.5%.'],en:['Impact Absorber','Damage taken -7.5%.']}
-  };
-  for(const[key,row]of Object.entries(numericTexts)){if(PASSIVES[key])PASSIVES[key].desc=row.ko[1];if(PASSIVE_TEXT[key]){PASSIVE_TEXT[key].ko=row.ko;PASSIVE_TEXT[key].en=row.en;for(const code of['ja','zh-CN','es','fr'])PASSIVE_TEXT[key][code]=PASSIVE_TEXT[key][code]||row.en;}}
-
   const NEW_PASSIVES={
     chainDrive:{name:'연쇄 추진기',icon:'»',color:'#7ce8ff',desc:'연쇄 12회마다 장비 발동 주기 추가 단축.',max:12},
     chainBurst:{name:'연쇄 폭심',icon:'✹',color:'#ff7b9e',desc:'20연쇄마다 플레이어 중심 폭발.',max:8},
@@ -74,30 +60,6 @@
   const baseUpdatePlayer=updatePlayer;
   updatePlayer=function progressionPlayer(dt){baseUpdatePlayer(dt);const n=stat('regen');if(!n)return;player.regenTimer=(player.regenTimer||4)-dt;if(player.regenTimer<=0){player.regenTimer+=4;player.hp=Math.min(player.maxHp,player.hp+n*2.5);}};
 
-  prismStage=function focusedPrismStage(heat,prismN){const first=prismN>=4?.68:.88,second=prismN>=6?1.55:prismN>=4?1.78:2.18;return heat>=second?2:heat>=first?1:0;};
-  prismMultiplier=function focusedPrismMultiplier(stage,prismN){return stage===2?(prismN>=6?4.6:prismN>=5?4.35:4.1):stage===1?1.9:1;};
-  updateFocusedPrisms=function rebuiltFocusedPrisms(dt,prismN){
-    const count=prismN>=6?3:prismN>=2?2:1,positions=prismPositions(count),range=weaponRange('prism'),locks=player.prismLocks||(player.prismLocks=[]),used=new Set(),size=weaponSizeMultiplier(),stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed();locks.length=count;
-    for(let i=0;i<count;i++){
-      const pos=positions[i],lock=locks[i]||(locks[i]={targetId:null,heat:0,tick:0,visual:0,augmentCd:0}),current=enemyById(lock.targetId),valid=current&&Math.hypot(current.x-pos.x,current.y-pos.y)<=range;
-      let target=valid?current:nearestEnemy(pos.x,pos.y,range,e=>!used.has(e.id));if(!target)target=nearestEnemy(pos.x,pos.y,range);
-      if(!target){lock.targetId=null;lock.heat=Math.max(0,lock.heat-dt*2.5);continue;}
-      if(lock.targetId===target.id)lock.heat=Math.min(3.2,lock.heat+dt);else{lock.targetId=target.id;lock.heat=0;lock.tick=0;}
-      used.add(target.id);lock.tick-=dt;lock.visual-=dt;lock.augmentCd-=dt;const stage=prismStage(lock.heat,prismN),mult=prismMultiplier(stage,prismN),color=stage===2?'#fff1a8':stage===1?'#ff9c72':'#c8b3ff',width=(2.7+stage*2.1+prismN*.16)*size;
-      if(lock.tick<=0){lock.tick=.18;dealDamage(target,(2.6+prismN*.86)*mult,{color,source:'prism-focus'});}
-      if(lock.visual<=0){lock.visual=stressed?.11:.075;state.entities.beams.push({x1:pos.x,y1:pos.y,x2:target.x,y2:target.y,life:stressed?.13:.11,max:stressed?.13:.11,color,width});}
-      if(state.weaponAugments?.prism&&stage===2&&lock.augmentCd<=0){
-        lock.augmentCd=1.15;const a=Math.atan2(target.y-pos.y,target.x-pos.x)+Math.PI/2,len=150+prismN*8,x1=target.x-Math.cos(a)*len,y1=target.y-Math.sin(a)*len,x2=target.x+Math.cos(a)*len,y2=target.y+Math.sin(a)*len;
-        state.entities.beams.push({x1,y1,x2,y2,life:.20,max:.20,color:'#fff6d7',width:3.1*size});
-        for(const e of state.entities.enemies)if(!e.dead&&segmentDistance(e.x,e.y,x1,y1,x2,y2)<e.r+7*size)dealDamage(e,10+prismN*2.5,{color:'#fff4dc',source:'prism-overheat-line',canCrit:false});
-        areaDamage(target.x,target.y,48*size,6+prismN*1.5,'#ffba72');
-      }
-    }
-    trimOldest(state.entities.beams,entityCap('beams'));
-  };
-  firePrism=function focusedPrismEcho(prismN,echoed=false){const positions=prismPositions(prismN>=6?3:prismN>=2?2:1),range=weaponRange('prism'),size=weaponSizeMultiplier();for(const pos of positions){const target=nearestEnemy(pos.x,pos.y,range);if(!target)continue;dealDamage(target,(7+prismN*2.4)*(echoed?.62:1),{color:echoed?COLORS.pink:'#f2d5ff',source:'prism-echo'});state.entities.beams.push({x1:pos.x,y1:pos.y,x2:target.x,y2:target.y,life:.16,max:.16,color:echoed?COLORS.pink:'#f2d5ff',width:(3.2+prismN*.18)*size});}trimOldest(state.entities.beams,entityCap('beams'));};
-  if(WEAPON_TEXT.prism){WEAPON_TEXT.prism.ko=['성좌 프리즘','소환 / 집속 광선','공전 프리즘이 한 표적을 추적하며 오래 조준할수록 3단계로 강해지는 집속 광선을 유지한다.'];WEAPON_TEXT.prism.en=['Constellation Prism','Summon / Focus Beam','Orbiting prisms maintain a three-stage beam that intensifies while a target remains locked.'];}
-
   let chainEffectGuard=false;
   const baseKill=killEnemy;
   killEnemy=function progressionKill(enemy,opts={}){
@@ -128,7 +90,7 @@
   function normalizeChoice(c){if(!c||!['core','weapon','passive'].includes(c.kind)||!c.key)return null;const source=c.kind==='passive'?PASSIVES[c.key]:WEAPONS[c.key];if(!source)return null;return{...source,...c,color:c.color||source.color||'#aeeeff',icon:c.icon||source.icon||'✦'};}
   function collectChoices(count){const result=[],seen=new Set(),take=list=>{for(const item of list||[]){const c=normalizeChoice(item);if(!c)continue;const id=`${c.kind}:${c.key}`;if(seen.has(id))continue;seen.add(id);result.push(c);if(result.length>=count)break;}};take(rollChoices(Math.max(9,count*3)));if(result.length<count){const fallback=[],coreCount=weaponCount('core');if(coreCount<6)fallback.push({kind:'core',key:'core',...WEAPONS.core,weight:1});for(const[key,w]of Object.entries(WEAPONS)){if(key==='core'||w.starter===false)continue;const owned=weaponCount(key),slots=state.weaponSlots.length;if(owned<6&&(owned>0||slots<6))fallback.push({kind:'weapon',key,...w,weight:1});}for(const[key,p]of Object.entries(PASSIVES))if(stat(key)<p.max)fallback.push({kind:'passive',key,...p,weight:1});take(fallback.sort(()=>Math.random()-.5));}return result.slice(0,count);}
   function applyChoiceSafely(c){if(c.kind==='core'){const after=weaponCount('core')+1;state.weaponStacks.core=after;showStackEffect?.('core',after);return;}if(c.kind==='weapon'){const before=weaponCount(c.key),after=before+1;state.weaponStacks[c.key]=after;if(before===0&&!state.weaponSlots.includes(c.key))state.weaponSlots.push(c.key);showStackEffect?.(c.key,after);if(c.key==='bulwark'){player.maxHp+=8;player.hp=Math.min(player.maxHp,player.hp+8);}return;}state.passives[c.key]=stat(c.key)+1;if(c.key==='vitality'){player.maxHp+=20;player.hp=Math.min(player.maxHp,player.hp+30);}if(c.key==='stellarLife'){const ratio=player.hp/Math.max(1,player.maxHp);player.maxHp=Math.max(player.maxHp+1,Math.round(player.maxHp*1.08));player.hp=Math.max(1,Math.min(player.maxHp,Math.round(player.maxHp*ratio)));}}
-  function finishChoiceSafely(){state.choiceOpening=false;state.choiceLocked=false;ui.choice.classList.add('hidden');ui.choiceCards.innerHTML='';state.mode='playing';renderLoadout();updateHUD();syncAbilityLedgerVisibility?.();setTimeout(()=>{if(state.mode==='playing')tryLevelUp?.();},0);}
+  function finishChoiceSafely(){state.choiceOpening=false;state.choiceLocked=false;ui.choice.classList.add('hidden');ui.choiceCards.innerHTML='';state.mode='playing';renderLoadout();updateHUD();syncAbilityLedgerVisibility?.();queueMicrotask(()=>{if(state.mode==='playing')tryLevelUp?.();});}
   function buildChoiceCard(c){const weaponLike=c.kind==='weapon'||c.kind==='core',text=choiceText(c),current=weaponLike?weaponCount(c.key):stat(c.key),next=weaponLike?stackEffectText(c.key,current+1):null,el=document.createElement('button');el.type='button';el.className='choice-card';el.style.setProperty('--card-accent',c.color);el.style.setProperty('--card-glow',hexToRgba(c.color,.22));const type=c.kind==='core'?tr('choice.basic'):c.kind==='weapon'?tr('choice.equipment'):tr('choice.passive'),countLabel=weaponLike?tr('choice.stack'):tr('choice.owned');el.innerHTML=`<span class="type">${type}</span><span class="stack-info">${countLabel} ${current} → ${current+1}</span><div class="big-icon">${c.icon}</div><h3>${text.name}</h3><p>${text.desc}</p>${next?`<div class="resonance-preview"><b>${current+1} · ${next.name}</b><span>${next.desc}</span></div>`:''}`;el.addEventListener('click',()=>selectChoice(c),{once:true});return el;}
   openChoices=function openChoicesStable(){if(state.choiceOpening||state.choiceLocked||state.mode==='gameover'||state.mode==='menu')return;closeAbilityLedger?.(true);state.choiceOpening=true;ui.choice.classList.add('hidden');ui.choiceCards.innerHTML='';try{const choices=collectChoices(3);if(!choices.length){finishChoiceSafely();return;}const fragment=document.createDocumentFragment();for(const c of choices)fragment.appendChild(buildChoiceCard(c));ui.choiceCards.appendChild(fragment);state.choiceLocked=false;state.mode='choice';ui.choiceTitle.textContent=`${tr('choice.title')} ${state.level}`;ui.choiceKicker.textContent=tr('choice.kicker');ui.choice.classList.remove('hidden');audio.level();syncAbilityLedgerVisibility?.();}catch(error){console.error('[Stackfall] level-up choices failed',error);state.choiceLocked=false;state.mode='playing';ui.choice.classList.add('hidden');ui.choiceCards.innerHTML='';}finally{state.choiceOpening=false;}};
   selectChoice=function selectChoiceStable(c){if(state.choiceLocked||state.mode!=='choice')return;state.choiceLocked=true;for(const button of ui.choiceCards.querySelectorAll('button'))button.disabled=true;try{applyChoiceSafely(c);}catch(error){console.error('[Stackfall] choice application failed',error,c);}finally{finishChoiceSafely();}};

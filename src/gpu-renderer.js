@@ -6,8 +6,8 @@
   const PIXI_INTEGRITY='sha384-brfu63ZHzOfumoqQXzA4Wo7k9kQOaJ68C/E7+Uc8lgQB42dOOjA+urOyy/sOnKPq';
 
   const canvasDrawProjectiles=drawProjectiles;
-  const canvasDrawEffects=drawEffects;
-  const canvasDrawEnemies=drawEnemies;
+  const canvasDrawAlliedEffects=drawAlliedEffects;
+  const canvasDrawForegroundEffects=drawForegroundEffects;
   const canvasDrawStars=typeof drawStars==='function'?drawStars:null;
   const baseSpawnParticle=spawnParticle;
   const baseUpdateEffects=updateEffects;
@@ -17,6 +17,8 @@
   let pixiLoaded=false;
   let webglReady=false;
   let contextLost=false;
+  let contextLossCount=0;
+  let contextRestoreCount=0;
   let rendererState='loading';
   let lastFailure='';
   let tickerFrames=0;
@@ -34,10 +36,25 @@
   const particleSprites=[];
   let projectileLayer=null;
   let particleLayer=null;
+  let tickerRegistered=false;
+  const rendererGeneration=window.__stackfallRendererGeneration=(window.__stackfallRendererGeneration||0)+1;
+  let foregroundCanvas=null;
+  let foregroundCtx=null;
   const warned=new Set();
 
   const sparklesEnabled=()=>GAME_SETTINGS.sparkles!==false;
   const shouldShowAlliedVisuals=()=>GAME_SETTINGS.hideProjectiles!==true&&state.mode!=='menu';
+
+  function ensureForegroundCanvas(){
+    foregroundCanvas=document.querySelector('#combatForeground')||document.createElement('canvas');foregroundCanvas.id='combatForeground';foregroundCanvas.setAttribute('aria-hidden','true');Object.assign(foregroundCanvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',display:'block',pointerEvents:'none',touchAction:'none',zIndex:'2',background:'transparent'});if(!foregroundCanvas.isConnected)canvas.insertAdjacentElement('afterend',foregroundCanvas);foregroundCtx=foregroundCanvas.getContext('2d',{alpha:true});resizeForegroundCanvas();
+  }
+  function resizeForegroundCanvas(){if(!foregroundCanvas||!foregroundCtx)return;const width=Math.max(1,Math.floor(vw*dpr)),height=Math.max(1,Math.floor(vh*dpr));if(foregroundCanvas.width!==width)foregroundCanvas.width=width;if(foregroundCanvas.height!==height)foregroundCanvas.height=height;foregroundCtx.setTransform(dpr,0,0,dpr,0,0);}
+  window.resizeForegroundCanvas=resizeForegroundCanvas;
+  window.drawForegroundCombat=function drawForegroundCombat(){
+    if(!foregroundCanvas||!foregroundCtx)return;resizeForegroundCanvas();foregroundCanvas.style.display=state.mode==='menu'?'none':'block';foregroundCtx.setTransform(1,0,0,1,0,0);foregroundCtx.clearRect(0,0,foregroundCanvas.width,foregroundCanvas.height);if(state.mode==='menu')return;
+    const previousCtx=ctx;ctx=foregroundCtx;try{ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.setLineDash([]);ctx.save();ctx.translate(state.camera.shakeX||0,state.camera.shakeY||0);runDrawStage('drawTelegraphsForeground',drawTelegraphs);if(typeof drawMapEvents==='function')runDrawStage('drawMapEventsForeground',drawMapEvents);runDrawStage('drawEnemiesForeground',drawEnemies);if(typeof drawBeamEffects==='function')runDrawStage('drawBeamEffectsForeground',drawBeamEffects);runDrawStage('drawEnemyProjectilesForeground',drawEnemyProjectiles);runDrawStage('drawMagnetFieldForeground',drawMagnetField);runDrawStage('drawChronoFieldForeground',drawChronoField);runDrawStage('drawPlayerForeground',drawPlayer);runDrawStage('drawEffectsForeground',canvasDrawForegroundEffects);ctx.restore();ctx.setTransform(dpr,0,0,dpr,0,0);const performanceTier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0;if(performanceTier===0){const vignette=ctx.createRadialGradient(vw/2,vh/2,Math.min(vw,vh)*.18,vw/2,vh/2,Math.max(vw,vh)*.74);vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(0,1,8,.58)');ctx.fillStyle=vignette;ctx.fillRect(0,0,vw,vh);}else if(performanceTier===1){ctx.fillStyle='rgba(0,1,8,.08)';ctx.fillRect(0,0,vw,vh);}if(sparklesEnabled()&&state.flash>0){ctx.fillStyle=`rgba(225,242,255,${Math.min(.42,state.flash*.72)})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlayForeground',drawRealmCinematicOverlay);}finally{ctx=previousCtx;}
+  };
+  ensureForegroundCanvas();
 
   function setRendererState(next){
     rendererState=next;
@@ -186,6 +203,7 @@
       firstGpuFrame=true;
       const canvas=safeGpuCanvas();
       if(canvas)canvas.style.display=state.mode==='menu'||contextLost?'none':'block';
+      if(app?.stage)app.stage.position.set(state.camera.shakeX||0,state.camera.shakeY||0);
       syncParticleSprites();
       syncProjectileSprites();
       evaluateReadiness();
@@ -220,8 +238,7 @@
       });
       webglReady=rendererLooksGpu();
       if(!webglReady)throw new Error('GPU renderer unavailable');
-      const canvas=app.canvas;
-      canvas.id='gpuCombatLayer';
+      const canvas=app.canvas,existing=document.querySelector('#gpuCombatLayer');if(existing&&existing!==canvas)existing.remove();canvas.id='gpuCombatLayer';
       Object.assign(canvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',display:'block',pointerEvents:'none',touchAction:'none',zIndex:'1',background:'transparent'});
       canvas.setAttribute('aria-hidden','true');
       const gameCanvas=document.querySelector('#game');
@@ -236,9 +253,9 @@
       solidTexture=makeTexture(48,false);
       particleTexture=makeTexture(40,true);
 
-      canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;disableGpuRenderer('WebGL context lost');});
-      canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;firstGpuFrame=false;firstProjectileSpriteSeen=false;projectileWarmupDeadline=0;setRendererState('warming-up');if(canvasReady())canvas.style.display='block';});
-      app.ticker.add(syncGpuLayer,undefined,PIXI.UPDATE_PRIORITY.HIGH);
+      canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;contextLossCount++;disableGpuRenderer('WebGL context lost');});
+      canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;contextRestoreCount++;firstGpuFrame=false;firstProjectileSpriteSeen=false;projectileWarmupDeadline=0;projectileTexture=makeTexture(64,true);solidTexture=makeTexture(48,false);particleTexture=makeTexture(40,true);app.renderer.resize(window.innerWidth,window.innerHeight);app.start();setRendererState('warming-up');if(canvasReady())canvas.style.display='block';});
+      if(!tickerRegistered){app.ticker.add(syncGpuLayer,undefined,PIXI.UPDATE_PRIORITY.HIGH);tickerRegistered=true;}
       evaluateReadiness();
     }catch(error){
       disableGpuRenderer('initialization failed',error);
@@ -247,6 +264,7 @@
   }
   function loadPixi(){
     if(window.PIXI?.Application){initPixi();return;}
+    const pending=document.querySelector('script[data-stackfall-pixi]');if(pending){pending.addEventListener('load',initPixi,{once:true});return;}
     const script=document.createElement('script');
     script.src=PIXI_URL;
     script.integrity=PIXI_INTEGRITY;
@@ -282,12 +300,7 @@
     if(sparklesEnabled())return canvasDrawProjectiles();
     drawMinimalAlliedProjectiles();
   };
-  drawEffects=function hybridEffectDraw(){
-    if(!activeGpuProjectiles()&&sparklesEnabled())return canvasDrawEffects();
-    const particles=state.entities.particles;
-    state.entities.particles=[];
-    try{return canvasDrawEffects();}finally{state.entities.particles=particles;}
-  };
+  drawAlliedEffects=function hybridAlliedEffectDraw(){if(activeGpuProjectiles()||!sparklesEnabled())return;return canvasDrawAlliedEffects();};
   if(canvasDrawStars){
     drawStars=function sparkleAwareStars(palette=['#f6f8ff','#8fe9ff','#cdbfff'],density=1){
       if(sparklesEnabled())return canvasDrawStars(palette,density);
@@ -306,54 +319,31 @@
     };
   }
 
-  function drawStableTankOverlay(){
-    for(const e of state.entities.enemies){
-      if(!e||e.dead||e.type!=='tank')continue;
-      const p=worldToScreen(e.x,e.y);
-      if(p.x<-100||p.x>vw+100||p.y<-100||p.y>vh+100)continue;
-      const r=e.r;
-      ctx.save();ctx.translate(p.x,p.y);
-      if(e.eventKind==='crash'){
-        ctx.rotate(Math.atan2(player.y-e.y,player.x-e.x));
-        ctx.fillStyle=e.hit?'#fff':'#23131a';ctx.strokeStyle=e.hit?'#fff':'#ff9a62';ctx.lineWidth=2.6;
-        ctx.beginPath();ctx.moveTo(r*1.28,0);ctx.lineTo(r*.42,-r*.82);ctx.lineTo(-r*.58,-r*.68);ctx.lineTo(-r*1.20,-r*.18);ctx.lineTo(-r*.92,0);ctx.lineTo(-r*1.20,r*.18);ctx.lineTo(-r*.58,r*.68);ctx.lineTo(r*.42,r*.82);ctx.closePath();ctx.fill();ctx.stroke();
-        ctx.fillStyle='#ffd08f';ctx.fillRect(r*.04,-r*.17,r*.65,r*.34);ctx.strokeStyle='#ff5f52';ctx.beginPath();ctx.moveTo(-r*.52,-r*.36);ctx.lineTo(-r*.95,-r*.78);ctx.moveTo(-r*.52,r*.36);ctx.lineTo(-r*.95,r*.78);ctx.stroke();
-      }else{
-        ctx.rotate((e.phase||0)*.035);
-        ctx.shadowBlur=sparklesEnabled()?14:0;ctx.shadowColor='#ff8a3d';
-        ctx.fillStyle=e.hit?'#fff':'#241311';ctx.strokeStyle=e.hit?'#fff':'#ff9f43';ctx.lineWidth=2.8;
-        ctx.beginPath();
-        for(let i=0;i<12;i++){const a=i/12*TAU,rr=r*(i%2?.84:1.16)*(1+Math.sin(i*4.1)*.045),x=Math.cos(a)*rr,y=Math.sin(a)*rr;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
-        ctx.closePath();ctx.fill();ctx.stroke();
-        for(let i=0;i<3;i++){ctx.save();ctx.rotate(i*TAU/3+(e.phase||0)*.012);ctx.fillStyle=i%2?'#a94d26':'#d86c2f';ctx.beginPath();ctx.moveTo(r*.18,-r*.18);ctx.lineTo(r*.98,-r*.44);ctx.lineTo(r*.76,r*.06);ctx.lineTo(r*.20,r*.20);ctx.closePath();ctx.fill();ctx.restore();}
-        const core=ctx.createRadialGradient(-r*.12,-r*.18,1,0,0,r*.44);core.addColorStop(0,'#fff0be');core.addColorStop(.30,'#ffb84e');core.addColorStop(1,'#50160f');ctx.fillStyle=core;ctx.beginPath();ctx.arc(0,0,r*.42,0,TAU);ctx.fill();
-        ctx.fillStyle='#17080a';ctx.beginPath();ctx.moveTo(-r*.20,-r*.10);ctx.lineTo(r*.28,0);ctx.lineTo(-r*.20,r*.10);ctx.closePath();ctx.fill();
-      }
-      ctx.restore();
-    }
-  }
-  drawEnemies=function stableEnemyIdentityDraw(){
-    const hiddenTanks=[];
-    for(const enemy of state.entities.enemies){if(!enemy||enemy.dead||enemy.type!=='tank')continue;hiddenTanks.push(enemy);enemy.dead=true;}
-    try{canvasDrawEnemies();}finally{for(const enemy of hiddenTanks)enemy.dead=false;}
-    drawStableTankOverlay();
-  };
-
   window.stackfallRendererInfo=()=>({
     status:rendererState,
     backend:rendererState==='active'?'PixiJS WebGL':'Canvas 2D',
-    version:pixiLoaded?PIXI_VERSION:null,
+    version:PIXI_VERSION,
     fallback:rendererState!=='active',
     pixiLoaded,
     webglReady,
     contextLost,
+    contextLossCount,
+    contextRestoreCount,
+    rendererGeneration,
+    tickerRegistered,
     tickerFrames,
     firstGpuFrame,
     firstProjectileSpriteSeen,
     projectileSprites:{pool:projectileSprites.length,visible:visibleProjectileSprites},
     particleSprites:{pool:particleSprites.length,visible:visibleParticleSprites},
     projectileCount:countRenderableProjectiles(),
-    gpuCanvas:safeGpuCanvas()?{width:safeGpuCanvas().width,height:safeGpuCanvas().height,display:safeGpuCanvas().style.display}:null,
+    hierarchy:['game-background','gpu-allied','combat-foreground','html-ui'],
+    dpr,
+    renderScale:Number(window.stackfallResolutionScale)||1,
+    shake:{x:state.camera.shakeX||0,y:state.camera.shakeY||0,frame:state.renderFrame},
+    baseCanvas:{width:canvas.width,height:canvas.height,cssWidth:canvas.clientWidth,cssHeight:canvas.clientHeight},
+    foregroundCanvas:foregroundCanvas?{width:foregroundCanvas.width,height:foregroundCanvas.height,cssWidth:foregroundCanvas.clientWidth,cssHeight:foregroundCanvas.clientHeight,display:foregroundCanvas.style.display}:null,
+    gpuCanvas:safeGpuCanvas()?{width:safeGpuCanvas().width,height:safeGpuCanvas().height,cssWidth:safeGpuCanvas().clientWidth,cssHeight:safeGpuCanvas().clientHeight,display:safeGpuCanvas().style.display}:null,
     lastFailure
   });
   setRendererState('loading');

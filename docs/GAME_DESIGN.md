@@ -316,6 +316,8 @@ min(70%, 10% + 중첩 × 7.5%)
 
 설정은 `localStorage`의 `stackfall.settings`에 저장한다.
 
+채널별 음량과 on/off 규칙은 그대로 유지한다. 최종 오디오 출력단은 이전 빌드 대비 2배(+6dB) 증폭하고, 피크는 기존 컴프레서에서 제어한다.
+
 ---
 
 ## 9. 렌더링 구조
@@ -347,6 +349,17 @@ WebGL 담당:
 - 텍스처 재사용
 - GPU 스프라이트 위치·회전·크기 갱신
 
+최종 화면 계층:
+
+```text
+배경·월드 Canvas #game (z=0)
+→ PixiJS 아군 projectile/particle #gpuCombatLayer (z=1)
+→ 위험·적·플레이어 Canvas #combatForeground (z=2)
+→ HTML UI (z>=10)
+```
+
+`combatForeground`는 `pointer-events: none`이며 메인 Canvas와 같은 좌표, CSS 크기, DPR, resize 상태를 사용한다. 메뉴 전환이나 재시작으로 Canvas를 다시 만들지 않는다.
+
 렌더러 상태:
 
 - `loading`: PixiJS 스크립트 로드 전
@@ -367,16 +380,27 @@ Canvas 2D의 아군 투사체 렌더링은 다음 조건이 모두 확인된 뒤
 
 `아군 투사체 숨기기`가 켜진 상태에서는 visible sprite가 0개인 것이 정상이다. 이 설정 때문에 GPU warm-up이 실패로 처리되어서는 안 된다.
 
-Canvas 2D 담당:
+배경 Canvas 2D 담당:
 
 - 배경
+- 중력 우물
+- 비위험 아군 효과
+
+전경 Canvas 2D 담당:
+
 - 적과 보스
 - 적 투사체
 - 위험 예고
-- 중력 우물
 - 플레이어
 - 광선과 중요 특수효과
 - UI
+
+### 공유 화면 흔들림
+
+- `src/render.js`가 매 렌더 프레임 `shakeX`, `shakeY`를 정확히 한 번 계산한다.
+- 배경 Canvas, Pixi stage, 전경 Canvas가 같은 값을 사용한다.
+- 개별 렌더러가 별도 난수를 만들지 않는다.
+- 화면 흔들림 설정을 끄거나 메뉴로 돌아가면 두 값은 즉시 0이다.
 
 ### 안정성 우선 폴백
 
@@ -392,7 +416,11 @@ Canvas 2D 담당:
 
 외부 렌더러가 실패해도 게임 로직은 계속 진행되어야 한다. Canvas 렌더러를 삭제하지 않고 폴백으로 유지한다.
 
-`window.stackfallRendererInfo()`는 콘솔 진단용으로만 사용한다. 반환 정보에는 renderer status, fallback 여부, PixiJS 로드 여부, ticker frame 수, 첫 GPU 프레임 여부, GPU canvas 크기, projectile sprite pool 크기와 visible sprite 수가 포함된다.
+컨텍스트 손실 때 GPU Canvas를 숨기고 Canvas 아군 투사체를 즉시 복구한다. 컨텍스트 복구 때 텍스처와 스프라이트 표시 상태를 다시 만들지만 기존 Pixi ticker를 두 번째로 등록하지 않는다.
+
+`window.stackfallRendererInfo()`는 콘솔 진단용으로만 사용한다. 반환 정보에는 renderer status, fallback 여부, PixiJS 버전, 계층, DPR, 공유 shake, 컨텍스트 손실·복구 횟수, ticker 등록 상태와 frame 수, 각 Canvas 크기, projectile/particle sprite pool과 visible 수가 포함된다.
+
+`window.stackfallRuntimeDiagnostics()`는 현재 런 세대, 렌더 프레임, 예약 공격 수, 개체 배열 수량, 정제 통계와 반복 오류를 반환한다. 렌더 단계 오류는 단계별·메시지별로 누적하며 같은 오류를 매 프레임 콘솔에 반복 출력하지 않는다.
 
 ### 기존 상시 최적화
 
@@ -400,6 +428,7 @@ Canvas 2D 담당:
 - 투사체와 중력 우물의 인접 셀 충돌
 - 유한 사거리 표적 탐색의 인접 셀 사용
 - 적 ID→객체 색인
+- 가까운 N개 표적만 유지하는 부분 삽입 선택
 - 투사체 객체 풀
 - 경험치 결정 병합
 - 화면 밖 개체 렌더링 생략
@@ -424,9 +453,34 @@ Canvas 2D 담당:
 
 현재 프로젝트는 여러 파일이 같은 전역 함수를 다시 대입한다. 파일 이름만 보고 판단하지 말고 `index.html`의 실제 순서를 확인한다.
 
-최종 렌더링 순서:
+최종 전체 로딩 순서:
 
 ```text
+src/bootstrap.js
+src/core.js
+src/language-pack.js
+src/boss-catalog.js
+src/systems-base.js
+src/runtime-config.js
+src/weapons.js
+src/boss-patterns.js
+src/bosses.js
+src/systems.js
+src/interface.js
+src/settings.js
+src/realm-backgrounds.js
+src/render-space.js
+src/elite-renderers.js
+src/render-entities.js
+src/feature-pack.js
+src/reward-refinement.js
+src/combat-balance-refinement.js
+src/progression-expansion.js
+src/map-event-expansion.js
+src/targeting-motion-refinement.js
+src/combat-guidance-refinement.js
+src/ability-ledger-audit.js
+src/render.js
 src/dark-cosmic-polish.js
 src/performance-guard.js
 src/build-audit-ui.js
@@ -443,7 +497,7 @@ src/gpu-renderer.js
    - 정예 표시, 원거리 적 오버레이, 최종 능력 UI 적용
 4. `gpu-renderer.js`
    - WebGL 아군 투사체·파티클 계층
-   - 중장갑 적 최종 외형 보호
+   - 전경 Canvas 연결과 Canvas 폴백
    - 반짝임 설정 최종 적용
 
 `build-audit-ui.js`를 `performance-guard.js`보다 먼저 로드하면 성능 렌더러가 `drawEnemies`를 다시 덮어써서 정예 표시가 사라진다. 이 순서를 바꾸지 않는다.
@@ -451,16 +505,27 @@ src/gpu-renderer.js
 현재 정리된 기능별 최종 소유 모듈:
 
 - 설정과 localStorage: `src/settings.js`, 기본 로드 `src/bootstrap.js`
-- 무기 발사와 에코 복제: `src/weapons.js`, 조준 보정 `src/combat-guidance-refinement.js`
+- 무기 발사와 에코 복제: `src/weapons.js`, 조준 보정: `src/combat-guidance-refinement.js`
+- 프리즘 기본 수치·집속·lock·배율: `src/weapons.js`, 보상 정의·강화 적용: `src/reward-refinement.js`
+- 부메랑 생성: `src/weapons.js`, 이동·충돌·귀환: `src/systems.js`, 표시: `src/render-entities.js`
 - 투사체 유도, 투사체 기본 갱신, 빔 수명: `src/systems.js`
 - 적 이동, 원거리 적 사격, 시간 정지 이동: `src/bosses.js`
-- 부메랑 생성과 일시정지 중 곡선 피해 방지: `src/feature-pack.js`
-- 자연스러운 부메랑 궤적 최종 갱신: `src/performance-guard.js`
 - 빔, 중력 우물, 플레이어, 기본 개체 렌더링: `src/render-entities.js`
+- 일반·이벤트 중장갑 공용 외형: `src/render-entities.js`
 - 정예와 이벤트 표시: `src/build-audit-ui.js`
 - 보상 중복 방지, 중간보스 보상, 특수 강화: `src/reward-refinement.js`
-- 공간 인덱스, sprite/cache, 부하 예산: `src/performance-guard.js`
+- 제자리 배열 압축과 런 세대 기반 예약기: `src/systems-base.js`, 각 배열 갱신 소유 시스템
+- 공간 인덱스, 적 ID 조회, 가까운 표적 선택, sprite/cache, 부하 예산: `src/performance-guard.js`
+- 단일 RAF, 공유 shake, 반복 오류 진단: `src/render.js`
 - PixiJS/WebGL 아군 투사체와 전투 파티클: `src/gpu-renderer.js`
+
+### 예약 공격 안전성
+
+- 전투 지연 공격은 `scheduleWeaponAction()`에 게임 시간 기준 남은 시간을 저장한다.
+- 일시정지 중에는 남은 시간이 감소하지 않는다.
+- reset, 메뉴, 게임 오버 때 런 세대가 바뀌고 남은 전투 예약을 비운다.
+- UI 표시 지연은 `scheduleUiAction()` 한곳에서 관리하며 런 세대를 확인한다.
+- 보상 대기열은 retry timeout 없이 메인 루프에서 갱신한다.
 
 이번 정리에서 삭제된 구식 파일:
 
@@ -571,3 +636,21 @@ node --check <file>
 ```
 
 브라우저 콘솔의 최초 오류를 우선 해결하고, 오류를 후속 파일로 덮어 숨기지 않는다.
+
+### 자동 브라우저 검사
+
+로컬 서버를 `127.0.0.1:8000`에서 실행한 뒤 Chrome CDP 하네스를 사용한다.
+
+```bash
+node scripts/browser-smoke.mjs
+```
+
+이 검사는 데스크톱·모바일 DPR, GPU 표시 옵션, 공유 shake, Prism 배율, invalid 중력 우물, reset/pause 예약 공격, 재시작 3회, WebGL context loss/restore, Pixi CDN 차단 Canvas 폴백, 중복 Canvas와 런타임 진단을 확인한다.
+
+고밀도 soak는 적 100명(정예 4명), 아군·적 투사체 각 200개, 파티클 200개와 15종 6중첩 장비로 시작한다.
+
+```bash
+STACKFALL_SOAK_MS=120000 node scripts/browser-smoke.mjs
+```
+
+PowerShell에서는 `$env:STACKFALL_SOAK_MS='120000'`을 먼저 설정한다. 테스트 수치는 게임 화면이 아니라 하네스 JSON 출력에만 기록한다.
