@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/tmp/apply.py", line 352, in <module>
+    raise RuntimeError('legacy projectileTexture reference remains')
+RuntimeError: legacy projectileTexture reference remains
