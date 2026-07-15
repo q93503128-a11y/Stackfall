@@ -1,15 +1,9 @@
 (function(){
-  const CELL=160,grid=new Map(),lowPrioritySources=new Set(['star-spark','comet-fragment','arc-strong-shard','comet-afterimage','arc-shard']);
+  const CELL=160,grid=new Map(),lowPrioritySources=new Set(['star-spark','comet-fragment','arc-strong-shard','comet-afterimage','arc-shard','drone-burst']);
   const gridKey=(x,y)=>(x*73856093)^(y*19349663);
   let heavyFrame=false;
-  function rebuildEnemyGrid(){
-    grid.clear();
-    for(const e of state.entities.enemies){if(!e||e.dead)continue;const cx=Math.floor(e.x/CELL),cy=Math.floor(e.y/CELL),key=gridKey(cx,cy),bucket=grid.get(key);if(bucket)bucket.push(e);else grid.set(key,[e]);}
-  }
-  function forEachNearbyEnemy(x,y,range,visit){
-    const cx=Math.floor(x/CELL),cy=Math.floor(y/CELL),reach=Math.max(1,Math.ceil(range/CELL));
-    for(let yy=cy-reach;yy<=cy+reach;yy++)for(let xx=cx-reach;xx<=cx+reach;xx++){const bucket=grid.get(gridKey(xx,yy));if(!bucket)continue;for(let i=0;i<bucket.length;i++)visit(bucket[i]);}
-  }
+  function rebuildEnemyGrid(){grid.clear();for(const e of state.entities.enemies){if(!e||e.dead)continue;const cx=Math.floor(e.x/CELL),cy=Math.floor(e.y/CELL),key=gridKey(cx,cy),bucket=grid.get(key);if(bucket)bucket.push(e);else grid.set(key,[e]);}}
+  function forEachNearbyEnemy(x,y,range,visit){const cx=Math.floor(x/CELL),cy=Math.floor(y/CELL),reach=Math.max(1,Math.ceil(range/CELL));for(let yy=cy-reach;yy<=cy+reach;yy++)for(let xx=cx-reach;xx<=cx+reach;xx++){const bucket=grid.get(gridKey(xx,yy));if(!bucket)continue;for(let i=0;i<bucket.length;i++)visit(bucket[i]);}}
   function pressureScore(){return state.entities.enemies.length+state.entities.projectiles.length*.34+state.entities.particles.length*.10+state.entities.beams.length*.16+(state.entities.curves?.length||0)*1.4;}
   function stressed(){return heavyFrame||pressureScore()>(compactDevice()?130:195);}
   function compactInPlace(list,keep){let write=0;for(let read=0;read<list.length;read++){const item=list[read];if(keep(item))list[write++]=item;}list.length=write;return list;}
@@ -23,11 +17,7 @@
   };
 
   const baseSpawnPlayerProjectile=spawnPlayerProjectile;
-  spawnPlayerProjectile=function guardedProjectileSpawn(data){
-    const source=String(data?.source||''),list=state.entities.projectiles,cap=entityCap('playerProjectiles');
-    if(list.length>=cap){if(lowPrioritySources.has(source))return null;let disposable=-1;for(let i=0;i<list.length;i++)if(lowPrioritySources.has(String(list[i]?.source||''))){disposable=i;break;}if(disposable>=0)list.splice(disposable,1);else list.shift();}
-    return baseSpawnPlayerProjectile(data);
-  };
+  spawnPlayerProjectile=function guardedProjectileSpawn(data){const source=String(data?.source||''),list=state.entities.projectiles,cap=entityCap('playerProjectiles');if(list.length>=cap){if(lowPrioritySources.has(source))return null;let disposable=-1;for(let i=0;i<list.length;i++)if(lowPrioritySources.has(String(list[i]?.source||''))){disposable=i;break;}if(disposable>=0)list.splice(disposable,1);else list.shift();}return baseSpawnPlayerProjectile(data);};
   const baseSpawnParticle=spawnParticle;
   spawnParticle=function guardedParticleSpawn(x,y,color,count=6,speed=120,size=3){const cap=entityCap('particles'),room=Math.max(0,cap-state.entities.particles.length);if(room<=0)return;const scale=stressed()?.38:1;return baseSpawnParticle(x,y,color,Math.min(room,Math.max(1,Math.ceil(count*scale))),speed,size);};
 
@@ -37,29 +27,22 @@
     for(let index=0;index<state.entities.projectiles.length;index++){
       const p=state.entities.projectiles[index];if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y)||!Number.isFinite(p.life)){if(p)p.life=0;continue;}if(p.life<=0)continue;
       p.vx=Number.isFinite(p.vx)?p.vx:0;p.vy=Number.isFinite(p.vy)?p.vy:0;p.r=Number.isFinite(p.r)?Math.max(.5,p.r):3;p.damage=Number.isFinite(p.damage)?p.damage:0;updateHomingProjectile(p,dt);p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.trailTick=(p.trailTick||0)-dt;
-      const source=String(p.source||'');p.source=source;const cometTrail=source.includes('comet'),trailSource=cometTrail||['ember','echo-star','core','core-echo','star-spark','wave'].includes(source);
+      const source=String(p.source||'');p.source=source;const cometTrail=source.includes('comet'),trailSource=cometTrail||['ember','echo-star','core','core-echo','star-spark','wave','meteor-drone','echo-drone','drone-burst'].includes(source);
       if(p.trailTick<=0&&trailSource&&state.entities.particles.length<particleCap&&!heavyFrame){p.trailTick=compactDevice()?.065:cometTrail?.032:.050;state.entities.particles.push({x:p.x-p.vx*.018,y:p.y-p.vy*.018,vx:rand(-14,14),vy:rand(-14,14),life:cometTrail?.34:.22,max:cometTrail?.34:.22,size:cometTrail?rand(2,4.2):rand(1.1,2.7),color:p.color||COLORS.white,star:true});}
       if(p.trailDamage){p.trailDamageCd=(p.trailDamageCd||0)-dt;if(p.trailDamageCd<=0){p.trailDamageCd=heavyFrame?.30:.18;const rr=25+weaponCount('comet')*2,limit=(rr+78)*(rr+78);forEachNearbyEnemy(p.x,p.y,rr+78,e=>{if(!e.dead&&(e.x-p.x)**2+(e.y-p.y)**2<Math.min(limit,(e.r+rr)**2))dealDamage(e,3+weaponCount('comet')*1.2,{color:COLORS.comet,source:'comet-trail',canCrit:false});});if(!heavyFrame)shockwave(p.x,p.y,'rgba(181,245,255,.55)',rr,.20,1.2);}}
-      if(p.life>0){
-        forEachNearbyEnemy(p.x,p.y,p.r+88,e=>{if(p.life<=0||e.dead||p.hitIds?.has(e.id))return;if((e.x-p.x)**2+(e.y-p.y)**2<(e.r+p.r)**2){dealDamage(e,p.damage,{color:p.color,source});if(!p.hitIds)p.hitIds=new Set();p.hitIds.add(e.id);if(p.split&&(p.splitCount||0)<(heavyFrame?1:2)&&spawned.length<36&&state.entities.projectiles.length+spawned.length<projectileCap){p.splitCount=(p.splitCount||0)+1;for(let i=0;i<3;i++){const a=Math.atan2(p.vy,p.vx)+(i-1)*.58;spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*350,vy:Math.sin(a)*350,r:3.2,life:.62,damage:p.damage*.34,color:'#ffb3d0',pierce:0,source:'star-spark'});}}if(p.fragment&&(p.fragmentCount||0)<(heavyFrame?1:2)&&spawned.length<36&&state.entities.projectiles.length+spawned.length<projectileCap){p.fragmentCount=(p.fragmentCount||0)+1;for(let i=0;i<4;i++){const a=i/4*TAU+Math.atan2(p.vy,p.vx);spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*285,vy:Math.sin(a)*285,r:3.5,life:.65,damage:p.damage*.25,color:'#d9fbff',pierce:0,source:'comet-fragment'});}}if(p.pierce>0)p.pierce--;else p.life=0;}});
-      }
+      if(p.life>0){forEachNearbyEnemy(p.x,p.y,p.r+88,e=>{if(p.life<=0||e.dead||p.hitIds?.has(e.id))return;if((e.x-p.x)**2+(e.y-p.y)**2<(e.r+p.r)**2){dealDamage(e,p.damage,{color:p.color,source});if(!p.hitIds)p.hitIds=new Set();p.hitIds.add(e.id);if(p.split&&(p.splitCount||0)<(heavyFrame?1:2)&&spawned.length<36&&state.entities.projectiles.length+spawned.length<projectileCap){p.splitCount=(p.splitCount||0)+1;for(let i=0;i<3;i++){const a=Math.atan2(p.vy,p.vx)+(i-1)*.58;spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*350,vy:Math.sin(a)*350,r:3.2,life:.62,damage:p.damage*.34,color:'#ffb3d0',pierce:0,source:'star-spark'});}}if(p.fragment&&(p.fragmentCount||0)<(heavyFrame?1:2)&&spawned.length<36&&state.entities.projectiles.length+spawned.length<projectileCap){p.fragmentCount=(p.fragmentCount||0)+1;for(let i=0;i<4;i++){const a=i/4*TAU+Math.atan2(p.vy,p.vx);spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*285,vy:Math.sin(a)*285,r:3.5,life:.65,damage:p.damage*.25,color:'#d9fbff',pierce:0,source:'comet-fragment'});}}if(p.pierce>0)p.pierce--;else p.life=0;}});}
       if(p.life<=0&&p.explode&&!p.exploded){p.exploded=true;areaDamage(p.x,p.y,125,24+weaponCount('comet')*4.5,COLORS.comet);}if((p.x-player.x)**2+(p.y-player.y)**2>4410000)p.life=0;
     }
     for(let i=0;i<spawned.length;i++)spawnPlayerProjectile(spawned[i]);compactInPlace(state.entities.projectiles,p=>p&&p.life>0&&Number.isFinite(p.x)&&Number.isFinite(p.y));trimOldest(state.entities.projectiles,projectileCap);
   };
 
-  updateWells=function spatialWellUpdate(dt){
-    if(!grid.size)rebuildEnemyGrid();const list=state.entities.wells;
-    for(let i=0;i<list.length;i++){const w=list[i];if(!normalizeWell(w)){w.life=0;continue;}w.life-=dt;w.tick-=dt;if(w.damage>0&&w.tick<=0){w.tick=stressed()?.40:.30;const rr=w.r*.42;forEachNearbyEnemy(w.x,w.y,rr+78,e=>{if(!e.dead&&(e.x-w.x)**2+(e.y-w.y)**2<(rr+e.r)**2)dealDamage(e,w.damage,{color:w.color,source:'well',canCrit:false});});}}
-    compactInPlace(list,w=>w&&w.life>0&&Number.isFinite(w.x)&&Number.isFinite(w.y));if(list.length>12)list.splice(0,list.length-12);
-  };
+  updateWells=function spatialWellUpdate(dt){if(!grid.size)rebuildEnemyGrid();const list=state.entities.wells;for(let i=0;i<list.length;i++){const w=list[i];if(!normalizeWell(w)){w.life=0;continue;}w.life-=dt;w.tick-=dt;if(w.damage>0&&w.tick<=0){w.tick=stressed()?.40:.30;const rr=w.r*.42;forEachNearbyEnemy(w.x,w.y,rr+78,e=>{if(!e.dead&&(e.x-w.x)**2+(e.y-w.y)**2<(rr+e.r)**2)dealDamage(e,w.damage,{color:w.color,source:'well',canCrit:false});});}}compactInPlace(list,w=>w&&w.life>0&&Number.isFinite(w.x)&&Number.isFinite(w.y));if(list.length>12)list.splice(0,list.length-12);};
 
   const quad=(a,b,c,t)=>{const u=1-t;return{x:u*u*a.x+2*u*t*b.x+t*t*c.x,y:u*u*a.y+2*u*t*b.y+t*t*c.y};};
   const ease=t=>t*t*(3-2*t),enemyById=id=>state.entities.enemies.find(e=>e.id===id&&!e.dead)||null;
   function startReturn(p){if(p.stage==='return')return;p.stage='return';p.stageTime=0;p.returnLife=0;if(p.stacks>=4)p.hitIds.clear();p.history.length=0;}
   sf2UpdateCurves=function naturalBoomerangUpdate(dt){
-    heavyFrame=pressureScore()>(compactDevice()?130:195);if(!grid.size)rebuildEnemyGrid();
-    const curves=state.entities.curves;
+    heavyFrame=pressureScore()>(compactDevice()?130:195);if(!grid.size)rebuildEnemyGrid();const curves=state.entities.curves;
     for(let i=0;i<curves.length;i++){
       const p=curves[i];if(!p||p.dead)continue;p.stageTime+=dt;p.lastX=p.x;p.lastY=p.y;
       if(p.stage==='outbound'||p.stage==='approach'){
@@ -77,4 +60,16 @@
 
   const baseUpdateEffects=updateEffects;
   updateEffects=function updateEffectsWithBudget(dt){baseUpdateEffects(dt);trimOldest(state.entities.particles,entityCap('particles'));trimOldest(state.entities.shockwaves,entityCap('shockwaves'));trimOldest(state.entities.beams,entityCap('beams'));if(state.entities.curves?.length>32)state.entities.curves.splice(0,state.entities.curves.length-32);};
+
+  const baseGravityLens=drawGravityLens;
+  drawGravityLens=function drawFasterParticleDisk(w,p,alpha,t){
+    baseGravityLens(w,p,alpha,t);const echoed=!!w.echoed||w.color===COLORS.pink,visual=Math.min(132,55+w.r*.29),rx=visual*.72,ry=Math.max(9,visual*.155),count=stressed()?14:26,phase=t*3.45+(w.x+w.y)*.0009;
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(-.17);ctx.shadowBlur=12;for(let i=0;i<count;i++){const a=phase+i*TAU/count,front=Math.sin(a)>=0,x=Math.cos(a)*rx,y=Math.sin(a)*ry,size=front?1.4+(i%3)*.45:.8+(i%2)*.3;ctx.globalAlpha=alpha*(front?.78:.28);ctx.fillStyle=echoed?(i%3?'#ff6f93':'#fff1f7'):(i%4===0?'#ffffff':i%2?'#ffbb69':'#7fcfff');ctx.shadowColor=ctx.fillStyle;ctx.beginPath();ctx.arc(x,y,size,0,TAU);ctx.fill();}ctx.restore();
+  };
+
+  const baseDrawPlayer=drawPlayer;
+  drawPlayer=function drawPlayerWithMeteorDrones(){
+    baseDrawPlayer();const n=weaponCount('drone');if(!n)return;const points=meteorDronePositions(n),t=performance.now()/1000;
+    for(const [i,pos] of points.entries()){const s=worldToScreen(pos.x,pos.y),a=pos.a;ctx.save();ctx.translate(s.x,s.y);ctx.rotate(a+Math.PI/2);ctx.shadowBlur=18;ctx.shadowColor='#8fffd0';ctx.fillStyle='#0b2630';ctx.strokeStyle='#baffea';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(8,6);ctx.lineTo(0,3);ctx.lineTo(-8,6);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle=i%2?'#ffffff':'#8fffd0';ctx.beginPath();ctx.arc(0,-1,2.5+.5*Math.sin(t*5+i),0,TAU);ctx.fill();ctx.restore();}
+  };
 })();
