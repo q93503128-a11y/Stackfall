@@ -1,0 +1,54 @@
+name: Apply final gameplay polish
+
+on:
+  push:
+    branches:
+      - agent/stackfall-final-gameplay-polish
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-final-gameplay-polish
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/stackfall-final-gameplay-polish
+          fetch-depth: 0
+      - name: Rebuild patch
+        run: |
+          cat .github/patch-parts/* | base64 -d | gzip -d > /tmp/apply.py
+          python -m py_compile /tmp/apply.py
+          test "$(sha256sum /tmp/apply.py | cut -d' ' -f1)" = "baf1a394f3ea2dcbc47308a1515eb281c029ebf7c601500c7e98ef3dbdb0e631"
+      - name: Apply source changes
+        run: python /tmp/apply.py
+      - name: Remove temporary patch files
+        run: rm -rf .github/patch-parts .github/workflows/apply-final-gameplay-polish.yml
+      - name: Refresh deployed asset fingerprint
+        run: node scripts/build-fingerprint.mjs
+      - name: Syntax checks
+        run: |
+          find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
+          git diff --check
+      - name: Browser smoke
+        run: |
+          python3 -m http.server 8000 >/tmp/stackfall-http.log 2>&1 &
+          server=$!
+          trap 'kill $server || true' EXIT
+          for i in {1..30}; do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep 1; done
+          STACKFALL_URL=http://127.0.0.1:8000 STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Overhaul apex encounters and event visuals"
+          git push origin HEAD:agent/stackfall-final-gameplay-polish
