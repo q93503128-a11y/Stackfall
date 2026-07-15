@@ -279,7 +279,14 @@
   }
 
   drawEnemies=function stableEnemyIdentityDraw(){
-    canvasDrawEnemies();
+    const hiddenTanks=[];
+    for(const enemy of state.entities.enemies){
+      if(!enemy||enemy.dead||enemy.type!=='tank')continue;
+      hiddenTanks.push(enemy);
+      enemy.dead=true;
+    }
+    try{canvasDrawEnemies();}
+    finally{for(const enemy of hiddenTanks)enemy.dead=false;}
     drawStableTankOverlay();
   };
 
