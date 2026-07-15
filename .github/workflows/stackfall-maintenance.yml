@@ -54,3 +54,4 @@ jobs:
           git add -A
           git commit -m "Verify deployed build and align audio diagnostics"
           git push origin HEAD:agent/stackfall-audio-build-audit
+# trigger after workflow registration
