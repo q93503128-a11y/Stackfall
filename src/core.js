@@ -23,15 +23,15 @@ const WEAPONS={
   bulwark:{name:'성광 장벽',icon:'◈',color:'#74f2a7',role:'방어 / 보호막',desc:'피해 흡수와 보호막 충전에 특화된 성광 장벽.',starter:true,resonance:{2:['겹빛 장벽','피해 감소율이 증가한다.'],4:['보복 장막','피격 시 주변에 충격파를 방출한다.'],6:['천체 성벽','강력한 보호막을 주기적으로 충전한다.']}},
   gravity:{name:'중력 우물',icon:'◉',color:'#9e79ff',role:'제어 / 집속',desc:'공간을 찌그러뜨려 적을 한곳에 끌어당긴다.',starter:true,resonance:{2:['조석 고정','흡입 범위와 힘이 증가한다.'],4:['붕괴핵','사건의 지평선 내부의 적이 지속 피해를 받는다.'],6:['쌍둥이 특이점','서로 교차하는 두 개의 우물을 생성한다.']}},
   comet:{name:'혜성 창',icon:'➳',color:'#b5f5ff',role:'공격 / 관통',desc:'가장 가까운 적을 향해 거대한 혜성을 발사한다.',starter:true,resonance:{2:['이중 궤적','혜성이 나란히 두 발 발사된다.'],4:['혜성 파편','관통할 때마다 주변으로 얼음별 파편을 뿌린다.'],6:['대충돌','혜성이 사라질 때 광역 폭발을 일으킨다.']}},
-  prism:{name:'성좌 프리즘',icon:'✧',color:'#c2a7ff',role:'소환 / 광선',desc:'공전 프리즘이 긴 광선으로 경로의 적을 관통한다.',starter:true,resonance:{2:['쌍둥이 프리즘','공전 위성이 두 개로 증가한다.'],4:['성좌 연결','위성 사이에 피해를 주는 별자리 선이 연결된다.'],6:['천구 의식','세 개의 위성이 빠르게 연속 사격한다.']}},
+  prism:{name:'성좌 프리즘',icon:'✧',color:'#c2a7ff',role:'소환 / 집속 광선',desc:'공전 프리즘이 한 적을 추적하며 오래 조준할수록 강해지는 집속 광선을 발사한다.',starter:true,resonance:{2:['쌍둥이 프리즘','두 번째 프리즘이 별도 표적을 추적한다.'],4:['과열 결정','집속 단계가 더 빠르게 상승한다.'],6:['천구 소각','세 개의 프리즘이 최대 출력까지 집속한다.']}},
   chrono:{name:'시간 고리',icon:'◎',color:'#8fffe0',role:'제어 / 지원',desc:'주변 적의 움직임을 늦추는 시간 제어 장치.',starter:true,resonance:{2:['느린 궤도','감속 범위와 효과가 증가한다.'],4:['시간 파동','주기적으로 정지 파동을 방출해 피해를 준다.'],6:['영원의 원환','고리 안의 적이 크게 느려지고 무기 주기가 빨라진다.']}}
 };
 const PASSIVES={
-  magnet:{name:'자석 코어',icon:'⊕',color:'#ffcc5c',desc:'결정 흡수 범위 +34',max:10},echo:{name:'에코 비콘',icon:'⌁',color:'#ff61b0',desc:'장비 발동 복제 확률 증가',max:8},power:{name:'출력 증폭',icon:'▲',color:'#ff7b8d',desc:'모든 피해 +16%',max:12},haste:{name:'가속 회로',icon:'»',color:'#7ce8ff',desc:'공격 주기 10% 단축',max:10},vitality:{name:'재생 장갑',icon:'+',color:'#74f2a7',desc:'최대 체력 +20, 즉시 회복',max:10},speed:{name:'벡터 부스터',icon:'➤',color:'#9e79ff',desc:'이동 속도 +9%',max:8},crit:{name:'취약점 해석',icon:'✧',color:'#ffd57f',desc:'치명타 확률 +6%',max:10},chain:{name:'연쇄 과부하',icon:'⌁',color:'#ff61b0',desc:'처치 연쇄 유지시간 +25%',max:8},greed:{name:'개척 계약',icon:'◆',color:'#ff9f43',desc:'적 체력 +4%, 경험치 +22%',max:7},armor:{name:'충격 흡수재',icon:'▣',color:'#9fb7d9',desc:'받는 피해 -7.5%',max:8}
+  magnet:{name:'자석 코어',icon:'⊕',color:'#ffcc5c',desc:'결정 흡수 범위 +34',max:10},echo:{name:'에코 비콘',icon:'⌁',color:'#ff61b0',desc:'장비 발동 복제 확률 +7.5%p',max:8},power:{name:'출력 증폭',icon:'▲',color:'#ff7b8d',desc:'모든 피해 +16%',max:12},haste:{name:'가속 회로',icon:'»',color:'#7ce8ff',desc:'공격 주기 10% 단축',max:10},vitality:{name:'재생 장갑',icon:'+',color:'#74f2a7',desc:'최대 체력 +20, 즉시 체력 30 회복',max:10},speed:{name:'벡터 부스터',icon:'➤',color:'#9e79ff',desc:'이동 속도 +9%',max:8},crit:{name:'취약점 해석',icon:'✧',color:'#ffd57f',desc:'치명타 확률 +6%p',max:10},chain:{name:'연쇄 과부하',icon:'⌁',color:'#ff61b0',desc:'연쇄 유지시간 +7%, 연쇄 피해 효율 증가',max:8},greed:{name:'개척 계약',icon:'◆',color:'#ff9f43',desc:'적 체력 +6%, 경험치 +12%',max:7},armor:{name:'충격 흡수재',icon:'▣',color:'#9fb7d9',desc:'받는 피해 -7.5%',max:8}
 };
 class AudioKit{constructor(){this.ctx=null;this.enabled=true;}init(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();}tone(freq,duration=.06,type='sine',volume=.025,slide=0){if(!this.enabled)return;this.init();const t=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(Math.max(30,freq+slide),t+duration);g.gain.setValueAtTime(volume,t);g.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(g).connect(this.ctx.destination);o.start(t);o.stop(t+duration);}hit(strong=false){this.tone(strong?120:180,strong?.11:.05,'square',strong?.045:.018,-70);}pickup(){this.tone(680,.05,'sine',.018,220);}level(){[420,620,910].forEach((f,i)=>setTimeout(()=>this.tone(f,.14,'triangle',.03,120),i*70));}resonance(){[180,260,390,580].forEach((f,i)=>setTimeout(()=>this.tone(f,.22,'sawtooth',.025,200),i*55));}boss(){[90,120,180].forEach((f,i)=>setTimeout(()=>this.tone(f,.48,'sawtooth',.035,90),i*120));}hurt(){this.tone(90,.18,'sawtooth',.045,-45);}}
 const audio=new AudioKit();
-function levelXpRequirement(level){return Math.max(12,Math.floor(10+level*3.4+Math.pow(level,1.28)*1.25));}
+function levelXpRequirement(level){return Math.max(12,Math.floor(10+level*3.8+Math.pow(level,1.34)*1.35));}
 const state={mode:'menu',selectedStarter:'blade',time:0,kills:0,level:1,xp:0,xpNeed:levelXpRequirement(1),threat:1,combo:0,maxCombo:0,comboTimer:0,camera:{x:0,y:0,shake:0},hitStop:0,flash:0,spawnTimer:0,encounterTimer:58,encounterStep:0,bossIndex:0,bossActiveId:null,nextApexAt:600,apexCount:0,apexActiveId:null,apexBoons:{},realmTheme:'space',realmTransition:null,weaponSlots:[],weaponStacks:{},passives:{},entities:{enemies:[],projectiles:[],enemyProjectiles:[],particles:[],gems:[],wells:[],texts:[],shockwaves:[],telegraphs:[],beams:[],curves:[],mapEvents:[]},input:{x:0,y:0,keys:new Set(),touchX:0,touchY:0},nextId:1,echoCycle:0};
 const player={x:0,y:0,r:17,hp:100,maxHp:100,shield:0,invuln:0,speed:230,angle:0,coreCd:0,bladeTick:0,emberCd:0,wellCd:0,fortressCd:0,cometCd:0,prismCd:0,chronoCd:0,hitPulse:0};
 function resetGame(){
@@ -39,10 +39,10 @@ function resetGame(){
 }
 function stat(key){return state.passives[key]||0;}
 function weaponCount(key){return state.weaponStacks[key]||0;}
-function damageMult(){const levelPower=1+Math.max(0,state.level-1)*.024;return levelPower*(1+stat('power')*.16)*(1+(state.nebulaBoosts?.power||0)*.10);}
+function damageMult(){const levelPower=1+Math.max(0,state.level-1)*.011;return levelPower*(1+stat('power')*.16)*(1+(state.nebulaBoosts?.power||0)*.10);}
 function hasteMult(){const chronoBonus=weaponCount('chrono')>=6?.14:0,nebula=(state.nebulaBoosts?.haste||0)*.08;return Math.max(.18,1-stat('haste')*.10-chronoBonus-nebula);}
-function enemyHpMult(){return(1+state.time/370)*(1+stat('greed')*.04);}
-function xpMult(){return 1+stat('greed')*.22;}
+function enemyHpMult(){const minutes=Math.max(0,(state.time||0)/60),timeScale=1+(state.time||0)/390+Math.pow(minutes,1.25)*.035;return timeScale*(1+stat('greed')*.06);}
+function xpMult(){return 1+stat('greed')*.12;}
 function damageReduction(){return clamp(stat('armor')*.075+Math.max(0,weaponCount('bulwark')-1)*.035,0,.76);}
 function magnetRange(){return 74+stat('magnet')*34+(state.nebulaBoosts?.magnet||0)*45;}
 function totalGrowth(){return Object.values(state.weaponStacks).reduce((a,b)=>a+b,0)+Object.values(state.passives).reduce((a,b)=>a+b,0);}
