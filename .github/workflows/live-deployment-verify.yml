@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   statuses: write
 
 jobs:
@@ -17,10 +17,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Harden Chrome shutdown and profile cleanup
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('scripts/browser-smoke.mjs')
+          text=path.read_text()
+          old="""  if(browser&&!browser.killed){browser.kill();await Promise.race([new Promise(done=>browser.once('exit',done)),sleep(3000)]);}
+  const tempRoot=resolve(tmpdir())+sep,target=resolve(profile);if(target.startsWith(tempRoot)){try{rmSync(target,{recursive:true,force:true,maxRetries:5,retryDelay:200});}catch(error){failures.push(`[harness] temporary profile cleanup failed: ${error.message}`);}}"""
+          new="""  if(browser&&browser.exitCode===null){browser.kill();await Promise.race([new Promise(done=>browser.once('exit',done)),sleep(3000)]);if(browser.exitCode===null){browser.kill('SIGKILL');await Promise.race([new Promise(done=>browser.once('exit',done)),sleep(2000)]);}}
+  const tempRoot=resolve(tmpdir())+sep,target=resolve(profile);if(target.startsWith(tempRoot)){let cleanupError=null;for(let attempt=0;attempt<8;attempt++){try{rmSync(target,{recursive:true,force:true,maxRetries:3,retryDelay:200});cleanupError=null;break;}catch(error){cleanupError=error;await sleep(250*(attempt+1));}}if(cleanupError)failures.push(`[harness] temporary profile cleanup failed after retries: ${cleanupError.message}`);}"""
+          if new in text:
+              print('cleanup hardening already present')
+          elif old in text:
+              path.write_text(text.replace(old,new))
+          else:
+              raise SystemExit('cleanup block not found')
+          PY
+          node --check scripts/browser-smoke.mjs
       - name: Wait for deployed asset fingerprint
         shell: bash
         run: |
@@ -42,9 +61,28 @@ jobs:
         env:
           STACKFALL_CHROME: /usr/bin/google-chrome
         run: node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-results/live-smoke.json
+      - name: Commit verified harness repair
+        id: repair_commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/fix-smoke-cleanup.yml
+          git config user.name "Stackfall Audit Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add scripts/browser-smoke.mjs .github/workflows/fix-smoke-cleanup.yml
+          if git diff --cached --quiet; then
+            final_sha=$(git rev-parse HEAD)
+          else
+            git commit -m "Harden browser smoke profile cleanup"
+            git push origin HEAD:main
+            final_sha=$(git rev-parse HEAD)
+          fi
+          echo "final_sha=$final_sha" >> "$GITHUB_OUTPUT"
       - name: Publish live smoke status
         if: always()
         uses: actions/github-script@v7
+        env:
+          FINAL_SHA: ${{ steps.repair_commit.outputs.final_sha }}
         with:
           script: |
             const fs = require('fs');
@@ -62,7 +100,7 @@ jobs:
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha: context.sha,
+              sha: process.env.FINAL_SHA || context.sha,
               state,
               context: 'stackfall/live-smoke',
               description: description.slice(0, 140),
