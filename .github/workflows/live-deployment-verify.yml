@@ -62,7 +62,6 @@ jobs:
           STACKFALL_CHROME: /usr/bin/google-chrome
         run: node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-results/live-smoke.json
       - name: Commit verified harness repair
-        id: repair_commit
         shell: bash
         run: |
           set -euo pipefail
@@ -70,19 +69,13 @@ jobs:
           git config user.name "Stackfall Audit Bot"
           git config user.email "actions@users.noreply.github.com"
           git add scripts/browser-smoke.mjs .github/workflows/fix-smoke-cleanup.yml
-          if git diff --cached --quiet; then
-            final_sha=$(git rev-parse HEAD)
-          else
+          if ! git diff --cached --quiet; then
             git commit -m "Harden browser smoke profile cleanup"
             git push origin HEAD:main
-            final_sha=$(git rev-parse HEAD)
           fi
-          echo "final_sha=$final_sha" >> "$GITHUB_OUTPUT"
       - name: Publish live smoke status
         if: always()
         uses: actions/github-script@v7
-        env:
-          FINAL_SHA: ${{ steps.repair_commit.outputs.final_sha }}
         with:
           script: |
             const fs = require('fs');
@@ -100,7 +93,7 @@ jobs:
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha: process.env.FINAL_SHA || context.sha,
+              sha: context.sha,
               state,
               context: 'stackfall/live-smoke',
               description: description.slice(0, 140),
