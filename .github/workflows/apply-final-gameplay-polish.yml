@@ -43,6 +43,9 @@ jobs:
           old_call="startRealmTransition(apexTheme(form),{duration,title,subtitle:form==='chronophage'?'CHRONOLOGY OVERRIDDEN':form==='starforge'?'TERMINAL FURNACE IGNITION':'THE SKY FORGETS ITS NAME',introStyle:form,onMidpoint:()=>{const e=spawnEnemy('apex');if(!e)return;const arena=state.apexArena;e.eliteForm=form;e.apexForm=form;e.name=title;e.color=BOSS_STATS[form].color;e.timeLock=0;if(form==='starforge'){e.speed=0;e.x=arena.x;e.y=arena.y-arena.r*.24;}else if(form==='chronophage'){e.speed*=.82;e.x=arena.x+arena.r*.24;e.y=arena.y-arena.r*.10;}else{e.speed=Math.max(72,e.speed*1.65);e.x=arena.x-arena.r*.42;e.y=arena.y;}state.apexActiveId=e.id;state.apexCount++;state.nextApexAt=(state.apexCount+1)*APEX_INTERVAL_SECONDS;},onComplete:()=>{state.pendingApexForm=null;}});return true;"
           new_call="startRealmTransition(apexTheme(form),{duration,title,subtitle:form==='chronophage'?'CHRONOLOGY OVERRIDDEN':form==='starforge'?'TERMINAL FURNACE IGNITION':'THE SKY FORGETS ITS NAME',introStyle:form,onMidpoint:()=>{const e=spawnEnemy('apex');if(!e)return;const arena=state.apexArena;e.eliteForm=form;e.apexForm=form;e.name=title;e.color=BOSS_STATS[form].color;e.timeLock=0;if(form==='starforge'){e.speed=0;e.x=arena.x;e.y=arena.y-arena.r*.24;}else if(form==='chronophage'){e.speed*=.82;e.x=arena.x+arena.r*.24;e.y=arena.y-arena.r*.10;}else{e.speed=Math.max(72,e.speed*1.65);e.x=arena.x-arena.r*.42;e.y=arena.y;}state.apexActiveId=e.id;state.apexCount++;state.nextApexAt=(state.apexCount+1)*APEX_INTERVAL_SECONDS;},onComplete:()=>{state.pendingApexForm=null;}});state.apexArena=apexArena;return true;"
           replacements.append((old_call,new_call,'apex arena persistence'))
+          old_update="if(state.apexActiveId||state.pendingApexForm||String(state.realmTransition?.to||'').startsWith('apex-'))return true;const due=(state.apexClock||0)>=(state.nextApexAt||APEX_INTERVAL_SECONDS);if(!due)return false;if(!forceApexPriority())return false;return beginApexEncounter();"
+          new_update="if(state.apexActiveId||state.pendingApexForm||String(state.realmTransition?.to||'').startsWith('apex-'))return true;const due=(state.apexClock||0)>=(state.nextApexAt||APEX_INTERVAL_SECONDS);if(!due)return false;if(!forceApexPriority())return false;const started=beginApexEncounter();if(started&&!state.apexArena){const form=state.pendingApexForm||'chronophage';state.apexArena={x:player.x,y:player.y,r:compactDevice()?318:486,form,createdAt:state.apexClock||0};}return started;"
+          replacements.append((old_update,new_update,'apex arena final invariant'))
           for old,new,label in replacements:
               if old not in text:
                   raise SystemExit(f'expected {label} not found')
@@ -50,7 +53,7 @@ jobs:
           p.write_text(text)
           PY
           python -m py_compile /tmp/apply.py
-          test "$(sha256sum /tmp/apply.py | cut -d' ' -f1)" = "29aecda210e14b1365ebe1894311c8507b547f278d786c87f94e8e14627cd665"
+          test "$(sha256sum /tmp/apply.py | cut -d' ' -f1)" = "fe59b508a38a59eb99012f8549c107127294b709a7f909be5cffd35ca937b402"
       - name: Apply source changes
         run: |
           set +e
