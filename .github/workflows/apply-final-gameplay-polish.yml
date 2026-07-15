@@ -31,6 +31,18 @@ jobs:
           cat .github/patch-parts/* | base64 -d | gzip -d > /tmp/apply.py
           python -m py_compile /tmp/apply.py
           test "$(sha256sum /tmp/apply.py | cut -d' ' -f1)" = "baf1a394f3ea2dcbc47308a1515eb281c029ebf7c601500c7e98ef3dbdb0e631"
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/apply.py')
+          text=p.read_text()
+          old="if 'projectileTexture' in read('src/gpu-renderer.js'):\n    raise RuntimeError('legacy projectileTexture reference remains')"
+          new="if re.search(r'(?<![A-Za-z0-9_$])projectileTexture(?![A-Za-z0-9_$])',read('src/gpu-renderer.js')):\n    raise RuntimeError('legacy projectileTexture reference remains')"
+          if old not in text:
+              raise SystemExit('expected renderer guard not found')
+          p.write_text(text.replace(old,new,1))
+          PY
+          python -m py_compile /tmp/apply.py
+          test "$(sha256sum /tmp/apply.py | cut -d' ' -f1)" = "15bef22e58dcc7c5cbabb115645c99bb62ce24dfe0f18050566da194cecb40cf"
       - name: Apply source changes
         run: |
           set +e
