@@ -1,13 +1,13 @@
 {
   "ok": false,
-  "startedAt": "2026-07-15T22:41:09.017Z",
-  "endedAt": "2026-07-15T22:41:40.322Z",
+  "startedAt": "2026-07-15T22:44:00.830Z",
+  "endedAt": "2026-07-15T22:44:32.344Z",
   "url": "http://127.0.0.1:8000",
-  "checkedUrl": "http://127.0.0.1:8000/?build-check=sha256-40dc36617d321801dfa414b4b16efddfcb9befaa9cdab28cafc03c030bd6319e",
+  "checkedUrl": "http://127.0.0.1:8000/?build-check=sha256-b34cd72cc7002b5ce6894514eebc6e2e204bcec671a3015395a5c6bff2f575ca",
   "runType": "local",
-  "commit": "1d72667dcae72baf6fd57337ade8a5088bb385b2",
-  "expectedBuildSha": "sha256-40dc36617d321801dfa414b4b16efddfcb9befaa9cdab28cafc03c030bd6319e",
-  "deployedBuildSha": "sha256-40dc36617d321801dfa414b4b16efddfcb9befaa9cdab28cafc03c030bd6319e",
+  "commit": "b00d4081db8d230172005632406c94fa5ef01c32",
+  "expectedBuildSha": "sha256-b34cd72cc7002b5ce6894514eebc6e2e204bcec671a3015395a5c6bff2f575ca",
+  "deployedBuildSha": "sha256-b34cd72cc7002b5ce6894514eebc6e2e204bcec671a3015395a5c6bff2f575ca",
   "chromeVersion": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/150.0.0.0 Safari/537.36",
   "viewport": {
     "desktop": {
@@ -24,7 +24,7 @@
   "browserArgs": [
     "--headless=new",
     "--remote-debugging-port=0",
-    "--user-data-dir=/tmp/stackfall-cdp-tQvQXu",
+    "--user-data-dir=/tmp/stackfall-cdp-cRYRNw",
     "--window-size=1920,1080",
     "--force-device-scale-factor=1",
     "--disable-background-timer-throttling",
@@ -62,7 +62,7 @@
   "scenarios": [
     {
       "name": "main-gpu",
-      "startedAt": "2026-07-15T22:41:14.766Z",
+      "startedAt": "2026-07-15T22:44:07.120Z",
       "screenshots": [
         "/home/runner/work/Stackfall/Stackfall/test-results/screenshots/desktop.png",
         "/home/runner/work/Stackfall/Stackfall/test-results/screenshots/mobile.png",
@@ -70,8 +70,8 @@
       ],
       "observations": {
         "build": {
-          "expected": "sha256-40dc36617d321801dfa414b4b16efddfcb9befaa9cdab28cafc03c030bd6319e",
-          "deployed": "sha256-40dc36617d321801dfa414b4b16efddfcb9befaa9cdab28cafc03c030bd6319e"
+          "expected": "sha256-b34cd72cc7002b5ce6894514eebc6e2e204bcec671a3015395a5c6bff2f575ca",
+          "deployed": "sha256-b34cd72cc7002b5ce6894514eebc6e2e204bcec671a3015395a5c6bff2f575ca"
         },
         "gpu": {
           "status": "active",
@@ -87,7 +87,7 @@
           "tickerRegistered": true,
           "tickerRegistrationCount": 1,
           "contextListenerRegistrationCount": 1,
-          "tickerFrames": 72,
+          "tickerFrames": 77,
           "firstGpuFrame": true,
           "firstProjectileSpriteSeen": true,
           "projectileSprites": {
@@ -123,7 +123,7 @@
           "shake": {
             "x": 0,
             "y": 0,
-            "frame": 73
+            "frame": 78
           },
           "baseCanvas": {
             "width": 1920,
@@ -234,7 +234,7 @@
           "diagnostics": {
             "mode": "playing",
             "runSerial": 23,
-            "renderFrame": 73,
+            "renderFrame": 78,
             "pendingActions": 0,
             "errors": [],
             "errorCount": 0,
@@ -271,7 +271,7 @@
               "tickerRegistered": true,
               "tickerRegistrationCount": 1,
               "contextListenerRegistrationCount": 1,
-              "tickerFrames": 79,
+              "tickerFrames": 85,
               "firstGpuFrame": true,
               "firstProjectileSpriteSeen": true,
               "projectileSprites": {
@@ -307,7 +307,7 @@
               "shake": {
                 "x": 0,
                 "y": 0,
-                "frame": 73
+                "frame": 78
               },
               "baseCanvas": {
                 "width": 1920,
@@ -362,7 +362,7 @@
           },
           "marker": {
             "count": 0,
-            "clock": 59.626668685019354
+            "clock": 54.434191915994916
           },
           "bounded": true,
           "control": 0,
@@ -455,8 +455,8 @@
             "d": {
               "mode": "playing",
               "runSerial": 34,
-              "renderFrame": 83,
-              "pendingActions": 2,
+              "renderFrame": 89,
+              "pendingActions": 1,
               "errors": [],
               "errorCount": 0,
               "sanitizer": {
@@ -468,14 +468,14 @@
                 "enemies": 72,
                 "projectiles": 71,
                 "enemyProjectiles": 0,
-                "particles": 58,
+                "particles": 92,
                 "gems": 0,
                 "wells": 2,
-                "texts": 35,
+                "texts": 36,
                 "shockwaves": 15,
                 "telegraphs": 0,
-                "beams": 10,
-                "curves": 3,
+                "beams": 2,
+                "curves": 1,
                 "mapEvents": 0
               },
               "renderer": {
@@ -492,7 +492,7 @@
                 "tickerRegistered": true,
                 "tickerRegistrationCount": 1,
                 "contextListenerRegistrationCount": 1,
-                "tickerFrames": 108,
+                "tickerFrames": 114,
                 "firstGpuFrame": true,
                 "firstProjectileSpriteSeen": true,
                 "projectileSprites": {
@@ -500,8 +500,8 @@
                   "visible": 71
                 },
                 "particleSprites": {
-                  "pool": 58,
-                  "visible": 58
+                  "pool": 107,
+                  "visible": 92
                 },
                 "textures": {
                   "generation": 1,
@@ -526,9 +526,9 @@
                 "dpr": 1,
                 "renderScale": 1,
                 "shake": {
-                  "x": -9.791503949675413,
-                  "y": -3.3756654018229675,
-                  "frame": 83
+                  "x": -1.8305602698050922,
+                  "y": -3.7403604117914,
+                  "frame": 89
                 },
                 "baseCanvas": {
                   "width": 1920,
@@ -571,7 +571,7 @@
               "tickerRegistered": true,
               "tickerRegistrationCount": 1,
               "contextListenerRegistrationCount": 1,
-              "tickerFrames": 108,
+              "tickerFrames": 114,
               "firstGpuFrame": true,
               "firstProjectileSpriteSeen": true,
               "projectileSprites": {
@@ -579,8 +579,8 @@
                 "visible": 71
               },
               "particleSprites": {
-                "pool": 58,
-                "visible": 58
+                "pool": 107,
+                "visible": 92
               },
               "textures": {
                 "generation": 1,
@@ -605,9 +605,9 @@
               "dpr": 1,
               "renderScale": 1,
               "shake": {
-                "x": -9.791503949675413,
-                "y": -3.3756654018229675,
-                "frame": 83
+                "x": -1.8305602698050922,
+                "y": -3.7403604117914,
+                "frame": 89
               },
               "baseCanvas": {
                 "width": 1920,
@@ -671,9 +671,9 @@
               4.6
             ],
             "nearest": [
-              16477.339923553543,
-              16816.926414606096,
-              16942.59501919997
+              13912.381153883836,
+              16818.694676648793,
+              16990.449074000087
             ]
           }
         },
@@ -693,7 +693,7 @@
               "tickerRegistered": true,
               "tickerRegistrationCount": 1,
               "contextListenerRegistrationCount": 1,
-              "tickerFrames": 126,
+              "tickerFrames": 130,
               "firstGpuFrame": true,
               "firstProjectileSpriteSeen": true,
               "projectileSprites": {
@@ -701,8 +701,8 @@
                 "visible": 43
               },
               "particleSprites": {
-                "pool": 58,
-                "visible": 50
+                "pool": 107,
+                "visible": 42
               },
               "textures": {
                 "generation": 1,
@@ -727,9 +727,9 @@
               "dpr": 1,
               "renderScale": 1,
               "shake": {
-                "x": -13.228532631917469,
-                "y": 6.60126517239838,
-                "frame": 101
+                "x": -6.0771398358238145,
+                "y": -2.355843466203879,
+                "frame": 105
               },
               "baseCanvas": {
                 "width": 1920,
@@ -774,16 +774,16 @@
                   "tickerRegistered": true,
                   "tickerRegistrationCount": 1,
                   "contextListenerRegistrationCount": 1,
-                  "tickerFrames": 128,
+                  "tickerFrames": 132,
                   "firstGpuFrame": true,
                   "firstProjectileSpriteSeen": true,
                   "projectileSprites": {
                     "pool": 71,
-                    "visible": 45
+                    "visible": 51
                   },
                   "particleSprites": {
-                    "pool": 58,
-                    "visible": 50
+                    "pool": 107,
+                    "visible": 39
                   },
                   "textures": {
                     "generation": 1,
@@ -798,7 +798,7 @@
                     "comet": "crystal-lance",
                     "shard": "angular-shard"
                   },
-                  "projectileCount": 44,
+                  "projectileCount": 50,
                   "hierarchy": [
                     "game-background",
                     "gpu-allied",
@@ -808,9 +808,9 @@
                   "dpr": 1,
                   "renderScale": 1,
                   "shake": {
-                    "x": 9.859601814363769,
-                    "y": 3.9808730068834546,
-                    "frame": 103
+                    "x": -10.358686915426844,
+                    "y": 7.9689314687652235,
+                    "frame": 107
                   },
                   "baseCanvas": {
                     "width": 1920,
@@ -852,7 +852,7 @@
                   "tickerRegistered": true,
                   "tickerRegistrationCount": 1,
                   "contextListenerRegistrationCount": 1,
-                  "tickerFrames": 135,
+                  "tickerFrames": 139,
                   "firstGpuFrame": true,
                   "firstProjectileSpriteSeen": true,
                   "projectileSprites": {
@@ -860,8 +860,8 @@
                     "visible": 44
                   },
                   "particleSprites": {
-                    "pool": 58,
-                    "visible": 30
+                    "pool": 107,
+                    "visible": 13
                   },
                   "textures": {
                     "generation": 2,
@@ -886,9 +886,9 @@
                   "dpr": 1,
                   "renderScale": 1,
                   "shake": {
-                    "x": 2.8832676967426716,
-                    "y": -2.8521094685051054,
-                    "frame": 110
+                    "x": -8.031560054879831,
+                    "y": 2.5396915610934663,
+                    "frame": 114
                   },
                   "baseCanvas": {
                     "width": 1920,
@@ -932,16 +932,16 @@
                   "tickerRegistered": true,
                   "tickerRegistrationCount": 1,
                   "contextListenerRegistrationCount": 1,
-                  "tickerFrames": 137,
+                  "tickerFrames": 141,
                   "firstGpuFrame": true,
                   "firstProjectileSpriteSeen": true,
                   "projectileSprites": {
                     "pool": 71,
-                    "visible": 42
+                    "visible": 47
                   },
                   "particleSprites": {
-                    "pool": 58,
-                    "visible": 24
+                    "pool": 107,
+                    "visible": 32
                   },
                   "textures": {
                     "generation": 2,
@@ -956,7 +956,7 @@
                     "comet": "crystal-lance",
                     "shard": "angular-shard"
                   },
-                  "projectileCount": 42,
+                  "projectileCount": 47,
                   "hierarchy": [
                     "game-background",
                     "gpu-allied",
@@ -966,9 +966,9 @@
                   "dpr": 1,
                   "renderScale": 1,
                   "shake": {
-                    "x": 2.8360109266873383,
-                    "y": 8.802882256781205,
-                    "frame": 112
+                    "x": -5.641902449858834,
+                    "y": -8.365478107091182,
+                    "frame": 116
                   },
                   "baseCanvas": {
                     "width": 1920,
@@ -1010,7 +1010,7 @@
                   "tickerRegistered": true,
                   "tickerRegistrationCount": 1,
                   "contextListenerRegistrationCount": 1,
-                  "tickerFrames": 144,
+                  "tickerFrames": 147,
                   "firstGpuFrame": true,
                   "firstProjectileSpriteSeen": true,
                   "projectileSprites": {
@@ -1018,8 +1018,8 @@
                     "visible": 42
                   },
                   "particleSprites": {
-                    "pool": 58,
-                    "visible": 32
+                    "pool": 107,
+                    "visible": 23
                   },
                   "textures": {
                     "generation": 3,
@@ -1044,9 +1044,9 @@
                   "dpr": 1,
                   "renderScale": 1,
                   "shake": {
-                    "x": 4.1599066217490535,
-                    "y": -5.185904397547127,
-                    "frame": 119
+                    "x": 0.6307486591892921,
+                    "y": -4.681901653730874,
+                    "frame": 122
                   },
                   "baseCanvas": {
                     "width": 1920,
@@ -1090,7 +1090,7 @@
                   "tickerRegistered": true,
                   "tickerRegistrationCount": 1,
                   "contextListenerRegistrationCount": 1,
-                  "tickerFrames": 146,
+                  "tickerFrames": 149,
                   "firstGpuFrame": true,
                   "firstProjectileSpriteSeen": true,
                   "projectileSprites": {
@@ -1098,8 +1098,8 @@
                     "visible": 34
                   },
                   "particleSprites": {
-                    "pool": 58,
-                    "visible": 28
+                    "pool": 107,
+                    "visible": 20
                   },
                   "textures": {
                     "generation": 3,
@@ -1124,9 +1124,9 @@
                   "dpr": 1,
                   "renderScale": 1,
                   "shake": {
-                    "x": 5.437558266471228,
-                    "y": -10.842097697897712,
-                    "frame": 121
+                    "x": -8.072978583205021,
+                    "y": -2.1392921118225336,
+                    "frame": 124
                   },
                   "baseCanvas": {
                     "width": 1920,
@@ -1151,7 +1151,7 @@
                   "lastFailure": "WebGL context lost"
                 },
                 "canvasCount": 3,
-                "fallbackDraws": 21
+                "fallbackDraws": 20
               },
               "restored": {
                 "renderer": {
@@ -1168,16 +1168,16 @@
                   "tickerRegistered": true,
                   "tickerRegistrationCount": 1,
                   "contextListenerRegistrationCount": 1,
-                  "tickerFrames": 155,
+                  "tickerFrames": 159,
                   "firstGpuFrame": true,
                   "firstProjectileSpriteSeen": true,
                   "projectileSprites": {
                     "pool": 71,
-                    "visible": 34
+                    "visible": 40
                   },
                   "particleSprites": {
-                    "pool": 58,
-                    "visible": 23
+                    "pool": 107,
+                    "visible": 15
                   },
                   "textures": {
                     "generation": 4,
@@ -1192,7 +1192,7 @@
                     "comet": "crystal-lance",
                     "shard": "angular-shard"
                   },
-                  "projectileCount": 34,
+                  "projectileCount": 40,
                   "hierarchy": [
                     "game-background",
                     "gpu-allied",
@@ -1202,9 +1202,9 @@
                   "dpr": 1,
                   "renderScale": 1,
                   "shake": {
-                    "x": 3.0349005020776865,
-                    "y": -1.594326396188654,
-                    "frame": 130
+                    "x": -4.479130649780652,
+                    "y": 4.997260969551416,
+                    "frame": 134
                   },
                   "baseCanvas": {
                     "width": 1920,
@@ -1247,16 +1247,16 @@
               "tickerRegistered": true,
               "tickerRegistrationCount": 1,
               "contextListenerRegistrationCount": 1,
-              "tickerFrames": 157,
+              "tickerFrames": 161,
               "firstGpuFrame": true,
               "firstProjectileSpriteSeen": true,
               "projectileSprites": {
                 "pool": 71,
-                "visible": 40
+                "visible": 38
               },
               "particleSprites": {
-                "pool": 58,
-                "visible": 24
+                "pool": 107,
+                "visible": 14
               },
               "textures": {
                 "generation": 4,
@@ -1271,7 +1271,7 @@
                 "comet": "crystal-lance",
                 "shard": "angular-shard"
               },
-              "projectileCount": 40,
+              "projectileCount": 38,
               "hierarchy": [
                 "game-background",
                 "gpu-allied",
@@ -1281,9 +1281,9 @@
               "dpr": 1,
               "renderScale": 1,
               "shake": {
-                "x": 12.317136179063539,
-                "y": -0.6077535403294689,
-                "frame": 132
+                "x": 3.419475353976086,
+                "y": -1.3467461378543168,
+                "frame": 136
               },
               "baseCanvas": {
                 "width": 1920,
@@ -1328,7 +1328,7 @@
               "tickerRegistered": true,
               "tickerRegistrationCount": 1,
               "contextListenerRegistrationCount": 1,
-              "tickerFrames": 180,
+              "tickerFrames": 185,
               "firstGpuFrame": true,
               "firstProjectileSpriteSeen": true,
               "projectileSprites": {
@@ -1336,8 +1336,8 @@
                 "visible": 49
               },
               "particleSprites": {
-                "pool": 58,
-                "visible": 6
+                "pool": 107,
+                "visible": 9
               },
               "textures": {
                 "generation": 4,
@@ -1364,7 +1364,7 @@
               "shake": {
                 "x": 0,
                 "y": 0,
-                "frame": 155
+                "frame": 160
               },
               "baseCanvas": {
                 "width": 1280,
@@ -1428,16 +1428,16 @@
               "tickerRegistered": true,
               "tickerRegistrationCount": 1,
               "contextListenerRegistrationCount": 1,
-              "tickerFrames": 193,
+              "tickerFrames": 200,
               "firstGpuFrame": true,
               "firstProjectileSpriteSeen": true,
               "projectileSprites": {
                 "pool": 71,
-                "visible": 53
+                "visible": 49
               },
               "particleSprites": {
-                "pool": 58,
-                "visible": 16
+                "pool": 107,
+                "visible": 50
               },
               "textures": {
                 "generation": 4,
@@ -1452,7 +1452,7 @@
                 "comet": "crystal-lance",
                 "shard": "angular-shard"
               },
-              "projectileCount": 50,
+              "projectileCount": 48,
               "hierarchy": [
                 "game-background",
                 "gpu-allied",
@@ -1462,9 +1462,9 @@
               "dpr": 1.35,
               "renderScale": 1,
               "shake": {
-                "x": 0,
-                "y": 0,
-                "frame": 168
+                "x": 1.2178480124957964,
+                "y": -0.3044933823651004,
+                "frame": 175
               },
               "baseCanvas": {
                 "width": 526,
@@ -1522,7 +1522,7 @@
         "finalDiagnostics": {
           "mode": "playing",
           "runSerial": 34,
-          "renderFrame": 181,
+          "renderFrame": 187,
           "pendingActions": 1,
           "errors": [],
           "errorCount": 0,
@@ -1533,15 +1533,15 @@
           },
           "entities": {
             "enemies": 72,
-            "projectiles": 36,
+            "projectiles": 41,
             "enemyProjectiles": 0,
-            "particles": 27,
+            "particles": 26,
             "gems": 0,
             "wells": 4,
-            "texts": 6,
-            "shockwaves": 8,
+            "texts": 9,
+            "shockwaves": 20,
             "telegraphs": 0,
-            "beams": 10,
+            "beams": 3,
             "curves": 0,
             "mapEvents": 0
           },
@@ -1559,16 +1559,16 @@
             "tickerRegistered": true,
             "tickerRegistrationCount": 1,
             "contextListenerRegistrationCount": 1,
-            "tickerFrames": 206,
+            "tickerFrames": 212,
             "firstGpuFrame": true,
             "firstProjectileSpriteSeen": true,
             "projectileSprites": {
               "pool": 71,
-              "visible": 36
+              "visible": 40
             },
             "particleSprites": {
-              "pool": 58,
-              "visible": 27
+              "pool": 107,
+              "visible": 26
             },
             "textures": {
               "generation": 4,
@@ -1583,7 +1583,7 @@
               "comet": "crystal-lance",
               "shard": "angular-shard"
             },
-            "projectileCount": 36,
+            "projectileCount": 40,
             "hierarchy": [
               "game-background",
               "gpu-allied",
@@ -1593,9 +1593,9 @@
             "dpr": 0.8,
             "renderScale": 0.8,
             "shake": {
-              "x": -2.6172281891586735,
-              "y": 1.2324663790721564,
-              "frame": 181
+              "x": 8.945618275870403,
+              "y": 8.318432760319434,
+              "frame": 187
             },
             "baseCanvas": {
               "width": 1536,
@@ -1628,7 +1628,7 @@
       "failureDiagnostics": {
         "mode": "playing",
         "runSerial": 34,
-        "renderFrame": 191,
+        "renderFrame": 198,
         "pendingActions": 0,
         "errors": [],
         "errorCount": 0,
@@ -1639,15 +1639,15 @@
         },
         "entities": {
           "enemies": 72,
-          "projectiles": 50,
+          "projectiles": 48,
           "enemyProjectiles": 0,
-          "particles": 11,
+          "particles": 26,
           "gems": 0,
           "wells": 4,
-          "texts": 3,
-          "shockwaves": 9,
+          "texts": 11,
+          "shockwaves": 3,
           "telegraphs": 0,
-          "beams": 0,
+          "beams": 3,
           "curves": 3,
           "mapEvents": 0
         },
@@ -1665,16 +1665,16 @@
           "tickerRegistered": true,
           "tickerRegistrationCount": 1,
           "contextListenerRegistrationCount": 1,
-          "tickerFrames": 216,
+          "tickerFrames": 223,
           "firstGpuFrame": true,
           "firstProjectileSpriteSeen": true,
           "projectileSprites": {
             "pool": 71,
-            "visible": 50
+            "visible": 48
           },
           "particleSprites": {
-            "pool": 58,
-            "visible": 11
+            "pool": 107,
+            "visible": 26
           },
           "textures": {
             "generation": 4,
@@ -1689,7 +1689,7 @@
             "comet": "crystal-lance",
             "shard": "angular-shard"
           },
-          "projectileCount": 50,
+          "projectileCount": 48,
           "hierarchy": [
             "game-background",
             "gpu-allied",
@@ -1699,9 +1699,9 @@
           "dpr": 0.8,
           "renderScale": 0.8,
           "shake": {
-            "x": 0,
-            "y": 0,
-            "frame": 191
+            "x": -0.30392925318576935,
+            "y": -14.368760117356464,
+            "frame": 198
           },
           "baseCanvas": {
             "width": 1536,
@@ -1730,12 +1730,12 @@
           "scriptCount": 31
         }
       },
-      "endedAt": "2026-07-15T22:41:35.261Z",
+      "endedAt": "2026-07-15T22:44:27.243Z",
       "ok": false
     },
     {
       "name": "pixi-fallback",
-      "startedAt": "2026-07-15T22:41:35.261Z",
+      "startedAt": "2026-07-15T22:44:27.243Z",
       "screenshots": [],
       "observations": {
         "fallback": {
@@ -1789,7 +1789,7 @@
             "shake": {
               "x": 0,
               "y": 0,
-              "frame": 46
+              "frame": 55
             },
             "baseCanvas": {
               "width": 1920,
@@ -1810,7 +1810,7 @@
           "diagnostics": {
             "mode": "playing",
             "runSerial": 1,
-            "renderFrame": 46,
+            "renderFrame": 55,
             "pendingActions": 0,
             "errors": [],
             "errorCount": 0,
@@ -1883,7 +1883,7 @@
               "shake": {
                 "x": 0,
                 "y": 0,
-                "frame": 46
+                "frame": 55
               },
               "baseCanvas": {
                 "width": 1920,
@@ -1911,11 +1911,11 @@
             "combatForeground"
           ],
           "projectiles": 0,
-          "renderFrame": 46,
+          "renderFrame": 55,
           "projectilePeak": 1
         }
       },
-      "endedAt": "2026-07-15T22:41:40.204Z",
+      "endedAt": "2026-07-15T22:44:32.207Z",
       "ok": true
     }
   ]
