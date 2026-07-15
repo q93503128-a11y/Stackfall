@@ -14,7 +14,7 @@ const BOSS_STATS={
   eclipse:{color:'#ff72cb',hp:1,speed:1,damage:1,r:1},seraph:{color:'#91ffe7',hp:.90,speed:1.10,damage:.92,r:.96},pulsar:{color:'#67b7ff',hp:1.08,speed:.92,damage:1.02,r:1.04},leviathan:{color:'#ff9b68',hp:1.22,speed:.76,damage:1.12,r:1.13},archivist:{color:'#d7b0ff',hp:.97,speed:.88,damage:.96,r:1.02},heliarch:{color:'#ffd66f',hp:1.05,speed:.94,damage:1.06,r:1.06},tempest:{color:'#76d9ff',hp:.94,speed:1.14,damage:.98,r:.96},nullengine:{color:'#a9b4d8',hp:1.16,speed:.82,damage:1.08,r:1.10},
   knight:{color:'#d4a6ff',hp:1,speed:1,damage:1,r:1},warden:{color:'#70e5ff',hp:.92,speed:1.10,damage:.94,r:.96},executioner:{color:'#ff7db6',hp:.86,speed:1.18,damage:1.06,r:.92},colossus:{color:'#ffd07b',hp:1.30,speed:.74,damage:1.12,r:1.16},harvester:{color:'#ff9c7d',hp:1.04,speed:.96,damage:1.08,r:1.05},mirror:{color:'#b6a2ff',hp:1.02,speed:1.07,damage:.99,r:.96},
   maw:{color:'#9b5cff',hp:1,speed:.94,damage:.96,r:1.10},oracle:{color:'#c58aff',hp:.90,speed:1.08,damage:.92,r:.92},weaver:{color:'#7446c8',hp:1.08,speed:.88,damage:1.03,r:1.07},grave:{color:'#6960ad',hp:1.20,speed:.76,damage:1.08,r:1.16},paradox:{color:'#d69cff',hp:1.04,speed:1.07,damage:1.02,r:.96},
-  chronophage:{color:'#79ffe1',hp:1.55,speed:.86,damage:1.08,r:1.28,theme:'apex-chrono'},starforge:{color:'#ffb04e',hp:1.72,speed:.72,damage:1.16,r:1.34,theme:'apex-forge'},lastconstellation:{color:'#b7c9ff',hp:1.62,speed:.80,damage:1.12,r:1.30,theme:'apex-constellation'}
+  chronophage:{color:'#79ffe1',hp:2.22,speed:.92,damage:1.34,r:1.34,theme:'apex-chrono'},starforge:{color:'#ffb04e',hp:2.48,speed:.80,damage:1.46,r:1.40,theme:'apex-forge'},lastconstellation:{color:'#b7c9ff',hp:2.34,speed:.86,damage:1.40,r:1.37,theme:'apex-constellation'}
 };
 function bossBag(kind){state.bossBags=state.bossBags||{};const pool=BOSS_POOLS[kind]||BOSS_POOLS.boss;let bag=state.bossBags[kind];if(!bag?.length){bag=[...pool].sort(()=>Math.random()-.5);state.bossBags[kind]=bag;}return bag.pop();}
 function resetBossSystems(){state.bossBags={};state.nextApexAt=APEX_INTERVAL_SECONDS;state.apexCount=0;state.apexActiveId=null;state.apexBoons={};state.apexBoonTimers={chrono:24,forge:18,constellation:12};}
@@ -23,13 +23,11 @@ function configureElite(enemy,kind){
   enemy.eliteCategory=category;enemy.eliteForm=form;enemy.name=bossName(form);enemy.color=s.color;enemy.r*=s.r;enemy.hp*=s.hp;enemy.speed*=s.speed;enemy.damage*=s.damage;
   if(category==='void')enemy.eventKind='void';
   if(category==='apex'){
-    const cycle=Math.max(0,t/APEX_INTERVAL_SECONDS-1),hpScale=1+cycle*.55,damageScale=1+cycle*.24,speedScale=1+Math.min(.18,cycle*.04),cooldownScale=Math.max(.72,1-cycle*.05);
-    enemy.eventKind='apex';enemy.apexForm=form;enemy.xp*=2.4+cycle*.35;enemy.apexPhase=1;enemy.hp*=hpScale;enemy.damage*=damageScale;enemy.speed*=speedScale;enemy.skillCd*=cooldownScale;enemy.burstCd*=cooldownScale;enemy.pulseCd*=cooldownScale;
+    const cycle=Math.max(0,t/APEX_INTERVAL_SECONDS-1),hpScale=1+cycle*.62,damageScale=1+cycle*.28,speedScale=1+Math.min(.22,cycle*.05),cooldownScale=Math.max(.66,1-cycle*.06);
+    enemy.eventKind='apex';enemy.apexForm=form;enemy.xp*=3.1+cycle*.45;enemy.apexPhase=1;enemy.hp*=hpScale*1.9;enemy.damage*=damageScale*1.25;enemy.speed*=speedScale*1.08;enemy.skillCd*=cooldownScale*.70;enemy.burstCd*=cooldownScale*.70;enemy.pulseCd*=cooldownScale*.70;
   }else{
     const isBoss=enemy.type==='boss',f=clamp((t-110)/520,0,1);enemy.hp*=lerp(isBoss?.56:.74,isBoss?.95:.99,f);enemy.damage*=lerp(isBoss?.66:.80,.98,clamp((t-110)/440,0,1));enemy.speed*=lerp(isBoss?.88:.94,1,clamp((t-110)/360,0,1));enemy.skillCd+=(isBoss?1.25:.65)*(1-f);enemy.burstCd+=(isBoss?1.45:.8)*(1-f);
-  }
-  if(category!=='mini'){
-    enemy.hp*=2;enemy.damage*=1.75;enemy.skillCd*=.82;enemy.burstCd*=.82;enemy.pulseCd*=.82;
+    if(category!=='mini'){enemy.hp*=2;enemy.damage*=1.75;enemy.skillCd*=.82;enemy.burstCd*=.82;enemy.pulseCd*=.82;}
   }
   enemy.maxHp=enemy.hp;
 }
