@@ -11,24 +11,6 @@
     fr:['Accélérateur Photonique','Vitesse des projectiles +10 % et rotation orbitale +8 %']
   };
 
-  const projectileSpeedMultiplier=()=>1+stat('projectileSpeed')*.10;
-  const baseSpawnProjectile=spawnPlayerProjectile;
-  spawnPlayerProjectile=function acceleratedProjectile(data){
-    const mult=projectileSpeedMultiplier();
-    const next={...data};
-    if(Number.isFinite(next.vx))next.vx*=mult;
-    if(Number.isFinite(next.vy))next.vy*=mult;
-    return baseSpawnProjectile(next);
-  };
-
-  const baseUpdateWeapons=updateWeapons;
-  updateWeapons=function acceleratedOrbitWeapons(dt){
-    const before=player.angle;
-    baseUpdateWeapons(dt);
-    const delta=player.angle-before;
-    if(Number.isFinite(delta)&&delta!==0)player.angle+=delta*stat('projectileSpeed')*.08;
-  };
-
   drawMagnetField=function differentiatedMagnetField(){
     const x=vw/2,y=vh/2,r=magnetRange(),stacks=stat('magnet'),t=performance.now();
     const rgb=stacks>0?'255,204,92':'104,220,255';ctx.save();
@@ -47,28 +29,6 @@
     ctx.lineWidth=player.shield>0?3:1.7;ctx.shadowBlur=player.shield>0?18:8;ctx.shadowColor=COLORS.green;ctx.beginPath();
     for(let i=0;i<6;i++){const a=i/6*TAU-Math.PI/2,px=Math.cos(a)*radius,py=Math.sin(a)*radius;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
     ctx.closePath();ctx.stroke();if(player.shield>0){ctx.globalAlpha=.20;ctx.fillStyle=COLORS.green;ctx.fill();}ctx.restore();
-  };
-
-  drawEquippedOrbits=function differentiatedEquipmentOrbits(x,y,t){
-    const bladeN=weaponCount('blade');
-    if(bladeN){
-      const count=bladeN>=5?3:bladeN>=2?2:1,orbit=bladeN>=6?116:bladeN>=3?91:80;
-      for(let i=0;i<count;i++){
-        const a=player.angle+i*TAU/count,bx=x+Math.cos(a)*orbit,by=y+Math.sin(a)*orbit;
-        ctx.save();ctx.translate(bx,by);ctx.rotate(a+Math.PI/2);ctx.shadowBlur=bladeN>=6?28:18;ctx.shadowColor=COLORS.cyan;
-        const blade=ctx.createLinearGradient(-17,-28,16,24);blade.addColorStop(0,'rgba(255,255,255,.98)');blade.addColorStop(.42,'#a7f5ff');blade.addColorStop(.75,'#668cff');blade.addColorStop(1,'rgba(60,76,190,.05)');ctx.fillStyle=blade;
-        ctx.beginPath();ctx.moveTo(-4,-28);ctx.bezierCurveTo(19,-12,17,14,-2,27);ctx.bezierCurveTo(7,10,3,-8,-4,-28);ctx.fill();ctx.restore();
-      }
-    }
-    const prismN=weaponCount('prism');
-    if(prismN){
-      const count=prismN>=6?3:prismN>=2?2:1;
-      for(const p of prismPositions(count)){
-        const s=worldToScreen(p.x,p.y);ctx.save();ctx.translate(s.x,s.y);ctx.rotate(-p.a+t*.00057);ctx.shadowBlur=16;ctx.shadowColor='#c2a7ff';
-        const g=ctx.createLinearGradient(0,-10,0,10);g.addColorStop(0,'#ffffff');g.addColorStop(.5,'#d2c3ff');g.addColorStop(1,'#6e63d8');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(8,0);ctx.lineTo(0,10);ctx.lineTo(-8,0);ctx.closePath();ctx.fill();ctx.restore();
-      }
-      if(prismN>=4){const pts=prismPositions(count).map(p=>worldToScreen(p.x,p.y));ctx.strokeStyle='rgba(194,167,255,.25)';ctx.lineWidth=1.2;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));if(pts.length>2)ctx.closePath();ctx.stroke();}
-    }
   };
 
   applyLanguage();renderLoadout();updateHUD();

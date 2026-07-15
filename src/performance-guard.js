@@ -131,8 +131,8 @@
   };
 
   const baseAudioHit=audio.hit.bind(audio);let lastLightHit=0;
-  audio.hit=function budgetedHit(strong=false){
-    const now=performance.now();if(!strong&&stressed()&&now-lastLightHit<52)return;if(!strong)lastLightHit=now;return baseAudioHit(strong);
+  audio.hit=function budgetedHit(strong=false,source=''){
+    const now=performance.now();if(!strong&&stressed()&&now-lastLightHit<52)return;if(!strong)lastLightHit=now;return baseAudioHit(strong,source);
   };
 
   function makeSurface(width,height){
@@ -252,7 +252,7 @@
           if(p.pierce>0)p.pierce--;else p.life=0;
         }
       });
-      if(p.life<=0&&p.explode&&!p.exploded){p.exploded=true;areaDamage(p.x,p.y,118,20+weaponCount('comet')*3.8,COLORS.comet);}
+      if(p.life<=0&&p.explode&&!p.exploded){p.exploded=true;areaDamage(p.x,p.y,118,20+weaponCount('comet')*3.8,COLORS.comet,'comet-burst');}
       if((p.x-player.x)**2+(p.y-player.y)**2>4410000)p.life=0;
     }
     for(const projectile of spawned)spawnPlayerProjectile(projectile);
@@ -278,14 +278,6 @@
   drawGravityLens=function drawBudgetedGravityLens(w,p,alpha,t){
     if(tier()<2)return baseGravityLens(w,p,alpha,t);
     const echoed=!!w.echoed||w.color===COLORS.pink,visual=Math.min(118,50+w.r*.25),horizon=Math.min(23,10+w.r*.052);ctx.save();ctx.translate(p.x,p.y);ctx.globalAlpha=alpha;ctx.rotate(-.17);ctx.strokeStyle=echoed?'#ff668f':'#ffb15d';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(0,0,visual*.68,visual*.14,0,0,TAU);ctx.stroke();ctx.fillStyle='#000';ctx.beginPath();ctx.arc(0,0,horizon,0,TAU);ctx.fill();ctx.restore();
-  };
-
-  drawEquippedOrbits=function separatedEquipmentOrbits(x,y,t){
-    const size=weaponSizeMultiplier(),level=tier(),bladeN=weaponCount('blade');
-    if(bladeN){const count=bladeN>=5?3:bladeN>=2?2:1,orbit=orbitRadiusFor('blade');for(let i=0;i<count;i++){const a=player.angle+i*TAU/count,bx=x+Math.cos(a)*orbit,by=y+Math.sin(a)*orbit;ctx.save();ctx.translate(bx,by);ctx.rotate(a+Math.PI/2);ctx.scale(size,size);ctx.shadowBlur=level===2?0:18;ctx.shadowColor=COLORS.cyan;ctx.fillStyle='#a7f5ff';ctx.beginPath();ctx.moveTo(-4,-28);ctx.bezierCurveTo(19,-12,17,14,-2,27);ctx.bezierCurveTo(7,10,3,-8,-4,-28);ctx.fill();ctx.restore();}}
-    const bulwarkN=weaponCount('bulwark');if(bulwarkN){const count=Math.min(4,1+Math.floor((bulwarkN-1)/2)),orbit=orbitRadiusFor('bulwark');for(let i=0;i<count;i++){const a=-t*.00055+i*TAU/count;ctx.save();ctx.translate(x+Math.cos(a)*orbit,y+Math.sin(a)*orbit);ctx.rotate(a+Math.PI/2);ctx.strokeStyle='rgba(116,242,167,.82)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-7,5);ctx.lineTo(0,-8);ctx.lineTo(7,5);ctx.lineTo(0,9);ctx.closePath();ctx.stroke();ctx.restore();}}
-    const prismN=weaponCount('prism');if(prismN){const count=prismN>=6?3:prismN>=2?2:1;for(const p of prismPositions(count)){const s=worldToScreen(p.x,p.y);ctx.save();ctx.translate(s.x,s.y);ctx.rotate(-p.a+t*.00057);ctx.scale(size,size);ctx.fillStyle='#d2c3ff';ctx.shadowBlur=level===2?0:15;ctx.shadowColor='#c2a7ff';ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(8,0);ctx.lineTo(0,10);ctx.lineTo(-8,0);ctx.closePath();ctx.fill();ctx.restore();}}
-    const droneN=weaponCount('drone');if(droneN){for(const pos of meteorDronePositions(droneN)){const s=worldToScreen(pos.x,pos.y);ctx.save();ctx.translate(s.x,s.y);ctx.rotate(pos.a+Math.PI/2);ctx.fillStyle='#0b2630';ctx.strokeStyle='#baffea';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(8,6);ctx.lineTo(0,3);ctx.lineTo(-8,6);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}}
   };
 
   if(PASSIVES.power){PASSIVES.power.desc='모든 피해 +10%.';if(PASSIVE_TEXT.power){PASSIVE_TEXT.power.ko=['출력 증폭',PASSIVES.power.desc];PASSIVE_TEXT.power.en=['Power Amplifier','All damage +10%.'];}}

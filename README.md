@@ -102,6 +102,8 @@ python -m http.server 8000
 
 전체 음향은 채널별 설정값을 유지한 채 최종 출력단에서 이전 빌드 대비 약 2배(+6dB)로 증폭합니다. 피크는 출력 컴프레서가 제어합니다.
 
+배경음은 일반 전투, 맵 이벤트, 초월체 전투의 세 장면으로 나뉘며 전투 상태가 바뀌면 자동 전환됩니다. 레벨업 효과음은 높은 상승음 대신 저역으로 가라앉는 음형을 사용합니다. 공격음은 높은 대역을 보강하고 코어·칼날·중력·레일 등 15개 무기 계열마다 주파수, 파형, 길이와 피치 이동을 다르게 사용합니다.
+
 `반짝임 효과`를 끄면 장식용 전투 파티클, 화면 섬광, 별의 점멸과 긴 광원 꼬리를 줄이거나 제거합니다. 적 투사체, 보스 장판, 공격 예고 등 생존에 필요한 표시는 유지합니다.
 
 ## 렌더링과 성능
@@ -131,7 +133,7 @@ python -m http.server 8000
 
 화면 계층은 `배경 Canvas(z=0) → PixiJS 아군 효과(z=1) → 전경 Canvas(z=2) → HTML UI(z≥10)` 순서입니다. 세 렌더 계층은 프레임마다 한 번 계산한 `shakeX`, `shakeY`를 함께 사용합니다.
 
-PixiJS는 버전 `8.19.0`을 고정해서 불러옵니다. 렌더러 상태는 `loading`, `warming-up`, `active`, `failed`, `context-lost`, `canvas-fallback`으로 관리합니다. PixiJS 로드, GPU 캔버스 삽입, 0이 아닌 캔버스 크기, ticker 실행, 첫 GPU 프레임, 실제 투사체 sprite 표시가 확인된 뒤에만 Canvas 2D 아군 투사체 렌더링을 멈춥니다. WebGL 컨텍스트가 복구되면 텍스처와 스프라이트 상태를 다시 만들되 ticker는 재등록하지 않습니다.
+PixiJS는 버전 `8.19.0`을 고정해서 불러옵니다. 렌더러 상태는 `loading`, `warming-up`, `active`, `failed`, `context-lost`, `canvas-fallback`으로 관리합니다. PixiJS 로드, GPU 캔버스 삽입, 0이 아닌 캔버스 크기, ticker 실행, 첫 GPU 프레임, 실제 투사체 sprite 표시가 확인된 뒤에만 Canvas 2D 아군 투사체 렌더링을 멈춥니다. WebGL 컨텍스트가 복구되면 기존 텍스처를 sprite에서 분리하고 파괴한 뒤 새 텍스처를 연결합니다. Pixi app, ticker, 캔버스와 context listener는 다시 만들거나 중복 등록하지 않습니다.
 
 로드 실패, 초기화 실패, WebGL 미지원, WebGL 컨텍스트 손실, 투사체 sprite warm-up 실패가 발생하면 게임을 중단하지 않고 기존 Canvas 2D 투사체 렌더러로 자동 복귀합니다. `window.stackfallRendererInfo()`는 계층·DPR·공유 shake·컨텍스트 복구 횟수·ticker·sprite pool을, `window.stackfallRuntimeDiagnostics()`는 반복 오류·예약 공격·개체 수를 콘솔 진단용으로 반환합니다.
 
@@ -148,6 +150,8 @@ PixiJS는 버전 `8.19.0`을 고정해서 불러옵니다. 렌더러 상태는 `
 - 효과 배열 제자리 압축
 - 런 세대와 게임 시간 기반 예약 공격
 - 심한 부하에서만 최후 수단 해상도 조절
+
+전투 예약기는 한 업데이트에서 만료된 callback마다 현재 런 세대와 `playing` 상태를 다시 검사합니다. 앞 callback이 reset·메뉴·게임 오버를 일으키면 같은 batch의 나머지는 실행하지 않으며, callback 안에서 새로 예약한 공격은 다음 업데이트부터 실행합니다. 일시정지·선택·보상·이벤트 중에는 남은 시간이 줄지 않고, cinematic 진입과 런 종료 시 queue를 비웁니다.
 
 ## 로딩 순서 주의
 
@@ -167,6 +171,7 @@ gpu-renderer.js
 - 투사체 유도와 빔 수명: `systems.js`
 - 원거리 적과 시간 정지 이동: `bosses.js`
 - 빔·중력 우물·플레이어 렌더링: `render-entities.js`
+- 장비 공전 외형과 중력 렌즈: `render-entities.js`
 - 프리즘 발사·집속·배율: `weapons.js`, 보상 정의: `reward-refinement.js`
 - 부메랑 생성: `weapons.js`, 갱신·충돌: `systems.js`, 렌더링: `render-entities.js`
 - 보상 중복 방지와 강화 보정: `reward-refinement.js`
@@ -174,7 +179,8 @@ gpu-renderer.js
 - 공간 색인과 가까운 표적 조회: `performance-guard.js`
 - 중장갑 공용 외형: `render-entities.js`
 - 런타임 진단과 단일 RAF: `render.js`
-- GPU fallback과 sprite pool: `gpu-renderer.js`
+- 장면별 BGM과 무기별 공격음: `runtime-config.js`, 장면 동기화 호출: `render.js`
+- GPU fallback, texture 수명과 sprite pool: `gpu-renderer.js`
 
 삭제된 구식 파일:
 
@@ -186,4 +192,12 @@ gpu-renderer.js
 
 세부 수치, 등장 규칙, 보상, 이벤트, 성능 원칙과 QA 항목은 `docs/GAME_DESIGN.md`를 기준으로 합니다.
 
-브라우저 회귀 검사는 로컬 서버를 켠 뒤 `node scripts/browser-smoke.mjs`로 실행합니다. 2분 고밀도 검사는 `STACKFALL_SOAK_MS=120000 node scripts/browser-smoke.mjs`를 사용합니다.
+브라우저 회귀 검사는 로컬 서버를 켠 뒤 `node scripts/browser-smoke.mjs`로 실행합니다. 예상하지 않은 warning/error/예외/네트워크 실패는 테스트 실패이며 결과는 무시되는 `test-results/stackfall-smoke.json`에 저장됩니다. 정상 GPU와 `WEBGL_lose_context`는 기본 필수이고, 명시적인 환경변수 `STACKFALL_ALLOW_GPU_SKIP=1`, `STACKFALL_ALLOW_CONTEXT_SKIP=1`에서만 사유가 포함된 skip을 허용합니다.
+
+2분 고밀도 검사는 플랫폼 공통으로 아래처럼 실행합니다.
+
+```bash
+node scripts/browser-smoke.mjs --soak-ms=120000
+```
+
+배포본은 `node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-results/live-smoke.json`으로 같은 정책을 적용해 확인합니다.

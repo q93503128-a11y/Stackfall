@@ -84,7 +84,7 @@
   renderLoadout=function(){renderSyncedLoadout(true);updateButton();};
   const baseUpdateHUD=updateHUD;
   updateHUD=function(){
-    renderSyncedLoadout(false);baseUpdateHUD();
+    renderSyncedLoadout(false);baseUpdateHUD();sf2UpdateCooldownHud();
     const duration=2.15*(typeof chainDurationMultiplier==='function'?chainDurationMultiplier():(1+stat('chain')*.25));
     ui.comboBar.style.transform=`scaleX(${clamp(state.comboTimer/Math.max(.001,duration),0,1)})`;
     const comboBonusEl=document.querySelector('#comboBonusText'),bonus=typeof chainDamageBonus==='function'?chainDamageBonus():0;

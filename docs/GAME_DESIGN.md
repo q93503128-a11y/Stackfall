@@ -318,6 +318,15 @@ min(70%, 10% + 중첩 × 7.5%)
 
 채널별 음량과 on/off 규칙은 그대로 유지한다. 최종 오디오 출력단은 이전 빌드 대비 2배(+6dB) 증폭하고, 피크는 기존 컴프레서에서 제어한다.
 
+### 배경음과 효과음
+
+- 일반 전투, 맵 이벤트, 초월체 전투는 각각 다른 저역 드론·펄스 간격·필터를 사용한다.
+- 이벤트 활성화 또는 공허 테마에서는 이벤트 BGM, 초월체 대기·전투·전용 렐름에서는 초월체 BGM이 우선한다.
+- 장면 판정은 메인 루프에서 0.35초마다 동기화하며 같은 장면의 오디오 노드를 중복 생성하지 않는다.
+- 레벨업은 저역 하강 음계와 low-pass 필터를 사용해 물속으로 잠기는 듯한 인상을 준다.
+- 공격은 15개 무기 계열별 profile을 사용한다. 높은 대역을 보강하되 중력은 저역, 레일·이온·혜성·초신성은 보조 고조파를 더해 역할을 구분한다.
+- 성능 가드가 명중음을 제한할 때도 공격 `source`를 보존해 무기별 profile이 사라지지 않아야 한다.
+
 ---
 
 ## 9. 렌더링 구조
@@ -416,7 +425,7 @@ Canvas 2D의 아군 투사체 렌더링은 다음 조건이 모두 확인된 뒤
 
 외부 렌더러가 실패해도 게임 로직은 계속 진행되어야 한다. Canvas 렌더러를 삭제하지 않고 폴백으로 유지한다.
 
-컨텍스트 손실 때 GPU Canvas를 숨기고 Canvas 아군 투사체를 즉시 복구한다. 컨텍스트 복구 때 텍스처와 스프라이트 표시 상태를 다시 만들지만 기존 Pixi ticker를 두 번째로 등록하지 않는다.
+컨텍스트 손실 때 GPU Canvas를 숨기고 Canvas 아군 투사체를 즉시 복구한다. 컨텍스트 복구 때 sprite를 안전한 공용 텍스처로 잠시 분리하고 기존 사용자 텍스처를 `destroy(true)`로 파괴한 뒤 세 텍스처를 새로 연결한다. sprite pool은 재사용하며 Pixi app, Canvas, ticker와 context listener를 다시 만들거나 중복 등록하지 않는다.
 
 `window.stackfallRendererInfo()`는 콘솔 진단용으로만 사용한다. 반환 정보에는 renderer status, fallback 여부, PixiJS 버전, 계층, DPR, 공유 shake, 컨텍스트 손실·복구 횟수, ticker 등록 상태와 frame 수, 각 Canvas 크기, projectile/particle sprite pool과 visible 수가 포함된다.
 
@@ -511,19 +520,26 @@ src/gpu-renderer.js
 - 투사체 유도, 투사체 기본 갱신, 빔 수명: `src/systems.js`
 - 적 이동, 원거리 적 사격, 시간 정지 이동: `src/bosses.js`
 - 빔, 중력 우물, 플레이어, 기본 개체 렌더링: `src/render-entities.js`
+- 장비 공전 외형과 중력 렌즈: `src/render-entities.js`
 - 일반·이벤트 중장갑 공용 외형: `src/render-entities.js`
 - 정예와 이벤트 표시: `src/build-audit-ui.js`
 - 보상 중복 방지, 중간보스 보상, 특수 강화: `src/reward-refinement.js`
 - 제자리 배열 압축과 런 세대 기반 예약기: `src/systems-base.js`, 각 배열 갱신 소유 시스템
 - 공간 인덱스, 적 ID 조회, 가까운 표적 선택, sprite/cache, 부하 예산: `src/performance-guard.js`
 - 단일 RAF, 공유 shake, 반복 오류 진단: `src/render.js`
-- PixiJS/WebGL 아군 투사체와 전투 파티클: `src/gpu-renderer.js`
+- 장면별 BGM과 무기별 공격음: `src/runtime-config.js`, 장면 동기화 호출: `src/render.js`
+- PixiJS/WebGL 아군 투사체, 전투 파티클과 texture 수명: `src/gpu-renderer.js`
 
 ### 예약 공격 안전성
 
 - 전투 지연 공격은 `scheduleWeaponAction()`에 게임 시간 기준 남은 시간을 저장한다.
 - 일시정지 중에는 남은 시간이 감소하지 않는다.
-- reset, 메뉴, 게임 오버 때 런 세대가 바뀌고 남은 전투 예약을 비운다.
+- choice, bossReward, worldEvent에서는 전투 callback과 남은 시간이 진행되지 않는다.
+- reset, 메뉴, 게임 오버, cinematic 진입 때 남은 전투 예약을 비운다.
+- 한 update에서 만료된 callback마다 실행 직전 `runSerial`과 `state.mode === 'playing'`을 다시 확인한다.
+- 앞 callback이 런 세대나 mode를 바꾸면 같은 due batch의 나머지 callback은 실행하지 않는다.
+- callback 안에서 추가한 예약은 현재 순회와 분리해 다음 update부터 실행한다.
+- callback 하나의 예외는 runtime stage 진단에 기록하고 나머지 게임 루프를 중단하지 않는다.
 - UI 표시 지연은 `scheduleUiAction()` 한곳에서 관리하며 런 세대를 확인한다.
 - 보상 대기열은 retry timeout 없이 메인 루프에서 갱신한다.
 
@@ -645,12 +661,14 @@ node --check <file>
 node scripts/browser-smoke.mjs
 ```
 
-이 검사는 데스크톱·모바일 DPR, GPU 표시 옵션, 공유 shake, Prism 배율, invalid 중력 우물, reset/pause 예약 공격, 재시작 3회, WebGL context loss/restore, Pixi CDN 차단 Canvas 폴백, 중복 Canvas와 런타임 진단을 확인한다.
+이 검사는 데스크톱·모바일 DPR, GPU 표시 옵션, 공유 shake, Prism 배율, invalid 우물·효과, due batch 세대 안전성, pause·선택·보상·이벤트 정지, 재시작 5회, 보상 이중 클릭, 게임 시간 쿨다운, BGM·무기음 routing, WebGL context loss/restore 3회, 텍스처 파괴 수, Pixi CDN 차단 Canvas 폴백, 중복 Canvas·ticker·listener와 런타임 진단을 확인한다.
+
+예상하지 않은 `console.warn`, `console.error`, `Runtime.exceptionThrown`, network failure와 HTTP 4xx/5xx는 실패다. CDN 차단 시나리오의 정확한 Pixi 경고와 차단 URL만 allowlist한다. 정상 GPU와 `WEBGL_lose_context`는 기본 필수이며 `STACKFALL_ALLOW_GPU_SKIP=1`, `STACKFALL_ALLOW_CONTEXT_SKIP=1`을 명시한 경우에만 사유·renderer 상태·브라우저 인자를 담아 skip할 수 있다. 결과 JSON은 커밋하지 않는 `test-results/stackfall-smoke.json`에 기록하고 assertion 하나라도 실패하면 non-zero로 종료한다.
 
 고밀도 soak는 적 100명(정예 4명), 아군·적 투사체 각 200개, 파티클 200개와 15종 6중첩 장비로 시작한다.
 
 ```bash
-STACKFALL_SOAK_MS=120000 node scripts/browser-smoke.mjs
+node scripts/browser-smoke.mjs --soak-ms=120000
 ```
 
-PowerShell에서는 `$env:STACKFALL_SOAK_MS='120000'`을 먼저 설정한다. 테스트 수치는 게임 화면이 아니라 하네스 JSON 출력에만 기록한다.
+배포본 검사는 `--url=https://stackfall.pages.dev --result=test-results/live-smoke.json`을 함께 사용한다. 테스트 수치는 게임 화면이 아니라 하네스 JSON 출력에만 기록한다.

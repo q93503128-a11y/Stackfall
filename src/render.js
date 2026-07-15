@@ -34,6 +34,7 @@ const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfa
 function loop(now){
   let dt=Math.min(.033,Math.max(0,(now-last)/1000));last=now;let shouldDraw=state.mode==='menu';
   try{
+    if(typeof audio.updateMusic==='function')runRuntimeStage('updateMusic',()=>audio.updateMusic(dt));
     const liveGameplay=state.mode==='playing';
     if(liveGameplay){
       if(state.hitStop>0){state.hitStop-=dt;dt=0;}

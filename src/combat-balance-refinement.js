@@ -16,9 +16,6 @@
     chrono:[['느린 시간','주변 적 이동속도 감소.'],['느린 궤도','감속 범위 증가.'],['시간 가속','모든 장비 발동 주기 추가 단축.'],['시간 파동','주기적인 범위 피해 파동.'],['찰나 정지','파동 적중 일반 적을 강하게 감속.'],['영원의 원환','감속 범위와 장비 가속 강화.']]
   });
 
-  let echoBladeGuard=false;
-  const echoDealBase=dealDamage;
-  dealDamage=function echoBladeDamage(enemy,amount,opts={}){echoDealBase(enemy,amount,opts);if(echoBladeGuard||!enemy||enemy.dead||state.mode!=='playing'||opts.source!=='blade'||!stat('echo')||(player.echoBladeCd||0)>0)return;const chance=Math.min(.36,.045+stat('echo')*.038);if(Math.random()>=chance)return;player.echoBladeCd=.46;const targetId=enemy.id;scheduleWeaponAction(60,()=>{const target=enemyById(targetId);if(!target)return;echoBladeGuard=true;echoDealBase(target,amount*.52,{color:COLORS.pink,source:'echo-blade',canCrit:false});echoBladeGuard=false;});};
   const echoUpdateBase=updateWeapons;updateWeapons=function echoBladeUpdate(dt){player.echoBladeCd=Math.max(0,(player.echoBladeCd||0)-dt);echoUpdateBase(dt);};
 
   let comboBonusEl=document.querySelector('#comboBonusText');if(!comboBonusEl){comboBonusEl=document.createElement('small');comboBonusEl.id='comboBonusText';ui.comboBox.appendChild(comboBonusEl);}

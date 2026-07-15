@@ -30,33 +30,12 @@
   Object.assign(PASSIVE_TEXT,PT);
 
   const currentChain=()=>Math.max(0,Number(state.combo)||0);
-  const legacyChainDamageBonus=()=>Math.min(.30,Math.floor(currentChain()/5)*.03);
-  function scaledChainDamageBonus(stacks=stat('chain'),combo=currentChain()){
-    const tiers=Math.floor(combo/5),raw=tiers*(.008+Math.max(0,stacks)*.0016);
-    return raw>0?Math.log1p(raw*2.7)/2.7:0;
-  }
-  function scaledChainDurationMultiplier(stacks=stat('chain'),combo=currentChain()){
-    const nebula=state.nebulaExtras?.chain||0,base=1+stacks*.07,momentum=1+Math.min(.14+stacks*.075,combo*stacks*.0018);
-    return base*momentum*(1+nebula*.20);
-  }
-  function chainDriveBonus(stacks=stat('chainDrive'),combo=currentChain()){
-    if(!stacks)return 0;const tiers=Math.floor(combo/12),perTier=.002+stacks*.0012,softMax=.04+stacks*.025;return Math.min(softMax,tiers*perTier);
-  }
-  window.chainDamageBonus=scaledChainDamageBonus;window.chainDurationMultiplier=scaledChainDurationMultiplier;window.chainDriveBonus=chainDriveBonus;
 
-  const baseHaste=hasteMult;
-  hasteMult=function progressionHaste(){return Math.max(.16,baseHaste()*(1-chainDriveBonus()));};
   const baseMagnet=magnetRange;
   magnetRange=function progressionMagnet(){const stacks=stat('chainField'),bonus=stacks?Math.min(30+stacks*24,currentChain()*(.18+stacks*.12)):0;return baseMagnet()+bonus;};
   const baseWeaponRange=weaponRange;
   weaponRange=function progressionWeaponRange(key){return baseWeaponRange(key)*(1+stat('range')*.10);};
   xpMult=function progressionXp(){return 1+stat('greed')*.30+stat('wisdom')*.10;};
-  const baseDamage=damageMult;
-  damageMult=function progressionDamage(){const normalized=baseDamage()/Math.max(.001,1+legacyChainDamageBonus()),overdrive=player.hp/player.maxHp<.45?1+stat('overdrive')*.14:1;return normalized*(1+scaledChainDamageBonus())*overdrive;};
-  const baseProjectile=spawnPlayerProjectile;
-  spawnPlayerProjectile=function progressionProjectile(data){const next={...data};next.pierce=(Number.isFinite(next.pierce)?next.pierce:0)+stat('pierce');next.r=(Number.isFinite(next.r)?next.r:4)*(1+stat('projectileSize')*.10);return baseProjectile(next);};
-  const baseDeal=dealDamage;
-  dealDamage=function progressionEliteDamage(enemy,amount,opts={}){if(enemy&&(enemy.type==='mini'||enemy.type==='boss'))amount*=1+stat('eliteHunter')*.15;return baseDeal(enemy,amount,opts);};
   const baseUpdatePlayer=updatePlayer;
   updatePlayer=function progressionPlayer(dt){baseUpdatePlayer(dt);const n=stat('regen');if(!n)return;player.regenTimer=(player.regenTimer||4)-dt;if(player.regenTimer<=0){player.regenTimer+=4;player.hp=Math.min(player.maxHp,player.hp+n*2.5);}};
 
@@ -65,7 +44,7 @@
   killEnemy=function progressionKill(enemy,opts={}){
     baseKill(enemy,opts);if(chainEffectGuard||!enemy)return;
     const chain=currentChain(),burst=stat('chainBurst'),recovery=stat('chainRecovery');
-    if(burst&&chain>0&&chain%20===0){const radius=78+burst*7+Math.min(74,chain*.65),damage=12+burst*5+chain*(.18+burst*.035)+state.level*.22;chainEffectGuard=true;areaDamage(player.x,player.y,radius,damage,'#ff7b9e');chainEffectGuard=false;}
+    if(burst&&chain>0&&chain%20===0){const radius=78+burst*7+Math.min(74,chain*.65),damage=12+burst*5+chain*(.18+burst*.035)+state.level*.22;chainEffectGuard=true;areaDamage(player.x,player.y,radius,damage,'#ff7b9e','nova-chain-burst');chainEffectGuard=false;}
     if(recovery&&chain>0&&chain%30===0){const fraction=Math.min(.04+recovery*.025,recovery*.004+chain*.0002);player.hp=Math.min(player.maxHp,player.hp+player.maxHp*fraction);shockwave(player.x,player.y,'#74f2a7',82+Math.min(65,chain*.45),.32,2.4);}
   };
 
@@ -78,14 +57,6 @@
     if(step<2)spawnEnemy('mini');else spawnEnemy('boss');
     state.encounterStep=(step+1)%3;state.encounterTimer=Math.max(38,56-Math.min(18,state.time/240));
   };
-  updateSpawning=function progressionSpawning(dt){
-    if(typeof updateApexSystems==='function'&&updateApexSystems(dt))return;
-    if(typeof worldEventBlocksSpawning==='function'&&worldEventBlocksSpawning())return;
-    state.spawnTimer-=dt;const elapsed=Math.max(0,state.time||0),compact=compactDevice(),rate=Math.max(compact?.55:.48,1.48/(1+elapsed/310));
-    if(state.spawnTimer<=0){state.spawnTimer=rate;const count=1+Math.min(compact?1:2,Math.floor(elapsed/260));for(let i=0;i<count;i++)spawnEnemy('normal');}
-    updateEncounterDirector(dt);
-  };
-
   function choiceText(c){const weaponLike=c.kind==='weapon'||c.kind==='core';return weaponLike?weaponText(c.key):passiveText(c.key);}
   function normalizeChoice(c){if(!c||!['core','weapon','passive'].includes(c.kind)||!c.key)return null;const source=c.kind==='passive'?PASSIVES[c.key]:WEAPONS[c.key];if(!source)return null;return{...source,...c,color:c.color||source.color||'#aeeeff',icon:c.icon||source.icon||'✦'};}
   function collectChoices(count){const result=[],seen=new Set(),take=list=>{for(const item of list||[]){const c=normalizeChoice(item);if(!c)continue;const id=`${c.kind}:${c.key}`;if(seen.has(id))continue;seen.add(id);result.push(c);if(result.length>=count)break;}};take(rollChoices(Math.max(9,count*3)));if(result.length<count){const fallback=[],coreCount=weaponCount('core');if(coreCount<6)fallback.push({kind:'core',key:'core',...WEAPONS.core,weight:1});for(const[key,w]of Object.entries(WEAPONS)){if(key==='core'||w.starter===false)continue;const owned=weaponCount(key),slots=state.weaponSlots.length;if(owned<6&&(owned>0||slots<6))fallback.push({kind:'weapon',key,...w,weight:1});}for(const[key,p]of Object.entries(PASSIVES))if(stat(key)<p.max)fallback.push({kind:'passive',key,...p,weight:1});take(fallback.sort(()=>Math.random()-.5));}return result.slice(0,count);}

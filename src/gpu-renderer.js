@@ -32,11 +32,16 @@
   let projectileTexture=null;
   let solidTexture=null;
   let particleTexture=null;
+  let textureGeneration=0;
+  let texturesCreated=0;
+  let texturesDestroyed=0;
   const projectileSprites=[];
   const particleSprites=[];
   let projectileLayer=null;
   let particleLayer=null;
   let tickerRegistered=false;
+  let tickerRegistrationCount=0;
+  let contextListenerRegistrationCount=0;
   const rendererGeneration=window.__stackfallRendererGeneration=(window.__stackfallRendererGeneration||0)+1;
   let foregroundCanvas=null;
   let foregroundCtx=null;
@@ -88,6 +93,21 @@
     }else g.fillStyle='#fff';
     g.beginPath();g.arc(c,c,soft?c:c*.72,0,Math.PI*2);g.fill();
     return PIXI.Texture.from(surface);
+  }
+  function destroyTexture(texture){
+    if(!texture||texture===PIXI.Texture.WHITE)return;
+    try{texture.destroy(true);texturesDestroyed++;}catch(error){console.error('[Stackfall] texture cleanup failed',error);}
+  }
+  function rebuildTextures(){
+    const safeTexture=PIXI.Texture.WHITE;
+    for(const sprite of projectileSprites)if(sprite)sprite.texture=safeTexture;
+    for(const sprite of particleSprites)if(sprite)sprite.texture=safeTexture;
+    destroyTexture(projectileTexture);destroyTexture(solidTexture);destroyTexture(particleTexture);
+    projectileTexture=makeTexture(64,true);solidTexture=makeTexture(48,false);particleTexture=makeTexture(40,true);
+    texturesCreated+=3;textureGeneration++;
+    const projectileReplacement=sparklesEnabled()?projectileTexture:solidTexture;
+    for(const sprite of projectileSprites)if(sprite)sprite.texture=projectileReplacement;
+    for(const sprite of particleSprites)if(sprite)sprite.texture=particleTexture;
   }
   function ensureSprite(pool,index,layer,texture){
     let sprite=pool[index];
@@ -249,13 +269,12 @@
       projectileLayer=new PIXI.Container();
       app.stage.addChild(particleLayer);
       app.stage.addChild(projectileLayer);
-      projectileTexture=makeTexture(64,true);
-      solidTexture=makeTexture(48,false);
-      particleTexture=makeTexture(40,true);
+      rebuildTextures();
 
-      canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;contextLossCount++;disableGpuRenderer('WebGL context lost');});
-      canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;contextRestoreCount++;firstGpuFrame=false;firstProjectileSpriteSeen=false;projectileWarmupDeadline=0;projectileTexture=makeTexture(64,true);solidTexture=makeTexture(48,false);particleTexture=makeTexture(40,true);app.renderer.resize(window.innerWidth,window.innerHeight);app.start();setRendererState('warming-up');if(canvasReady())canvas.style.display='block';});
-      if(!tickerRegistered){app.ticker.add(syncGpuLayer,undefined,PIXI.UPDATE_PRIORITY.HIGH);tickerRegistered=true;}
+      canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;contextLossCount++;lastFailure='WebGL context lost';hideUnused(projectileSprites,0);hideUnused(particleSprites,0);canvas.style.display='none';setRendererState('context-lost');});
+      canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;contextRestoreCount++;lastFailure='';firstGpuFrame=false;firstProjectileSpriteSeen=false;projectileWarmupDeadline=0;rebuildTextures();app.renderer.resize(window.innerWidth,window.innerHeight);app.start();setRendererState('warming-up');if(canvasReady())canvas.style.display='block';});
+      contextListenerRegistrationCount++;
+      if(!tickerRegistered){app.ticker.add(syncGpuLayer,undefined,PIXI.UPDATE_PRIORITY.HIGH);tickerRegistered=true;tickerRegistrationCount++;}
       evaluateReadiness();
     }catch(error){
       disableGpuRenderer('initialization failed',error);
@@ -331,11 +350,14 @@
     contextRestoreCount,
     rendererGeneration,
     tickerRegistered,
+    tickerRegistrationCount,
+    contextListenerRegistrationCount,
     tickerFrames,
     firstGpuFrame,
     firstProjectileSpriteSeen,
     projectileSprites:{pool:projectileSprites.length,visible:visibleProjectileSprites},
     particleSprites:{pool:particleSprites.length,visible:visibleParticleSprites},
+    textures:{generation:textureGeneration,created:texturesCreated,destroyed:texturesDestroyed,live:[projectileTexture,solidTexture,particleTexture].filter(Boolean).length},
     projectileCount:countRenderableProjectiles(),
     hierarchy:['game-background','gpu-allied','combat-foreground','html-ui'],
     dpr,

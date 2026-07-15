@@ -2,7 +2,9 @@ player.arcCd=player.arcCd||0;
 
 const sf2BaseResetGame=resetGame;
 resetGame=function resetGameWithBasicCore(){
+  resetRuntimeWeaponState();
   sf2BaseResetGame();
+  resetRuntimeWeaponState();
   state.weaponStacks.core=1;
   state.entities.curves.length=0;
   player.arcCd=0;
@@ -11,6 +13,7 @@ resetGame=function resetGameWithBasicCore(){
   player.bulwarkCd=0;
   renderLoadout();
   updateHUD();
+  audio.syncAmbient();
 };
 
 const sf2BaseAddText=addText;
@@ -19,6 +22,7 @@ addText=function addTextWithSetting(...args){
 };
 
 const sf2BaseDealDamage=dealDamage;
+let sf2EchoBladeGuard=false;
 dealDamage=function dealDamageWithDistinctBursts(enemy,amount,opts={}){
   if(!enemy||enemy.dead)return;
   const source=opts.source||'';
@@ -48,6 +52,10 @@ dealDamage=function dealDamageWithDistinctBursts(enemy,amount,opts={}){
       }
     }
   }
+  if(sf2EchoBladeGuard||enemy.dead||state.mode!=='playing'||source!=='blade'||!stat('echo')||(player.echoBladeCd||0)>0)return;
+  const chance=Math.min(.36,.045+stat('echo')*.038);if(Math.random()>=chance)return;
+  player.echoBladeCd=.46;const targetId=enemy.id;
+  scheduleWeaponAction(60,()=>{const target=enemyById(targetId);if(!target)return;sf2EchoBladeGuard=true;sf2BaseDealDamage(target,amount*.52,{color:COLORS.pink,source:'echo-blade',canCrit:false});sf2EchoBladeGuard=false;});
 };
 
 spawnCoreShot=function spawnStackedCoreShot(target,echoed=false){
@@ -102,34 +110,6 @@ rollChoices=function rollChoicesWithBasicCore(n){
   return out;
 };
 
-openChoices=function openChoicesWithBasicCore(){
-  state.mode='choice';audio.level();ui.choice.classList.remove('hidden');
-  ui.choiceTitle.textContent=`${tr('choice.title')} ${state.level}`;ui.choiceKicker.textContent=tr('choice.kicker');
-  const choices=rollChoices(3);ui.choiceCards.innerHTML='';
-  choices.forEach(c=>{
-    const weaponLike=c.kind==='weapon'||c.kind==='core';
-    const text=weaponLike?weaponText(c.key):passiveText(c.key);
-    const current=weaponLike?weaponCount(c.key):stat(c.key),next=weaponLike?stackEffectText(c.key,current+1):null;
-    const el=document.createElement('button');el.className='choice-card';el.style.setProperty('--card-accent',c.color);el.style.setProperty('--card-glow',hexToRgba(c.color,.22));
-    const type=c.kind==='core'?tr('choice.basic'):c.kind==='weapon'?tr('choice.equipment'):tr('choice.passive');
-    const countLabel=weaponLike?tr('choice.stack'):tr('choice.owned');
-    el.innerHTML=`<span class="type">${type}</span><span class="stack-info">${countLabel} ${current} → ${current+1}</span><div class="big-icon">${c.icon}</div><h3>${text.name}</h3><p>${text.desc}</p>${next?`<div class="resonance-preview"><b>${current+1} · ${next.name}</b><span>${next.desc}</span></div>`:''}`;
-    el.onclick=()=>selectChoice(c);ui.choiceCards.appendChild(el);
-  });
-};
-
-selectChoice=function selectChoiceWithBasicCore(c){
-  if(c.kind==='core'){
-    const after=weaponCount('core')+1;state.weaponStacks.core=after;showStackEffect('core',after);
-  }else if(c.kind==='weapon'){
-    const before=weaponCount(c.key),after=before+1;state.weaponStacks[c.key]=after;if(before===0)state.weaponSlots.push(c.key);showStackEffect(c.key,after);
-    if(c.key==='bulwark'){player.maxHp+=8;player.hp=Math.min(player.maxHp,player.hp+8);}
-  }else{
-    state.passives[c.key]=stat(c.key)+1;if(c.key==='vitality'){player.maxHp+=15;player.hp=Math.min(player.maxHp,player.hp+22);}
-  }
-  ui.choice.classList.add('hidden');state.mode='playing';renderLoadout();updateHUD();
-};
-
 function sf2SlotMarkup(key,basic=false){
   const w=WEAPONS[key],text=weaponText(key),count=weaponCount(key);
   return `<div class="weapon-slot${basic?' basic-slot':''}${count>=2?' resonant':''}" data-cooldown-key="${key}" style="--slot-color:${hexToRgba(w.color,.18)};--cooldown-color:${w.color}"><div class="icon-wrap"><div class="icon">${w.icon}</div><div class="cooldown-sweep"></div><span class="cooldown-time"></span></div><div class="name">${text.name}</div><b class="stack">${count}</b></div>`;
@@ -173,9 +153,6 @@ function sf2UpdateCooldownHud(){
     if(label)label.textContent=info.remaining>=.12?(info.remaining>=10?Math.ceil(info.remaining):info.remaining.toFixed(1)):'';
   }
 }
-const sf2BaseUpdateHUD=updateHUD;
-updateHUD=function updateHUDWithCooldown(){sf2BaseUpdateHUD();sf2UpdateCooldownHud();};
-
 const sf2BaseSyncSettings=syncSettingsControls;
 syncSettingsControls=function syncSettingsWithDamageNumbers(){
   sf2BaseSyncSettings();
@@ -189,36 +166,6 @@ if(sf2DamageNumbers){
 
 const sf2BaseApplyLanguage=applyLanguage;
 applyLanguage=function applyLanguageWithExpandedContent(){sf2BaseApplyLanguage();renderStarterOptions();renderLoadout();};
-
-function sf2DrawBladeBody(x,y,angle,stacks){
-  ctx.save();ctx.translate(x,y);ctx.rotate(angle+Math.PI/2);ctx.shadowBlur=stacks>=6?28:18;ctx.shadowColor=COLORS.cyan;
-  const blade=ctx.createLinearGradient(-17,-28,16,24);blade.addColorStop(0,'rgba(255,255,255,.98)');blade.addColorStop(.42,'#a7f5ff');blade.addColorStop(.75,'#668cff');blade.addColorStop(1,'rgba(60,76,190,.05)');ctx.fillStyle=blade;
-  ctx.beginPath();ctx.moveTo(-4,-28);ctx.bezierCurveTo(19,-12,17,14,-2,27);ctx.bezierCurveTo(7,10,3,-8,-4,-28);ctx.fill();
-  ctx.restore();
-}
-drawEquippedOrbits=function drawEquippedOrbitsClean(x,y,t){
-  const bladeN=weaponCount('blade');
-  if(bladeN){
-    const count=bladeN>=5?3:bladeN>=2?2:1,orbit=bladeN>=6?116:bladeN>=3?91:80;
-    for(let i=0;i<count;i++){const a=player.angle+i*TAU/count;sf2DrawBladeBody(x+Math.cos(a)*orbit,y+Math.sin(a)*orbit,a,bladeN);}
-  }
-  const prismN=weaponCount('prism');
-  if(prismN){
-    const count=prismN>=6?3:prismN>=2?2:1;
-    for(const p of prismPositions(count)){
-      const s=worldToScreen(p.x,p.y);ctx.save();ctx.translate(s.x,s.y);ctx.rotate(-p.a+t/1300);ctx.shadowBlur=16;ctx.shadowColor='#c2a7ff';
-      const g=ctx.createLinearGradient(0,-10,0,10);g.addColorStop(0,'#ffffff');g.addColorStop(.5,'#d2c3ff');g.addColorStop(1,'#6e63d8');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(8,0);ctx.lineTo(0,10);ctx.lineTo(-8,0);ctx.closePath();ctx.fill();ctx.restore();
-    }
-    if(prismN>=4){
-      const pts=prismPositions(count).map(p=>worldToScreen(p.x,p.y));ctx.strokeStyle='rgba(194,167,255,.25)';ctx.lineWidth=1.2;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));if(pts.length>2)ctx.closePath();ctx.stroke();
-    }
-  }
-  const bulwarkN=weaponCount('bulwark');
-  if(bulwarkN){
-    const count=Math.min(4,1+Math.floor((bulwarkN-1)/2));
-    for(let i=0;i<count;i++){const a=-t/1800+i*TAU/count,rr=48;ctx.save();ctx.translate(x+Math.cos(a)*rr,y+Math.sin(a)*rr);ctx.rotate(a+Math.PI/2);ctx.shadowBlur=10;ctx.shadowColor=COLORS.green;ctx.strokeStyle='rgba(116,242,167,.78)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-7,5);ctx.lineTo(0,-8);ctx.lineTo(7,5);ctx.lineTo(0,9);ctx.closePath();ctx.stroke();ctx.restore();}
-  }
-};
 
 renderStarterOptions();
 renderLoadout();
