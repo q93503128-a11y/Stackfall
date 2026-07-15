@@ -43,7 +43,8 @@ let last=performance.now(),hudRefresh=0;
 function loop(now){
   let dt=Math.min(.033,Math.max(0,(now-last)/1000));last=now;let shouldDraw=state.mode==='menu';
   try{
-    if(state.mode==='playing'){
+    const liveGameplay=state.mode==='playing'||state.mode==='abilityView';
+    if(liveGameplay){
       if(state.hitStop>0){state.hitStop-=dt;dt=0;}
       state.time+=dt;state.comboTimer-=dt;if(state.comboTimer<=0)state.combo=0;
       runRuntimeStage('updatePlayer',()=>updatePlayer(dt));runRuntimeStage('updateSpawning',()=>updateSpawning(dt));runRuntimeStage('updateWeapons',()=>updateWeapons(dt));runRuntimeStage('updateEnemies',()=>updateEnemies(dt));runRuntimeStage('updateProjectiles',()=>updateProjectiles(dt));runRuntimeStage('updateEnemyProjectiles',()=>updateEnemyProjectiles(dt));runRuntimeStage('updateTelegraphs',()=>updateTelegraphs(dt));runRuntimeStage('updateWells',()=>updateWells(dt));runRuntimeStage('updateGems',()=>updateGems(dt));
