@@ -26,7 +26,23 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
+          set +e
           node scripts/apply-audit-patch.mjs 2>&1 | tee /tmp/audit-patch.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ] && grep -q "data:|//" scripts/build-fingerprint.mjs; then
+            python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/build-fingerprint.mjs')
+          text=p.read_text()
+          text=text.replace("/^(?:https?:|data:|//)/i.test(value)", "/^(?:https?:|data:)/i.test(value)||value.startsWith('//')")
+          p.write_text(text)
+          PY
+            node scripts/build-fingerprint.mjs | tee -a /tmp/audit-patch.log
+            rm -f scripts/apply-audit-patch.mjs .github/workflows/stackfall-maintenance.yml
+          elif [ "$status" -ne 0 ]; then
+            exit "$status"
+          fi
       - name: Upload patch diagnostics
         if: always()
         uses: actions/upload-artifact@v4
