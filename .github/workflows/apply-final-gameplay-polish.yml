@@ -54,19 +54,32 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add .github/patch-error.log
-            git commit -m "Report gameplay patch failure"
+            git commit -m "Report gameplay patch failure" -- .github/patch-error.log
             git push origin HEAD:agent/stackfall-final-gameplay-polish
             cat /tmp/apply.log
             exit "$status"
           fi
       - name: Remove temporary patch files
-        run: rm -rf .github/patch-parts .github/patch-error.log .github/workflows/apply-final-gameplay-polish.yml
+        run: rm -rf .github/patch-parts .github/patch-error.log .github/syntax-error.log .github/workflows/apply-final-gameplay-polish.yml
       - name: Refresh deployed asset fingerprint
         run: node scripts/build-fingerprint.mjs
       - name: Syntax checks
         run: |
-          find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check
-          git diff --check
+          set +e
+          { find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | xargs -0 -n1 node --check; git diff --check; } >/tmp/syntax.log 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            mkdir -p .github
+            cp /tmp/syntax.log .github/syntax-error.log
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -f .github/syntax-error.log
+            git commit -m "Report gameplay syntax failure" -- .github/syntax-error.log
+            git push origin HEAD:agent/stackfall-final-gameplay-polish
+            cat /tmp/syntax.log
+            exit "$status"
+          fi
       - name: Browser smoke
         run: |
           python3 -m http.server 8000 >/tmp/stackfall-http.log 2>&1 &
