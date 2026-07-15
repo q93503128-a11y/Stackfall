@@ -1,0 +1,10 @@
+/home/runner/work/Stackfall/Stackfall/src/render-space.js:2
+function startRealmTransition(target,options={}){clearPendingCombatActions();state.realmTransition={from:state.realmTheme||'space',to:target,elapsed:0,duration:options.duration||2.2,title:options.title||'',subtitle:options.subtitle||'',introStyle:options.introStyle||null,seed:Math.random()*TAU,onMidpoint:options.onMidpoint||null,onComplete:options.onComplete||null,midpointDone:false};state.mode='cinematic';ui.touch.classList.add('hidden');state.hitStop=0;state.camera.shake=0;}){clearPendingCombatActions();state.realmTransition={from:state.realmTheme||'space',to:target,elapsed:0,duration:options.duration||2.2,title:options.title||'',subtitle:options.subtitle||'',onMidpoint:options.onMidpoint||null,onComplete:options.onComplete||null,midpointDone:false};state.mode='cinematic';ui.touch.classList.add('hidden');state.hitStop=0;state.camera.shake=0;}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ^
+
+SyntaxError: Unexpected token ')'
+    at wrapSafe (node:internal/modules/cjs/loader:1713:18)
+    at checkSyntax (node:internal/main/check_syntax:78:3)
+
+Node.js v22.23.1
+docs/GAME_DESIGN.md:724: new blank line at EOF.
