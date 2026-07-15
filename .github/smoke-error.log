@@ -1,0 +1,1922 @@
+{
+  "ok": false,
+  "startedAt": "2026-07-15T22:40:17.921Z",
+  "endedAt": "2026-07-15T22:40:49.747Z",
+  "url": "http://127.0.0.1:8000",
+  "checkedUrl": "http://127.0.0.1:8000/?build-check=sha256-40dc36617d321801dfa414b4b16efddfcb9befaa9cdab28cafc03c030bd6319e",
+  "runType": "local",
+  "commit": "2a52129790d349bf653fbdcd206482b14277b376",
+  "expectedBuildSha": "sha256-40dc36617d321801dfa414b4b16efddfcb9befaa9cdab28cafc03c030bd6319e",
+  "deployedBuildSha": "sha256-40dc36617d321801dfa414b4b16efddfcb9befaa9cdab28cafc03c030bd6319e",
+  "chromeVersion": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/150.0.0.0 Safari/537.36",
+  "viewport": {
+    "desktop": {
+      "width": 1920,
+      "height": 1080,
+      "dpr": 1
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "dpr": 2
+    }
+  },
+  "browserArgs": [
+    "--headless=new",
+    "--remote-debugging-port=0",
+    "--user-data-dir=/tmp/stackfall-cdp-zW8W8n",
+    "--window-size=1920,1080",
+    "--force-device-scale-factor=1",
+    "--disable-background-timer-throttling",
+    "--disable-renderer-backgrounding",
+    "--disable-backgrounding-occluded-windows",
+    "--autoplay-policy=no-user-gesture-required",
+    "--mute-audio",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "about:blank"
+  ],
+  "soakRequestedMs": 0,
+  "soakBudgetEnforced": true,
+  "failures": [
+    "[main-gpu] apex did not override an active choice/event state"
+  ],
+  "warnings": [
+    {
+      "scenario": "pixi-fallback",
+      "level": "warning",
+      "text": "[Stackfall] PixiJS download failed; Canvas 2D fallback remains active."
+    }
+  ],
+  "networkFailures": [
+    {
+      "scenario": "pixi-fallback",
+      "url": "https://cdn.jsdelivr.net/npm/pixi.js@8.19.0/dist/pixi.min.js",
+      "error": "",
+      "type": "Script",
+      "canceled": false,
+      "blockedReason": "inspector"
+    }
+  ],
+  "skips": [],
+  "scenarios": [
+    {
+      "name": "main-gpu",
+      "startedAt": "2026-07-15T22:40:25.245Z",
+      "screenshots": [
+        "/home/runner/work/Stackfall/Stackfall/test-results/screenshots/desktop.png",
+        "/home/runner/work/Stackfall/Stackfall/test-results/screenshots/mobile.png",
+        "/home/runner/work/Stackfall/Stackfall/test-results/screenshots/main-gpu-failure.png"
+      ],
+      "observations": {
+        "build": {
+          "expected": "sha256-40dc36617d321801dfa414b4b16efddfcb9befaa9cdab28cafc03c030bd6319e",
+          "deployed": "sha256-40dc36617d321801dfa414b4b16efddfcb9befaa9cdab28cafc03c030bd6319e"
+        },
+        "gpu": {
+          "status": "active",
+          "backend": "PixiJS WebGL",
+          "version": "8.19.0",
+          "fallback": false,
+          "pixiLoaded": true,
+          "webglReady": true,
+          "contextLost": false,
+          "contextLossCount": 0,
+          "contextRestoreCount": 0,
+          "rendererGeneration": 1,
+          "tickerRegistered": true,
+          "tickerRegistrationCount": 1,
+          "contextListenerRegistrationCount": 1,
+          "tickerFrames": 81,
+          "firstGpuFrame": true,
+          "firstProjectileSpriteSeen": true,
+          "projectileSprites": {
+            "pool": 1,
+            "visible": 1
+          },
+          "particleSprites": {
+            "pool": 1,
+            "visible": 1
+          },
+          "textures": {
+            "generation": 1,
+            "created": 7,
+            "destroyed": 0,
+            "live": 7
+          },
+          "projectileVisuals": {
+            "generic": "orb",
+            "core": "diamond-pulse",
+            "ember": "explosive-sigil",
+            "comet": "crystal-lance",
+            "shard": "angular-shard"
+          },
+          "projectileCount": 1,
+          "hierarchy": [
+            "game-background",
+            "gpu-allied",
+            "combat-foreground",
+            "html-ui"
+          ],
+          "dpr": 1,
+          "renderScale": 1,
+          "shake": {
+            "x": 0,
+            "y": 0,
+            "frame": 83
+          },
+          "baseCanvas": {
+            "width": 1920,
+            "height": 993,
+            "cssWidth": 1920,
+            "cssHeight": 993
+          },
+          "foregroundCanvas": {
+            "width": 1920,
+            "height": 993,
+            "cssWidth": 1920,
+            "cssHeight": 993,
+            "display": "block"
+          },
+          "gpuCanvas": {
+            "width": 1920,
+            "height": 993,
+            "cssWidth": 1920,
+            "cssHeight": 993,
+            "display": "block"
+          },
+          "lastFailure": ""
+        },
+        "scheduler": {
+          "reset": {
+            "log": [
+              "first"
+            ],
+            "mode": "playing",
+            "pending": 0
+          },
+          "menu": {
+            "log": [
+              "first"
+            ],
+            "mode": "menu",
+            "pending": 0
+          },
+          "gameover": {
+            "log": [
+              "first"
+            ],
+            "mode": "gameover",
+            "pending": 0
+          },
+          "nestedFirst": {
+            "log": [
+              "outer"
+            ],
+            "pending": 1
+          },
+          "nestedSecond": {
+            "log": [
+              "outer",
+              "inner"
+            ],
+            "pending": 0
+          },
+          "pauseBefore": 0.5,
+          "paused": {
+            "before": 0.5,
+            "during": 0.5,
+            "runsBefore": 0,
+            "runsAfter": 1,
+            "restartPending": 0,
+            "oldAttackHp": 500,
+            "frozen": {
+              "choice": [
+                0.4,
+                0.4
+              ],
+              "bossReward": [
+                0.4,
+                0.4
+              ],
+              "worldEvent": [
+                0.4,
+                0.4
+              ]
+            },
+            "cinematicPending": 0,
+            "finalPending": 0
+          }
+        },
+        "invalidWells": {
+          "error": null,
+          "length": 1,
+          "reference": true
+        },
+        "invalidEffects": {
+          "error": null,
+          "refs": {
+            "particles": true,
+            "texts": true,
+            "shockwaves": true,
+            "telegraphs": true,
+            "beams": true,
+            "curves": true
+          },
+          "counts": {
+            "particles": 1,
+            "texts": 1,
+            "shockwaves": 1,
+            "telegraphs": 1,
+            "beams": 1,
+            "curves": 1
+          },
+          "diagnostics": {
+            "mode": "playing",
+            "runSerial": 23,
+            "renderFrame": 83,
+            "pendingActions": 0,
+            "errors": [],
+            "errorCount": 0,
+            "sanitizer": {
+              "passes": 0,
+              "totalRemoved": 0,
+              "removed": {}
+            },
+            "entities": {
+              "enemies": 3,
+              "projectiles": 0,
+              "enemyProjectiles": 0,
+              "particles": 1,
+              "gems": 0,
+              "wells": 0,
+              "texts": 1,
+              "shockwaves": 1,
+              "telegraphs": 1,
+              "beams": 1,
+              "curves": 1,
+              "mapEvents": 0
+            },
+            "renderer": {
+              "status": "active",
+              "backend": "PixiJS WebGL",
+              "version": "8.19.0",
+              "fallback": false,
+              "pixiLoaded": true,
+              "webglReady": true,
+              "contextLost": false,
+              "contextLossCount": 0,
+              "contextRestoreCount": 0,
+              "rendererGeneration": 1,
+              "tickerRegistered": true,
+              "tickerRegistrationCount": 1,
+              "contextListenerRegistrationCount": 1,
+              "tickerFrames": 89,
+              "firstGpuFrame": true,
+              "firstProjectileSpriteSeen": true,
+              "projectileSprites": {
+                "pool": 1,
+                "visible": 0
+              },
+              "particleSprites": {
+                "pool": 1,
+                "visible": 0
+              },
+              "textures": {
+                "generation": 1,
+                "created": 7,
+                "destroyed": 0,
+                "live": 7
+              },
+              "projectileVisuals": {
+                "generic": "orb",
+                "core": "diamond-pulse",
+                "ember": "explosive-sigil",
+                "comet": "crystal-lance",
+                "shard": "angular-shard"
+              },
+              "projectileCount": 0,
+              "hierarchy": [
+                "game-background",
+                "gpu-allied",
+                "combat-foreground",
+                "html-ui"
+              ],
+              "dpr": 1,
+              "renderScale": 1,
+              "shake": {
+                "x": 0,
+                "y": 0,
+                "frame": 83
+              },
+              "baseCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993
+              },
+              "foregroundCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993,
+                "display": "block"
+              },
+              "gpuCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993,
+                "display": "block"
+              },
+              "lastFailure": ""
+            },
+            "dom": {
+              "canvasCount": 3,
+              "scriptCount": 31
+            }
+          }
+        },
+        "ui": {
+          "ledgerError": null,
+          "ledgerOpen": false,
+          "level": {
+            "growthBefore": 2,
+            "growthAfter": 3,
+            "mode": "playing",
+            "hidden": true
+          },
+          "reward": {
+            "before": 0,
+            "after": 1,
+            "queueBefore": 1,
+            "queueAfter": 0,
+            "mode": "playing"
+          }
+        },
+        "eventApex": {
+          "crash": {
+            "active": null,
+            "enemies": 0,
+            "mode": "playing"
+          },
+          "marker": {
+            "count": 0,
+            "clock": 58.42175044568711
+          },
+          "bounded": true,
+          "control": 0,
+          "apex": {
+            "priority": true,
+            "mode": "cinematic",
+            "pending": "chronophage",
+            "arena": false,
+            "choiceHidden": true,
+            "event": null
+          }
+        },
+        "cooldown": {
+          "pauseStart": {
+            "time": 5,
+            "ready": 5.43
+          },
+          "pausedTime": 5,
+          "readyBefore": 5.43,
+          "immediateReady": 5.43,
+          "advancedReady": 5.859999999999999,
+          "resetReady": 0,
+          "menuReady": 0
+        },
+        "audio": {
+          "combat": "combat",
+          "event": "event",
+          "voidScene": "event",
+          "apexPending": "apex",
+          "apexActive": "apex",
+          "apexRealm": "apex",
+          "routed": "rail",
+          "unknown": "core",
+          "profiles": {
+            "music": [
+              "combat",
+              "event",
+              "apex"
+            ],
+            "weapons": [
+              "core",
+              "blade",
+              "ember",
+              "gravity",
+              "comet",
+              "prism",
+              "chrono",
+              "arc",
+              "ion",
+              "nova",
+              "drone",
+              "rail",
+              "spiral",
+              "mirror",
+              "bulwark"
+            ],
+            "level": "submerged-descending"
+          },
+          "actual": {
+            "outputGain": 2.759999990463257,
+            "compressorThreshold": -20,
+            "compressorRatio": 4.5,
+            "compressorKnee": 22
+          },
+          "levelDescending": true,
+          "masterOffKeptOutput": true,
+          "sameScene": {
+            "timerStable": true,
+            "nodeStable": true,
+            "scene": "combat",
+            "nodes": 25
+          },
+          "cycled": {
+            "timerActive": true,
+            "nodes": 25,
+            "scene": "combat"
+          },
+          "ambientOff": {
+            "timerActive": false,
+            "nodes": 0
+          },
+          "initialScene": "combat"
+        },
+        "stress": {
+          "fixture": {
+            "enemies": 72,
+            "projectiles": 28
+          },
+          "stressed": {
+            "d": {
+              "mode": "playing",
+              "runSerial": 34,
+              "renderFrame": 104,
+              "pendingActions": 0,
+              "errors": [],
+              "errorCount": 0,
+              "sanitizer": {
+                "passes": 0,
+                "totalRemoved": 0,
+                "removed": {}
+              },
+              "entities": {
+                "enemies": 72,
+                "projectiles": 54,
+                "enemyProjectiles": 0,
+                "particles": 47,
+                "gems": 0,
+                "wells": 2,
+                "texts": 36,
+                "shockwaves": 2,
+                "telegraphs": 0,
+                "beams": 3,
+                "curves": 0,
+                "mapEvents": 0
+              },
+              "renderer": {
+                "status": "active",
+                "backend": "PixiJS WebGL",
+                "version": "8.19.0",
+                "fallback": false,
+                "pixiLoaded": true,
+                "webglReady": true,
+                "contextLost": false,
+                "contextLossCount": 0,
+                "contextRestoreCount": 0,
+                "rendererGeneration": 1,
+                "tickerRegistered": true,
+                "tickerRegistrationCount": 1,
+                "contextListenerRegistrationCount": 1,
+                "tickerFrames": 135,
+                "firstGpuFrame": true,
+                "firstProjectileSpriteSeen": true,
+                "projectileSprites": {
+                  "pool": 71,
+                  "visible": 54
+                },
+                "particleSprites": {
+                  "pool": 108,
+                  "visible": 47
+                },
+                "textures": {
+                  "generation": 1,
+                  "created": 7,
+                  "destroyed": 0,
+                  "live": 7
+                },
+                "projectileVisuals": {
+                  "generic": "orb",
+                  "core": "diamond-pulse",
+                  "ember": "explosive-sigil",
+                  "comet": "crystal-lance",
+                  "shard": "angular-shard"
+                },
+                "projectileCount": 54,
+                "hierarchy": [
+                  "game-background",
+                  "gpu-allied",
+                  "combat-foreground",
+                  "html-ui"
+                ],
+                "dpr": 1,
+                "renderScale": 1,
+                "shake": {
+                  "x": -11.04869170787735,
+                  "y": -4.400420895719723,
+                  "frame": 104
+                },
+                "baseCanvas": {
+                  "width": 1920,
+                  "height": 993,
+                  "cssWidth": 1920,
+                  "cssHeight": 993
+                },
+                "foregroundCanvas": {
+                  "width": 1920,
+                  "height": 993,
+                  "cssWidth": 1920,
+                  "cssHeight": 993,
+                  "display": "block"
+                },
+                "gpuCanvas": {
+                  "width": 1920,
+                  "height": 993,
+                  "cssWidth": 1920,
+                  "cssHeight": 993,
+                  "display": "block"
+                },
+                "lastFailure": ""
+              },
+              "dom": {
+                "canvasCount": 3,
+                "scriptCount": 31
+              }
+            },
+            "r": {
+              "status": "active",
+              "backend": "PixiJS WebGL",
+              "version": "8.19.0",
+              "fallback": false,
+              "pixiLoaded": true,
+              "webglReady": true,
+              "contextLost": false,
+              "contextLossCount": 0,
+              "contextRestoreCount": 0,
+              "rendererGeneration": 1,
+              "tickerRegistered": true,
+              "tickerRegistrationCount": 1,
+              "contextListenerRegistrationCount": 1,
+              "tickerFrames": 135,
+              "firstGpuFrame": true,
+              "firstProjectileSpriteSeen": true,
+              "projectileSprites": {
+                "pool": 71,
+                "visible": 54
+              },
+              "particleSprites": {
+                "pool": 108,
+                "visible": 47
+              },
+              "textures": {
+                "generation": 1,
+                "created": 7,
+                "destroyed": 0,
+                "live": 7
+              },
+              "projectileVisuals": {
+                "generic": "orb",
+                "core": "diamond-pulse",
+                "ember": "explosive-sigil",
+                "comet": "crystal-lance",
+                "shard": "angular-shard"
+              },
+              "projectileCount": 54,
+              "hierarchy": [
+                "game-background",
+                "gpu-allied",
+                "combat-foreground",
+                "html-ui"
+              ],
+              "dpr": 1,
+              "renderScale": 1,
+              "shake": {
+                "x": -11.04869170787735,
+                "y": -4.400420895719723,
+                "frame": 104
+              },
+              "baseCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993
+              },
+              "foregroundCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993,
+                "display": "block"
+              },
+              "gpuCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993,
+                "display": "block"
+              },
+              "lastFailure": ""
+            },
+            "canvases": [
+              {
+                "id": "game",
+                "width": 1920,
+                "height": 993,
+                "css": [
+                  1920,
+                  993
+                ],
+                "z": "0",
+                "display": "block"
+              },
+              {
+                "id": "gpuCombatLayer",
+                "width": 1920,
+                "height": 993,
+                "css": [
+                  1920,
+                  993
+                ],
+                "z": "1",
+                "display": "block"
+              },
+              {
+                "id": "combatForeground",
+                "width": 1920,
+                "height": 993,
+                "css": [
+                  1920,
+                  993
+                ],
+                "z": "2",
+                "display": "block"
+              }
+            ],
+            "prism": [
+              4.35,
+              4.6
+            ],
+            "nearest": [
+              14751.894101660208,
+              15188.524663631393,
+              15881.571851897159
+            ]
+          }
+        },
+        "context": {
+          "baseline": {
+            "renderer": {
+              "status": "active",
+              "backend": "PixiJS WebGL",
+              "version": "8.19.0",
+              "fallback": false,
+              "pixiLoaded": true,
+              "webglReady": true,
+              "contextLost": false,
+              "contextLossCount": 0,
+              "contextRestoreCount": 0,
+              "rendererGeneration": 1,
+              "tickerRegistered": true,
+              "tickerRegistrationCount": 1,
+              "contextListenerRegistrationCount": 1,
+              "tickerFrames": 160,
+              "firstGpuFrame": true,
+              "firstProjectileSpriteSeen": true,
+              "projectileSprites": {
+                "pool": 71,
+                "visible": 43
+              },
+              "particleSprites": {
+                "pool": 108,
+                "visible": 40
+              },
+              "textures": {
+                "generation": 1,
+                "created": 7,
+                "destroyed": 0,
+                "live": 7
+              },
+              "projectileVisuals": {
+                "generic": "orb",
+                "core": "diamond-pulse",
+                "ember": "explosive-sigil",
+                "comet": "crystal-lance",
+                "shard": "angular-shard"
+              },
+              "projectileCount": 43,
+              "hierarchy": [
+                "game-background",
+                "gpu-allied",
+                "combat-foreground",
+                "html-ui"
+              ],
+              "dpr": 1,
+              "renderScale": 1,
+              "shake": {
+                "x": 10.899281634228895,
+                "y": 11.596363093371728,
+                "frame": 129
+              },
+              "baseCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993
+              },
+              "foregroundCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993,
+                "display": "block"
+              },
+              "gpuCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993,
+                "display": "block"
+              },
+              "lastFailure": ""
+            },
+            "canvasCount": 3,
+            "fallbackDraws": 1
+          },
+          "cycles": [
+            {
+              "cycle": 1,
+              "lost": {
+                "renderer": {
+                  "status": "context-lost",
+                  "backend": "Canvas 2D",
+                  "version": "8.19.0",
+                  "fallback": true,
+                  "pixiLoaded": true,
+                  "webglReady": true,
+                  "contextLost": true,
+                  "contextLossCount": 1,
+                  "contextRestoreCount": 0,
+                  "rendererGeneration": 1,
+                  "tickerRegistered": true,
+                  "tickerRegistrationCount": 1,
+                  "contextListenerRegistrationCount": 1,
+                  "tickerFrames": 162,
+                  "firstGpuFrame": true,
+                  "firstProjectileSpriteSeen": true,
+                  "projectileSprites": {
+                    "pool": 71,
+                    "visible": 37
+                  },
+                  "particleSprites": {
+                    "pool": 108,
+                    "visible": 45
+                  },
+                  "textures": {
+                    "generation": 1,
+                    "created": 7,
+                    "destroyed": 0,
+                    "live": 7
+                  },
+                  "projectileVisuals": {
+                    "generic": "orb",
+                    "core": "diamond-pulse",
+                    "ember": "explosive-sigil",
+                    "comet": "crystal-lance",
+                    "shard": "angular-shard"
+                  },
+                  "projectileCount": 37,
+                  "hierarchy": [
+                    "game-background",
+                    "gpu-allied",
+                    "combat-foreground",
+                    "html-ui"
+                  ],
+                  "dpr": 1,
+                  "renderScale": 1,
+                  "shake": {
+                    "x": -6.080079384697099,
+                    "y": -7.656159398692828,
+                    "frame": 131
+                  },
+                  "baseCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993
+                  },
+                  "foregroundCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993,
+                    "display": "block"
+                  },
+                  "gpuCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 0,
+                    "cssHeight": 0,
+                    "display": "none"
+                  },
+                  "lastFailure": "WebGL context lost"
+                },
+                "canvasCount": 3,
+                "fallbackDraws": 3
+              },
+              "restored": {
+                "renderer": {
+                  "status": "active",
+                  "backend": "PixiJS WebGL",
+                  "version": "8.19.0",
+                  "fallback": false,
+                  "pixiLoaded": true,
+                  "webglReady": true,
+                  "contextLost": false,
+                  "contextLossCount": 1,
+                  "contextRestoreCount": 1,
+                  "rendererGeneration": 1,
+                  "tickerRegistered": true,
+                  "tickerRegistrationCount": 1,
+                  "contextListenerRegistrationCount": 1,
+                  "tickerFrames": 176,
+                  "firstGpuFrame": true,
+                  "firstProjectileSpriteSeen": true,
+                  "projectileSprites": {
+                    "pool": 71,
+                    "visible": 39
+                  },
+                  "particleSprites": {
+                    "pool": 108,
+                    "visible": 18
+                  },
+                  "textures": {
+                    "generation": 2,
+                    "created": 14,
+                    "destroyed": 7,
+                    "live": 7
+                  },
+                  "projectileVisuals": {
+                    "generic": "orb",
+                    "core": "diamond-pulse",
+                    "ember": "explosive-sigil",
+                    "comet": "crystal-lance",
+                    "shard": "angular-shard"
+                  },
+                  "projectileCount": 39,
+                  "hierarchy": [
+                    "game-background",
+                    "gpu-allied",
+                    "combat-foreground",
+                    "html-ui"
+                  ],
+                  "dpr": 1,
+                  "renderScale": 1,
+                  "shake": {
+                    "x": -11.474305391365704,
+                    "y": -10.819908365862856,
+                    "frame": 145
+                  },
+                  "baseCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993
+                  },
+                  "foregroundCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993,
+                    "display": "block"
+                  },
+                  "gpuCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993,
+                    "display": "block"
+                  },
+                  "lastFailure": ""
+                },
+                "canvasCount": 3
+              }
+            },
+            {
+              "cycle": 2,
+              "lost": {
+                "renderer": {
+                  "status": "context-lost",
+                  "backend": "Canvas 2D",
+                  "version": "8.19.0",
+                  "fallback": true,
+                  "pixiLoaded": true,
+                  "webglReady": true,
+                  "contextLost": true,
+                  "contextLossCount": 2,
+                  "contextRestoreCount": 1,
+                  "rendererGeneration": 1,
+                  "tickerRegistered": true,
+                  "tickerRegistrationCount": 1,
+                  "contextListenerRegistrationCount": 1,
+                  "tickerFrames": 178,
+                  "firstGpuFrame": true,
+                  "firstProjectileSpriteSeen": true,
+                  "projectileSprites": {
+                    "pool": 71,
+                    "visible": 37
+                  },
+                  "particleSprites": {
+                    "pool": 108,
+                    "visible": 14
+                  },
+                  "textures": {
+                    "generation": 2,
+                    "created": 14,
+                    "destroyed": 7,
+                    "live": 7
+                  },
+                  "projectileVisuals": {
+                    "generic": "orb",
+                    "core": "diamond-pulse",
+                    "ember": "explosive-sigil",
+                    "comet": "crystal-lance",
+                    "shard": "angular-shard"
+                  },
+                  "projectileCount": 37,
+                  "hierarchy": [
+                    "game-background",
+                    "gpu-allied",
+                    "combat-foreground",
+                    "html-ui"
+                  ],
+                  "dpr": 1,
+                  "renderScale": 1,
+                  "shake": {
+                    "x": 5.1447679703241285,
+                    "y": -12.27934541712036,
+                    "frame": 147
+                  },
+                  "baseCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993
+                  },
+                  "foregroundCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993,
+                    "display": "block"
+                  },
+                  "gpuCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 0,
+                    "cssHeight": 0,
+                    "display": "none"
+                  },
+                  "lastFailure": "WebGL context lost"
+                },
+                "canvasCount": 3,
+                "fallbackDraws": 19
+              },
+              "restored": {
+                "renderer": {
+                  "status": "active",
+                  "backend": "PixiJS WebGL",
+                  "version": "8.19.0",
+                  "fallback": false,
+                  "pixiLoaded": true,
+                  "webglReady": true,
+                  "contextLost": false,
+                  "contextLossCount": 2,
+                  "contextRestoreCount": 2,
+                  "rendererGeneration": 1,
+                  "tickerRegistered": true,
+                  "tickerRegistrationCount": 1,
+                  "contextListenerRegistrationCount": 1,
+                  "tickerFrames": 193,
+                  "firstGpuFrame": true,
+                  "firstProjectileSpriteSeen": true,
+                  "projectileSprites": {
+                    "pool": 71,
+                    "visible": 47
+                  },
+                  "particleSprites": {
+                    "pool": 108,
+                    "visible": 16
+                  },
+                  "textures": {
+                    "generation": 3,
+                    "created": 21,
+                    "destroyed": 14,
+                    "live": 7
+                  },
+                  "projectileVisuals": {
+                    "generic": "orb",
+                    "core": "diamond-pulse",
+                    "ember": "explosive-sigil",
+                    "comet": "crystal-lance",
+                    "shard": "angular-shard"
+                  },
+                  "projectileCount": 47,
+                  "hierarchy": [
+                    "game-background",
+                    "gpu-allied",
+                    "combat-foreground",
+                    "html-ui"
+                  ],
+                  "dpr": 1,
+                  "renderScale": 1,
+                  "shake": {
+                    "x": 1.825192896717489,
+                    "y": -6.0278653176803125,
+                    "frame": 162
+                  },
+                  "baseCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993
+                  },
+                  "foregroundCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993,
+                    "display": "block"
+                  },
+                  "gpuCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993,
+                    "display": "block"
+                  },
+                  "lastFailure": ""
+                },
+                "canvasCount": 3
+              }
+            },
+            {
+              "cycle": 3,
+              "lost": {
+                "renderer": {
+                  "status": "context-lost",
+                  "backend": "Canvas 2D",
+                  "version": "8.19.0",
+                  "fallback": true,
+                  "pixiLoaded": true,
+                  "webglReady": true,
+                  "contextLost": true,
+                  "contextLossCount": 3,
+                  "contextRestoreCount": 2,
+                  "rendererGeneration": 1,
+                  "tickerRegistered": true,
+                  "tickerRegistrationCount": 1,
+                  "contextListenerRegistrationCount": 1,
+                  "tickerFrames": 195,
+                  "firstGpuFrame": true,
+                  "firstProjectileSpriteSeen": true,
+                  "projectileSprites": {
+                    "pool": 71,
+                    "visible": 46
+                  },
+                  "particleSprites": {
+                    "pool": 108,
+                    "visible": 14
+                  },
+                  "textures": {
+                    "generation": 3,
+                    "created": 21,
+                    "destroyed": 14,
+                    "live": 7
+                  },
+                  "projectileVisuals": {
+                    "generic": "orb",
+                    "core": "diamond-pulse",
+                    "ember": "explosive-sigil",
+                    "comet": "crystal-lance",
+                    "shard": "angular-shard"
+                  },
+                  "projectileCount": 46,
+                  "hierarchy": [
+                    "game-background",
+                    "gpu-allied",
+                    "combat-foreground",
+                    "html-ui"
+                  ],
+                  "dpr": 1,
+                  "renderScale": 1,
+                  "shake": {
+                    "x": 14.29052015985286,
+                    "y": 0.29012210032470875,
+                    "frame": 164
+                  },
+                  "baseCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993
+                  },
+                  "foregroundCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993,
+                    "display": "block"
+                  },
+                  "gpuCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 0,
+                    "cssHeight": 0,
+                    "display": "none"
+                  },
+                  "lastFailure": "WebGL context lost"
+                },
+                "canvasCount": 3,
+                "fallbackDraws": 36
+              },
+              "restored": {
+                "renderer": {
+                  "status": "active",
+                  "backend": "PixiJS WebGL",
+                  "version": "8.19.0",
+                  "fallback": false,
+                  "pixiLoaded": true,
+                  "webglReady": true,
+                  "contextLost": false,
+                  "contextLossCount": 3,
+                  "contextRestoreCount": 3,
+                  "rendererGeneration": 1,
+                  "tickerRegistered": true,
+                  "tickerRegistrationCount": 1,
+                  "contextListenerRegistrationCount": 1,
+                  "tickerFrames": 210,
+                  "firstGpuFrame": true,
+                  "firstProjectileSpriteSeen": true,
+                  "projectileSprites": {
+                    "pool": 71,
+                    "visible": 54
+                  },
+                  "particleSprites": {
+                    "pool": 108,
+                    "visible": 21
+                  },
+                  "textures": {
+                    "generation": 4,
+                    "created": 28,
+                    "destroyed": 21,
+                    "live": 7
+                  },
+                  "projectileVisuals": {
+                    "generic": "orb",
+                    "core": "diamond-pulse",
+                    "ember": "explosive-sigil",
+                    "comet": "crystal-lance",
+                    "shard": "angular-shard"
+                  },
+                  "projectileCount": 54,
+                  "hierarchy": [
+                    "game-background",
+                    "gpu-allied",
+                    "combat-foreground",
+                    "html-ui"
+                  ],
+                  "dpr": 1,
+                  "renderScale": 1,
+                  "shake": {
+                    "x": -2.797884521288559,
+                    "y": 1.7391406300914198,
+                    "frame": 179
+                  },
+                  "baseCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993
+                  },
+                  "foregroundCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993,
+                    "display": "block"
+                  },
+                  "gpuCanvas": {
+                    "width": 1920,
+                    "height": 993,
+                    "cssWidth": 1920,
+                    "cssHeight": 993,
+                    "display": "block"
+                  },
+                  "lastFailure": ""
+                },
+                "canvasCount": 3
+              }
+            }
+          ],
+          "final": {
+            "renderer": {
+              "status": "active",
+              "backend": "PixiJS WebGL",
+              "version": "8.19.0",
+              "fallback": false,
+              "pixiLoaded": true,
+              "webglReady": true,
+              "contextLost": false,
+              "contextLossCount": 3,
+              "contextRestoreCount": 3,
+              "rendererGeneration": 1,
+              "tickerRegistered": true,
+              "tickerRegistrationCount": 1,
+              "contextListenerRegistrationCount": 1,
+              "tickerFrames": 212,
+              "firstGpuFrame": true,
+              "firstProjectileSpriteSeen": true,
+              "projectileSprites": {
+                "pool": 71,
+                "visible": 55
+              },
+              "particleSprites": {
+                "pool": 108,
+                "visible": 30
+              },
+              "textures": {
+                "generation": 4,
+                "created": 28,
+                "destroyed": 21,
+                "live": 7
+              },
+              "projectileVisuals": {
+                "generic": "orb",
+                "core": "diamond-pulse",
+                "ember": "explosive-sigil",
+                "comet": "crystal-lance",
+                "shard": "angular-shard"
+              },
+              "projectileCount": 55,
+              "hierarchy": [
+                "game-background",
+                "gpu-allied",
+                "combat-foreground",
+                "html-ui"
+              ],
+              "dpr": 1,
+              "renderScale": 1,
+              "shake": {
+                "x": -3.132566888324531,
+                "y": -11.909825933151822,
+                "frame": 181
+              },
+              "baseCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993
+              },
+              "foregroundCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993,
+                "display": "block"
+              },
+              "gpuCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993,
+                "display": "block"
+              },
+              "lastFailure": ""
+            },
+            "canvasCount": 3,
+            "errors": 0
+          }
+        },
+        "resize": {
+          "dpr1": {
+            "dpr": 1,
+            "renderer": {
+              "status": "active",
+              "backend": "PixiJS WebGL",
+              "version": "8.19.0",
+              "fallback": false,
+              "pixiLoaded": true,
+              "webglReady": true,
+              "contextLost": false,
+              "contextLossCount": 3,
+              "contextRestoreCount": 3,
+              "rendererGeneration": 1,
+              "tickerRegistered": true,
+              "tickerRegistrationCount": 1,
+              "contextListenerRegistrationCount": 1,
+              "tickerFrames": 238,
+              "firstGpuFrame": true,
+              "firstProjectileSpriteSeen": true,
+              "projectileSprites": {
+                "pool": 71,
+                "visible": 55
+              },
+              "particleSprites": {
+                "pool": 108,
+                "visible": 32
+              },
+              "textures": {
+                "generation": 4,
+                "created": 28,
+                "destroyed": 21,
+                "live": 7
+              },
+              "projectileVisuals": {
+                "generic": "orb",
+                "core": "diamond-pulse",
+                "ember": "explosive-sigil",
+                "comet": "crystal-lance",
+                "shard": "angular-shard"
+              },
+              "projectileCount": 55,
+              "hierarchy": [
+                "game-background",
+                "gpu-allied",
+                "combat-foreground",
+                "html-ui"
+              ],
+              "dpr": 1,
+              "renderScale": 1,
+              "shake": {
+                "x": 10.974466001827185,
+                "y": -14.863004290960555,
+                "frame": 207
+              },
+              "baseCanvas": {
+                "width": 1280,
+                "height": 720,
+                "cssWidth": 1280,
+                "cssHeight": 720
+              },
+              "foregroundCanvas": {
+                "width": 1280,
+                "height": 720,
+                "cssWidth": 1280,
+                "cssHeight": 720,
+                "display": "block"
+              },
+              "gpuCanvas": {
+                "width": 1280,
+                "height": 720,
+                "cssWidth": 1280,
+                "cssHeight": 720,
+                "display": "block"
+              },
+              "lastFailure": ""
+            },
+            "canvases": [
+              {
+                "id": "game",
+                "css": [
+                  1280,
+                  720
+                ]
+              },
+              {
+                "id": "gpuCombatLayer",
+                "css": [
+                  1280,
+                  720
+                ]
+              },
+              {
+                "id": "combatForeground",
+                "css": [
+                  1280,
+                  720
+                ]
+              }
+            ]
+          },
+          "mobile": {
+            "dpr": 2,
+            "renderer": {
+              "status": "active",
+              "backend": "PixiJS WebGL",
+              "version": "8.19.0",
+              "fallback": false,
+              "pixiLoaded": true,
+              "webglReady": true,
+              "contextLost": false,
+              "contextLossCount": 3,
+              "contextRestoreCount": 3,
+              "rendererGeneration": 1,
+              "tickerRegistered": true,
+              "tickerRegistrationCount": 1,
+              "contextListenerRegistrationCount": 1,
+              "tickerFrames": 262,
+              "firstGpuFrame": true,
+              "firstProjectileSpriteSeen": true,
+              "projectileSprites": {
+                "pool": 71,
+                "visible": 62
+              },
+              "particleSprites": {
+                "pool": 108,
+                "visible": 34
+              },
+              "textures": {
+                "generation": 4,
+                "created": 28,
+                "destroyed": 21,
+                "live": 7
+              },
+              "projectileVisuals": {
+                "generic": "orb",
+                "core": "diamond-pulse",
+                "ember": "explosive-sigil",
+                "comet": "crystal-lance",
+                "shard": "angular-shard"
+              },
+              "projectileCount": 62,
+              "hierarchy": [
+                "game-background",
+                "gpu-allied",
+                "combat-foreground",
+                "html-ui"
+              ],
+              "dpr": 1.35,
+              "renderScale": 1,
+              "shake": {
+                "x": -3.374027836860245,
+                "y": -9.349926426468539,
+                "frame": 231
+              },
+              "baseCanvas": {
+                "width": 526,
+                "height": 1139,
+                "cssWidth": 390,
+                "cssHeight": 844
+              },
+              "foregroundCanvas": {
+                "width": 526,
+                "height": 1139,
+                "cssWidth": 390,
+                "cssHeight": 844,
+                "display": "block"
+              },
+              "gpuCanvas": {
+                "width": 390,
+                "height": 844,
+                "cssWidth": 390,
+                "cssHeight": 844,
+                "display": "block"
+              },
+              "lastFailure": ""
+            },
+            "canvases": [
+              {
+                "id": "game",
+                "width": 526,
+                "height": 1139,
+                "css": [
+                  390,
+                  844
+                ]
+              },
+              {
+                "id": "gpuCombatLayer",
+                "width": 390,
+                "height": 844,
+                "css": [
+                  390,
+                  844
+                ]
+              },
+              {
+                "id": "combatForeground",
+                "width": 526,
+                "height": 1139,
+                "css": [
+                  390,
+                  844
+                ]
+              }
+            ]
+          }
+        },
+        "finalDiagnostics": {
+          "mode": "playing",
+          "runSerial": 34,
+          "renderFrame": 244,
+          "pendingActions": 0,
+          "errors": [],
+          "errorCount": 0,
+          "sanitizer": {
+            "passes": 0,
+            "totalRemoved": 0,
+            "removed": {}
+          },
+          "entities": {
+            "enemies": 72,
+            "projectiles": 46,
+            "enemyProjectiles": 0,
+            "particles": 24,
+            "gems": 0,
+            "wells": 2,
+            "texts": 13,
+            "shockwaves": 0,
+            "telegraphs": 0,
+            "beams": 3,
+            "curves": 0,
+            "mapEvents": 0
+          },
+          "renderer": {
+            "status": "active",
+            "backend": "PixiJS WebGL",
+            "version": "8.19.0",
+            "fallback": false,
+            "pixiLoaded": true,
+            "webglReady": true,
+            "contextLost": false,
+            "contextLossCount": 3,
+            "contextRestoreCount": 3,
+            "rendererGeneration": 1,
+            "tickerRegistered": true,
+            "tickerRegistrationCount": 1,
+            "contextListenerRegistrationCount": 1,
+            "tickerFrames": 275,
+            "firstGpuFrame": true,
+            "firstProjectileSpriteSeen": true,
+            "projectileSprites": {
+              "pool": 71,
+              "visible": 46
+            },
+            "particleSprites": {
+              "pool": 108,
+              "visible": 24
+            },
+            "textures": {
+              "generation": 4,
+              "created": 28,
+              "destroyed": 21,
+              "live": 7
+            },
+            "projectileVisuals": {
+              "generic": "orb",
+              "core": "diamond-pulse",
+              "ember": "explosive-sigil",
+              "comet": "crystal-lance",
+              "shard": "angular-shard"
+            },
+            "projectileCount": 46,
+            "hierarchy": [
+              "game-background",
+              "gpu-allied",
+              "combat-foreground",
+              "html-ui"
+            ],
+            "dpr": 1,
+            "renderScale": 1,
+            "shake": {
+              "x": -4.376588335024193,
+              "y": 5.280970639895287,
+              "frame": 244
+            },
+            "baseCanvas": {
+              "width": 1920,
+              "height": 993,
+              "cssWidth": 1920,
+              "cssHeight": 993
+            },
+            "foregroundCanvas": {
+              "width": 1920,
+              "height": 993,
+              "cssWidth": 1920,
+              "cssHeight": 993,
+              "display": "block"
+            },
+            "gpuCanvas": {
+              "width": 1920,
+              "height": 993,
+              "cssWidth": 1920,
+              "cssHeight": 993,
+              "display": "block"
+            },
+            "lastFailure": ""
+          },
+          "dom": {
+            "canvasCount": 3,
+            "scriptCount": 31
+          }
+        }
+      },
+      "failureDiagnostics": {
+        "mode": "playing",
+        "runSerial": 34,
+        "renderFrame": 254,
+        "pendingActions": 0,
+        "errors": [],
+        "errorCount": 0,
+        "sanitizer": {
+          "passes": 0,
+          "totalRemoved": 0,
+          "removed": {}
+        },
+        "entities": {
+          "enemies": 72,
+          "projectiles": 40,
+          "enemyProjectiles": 0,
+          "particles": 27,
+          "gems": 0,
+          "wells": 2,
+          "texts": 11,
+          "shockwaves": 8,
+          "telegraphs": 0,
+          "beams": 7,
+          "curves": 3,
+          "mapEvents": 0
+        },
+        "renderer": {
+          "status": "active",
+          "backend": "PixiJS WebGL",
+          "version": "8.19.0",
+          "fallback": false,
+          "pixiLoaded": true,
+          "webglReady": true,
+          "contextLost": false,
+          "contextLossCount": 3,
+          "contextRestoreCount": 3,
+          "rendererGeneration": 1,
+          "tickerRegistered": true,
+          "tickerRegistrationCount": 1,
+          "contextListenerRegistrationCount": 1,
+          "tickerFrames": 285,
+          "firstGpuFrame": true,
+          "firstProjectileSpriteSeen": true,
+          "projectileSprites": {
+            "pool": 71,
+            "visible": 40
+          },
+          "particleSprites": {
+            "pool": 108,
+            "visible": 27
+          },
+          "textures": {
+            "generation": 4,
+            "created": 28,
+            "destroyed": 21,
+            "live": 7
+          },
+          "projectileVisuals": {
+            "generic": "orb",
+            "core": "diamond-pulse",
+            "ember": "explosive-sigil",
+            "comet": "crystal-lance",
+            "shard": "angular-shard"
+          },
+          "projectileCount": 40,
+          "hierarchy": [
+            "game-background",
+            "gpu-allied",
+            "combat-foreground",
+            "html-ui"
+          ],
+          "dpr": 1,
+          "renderScale": 1,
+          "shake": {
+            "x": 7.8492303214724615,
+            "y": 0.4815399378171712,
+            "frame": 254
+          },
+          "baseCanvas": {
+            "width": 1920,
+            "height": 993,
+            "cssWidth": 1920,
+            "cssHeight": 993
+          },
+          "foregroundCanvas": {
+            "width": 1920,
+            "height": 993,
+            "cssWidth": 1920,
+            "cssHeight": 993,
+            "display": "block"
+          },
+          "gpuCanvas": {
+            "width": 1920,
+            "height": 993,
+            "cssWidth": 1920,
+            "cssHeight": 993,
+            "display": "block"
+          },
+          "lastFailure": ""
+        },
+        "dom": {
+          "canvasCount": 3,
+          "scriptCount": 31
+        }
+      },
+      "endedAt": "2026-07-15T22:40:44.547Z",
+      "ok": false
+    },
+    {
+      "name": "pixi-fallback",
+      "startedAt": "2026-07-15T22:40:44.547Z",
+      "screenshots": [],
+      "observations": {
+        "fallback": {
+          "renderer": {
+            "status": "failed",
+            "backend": "Canvas 2D",
+            "version": "8.19.0",
+            "fallback": true,
+            "pixiLoaded": false,
+            "webglReady": false,
+            "contextLost": false,
+            "contextLossCount": 0,
+            "contextRestoreCount": 0,
+            "rendererGeneration": 1,
+            "tickerRegistered": false,
+            "tickerRegistrationCount": 0,
+            "contextListenerRegistrationCount": 0,
+            "tickerFrames": 0,
+            "firstGpuFrame": false,
+            "firstProjectileSpriteSeen": false,
+            "projectileSprites": {
+              "pool": 0,
+              "visible": 0
+            },
+            "particleSprites": {
+              "pool": 0,
+              "visible": 0
+            },
+            "textures": {
+              "generation": 0,
+              "created": 0,
+              "destroyed": 0,
+              "live": 0
+            },
+            "projectileVisuals": {
+              "generic": "orb",
+              "core": "diamond-pulse",
+              "ember": "explosive-sigil",
+              "comet": "crystal-lance",
+              "shard": "angular-shard"
+            },
+            "projectileCount": 0,
+            "hierarchy": [
+              "game-background",
+              "gpu-allied",
+              "combat-foreground",
+              "html-ui"
+            ],
+            "dpr": 1,
+            "renderScale": 1,
+            "shake": {
+              "x": 0,
+              "y": 0,
+              "frame": 43
+            },
+            "baseCanvas": {
+              "width": 1920,
+              "height": 993,
+              "cssWidth": 1920,
+              "cssHeight": 993
+            },
+            "foregroundCanvas": {
+              "width": 1920,
+              "height": 993,
+              "cssWidth": 1920,
+              "cssHeight": 993,
+              "display": "block"
+            },
+            "gpuCanvas": null,
+            "lastFailure": "PixiJS download failed"
+          },
+          "diagnostics": {
+            "mode": "playing",
+            "runSerial": 1,
+            "renderFrame": 43,
+            "pendingActions": 0,
+            "errors": [],
+            "errorCount": 0,
+            "sanitizer": {
+              "passes": 0,
+              "totalRemoved": 0,
+              "removed": {}
+            },
+            "entities": {
+              "enemies": 3,
+              "projectiles": 0,
+              "enemyProjectiles": 0,
+              "particles": 0,
+              "gems": 0,
+              "wells": 0,
+              "texts": 0,
+              "shockwaves": 0,
+              "telegraphs": 0,
+              "beams": 0,
+              "curves": 0,
+              "mapEvents": 0
+            },
+            "renderer": {
+              "status": "failed",
+              "backend": "Canvas 2D",
+              "version": "8.19.0",
+              "fallback": true,
+              "pixiLoaded": false,
+              "webglReady": false,
+              "contextLost": false,
+              "contextLossCount": 0,
+              "contextRestoreCount": 0,
+              "rendererGeneration": 1,
+              "tickerRegistered": false,
+              "tickerRegistrationCount": 0,
+              "contextListenerRegistrationCount": 0,
+              "tickerFrames": 0,
+              "firstGpuFrame": false,
+              "firstProjectileSpriteSeen": false,
+              "projectileSprites": {
+                "pool": 0,
+                "visible": 0
+              },
+              "particleSprites": {
+                "pool": 0,
+                "visible": 0
+              },
+              "textures": {
+                "generation": 0,
+                "created": 0,
+                "destroyed": 0,
+                "live": 0
+              },
+              "projectileVisuals": {
+                "generic": "orb",
+                "core": "diamond-pulse",
+                "ember": "explosive-sigil",
+                "comet": "crystal-lance",
+                "shard": "angular-shard"
+              },
+              "projectileCount": 0,
+              "hierarchy": [
+                "game-background",
+                "gpu-allied",
+                "combat-foreground",
+                "html-ui"
+              ],
+              "dpr": 1,
+              "renderScale": 1,
+              "shake": {
+                "x": 0,
+                "y": 0,
+                "frame": 43
+              },
+              "baseCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993
+              },
+              "foregroundCanvas": {
+                "width": 1920,
+                "height": 993,
+                "cssWidth": 1920,
+                "cssHeight": 993,
+                "display": "block"
+              },
+              "gpuCanvas": null,
+              "lastFailure": "PixiJS download failed"
+            },
+            "dom": {
+              "canvasCount": 2,
+              "scriptCount": 31
+            }
+          },
+          "canvasIds": [
+            "game",
+            "combatForeground"
+          ],
+          "projectiles": 0,
+          "renderFrame": 43,
+          "projectilePeak": 1
+        }
+      },
+      "endedAt": "2026-07-15T22:40:49.571Z",
+      "ok": true
+    }
+  ]
+}
