@@ -1,5 +1,6 @@
 GAME_SETTINGS.audio=GAME_SETTINGS.audio||{};
 GAME_SETTINGS.audio.volume={master:.90,combat:.92,ui:.82,ambient:.58,...(GAME_SETTINGS.audio.volume||{})};
+try{const saved=JSON.parse(localStorage.getItem('stackfall.settings')||'{}');GAME_SETTINGS.hideProjectiles=saved.hideProjectiles===true;}catch{GAME_SETTINGS.hideProjectiles=false;}
 
 const settingsUi = {
   screen: document.querySelector('#settingsScreen'),
@@ -17,6 +18,7 @@ const settingsUi = {
   volumeUi: document.querySelector('#volumeUi'),
   volumeAmbient: document.querySelector('#volumeAmbient'),
   damageNumbers: document.querySelector('#damageNumbers'),
+  hideProjectiles: document.querySelector('#hideProjectiles'),
   screenShake: document.querySelector('#screenShake')
 };
 
@@ -24,12 +26,12 @@ const volumeKeys={volumeMaster:'master',volumeCombat:'combat',volumeUi:'ui',volu
 function clampVolume(v){return Math.max(0,Math.min(1,Number(v)||0));}
 function ensureSettingTexts(){
   const rows={
-    ko:{masterVolume:'전체 음량',combatVolume:'전투 음량',uiVolume:'UI 음량',ambientVolume:'배경음 음량',damageNumbers:'피해량 표시',screenShake:'화면 흔들림'},
-    en:{masterVolume:'Master volume',combatVolume:'Combat volume',uiVolume:'UI volume',ambientVolume:'Ambient volume',damageNumbers:'Damage numbers',screenShake:'Screen shake'},
-    ja:{masterVolume:'全体音量',combatVolume:'戦闘音量',uiVolume:'UI音量',ambientVolume:'環境音量',damageNumbers:'ダメージ表示',screenShake:'画面振動'},
-    'zh-CN':{masterVolume:'总音量',combatVolume:'战斗音量',uiVolume:'界面音量',ambientVolume:'环境音量',damageNumbers:'伤害数字',screenShake:'屏幕震动'},
-    es:{masterVolume:'Volumen general',combatVolume:'Volumen de combate',uiVolume:'Volumen de interfaz',ambientVolume:'Volumen ambiental',damageNumbers:'Números de daño',screenShake:'Sacudida de pantalla'},
-    fr:{masterVolume:'Volume général',combatVolume:'Volume de combat',uiVolume:'Volume interface',ambientVolume:'Volume d’ambiance',damageNumbers:'Dégâts affichés',screenShake:'Secousse d’écran'}
+    ko:{masterVolume:'전체 음량',combatVolume:'전투 음량',uiVolume:'UI 음량',ambientVolume:'배경음 음량',damageNumbers:'피해량 표시',hideProjectiles:'아군 투사체 숨기기',screenShake:'화면 흔들림'},
+    en:{masterVolume:'Master volume',combatVolume:'Combat volume',uiVolume:'UI volume',ambientVolume:'Ambient volume',damageNumbers:'Damage numbers',hideProjectiles:'Hide allied projectiles',screenShake:'Screen shake'},
+    ja:{masterVolume:'全体音量',combatVolume:'戦闘音量',uiVolume:'UI音量',ambientVolume:'環境音量',damageNumbers:'ダメージ表示',hideProjectiles:'味方の弾を非表示',screenShake:'画面振動'},
+    'zh-CN':{masterVolume:'总音量',combatVolume:'战斗音量',uiVolume:'界面音量',ambientVolume:'环境音量',damageNumbers:'伤害数字',hideProjectiles:'隐藏友方弹幕',screenShake:'屏幕震动'},
+    es:{masterVolume:'Volumen general',combatVolume:'Volumen de combate',uiVolume:'Volumen de interfaz',ambientVolume:'Volumen ambiental',damageNumbers:'Números de daño',hideProjectiles:'Ocultar proyectiles aliados',screenShake:'Sacudida de pantalla'},
+    fr:{masterVolume:'Volume général',combatVolume:'Volume de combat',uiVolume:'Volume interface',ambientVolume:'Volume d’ambiance',damageNumbers:'Dégâts affichés',hideProjectiles:'Masquer les projectiles alliés',screenShake:'Secousse d’écran'}
   };
   for(const [code,row] of Object.entries(rows)){if(!TEXT[code])continue;for(const [key,value] of Object.entries(row))TEXT[code][`settings.${key}`]=value;}
 }
@@ -58,6 +60,7 @@ function syncSettingsControls() {
   settingsUi.ambient.checked=GAME_SETTINGS.audio.ambient!==false;
   for(const [id,key] of Object.entries(volumeKeys))syncRange(settingsUi[id],key);
   settingsUi.damageNumbers.checked=GAME_SETTINGS.damageNumbers!==false;
+  settingsUi.hideProjectiles.checked=GAME_SETTINGS.hideProjectiles===true;
   settingsUi.screenShake.checked=GAME_SETTINGS.screenShake!==false;
 }
 
@@ -85,6 +88,7 @@ settingsUi.ui.addEventListener('change',()=>updateAudioSetting('ui',settingsUi.u
 settingsUi.ambient.addEventListener('change',()=>updateAudioSetting('ambient',settingsUi.ambient.checked));
 for(const [id,key] of Object.entries(volumeKeys))settingsUi[id]?.addEventListener('input',()=>updateAudioVolume(key,settingsUi[id]));
 settingsUi.damageNumbers.addEventListener('change',()=>updateDisplaySetting('damageNumbers',settingsUi.damageNumbers.checked));
+settingsUi.hideProjectiles.addEventListener('change',()=>updateDisplaySetting('hideProjectiles',settingsUi.hideProjectiles.checked));
 settingsUi.screenShake.addEventListener('change',()=>updateDisplaySetting('screenShake',settingsUi.screenShake.checked));
 window.addEventListener('keydown',e=>{if(e.code==='Escape'&&!settingsUi.screen.classList.contains('hidden')){e.preventDefault();e.stopImmediatePropagation();closeSettings();}},true);
 
