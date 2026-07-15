@@ -2,13 +2,13 @@
   const numericTexts={
     magnet:{ko:['자석 코어','결정 흡수 범위 +34.'],en:['Magnet Core','Pickup range +34.']},
     echo:{ko:['에코 비콘','발사·설치형 장비 복제 확률 +7.5%p.'],en:['Echo Beacon','Repeat chance for fired and deployed equipment +7.5%p.']},
-    power:{ko:['출력 증폭','모든 피해 +16%.'],en:['Power Amplifier','All damage +16%.']},
+    power:{ko:['출력 증폭','모든 피해 +10%.'],en:['Power Amplifier','All damage +10%.']},
     haste:{ko:['가속 회로','장비 발동 주기 -10%.'],en:['Acceleration Circuit','Equipment interval -10%.']},
     vitality:{ko:['재생 장갑','최대 체력 +20, 즉시 체력 30 회복.'],en:['Regenerative Plating','Max health +20 and restore 30 health.']},
     speed:{ko:['벡터 부스터','이동 속도 +9%.'],en:['Vector Booster','Move speed +9%.']},
     crit:{ko:['취약점 해석','치명타 확률 +6%p.'],en:['Weakness Analysis','Critical chance +6%p.']},
     chain:{ko:['연쇄 과부하','연쇄 유지시간 +7%, 연쇄 피해 효율 증가.'],en:['Chain Overload','Chain duration +7%; chain damage efficiency increases.']},
-    greed:{ko:['개척 계약','적 체력 +6%, 경험치 획득량 +12%.'],en:['Frontier Contract','Enemy health +6%, experience gained +12%.']},
+    greed:{ko:['개척 계약','적 체력 +10%, 경험치 획득량 +30%.'],en:['Frontier Contract','Enemy health +10%, experience gained +30%.']},
     armor:{ko:['충격 흡수재','받는 피해 -7.5%.'],en:['Impact Absorber','Damage taken -7.5%.']}
   };
   for(const[key,row]of Object.entries(numericTexts)){if(PASSIVES[key])PASSIVES[key].desc=row.ko[1];if(PASSIVE_TEXT[key]){PASSIVE_TEXT[key].ko=row.ko;PASSIVE_TEXT[key].en=row.en;for(const code of['ja','zh-CN','es','fr'])PASSIVE_TEXT[key][code]=PASSIVE_TEXT[key][code]||row.en;}}
@@ -18,7 +18,7 @@
     chainBurst:{name:'연쇄 폭심',icon:'✹',color:'#ff7b9e',desc:'20연쇄마다 플레이어 중심 폭발.',max:8},
     chainRecovery:{name:'연쇄 회수',icon:'✚',color:'#74f2a7',desc:'30연쇄마다 최대 체력 비례 회복.',max:8},
     chainField:{name:'전리품 공명',icon:'⊙',color:'#ffcc5c',desc:'현재 연쇄에 따라 결정 흡수 범위 증가.',max:8},
-    eliteHunter:{name:'거성 사냥꾼',icon:'♜',color:'#e6b2ff',desc:'중간보스·보스 피해 +12%.',max:6},
+    eliteHunter:{name:'거성 사냥꾼',icon:'♜',color:'#e6b2ff',desc:'중간보스·보스 피해 +15%.',max:6},
     pierce:{name:'관통 렌즈',icon:'⇢',color:'#b5f5ff',desc:'투사체 관통 +1.',max:4},
     regen:{name:'자가 복원',icon:'♻',color:'#88f0ad',desc:'4초마다 체력 2.5 회복.',max:6},
     wisdom:{name:'성운 통찰',icon:'✧',color:'#bba6ff',desc:'경험치 획득량 +10%.',max:8},
@@ -31,7 +31,7 @@
     chainBurst:{ko:['연쇄 폭심','20연쇄마다 플레이어 중심 폭발.'],en:['Chain Detonation','Every 20 chain triggers a player-centered blast.']},
     chainRecovery:{ko:['연쇄 회수','30연쇄마다 최대 체력 비례 회복.'],en:['Chain Recovery','Every 30 chain restores a portion of maximum health.']},
     chainField:{ko:['전리품 공명','현재 연쇄에 따라 결정 흡수 범위 증가.'],en:['Loot Resonance','Pickup range increases with current chain.']},
-    eliteHunter:{ko:['거성 사냥꾼','중간보스·보스 피해 +12%.'],en:['Giant Hunter','Damage to mini-bosses and bosses +12%.']},
+    eliteHunter:{ko:['거성 사냥꾼','중간보스·보스 피해 +15%.'],en:['Giant Hunter','Damage to mini-bosses and bosses +15%.']},
     pierce:{ko:['관통 렌즈','투사체 관통 +1.'],en:['Piercing Lens','Projectile pierce +1.']},
     regen:{ko:['자가 복원','4초마다 체력 2.5 회복.'],en:['Self Repair','Restores 2.5 health every 4 seconds.']},
     wisdom:{ko:['성운 통찰','경험치 획득량 +10%.'],en:['Nebula Insight','Experience gained +10%.']},
@@ -60,13 +60,13 @@
   hasteMult=function progressionHaste(){return Math.max(.16,baseHaste()*(1-chainDriveBonus()));};
   const baseMagnet=magnetRange;
   magnetRange=function progressionMagnet(){const stacks=stat('chainField'),bonus=stacks?Math.min(30+stacks*24,currentChain()*(.18+stacks*.12)):0;return baseMagnet()+bonus;};
-  const baseXp=xpMult;xpMult=function progressionXp(){return baseXp()*(1+stat('wisdom')*.10);};
+  xpMult=function progressionXp(){return 1+stat('greed')*.30+stat('wisdom')*.10;};
   const baseDamage=damageMult;
   damageMult=function progressionDamage(){const normalized=baseDamage()/Math.max(.001,1+legacyChainDamageBonus()),overdrive=player.hp/player.maxHp<.45?1+stat('overdrive')*.14:1;return normalized*(1+scaledChainDamageBonus())*overdrive;};
   const baseProjectile=spawnPlayerProjectile;
   spawnPlayerProjectile=function progressionProjectile(data){const next={...data};next.pierce=(Number.isFinite(next.pierce)?next.pierce:0)+stat('pierce');next.r=(Number.isFinite(next.r)?next.r:4)*(1+stat('projectileSize')*.10);return baseProjectile(next);};
   const baseDeal=dealDamage;
-  dealDamage=function progressionEliteDamage(enemy,amount,opts={}){if(enemy&&(enemy.type==='mini'||enemy.type==='boss'))amount*=1+stat('eliteHunter')*.12;return baseDeal(enemy,amount,opts);};
+  dealDamage=function progressionEliteDamage(enemy,amount,opts={}){if(enemy&&(enemy.type==='mini'||enemy.type==='boss'))amount*=1+stat('eliteHunter')*.15;return baseDeal(enemy,amount,opts);};
   const baseUpdatePlayer=updatePlayer;
   updatePlayer=function progressionPlayer(dt){baseUpdatePlayer(dt);const n=stat('regen');if(!n)return;player.regenTimer=(player.regenTimer||4)-dt;if(player.regenTimer<=0){player.regenTimer+=4;player.hp=Math.min(player.maxHp,player.hp+n*2.5);}};
 
