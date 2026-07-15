@@ -10,11 +10,14 @@
     prism:[['단일 프리즘','프리즘 1개와 관통 광선 1줄.'],['쌍둥이 프리즘','프리즘 2개 공전.'],['광폭 굴절','광선 폭과 경로 판정 증가.'],['성좌 연결','프리즘 사이 연결선에 접촉 피해.'],['다중 초점','각 프리즘이 광선 2줄 발사.'],['천구 의식','프리즘 3개 공전.']],
     bulwark:[['성광 피막','최대 체력과 피해 감소 증가.'],['겹빛 장벽','피해 감소율 추가 증가.'],['재충전 장벽','일정 시간마다 보호막 충전.'],['보복 장막','피격 시 주변 충격파.'],['요새 장막','보호막 최대치와 충전량 증가.'],['천체 성벽','강한 보호막을 주기적으로 충전.']],
     gravity:[['특이점 씨앗','중력 우물 1개를 주기적으로 생성.'],['조석 고정','흡입 반경과 흡입력 증가.'],['장수 특이점','중력 우물 지속시간 증가.'],['붕괴핵','중심부에 지속 피해.'],['압축 붕괴','중심 피해와 흡입력 추가 증가.'],['쌍둥이 특이점','중력 우물 2개 동시 생성.']],
-    chrono:[['느린 시간','주변 적 이동속도 감소.'],['느린 궤도','감속 범위와 감속률 증가.'],['시간 가속','모든 장비 발동 주기 단축.'],['시간 파동','주기적인 범위 피해 파동.'],['찰나 정지','파동 적중 적을 강하게 감속.'],['영원의 원환','감속 범위와 장비 가속 강화.']]
+    chrono:[['느린 시간','주변 적 이동속도 감소.'],['느린 궤도','감속 범위와 감속률 증가.'],['시간 가속','모든 장비 발동 주기 단축.'],['시간 파동','주기적인 범위 피해 파동.'],['찰나 정지','파동 적중 적을 강하게 감속.'],['영원의 원환','감속 범위와 장비 가속 강화.']],
+    ion:[['첫 방전','가까운 적 사이를 잇는 이온 사슬.'],['연결 확장','사슬이 적 하나를 더 타격.'],['고전압','사슬 거리와 피해 증가.'],['분기 방전','첫 대상에서 두 갈래로 분기.'],['잔류 전하','마지막 대상 주변에 소형 폭발.'],['쌍중 낙뢰','짧은 간격으로 두 번 방전.']],
+    nova:[['항성 점화','플레이어 중심 초신성 파동.'],['팽창권','파동 반경 증가.'],['잔광 파동','잠시 뒤 내부에 두 번째 파동.'],['충격 전선','적을 바깥으로 밀어냄.'],['과열 코일','파동 반경과 발동 속도 증가.'],['이중 초신성','더 넓은 후속 폭발 발생.']],
+    drone:[['단일 편대','유성 드론 1기 공전 사격.'],['쌍기 편대','유성 드론 2기 공전.'],['관통 탄두','드론 탄환이 적을 추가 관통.'],['교차 사격','각 드론이 탄환 2발 발사.'],['고속 궤도','공전 반경과 발사 속도 증가.'],['삼중 편대','드론 3기와 주기적 방사 사격.']]
   });
 
   const conciseDescriptions={
-    magnet:'결정 흡수 범위 증가.',echo:'발사·설치형 장비를 일정 확률로 한 번 더 발동.',power:'모든 피해 증가.',haste:'모든 장비 발동 주기 단축.',vitality:'최대 체력 증가와 즉시 회복.',speed:'이동 속도 증가.',crit:'치명타 확률 증가.',chain:'연쇄 유지시간 증가. 연쇄가 높을수록 피해 증가.',greed:'적이 강해지고 경험치 획득량 증가.',armor:'받는 피해 감소.',chainDrive:'현재 연쇄가 높을수록 장비 발동 주기 단축.',chainBurst:'일정 연쇄마다 플레이어 중심 폭발.',chainRecovery:'일정 연쇄마다 체력 회복.',chainField:'현재 연쇄가 높을수록 자석 범위 증가.',eliteHunter:'중간보스와 보스에게 주는 피해 증가.',pierce:'투사체 관통 횟수 증가.',regen:'일정 시간마다 체력 회복.',wisdom:'경험치 획득량 증가.',overdrive:'체력이 낮을 때 피해 증가.',projectileSize:'플레이어 투사체 크기 증가.',projectileSpeed:'투사체와 공전 장비 속도 증가.'
+    magnet:'결정 흡수 범위 증가.',echo:'발사·설치형 장비를 일정 확률로 한 번 더 발동.',power:'모든 피해 증가.',haste:'모든 장비 발동 주기 단축.',vitality:'최대 체력 증가와 즉시 회복.',speed:'이동 속도 증가.',crit:'치명타 확률 증가.',chain:'연쇄 유지시간 증가. 연쇄가 높을수록 피해 증가.',greed:'적이 강해지고 경험치 획득량 증가.',armor:'받는 피해 감소.',chainDrive:'현재 연쇄가 높을수록 장비 발동 주기 단축.',chainBurst:'일정 연쇄마다 플레이어 중심 폭발.',chainRecovery:'일정 연쇄마다 체력 회복.',chainField:'현재 연쇄가 높을수록 자석 범위 증가.',eliteHunter:'중간보스와 보스에게 주는 피해 증가.',pierce:'투사체 관통 횟수 증가.',regen:'일정 시간마다 체력 회복.',wisdom:'경험치 획득량 증가.',overdrive:'체력이 낮을 때 피해 증가.',projectileSize:'투사체·광선·중력 우물·공전 칼날 크기 증가.',projectileSpeed:'투사체와 공전 장비 속도 증가.'
   };
   for(const [key,desc] of Object.entries(conciseDescriptions)){
     if(PASSIVES[key])PASSIVES[key].desc=desc;
@@ -25,38 +28,25 @@
   }
   if(PASSIVES.chainDrive)PASSIVES.chainDrive.max=Math.max(12,PASSIVES.chainDrive.max||0);
 
-  function chainDriveBonus(stacks=stat('chainDrive'),combo=state.combo||0){
-    const tiers=Math.min(20,Math.floor(Math.max(0,combo)/10));
-    return Math.min(.42,tiers*(.002+Math.max(0,stacks)*.0015));
-  }
+  function chainDriveBonus(stacks=stat('chainDrive'),combo=state.combo||0){const tiers=Math.min(20,Math.floor(Math.max(0,combo)/10));return Math.min(.42,tiers*(.002+Math.max(0,stacks)*.0015));}
   window.chainDriveBonus=chainDriveBonus;
-  function hasteWithoutChainDrive(){
-    const chrono=weaponCount('chrono'),chronoBonus=chrono>=6?.18:chrono>=3?.08:0,nebula=(state.nebulaBoosts?.haste||0)*.08,apex=(state.apexBoons?.chronophage||0)*.025;
-    const local=Math.max(.15,1-stat('haste')*.10-chronoBonus-nebula-apex);
-    return Math.max(.12,local*(1-(state.voidImprintStacks||0)*.06));
-  }
+  function hasteWithoutChainDrive(){const chrono=weaponCount('chrono'),chronoBonus=chrono>=6?.18:chrono>=3?.08:0,nebula=(state.nebulaBoosts?.haste||0)*.08,apex=(state.apexBoons?.chronophage||0)*.025;const local=Math.max(.15,1-stat('haste')*.10-chronoBonus-nebula-apex);return Math.max(.12,local*(1-(state.voidImprintStacks||0)*.06));}
   hasteMult=function auditedHasteMultiplier(){return Math.max(.14,hasteWithoutChainDrive()*(1-chainDriveBonus()));};
 
   const previousChainDamage=typeof chainDamageBonus==='function'?chainDamageBonus:()=>0;
   const previousDamageMult=damageMult;
-  function softChainDamageBonus(){
-    const tiers=Math.floor(Math.max(0,state.combo||0)/5),raw=tiers*(.02+stat('chain')*.003);
-    return raw>0?Math.log1p(raw*2.4)/2.4:0;
-  }
+  function softChainDamageBonus(){const tiers=Math.floor(Math.max(0,state.combo||0)/5),raw=tiers*(.02+stat('chain')*.003);return raw>0?Math.log1p(raw*2.4)/2.4:0;}
   window.chainDamageBonus=softChainDamageBonus;
-  damageMult=function softCappedChainDamage(){
-    const previous=previousDamageMult(),oldBonus=previousChainDamage();
-    return previous/Math.max(.001,1+oldBonus)*(1+softChainDamageBonus());
-  };
+  damageMult=function softCappedChainDamage(){const previous=previousDamageMult(),oldBonus=previousChainDamage();return previous/Math.max(.001,1+oldBonus)*(1+softChainDamageBonus());};
 
   sf2FireArc=function naturalBoomerangFire(target,stacks,echoed=false){
     target=target&&!target.dead?target:nearestEnemy(player.x,player.y);if(!target)return;
-    const shots=stacks>=6?3:stacks>=2?2:1,start={x:player.x,y:player.y},base=Math.atan2(target.y-start.y,target.x-start.x),distance=Math.hypot(target.x-start.x,target.y-start.y),normal={x:-Math.sin(base),y:Math.cos(base)};
+    const shots=stacks>=6?3:stacks>=2?2:1,start={x:player.x,y:player.y},base=Math.atan2(target.y-start.y,target.x-start.x),distance=Math.hypot(target.x-start.x,target.y-start.y),normal={x:-Math.sin(base),y:Math.cos(base)},size=weaponSizeMultiplier();
     player.arcSide=(player.arcSide||-1)*-1;
     for(let i=0;i<shots;i++){
       const spread=i-(shots-1)/2,side=shots===1?player.arcSide:(spread===0?player.arcSide:Math.sign(spread)),lateral=spread*(28+stacks*3),targetPoint={x:target.x+normal.x*lateral,y:target.y+normal.y*lateral};
       const mid={x:(start.x+targetPoint.x)/2,y:(start.y+targetPoint.y)/2},curve=(42+Math.min(78,distance*.10)+(stacks>=3?28:0))*side,control={x:mid.x+normal.x*curve,y:mid.y+normal.y*curve};
-      state.entities.curves.push({stage:'outbound',stageTime:0,stageDuration:clamp(distance/(620+stacks*22),.32,.82),start:{...start},control,targetPoint,targetId:target.id,lateral,side,x:start.x,y:start.y,lastX:start.x,lastY:start.y,hitIds:new Set(),r:10+stacks*1.05+(stacks>=3?1.8:0),damage:(18+stacks*5.1)*(echoed?.68:1),returnDamageMult:stacks>=4?1.38:1,color:echoed?COLORS.pink:'#69ffe0',trailDamage:stacks>=5,trailCd:0,history:[],stacks,dead:false,returnLife:0});
+      state.entities.curves.push({stage:'outbound',stageTime:0,stageDuration:clamp(distance/(620+stacks*22),.32,.82),start:{...start},control,targetPoint,targetId:target.id,lateral,side,x:start.x,y:start.y,lastX:start.x,lastY:start.y,hitIds:new Set(),r:(10+stacks*1.05+(stacks>=3?1.8:0))*size,damage:(18+stacks*5.1)*(echoed?.68:1),returnDamageMult:stacks>=4?1.38:1,color:echoed?COLORS.pink:'#69ffe0',trailDamage:stacks>=5,trailCd:0,history:[],stacks,dead:false,returnLife:0});
     }
     if(state.entities.curves.length>32)state.entities.curves.splice(0,state.entities.curves.length-32);
   };
@@ -80,7 +70,7 @@
     const card=detail.querySelector('.ledger-detail-card'),icon=detail.querySelector('.ledger-detail-icon'),title=detail.querySelector('h3'),sub=detail.querySelector('p'),content=detail.querySelector('.ledger-detail-content');
     const close=()=>detail.classList.add('hidden');detail.querySelector('.ledger-detail-close').onclick=close;detail.addEventListener('pointerdown',e=>{if(e.target===detail)close();});
     const fmt=v=>Number.isFinite(v)?(Math.abs(v)>=100?Math.round(v):Number(v).toFixed(2).replace(/\.00$/,'')):'—';
-    function weaponStats(key,n){const h=hasteMult(),out=[];if(key==='core')out.push(['발사 주기',`${fmt(Math.max(.42,1.08-(n-1)*.085)*h)}초`],['동시 발사',n>=5?3:n>=2?2:1]);else if(key==='ember')out.push(['발사 주기',`${fmt((.74-Math.min(.32,n*.04))*h)}초`],['동시 발사',n>=5?3:n>=2?2:1]);else if(key==='comet')out.push(['발사 주기',`${fmt((1.72-Math.min(.5,n*.065))*h)}초`],['동시 발사',n>=2?2:1],['관통',2+Math.floor(n/2)+(n>=3?2:0)]);else if(key==='blade')out.push(['칼날 수',n>=5?3:n>=2?2:1],['공전 반경',n>=6?116:n>=3?91:80]);else if(key==='prism')out.push(['프리즘 수',n>=6?3:n>=2?2:1],['프리즘당 광선',n>=5?2:1]);else if(key==='gravity')out.push(['생성 주기',`${fmt((5.8-Math.min(2.45,n*.34))*h)}초`],['우물 수',n>=6?2:1],['흡입 반경',n>=2?185:135]);else if(key==='bulwark')out.push(['피해 감소',`${Math.round((n*.034+(n>=5?.05:0))*100)}%`],['보호막',n>=5?'강화':n>=3?'재충전':'기본']);else if(key==='chrono')out.push(['감속 반경',145+n*18],['장비 가속',n>=6?'18%':n>=3?'8%':'0%']);else if(key==='arc')out.push(['발사 주기',`${fmt((1.92-Math.min(.58,n*.075))*h)}초`],['칼날 수',n>=6?3:n>=2?2:1],['귀환 피해',n>=4?'×1.38':'×1.00']);return out;}
+    function weaponStats(key,n){const h=hasteMult(),out=[],size=weaponSizeMultiplier();if(key==='core')out.push(['발사 주기',`${fmt(Math.max(.42,1.08-(n-1)*.085)*h)}초`],['동시 발사',n>=5?3:n>=2?2:1]);else if(key==='ember')out.push(['발사 주기',`${fmt((.74-Math.min(.32,n*.04))*h)}초`],['동시 발사',n>=5?3:n>=2?2:1]);else if(key==='comet')out.push(['발사 주기',`${fmt((1.72-Math.min(.5,n*.065))*h)}초`],['동시 발사',n>=2?2:1],['관통',2+Math.floor(n/2)+(n>=3?2:0)]);else if(key==='blade')out.push(['칼날 수',n>=5?3:n>=2?2:1],['판정 크기',`×${fmt(size)}`]);else if(key==='prism')out.push(['프리즘 수',n>=6?3:n>=2?2:1],['광선 굵기',`×${fmt(size)}`]);else if(key==='gravity')out.push(['생성 주기',`${fmt((5.8-Math.min(2.45,n*.34))*h)}초`],['우물 수',n>=6?2:1],['흡입 반경',Math.round((n>=2?185:135)*size)]);else if(key==='bulwark')out.push(['피해 감소',`${Math.round((n*.034+(n>=5?.05:0))*100)}%`],['보호막',n>=5?'강화':n>=3?'재충전':'기본']);else if(key==='chrono')out.push(['감속 반경',Math.round((145+n*18)*size)],['장비 가속',n>=6?'18%':n>=3?'8%':'0%']);else if(key==='arc')out.push(['발사 주기',`${fmt((1.92-Math.min(.58,n*.075))*h)}초`],['칼날 수',n>=6?3:n>=2?2:1],['귀환 피해',n>=4?'×1.38':'×1.00']);else if(key==='ion')out.push(['발동 주기',`${fmt((2.18-Math.min(.68,n*.075))*h)}초`],['연결 수',2+(n>=2?1:0)+(n>=5?1:0)],['분기',n>=4?'활성':'없음']);else if(key==='nova')out.push(['발동 주기',`${fmt((4.65-Math.min(1.38,n*.17))*h)}초`],['파동 반경',Math.round((145+(n>=2?40:0)+(n>=5?18:0))*size)],['후속 파동',n>=3?'활성':'없음']);else if(key==='drone')out.push(['드론 수',n>=6?3:n>=2?2:1],['발사 주기',`${fmt((1.48-Math.min(.48,n*.06))*(n>=5?.78:1)*h)}초`],['드론당 탄환',n>=4?2:1]);return out;}
     function openWeapon(key){const w=WEAPONS[key];if(!w)return;const text=weaponText(key),n=weaponCount(key),rows=STACK_EFFECTS[key]||[];card.style.setProperty('--detail-color',w.color);icon.textContent=w.icon;title.textContent=text.name;sub.textContent=`현재 ${n}중첩`;const live=weaponStats(key,n).map(([a,b])=>`<div class="ledger-live-stat"><small>${a}</small><b>${b}</b></div>`).join(''),list=rows.map((row,i)=>`<div class="stack-audit-row ${n>=i+1?'unlocked':''} ${n===i+1?'current':''}"><strong>${i+1}</strong><div><b>${row[0]}</b><span>${row[1]}</span></div></div>`).join('');content.innerHTML=`<div class="ledger-live-stats">${live}</div><div class="stack-audit-list">${list}</div>`;detail.classList.remove('hidden');}
     function openPassive(key){const p=PASSIVES[key],text=passiveText(key),n=stat(key);if(!p)return;card.style.setProperty('--detail-color',p.color);icon.textContent=p.icon;title.textContent=text.name;sub.textContent=`현재 ${n}중첩`;let html='';if(key==='echo'){const rows=Array.from({length:p.max},(_,i)=>{const s=i+1,chance=Math.min(.72,.11+s*.076),blade=Math.min(.42,.07+s*.045);return`<div class="stack-audit-row ${n>=s?'unlocked':''} ${n===s?'current':''}"><strong>${s}</strong><div><b>발사·설치 복제 ${Math.round(chance*1000)/10}%</b><span>지속형 칼날 잔상 ${Math.round(blade*1000)/10}%${s>=8?' · 주기적 확정 복제':''}</span></div></div>`;}).join('');html=`<div class="stack-audit-list">${rows}</div>`;}else if(key==='chainDrive'){const rows=Array.from({length:p.max},(_,i)=>{const s=i+1,value=chainDriveBonus(s,state.combo||0);return`<div class="stack-audit-row ${n>=s?'unlocked':''} ${n===s?'current':''}"><strong>${s}</strong><div><b>현재 연쇄 기준 ${Math.round(value*1000)/10}% 단축</b><span>연쇄가 이어질수록 장비 발동이 빨라진다.</span></div></div>`;}).join('');html=`<div class="ledger-live-stats"><div class="ledger-live-stat"><small>현재 적용</small><b>${Math.round(chainDriveBonus()*1000)/10}%</b></div></div><div class="stack-audit-list">${rows}</div>`;}else if(key==='magnet'){html=`<div class="ledger-live-stats"><div class="ledger-live-stat"><small>현재 흡수 반경</small><b>${Math.round(magnetRange())}</b></div><div class="ledger-live-stat"><small>중첩당 증가</small><b>+34</b></div></div>`;}else html=`<div class="ledger-live-stats"><div class="ledger-live-stat"><small>현재 중첩</small><b>${n}</b></div><div class="ledger-live-stat"><small>효과</small><b>${text.desc}</b></div></div>`;content.innerHTML=html;detail.classList.remove('hidden');}
     function annotate(){const sections=ledgerBody.querySelectorAll('.ledger-section'),weaponCards=sections[0]?.querySelectorAll('.ledger-card')||[],passiveCards=sections[1]?.querySelectorAll('.ledger-card')||[];for(const item of weaponCards){delete item.dataset.weaponKey;const name=item.querySelector('h4')?.textContent;for(const [key,count] of Object.entries(state.weaponStacks||{}))if(count>0&&weaponText(key).name===name){item.dataset.weaponKey=key;item.tabIndex=0;break;}}for(const item of passiveCards){delete item.dataset.passiveKey;const name=item.querySelector('h4')?.textContent;for(const [key,count] of Object.entries(state.passives||{}))if(count>0&&passiveText(key).name===name){item.dataset.passiveKey=key;item.tabIndex=0;break;}}}
