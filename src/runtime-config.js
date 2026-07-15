@@ -13,22 +13,26 @@ WEAPON_TEXT.core={
   fr:['Impulsion du Noyau','Arme de base','Arme photonique de base qui suit automatiquement l’ennemi le plus proche.']
 };
 if(!WEAPONS.arc){
-  WEAPONS.arc={
-    name:'성운 부메랑',icon:'☾',color:'#69ffe0',role:'공격 / 곡선',
-    desc:'표적을 크게 휘어 베고 선회한 뒤 플레이어에게 귀환하는 성운 칼날.',starter:true,resonance:{}
-  };
+  WEAPONS.arc={name:'성운 부메랑',icon:'☾',color:'#69ffe0',role:'공격 / 곡선',desc:'적에게 자연스럽게 휘어 날아가 타격한 뒤 곧바로 귀환하는 성운 칼날.',starter:true,resonance:{}};
 }
 WEAPON_TEXT.arc={
-  ko:['성운 부메랑','공격 / 곡선','표적을 크게 휘어 베고 선회한 뒤 플레이어에게 귀환하는 성운 칼날.'],
-  en:['Nebula Boomerang','Attack / Curved','A nebula blade that curves through its target, turns, and returns to the player.'],
-  ja:['星雲ブーメラン','攻撃 / 曲線','標的を大きく回り込んで斬り、旋回してプレイヤーへ戻る星雲の刃。'],
-  'zh-CN':['星云回旋刃','攻击 / 曲线','大幅绕向目标斩击，转向后返回玩家身边的星云刀刃。'],
-  es:['Bumerán de Nébula','Ataque / Curvo','Una hoja nebular que rodea al objetivo, gira y regresa al jugador.'],
-  fr:['Boomerang Nébulaire','Attaque / Courbe','Une lame nébulaire qui contourne sa cible, vire puis revient vers le joueur.']
+  ko:['성운 부메랑','공격 / 곡선','적에게 자연스럽게 휘어 날아가 타격한 뒤 곧바로 귀환하는 성운 칼날.'],
+  en:['Nebula Boomerang','Attack / Curved','A nebula blade that curves into an enemy and immediately returns.'],
+  ja:['星雲ブーメラン','攻撃 / 曲線','自然な曲線で敵を斬り、すぐにプレイヤーへ戻る星雲の刃。'],
+  'zh-CN':['星云回旋刃','攻击 / 曲线','沿自然曲线命中敌人后立即返回的星云刀刃。'],
+  es:['Bumerán de Nébula','Ataque / Curvo','Una hoja nebular que golpea con una curva natural y regresa de inmediato.'],
+  fr:['Boomerang Nébulaire','Attaque / Courbe','Une lame nébulaire qui frappe en courbe puis revient immédiatement.']
 };
+if(!WEAPONS.ion)WEAPONS.ion={name:'이온 사슬',icon:'ϟ',color:'#72f2ff',role:'공격 / 연쇄',desc:'가까운 적에서 다음 적으로 번지는 즉발 이온 방전.',starter:true,resonance:{}};
+WEAPON_TEXT.ion={ko:['이온 사슬','공격 / 연쇄','가까운 적에서 다음 적으로 번지는 즉발 이온 방전.'],en:['Ion Chain','Attack / Chain','An instant ion discharge that jumps between nearby enemies.'],ja:['イオンチェイン','攻撃 / 連鎖','近くの敵から次の敵へ連鎖する即時イオン放電。'],'zh-CN':['离子链','攻击 / 连锁','在附近敌人之间跳跃的瞬发离子放电。'],es:['Cadena Iónica','Ataque / Cadena','Una descarga instantánea que salta entre enemigos cercanos.'],fr:['Chaîne Ionique','Attaque / Chaîne','Une décharge instantanée qui saute entre les ennemis proches.']};
+if(!WEAPONS.nova)WEAPONS.nova={name:'초신성 코일',icon:'✺',color:'#ffbd69',role:'공격 / 파동',desc:'플레이어 중심에서 폭발적인 항성 파동을 방출하는 코일.',starter:true,resonance:{}};
+WEAPON_TEXT.nova={ko:['초신성 코일','공격 / 파동','플레이어 중심에서 폭발적인 항성 파동을 방출하는 코일.'],en:['Supernova Coil','Attack / Pulse','A coil that releases explosive stellar pulses around the player.'],ja:['超新星コイル','攻撃 / 波動','プレイヤーを中心に爆発的な恒星波動を放つコイル。'],'zh-CN':['超新星线圈','攻击 / 波动','以玩家为中心释放爆炸性恒星波动。'],es:['Bobina de Supernova','Ataque / Pulso','Una bobina que libera pulsos estelares explosivos alrededor del jugador.'],fr:['Bobine Supernova','Attaque / Onde','Une bobine qui libère des ondes stellaires explosives autour du joueur.']};
+if(!WEAPONS.drone)WEAPONS.drone={name:'유성 드론',icon:'⌾',color:'#8fffd0',role:'소환 / 탄환',desc:'플레이어를 공전하며 서로 다른 표적을 자동 사격하는 드론 편대.',starter:true,resonance:{}};
+WEAPON_TEXT.drone={ko:['유성 드론','소환 / 탄환','플레이어를 공전하며 서로 다른 표적을 자동 사격하는 드론 편대.'],en:['Meteor Drones','Summon / Projectile','Orbiting drones that automatically fire at separate targets.'],ja:['流星ドローン','召喚 / 弾丸','プレイヤーを周回し、別々の標的を自動射撃するドローン編隊。'],'zh-CN':['流星无人机','召唤 / 弹丸','环绕玩家并自动攻击不同目标的无人机编队。'],es:['Drones Meteoro','Invocación / Proyectil','Drones orbitales que disparan automáticamente a objetivos distintos.'],fr:['Drones Météore','Invocation / Projectile','Des drones orbitaux qui tirent automatiquement sur des cibles distinctes.']};
 WEAPONS.comet.icon='⟐';
 state.entities.beams=state.entities.beams||[];
-player.bulwarkCd=0;player.arcCd=player.arcCd||0;
+player.bulwarkCd=0;player.arcCd=player.arcCd||0;player.ionCd=player.ionCd||0;player.novaCd=player.novaCd||0;player.droneCd=player.droneCd||0;player.droneVolley=player.droneVolley||0;
+function weaponSizeMultiplier(){return(1+stat('projectileSize')*.10)*(1+(state.nebulaExtras?.photon||0)*.08);}
 for(const[key,weapon]of Object.entries(WEAPONS)){weapon.key=key;weapon.stackEffects=STACK_EFFECTS[key]||[];}
 for(const[key,passive]of Object.entries(PASSIVES))passive.key=key;
 const runtimeDamageBase=damageMult;
@@ -53,82 +57,31 @@ audio.ensureOutput=function ensureCosmicOutput(){
   echoInput.connect(delay);delay.connect(filter);filter.connect(wet).connect(output);filter.connect(feedback).connect(delay);
   this.outputNode=output;this.echoInput=echoInput;this.fxNodes=[compressor,delay,feedback,filter,wet];
 };
-audio.init=function initAudioWithSettings(){
-  rawAudioInit();
-  if(this.ctx.state==='suspended')this.ctx.resume().catch(()=>{});
-  this.ensureOutput();
-  this.syncAmbient();
-};
+audio.init=function initAudioWithSettings(){rawAudioInit();if(this.ctx.state==='suspended')this.ctx.resume().catch(()=>{});this.ensureOutput();this.syncAmbient();};
 audio.allowed=function allowed(channel){return GAME_SETTINGS.audio.master!==false&&GAME_SETTINGS.audio[channel]!==false&&audioVolume(channel)>.001;};
 audio.playChannel=function playCosmicChannel(channel,freq,duration=.06,type='sine',volume=.025,slide=0,pan=0){
-  if(!this.allowed(channel))return;
-  rawAudioInit();this.ensureOutput();
+  if(!this.allowed(channel))return;rawAudioInit();this.ensureOutput();
   const t=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain(),filter=this.ctx.createBiquadFilter();
   const panner=typeof this.ctx.createStereoPanner==='function'?this.ctx.createStereoPanner():null;
-  const scaled=volume*audioVolume(channel)*5.65;
-  o.type=type;o.detune.value=rand(-5,5);o.frequency.setValueAtTime(Math.max(30,freq),t);
-  o.frequency.exponentialRampToValueAtTime(Math.max(30,freq+slide),t+duration);
+  const scaled=volume*audioVolume(channel)*5.65;o.type=type;o.detune.value=rand(-5,5);o.frequency.setValueAtTime(Math.max(30,freq),t);o.frequency.exponentialRampToValueAtTime(Math.max(30,freq+slide),t+duration);
   filter.type=type==='square'||type==='sawtooth'?'lowpass':'bandpass';filter.frequency.value=Math.max(150,Math.min(6800,freq*3.1));filter.Q.value=type==='sine'?.75:.58;
   g.gain.setValueAtTime(Math.max(.0001,scaled),t);g.gain.exponentialRampToValueAtTime(.0001,t+duration);
-  if(panner){panner.pan.value=clamp(pan+rand(-.10,.10),-1,1);o.connect(filter).connect(g).connect(panner);panner.connect(this.outputNode);panner.connect(this.echoInput);}
-  else{o.connect(filter).connect(g);g.connect(this.outputNode);g.connect(this.echoInput);}
-  o.start(t);o.stop(t+duration+.03);
+  if(panner){panner.pan.value=clamp(pan+rand(-.10,.10),-1,1);o.connect(filter).connect(g).connect(panner);panner.connect(this.outputNode);panner.connect(this.echoInput);}else{o.connect(filter).connect(g);g.connect(this.outputNode);g.connect(this.echoInput);}o.start(t);o.stop(t+duration+.03);
 };
 audio.tone=function(freq,duration=.06,type='sine',volume=.025,slide=0){this.playChannel('combat',freq,duration,type,volume,slide);};
-audio.hit=function(strong=false){
-  const now=performance.now();if(!strong&&now-this.lastHitAt<22)return;this.lastHitAt=now;
-  this.playChannel('combat',strong?96:168,strong?.15:.06,strong?'sawtooth':'triangle',strong?.060:.025,strong?-46:-76,strong?.18:0);
-  if(strong)this.playChannel('combat',760,.09,'sine',.017,-330,-.18);
-};
-audio.enemyImpact=function enemyImpact(strength=1){
-  const now=performance.now();if(now-this.lastEnemyImpactAt<85)return;this.lastEnemyImpactAt=now;
-  const s=clamp(strength,.6,1.8);this.playChannel('combat',54,.34,'sawtooth',.070*s,-18,-.18);
-  this.playChannel('combat',108,.18,'square',.038*s,-62,.18);this.playChannel('combat',640,.08,'triangle',.015*s,-350,0);
-};
+audio.hit=function(strong=false){const now=performance.now();if(!strong&&now-this.lastHitAt<22)return;this.lastHitAt=now;this.playChannel('combat',strong?96:168,strong?.15:.06,strong?'sawtooth':'triangle',strong?.060:.025,strong?-46:-76,strong?.18:0);if(strong)this.playChannel('combat',760,.09,'sine',.017,-330,-.18);};
+audio.enemyImpact=function enemyImpact(strength=1){const now=performance.now();if(now-this.lastEnemyImpactAt<85)return;this.lastEnemyImpactAt=now;const s=clamp(strength,.6,1.8);this.playChannel('combat',54,.34,'sawtooth',.070*s,-18,-.18);this.playChannel('combat',108,.18,'square',.038*s,-62,.18);this.playChannel('combat',640,.08,'triangle',.015*s,-350,0);};
 audio.hurt=function(){this.playChannel('combat',72,.24,'sawtooth',.068,-35,-.16);this.playChannel('combat',270,.15,'triangle',.024,-170,.18);};
 audio.pickup=function(){this.playChannel('ui',760,.075,'sine',.026,310,rand(-.28,.28));};
-audio.level=function(){
-  this.playChannel('ui',52,.72,'sine',.080,28,0);this.playChannel('ui',78,.52,'triangle',.052,42,-.20);
-  const notes=[110,165,247,370,554];notes.forEach((f,i)=>setTimeout(()=>{this.playChannel('ui',f,.34+i*.025,i<2?'triangle':'sine',.043,95+i*20,(i-2)*.11);if(i===4)this.playChannel('ui',f*2,.48,'sine',.020,-180,.18);},i*105));
-};
+audio.level=function(){this.playChannel('ui',52,.72,'sine',.080,28,0);this.playChannel('ui',78,.52,'triangle',.052,42,-.20);const notes=[110,165,247,370,554];notes.forEach((f,i)=>setTimeout(()=>{this.playChannel('ui',f,.34+i*.025,i<2?'triangle':'sine',.043,95+i*20,(i-2)*.11);if(i===4)this.playChannel('ui',f*2,.48,'sine',.020,-180,.18);},i*105));};
 audio.resonance=function(){[118,177,266,399,598,897].forEach((f,i)=>setTimeout(()=>this.playChannel('ui',f,.34,i<2?'sawtooth':'triangle',.040,190,(i-2.5)*.1),i*68));};
 audio.boss=function(){[52,78,117,175].forEach((f,i)=>setTimeout(()=>this.playChannel('combat',f,.68,'sawtooth',.057,72,(i-1.5)*.16),i*135));};
-audio.stopAmbient=function(){
-  if(this.ambientTimer){clearInterval(this.ambientTimer);this.ambientTimer=null;}
-  for(const node of this.ambientNodes){try{node.stop?.();}catch{}try{node.disconnect?.();}catch{}}
-  this.ambientNodes=[];this.ambientMaster=null;this.ambientStep=0;
-};
-audio.startAmbientSequence=function startAmbientSequence(){
-  if(this.ambientTimer||!this.ctx||!this.allowed('ambient'))return;
-  const notes=[55,65.4,82.4,98,73.4,110,82.4,130.8,98,146.8,110,164.8];
-  const pulse=()=>{
-    if(!this.ctx||!this.allowed('ambient'))return;
-    const step=this.ambientStep++,f=notes[step%notes.length],pan=Math.sin(step*.83)*.46;
-    this.playChannel('ambient',f,1.45,'triangle',.026,f*.08,pan);
-    if(step%3===0)this.playChannel('ambient',f*2,.88,'sine',.013,-f*.18,-pan*.6);
-    if(step%6===5)this.playChannel('ambient',f*3,.62,'sine',.009,90,pan*.35);
-  };
-  pulse();this.ambientTimer=setInterval(pulse,1050);
-};
+audio.stopAmbient=function(){if(this.ambientTimer){clearInterval(this.ambientTimer);this.ambientTimer=null;}for(const node of this.ambientNodes){try{node.stop?.();}catch{}try{node.disconnect?.();}catch{}}this.ambientNodes=[];this.ambientMaster=null;this.ambientStep=0;};
+audio.startAmbientSequence=function startAmbientSequence(){if(this.ambientTimer||!this.ctx||!this.allowed('ambient'))return;const notes=[55,65.4,82.4,98,73.4,110,82.4,130.8,98,146.8,110,164.8];const pulse=()=>{if(!this.ctx||!this.allowed('ambient'))return;const step=this.ambientStep++,f=notes[step%notes.length],pan=Math.sin(step*.83)*.46;this.playChannel('ambient',f,1.45,'triangle',.026,f*.08,pan);if(step%3===0)this.playChannel('ambient',f*2,.88,'sine',.013,-f*.18,-pan*.6);if(step%6===5)this.playChannel('ambient',f*3,.62,'sine',.009,90,pan*.35);};pulse();this.ambientTimer=setInterval(pulse,1050);};
 audio.syncAmbient=function(){
-  if(!this.ctx||!this.allowed('ambient')){this.stopAmbient();return;}
-  this.ensureOutput();
-  const target=.135*audioVolume('ambient');
-  if(this.ambientMaster){this.ambientMaster.gain.setTargetAtTime(target,this.ctx.currentTime,.12);this.startAmbientSequence();return;}
-  const t=this.ctx.currentTime,master=this.ctx.createGain(),air=this.ctx.createBiquadFilter();
-  master.gain.value=target;air.type='lowpass';air.frequency.value=1550;air.Q.value=.38;master.connect(air).connect(this.outputNode);
-  const freqs=[43,65.4,98,147];this.ambientNodes=[master,air];
-  for(let i=0;i<freqs.length;i++){
-    const o=this.ctx.createOscillator(),g=this.ctx.createGain(),p=typeof this.ctx.createStereoPanner==='function'?this.ctx.createStereoPanner():null,lfo=this.ctx.createOscillator(),lfoGain=this.ctx.createGain();
-    o.type=i===0?'sine':i===3?'sine':'triangle';o.frequency.value=freqs[i];o.detune.value=i%2?-5:4;
-    g.gain.value=[.72,.24,.14,.055][i];lfo.type='sine';lfo.frequency.value=.025+i*.011;lfoGain.gain.value=4+i*1.4;lfo.connect(lfoGain).connect(o.detune);
-    if(p){p.pan.value=(i-1.5)*.26;o.connect(g).connect(p).connect(master);this.ambientNodes.push(p);}else o.connect(g).connect(master);
-    o.start(t);lfo.start(t);this.ambientNodes.push(o,g,lfo,lfoGain);
-  }
-  const length=Math.max(1,Math.floor(this.ctx.sampleRate*3)),buffer=this.ctx.createBuffer(1,length,this.ctx.sampleRate),data=buffer.getChannelData(0);
-  let last=0;for(let i=0;i<length;i++){last=last*.985+(Math.random()*2-1)*.015;data[i]=last;}
-  const noise=this.ctx.createBufferSource(),noiseFilter=this.ctx.createBiquadFilter(),noiseGain=this.ctx.createGain();
-  noise.buffer=buffer;noise.loop=true;noiseFilter.type='bandpass';noiseFilter.frequency.value=620;noiseFilter.Q.value=.50;noiseGain.gain.value=.075;
-  noise.connect(noiseFilter).connect(noiseGain).connect(master);noise.start(t);this.ambientNodes.push(noise,noiseFilter,noiseGain);this.ambientMaster=master;this.startAmbientSequence();
+  if(!this.ctx||!this.allowed('ambient')){this.stopAmbient();return;}this.ensureOutput();const target=.135*audioVolume('ambient');if(this.ambientMaster){this.ambientMaster.gain.setTargetAtTime(target,this.ctx.currentTime,.12);this.startAmbientSequence();return;}
+  const t=this.ctx.currentTime,master=this.ctx.createGain(),air=this.ctx.createBiquadFilter();master.gain.value=target;air.type='lowpass';air.frequency.value=1550;air.Q.value=.38;master.connect(air).connect(this.outputNode);const freqs=[43,65.4,98,147];this.ambientNodes=[master,air];
+  for(let i=0;i<freqs.length;i++){const o=this.ctx.createOscillator(),g=this.ctx.createGain(),p=typeof this.ctx.createStereoPanner==='function'?this.ctx.createStereoPanner():null,lfo=this.ctx.createOscillator(),lfoGain=this.ctx.createGain();o.type=i===0?'sine':i===3?'sine':'triangle';o.frequency.value=freqs[i];o.detune.value=i%2?-5:4;g.gain.value=[.72,.24,.14,.055][i];lfo.type='sine';lfo.frequency.value=.025+i*.011;lfoGain.gain.value=4+i*1.4;lfo.connect(lfoGain).connect(o.detune);if(p){p.pan.value=(i-1.5)*.26;o.connect(g).connect(p).connect(master);this.ambientNodes.push(p);}else o.connect(g).connect(master);o.start(t);lfo.start(t);this.ambientNodes.push(o,g,lfo,lfoGain);}
+  const length=Math.max(1,Math.floor(this.ctx.sampleRate*3)),buffer=this.ctx.createBuffer(1,length,this.ctx.sampleRate),data=buffer.getChannelData(0);let last=0;for(let i=0;i<length;i++){last=last*.985+(Math.random()*2-1)*.015;data[i]=last;}const noise=this.ctx.createBufferSource(),noiseFilter=this.ctx.createBiquadFilter(),noiseGain=this.ctx.createGain();noise.buffer=buffer;noise.loop=true;noiseFilter.type='bandpass';noiseFilter.frequency.value=620;noiseFilter.Q.value=.50;noiseGain.gain.value=.075;noise.connect(noiseFilter).connect(noiseGain).connect(master);noise.start(t);this.ambientNodes.push(noise,noiseFilter,noiseGain);this.ambientMaster=master;this.startAmbientSequence();
 };
-const baseResetGame=resetGame;resetGame=function resetConfiguredGame(){player.bulwarkCd=0;player.emberVolley=0;player.arcCd=0;baseResetGame();player.bulwarkCd=0;player.emberVolley=0;player.arcCd=0;audio.syncAmbient();};
+const baseResetGame=resetGame;resetGame=function resetConfiguredGame(){player.bulwarkCd=0;player.emberVolley=0;player.arcCd=0;player.ionCd=0;player.novaCd=0;player.droneCd=0;player.droneVolley=0;baseResetGame();player.bulwarkCd=0;player.emberVolley=0;player.arcCd=0;player.ionCd=0;player.novaCd=0;player.droneCd=0;player.droneVolley=0;audio.syncAmbient();};
