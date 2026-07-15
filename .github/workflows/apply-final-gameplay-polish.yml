@@ -32,9 +32,23 @@ jobs:
           python -m py_compile /tmp/apply.py
           test "$(sha256sum /tmp/apply.py | cut -d' ' -f1)" = "baf1a394f3ea2dcbc47308a1515eb281c029ebf7c601500c7e98ef3dbdb0e631"
       - name: Apply source changes
-        run: python /tmp/apply.py
+        run: |
+          set +e
+          python /tmp/apply.py >/tmp/apply.log 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            cp /tmp/apply.log .github/patch-error.log
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/patch-error.log
+            git commit -m "Report gameplay patch failure"
+            git push origin HEAD:agent/stackfall-final-gameplay-polish
+            cat /tmp/apply.log
+            exit "$status"
+          fi
       - name: Remove temporary patch files
-        run: rm -rf .github/patch-parts .github/workflows/apply-final-gameplay-polish.yml
+        run: rm -rf .github/patch-parts .github/patch-error.log .github/workflows/apply-final-gameplay-polish.yml
       - name: Refresh deployed asset fingerprint
         run: node scripts/build-fingerprint.mjs
       - name: Syntax checks
