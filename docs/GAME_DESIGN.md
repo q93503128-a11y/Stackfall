@@ -316,7 +316,7 @@ min(70%, 10% + 중첩 × 7.5%)
 
 설정은 `localStorage`의 `stackfall.settings`에 저장한다.
 
-채널별 음량과 on/off 규칙은 그대로 유지한다. 최종 오디오 출력단은 이전 빌드 대비 2배(+6dB) 증폭하고, 피크는 기존 컴프레서에서 제어한다.
+채널별 음량과 on/off 규칙은 그대로 유지한다. 현재 최종 출력 gain은 `2.76`이고 threshold `-20dB`, knee `22dB`, ratio `4.5:1`, attack `0.004s`, release `0.34s` 컴프레서를 거친다. 직전 커밋의 gain `3.24`와 `1.24배` wrapper보다 실제 pre-compressor 합성 출력은 낮으므로 “직전 빌드 대비 +6dB”라고 쓰지 않는다. 공격 가독성은 무기 profile과 고역 보조음으로 확보하고 피크·동시발음 뭉침은 컴프레서와 rate limit으로 제어한다.
 
 ### 배경음과 효과음
 
@@ -326,6 +326,9 @@ min(70%, 10% + 중첩 × 7.5%)
 - 레벨업은 저역 하강 음계와 low-pass 필터를 사용해 물속으로 잠기는 듯한 인상을 준다.
 - 공격은 15개 무기 계열별 profile을 사용한다. 높은 대역을 보강하되 중력은 저역, 레일·이온·혜성·초신성은 보조 고조파를 더해 역할을 구분한다.
 - 성능 가드가 명중음을 제한할 때도 공격 `source`를 보존해 무기별 profile이 사라지지 않아야 한다.
+- smoke는 상수가 아니라 `audio.outputNode.gain.value`와 compressor node의 실제 threshold·ratio를 읽는다.
+- master OFF에서는 새 출력 node를 만들지 않고, ambient OFF·장면 전환·reset 반복 후 interval은 하나 이하, ambient node 배열은 현재 장면 한 세트만 남아야 한다.
+- headless 검사는 routing·gain·profile·timer·node 수명만 검증하며 주관적 음색을 청취했다고 간주하지 않는다.
 
 ---
 
@@ -499,7 +502,8 @@ src/gpu-renderer.js
 이 순서의 의미:
 
 1. `dark-cosmic-polish.js`
-   - 우주 비주얼, 블랙홀, 이벤트, 기본 적 외형 정의
+   - 우주 비주얼, 블랙홀과 맵 이벤트 형상 정의
+   - 항상 후속 script에 덮어써지던 별도 `drawEnemiesRefined()`·로컬 `drawTankBody()` 구현은 삭제
 2. `performance-guard.js`
    - 공간 격자, 캐시 렌더러, 개체 예산 적용
 3. `build-audit-ui.js`
@@ -521,8 +525,10 @@ src/gpu-renderer.js
 - 적 이동, 원거리 적 사격, 시간 정지 이동: `src/bosses.js`
 - 빔, 중력 우물, 플레이어, 기본 개체 렌더링: `src/render-entities.js`
 - 장비 공전 외형과 중력 렌즈: `src/render-entities.js`
-- 일반·이벤트 중장갑 공용 외형: `src/render-entities.js`
-- 정예와 이벤트 표시: `src/build-audit-ui.js`
+- 일반·이벤트 중장갑 공용 형상 helper와 Canvas 폴백 적 렌더: `src/render-entities.js`
+- 최종 캐시 적 렌더 진입점: `src/performance-guard.js`
+- 원거리 적 오버레이와 정예·화면 밖 표시: `src/build-audit-ui.js`
+- 맵 이벤트 형상: `src/dark-cosmic-polish.js`, 최종 이벤트 표시 래퍼: `src/build-audit-ui.js`
 - 보상 중복 방지, 중간보스 보상, 특수 강화: `src/reward-refinement.js`
 - 제자리 배열 압축과 런 세대 기반 예약기: `src/systems-base.js`, 각 배열 갱신 소유 시스템
 - 공간 인덱스, 적 ID 조회, 가까운 표적 선택, sprite/cache, 부하 예산: `src/performance-guard.js`
@@ -661,14 +667,14 @@ node --check <file>
 node scripts/browser-smoke.mjs
 ```
 
-이 검사는 데스크톱·모바일 DPR, GPU 표시 옵션, 공유 shake, Prism 배율, invalid 우물·효과, due batch 세대 안전성, pause·선택·보상·이벤트 정지, 재시작 5회, 보상 이중 클릭, 게임 시간 쿨다운, BGM·무기음 routing, WebGL context loss/restore 3회, 텍스처 파괴 수, Pixi CDN 차단 Canvas 폴백, 중복 Canvas·ticker·listener와 런타임 진단을 확인한다.
+이 검사는 데스크톱·모바일 DPR, GPU 표시 옵션, 공유 shake, Prism 배율, invalid 우물·효과, due batch 세대 안전성, pause·선택·보상·이벤트 정지, 재시작 5회, 보상 이중 클릭, 게임 시간 쿨다운, BGM·무기음 routing, 실제 output gain·compressor 값, ambient timer·node 중복, WebGL context loss/restore 3회, 텍스처 파괴 수, Pixi CDN 차단 Canvas 폴백, 중복 Canvas·ticker·listener, 배포 자산 SHA-256 지문과 런타임 진단을 확인한다.
 
 예상하지 않은 `console.warn`, `console.error`, `Runtime.exceptionThrown`, network failure와 HTTP 4xx/5xx는 실패다. CDN 차단 시나리오의 정확한 Pixi 경고와 차단 URL만 allowlist한다. 정상 GPU와 `WEBGL_lose_context`는 기본 필수이며 `STACKFALL_ALLOW_GPU_SKIP=1`, `STACKFALL_ALLOW_CONTEXT_SKIP=1`을 명시한 경우에만 사유·renderer 상태·브라우저 인자를 담아 skip할 수 있다. 결과 JSON은 커밋하지 않는 `test-results/stackfall-smoke.json`에 기록하고 assertion 하나라도 실패하면 non-zero로 종료한다.
 
-고밀도 soak는 적 100명(정예 4명), 아군·적 투사체 각 200개, 파티클 200개와 15종 6중첩 장비로 시작한다.
+고밀도 soak는 적 100명(정예 4명), 아군·적 투사체 각 200개, 파티클 200개와 15종 6중첩 장비로 시작한다. 로컬 기본 실행은 p95 50.5ms 이하, 50ms 이상 frame 비율 8% 미만, 최대 frame 100ms 미만의 절대 예산을 강제한다. GitHub hosted headless Chrome처럼 frame cadence가 불안정한 환경에서는 `STACKFALL_SOAK_STRICT=0`으로 절대 예산만 명시적 skip 처리할 수 있지만, 2분 실행·샘플 수·런타임 오류·sprite pool·Canvas·ticker·실제 p95·p99·max·50ms 이상 비율 기록은 그대로 필수다.
 
 ```bash
 node scripts/browser-smoke.mjs --soak-ms=120000
 ```
 
-배포본 검사는 `--url=https://stackfall.pages.dev --result=test-results/live-smoke.json`을 함께 사용한다. 테스트 수치는 게임 화면이 아니라 하네스 JSON 출력에만 기록한다.
+`node scripts/build-fingerprint.mjs`는 `index.html`과 페이지가 실제 로드하는 로컬 CSS·JavaScript(자기 자신인 `src/build-info.js` 제외)의 SHA-256 지문을 생성한다. smoke는 로컬에서 재계산한 지문과 페이지의 `window.STACKFALL_BUILD_SHA`를 비교하고 URL에 cache-bust query를 붙인다. 이는 Git commit SHA를 정적 파일에 수동 복사하는 방식이 아니며, 배포 자산이 현재 checkout과 동일한지를 검증한다. 배포본 검사는 `--url=https://stackfall.pages.dev --result=test-results/live-smoke.json`을 함께 사용한다. 테스트 수치는 게임 화면이 아니라 하네스 JSON 출력에만 기록한다.

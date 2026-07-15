@@ -100,9 +100,9 @@ python -m http.server 8000
 - 반짝임 효과
 - 화면 흔들림
 
-전체 음향은 채널별 설정값을 유지한 채 최종 출력단에서 이전 빌드 대비 약 2배(+6dB)로 증폭합니다. 피크는 출력 컴프레서가 제어합니다.
+최종 출력 gain은 `2.76`이며 채널 곡선·개별 profile·에코 send를 거친 신호를 threshold `-20dB`, ratio `4.5:1`, knee `22dB`의 컴프레서로 제한합니다. 직전 커밋에는 출력 gain `3.24`와 추가 `1.24배` wrapper가 함께 있었으므로 현재 값을 “직전 빌드 대비 +6dB”라고 표현하지 않습니다. 현재 설계는 단순 증폭보다 공격음의 고역 가독성, 무기별 음색 분리와 피크 억제를 우선합니다.
 
-배경음은 일반 전투, 맵 이벤트, 초월체 전투의 세 장면으로 나뉘며 전투 상태가 바뀌면 자동 전환됩니다. 레벨업 효과음은 높은 상승음 대신 저역으로 가라앉는 음형을 사용합니다. 공격음은 높은 대역을 보강하고 코어·칼날·중력·레일 등 15개 무기 계열마다 주파수, 파형, 길이와 피치 이동을 다르게 사용합니다.
+배경음은 일반 전투, 맵 이벤트, 초월체 전투의 세 장면으로 나뉘며 전투 상태가 바뀌면 자동 전환됩니다. 같은 장면을 반복 동기화해도 ambient interval은 하나만 유지하고, 장면 변경·비활성화 시 이전 node와 timer를 정리합니다. 레벨업 효과음은 높은 상승음 대신 220Hz에서 82.41Hz로 내려가는 저역 음형, low-pass와 41.2Hz sub tone을 사용합니다. 공격음은 높은 대역을 보강하고 코어·칼날·중력·레일 등 15개 무기 계열마다 주파수, 파형, 길이와 피치 이동을 다르게 사용합니다.
 
 `반짝임 효과`를 끄면 장식용 전투 파티클, 화면 섬광, 별의 점멸과 긴 광원 꼬리를 줄이거나 제거합니다. 적 투사체, 보스 장판, 공격 예고 등 생존에 필요한 표시는 유지합니다.
 
@@ -177,7 +177,10 @@ gpu-renderer.js
 - 보상 중복 방지와 강화 보정: `reward-refinement.js`
 - 예약 공격과 UI 타이머: `systems-base.js`
 - 공간 색인과 가까운 표적 조회: `performance-guard.js`
-- 중장갑 공용 외형: `render-entities.js`
+- 일반·이벤트 중장갑 공용 형상 helper와 Canvas 폴백 적 렌더: `render-entities.js`
+- 최종 캐시 적 렌더 진입점: `performance-guard.js`
+- 원거리 적 오버레이와 정예·화면 밖 표시: `build-audit-ui.js`
+- 맵 이벤트 형상: `dark-cosmic-polish.js`, 최종 이벤트 표시 래퍼: `build-audit-ui.js`
 - 런타임 진단과 단일 RAF: `render.js`
 - 장면별 BGM과 무기별 공격음: `runtime-config.js`, 장면 동기화 호출: `render.js`
 - GPU fallback, texture 수명과 sprite pool: `gpu-renderer.js`
@@ -200,4 +203,4 @@ gpu-renderer.js
 node scripts/browser-smoke.mjs --soak-ms=120000
 ```
 
-배포본은 `node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-results/live-smoke.json`으로 같은 정책을 적용해 확인합니다.
+`node scripts/build-fingerprint.mjs`는 `index.html`과 실제 로드되는 로컬 CSS·JavaScript의 SHA-256 지문을 `src/build-info.js`에 기록합니다. 브라우저 smoke는 로컬에서 다시 계산한 지문과 페이지가 노출한 `window.STACKFALL_BUILD_SHA`를 비교하므로, 로컬 Git HEAD만 최신이고 Cloudflare Pages가 이전 자산을 제공하는 경우 실패합니다. 배포본은 `node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-results/live-smoke.json`으로 확인합니다.
