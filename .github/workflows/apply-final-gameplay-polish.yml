@@ -35,14 +35,20 @@ jobs:
           from pathlib import Path
           p=Path('/tmp/apply.py')
           text=p.read_text()
-          old="if 'projectileTexture' in read('src/gpu-renderer.js'):\n    raise RuntimeError('legacy projectileTexture reference remains')"
-          new="if re.search(r'(?<![A-Za-z0-9_$])projectileTexture(?![A-Za-z0-9_$])',read('src/gpu-renderer.js')):\n    raise RuntimeError('legacy projectileTexture reference remains')"
-          if old not in text:
-              raise SystemExit('expected renderer guard not found')
-          p.write_text(text.replace(old,new,1))
+          old_guard="if 'projectileTexture' in read('src/gpu-renderer.js'):\n    raise RuntimeError('legacy projectileTexture reference remains')"
+          new_guard="if re.search(r'(?<![A-Za-z0-9_$])projectileTexture(?![A-Za-z0-9_$])',read('src/gpu-renderer.js')):\n    raise RuntimeError('legacy projectileTexture reference remains')"
+          old_render='''replace_js_function('src/render-space.js','startRealmTransition',"""function startRealmTransition(target,options={}){clearPendingCombatActions();state.realmTransition={from:state.realmTheme||'space',to:target,elapsed:0,duration:options.duration||2.2,title:options.title||'',subtitle:options.subtitle||'',introStyle:options.introStyle||null,seed:Math.random()*TAU,onMidpoint:options.onMidpoint||null,onComplete:options.onComplete||null,midpointDone:false};state.mode='cinematic';ui.touch.classList.add('hidden');state.hitStop=0;state.camera.shake=0;}""")'''
+          new_render='''replace_once('src/render-space.js',"function startRealmTransition(target,options={}){clearPendingCombatActions();state.realmTransition={from:state.realmTheme||'space',to:target,elapsed:0,duration:options.duration||2.2,title:options.title||'',subtitle:options.subtitle||'',onMidpoint:options.onMidpoint||null,onComplete:options.onComplete||null,midpointDone:false};state.mode='cinematic';ui.touch.classList.add('hidden');state.hitStop=0;state.camera.shake=0;}","function startRealmTransition(target,options={}){clearPendingCombatActions();state.realmTransition={from:state.realmTheme||'space',to:target,elapsed:0,duration:options.duration||2.2,title:options.title||'',subtitle:options.subtitle||'',introStyle:options.introStyle||null,seed:Math.random()*TAU,onMidpoint:options.onMidpoint||null,onComplete:options.onComplete||null,midpointDone:false};state.mode='cinematic';ui.touch.classList.add('hidden');state.hitStop=0;state.camera.shake=0;}")'''
+          old_docs="text=text.rstrip()+append_design+'\\n'"
+          new_docs="text=text.rstrip()+'\\n'+append_design.strip()+'\\n'"
+          for old,new,label in ((old_guard,new_guard,'renderer guard'),(old_render,new_render,'realm transition replacement'),(old_docs,new_docs,'design EOF')):
+              if old not in text:
+                  raise SystemExit(f'expected {label} not found')
+              text=text.replace(old,new,1)
+          p.write_text(text)
           PY
           python -m py_compile /tmp/apply.py
-          test "$(sha256sum /tmp/apply.py | cut -d' ' -f1)" = "15bef22e58dcc7c5cbabb115645c99bb62ce24dfe0f18050566da194cecb40cf"
+          test "$(sha256sum /tmp/apply.py | cut -d' ' -f1)" = "eddba3e457bf112e78ab25253aee690f2348d13d96f52098bf04d5c897bee91b"
       - name: Apply source changes
         run: |
           set +e
@@ -60,7 +66,7 @@ jobs:
             exit "$status"
           fi
       - name: Remove temporary patch files
-        run: rm -rf .github/patch-parts .github/patch-error.log .github/syntax-error.log .github/workflows/apply-final-gameplay-polish.yml
+        run: rm -rf .github/patch-parts .github/patch-error.log .github/syntax-error.log .github/smoke-error.log .github/workflows/apply-final-gameplay-polish.yml
       - name: Refresh deployed asset fingerprint
         run: node scripts/build-fingerprint.mjs
       - name: Syntax checks
@@ -86,7 +92,21 @@ jobs:
           server=$!
           trap 'kill $server || true' EXIT
           for i in {1..30}; do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep 1; done
-          STACKFALL_URL=http://127.0.0.1:8000 STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs
+          set +e
+          STACKFALL_URL=http://127.0.0.1:8000 STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs >/tmp/smoke.log 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            mkdir -p .github
+            cp /tmp/smoke.log .github/smoke-error.log
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -f .github/smoke-error.log
+            git commit -m "Report gameplay smoke failure" -- .github/smoke-error.log
+            git push origin HEAD:agent/stackfall-final-gameplay-polish
+            cat /tmp/smoke.log
+            exit "$status"
+          fi
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
