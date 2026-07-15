@@ -14,7 +14,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=(a,b)=>a+Math.random()*(b-a);
 const lerp=(a,b,t)=>a+(b-a)*t;
 let vw=1280,vh=720,dpr=1;
-function resize(){dpr=Math.min(window.devicePixelRatio||1,2);vw=window.innerWidth;vh=window.innerHeight;canvas.width=Math.floor(vw*dpr);canvas.height=Math.floor(vh*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
+function resize(){const compact=matchMedia('(pointer:coarse)').matches||innerWidth<760,scale=clamp(Number(window.stackfallResolutionScale)||1,.55,1),cap=compact?1.35:1.75;dpr=Math.max(.55,Math.min(window.devicePixelRatio||1,cap)*scale);vw=window.innerWidth;vh=window.innerHeight;canvas.width=Math.max(1,Math.floor(vw*dpr));canvas.height=Math.max(1,Math.floor(vh*dpr));ctx.setTransform(dpr,0,0,dpr,0,0);}
 window.addEventListener('resize',resize);resize();
 const COLORS={cyan:'#7ce8ff',violet:'#9e79ff',pink:'#ff61b0',amber:'#ffcc5c',green:'#74f2a7',red:'#ff6d7a',white:'#f5f7ff',bg:'#050814',blue:'#4ab7ff',deep:'#0d1330',comet:'#b5f5ff',chrono:'#8fffe0'};
 const WEAPONS={
@@ -23,7 +23,7 @@ const WEAPONS={
   bulwark:{name:'성광 장벽',icon:'◈',color:'#74f2a7',role:'방어 / 보호막',desc:'피해 흡수와 보호막 충전에 특화된 성광 장벽.',starter:true,resonance:{2:['겹빛 장벽','피해 감소율이 증가한다.'],4:['보복 장막','피격 시 주변에 충격파를 방출한다.'],6:['천체 성벽','강력한 보호막을 주기적으로 충전한다.']}},
   gravity:{name:'중력 우물',icon:'◉',color:'#9e79ff',role:'제어 / 집속',desc:'공간을 찌그러뜨려 적을 한곳에 끌어당긴다.',starter:true,resonance:{2:['조석 고정','흡입 범위와 힘이 증가한다.'],4:['붕괴핵','사건의 지평선 내부의 적이 지속 피해를 받는다.'],6:['쌍둥이 특이점','서로 교차하는 두 개의 우물을 생성한다.']}},
   comet:{name:'혜성 창',icon:'➳',color:'#b5f5ff',role:'공격 / 관통',desc:'가장 가까운 적을 향해 거대한 혜성을 발사한다.',starter:true,resonance:{2:['이중 궤적','혜성이 나란히 두 발 발사된다.'],4:['혜성 파편','관통할 때마다 주변으로 얼음별 파편을 뿌린다.'],6:['대충돌','혜성이 사라질 때 광역 폭발을 일으킨다.']}},
-  prism:{name:'성좌 프리즘',icon:'✧',color:'#c2a7ff',role:'소환 / 집속 광선',desc:'공전 프리즘이 한 적을 추적하며 오래 조준할수록 강해지는 집속 광선을 발사한다.',starter:true,resonance:{2:['쌍둥이 프리즘','두 번째 프리즘이 별도 표적을 추적한다.'],4:['과열 결정','집속 단계가 더 빠르게 상승한다.'],6:['천구 소각','세 개의 프리즘이 최대 출력까지 집속한다.']}},
+  prism:{name:'성좌 프리즘',icon:'✧',color:'#c2a7ff',role:'소환 / 집속 광선',desc:'공전 프리즘이 한 적을 추적하며 오래 조준할수록 강해지는 집속 광선을 발사한다.',starter:true,resonance:{2:['쌍둥이 프리즘','두 번째 프리즘이 별도 표적을 조준한다.'],4:['과열 결정','최대 출력까지 걸리는 시간이 줄어든다.'],6:['천구 소각','세 개의 프리즘이 최대 출력까지 집속한다.']}},
   chrono:{name:'시간 고리',icon:'◎',color:'#8fffe0',role:'제어 / 지원',desc:'주변 적의 움직임을 늦추는 시간 제어 장치.',starter:true,resonance:{2:['느린 궤도','감속 범위와 효과가 증가한다.'],4:['시간 파동','주기적으로 정지 파동을 방출해 피해를 준다.'],6:['영원의 원환','고리 안의 적이 크게 느려지고 무기 주기가 빨라진다.']}}
 };
 const PASSIVES={
