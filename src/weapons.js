@@ -60,4 +60,12 @@ function updateWeapons(dt){
   const spiralN=weaponCount('spiral');if(spiralN){player.spiralCd-=dt;if(player.spiralCd<=0){player.spiralCd=(3.05-Math.min(.82,spiralN*.11))*hasteMult();fireGalacticSpiral(spiralN);echoTrigger(()=>fireGalacticSpiral(spiralN,true));}}
   const mirrorN=weaponCount('mirror');if(mirrorN){player.mirrorCd-=dt;if(player.mirrorCd<=0){player.mirrorCd=(5.35-Math.min(1.35,mirrorN*.18))*hasteMult();fireReflector(mirrorN);echoTrigger(()=>fireReflector(mirrorN,true));}}
 }
-function echoTrigger(fn){const n=stat('echo');if(!n)return;state.echoCycle++;const chance=Math.min(.70,.10+n*.075),guaranteed=n>=8&&state.echoCycle%5===0;if(guaranteed||Math.random()<chance){fn();if(n>=5&&Math.random()<.24)scheduleWeaponAction(80,fn);}}
+function echoTrigger(fn){
+  const n=stat('echo');if(!n||typeof fn!=='function')return;
+  state.echoCycle++;
+  const chance=Math.min(.70,.10+n*.075),guaranteed=n>=8&&state.echoCycle%5===0;
+  if(!guaranteed&&Math.random()>=chance)return;
+  const firstDelay=64+Math.floor(Math.random()*28);
+  scheduleWeaponAction(firstDelay,fn);
+  if(n>=5&&Math.random()<.24)scheduleWeaponAction(firstDelay+90+Math.floor(Math.random()*31),fn);
+}
