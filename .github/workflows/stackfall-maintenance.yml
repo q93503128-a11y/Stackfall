@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/stackfall-audio-build-audit
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -46,6 +49,7 @@ jobs:
           STACKFALL_CHROME: /usr/bin/google-chrome
         run: node scripts/browser-smoke.mjs --soak-ms=120000 --result=test-results/stackfall-soak.json
       - name: Commit verified changes
+        if: github.event_name == 'push'
         shell: bash
         run: |
           set -euo pipefail
@@ -54,4 +58,3 @@ jobs:
           git add -A
           git commit -m "Verify deployed build and align audio diagnostics"
           git push origin HEAD:agent/stackfall-audio-build-audit
-# trigger after workflow registration
