@@ -28,6 +28,8 @@ function configureElite(enemy,kind){
   }else{
     const isBoss=enemy.type==='boss',f=clamp((t-110)/520,0,1);enemy.hp*=lerp(isBoss?.56:.74,isBoss?.95:.99,f);enemy.damage*=lerp(isBoss?.66:.80,.98,clamp((t-110)/440,0,1));enemy.speed*=lerp(isBoss?.88:.94,1,clamp((t-110)/360,0,1));enemy.skillCd+=(isBoss?1.25:.65)*(1-f);enemy.burstCd+=(isBoss?1.45:.8)*(1-f);
     if(category!=='mini'){enemy.hp*=2;enemy.damage*=1.75;enemy.skillCd*=.82;enemy.burstCd*=.82;enemy.pulseCd*=.82;}
+    if(category==='boss')enemy.hp*=.88;
+    else if(category==='void')enemy.hp*=.92;
   }
   enemy.maxHp=enemy.hp;
 }
