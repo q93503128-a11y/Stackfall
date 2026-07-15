@@ -35,6 +35,7 @@ function loop(now){
   let dt=Math.min(.033,Math.max(0,(now-last)/1000));last=now;let shouldDraw=state.mode==='menu';
   try{
     if(typeof audio.updateMusic==='function')runRuntimeStage('updateMusic',()=>audio.updateMusic(dt));
+    if(!['menu','gameover'].includes(state.mode)){state.apexClock=(state.apexClock||0)+dt;if(typeof updateApexSystems==='function')runRuntimeStage('updateApexPriority',()=>updateApexSystems(0,true));}
     const liveGameplay=state.mode==='playing';
     if(liveGameplay){
       if(state.hitStop>0){state.hitStop-=dt;dt=0;}

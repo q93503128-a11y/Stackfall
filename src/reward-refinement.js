@@ -155,7 +155,7 @@
     state.rewardTimers=state.rewardTimers||{stellar:6,aegis:8,chrono:7};
     if(state.bossTraits.stellar){state.rewardTimers.stellar-=dt;if(state.rewardTimers.stellar<=0){state.rewardTimers.stellar=7.5;const targets=nearestEnemies(player.x,player.y,6);for(const e of targets){dealDamage(e,32+state.level*1.5,{color:'#ffe49a',source:'stellar-crown'});state.entities.beams.push({x1:player.x,y1:player.y,x2:e.x,y2:e.y,life:.22,max:.22,color:'#ffe49a',width:2.6});}}}
     if(state.bossTraits.aegis){state.rewardTimers.aegis-=dt;if(state.rewardTimers.aegis<=0){state.rewardTimers.aegis=10;player.shield=Math.min(60,player.shield+18);shockwave(player.x,player.y,'#83ffd1',120,.42,4);}}
-    if(state.bossTraits.chrono){state.rewardTimers.chrono-=dt;if(state.rewardTimers.chrono<=0){state.rewardTimers.chrono=9;shockwave(player.x,player.y,'#8fffe0',220,.55,4);for(const e of state.entities.enemies)if(!e.dead&&Math.hypot(e.x-player.x,e.y-player.y)<220)e.timeLock=Math.max(e.timeLock||0,e.type==='boss'?.55:1.35);}}
+    if(state.bossTraits.chrono){state.rewardTimers.chrono-=dt;if(state.rewardTimers.chrono<=0){state.rewardTimers.chrono=9;shockwave(player.x,player.y,'#8fffe0',220,.55,4);for(const e of state.entities.enemies)if(!e.dead&&e.kind!=='apex'&&Math.hypot(e.x-player.x,e.y-player.y)<220)e.timeLock=Math.max(e.timeLock||0,e.type==='boss'?.55:1.35);}}
   };
 
   const rrDeal=dealDamage;let chainGuard=false,bladeGuard=false,augmentBurstGuard=false;
