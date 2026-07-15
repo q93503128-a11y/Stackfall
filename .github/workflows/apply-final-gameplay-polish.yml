@@ -28,7 +28,7 @@ jobs:
           fetch-depth: 0
       - name: Rebuild verified patch
         run: |
-          cat .github/patch-parts/00 .github/patch-parts/01 .github/patch-parts/02 .github/patch-parts/03 .github/patch-parts/04 .github/patch-parts/05 | base64 -d | gzip -d > /tmp/apply.py
+          cat .github/patch-parts/00 .github/patch-parts/01 .github/patch-parts/02 .github/patch-parts/03 .github/patch-parts/04a .github/patch-parts/04b .github/patch-parts/05 | base64 -d | gzip -d > /tmp/apply.py
           python -m py_compile /tmp/apply.py
           test "$(sha256sum /tmp/apply.py | cut -d' ' -f1)" = "15bef22e58dcc7c5cbabb115645c99bb62ce24dfe0f18050566da194cecb40cf"
           python - <<'PY'
