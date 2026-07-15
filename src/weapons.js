@@ -27,8 +27,7 @@ function fireComet(target, cometN, echoed=false) {
 }
 
 function prismPositions(count) {
-  const points=[];
-  const orbit=count>=3?82:70;
+  const points=[],orbit=orbitRadiusFor('prism');
   for(let i=0;i<count;i++) {
     const a=player.angle*.52+i*TAU/count;
     points.push({x:player.x+Math.cos(a)*orbit,y:player.y+Math.sin(a)*orbit,a});
@@ -37,7 +36,7 @@ function prismPositions(count) {
 }
 
 function meteorDronePositions(stacks) {
-  const count=stacks>=6?3:stacks>=2?2:1,orbit=stacks>=5?94:82,points=[];
+  const count=stacks>=6?3:stacks>=2?2:1,orbit=orbitRadiusFor('drone'),points=[];
   for(let i=0;i<count;i++){
     const a=player.angle*.68+i*TAU/count;
     points.push({x:player.x+Math.cos(a)*orbit,y:player.y+Math.sin(a)*orbit,a});
@@ -83,11 +82,11 @@ function firePrism(prismN, echoed=false) {
 }
 
 function createGravityWells(gravN, echoed=false) {
-  const count=gravN>=6?2:1,size=weaponSizeMultiplier();
+  const count=gravN>=6?2:1;
   for(let i=0;i<count;i++) {
     const a=player.angle+i*Math.PI+(echoed?.45:0),d=count===2?150:105;
     const duration=(gravN>=3?3.55:2.7)+(gravN>=4?.55:0);
-    state.entities.wells.push({x:player.x+Math.cos(a)*d,y:player.y+Math.sin(a)*d,r:(gravN>=2?185:135)*size,life:duration,max:duration,strength:(gravN>=2?430:280)+(gravN>=5?120:0),damage:gravN>=4?(9+gravN*2.2+(gravN>=5?7:0))*(echoed?.55:1):0,tick:0,color:echoed?COLORS.pink:COLORS.violet});
+    state.entities.wells.push({x:player.x+Math.cos(a)*d,y:player.y+Math.sin(a)*d,r:gravN>=2?185:135,life:duration,max:duration,strength:(gravN>=2?430:280)+(gravN>=5?120:0),damage:gravN>=4?(9+gravN*2.2+(gravN>=5?7:0))*(echoed?.55:1):0,tick:0,color:echoed?COLORS.pink:COLORS.violet});
   }
 }
 
@@ -118,7 +117,7 @@ function fireIonChain(ionN,echoed=false){
     trimOldest(state.entities.beams,entityCap('beams'));
   };
   cast();
-  if(ionN>=6&&!echoed)setTimeout(()=>{if(state.mode==='playing')cast();},95);
+  if(ionN>=6&&!echoed)scheduleWeaponAction(95,cast);
 }
 
 function pushFromPlayer(radius,force){
@@ -130,8 +129,8 @@ function fireNovaPulse(novaN,echoed=false){
   const size=weaponSizeMultiplier(),color=echoed?COLORS.pink:'#ffbd69',radius=(145+(novaN>=2?40:0)+(novaN>=5?18:0))*size,damage=(18+novaN*5.2)*(echoed?.64:1);
   areaDamage(player.x,player.y,radius,damage,color);shockwave(player.x,player.y,'#fff2c7',radius*.76,.40,3.8);state.flash=Math.max(state.flash,.08);state.camera.shake=Math.max(state.camera.shake,4.5);
   if(novaN>=4)pushFromPlayer(radius,32+novaN*3);
-  if(novaN>=3)setTimeout(()=>{if(state.mode!=='playing')return;areaDamage(player.x,player.y,radius*.72,damage*.46,color);},145);
-  if(novaN>=6&&!echoed)setTimeout(()=>{if(state.mode!=='playing')return;areaDamage(player.x,player.y,radius*1.16,damage*.72,'#fff0b5');shockwave(player.x,player.y,color,radius*1.22,.48,5);},285);
+  if(novaN>=3)scheduleWeaponAction(145,()=>areaDamage(player.x,player.y,radius*.72,damage*.46,color));
+  if(novaN>=6&&!echoed)scheduleWeaponAction(285,()=>{areaDamage(player.x,player.y,radius*1.16,damage*.72,'#fff0b5');shockwave(player.x,player.y,color,radius*1.22,.48,5);});
 }
 
 function fireMeteorDrones(droneN,echoed=false){
@@ -148,6 +147,42 @@ function fireMeteorDrones(droneN,echoed=false){
   if(droneN>=6&&!echoed&&player.droneVolley%5===0){for(let i=0;i<8;i++){const a=i*TAU/8;spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*430,vy:Math.sin(a)*430,r:4.2,life:1.05,damage:13+droneN*2.4,color:'#d8fff1',pierce:1,source:'drone-burst'});}}
 }
 
+function applyRailBeam(x1,y1,x2,y2,width,damage,color,source,eliteBonus=1){
+  state.entities.beams.push({x1,y1,x2,y2,life:.20,max:.20,color,width});
+  for(const enemy of state.entities.enemies){if(enemy.dead)continue;if(segmentDistance(enemy.x,enemy.y,x1,y1,x2,y2)<enemy.r+width*.72){const elite=enemy.type==='boss'||enemy.type==='mini';dealDamage(enemy,damage*(elite?eliteBonus:1),{color,source});}}
+}
+
+function fireRailgun(railN,echoed=false){
+  const target=nearestEnemy(player.x,player.y);if(!target)return;
+  const color=echoed?COLORS.pink:'#b7e7ff',base=Math.atan2(target.y-player.y,target.x-player.x),size=weaponSizeMultiplier(),length=Math.hypot(vw,vh)*1.55+720;
+  const offsets=railN>=4?[-14,14]:[0],damage=(28+railN*8.5)*(echoed?.62:1),width=(5.2+railN*.72)*size,eliteBonus=railN>=5?1.38:1;
+  const volley=(mult=1,after=false)=>{for(const offset of offsets){const nx=-Math.sin(base),ny=Math.cos(base),x1=player.x+nx*offset,y1=player.y+ny*offset,x2=x1+Math.cos(base)*length,y2=y1+Math.sin(base)*length;applyRailBeam(x1,y1,x2,y2,width*(after?.72:1),damage*mult,after?'#eaf8ff':color,after?'rail-afterimage':'rail',eliteBonus);}};
+  volley();
+  if(railN>=3)scheduleWeaponAction(120,()=>volley(.46,true));
+  if(railN>=6&&!echoed)scheduleWeaponAction(70,()=>{const a=base+Math.PI/2,half=length*.48,x1=target.x-Math.cos(a)*half,y1=target.y-Math.sin(a)*half,x2=target.x+Math.cos(a)*half,y2=target.y+Math.sin(a)*half;applyRailBeam(x1,y1,x2,y2,width*.82,damage*.78,'#ffffff','rail-cross',eliteBonus);});
+  trimOldest(state.entities.beams,entityCap('beams'));
+}
+
+function fireGalacticSpiral(spiralN,echoed=false){
+  player.spiralPhase=(player.spiralPhase||0)+.73;
+  const phase=player.spiralPhase,arms=spiralN>=6?4:spiralN>=4?3:spiralN>=2?2:1,beads=spiralN>=5?5:4,color=echoed?COLORS.pink:'#e3a7ff';
+  for(let step=0;step<beads;step++)scheduleWeaponAction(step*58,()=>{
+    for(let arm=0;arm<arms;arm++){
+      const a=phase+arm*TAU/arms+step*.31*(arm%2?-1:1),speed=300+spiralN*18+step*16,target=spiralN>=3?nearestEnemy(player.x,player.y):null;
+      spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:4.4+spiralN*.28,life:1.65,damage:(8.5+spiralN*2.7)*(echoed?.64:1),color,pierce:spiralN>=5?1:0,source:echoed?'echo-spiral':'spiral-bolt',homingTargetId:target?.id,homingReacquire:spiralN>=3,homingTurn:spiralN>=3?1.45:0});
+    }
+  });
+}
+
+function fireReflector(mirrorN,echoed=false){
+  const size=weaponSizeMultiplier(),radius=(220+mirrorN*34)*size,color=echoed?COLORS.pink:'#9fffe7',candidates=state.entities.enemyProjectiles.filter(p=>p.life>0&&(p.x-player.x)**2+(p.y-player.y)**2<radius*radius).sort((a,b)=>((a.x-player.x)**2+(a.y-player.y)**2)-((b.x-player.x)**2+(b.y-player.y)**2));
+  const limit=mirrorN>=6?14:2+mirrorN,chosen=candidates.slice(0,limit);
+  for(const shot of chosen){shot.life=0;const target=nearestEnemy(shot.x,shot.y),a=target?Math.atan2(target.y-shot.y,target.x-shot.x):Math.atan2(shot.y-player.y,shot.x-player.x);spawnPlayerProjectile({x:shot.x,y:shot.y,vx:Math.cos(a)*(470+mirrorN*16),vy:Math.sin(a)*(470+mirrorN*16),r:Math.max(4,shot.r*.82),life:1.45,damage:(12+mirrorN*3.5)*(echoed?.62:1),color,pierce:mirrorN>=3?1:0,source:echoed?'echo-reflect':'mirror-return'});}
+  if(!chosen.length||mirrorN>=4){const targets=nearestEnemies(player.x,player.y,mirrorN>=6?6:3);for(const target of targets){const a=Math.atan2(target.y-player.y,target.x-player.x);spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*510,vy:Math.sin(a)*510,r:4.8,life:1.25,damage:(10+mirrorN*3)*(echoed?.62:1),color,pierce:mirrorN>=3?1:0,source:'mirror-counter'});}}
+  if(mirrorN>=5)player.shield=Math.min(36+mirrorN*6,player.shield+4+mirrorN*1.5);
+  if(mirrorN>=6&&!echoed){areaDamage(player.x,player.y,radius*.46,16+mirrorN*4,color);shockwave(player.x,player.y,color,radius,.42,3.2);}else shockwave(player.x,player.y,color,radius,.28,2);
+}
+
 function updateWeapons(dt) {
   const bladeN=weaponCount('blade'),prismN=weaponCount('prism');
   player.angle += dt*(2.05+bladeN*.12+prismN*.05+(bladeN>=3?.42:0))/hasteMult();
@@ -159,7 +194,7 @@ function updateWeapons(dt) {
     player.bladeTick-=dt;
     if(player.bladeTick<=0){
       player.bladeTick=.105*hasteMult();
-      const count=bladeN>=5?3:bladeN>=2?2:1,orbit=bladeN>=6?116:bladeN>=3?91:80,bladeR=(bladeN>=6?31:bladeN>=3?25:22)*weaponSizeMultiplier();
+      const count=bladeN>=5?3:bladeN>=2?2:1,orbit=orbitRadiusFor('blade'),bladeR=(bladeN>=6?31:bladeN>=3?25:22)*weaponSizeMultiplier();
       for(const e of state.entities.enemies){if(e.dead)continue;for(let i=0;i<count;i++){const a=player.angle+i*TAU/count,bx=player.x+Math.cos(a)*orbit,by=player.y+Math.sin(a)*orbit;if((e.x-bx)**2+(e.y-by)**2<(e.r+bladeR)**2){dealDamage(e,11+bladeN*4.4,{color:COLORS.cyan,source:'blade'});if(bladeN>=4){const dx=e.x-player.x,dy=e.y-player.y,d=Math.hypot(dx,dy)||1;spawnPlayerProjectile({x:e.x,y:e.y,vx:dx/d*455,vy:dy/d*455,r:7,life:.28,damage:10+bladeN*2,color:COLORS.cyan,pierce:2+(bladeN>=5?1:0),source:'wave'});}break;}}}
     }
   }
@@ -190,6 +225,15 @@ function updateWeapons(dt) {
 
   const droneN=weaponCount('drone');
   if(droneN){player.droneCd-=dt;if(player.droneCd<=0){player.droneCd=(1.48-Math.min(.48,droneN*.06))*(droneN>=5?.78:1)*hasteMult();fireMeteorDrones(droneN);echoTrigger(()=>fireMeteorDrones(droneN,true));}}
+
+  const railN=weaponCount('rail');
+  if(railN){player.railCd-=dt;if(player.railCd<=0){player.railCd=(3.65-Math.min(1.05,railN*.14))*hasteMult();fireRailgun(railN);echoTrigger(()=>fireRailgun(railN,true));}}
+
+  const spiralN=weaponCount('spiral');
+  if(spiralN){player.spiralCd-=dt;if(player.spiralCd<=0){player.spiralCd=(2.85-Math.min(.92,spiralN*.12))*hasteMult();fireGalacticSpiral(spiralN);echoTrigger(()=>fireGalacticSpiral(spiralN,true));}}
+
+  const mirrorN=weaponCount('mirror');
+  if(mirrorN){player.mirrorCd-=dt;if(player.mirrorCd<=0){player.mirrorCd=(5.15-Math.min(1.55,mirrorN*.20))*hasteMult();fireReflector(mirrorN);echoTrigger(()=>fireReflector(mirrorN,true));}}
 }
 
 function echoTrigger(fn) {
@@ -197,5 +241,5 @@ function echoTrigger(fn) {
   if(!n)return;
   state.echoCycle++;
   const chance=Math.min(.70,.10+n*.075),guaranteed=n>=8&&state.echoCycle%5===0;
-  if(guaranteed||Math.random()<chance){fn();if(n>=5&&Math.random()<.28)setTimeout(fn,70);}
+  if(guaranteed||Math.random()<chance){fn();if(n>=5&&Math.random()<.28)scheduleWeaponAction(70,fn);}
 }
