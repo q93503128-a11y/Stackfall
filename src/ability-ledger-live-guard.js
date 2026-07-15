@@ -58,6 +58,13 @@
     if(typeof previousReset==='function')previousReset();
   };
 
+  const previousTryLevelUp=tryLevelUp;
+  tryLevelUp=function tryLevelUpOutsideLedger(){
+    if(state.mode==='abilityView')state.mode='playing';
+    if(!screen.classList.contains('hidden')&&state.xp>=state.xpNeed)screen.classList.add('hidden');
+    return previousTryLevelUp();
+  };
+
   function frameGuard(){
     reconcileLedgerMode();
     requestAnimationFrame(frameGuard);
