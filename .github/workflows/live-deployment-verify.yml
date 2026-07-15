@@ -1,0 +1,50 @@
+name: Verify Stackfall live deployment
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Wait for deployed asset fingerprint
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=$(node --input-type=module -e "import {computeBuildFingerprint} from './scripts/build-fingerprint.mjs'; console.log(computeBuildFingerprint(process.cwd()).sha)")
+          echo "expected=$expected"
+          for attempt in $(seq 1 24); do
+            body=$(curl -fsS "https://stackfall.pages.dev/src/build-info.js?build-check=${GITHUB_SHA}-${attempt}" || true)
+            if printf '%s' "$body" | grep -Fq "$expected"; then
+              echo "deployed fingerprint matched on attempt $attempt"
+              exit 0
+            fi
+            echo "attempt $attempt: deployment not ready"
+            sleep 15
+          done
+          echo "deployed fingerprint did not match $expected" >&2
+          exit 1
+      - name: Live browser smoke
+        env:
+          STACKFALL_CHROME: /usr/bin/google-chrome
+        run: node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-results/live-smoke.json
+      - name: Upload live smoke result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stackfall-live-smoke
+          path: test-results
+          if-no-files-found: ignore
