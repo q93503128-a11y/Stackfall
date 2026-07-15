@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/stackfall-final-gameplay-polish
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -43,7 +46,7 @@ jobs:
           for i in {1..30}; do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep 1; done
           STACKFALL_URL=http://127.0.0.1:8000 STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs
       - name: Remove temporary patch files
-        run: rm -rf .github/patch-parts .github/patch-repair.py .github/workflows/apply-final-gameplay-polish.yml .github/workflows/apply-final-gameplay-polish-v2.yml
+        run: rm -rf .github/patch-parts .github/patch-repair.py .github/gameplay-patch-trigger .github/workflows/apply-final-gameplay-polish.yml .github/workflows/apply-final-gameplay-polish-v2.yml
       - name: Commit verified changes
         run: |
           git config user.name "github-actions[bot]"
