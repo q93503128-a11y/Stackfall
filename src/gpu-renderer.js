@@ -13,9 +13,20 @@
   const baseUpdateEffects=updateEffects;
 
   let app=null;
-  let active=false;
   let initStarted=false;
+  let pixiLoaded=false;
+  let webglReady=false;
   let contextLost=false;
+  let rendererState='loading';
+  let lastFailure='';
+  let tickerFrames=0;
+  let firstGpuFrame=false;
+  let firstProjectileSpriteSeen=false;
+  let projectileWarmupDeadline=0;
+  let initDeadline=performance.now()+3600;
+  let visibleProjectileSprites=0;
+  let visibleParticleSprites=0;
+  let lastProjectileCount=0;
   let projectileTexture=null;
   let solidTexture=null;
   let particleTexture=null;
@@ -23,28 +34,33 @@
   const particleSprites=[];
   let projectileLayer=null;
   let particleLayer=null;
+  const warned=new Set();
 
   const sparklesEnabled=()=>GAME_SETTINGS.sparkles!==false;
   const shouldShowAlliedVisuals=()=>GAME_SETTINGS.hideProjectiles!==true&&state.mode!=='menu';
 
+  function setRendererState(next){
+    rendererState=next;
+    document.documentElement.dataset.stackfallRenderer=next==='active'?'pixi-webgl':'canvas2d';
+  }
+  function warnOnce(key,message,error){
+    if(warned.has(key))return;
+    warned.add(key);
+    console.warn(message,error||'');
+  }
   function parseColor(value,fallback=0xffffff){
     if(typeof value!=='string')return fallback;
     const text=value.trim();
     if(/^#[0-9a-f]{6}$/i.test(text))return Number.parseInt(text.slice(1),16);
-    if(/^#[0-9a-f]{3}$/i.test(text)){
-      const [r,g,b]=text.slice(1).split('').map(v=>v+v);
-      return Number.parseInt(`${r}${g}${b}`,16);
-    }
+    if(/^#[0-9a-f]{3}$/i.test(text)){const [r,g,b]=text.slice(1).split('').map(v=>v+v);return Number.parseInt(`${r}${g}${b}`,16);}
     const rgb=text.match(/^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
     if(rgb)return(clamp(Number(rgb[1]),0,255)<<16)|(clamp(Number(rgb[2]),0,255)<<8)|clamp(Number(rgb[3]),0,255);
     return fallback;
   }
-
   function makeTexture(size,soft=true){
     const surface=document.createElement('canvas');
     surface.width=surface.height=size;
-    const g=surface.getContext('2d');
-    const c=size/2;
+    const g=surface.getContext('2d'),c=size/2;
     if(soft){
       const grad=g.createRadialGradient(c,c,0,c,c,c);
       grad.addColorStop(0,'rgba(255,255,255,1)');
@@ -56,7 +72,6 @@
     g.beginPath();g.arc(c,c,soft?c:c*.72,0,Math.PI*2);g.fill();
     return PIXI.Texture.from(surface);
   }
-
   function ensureSprite(pool,index,layer,texture){
     let sprite=pool[index];
     if(!sprite){
@@ -69,12 +84,40 @@
     if(sprite.texture!==texture)sprite.texture=texture;
     return sprite;
   }
-
   function hideUnused(pool,start){
     for(let i=start;i<pool.length;i++)pool[i].visible=false;
   }
-
+  function canvasReady(){
+    const canvas=safeGpuCanvas();
+    if(!canvas||!document.body.contains(canvas))return false;
+    const rect=canvas.getBoundingClientRect();
+    return canvas.width>0&&canvas.height>0&&rect.width>0&&rect.height>0;
+  }
+  function safeGpuCanvas(){
+    try{return app?.canvas||null;}catch{return null;}
+  }
+  function rendererLooksGpu(){
+    const renderer=app?.renderer;
+    if(!renderer)return false;
+    const name=String(renderer.constructor?.name||renderer.name||'');
+    return /webgl|gpu/i.test(name)||!!renderer.gl||!!renderer.context?.gl||!!renderer.runners;
+  }
+  function activeGpuProjectiles(){
+    return rendererState==='active'&&app&&!contextLost&&canvasReady();
+  }
+  function countRenderableProjectiles(){
+    const list=state.entities.projectiles||[];
+    let count=0;
+    for(const p of list){
+      if(!p||p.life<=0||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;
+      const x=p.x-player.x+vw/2,y=p.y-player.y+vh/2;
+      if(x<-120||x>vw+120||y<-120||y>vh+120)continue;
+      count++;
+    }
+    return count;
+  }
   function syncProjectileSprites(){
+    visibleProjectileSprites=0;
     if(!app||contextLost)return;
     const visible=shouldShowAlliedVisuals();
     if(!visible){hideUnused(projectileSprites,0);return;}
@@ -93,14 +136,16 @@
       sprite.x=Math.round(x);sprite.y=Math.round(y);
       sprite.rotation=Math.atan2(p.vy||0,p.vx||0);
       sprite.tint=parseColor(p.color,0xffffff);
-      sprite.alpha=sparklesEnabled()?(comet?.98:.90):.82;
+      sprite.alpha=sparklesEnabled()?(comet?.98:.90):.88;
       sprite.width=Math.max(radius*2.8,comet?radius*8.2:star?radius*5.2:radius*3.8+Math.min(22,speed*.018));
       sprite.height=Math.max(3.5,radius*(comet?3.5:star?3.0:2.5));
     }
+    visibleProjectileSprites=used;
+    if(used>0)firstProjectileSpriteSeen=true;
     hideUnused(projectileSprites,used);
   }
-
   function syncParticleSprites(){
+    visibleParticleSprites=0;
     if(!app||contextLost)return;
     if(!sparklesEnabled()||GAME_SETTINGS.hideProjectiles===true||state.mode==='menu'){hideUnused(particleSprites,0);return;}
     const list=state.entities.particles||[];
@@ -119,30 +164,46 @@
       sprite.width=sprite.height=size*(p.star?4.1:3.2);
       sprite.rotation=p.star?(performance.now()*.002+i*.73):0;
     }
+    visibleParticleSprites=used;
     hideUnused(particleSprites,used);
   }
-
+  function evaluateReadiness(){
+    if(!app||contextLost||!['warming-up','active'].includes(rendererState))return;
+    const visualsEnabled=shouldShowAlliedVisuals();
+    const renderable=visualsEnabled?countRenderableProjectiles():0;
+    lastProjectileCount=countRenderableProjectiles();
+    const baseReady=pixiLoaded&&webglReady&&canvasReady()&&tickerFrames>0&&firstGpuFrame;
+    if(!visualsEnabled){projectileWarmupDeadline=0;return;}
+    if(renderable>0&&!firstProjectileSpriteSeen&&!projectileWarmupDeadline)projectileWarmupDeadline=performance.now()+900;
+    if(baseReady&&renderable>0&&visibleProjectileSprites>0){setRendererState('active');return;}
+    if(rendererState==='active'&&renderable>0&&visibleProjectileSprites===0){setRendererState('warming-up');projectileWarmupDeadline=performance.now()+900;return;}
+    if(!firstGpuFrame&&performance.now()>initDeadline){disableGpuRenderer('warm-up timed out');return;}
+    if(renderable>0&&!firstProjectileSpriteSeen&&projectileWarmupDeadline&&performance.now()>projectileWarmupDeadline)disableGpuRenderer('projectile sprite warm-up timed out');
+  }
   function syncGpuLayer(){
     try{
+      tickerFrames++;
+      firstGpuFrame=true;
+      const canvas=safeGpuCanvas();
+      if(canvas)canvas.style.display=state.mode==='menu'||contextLost?'none':'block';
       syncParticleSprites();
       syncProjectileSprites();
-      if(app?.canvas)app.canvas.style.display=state.mode==='menu'?'none':'block';
+      evaluateReadiness();
     }catch(error){
       disableGpuRenderer('frame update failed',error);
     }
   }
-
   function disableGpuRenderer(reason,error){
-    if(!active&&!app)return;
-    active=false;
-    if(app?.canvas)app.canvas.style.display='none';
+    lastFailure=reason;
+    const canvas=safeGpuCanvas();
+    if(canvas)canvas.style.display='none';
     hideUnused(projectileSprites,0);hideUnused(particleSprites,0);
-    console.warn(`[Stackfall] PixiJS renderer disabled: ${reason}`,error||'');
+    setRendererState(contextLost?'context-lost':initStarted&&!app?'failed':'canvas-fallback');
+    warnOnce(reason,`[Stackfall] PixiJS renderer disabled: ${reason}`,error);
   }
-
   async function initPixi(){
     if(initStarted||!window.PIXI?.Application)return;
-    initStarted=true;
+    initStarted=true;pixiLoaded=true;setRendererState('warming-up');initDeadline=performance.now()+3600;
     try{
       app=new PIXI.Application();
       await app.init({
@@ -157,10 +218,11 @@
         autoStart:true,
         sharedTicker:false
       });
-      if(!/WebGL/i.test(app.renderer?.constructor?.name||''))throw new Error('WebGL renderer unavailable');
+      webglReady=rendererLooksGpu();
+      if(!webglReady)throw new Error('GPU renderer unavailable');
       const canvas=app.canvas;
       canvas.id='gpuCombatLayer';
-      Object.assign(canvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',display:'block',pointerEvents:'none',touchAction:'none',zIndex:'1'});
+      Object.assign(canvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',display:'block',pointerEvents:'none',touchAction:'none',zIndex:'1',background:'transparent'});
       canvas.setAttribute('aria-hidden','true');
       const gameCanvas=document.querySelector('#game');
       gameCanvas.style.zIndex='0';
@@ -174,21 +236,15 @@
       solidTexture=makeTexture(48,false);
       particleTexture=makeTexture(40,true);
 
-      canvas.addEventListener('webglcontextlost',event=>{
-        event.preventDefault();contextLost=true;disableGpuRenderer('WebGL context lost');
-      });
-      canvas.addEventListener('webglcontextrestored',()=>{
-        contextLost=false;active=true;canvas.style.display='block';
-      });
+      canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;disableGpuRenderer('WebGL context lost');});
+      canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;firstGpuFrame=false;firstProjectileSpriteSeen=false;projectileWarmupDeadline=0;setRendererState('warming-up');if(canvasReady())canvas.style.display='block';});
       app.ticker.add(syncGpuLayer,undefined,PIXI.UPDATE_PRIORITY.HIGH);
-      active=true;
-      document.documentElement.dataset.stackfallRenderer='pixi-webgl';
+      evaluateReadiness();
     }catch(error){
       disableGpuRenderer('initialization failed',error);
-      document.documentElement.dataset.stackfallRenderer='canvas2d';
+      setRendererState('failed');
     }
   }
-
   function loadPixi(){
     if(window.PIXI?.Application){initPixi();return;}
     const script=document.createElement('script');
@@ -198,24 +254,10 @@
     script.async=true;
     script.dataset.stackfallPixi=PIXI_VERSION;
     script.addEventListener('load',initPixi,{once:true});
-    script.addEventListener('error',()=>{document.documentElement.dataset.stackfallRenderer='canvas2d';console.warn('[Stackfall] PixiJS download failed; Canvas 2D fallback remains active.');},{once:true});
+    script.addEventListener('error',()=>{lastFailure='PixiJS download failed';setRendererState('failed');warnOnce('download','[Stackfall] PixiJS download failed; Canvas 2D fallback remains active.');},{once:true});
     document.head.appendChild(script);
   }
-
-  spawnParticle=function sparkleAwareParticleSpawn(...args){
-    if(!sparklesEnabled())return;
-    return baseSpawnParticle(...args);
-  };
-
-  updateEffects=function sparkleAwareEffectUpdate(dt){
-    const result=baseUpdateEffects(dt);
-    if(!sparklesEnabled()&&state.entities?.particles)state.entities.particles.length=0;
-    return result;
-  };
-
-  drawProjectiles=function hybridProjectileDraw(){
-    if(active)return;
-    if(sparklesEnabled())return canvasDrawProjectiles();
+  function drawMinimalAlliedProjectiles(){
     for(const p of state.entities.projectiles){
       if(!p||p.life<=0)continue;
       const x=p.x-player.x+vw/2,y=p.y-player.y+vh/2;
@@ -224,15 +266,28 @@
       ctx.strokeStyle=typeof p.color==='string'?p.color:'#fff';ctx.lineWidth=Math.max(1.5,r*.55);ctx.beginPath();ctx.moveTo(x-nx*r*3,y-ny*r*3);ctx.lineTo(x,y);ctx.stroke();
       ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.arc(x,y,r*.72,0,TAU);ctx.fill();
     }
-  };
+  }
 
+  spawnParticle=function sparkleAwareParticleSpawn(...args){
+    if(!sparklesEnabled())return;
+    return baseSpawnParticle(...args);
+  };
+  updateEffects=function sparkleAwareEffectUpdate(dt){
+    const result=baseUpdateEffects(dt);
+    if(!sparklesEnabled()&&state.entities?.particles)state.entities.particles.length=0;
+    return result;
+  };
+  drawProjectiles=function hybridProjectileDraw(){
+    if(activeGpuProjectiles())return;
+    if(sparklesEnabled())return canvasDrawProjectiles();
+    drawMinimalAlliedProjectiles();
+  };
   drawEffects=function hybridEffectDraw(){
-    if(!active&&sparklesEnabled())return canvasDrawEffects();
+    if(!activeGpuProjectiles()&&sparklesEnabled())return canvasDrawEffects();
     const particles=state.entities.particles;
     state.entities.particles=[];
     try{return canvasDrawEffects();}finally{state.entities.particles=particles;}
   };
-
   if(canvasDrawStars){
     drawStars=function sparkleAwareStars(palette=['#f6f8ff','#8fe9ff','#cdbfff'],density=1){
       if(sparklesEnabled())return canvasDrawStars(palette,density);
@@ -277,19 +332,30 @@
       ctx.restore();
     }
   }
-
   drawEnemies=function stableEnemyIdentityDraw(){
     const hiddenTanks=[];
-    for(const enemy of state.entities.enemies){
-      if(!enemy||enemy.dead||enemy.type!=='tank')continue;
-      hiddenTanks.push(enemy);
-      enemy.dead=true;
-    }
-    try{canvasDrawEnemies();}
-    finally{for(const enemy of hiddenTanks)enemy.dead=false;}
+    for(const enemy of state.entities.enemies){if(!enemy||enemy.dead||enemy.type!=='tank')continue;hiddenTanks.push(enemy);enemy.dead=true;}
+    try{canvasDrawEnemies();}finally{for(const enemy of hiddenTanks)enemy.dead=false;}
     drawStableTankOverlay();
   };
 
-  window.stackfallRendererInfo=()=>({backend:active?'PixiJS WebGL':'Canvas 2D',version:active?PIXI_VERSION:null,fallback:!active});
+  window.stackfallRendererInfo=()=>({
+    status:rendererState,
+    backend:rendererState==='active'?'PixiJS WebGL':'Canvas 2D',
+    version:pixiLoaded?PIXI_VERSION:null,
+    fallback:rendererState!=='active',
+    pixiLoaded,
+    webglReady,
+    contextLost,
+    tickerFrames,
+    firstGpuFrame,
+    firstProjectileSpriteSeen,
+    projectileSprites:{pool:projectileSprites.length,visible:visibleProjectileSprites},
+    particleSprites:{pool:particleSprites.length,visible:visibleParticleSprites},
+    projectileCount:countRenderableProjectiles(),
+    gpuCanvas:safeGpuCanvas()?{width:safeGpuCanvas().width,height:safeGpuCanvas().height,display:safeGpuCanvas().style.display}:null,
+    lastFailure
+  });
+  setRendererState('loading');
   loadPixi();
 })();

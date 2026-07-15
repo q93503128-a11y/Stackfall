@@ -123,7 +123,9 @@ python -m http.server 8000
 - 플레이어
 - UI와 안내
 
-PixiJS는 버전 `8.19.0`을 고정해서 불러옵니다. 로드 실패, 초기화 실패, WebGL 미지원, WebGL 컨텍스트 손실이 발생하면 게임을 중단하지 않고 기존 Canvas 2D 투사체 렌더러로 자동 복귀합니다.
+PixiJS는 버전 `8.19.0`을 고정해서 불러옵니다. 렌더러 상태는 `loading`, `warming-up`, `active`, `failed`, `context-lost`, `canvas-fallback`으로 관리합니다. PixiJS 로드, GPU 캔버스 삽입, 0이 아닌 캔버스 크기, ticker 실행, 첫 GPU 프레임, 실제 투사체 sprite 표시가 확인된 뒤에만 Canvas 2D 아군 투사체 렌더링을 멈춥니다.
+
+로드 실패, 초기화 실패, WebGL 미지원, WebGL 컨텍스트 손실, 투사체 sprite warm-up 실패가 발생하면 게임을 중단하지 않고 기존 Canvas 2D 투사체 렌더러로 자동 복귀합니다. `window.stackfallRendererInfo()`는 현재 상태, fallback 여부, ticker frame 수, GPU 캔버스 크기, projectile sprite pool과 visible sprite 수를 콘솔 진단용으로 반환합니다.
 
 기존 최적화도 유지합니다.
 
@@ -148,5 +150,22 @@ gpu-renderer.js
 ```
 
 `performance-guard.js`가 적 렌더러를 교체한 뒤 `build-audit-ui.js`가 정예 종류 표시와 원거리 적 표시를 감싸야 합니다. 순서를 반대로 바꾸면 중간보스·보스 표시가 사라질 수 있습니다. `gpu-renderer.js`는 마지막에 WebGL 전투 레이어와 중장갑 적 외형 보호를 적용합니다.
+
+구식 임시 덮어쓰기 파일은 정식 소유 모듈로 통합했습니다.
+
+- 투사체 유도와 빔 수명: `systems.js`
+- 원거리 적과 시간 정지 이동: `bosses.js`
+- 빔·중력 우물·플레이어 렌더링: `render-entities.js`
+- 부메랑 일시정지 처리: `feature-pack.js`
+- 보상 중복 방지와 강화 보정: `reward-refinement.js`
+- GPU fallback과 sprite pool: `gpu-renderer.js`
+
+삭제된 구식 파일:
+
+- `src/projectile-overrides.js`
+- `src/visual-overrides.js`
+- `src/feature-hotfix.js`
+- `src/reward-refinement-fix.js`
+- `src/boomerang-return-fix.js`
 
 세부 수치, 등장 규칙, 보상, 이벤트, 성능 원칙과 QA 항목은 `docs/GAME_DESIGN.md`를 기준으로 합니다.

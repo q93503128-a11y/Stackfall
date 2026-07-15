@@ -32,7 +32,7 @@ function draw(){
   ctx.save();ctx.translate(sx,sy);
   runDrawStage('drawTelegraphs',drawTelegraphs);runDrawStage('drawWells',drawWells);runDrawStage('drawGems',drawGems);
   if(typeof drawMapEvents==='function')runDrawStage('drawMapEvents',drawMapEvents);
-  runDrawStage('drawEnemies',drawEnemies);if(GAME_SETTINGS.hideProjectiles!==true)runDrawStage('drawProjectiles',drawProjectiles);runDrawStage('drawEnemyProjectiles',drawEnemyProjectiles);
+  runDrawStage('drawEnemies',drawEnemies);if(GAME_SETTINGS.hideProjectiles!==true)runDrawStage('drawProjectiles',drawProjectiles);if(typeof drawBeamEffects==='function')runDrawStage('drawBeamEffects',drawBeamEffects);runDrawStage('drawEnemyProjectiles',drawEnemyProjectiles);
   if(state.mode!=='menu'){runDrawStage('drawMagnetField',drawMagnetField);runDrawStage('drawChronoField',drawChronoField);runDrawStage('drawPlayer',drawPlayer);}
   runDrawStage('drawEffects',drawEffects);ctx.restore();
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.setLineDash([]);

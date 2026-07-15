@@ -198,7 +198,10 @@ updateWeapons=function updateWeaponsWithCurvedWeapon(dt){
   }
 };
 const sf2BaseUpdateEffects=updateEffects;
-updateEffects=function updateEffectsWithCurves(dt){sf2BaseUpdateEffects(dt);sf2UpdateCurves(dt);};
+updateEffects=function updateEffectsWithCurves(dt){
+  sf2BaseUpdateEffects(dt);
+  if(state.mode==='playing')sf2UpdateCurves(dt);
+};
 const sf2BaseDrawProjectiles=drawProjectiles;
 drawProjectiles=function drawProjectilesWithCurves(){sf2BaseDrawProjectiles();sf2DrawCurves();};
 

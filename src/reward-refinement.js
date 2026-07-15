@@ -25,6 +25,18 @@
   };
   for(const [key,row] of Object.entries(koDescriptions))if(WEAPON_TEXT[key])WEAPON_TEXT[key].ko=row;
   Object.assign(WEAPONS.bulwark,{name:'성광 장벽',icon:'◈',role:'방어 / 보호막',desc:koDescriptions.bulwark[2]});
+  STACK_EFFECTS.bulwark=[
+    ['성광 피막','받는 피해를 줄이는 기본 성광 장벽.'],
+    ['겹빛 장벽','최대 체력과 피해 감소가 증가하는 이중 장벽.'],
+    ['재충전 장벽','일정 시간마다 보호막을 회복하는 재충전 장벽.'],
+    ['보복 파동','피격 시 주변 적을 밀어내는 반격 파동.'],
+    ['요새 장막','보호막 용량과 재충전량이 증가하는 요새 장막.'],
+    ['천체 성벽','주기적으로 강력한 보호막을 충전하는 천체 성벽.']
+  ];
+  STACK_EFFECTS_EN.bulwark=['Radiant Film','Layered Barrier','Recharge Barrier','Retaliation Wave','Fortress Veil','Celestial Wall'];
+  STACK_DESC_EN.bulwark=['A radiant barrier that reduces incoming damage.','A layered barrier with increased maximum health and damage reduction.','A recharging barrier that restores shield over time.','Taking damage releases a repelling counter wave.','A fortress veil with greater shield capacity and recharge.','A celestial wall that periodically charges a powerful shield.'];
+  STACK_EFFECTS_JA.bulwark=['星光皮膜','重光障壁','再充填障壁','報復波動','要塞帳幕','天体城壁'];
+  STACK_DESC_JA.bulwark=['被ダメージを軽減する基本星光障壁。','最大HPと軽減率が増える二重障壁。','一定時間ごとにシールドを回復する障壁。','被弾時に周囲を押し返す反撃波。','シールド容量と充填量が増える要塞帳幕。','定期的に強力なシールドを充填する天体城壁。'];
   if(WEAPON_TEXT.bulwark){
     WEAPON_TEXT.bulwark.en=['Astral Barrier','Defense / Shield','A radiant barrier specialized in damage absorption and shield recovery.'];
     WEAPON_TEXT.bulwark.ja=['星光障壁','防御 / シールド','被害吸収とシールド充填に特化した星光障壁。'];
@@ -93,12 +105,12 @@
   createGravityWells=function(gravN,echoed=false){
     const target=nearestEnemy(player.x,player.y),count=gravN>=6?2:1;
     const base=target?Math.atan2(target.y-player.y,target.x-player.x):player.angle;
-    const targetDistance=target?Math.hypot(target.x-player.x,target.y-player.y):150;
+    const targetDistance=target?Math.hypot(target.x-player.x,target.y-player.y):150,size=weaponSizeMultiplier();
     for(let i=0;i<count;i++){
       const a=base+(i-(count-1)/2)*.42+(echoed?.2:0),d=clamp(targetDistance*.78,110,205),duration=(gravN>=3?3.55:2.7)+(gravN>=4?.55:0);
-      state.entities.wells.push({x:player.x+Math.cos(a)*d,y:player.y+Math.sin(a)*d,r:gravN>=2?185:135,life:duration,max:duration,
+      state.entities.wells.push({x:player.x+Math.cos(a)*d,y:player.y+Math.sin(a)*d,r:(gravN>=2?185:135)*size,life:duration,max:duration,
         strength:(gravN>=2?430:280)+(gravN>=5?120:0),damage:gravN>=4?(9+gravN*2.2+(gravN>=5?7:0))*(echoed?.55:1):0,tick:0,color:echoed?COLORS.pink:COLORS.violet,
-        rewardBurst:!!state.weaponAugments?.gravity});
+        rewardBurst:!!state.weaponAugments?.gravity,attackSizeScaled:true});
     }
   };
 
@@ -148,7 +160,7 @@
   state.bossTraits=state.bossTraits||{};state.weaponAugments=state.weaponAugments||{};state.rewardQueue=state.rewardQueue||[];
   const rrReset=resetGame;resetGame=function(){rrReset();state.bossTraits={};state.weaponAugments={};state.rewardQueue=[];state.rewardTimers={stellar:6,aegis:8,chrono:7};state.rewardKills=0;rewardScreen.classList.add('hidden');};
   const rrShowMenu=showMainMenu;showMainMenu=function(){rewardScreen.classList.add('hidden');state.rewardQueue=[];return rrShowMenu();};
-  const rrEnd=endGame;endGame=function(){rewardScreen.classList.add('hidden');return rrEnd();};
+  const rrEnd=endGame;endGame=function(){rewardScreen.classList.add('hidden');state.rewardQueue=[];return rrEnd();};
 
   function rewardOptionPool(){
     const pool=[];
@@ -175,13 +187,29 @@
       card.onclick=()=>{if(option.kind==='trait')state.bossTraits[option.key]=true;else state.weaponAugments[option.key]=true;state.rewardQueue.shift();rewardScreen.classList.add('hidden');state.mode='playing';if(matchMedia('(pointer:coarse)').matches||innerWidth<760)ui.touch.classList.remove('hidden');audio.resonance();setTimeout(tryOpenReward,80);};cards.appendChild(card);}
   }
 
+  function applyMiniRewardPassive(key){
+    state.passives[key]=stat(key)+1;
+    if(key==='vitality'){player.maxHp+=20;player.hp=Math.min(player.maxHp,player.hp+30);}
+    if(key==='stellarLife'){const ratio=player.hp/Math.max(1,player.maxHp);player.maxHp=Math.max(player.maxHp+1,Math.round(player.maxHp*1.08));player.hp=Math.max(1,Math.round(player.maxHp*ratio));}
+  }
+  function grantMinibossReward(){
+    const weapons=Object.keys(state.weaponStacks||{}).filter(key=>weaponCount(key)>0&&weaponCount(key)<6),passives=Object.keys(PASSIVES).filter(key=>stat(key)<PASSIVES[key].max);
+    const useWeapon=weapons.length&&(!passives.length||Math.random()<.45);
+    let title='정예 전리품',desc='';
+    if(useWeapon){const key=weapons[Math.floor(Math.random()*weapons.length)],next=weaponCount(key)+1;state.weaponStacks[key]=next;if(key!=='core'&&!state.weaponSlots.includes(key))state.weaponSlots.push(key);title=weaponText(key).name;desc=stackEffectText(key,next)?.desc||'장비 중첩 증가.';}
+    else if(passives.length){const key=passives[Math.floor(Math.random()*passives.length)];applyMiniRewardPassive(key);title=passiveText(key).name;desc=passiveText(key).desc;}
+    else{player.shield=Math.max(player.shield,18);desc='보호막 충전.';}
+    const kicker=document.querySelector('#resonanceKicker');if(kicker)kicker.textContent='중간보스 전리품';ui.resonanceTitle.textContent=title;ui.resonanceDesc.textContent=desc;ui.resonance.classList.remove('hidden');setTimeout(()=>ui.resonance.classList.add('hidden'),1900);audio.pickup();renderLoadout();updateHUD();
+  }
+
   const rrKill=killEnemy;killEnemy=function(enemy,opts={}){
-    const elite=enemy&&(enemy.type==='boss'||enemy.type==='mini'),x=enemy?.x||0,y=enemy?.y||0,locked=enemy?.timeLock>0;
+    const elite=enemy&&(enemy.type==='boss'||enemy.type==='mini'),x=enemy?.x||0,y=enemy?.y||0,locked=enemy?.timeLock>0,before=state.rewardQueue?.length||0,wellsBefore=state.entities.wells.length;
     rrKill(enemy,opts);
     if(state.bossTraits.harvest){const heal=elite?Math.ceil(player.maxHp*.25):1;player.hp=Math.min(player.maxHp,player.hp+heal);}
     if(state.bossTraits.singularity){state.rewardKills=(state.rewardKills||0)+1;if(state.rewardKills%18===0)state.entities.wells.push({x,y,r:145,life:2.6,max:2.6,strength:390,damage:12,tick:0,color:'#9e79ff'});}
     if(state.weaponAugments.chrono&&locked)areaDamage(x,y,72,16+weaponCount('chrono')*3,COLORS.chrono);
-    if(elite){state.rewardQueue.push(enemy.type);setTimeout(tryOpenReward,180);}
+    if(state.bossTraits?.singularity&&state.entities.wells.length>wellsBefore&&(state.rewardKills||0)%18===0){const well=state.entities.wells[state.entities.wells.length-1];if(well){well.kind='trait-singularity';well.color='#e65cff';well.r=118;well.strength=720;well.damage=Math.max(18,well.damage||0);well.max=well.life=Math.max(2.2,well.life||0);}}
+    if(elite){const suppress=enemy?.kind==='apex'||enemy?.eventKind==='void'||enemy?.noEliteReward===true;if(suppress||enemy?.type==='mini')state.rewardQueue.splice(before);else if((state.rewardQueue?.length||0)===before)state.rewardQueue.push(enemy.type);if(!suppress&&enemy?.type==='mini')grantMinibossReward();else if(!suppress&&enemy?.type==='boss')setTimeout(tryOpenReward,180);}
   };
 
   const rrDamageMult=damageMult;damageMult=function(){let v=rrDamageMult();if(state.bossTraits.eclipse)v*=player.hp/player.maxHp<.5?1.52:1.18;return v;};
@@ -193,16 +221,18 @@
     if(state.bossTraits.chrono){state.rewardTimers.chrono-=dt;if(state.rewardTimers.chrono<=0){state.rewardTimers.chrono=9;shockwave(player.x,player.y,'#8fffe0',220,.55,4);for(const e of state.entities.enemies)if(!e.dead&&Math.hypot(e.x-player.x,e.y-player.y)<220)e.timeLock=Math.max(e.timeLock||0,e.type==='boss'?.55:1.35);}}
   };
 
-  const rrDeal=dealDamage;let chainGuard=false,bladeGuard=false;
+  const rrDeal=dealDamage;let chainGuard=false,bladeGuard=false,augmentBurstGuard=false;
   dealDamage=function(enemy,amount,opts={}){
-    const source=opts.source||'',x=enemy?.x||0,y=enemy?.y||0;rrDeal(enemy,amount,opts);
-    if(!enemy||enemy.dead&&source==='ember-burst')return;
-    if(state.weaponAugments.blade&&source==='blade'&&!bladeGuard){player.bladeAugCd=(player.bladeAugCd||0)-.105;if(player.bladeAugCd<=0){player.bladeAugCd=.72;bladeGuard=true;areaDamage(x,y,58,10+weaponCount('blade')*2,COLORS.cyan);bladeGuard=false;}}
-    if(state.weaponAugments.ember&&(source==='ember'||source==='echo-star')&&!chainGuard){const other=nearestEnemies(x,y,2,new Set([enemy.id]))[0];if(other){chainGuard=true;rrDeal(other,amount*.28,{color:'#ff9aba',source:'ember-chain',canCrit:false});state.entities.beams.push({x1:x,y1:y,x2:other.x,y2:other.y,life:.13,max:.13,color:'#ff9aba',width:1.5});chainGuard=false;}}
-    if(state.weaponAugments.arc&&source==='arc-return'){for(let i=-1;i<=1;i++){const target=nearestEnemy(x,y);if(!target)break;const a=Math.atan2(target.y-y,target.x-x)+i*.38;spawnPlayerProjectile({x,y,vx:Math.cos(a)*380,vy:Math.sin(a)*380,r:3.6,life:.7,damage:amount*.23,color:'#aaffee',pierce:0,source:'arc-shard'});}}
+    const wasAlive=enemy&&!enemy.dead,source=opts.source||'',locked=enemy?.timeLock>0,x=enemy?.x||0,y=enemy?.y||0;rrDeal(enemy,amount,opts);
+    if(!wasAlive||augmentBurstGuard)return;
+    const now=performance.now();
+    if(state.weaponAugments.blade&&source==='blade'&&!bladeGuard&&now-(player.strongBladeBurstAt||0)>430){player.strongBladeBurstAt=now;bladeGuard=true;augmentBurstGuard=true;areaDamage(x,y,88*weaponSizeMultiplier(),18+weaponCount('blade')*4.5,COLORS.cyan);augmentBurstGuard=false;bladeGuard=false;}
+    if(state.weaponAugments.ember&&(source==='ember'||source==='echo-star')&&!chainGuard){const targets=nearestEnemies(x,y,4,new Set([enemy.id])).slice(0,2);chainGuard=true;for(const [i,target]of targets.entries()){rrDeal(target,amount*(i?.30:.42),{color:'#ff9aba',source:'ember-strong-chain',canCrit:false});state.entities.beams.push({x1:x,y1:y,x2:target.x,y2:target.y,life:.17,max:.17,color:'#ff9aba',width:2.1*weaponSizeMultiplier()});}chainGuard=false;}
+    if(state.weaponAugments.arc&&source==='arc-return'){for(let i=-2;i<=2;i++){const target=nearestEnemy(x,y);if(!target)break;const a=Math.atan2(target.y-y,target.x-x)+i*.24;spawnPlayerProjectile({x,y,vx:Math.cos(a)*430,vy:Math.sin(a)*430,r:4.2,life:.82,damage:amount*.31,color:'#c8fff1',pierce:1,source:'arc-strong-shard'});}}
+    if(state.weaponAugments.chrono&&locked&&enemy.dead){augmentBurstGuard=true;areaDamage(x,y,118*weaponSizeMultiplier(),24+weaponCount('chrono')*4.2,COLORS.chrono);augmentBurstGuard=false;}
   };
 
-  const rrHurt=hurtPlayer;hurtPlayer=function(amount,source){rrHurt(amount,source);if(state.weaponAugments.bulwark){for(let i=0;i<8;i++){const a=i*TAU/8;spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*370,vy:Math.sin(a)*370,r:4,life:.8,damage:12+weaponCount('bulwark')*3,color:COLORS.green,pierce:0,source:'barrier-shard'});}}};
+  const rrHurt=hurtPlayer;hurtPlayer=function(amount,source){rrHurt(amount,source);if(!state.weaponAugments?.bulwark||state.mode==='gameover')return;const n=Math.max(1,weaponCount('bulwark'));player.shield=Math.min(58+n*8,player.shield+5+n*1.5);for(let i=0;i<4;i++){const a=i*TAU/4+Math.PI/4;spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*455,vy:Math.sin(a)*455,r:5.2,life:1.0,damage:18+n*4,color:'#b5ffe5',pierce:2,source:'barrier-lance'});}};
   const rrSpawnCore=spawnCoreShot;spawnCoreShot=function(target,echoed=false){
     rrSpawnCore(target,echoed);
     if(state.weaponAugments.core&&!echoed&&player.coreVolley%5===0){
@@ -212,9 +242,9 @@
   };
 
   const rrFireComet=fireComet;fireComet=function(target,n,echoed=false){rrFireComet(target,n,echoed);if(state.weaponAugments.comet&&target&&!echoed){setTimeout(()=>{if(state.mode!=='playing')return;const a=Math.atan2(target.y-player.y,target.x-player.x);spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*560,vy:Math.sin(a)*560,r:6.5,life:1.55,damage:15+n*3,color:'#dffcff',pierce:1+Math.floor(n/3),source:'comet-afterimage'});},90);}};
-  const rrFirePrism=firePrism;firePrism=function(n,echoed=false){rrFirePrism(n,echoed);if(state.weaponAugments.prism&&!echoed){const target=nearestEnemy(player.x,player.y);if(target){const a=Math.atan2(target.y-player.y,target.x-player.x)+Math.PI/2,len=Math.hypot(vw,vh)*.75;const x1=target.x-Math.cos(a)*len,y1=target.y-Math.sin(a)*len,x2=target.x+Math.cos(a)*len,y2=target.y+Math.sin(a)*len;state.entities.beams.push({x1,y1,x2,y2,life:.16,max:.16,color:'#e0d8ff',width:2.4});for(const e of state.entities.enemies)if(!e.dead&&segmentDistance(e.x,e.y,x1,y1,x2,y2)<e.r+5)rrDeal(e,7+n*2,{color:'#e0d8ff',source:'prism-cross',canCrit:false});}}};
+  const rrFirePrism=firePrism;firePrism=function(n,echoed=false){const before=state.entities.beams.length;rrFirePrism(n,echoed);const size=weaponSizeMultiplier();for(let i=before;i<state.entities.beams.length;i++){const beam=state.entities.beams[i];if(beam&&!beam.attackSizeScaled){beam.width*=size;beam.attackSizeScaled=true;}}if(!state.weaponAugments?.prism||echoed)return;const target=nearestEnemy(player.x,player.y);if(!target)return;for(const offset of[-Math.PI/4,Math.PI/4]){const a=Math.atan2(target.y-player.y,target.x-player.x)+offset,len=Math.hypot(vw,vh)*.72,x1=target.x-Math.cos(a)*len,y1=target.y-Math.sin(a)*len,x2=target.x+Math.cos(a)*len,y2=target.y+Math.sin(a)*len;state.entities.beams.push({x1,y1,x2,y2,life:.22,max:.22,color:'#f0eaff',width:3.1*size,attackSizeScaled:true});for(const e of state.entities.enemies)if(!e.dead&&segmentDistance(e.x,e.y,x1,y1,x2,y2)<e.r+7*size)rrDeal(e,13+n*3.1,{color:'#f0eaff',source:'prism-lattice',canCrit:false});}};
 
-  const rrUpdateWells=updateWells;updateWells=function(dt){const expiring=state.entities.wells.filter(w=>w.rewardBurst&&!w.rewardBurstDone&&w.life<=dt+.02);rrUpdateWells(dt);for(const w of expiring){w.rewardBurstDone=true;areaDamage(w.x,w.y,135,24+weaponCount('gravity')*4,COLORS.violet);}};
+  const rrUpdateWells=updateWells;updateWells=function(dt){const expiring=state.entities.wells.filter(w=>w.rewardBurst&&!w.strongRewardBurstDone&&w.life<=dt+.035);rrUpdateWells(dt);for(const w of expiring){w.strongRewardBurstDone=true;areaDamage(w.x,w.y,195*weaponSizeMultiplier(),34+weaponCount('gravity')*7,COLORS.violet);shockwave(w.x,w.y,'#e8d9ff',245*weaponSizeMultiplier(),.58,5);}};
 
   applyLanguage();renderStarterOptions();renderLoadout();
 })();

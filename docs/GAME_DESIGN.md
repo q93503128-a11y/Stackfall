@@ -347,6 +347,26 @@ WebGL 담당:
 - 텍스처 재사용
 - GPU 스프라이트 위치·회전·크기 갱신
 
+렌더러 상태:
+
+- `loading`: PixiJS 스크립트 로드 전
+- `warming-up`: PixiJS와 GPU 캔버스는 준비 중이나 Canvas 투사체를 아직 끄지 않은 상태
+- `active`: ticker, 첫 GPU 프레임, 실제 투사체 sprite 표시까지 확인되어 아군 투사체를 PixiJS가 담당하는 상태
+- `failed`: PixiJS 로드나 초기화 실패
+- `context-lost`: WebGL context loss 발생
+- `canvas-fallback`: 실행 중 검증 실패로 Canvas 2D 투사체 렌더러를 유지하는 상태
+
+Canvas 2D의 아군 투사체 렌더링은 다음 조건이 모두 확인된 뒤에만 중단한다.
+
+1. PixiJS 라이브러리 로드 성공
+2. GPU 렌더러와 투명 GPU canvas 생성 성공
+3. GPU canvas가 DOM에 삽입되고 CSS 크기와 내부 해상도가 0이 아님
+4. Pixi ticker가 실제 실행됨
+5. 최초 GPU 프레임이 실행됨
+6. 아군 투사체가 존재할 때 최소 1개 이상의 sprite가 visible 상태임
+
+`아군 투사체 숨기기`가 켜진 상태에서는 visible sprite가 0개인 것이 정상이다. 이 설정 때문에 GPU warm-up이 실패로 처리되어서는 안 된다.
+
 Canvas 2D 담당:
 
 - 배경
@@ -368,8 +388,11 @@ Canvas 2D 담당:
 - 실제 렌더러가 WebGL이 아님
 - WebGL 컨텍스트 손실
 - GPU 프레임 갱신 중 예외
+- 투사체가 존재하는데 제한 시간 안에 visible sprite가 확인되지 않음
 
 외부 렌더러가 실패해도 게임 로직은 계속 진행되어야 한다. Canvas 렌더러를 삭제하지 않고 폴백으로 유지한다.
+
+`window.stackfallRendererInfo()`는 콘솔 진단용으로만 사용한다. 반환 정보에는 renderer status, fallback 여부, PixiJS 로드 여부, ticker frame 수, 첫 GPU 프레임 여부, GPU canvas 크기, projectile sprite pool 크기와 visible sprite 수가 포함된다.
 
 ### 기존 상시 최적화
 
@@ -424,6 +447,28 @@ src/gpu-renderer.js
    - 반짝임 설정 최종 적용
 
 `build-audit-ui.js`를 `performance-guard.js`보다 먼저 로드하면 성능 렌더러가 `drawEnemies`를 다시 덮어써서 정예 표시가 사라진다. 이 순서를 바꾸지 않는다.
+
+현재 정리된 기능별 최종 소유 모듈:
+
+- 설정과 localStorage: `src/settings.js`, 기본 로드 `src/bootstrap.js`
+- 무기 발사와 에코 복제: `src/weapons.js`, 조준 보정 `src/combat-guidance-refinement.js`
+- 투사체 유도, 투사체 기본 갱신, 빔 수명: `src/systems.js`
+- 적 이동, 원거리 적 사격, 시간 정지 이동: `src/bosses.js`
+- 부메랑 생성과 일시정지 중 곡선 피해 방지: `src/feature-pack.js`
+- 자연스러운 부메랑 궤적 최종 갱신: `src/performance-guard.js`
+- 빔, 중력 우물, 플레이어, 기본 개체 렌더링: `src/render-entities.js`
+- 정예와 이벤트 표시: `src/build-audit-ui.js`
+- 보상 중복 방지, 중간보스 보상, 특수 강화: `src/reward-refinement.js`
+- 공간 인덱스, sprite/cache, 부하 예산: `src/performance-guard.js`
+- PixiJS/WebGL 아군 투사체와 전투 파티클: `src/gpu-renderer.js`
+
+이번 정리에서 삭제된 구식 파일:
+
+- `src/projectile-overrides.js`
+- `src/visual-overrides.js`
+- `src/feature-hotfix.js`
+- `src/reward-refinement-fix.js`
+- `src/boomerang-return-fix.js`
 
 ### 회귀 금지 목록
 

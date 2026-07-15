@@ -16,7 +16,17 @@
 
   const gridKey=(x,y)=>(x*73856093)^(y*19349663);
   const roundPixel=value=>Math.round(value);
-  const safeColor=(value,fallback='#ffffff')=>typeof value==='string'?value:fallback;
+  function safeColor(value,fallback='#ffffff'){
+    if(typeof value!=='string')return fallback;
+    const text=value.trim();
+    if(/^#[0-9a-f]{6}$/i.test(text))return text;
+    if(/^#[0-9a-f]{3}$/i.test(text))return`#${text.slice(1).split('').map(v=>v+v).join('')}`;
+    return CSS.supports?.('color',text)?text:fallback;
+  }
+  function colorAlpha(value,alpha='55'){
+    const color=safeColor(value);
+    return /^#[0-9a-f]{6}$/i.test(color)?`${color}${alpha}`:color;
+  }
 
   function pressureScore(){
     return state.entities.enemies.length+state.entities.projectiles.length*.34+state.entities.enemyProjectiles.length*.20+state.entities.particles.length*.10+state.entities.beams.length*.22+(state.entities.curves?.length||0)*1.45;
@@ -143,7 +153,7 @@
     let entry=projectileSpriteCache.get(key);if(entry)return entry;
     const trail=kind==='comet'?82:kind==='star'?42:enemy?32:28,pad=kind==='comet'?40:26,width=Math.ceil(trail+radius*4+pad*2),height=Math.ceil(radius*6+pad*2),surface=makeSurface(width,height),g=surface.getContext('2d'),cx=trail+pad+radius,cy=height/2;
     g.clearRect(0,0,width,height);g.lineCap='round';
-    const trailGradient=g.createLinearGradient(pad,cy,cx,cy);trailGradient.addColorStop(0,'rgba(0,0,0,0)');trailGradient.addColorStop(.45,color+'55');trailGradient.addColorStop(1,color);g.strokeStyle=trailGradient;g.lineWidth=Math.max(2,radius*.8);g.beginPath();g.moveTo(pad,cy);g.lineTo(cx,cy);g.stroke();
+    const trailGradient=g.createLinearGradient(pad,cy,cx,cy);trailGradient.addColorStop(0,'rgba(0,0,0,0)');trailGradient.addColorStop(.45,colorAlpha(color));trailGradient.addColorStop(1,color);g.strokeStyle=trailGradient;g.lineWidth=Math.max(2,radius*.8);g.beginPath();g.moveTo(pad,cy);g.lineTo(cx,cy);g.stroke();
     g.shadowColor=color;g.shadowBlur=kind==='comet'?28:enemy?16:18;
     if(kind==='comet'){
       const coma=g.createRadialGradient(cx,cy,0,cx,cy,radius*1.8);coma.addColorStop(0,'#ffffff');coma.addColorStop(.38,color);coma.addColorStop(1,'rgba(181,245,255,0)');g.fillStyle=coma;g.beginPath();g.arc(cx,cy,radius*1.8,0,TAU);g.fill();g.fillStyle='#fff';g.beginPath();g.arc(cx+radius*.18,cy,radius*.62,0,TAU);g.fill();

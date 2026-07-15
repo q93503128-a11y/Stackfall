@@ -1,5 +1,33 @@
 function bossSkill(enemy,dt){if(enemy.type==='mini')return miniSkill(enemy,dt);if(enemy.type!=='boss')return;if(enemy.kind==='apex')return apexBossSkill(enemy,dt);if(enemy.kind==='void'||enemy.eventKind==='void')return voidBossSkill(enemy,dt);return normalBossSkill(enemy,dt);}
-function updateEnemies(dt){const gravWells=state.entities.wells,chronoN=weaponCount('chrono'),chronoRadius=145+chronoN*18,threat=1+Math.floor((state.time||0)/60);for(const e of state.entities.enemies){if(e.dead)continue;e.hit=Math.max(0,e.hit-dt);e.phase+=dt*3;bossSkill(e,dt);let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1,speed=e.speed;if(chronoN&&d<chronoRadius)speed*=Math.max(.32,1-(.10+chronoN*.07));if((e.timeLock||0)>0){e.timeLock=Math.max(0,e.timeLock-dt);speed*=e.type==='boss'?.26:e.type==='mini'?.12:.025;}let vx,vy;if(e.type==='ranged'){const radial=d>435?1:d<285?-1:0,strafe=e.strafeDir||1;vx=(dx/d*radial+(-dy/d)*strafe*.72)*speed;vy=(dy/d*radial+(dx/d)*strafe*.72)*speed;e.rangedCd=(e.rangedCd||1)-dt;if(e.rangedCd<=0&&d<720){e.rangedCd=Math.max(.72,1.75-threat*.055)*rand(.88,1.12);const base=Math.atan2(dy,dx),shots=threat>=9?2:1;for(let i=0;i<shots;i++){const a=base+(i-(shots-1)/2)*.13;spawnEnemyProjectile(e.x,e.y,a,225+Math.min(105,threat*7),e.damage*.72,e.eventKind==='crash'?'#ffcb72':'#65ddff',5.2,4.5);}}}else{vx=dx/d*speed;vy=dy/d*speed;}const control=enemyControlFactor(e);for(const w of gravWells){if(!w||!Number.isFinite(w.x)||!Number.isFinite(w.y)||!Number.isFinite(w.r)||!Number.isFinite(w.strength))continue;const wx=w.x-e.x,wy=w.y-e.y,wd=Math.hypot(wx,wy)||1;if(wd<w.r){const force=(1-wd/w.r)*w.strength*control;vx+=wx/wd*force;vy+=wy/wd*force;}}if(e.dash>0){e.dash-=dt;vx+=e.dashX;vy+=e.dashY;}e.x+=vx*dt;e.y+=vy*dt;if(!Number.isFinite(e.x)||!Number.isFinite(e.y)){e.dead=true;continue;}if(d<player.r+e.r+2&&player.invuln<=0)hurtPlayer(e.damage,e);}state.entities.enemies=state.entities.enemies.filter(e=>!e.dead);}
+function updateEnemies(dt){
+  const gravWells=state.entities.wells,chronoN=weaponCount('chrono'),chronoRadius=145+chronoN*18,threat=1+Math.floor((state.time||0)/60);
+  for(const e of state.entities.enemies){
+    if(!e||e.dead)continue;
+    if(!Number.isFinite(e.x)||!Number.isFinite(e.y)||!Number.isFinite(e.speed)){e.dead=true;continue;}
+    e.hit=Math.max(0,(e.hit||0)-dt);e.phase=(Number.isFinite(e.phase)?e.phase:0)+dt*3;bossSkill(e,dt);
+    let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1,speed=e.speed;
+    if(chronoN&&d<chronoRadius)speed*=Math.max(.32,1-(.10+chronoN*.07));
+    if((e.timeLock||0)>0){e.timeLock=Math.max(0,e.timeLock-dt);speed*=e.type==='boss'?.42:e.type==='mini'?.24:.08;}
+    let vx,vy;
+    if(e.type==='ranged'){
+      const radial=d>435?1:d<285?-1:0,strafe=e.strafeDir||1;
+      vx=(dx/d*radial+(-dy/d)*strafe*.72)*speed;vy=(dy/d*radial+(dx/d)*strafe*.72)*speed;
+      e.rangedCd=(e.rangedCd||1)-dt;
+      if(e.rangedCd<=0&&d<720){
+        e.rangedCd=Math.max(.72,1.75-threat*.055)*rand(.88,1.12);
+        const base=Math.atan2(dy,dx),shots=threat>=9?2:1;
+        for(let i=0;i<shots;i++){const a=base+(i-(shots-1)/2)*.13;spawnEnemyProjectile(e.x,e.y,a,225+Math.min(105,threat*7),e.damage*.72,e.eventKind==='crash'?'#ffcb72':'#65ddff',5.2,4.5);}
+      }
+    }else{vx=dx/d*speed;vy=dy/d*speed;}
+    const control=enemyControlFactor(e);
+    for(const w of gravWells){if(!w||!Number.isFinite(w.x)||!Number.isFinite(w.y)||!Number.isFinite(w.r)||!Number.isFinite(w.strength))continue;const wx=w.x-e.x,wy=w.y-e.y,wd=Math.hypot(wx,wy)||1;if(wd<w.r){const force=(1-wd/w.r)*w.strength*control;vx+=wx/wd*force;vy+=wy/wd*force;}}
+    if(e.dash>0){e.dash-=dt;vx+=Number.isFinite(e.dashX)?e.dashX:0;vy+=Number.isFinite(e.dashY)?e.dashY:0;}
+    e.x+=vx*dt;e.y+=vy*dt;
+    if(!Number.isFinite(e.x)||!Number.isFinite(e.y)){e.dead=true;continue;}
+    if(d<player.r+e.r+2&&player.invuln<=0)hurtPlayer(e.damage,e);
+  }
+  state.entities.enemies=state.entities.enemies.filter(e=>e&&!e.dead&&Number.isFinite(e.x)&&Number.isFinite(e.y));
+}
 function hurtPlayer(amount,source){const hadDefense=weaponCount('bulwark')>0||stat('armor')>0||player.shield>0;amount*=1-damageReduction();if(player.shield>0){const used=Math.min(player.shield,amount);player.shield-=used;amount-=used;}if(amount>0)player.hp-=amount;player.invuln=.9;player.hitPulse=.22;state.camera.shake=Math.max(state.camera.shake,3.5);state.flash=Math.max(state.flash,.07);audio.hurt();spawnParticle(player.x,player.y,COLORS.red,10,170,4);if(hadDefense)shockwave(player.x,player.y,COLORS.green,78,.24,3);if(source&&state.entities.enemies.includes(source)){const dx=source.x-player.x,dy=source.y-player.y,d=Math.hypot(dx,dy)||1,f=enemyControlFactor(source);source.x+=dx/d*48*f;source.y+=dy/d*48*f;}if(weaponCount('bulwark')>=4)areaDamage(player.x,player.y,115,24+weaponCount('bulwark')*4,COLORS.green);if(player.hp<=0)endGame();}
 function updateEnemyProjectiles(dt){for(const p of state.entities.enemyProjectiles){if(!Number.isFinite(p.x)||!Number.isFinite(p.y)||!Number.isFinite(p.life)){p.life=0;continue;}p.vx=Number.isFinite(p.vx)?p.vx:0;p.vy=Number.isFinite(p.vy)?p.vy:0;p.r=Number.isFinite(p.r)?p.r:5;p.phase=Number.isFinite(p.phase)?p.phase+dt*4:0;p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;const d=Math.hypot(player.x-p.x,player.y-p.y);if(d<player.r+p.r&&player.invuln<=0){p.life=0;hurtPlayer(p.damage,p);}if(d>1900)p.life=0;}state.entities.enemyProjectiles=state.entities.enemyProjectiles.filter(p=>p.life>0);trimOldest(state.entities.enemyProjectiles,entityCap('enemyProjectiles'));}
 function lineDistance(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1,l=dx*dx+dy*dy||1,t=clamp(((px-x1)*dx+(py-y1)*dy)/l,0,1);return Math.hypot(px-(x1+dx*t),py-(y1+dy*t));}
