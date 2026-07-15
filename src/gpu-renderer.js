@@ -29,7 +29,7 @@
   let visibleProjectileSprites=0;
   let visibleParticleSprites=0;
   let lastProjectileCount=0;
-  let projectileTexture=null;
+  let projectileTextures={};
   let solidTexture=null;
   let particleTexture=null;
   let textureGeneration=0;
@@ -94,20 +94,24 @@
     g.beginPath();g.arc(c,c,soft?c:c*.72,0,Math.PI*2);g.fill();
     return PIXI.Texture.from(surface);
   }
+  function makeProjectileTexture(kind){
+    const width=kind==='comet'?192:kind==='ember'?96:kind==='core'?104:kind==='shard'?84:72,height=kind==='comet'?72:72,surface=document.createElement('canvas');surface.width=width;surface.height=height;const g=surface.getContext('2d'),cx=width/2,cy=height/2;g.translate(cx,cy);g.fillStyle='#fff';g.strokeStyle='rgba(255,255,255,.86)';g.lineCap='round';g.lineJoin='round';
+    if(kind==='comet'){const len=width*.45,h=height*.18,grad=g.createLinearGradient(-len,0,len,0);grad.addColorStop(0,'rgba(255,255,255,0)');grad.addColorStop(.3,'rgba(255,255,255,.42)');grad.addColorStop(.72,'#fff');g.fillStyle=grad;g.beginPath();g.moveTo(-len,-h*.18);g.lineTo(len*.18,-h*.32);g.lineTo(len*.56,-h);g.lineTo(len,0);g.lineTo(len*.56,h);g.lineTo(len*.18,h*.32);g.lineTo(-len,h*.18);g.closePath();g.fill();g.lineWidth=2;g.beginPath();g.moveTo(-len*.58,0);g.lineTo(len*.78,0);g.stroke();}
+    else if(kind==='ember'){g.rotate(Math.PI/12);g.beginPath();for(let i=0;i<12;i++){const a=i/12*Math.PI*2,r=i%2?13:29,x=Math.cos(a)*r,y=Math.sin(a)*r;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();g.fill();g.globalCompositeOperation='destination-out';g.beginPath();g.arc(0,0,7,0,Math.PI*2);g.fill();g.globalCompositeOperation='source-over';g.lineWidth=2;g.beginPath();g.arc(0,0,34,-.8,.9);g.stroke();}
+    else if(kind==='core'){g.beginPath();g.moveTo(39,0);g.lineTo(0,-18);g.lineTo(-34,0);g.lineTo(0,18);g.closePath();g.fill();g.lineWidth=2;g.beginPath();g.moveTo(-46,0);g.lineTo(46,0);g.moveTo(0,-27);g.lineTo(0,27);g.stroke();}
+    else if(kind==='shard'){g.beginPath();g.moveTo(34,0);g.lineTo(-8,-15);g.lineTo(-30,0);g.lineTo(-8,15);g.closePath();g.fill();}
+    else{const grad=g.createRadialGradient(0,0,0,0,0,30);grad.addColorStop(0,'#fff');grad.addColorStop(.36,'rgba(255,255,255,.94)');grad.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=grad;g.beginPath();g.arc(0,0,30,0,Math.PI*2);g.fill();}
+    return PIXI.Texture.from(surface);
+  }
   function destroyTexture(texture){
     if(!texture||texture===PIXI.Texture.WHITE)return;
     try{texture.destroy(true);texturesDestroyed++;}catch(error){console.error('[Stackfall] texture cleanup failed',error);}
   }
   function rebuildTextures(){
-    const safeTexture=PIXI.Texture.WHITE;
-    for(const sprite of projectileSprites)if(sprite)sprite.texture=safeTexture;
-    for(const sprite of particleSprites)if(sprite)sprite.texture=safeTexture;
-    destroyTexture(projectileTexture);destroyTexture(solidTexture);destroyTexture(particleTexture);
-    projectileTexture=makeTexture(64,true);solidTexture=makeTexture(48,false);particleTexture=makeTexture(40,true);
-    texturesCreated+=3;textureGeneration++;
-    const projectileReplacement=sparklesEnabled()?projectileTexture:solidTexture;
-    for(const sprite of projectileSprites)if(sprite)sprite.texture=projectileReplacement;
-    for(const sprite of particleSprites)if(sprite)sprite.texture=particleTexture;
+    const safeTexture=PIXI.Texture.WHITE;for(const sprite of projectileSprites)if(sprite)sprite.texture=safeTexture;for(const sprite of particleSprites)if(sprite)sprite.texture=safeTexture;
+    for(const texture of Object.values(projectileTextures))destroyTexture(texture);destroyTexture(solidTexture);destroyTexture(particleTexture);
+    projectileTextures={generic:makeProjectileTexture('generic'),core:makeProjectileTexture('core'),ember:makeProjectileTexture('ember'),comet:makeProjectileTexture('comet'),shard:makeProjectileTexture('shard')};solidTexture=makeTexture(48,false);particleTexture=makeTexture(40,true);texturesCreated+=Object.keys(projectileTextures).length+2;textureGeneration++;
+    for(const sprite of projectileSprites)if(sprite)sprite.texture=projectileTextures.generic;for(const sprite of particleSprites)if(sprite)sprite.texture=particleTexture;
   }
   function ensureSprite(pool,index,layer,texture){
     let sprite=pool[index];
@@ -153,33 +157,11 @@
     }
     return count;
   }
+  function projectileVisual(source){const s=String(source||'');if(s.includes('comet')&&!s.includes('fragment'))return{kind:'comet',texture:projectileTextures.comet,width:8.6,height:3.15,alpha:.98};if(s==='ember'||s==='echo-star')return{kind:'ember',texture:projectileTextures.ember,width:4.7,height:4.1,alpha:.96};if(s==='core'||s==='core-echo'||s==='core-nova')return{kind:'core',texture:projectileTextures.core,width:4.35,height:2.65,alpha:.93};if(s.includes('fragment')||s.includes('shard')||s.includes('lance')||s.includes('mirror'))return{kind:'shard',texture:projectileTextures.shard,width:4.4,height:2.45,alpha:.92};return{kind:'generic',texture:projectileTextures.generic||solidTexture,width:3.8,height:2.5,alpha:.90};}
   function syncProjectileSprites(){
-    visibleProjectileSprites=0;
-    if(!app||contextLost)return;
-    const visible=shouldShowAlliedVisuals();
-    if(!visible){hideUnused(projectileSprites,0);return;}
-    const list=state.entities.projectiles||[];
-    let used=0;
-    for(let i=0;i<list.length;i++){
-      const p=list[i];
-      if(!p||p.life<=0||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;
-      const x=p.x-player.x+vw/2,y=p.y-player.y+vh/2;
-      if(x<-120||x>vw+120||y<-120||y>vh+120)continue;
-      const source=String(p.source||''),speed=Math.hypot(p.vx||0,p.vy||0),radius=Math.max(1.5,Math.min(24,Number(p.r)||4));
-      const comet=source.includes('comet'),star=['ember','echo-star','core','core-echo','star-spark'].includes(source);
-      const texture=sparklesEnabled()?projectileTexture:solidTexture;
-      const sprite=ensureSprite(projectileSprites,used++,projectileLayer,texture);
-      sprite.visible=true;
-      sprite.x=Math.round(x);sprite.y=Math.round(y);
-      sprite.rotation=Math.atan2(p.vy||0,p.vx||0);
-      sprite.tint=parseColor(p.color,0xffffff);
-      sprite.alpha=sparklesEnabled()?(comet?.98:.90):.88;
-      sprite.width=Math.max(radius*2.8,comet?radius*8.2:star?radius*5.2:radius*3.8+Math.min(22,speed*.018));
-      sprite.height=Math.max(3.5,radius*(comet?3.5:star?3.0:2.5));
-    }
-    visibleProjectileSprites=used;
-    if(used>0)firstProjectileSpriteSeen=true;
-    hideUnused(projectileSprites,used);
+    visibleProjectileSprites=0;if(!app||contextLost)return;const visible=shouldShowAlliedVisuals();if(!visible){hideUnused(projectileSprites,0);return;}const list=state.entities.projectiles||[];let used=0;
+    for(let i=0;i<list.length;i++){const p=list[i];if(!p||p.life<=0||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;const x=p.x-player.x+vw/2,y=p.y-player.y+vh/2;if(x<-150||x>vw+150||y<-150||y>vh+150)continue;const speed=Math.hypot(p.vx||0,p.vy||0),radius=Math.max(1.5,Math.min(24,Number(p.r)||4)),visual=projectileVisual(p.source),sprite=ensureSprite(projectileSprites,used++,projectileLayer,visual.texture||solidTexture);sprite.visible=true;sprite.x=Math.round(x);sprite.y=Math.round(y);sprite.rotation=Math.atan2(p.vy||0,p.vx||0);sprite.tint=parseColor(p.color,0xffffff);sprite.alpha=sparklesEnabled()?visual.alpha:Math.min(.9,visual.alpha);sprite.width=Math.max(4,radius*visual.width+(visual.kind==='generic'?Math.min(18,speed*.012):0));sprite.height=Math.max(3.5,radius*visual.height);}
+    visibleProjectileSprites=used;if(used>0)firstProjectileSpriteSeen=true;hideUnused(projectileSprites,used);
   }
   function syncParticleSprites(){
     visibleParticleSprites=0;
@@ -357,7 +339,8 @@
     firstProjectileSpriteSeen,
     projectileSprites:{pool:projectileSprites.length,visible:visibleProjectileSprites},
     particleSprites:{pool:particleSprites.length,visible:visibleParticleSprites},
-    textures:{generation:textureGeneration,created:texturesCreated,destroyed:texturesDestroyed,live:[projectileTexture,solidTexture,particleTexture].filter(Boolean).length},
+    textures:{generation:textureGeneration,created:texturesCreated,destroyed:texturesDestroyed,live:Object.values(projectileTextures).filter(Boolean).length+[solidTexture,particleTexture].filter(Boolean).length},
+    projectileVisuals:{generic:'orb',core:'diamond-pulse',ember:'explosive-sigil',comet:'crystal-lance',shard:'angular-shard'},
     projectileCount:countRenderableProjectiles(),
     hierarchy:['game-background','gpu-allied','combat-foreground','html-ui'],
     dpr,
