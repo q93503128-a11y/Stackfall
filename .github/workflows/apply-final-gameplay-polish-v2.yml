@@ -31,7 +31,21 @@ jobs:
           python -m py_compile /tmp/apply.py
           test "$(sha256sum /tmp/apply.py | cut -d' ' -f1)" = "fe59b508a38a59eb99012f8549c107127294b709a7f909be5cffd35ca937b402"
       - name: Apply source changes
-        run: python /tmp/apply.py
+        run: |
+          set +e
+          python /tmp/apply.py >/tmp/apply.log 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            cp /tmp/apply.log .github/apply-error.log
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -f .github/apply-error.log
+            git commit -m "Report final gameplay patch mismatch" -- .github/apply-error.log
+            git push origin HEAD:agent/stackfall-final-gameplay-polish
+            cat /tmp/apply.log
+            exit "$status"
+          fi
       - name: Refresh deployed asset fingerprint
         run: node scripts/build-fingerprint.mjs
       - name: Syntax checks
@@ -46,7 +60,7 @@ jobs:
           for i in {1..30}; do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep 1; done
           STACKFALL_URL=http://127.0.0.1:8000 STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs
       - name: Remove temporary patch files
-        run: rm -rf .github/patch-parts .github/patch-repair.py .github/gameplay-patch-trigger .github/workflows/apply-final-gameplay-polish.yml .github/workflows/apply-final-gameplay-polish-v2.yml
+        run: rm -rf .github/patch-parts .github/patch-repair.py .github/apply-error.log .github/gameplay-patch-trigger .github/workflows/apply-final-gameplay-polish.yml .github/workflows/apply-final-gameplay-polish-v2.yml
       - name: Commit verified changes
         run: |
           git config user.name "github-actions[bot]"
