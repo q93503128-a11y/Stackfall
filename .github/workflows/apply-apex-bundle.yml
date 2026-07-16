@@ -1,0 +1,66 @@
+name: Apply apex reward bundle polish
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: agent/apex-bundle-favicon-shield
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Rebuild and apply exact patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .tmp-apex/part* | base64 -d > .tmp-apex/apply.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.tmp-apex/apply.mjs')
+          text = path.read_text(encoding='utf-8')
+          old = 'apexBlock+"  function applyMiniRewardPassive(key){"'
+          if old not in text:
+              raise SystemExit('expected applyMiniRewardPassive boundary correction was not found')
+          path.write_text(text.replace(old, 'apexBlock', 1), encoding='utf-8')
+          PY
+          node --check .tmp-apex/apply.mjs
+          node .tmp-apex/apply.mjs
+          node scripts/build-fingerprint.mjs
+      - name: Check source and gameplay contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
+          node scripts/polish-contract-check.mjs
+          test -s favicon.svg
+          test -s site.webmanifest
+      - name: Browser smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8000 >/tmp/stackfall-http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in {1..30}; do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep 1; done
+          node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/apex-bundle-smoke.json
+      - name: Commit verified implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'stackfall-maintenance-bot'
+          git config user.email 'stackfall-maintenance-bot@users.noreply.github.com'
+          git add README.md docs/GAME_DESIGN.md docs/WIKI.md index.html favicon.svg site.webmanifest scripts/polish-contract-check.mjs src/reward-refinement.js src/render-entities.js src/render-space.js src/build-info.js
+          git diff --cached --check
+          git commit -m 'Bundle apex rewards and attach barrier spikes'
+          git push origin HEAD:agent/apex-bundle-favicon-shield
