@@ -1,0 +1,30 @@
+name: Inspect late-game state
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Collect relevant source context
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p inspection
+          {
+            echo '=== eclipse / damage scaling ==='
+            grep -RInE "eclipse|일식 동력로|damageMult|enemyHpMult|lateSeconds|Math\.min\(|Math\.log" src scripts README.md docs || true
+            echo '=== realm / void / apex transitions ==='
+            grep -RInE "startRealmTransition|realm|void|apex|background|transition|mapEventActive" src | head -n 1200 || true
+            echo '=== reward option pools / augments ==='
+            grep -RInE "rewardOptionPool|chooseRewards|weaponAugments|augmentDefs|bossReward" src | head -n 800 || true
+          } > inspection/report.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lategame-state-inspection
+          path: inspection/report.txt
