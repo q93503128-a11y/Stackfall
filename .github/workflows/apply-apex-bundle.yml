@@ -23,9 +23,11 @@ jobs:
       - name: Rebuild and apply exact patch
         shell: bash
         run: |
-          set -euo pipefail
-          cat .tmp-apex/part* | base64 -d > .tmp-apex/apply.mjs
-          python3 - <<'PY'
+          set -o pipefail
+          {
+            set -euo pipefail
+            cat .tmp-apex/part* | base64 -d > .tmp-apex/apply.mjs
+            python3 - <<'PY'
           from pathlib import Path
           path = Path('.tmp-apex/apply.mjs')
           text = path.read_text(encoding='utf-8')
@@ -34,9 +36,17 @@ jobs:
               raise SystemExit('expected applyMiniRewardPassive boundary correction was not found')
           path.write_text(text.replace(old, 'apexBlock', 1), encoding='utf-8')
           PY
-          node --check .tmp-apex/apply.mjs
-          node .tmp-apex/apply.mjs
-          node scripts/build-fingerprint.mjs
+            node --check .tmp-apex/apply.mjs
+            node .tmp-apex/apply.mjs
+            node scripts/build-fingerprint.mjs
+          } 2>&1 | tee /tmp/apex-bundle-apply.log
+      - name: Upload application failure log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-bundle-apply-failure
+          path: /tmp/apex-bundle-apply.log
+          if-no-files-found: error
       - name: Check source and gameplay contracts
         shell: bash
         run: |
