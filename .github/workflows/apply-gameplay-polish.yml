@@ -38,10 +38,23 @@ jobs:
           from pathlib import Path
           path=Path('.tmp-polish/apply-gameplay-polish.mjs')
           text=path.read_text()
-          old=r"/  function drawVaultGate\(p,t\)\{[\s\S]*?\n  \}\n  function drawCrashBeacon/"
-          new=r"/  function drawVaultGate\(p,t\)\{[\s\S]*?\r?\n  \}\r?\n  function drawCrashBeacon/"
-          if old not in text:
-              raise SystemExit('vault pattern literal missing')
+          helper="""function replaceFunctionBlock(path,startName,nextName,replacement){
+            const text=read(path),startCandidates=[`  function ${startName}(`,`function ${startName}(`],nextCandidates=[`  function ${nextName}`,`function ${nextName}`];
+            const start=startCandidates.map(marker=>text.indexOf(marker)).find(index=>index>=0);
+            if(start===undefined)throw new Error(`${path}: missing function ${startName}`);
+            let next=-1,nextMarker='';for(const marker of nextCandidates){const index=text.indexOf(marker,start+1);if(index>=0&&(next<0||index<next)){next=index;nextMarker=marker;}}
+            if(next<0)throw new Error(`${path}: missing following function ${nextName}`);
+            write(path,text.slice(0,start)+replacement+text.slice(next+nextMarker.length));
+          }
+          """
+          anchor='function appendOnce(path,marker,block){\n'
+          if text.count(anchor)!=1:
+              raise SystemExit('appendOnce anchor missing')
+          text=text.replace(anchor,helper+anchor,1)
+          old="replaceRegex('src/build-audit-ui.js',/  function drawVaultGate\\(p,t\\)\\{[\\s\\S]*?\\n  \\}\\n  function drawCrashBeacon/,\n"
+          new="replaceFunctionBlock('src/build-audit-ui.js','drawVaultGate','drawCrashBeacon',\n"
+          if text.count(old)!=1:
+              raise SystemExit('vault replacement call missing')
           path.write_text(text.replace(old,new,1))
           PY
             node --check .tmp-polish/apply-gameplay-polish.mjs
