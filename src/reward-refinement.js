@@ -85,7 +85,7 @@
     stellar:{icon:'✹',color:'#ffe49a',name:{ko:'항성 왕관',en:'Stellar Crown'},desc:{ko:'주기적으로 가까운 적들을 관통하는 별빛 광선.',en:'Periodically pierces nearby enemies with stellar rays.'}},
     aegis:{icon:'⬢',color:'#83ffd1',name:{ko:'공허의 가호',en:'Void Aegis'},desc:{ko:'주기적인 대형 보호막 충전.',en:'Periodically charges a powerful shield.'}},
     singularity:{icon:'◉',color:'#a98cff',name:{ko:'특이점 혈맥',en:'Singularity Vein'},desc:{ko:'15처치마다 탄환과 적의 시간을 늦추고 붕괴 파편을 방출하는 특이점 생성.',en:'Every 15 kills creates a singularity that slows shots and enemies, then bursts into collapse shards.'}},
-    eclipse:{icon:'◒',color:'#ff76bd',name:{ko:'일식 동력로',en:'Eclipse Reactor'},desc:{ko:'상시 피해 +12%. 체력 50% 미만에서 최대 +28% 추가 증가(총 최대 +40%).',en:'Permanent damage +12%. Below 50% health, gains up to +28% more (maximum total +40%).'}},
+    eclipse:{icon:'◒',color:'#ff76bd',name:{ko:'일식 동력로',en:'Eclipse Reactor'},desc:{ko:'상시 피해 +20%. 체력 50% 미만부터 추가 피해가 증가해 체력 30% 이하에서 총 최대 +50%.',en:'Permanent damage +20%. Bonus damage rises below 50% health and reaches a maximum total of +50% at or below 30% health.'}},
     chrono:{icon:'◎',color:'#8fffe0',name:{ko:'찰나의 꽃',en:'Chrono Bloom'},desc:{ko:'주기적으로 주변 적의 시간을 정지시키는 파동.',en:'Periodically releases a wave that halts nearby enemies.'}},
     harvest:{icon:'✦',color:'#ff9a9a',name:{ko:'별의 수확',en:'Star Harvest'},desc:{ko:'처치 시 체력 회복, 정예 처치 시 대량 회복.',en:'Restores health on kills and greatly on elite kills.'}}
   };
@@ -109,8 +109,8 @@
   window.stackfallWeaponAugmentDefs=augmentDefs;
 
 
-  const ECLIPSE_BASE_DAMAGE=.12,ECLIPSE_LOW_HEALTH_DAMAGE=.28,ECLIPSE_THRESHOLD=.50;
-  function eclipseDamageBonus(){if(!state.bossTraits?.eclipse)return 0;const ratio=clamp(player.hp/Math.max(1,player.maxHp),0,1),surge=ratio<ECLIPSE_THRESHOLD?(ECLIPSE_THRESHOLD-ratio)/ECLIPSE_THRESHOLD:0;return ECLIPSE_BASE_DAMAGE+ECLIPSE_LOW_HEALTH_DAMAGE*clamp(surge,0,1);}
+  const ECLIPSE_BASE_DAMAGE=.20,ECLIPSE_LOW_HEALTH_DAMAGE=.30,ECLIPSE_SURGE_START=.50,ECLIPSE_THRESHOLD=.30;
+  function eclipseDamageBonus(){if(!state.bossTraits?.eclipse)return 0;const ratio=clamp(player.hp/Math.max(1,player.maxHp),0,1),surge=clamp((ECLIPSE_SURGE_START-ratio)/(ECLIPSE_SURGE_START-ECLIPSE_THRESHOLD),0,1);return ECLIPSE_BASE_DAMAGE+ECLIPSE_LOW_HEALTH_DAMAGE*surge;}
   window.stackfallEclipseDamageBonus=eclipseDamageBonus;
 
   const weaponSpecialDefs={
@@ -167,8 +167,8 @@
 
   function applyMiniRewardPassive(key){
     state.passives[key]=stat(key)+1;
-    if(key==='vitality'){player.maxHp+=20;player.hp=Math.min(player.maxHp,player.hp+30);}
-    if(key==='stellarLife'){const ratio=player.hp/Math.max(1,player.maxHp);player.maxHp=Math.max(player.maxHp+1,Math.round(player.maxHp*1.08));player.hp=Math.max(1,Math.round(player.maxHp*ratio));}
+    if(key==='vitality'){player.maxHp+=24;player.hp=Math.min(player.maxHp,player.hp+36);}
+    if(key==='stellarLife'){const ratio=player.hp/Math.max(1,player.maxHp);player.maxHp=Math.max(player.maxHp+1,Math.round(player.maxHp*1.10));player.hp=Math.max(1,Math.round(player.maxHp*ratio));}
   }
   function grantMinibossReward(){
     const weapons=Object.keys(state.weaponStacks||{}).filter(key=>weaponCount(key)>0&&weaponCount(key)<6),passives=Object.keys(PASSIVES).filter(key=>stat(key)<PASSIVES[key].max);
