@@ -26,6 +26,8 @@ jobs:
         run: |
           set -euo pipefail
           expected=$(node --input-type=module -e "import {computeBuildFingerprint} from './scripts/build-fingerprint.mjs'; console.log(computeBuildFingerprint(process.cwd()).sha)")
+          mkdir -p test-results
+          printf '%s\n' "$expected" > test-results/expected-build-fingerprint.txt
           echo "expected=$expected"
           for attempt in $(seq 1 24); do
             body=$(curl -fsS "https://stackfall.pages.dev/src/build-info.js?build-check=${GITHUB_SHA}-${attempt}" || true)
