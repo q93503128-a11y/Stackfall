@@ -5,7 +5,7 @@ const checks=[
   ['copy chance starts at zero',read('src/weapons.js').includes('Math.min(.60,n*.075)')],
   ['nova suppresses routine shake',read('src/weapons.js').includes("source,{shake:false}")],
   ['damage numbers are deterministic',read('src/systems-base.js').includes('damageNumbers!==false&&(!stressed||crit||elite)')],
-  ['enemy shots face velocity',read('src/bosses.js').includes('Math.atan2(p.vy,p.vx)+Math.PI/2')],
+  ['enemy shots face velocity',read('src/bosses.js').includes('p.phase=p.heading')&&!read('src/bosses.js').includes('p.phase=Math.atan2(p.vy,p.vx)+Math.PI/2')],
   ['apex terminal frenzy',read('src/boss-patterns.js').includes('e.apexElapsed>=240')],
   ['singularity distortion',read('src/reward-refinement.js').includes("kind==='trait-singularity'")],
   ['random upgrade notice',read('src/map-event-expansion.js').includes('showUpgradeNotice')],
@@ -17,6 +17,9 @@ const checks=[
 ['bulwark attached spikes',read('src/render-space.js').includes('const spikes=bulwarkN>=6?18:bulwarkN>=5?15:12')],
 ['no detached bulwark orbit',!read('src/render-entities.js').includes("orbitRadiusFor('bulwark')")],
 ['browser favicon',read('index.html').includes('favicon.svg?v=3')],
-['site manifest',read('index.html').includes('site.webmanifest')]
+['site manifest',read('index.html').includes('site.webmanifest')],
+['enemy shot swept collision',read('src/bosses.js').includes('relativeProjectileSweepHitsPlayer')],
+['enemy shot visual families',read('src/boss-catalog.js').includes('enemyProjectileVisualFor')&&read('src/render-entities.js').includes("kind==='constellation'")&&read('src/render-entities.js').includes("kind==='void'")],
+['enemy shots use styled renderer',read('src/performance-guard.js').includes('fullDrawEnemyProjectiles')&&!read('src/performance-guard.js').includes('cachedEnemyProjectiles(){drawCachedProjectiles(state.entities.enemyProjectiles,true)')]
 ];
 const failed=checks.filter(([,ok])=>!ok);for(const [name,ok]of checks)console.log(ok?'PASS':'FAIL',name);if(failed.length)process.exit(1);

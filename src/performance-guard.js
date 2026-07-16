@@ -212,14 +212,14 @@
     const scale=Math.min(...scales.filter(v=>v>0)),x=cx+dx*scale,y=cy+dy*scale,a=Math.atan2(dy,dx);ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.fillStyle=e.kind==='apex'?'#fff0a8':e.kind==='void'||e.eventKind==='void'?'#c38cff':e.type==='boss'?'#ff78bd':'#8fdcff';ctx.beginPath();ctx.moveTo(14,0);ctx.lineTo(-8,-7);ctx.lineTo(-5,0);ctx.lineTo(-8,7);ctx.closePath();ctx.fill();ctx.restore();
   }
 
-  const fullDrawBackground=drawBackground,fullDrawEffects=drawEffects;
+  const fullDrawBackground=drawBackground,fullDrawEffects=drawEffects,fullDrawEnemyProjectiles=drawEnemyProjectiles;
   function themeVisual(theme){if(theme==='void')return{base:'#070311',stars:['#d7c7ff','#8f65de','#65409d']};if(theme==='apex-chrono')return{base:'#031116',stars:['#e7ffff','#79ffe1','#6aa9c9']};if(theme==='apex-forge')return{base:'#140704',stars:['#fff3d1','#ffb04e','#ff6a3d']};if(theme==='apex-constellation')return{base:'#030716',stars:['#ffffff','#b7c9ff','#8b85ff']};return{base:'#02040d',stars:['#f6f8ff','#8fe9ff','#cdbfff']};}
   drawBackground=function optimizedBackground(){
     if(tier()<2||state.realmTransition)return fullDrawBackground();
     const visual=themeVisual(state.realmTheme||'space');ctx.fillStyle=visual.base;ctx.fillRect(0,0,vw,vh);if(typeof drawStars==='function')drawStars(visual.stars,.24);
   };
   drawProjectiles=function cachedPlayerProjectiles(){if(GAME_SETTINGS.hideProjectiles===true)return;drawCachedProjectiles(state.entities.projectiles,false);};
-  drawEnemyProjectiles=function cachedEnemyProjectiles(){drawCachedProjectiles(state.entities.enemyProjectiles,true);};
+  drawEnemyProjectiles=function styledEnemyProjectiles(){return fullDrawEnemyProjectiles();};
   drawEnemies=function cachedEnemyRenderer(){drawCachedEnemies();};
 
   function minimalEffects(){

@@ -1,7 +1,7 @@
 function rawLine(x1,y1,x2,y2,width,damage,color,life=.9,impactStyle=null){if(state.entities.telegraphs.length>=entityCap('telegraphs'))state.entities.telegraphs.shift();state.entities.telegraphs.push({type:'line',x:x1,y:y1,a:Math.atan2(y2-y1,x2-x1),length:Math.hypot(x2-x1,y2-y1),width,life,max:life,damage,color,impactStyle});}
 function predictedPlayer(distance=130){let x=0,y=0;if(state.input.keys.has('KeyA')||state.input.keys.has('ArrowLeft'))x--;if(state.input.keys.has('KeyD')||state.input.keys.has('ArrowRight'))x++;if(state.input.keys.has('KeyW')||state.input.keys.has('ArrowUp'))y--;if(state.input.keys.has('KeyS')||state.input.keys.has('ArrowDown'))y++;x+=state.input.touchX||0;y+=state.input.touchY||0;const d=Math.hypot(x,y)||1;return{x:player.x+x/d*distance,y:player.y+y/d*distance};}
 function nearbyTwin(e){return e.twinGroup?state.entities.enemies.find(other=>other!==e&&!other.dead&&other.twinGroup===e.twinGroup):null;}
-function placeMines(e,count,color,damage){const base=Math.atan2(player.y-e.y,player.x-e.x);for(let i=0;i<count;i++){const a=base+(i-(count-1)/2)*.25,dist=90+i*48;spawnEnemyProjectile(e.x+Math.cos(a)*dist,e.y+Math.sin(a)*dist,0,0,damage,color,7,4.2);}}
+function placeMines(e,count,color,damage){const base=Math.atan2(player.y-e.y,player.x-e.x);for(let i=0;i<count;i++){const a=base+(i-(count-1)/2)*.25,dist=90+i*48;spawnEnemyProjectile(e.x+Math.cos(a)*dist,e.y+Math.sin(a)*dist,0,0,damage,color,7,4.2,'mine');}}
 function webAroundPlayer(count,radius,damage,color){const pts=[];for(let i=0;i<count;i++){const a=i/count*TAU+.25,rr=radius*(i%2?1:.72);pts.push({x:player.x+Math.cos(a)*rr,y:player.y+Math.sin(a)*rr});}for(let i=0;i<count;i++)rawLine(pts[i].x,pts[i].y,pts[(i+2)%count].x,pts[(i+2)%count].y,18,damage,color,1.15);}
 
 function miniSkill(e,dt){e.skillCd-=dt;e.burstCd-=dt;const d=Math.max(4,e.damage*.5),f=e.eliteForm;
@@ -102,7 +102,7 @@ function voidBossSkill(e,dt){const k=skillScale(e);e.skillCd-=dt/k;e.burstCd-=dt
   }
 }
 
-function fireRingWithGaps(e,count,speed,damage,color,offset=0,gapAngle=0,gapWidth=.24,r=5.4){for(let i=0;i<count;i++){const a=i/count*TAU+offset,d=Math.abs(Math.atan2(Math.sin(a-gapAngle),Math.cos(a-gapAngle)));if(d<gapWidth||Math.abs(d-Math.PI)<gapWidth*.72)continue;spawnEnemyProjectile(e.x,e.y,a,speed,damage,color,r,7);}}
+function fireRingWithGaps(e,count,speed,damage,color,offset=0,gapAngle=0,gapWidth=.24,r=5.4){const visual=enemyProjectileVisualFor(e,'ring');for(let i=0;i<count;i++){const a=i/count*TAU+offset,d=Math.abs(Math.atan2(Math.sin(a-gapAngle),Math.cos(a-gapAngle)));if(d<gapWidth||Math.abs(d-Math.PI)<gapWidth*.72)continue;spawnEnemyProjectile(e.x,e.y,a,speed,damage,color,r,7,visual);}}
 function apexArenaPoints(count,radius,phase=0){const arena=state.apexArena||{x:player.x,y:player.y,r:radius};return Array.from({length:count},(_,i)=>{const a=i/count*TAU+phase;return{x:arena.x+Math.cos(a)*Math.min(radius,arena.r*.78),y:arena.y+Math.sin(a)*Math.min(radius,arena.r*.78)};});}
 function teleportConstellation(e,step=0){const arena=state.apexArena;if(!arena)return;const a=(e.phase*.19+step*2.399)%(TAU),oldX=e.x,oldY=e.y;e.x=arena.x+Math.cos(a)*arena.r*.48;e.y=arena.y+Math.sin(a)*arena.r*.36;state.entities.beams.push({x1:oldX,y1:oldY,x2:e.x,y2:e.y,life:.32,max:.32,color:'#dce6ff',width:2.2});shockwave(oldX,oldY,'#7f91ca',72,.28,2);shockwave(e.x,e.y,'#e7edff',92,.38,3);}
 function apexBossSkill(e,dt){

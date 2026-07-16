@@ -52,5 +52,22 @@ function killEnemy(enemy,opts={}){
 }
 function areaDamage(x,y,r,damage,color,source='area',options={}){shockwave(x,y,color,r,.34,4);if(options.shake!==false)state.camera.shake+=3;const candidates=typeof performanceNearbyEnemies==='function'?performanceNearbyEnemies(x,y,r+90):null,pool=candidates?.length?candidates:state.entities.enemies;for(const e of pool)if(!e.dead&&(e.x-x)**2+(e.y-y)**2<(r+e.r)**2)dealDamage(e,damage,{color,source});}
 function spawnPlayerProjectile(data){const source=data||{},next=window.stackfallProjectilePool?.pop?.()||{};for(const key in next)delete next[key];Object.assign(next,source);const photon=state.nebulaExtras?.photon||0,speed=(1+photon*.12)*(1+stat('projectileSpeed')*.10),size=(1+photon*.08)*(1+stat('projectileSize')*.10);if(Number.isFinite(next.vx))next.vx*=speed;if(Number.isFinite(next.vy))next.vy*=speed;if(Number.isFinite(next.r))next.r*=size;next.pierce=(Number.isFinite(next.pierce)?next.pierce:0)+stat('pierce');if(state.entities.projectiles.length>=entityCap('playerProjectiles')){const removed=state.entities.projectiles.shift();if(removed&&window.stackfallProjectilePool?.length<320)window.stackfallProjectilePool.push(removed);}const originX=Number.isFinite(next.originX)?next.originX:(Number.isFinite(next.x)?next.x:player.x),originY=Number.isFinite(next.originY)?next.originY:(Number.isFinite(next.y)?next.y:player.y);Object.assign(next,{trailTick:0,maxLife:next.life,originX,originY});state.entities.projectiles.push(next);return next;}
-function spawnEnemyProjectile(x,y,a,speed,damage,color='#ff6ccf',r=6,life=5){if(state.entities.enemyProjectiles.length>=entityCap('enemyProjectiles'))state.entities.enemyProjectiles.shift();state.entities.enemyProjectiles.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,damage,color,r,life,maxLife:life,phase:a+Math.PI/2});}
+function inferEnemyProjectileVisual(color,speed=0,r=5){
+  const text=String(color||'').toLowerCase().replace(/s+/g,'');
+  if(Math.abs(speed)<=1)return'mine';
+  if(/79ffe1|8fffe0|c6fff4|d9fff8|e4fffb/.test(text))return'chrono';
+  if(/ffb04e|ff9d42|ff7135|ff8a42|ffd26f|fff0a8|fff1b0|ffcb72|ffd07b|ffad73|ff895f/.test(text))return r>=6?'sun':'forge';
+  if(/b7c9ff|9fb2ef|d8e2ff|f0f4ff|ffffff|eaf1ff|aebfff|879be0/.test(text))return'constellation';
+  if(/7446c8|713dd0|8a4dff|8d5ddb|9b5cff|bb82ff|a86df0|d69cff|8d6bce|8c82ce|6960ad/.test(text))return'void';
+  if(/d7b0ff|c58aff|c79cff|a9b4d8|6d789d|8799c9|d6a8ff/.test(text))return'rune';
+  if(/65ddff|55d7ff|70e5ff|72e9ff|76d9ff|a9eaff|5ea8ff|69bfff|b5e8ff|b8fff0/.test(text))return'storm';
+  if(/ff72cb|ff7db6|ff9bc9|ff61b0|e0d7ff|9d82ff|ff7|ff9/.test(text))return'mirror';
+  if(speed>=225)return'needle';
+  return r>=6.2?'orb':'needle';
+}
+function spawnEnemyProjectile(x,y,a,speed,damage,color='#ff6ccf',r=6,life=5,visual=null){
+  if(state.entities.enemyProjectiles.length>=entityCap('enemyProjectiles'))state.entities.enemyProjectiles.shift();
+  const heading=Number.isFinite(a)?a:0,velocity=Number.isFinite(speed)?speed:0;
+  state.entities.enemyProjectiles.push({x,y,prevX:x,prevY:y,vx:Math.cos(heading)*velocity,vy:Math.sin(heading)*velocity,damage,color,r,life,maxLife:life,heading,phase:heading,age:0,visual:visual||inferEnemyProjectileVisual(color,velocity,r),visualSeed:Math.random()*TAU});
+}
 function nearestEnemy(x,y,maxRange=Infinity,predicate=null){let best=null,bd=Number.isFinite(maxRange)?maxRange*maxRange:Infinity,candidates=state.entities.enemies;if(Number.isFinite(maxRange)&&typeof performanceNearbyEnemies==='function'){const nearby=performanceNearbyEnemies(x,y,maxRange);if(nearby.length)candidates=nearby;}for(const e of candidates){if(e.dead||(predicate&&!predicate(e)))continue;const d=(e.x-x)**2+(e.y-y)**2;if(d<bd){bd=d;best=e;}}return best;}
