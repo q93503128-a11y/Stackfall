@@ -1,0 +1,16 @@
+{
+  "name": "STACKFALL",
+  "short_name": "STACKFALL",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030611",
+  "theme_color": "#050814",
+  "icons": [
+    {
+      "src": "/favicon.svg?v=3",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
