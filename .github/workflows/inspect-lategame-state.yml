@@ -1,6 +1,8 @@
 name: Inspect late-game state
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
