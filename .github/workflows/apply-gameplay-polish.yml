@@ -69,6 +69,15 @@ jobs:
           PY
             node --check .tmp-polish/apply-gameplay-polish.mjs
             node .tmp-polish/apply-gameplay-polish.mjs
+            python3 - <<'PY'
+          from pathlib import Path
+          path=Path('src/weapons.js')
+          text=path.read_text()
+          typo='shake:ke:false'
+          if text.count(typo)!=1:
+              raise SystemExit(f'expected one nova option typo, found {text.count(typo)}')
+          path.write_text(text.replace(typo,'shake:false',1))
+          PY
             node scripts/build-fingerprint.mjs
           } 2>&1 | tee /tmp/apply-polish.log
       - name: Upload application failure log
