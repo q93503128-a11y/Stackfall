@@ -13,9 +13,12 @@ const catalog=read('src/boss-catalog.js');
 const events=read('src/map-event-expansion.js');
 const endgame=read('src/endgame-balance-expansion.js');
 const ledger=read('src/ability-ledger-audit.js');
+const core=read('src/core.js');
+const progression=read('src/progression-expansion.js');
 
-expect('eclipse exact description',reward.includes('상시 피해 +20%. 체력 30% 이하에서 최대 +30% 추가 증가(총 최대 +50%).')&&ledger.includes('총 최대 +50%'));
-expect('eclipse real damage function',reward.includes('ECLIPSE_BASE_DAMAGE=.20')&&reward.includes('ECLIPSE_LOW_HEALTH_DAMAGE=.30')&&reward.includes('ECLIPSE_THRESHOLD=.30')&&reward.includes('amount*=1+eclipseDamageBonus()'));
+expect('eclipse exact description',reward.includes('체력 50% 미만부터 추가 피해가 증가해 체력 30% 이하에서 총 최대 +50%')&&ledger.includes('30% 이하에서 총 최대 +50%'));
+expect('eclipse real damage function',reward.includes('ECLIPSE_BASE_DAMAGE=.20')&&reward.includes('ECLIPSE_LOW_HEALTH_DAMAGE=.30')&&reward.includes('ECLIPSE_SURGE_START=.50')&&reward.includes('ECLIPSE_THRESHOLD=.30')&&reward.includes('(ECLIPSE_SURGE_START-ratio)/(ECLIPSE_SURGE_START-ECLIPSE_THRESHOLD)')&&reward.includes('amount*=1+eclipseDamageBonus()'));
+expect('max health passive buffs',core.includes('최대 체력 +24, 즉시 체력 36 회복')&&progression.includes('player.maxHp+=24')&&progression.includes('player.maxHp*1.10')&&reward.includes('player.maxHp+=24')&&reward.includes('player.maxHp*1.10'));
 expect('five real weapon special branches',['overcharge','cycle','elite','opening','recycle'].every(key=>reward.includes(`${key}:{`)));
 expect('owned weapons gate reward pool',reward.includes('for(const key of ownedWeaponKeys())')&&reward.includes('if(weaponCount(key)>0'));
 expect('four boss reward choices',reward.includes('while(out.length<4')&&endgame.includes('.slice(0,4)'));
