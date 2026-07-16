@@ -1,0 +1,22 @@
+name: Export eclipse tuning source
+
+on:
+  push:
+    branches: [agent/eclipse-health-performance-tuning]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/eclipse-health-performance-tuning
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eclipse-tuning-source
+          path: |
+            .
+            !.git
