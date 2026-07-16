@@ -12,7 +12,11 @@
 
   const copy={
     ko:{title:'난이도',easy:['쉬움','적 체력·피해 감소'],normal:['보통','기준 난이도'],hard:['어려움','더 강하고 빠른 적']},
-    en:{title:'DIFFICULTY',easy:['EASY','Lower enemy health and damage'],normal:['NORMAL','Baseline difficulty'],hard:['HARD','Stronger and faster enemies']}
+    en:{title:'DIFFICULTY',easy:['EASY','Lower enemy health and damage'],normal:['NORMAL','Baseline difficulty'],hard:['HARD','Stronger and faster enemies']},
+    ja:{title:'難易度',easy:['簡単','敵の体力・攻撃力が低下'],normal:['普通','基準難易度'],hard:['難しい','より強く速い敵']},
+    'zh-CN':{title:'难度',easy:['简单','降低敌人生命与伤害'],normal:['普通','标准难度'],hard:['困难','敌人更强更快']},
+    es:{title:'DIFICULTAD',easy:['FÁCIL','Menos vida y daño enemigo'],normal:['NORMAL','Dificultad de referencia'],hard:['DIFÍCIL','Enemigos más fuertes y rápidos']},
+    fr:{title:'DIFFICULTÉ',easy:['FACILE','Vie et dégâts ennemis réduits'],normal:['NORMAL','Difficulté de référence'],hard:['DIFFICILE','Ennemis plus forts et rapides']}
   };
   const picker=document.createElement('div');picker.className='difficulty-picker';picker.innerHTML='<div class="difficulty-copy"><span id="difficultyLabel"></span><small id="difficultyDesc"></small></div><div id="difficultyOptions" class="difficulty-options" role="radiogroup" aria-labelledby="difficultyLabel"></div>';
   ui.start.insertAdjacentElement('beforebegin',picker);
@@ -48,7 +52,7 @@
   fireReflector=function augmentedReflector(stacks,echoed=false){const radius=Math.min(weaponRange('mirror'),(210+stacks*24)*weaponSizeMultiplier()),shots=state.weaponAugments?.mirror&&!echoed?state.entities.enemyProjectiles.filter(p=>p&&p.life>0&&Math.hypot(p.x-player.x,p.y-player.y)<radius).slice(0,6).map(p=>({x:p.x,y:p.y,r:p.r})):[];baseMirror(stacks,echoed);for(const shot of shots){const target=nearestEnemy(shot.x,shot.y,weaponRange('mirror'));if(!target)continue;const base=Math.atan2(target.y-shot.y,target.x-shot.x);for(const offset of[-.13,.13]){const a=base+offset;spawnPlayerProjectile({x:shot.x,y:shot.y,vx:Math.cos(a)*(470+stacks*16),vy:Math.sin(a)*(470+stacks*16),r:Math.max(3.8,(shot.r||4)*.72),life:1.05,maxRange:weaponRange('mirror'),damage:7+stacks*2.2,color:'#d7fff4',pierce:1,source:'mirror-twin-reflect'});}}};
 
   const baseKill=killEnemy;let arcRicochetGuard=false;
-  killEnemy=function augmentedArcKill(enemy,opts={}){const wasAlive=enemy&&!enemy.dead,x=enemy?.x||0,y=enemy?.y||0,source=String(opts.source||'');baseKill(enemy,opts);if(arcRicochetGuard||!wasAlive||!enemy?.dead||!state.weaponAugments?.arc||!['arc','arc-return'].includes(source))return;const candidates=state.entities.enemies.filter(e=>!e.dead&&e!==enemy&&Math.hypot(e.x-x,e.y-y)<=weaponRange('arc')*1.25);if(!candidates.length)return;const target=candidates[Math.floor(Math.random()*candidates.length)];arcRicochetGuard=true;try{fireBoomerang(target,Math.max(1,weaponCount('arc')),false,{x,y},true);}finally{arcRicochetGuard=false;}};
+  killEnemy=function augmentedArcKill(enemy,opts={}){const wasAlive=enemy&&!enemy.dead,x=enemy?.x||0,y=enemy?.y||0,source=String(opts.source||'');baseKill(enemy,opts);if(arcRicochetGuard||!wasAlive||!enemy?.dead||!state.weaponAugments?.arc||!['arc','arc-return'].includes(source))return;const range=weaponRange('arc'),candidates=state.entities.enemies.filter(e=>!e.dead&&e!==enemy&&Math.hypot(e.x-x,e.y-y)<=range*1.25&&Math.hypot(e.x-player.x,e.y-player.y)<=range);if(!candidates.length)return;const target=candidates[Math.floor(Math.random()*candidates.length)];arcRicochetGuard=true;try{fireBoomerang(target,Math.max(1,weaponCount('arc')),false,{x,y},true);}finally{arcRicochetGuard=false;}};
 
   renderDifficulty();
 })();
