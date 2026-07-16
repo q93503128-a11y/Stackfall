@@ -25,6 +25,15 @@ jobs:
         run: |
           set -euo pipefail
           python3 .tmp-balance/apply.py
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('scripts/polish-contract-check.mjs')
+          text=path.read_text(encoding='utf-8')
+          old="['ledger pauses',read('src/ability-ledger-audit.js').includes(\"resumeAfterLedger=!wasPaused;state.mode='paused'\")],"
+          new="['ledger pauses',read('src/ability-ledger-audit.js').includes(\"resumeAfterLedger=originMode==='playing'\")&&read('src/ability-ledger-audit.js').includes(\"state.mode='paused'\")],"
+          if text.count(old)!=1: raise SystemExit('ledger pause contract boundary missing')
+          path.write_text(text.replace(old,new,1),encoding='utf-8')
+          PY
           node scripts/build-fingerprint.mjs
       - name: Syntax and contract checks
         shell: bash
