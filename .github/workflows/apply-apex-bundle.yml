@@ -30,6 +30,29 @@ jobs:
             echo '09484523aa62c97297b4b641c27801131a549ee9d2669325f84f792a2373ec64  .tmp-apex-v2/apply.mjs' | sha256sum -c -
             node --check .tmp-apex-v2/apply.mjs
             node .tmp-apex-v2/apply.mjs
+            python3 - <<'PY'
+          from pathlib import Path
+          path=Path('scripts/polish-contract-check.mjs')
+          text=path.read_text(encoding='utf-8')
+          appended="\n\n{const reward=read('src/reward-refinement.js')"
+          if appended not in text:
+              raise SystemExit('temporary contract block not found')
+          text=text[:text.index(appended)].rstrip()+"\n"
+          old="  ['thumbnail metadata',read('index.html').includes('summ.png')]\n];"
+          new="""  ['thumbnail metadata',read('index.html').includes('summ.png')],
+          ['apex bundle reward screen',read('src/reward-refinement.js').includes('id=\"apexRewardConfirmBtn\"')],
+          ['apex bundle confirm',read('src/reward-refinement.js').includes(\"confirm.querySelector('span').textContent='모두 받기'\")],
+          ['apex passive stacks',read('src/reward-refinement.js').includes('planApexPassiveRewards(3)')],
+          ['apex body reconstruction',read('src/reward-refinement.js').includes('Math.round(player.maxHp*1.12)')],
+          ['bulwark attached spikes',read('src/render-space.js').includes('const spikes=bulwarkN>=6?18:bulwarkN>=5?15:12')],
+          ['no detached bulwark orbit',!read('src/render-entities.js').includes(\"orbitRadiusFor('bulwark')\")],
+          ['browser favicon',read('index.html').includes('favicon.svg?v=3')],
+          ['site manifest',read('index.html').includes('site.webmanifest')]
+          ];"""
+          if old not in text:
+              raise SystemExit('contract check array boundary not found')
+          path.write_text(text.replace(old,new,1),encoding='utf-8')
+          PY
             node scripts/build-fingerprint.mjs
           } 2>&1 | tee /tmp/apex-bundle-apply.log
       - name: Upload application failure log
