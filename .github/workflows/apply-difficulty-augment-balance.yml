@@ -29,10 +29,20 @@ jobs:
       - name: Syntax and contract checks
         shell: bash
         run: |
-          set -euo pipefail
-          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
-          node scripts/polish-contract-check.mjs
-          git diff --check
+          set -o pipefail
+          {
+            set -euo pipefail
+            while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
+            node scripts/polish-contract-check.mjs
+            git diff --check
+          } 2>&1 | tee /tmp/difficulty-augment-contract.log
+      - name: Upload contract diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: difficulty-augment-contract-diagnostics
+          path: /tmp/difficulty-augment-contract.log
+          if-no-files-found: error
       - name: Browser smoke
         shell: bash
         run: |
