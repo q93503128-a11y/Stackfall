@@ -1,0 +1,40 @@
+name: Debug realm patch application
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/realm-continuity-weapon-specials
+      - name: Check patches individually
+        shell: bash
+        run: |
+          mkdir -p test-results
+          status=0
+          for patch in .github/realm-patches/*.patch; do
+            echo "=== $patch ===" | tee -a test-results/patch-debug.log
+            git apply --check "$patch" >>test-results/patch-debug.log 2>&1 || { status=$?; echo "FAILED $patch" | tee -a test-results/patch-debug.log; break; }
+            git apply "$patch" >>test-results/patch-debug.log 2>&1 || { status=$?; echo "APPLY FAILED $patch" | tee -a test-results/patch-debug.log; break; }
+            echo "PASS $patch" | tee -a test-results/patch-debug.log
+          done
+          exit $status
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: realm-patch-debug
+          path: test-results/patch-debug.log
+      - name: Publish debug run
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createCommitStatus({owner:context.repo.owner,repo:context.repo.repo,sha:context.sha,state:'success',context:'stackfall/realm-patch-debug',description:'realm patch diagnostic complete',target_url:`https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`});
