@@ -52,10 +52,15 @@ jobs:
               raise SystemExit('appendOnce anchor missing')
           text=text.replace(anchor,helper+anchor,1)
           old="replaceRegex('src/build-audit-ui.js',/  function drawVaultGate\\(p,t\\)\\{[\\s\\S]*?\\n  \\}\\n  function drawCrashBeacon/,\n"
-          new="replaceFunctionBlock('src/build-audit-ui.js','drawVaultGate','drawCrashBeacon',\n"
+          new="replaceFunctionBlock('src/dark-cosmic-polish.js','drawVaultGate','drawCrashBeacon',\n"
           if text.count(old)!=1:
               raise SystemExit('vault replacement call missing')
-          path.write_text(text.replace(old,new,1))
+          text=text.replace(old,new,1)
+          apex_old="replaceOne('src/build-audit-ui.js','e.apexForm=form;state.apexActiveId=e.id;'"
+          apex_new="replaceOne('src/dark-cosmic-polish.js','e.apexForm=form;state.apexActiveId=e.id;'"
+          if text.count(apex_old)!=1:
+              raise SystemExit('apex entrance replacement call missing')
+          path.write_text(text.replace(apex_old,apex_new,1))
           PY
             node --check .tmp-polish/apply-gameplay-polish.mjs
             node .tmp-polish/apply-gameplay-polish.mjs
