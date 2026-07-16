@@ -60,7 +60,12 @@ jobs:
           apex_new="replaceOne('src/dark-cosmic-polish.js','e.apexForm=form;state.apexActiveId=e.id;'"
           if text.count(apex_old)!=1:
               raise SystemExit('apex entrance replacement call missing')
-          path.write_text(text.replace(apex_old,apex_new,1))
+          text=text.replace(apex_old,apex_new,1)
+          passive="replaceOne('src/map-event-expansion.js',\"grantRandomPassives(2);finishChoice('crash');\",\"const entries=grantRandomPassives(2);showUpgradeNotice('우주선 회수',entries);finishChoice('crash');\");"
+          weapon="replaceOne('src/map-event-expansion.js',\"grantRandomWeapon(2)||grantRandomPassives(2);finishChoice('crash');\",\"const weapon=grantRandomWeapon(2),entries=weapon?[weapon]:grantRandomPassives(2);showUpgradeNotice('무기 공명',entries);finishChoice('crash');\");"
+          if text.count(passive+'\n'+weapon)!=1:
+              raise SystemExit('crash reward replacement order missing')
+          path.write_text(text.replace(passive+'\n'+weapon,weapon+'\n'+passive,1))
           PY
             node --check .tmp-polish/apply-gameplay-polish.mjs
             node .tmp-polish/apply-gameplay-polish.mjs
