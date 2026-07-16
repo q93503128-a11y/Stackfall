@@ -35,7 +35,7 @@
     const value=pressureScore(),compact=compactDevice();
     return value>(compact?190:285)?2:value>(compact?135:210)?1:0;
   }
-  function tier(){return Math.max(performanceTier,pressureTier());}
+  function tier(){return performanceTier;}
   function applyEmergencyResolution(enabled){
     if(enabled===emergencyResolution)return;
     emergencyResolution=enabled;
@@ -43,26 +43,27 @@
     resize();
   }
   function syncResolution(dt){
-    const shouldDrop=performanceTier===2&&frameMs>29;
+    const shouldDrop=performanceTier===2&&frameMs>38&&slowDebt>=5.5;
     if(shouldDrop){
       resolutionDropTime+=dt;resolutionRecoverTime=0;
-      if(resolutionDropTime>1.8)applyEmergencyResolution(true);
+      if(resolutionDropTime>2.5)applyEmergencyResolution(true);
     }else if(emergencyResolution){
       resolutionDropTime=0;
-      if(frameMs<18&&slowDebt<4)resolutionRecoverTime+=dt;else resolutionRecoverTime=0;
-      if(resolutionRecoverTime>7){applyEmergencyResolution(false);resolutionRecoverTime=0;}
+      if(frameMs<23&&slowDebt<.7)resolutionRecoverTime+=dt;else resolutionRecoverTime=0;
+      if(resolutionRecoverTime>5){applyEmergencyResolution(false);resolutionRecoverTime=0;}
     }else{
       resolutionDropTime=0;resolutionRecoverTime=0;
     }
   }
   function observeFrame(dt){
-    const ms=clamp((Number(dt)||.0167)*1000,4,50);
-    frameMs=frameMs*.92+ms*.08;
-    if(frameMs>27)slowDebt=Math.min(140,slowDebt+2.2);
-    else if(frameMs>21)slowDebt=Math.min(140,slowDebt+.65);
-    else slowDebt=Math.max(0,slowDebt-1.4);
-    performanceTier=frameMs>33||slowDebt>82?2:frameMs>23.5||slowDebt>28?1:0;
-    syncResolution(dt);
+    const seconds=clamp(Number(dt)||.0167,.004,.25),ms=seconds*1000;
+    frameMs=frameMs*.94+ms*.06;
+    if(frameMs>42)slowDebt=Math.min(12,slowDebt+seconds*2.4);
+    else if(frameMs>31)slowDebt=Math.min(12,slowDebt+seconds);
+    else if(frameMs<24)slowDebt=Math.max(0,slowDebt-seconds*1.8);
+    else slowDebt=Math.max(0,slowDebt-seconds*.45);
+    performanceTier=slowDebt>=5.5?2:slowDebt>=2?1:0;
+    syncResolution(seconds);
   }
   function stressed(){return tier()>0;}
   function rebuildEnemyGrid(){
@@ -94,6 +95,7 @@
 
   window.stackfallPerformanceStressed=stressed;
   window.stackfallPerformanceTier=()=>tier();
+  window.stackfallPerformanceDiagnostics=()=>({tier:tier(),measuredTier:performanceTier,pressureTier:pressureTier(),frameMs,slowDebt,emergencyResolution});
   window.rebuildEnemyIndex=rebuildEnemyGrid;
   window.getEnemyById=getEnemyById;
   window.performanceNearestEnemies=nearestIndexedEnemies;

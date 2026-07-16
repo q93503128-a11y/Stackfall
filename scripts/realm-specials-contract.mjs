@@ -14,8 +14,8 @@ const events=read('src/map-event-expansion.js');
 const endgame=read('src/endgame-balance-expansion.js');
 const ledger=read('src/ability-ledger-audit.js');
 
-expect('eclipse exact description',reward.includes('상시 피해 +12%. 체력 50% 미만에서 최대 +28% 추가 증가(총 최대 +40%).')&&ledger.includes('총 최대 +40%'));
-expect('eclipse real damage function',reward.includes('ECLIPSE_BASE_DAMAGE=.12')&&reward.includes('ECLIPSE_LOW_HEALTH_DAMAGE=.28')&&reward.includes('amount*=1+eclipseDamageBonus()'));
+expect('eclipse exact description',reward.includes('상시 피해 +20%. 체력 30% 이하에서 최대 +30% 추가 증가(총 최대 +50%).')&&ledger.includes('총 최대 +50%'));
+expect('eclipse real damage function',reward.includes('ECLIPSE_BASE_DAMAGE=.20')&&reward.includes('ECLIPSE_LOW_HEALTH_DAMAGE=.30')&&reward.includes('ECLIPSE_THRESHOLD=.30')&&reward.includes('amount*=1+eclipseDamageBonus()'));
 expect('five real weapon special branches',['overcharge','cycle','elite','opening','recycle'].every(key=>reward.includes(`${key}:{`)));
 expect('owned weapons gate reward pool',reward.includes('for(const key of ownedWeaponKeys())')&&reward.includes('if(weaponCount(key)>0'));
 expect('four boss reward choices',reward.includes('while(out.length<4')&&endgame.includes('.slice(0,4)'));
@@ -24,6 +24,7 @@ expect('stable realm serial ownership',realm.includes('realmTransitionSerial')&&
 expect('realm cancel helper',realm.includes('function cancelRealmTransition')&&realm.includes('window.cancelRealmTransition'));
 expect('no duplicate apex encounter override',!dark.includes('beginApexEncounter=function beginCinematicApexEncounter'));
 expect('canonical background only',!perf.includes('drawBackground=function optimizedBackground')&&!perf.includes('function themeVisual(theme)'));
+expect('quality reduction requires measured lag',perf.includes('function tier(){return performanceTier;}')&&perf.includes('slowDebt>=5.5?2:slowDebt>=2?1:0')&&perf.includes('frameMs>38&&slowDebt>=5.5'));
 expect('void owned transitions',events.includes("owner:'void-entry'")&&events.includes("owner:'void-exit'")&&events.includes("owner:'void-abort'"));
 expect('apex owned transitions',bosses.includes("owner:'apex-entry'")&&bosses.includes("owner:'apex-exit'")&&bosses.includes('state.apexArena=apexArena'));
 expect('uncapped late damage growth',endgame.includes('Math.pow(minutes,1.14)')&&!endgame.includes('Math.min(.58'));
