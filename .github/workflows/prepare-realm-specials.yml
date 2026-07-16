@@ -20,32 +20,40 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Apply verified source patch
+      - name: Apply verified source patches
         shell: bash
         run: |
           set -euo pipefail
           if ! grep -Fq 'ECLIPSE_BASE_DAMAGE=.12' src/reward-refinement.js; then
-            base64 -d .github/realm-specials.patch.gz.b64 | gzip -d > /tmp/realm-specials.patch
-            git apply /tmp/realm-specials.patch
+            git apply --check .github/realm-patches/*.patch
+            git apply .github/realm-patches/*.patch
           fi
           python3 - <<'PY'
           from pathlib import Path
+          import re
+
           contract=Path('scripts/endgame-balance-contract.mjs')
           text=contract.read_text(encoding='utf-8')
-          text=text.replace("expect('prism haste tick',expansion.includes('tickInterval=Math.max(.085,.25*hasteMult())'));","expect('prism haste tick',expansion.includes(\"tickInterval=Math.max(.060,.25*hasteMult()*(typeof weaponCycleMultiplier==='function'?weaponCycleMultiplier('prism'):1))\"));")
-          text=text.replace("expect('late enemy damage curve',expansion.includes('Math.min(.58,late/1050)'));","expect('late enemy damage curve',expansion.includes('Math.pow(minutes,1.14)')&&!expansion.includes('Math.min(.58')); ")
-          text=text.replace("expect('late enemy speed curve',expansion.includes('Math.min(.38,late/1450)'));","expect('late enemy speed curve',expansion.includes('Math.pow(minutes,1.10)')&&!expansion.includes('Math.min(.38')); ")
+          text=re.sub(r"expect\('prism haste tick'.*?;\n", "expect('prism haste tick',expansion.includes(\"tickInterval=Math.max(.060,.25*hasteMult()*(typeof weaponCycleMultiplier==='function'?weaponCycleMultiplier('prism'):1))\"));\n", text)
+          text=re.sub(r"expect\('late enemy damage curve'.*?;\n", "expect('late enemy damage curve',expansion.includes('Math.pow(minutes,1.14)')&&!expansion.includes('Math.min(.58')));\n", text)
+          text=re.sub(r"expect\('late enemy speed curve'.*?;\n", "expect('late enemy speed curve',expansion.includes('Math.pow(minutes,1.10)')&&!expansion.includes('Math.min(.38')));\n", text)
           contract.write_text(text,encoding='utf-8')
+
           sections={
             'README.md':'''\n\n### 맵 전환·장기 특수효과·무제한 위협 성장\n\n- 효과 설명에는 실제 전투 수치나 판정 변화만 기록한다. 단순 외형·광원·장식 변화는 효과로 표기하지 않는다.\n- 일식 동력로는 상시 피해 +12%이며, 체력 50% 미만에서 최대 +28%가 추가되어 총 최대 +40%까지 증가한다.\n- 보스 보상은 4개 카드로 확장하며, 무기 관련 항목은 현재 보유한 무기에 대해서만 생성한다. 각 무기는 고유 특수효과 외에도 피해·주기·정예·초동·회수 계열 장기 중첩을 가진다.\n- 공허 및 초월체 맵 전환은 단일 전환 소유권과 일련번호를 사용한다. 이전 전환의 지연 콜백은 새 전환이나 복귀 배경을 덮어쓸 수 없다.\n- 4분 이후 적 피해·속도는 상한이나 로그함수 없이 선형항과 거듭제곱항으로 계속 증가한다. 적 체력 성장 역시 기존의 무제한 거듭제곱 성장을 유지한다.\n''',
             'docs/GAME_DESIGN.md':'''\n\n## 장기 보스 보상 및 전장 연속성\n\n- 보스 보상은 최대 4개를 제시하고 가능한 경우 보유 무기 관련 항목을 최소 3개 우선 배치한다. 미보유 무기의 특수효과는 보상 풀에 넣지 않는다.\n- 무기 장기 특수효과는 과충전 회로(중첩당 피해 +12%), 주기 재편(중첩당 공격 주기 -7%), 정예 파쇄(정예 피해 +15%), 초동 폭압(체력 80% 이상 대상 피해 +18%), 회수 루프(처치 시 다음 공격 대기시간 0.22초 감소)로 구성한다. 모든 항목은 실제 판정 또는 수치에 연결한다.\n- 공허·초월체 진입과 퇴장은 소유자가 표시된 하나의 전환 객체만 사용한다. 전환 중 새 전환이 시작되면 이전 콜백은 즉시 무효화하며, 퇴장 완료 후 배경 테마를 명시적으로 우주로 고정한다.\n- 성능 보호 단계는 전투 개체와 이펙트 비용만 낮추며, 배경 렌더러 자체를 교체하지 않는다.\n- 후반 적 성장식에는 최대값과 로그함수를 사용하지 않는다. 장시간 플레이에서도 피해·속도·체력 압박이 계속 증가해야 한다.\n''',
             'docs/WIKI.md':'''\n\n## 보스 장기 특수효과\n\n보스 보상은 한 번에 최대 4개가 표시됩니다. 무기 특수효과는 현재 가지고 있는 무기에 대해서만 등장합니다. 같은 무기도 피해 증가, 공격 주기 단축, 정예 피해, 높은 체력 대상 피해, 처치 후 대기시간 회수 효과를 여러 번 중첩할 수 있어 장시간 생존할수록 빌드가 계속 확장됩니다. 일식 동력로는 상시 피해 +12%를 제공하며 체력이 50% 아래로 내려가면 추가 피해가 점차 증가해 총 최대 +40%가 됩니다.\n'''
           }
           for path,addition in sections.items():
-              p=Path(path); current=p.read_text(encoding='utf-8'); marker=addition.strip().splitlines()[0]
-              if marker not in current:p.write_text(current.rstrip()+addition,encoding='utf-8')
+              p=Path(path)
+              current=p.read_text(encoding='utf-8')
+              marker=addition.strip().splitlines()[0]
+              if marker not in current:
+                  p.write_text(current.rstrip()+addition,encoding='utf-8')
           PY
-          rm -f .github/realm-specials.patch.gz.b64 .github/workflows/prepare-realm-specials.yml .github/workflows/inspect-lategame-state.yml
+          rm -f .github/realm-specials.patch.gz.b64
+          rm -rf .github/realm-patches
+          rm -f .github/workflows/prepare-realm-specials.yml .github/workflows/inspect-lategame-state.yml
           node scripts/build-fingerprint.mjs
       - name: Syntax and contract verification
         shell: bash
