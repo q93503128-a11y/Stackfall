@@ -6,7 +6,7 @@
   };
   const l=k=>(P[locale()]||P.en)[k]||P.en[k]||k;
   const traitMeta={stellar:['✹','#ffe49a','항성 왕관','주기적으로 가까운 적들을 관통하는 별빛 광선.'],aegis:['⬢','#83ffd1','공허의 가호','주기적으로 강력한 보호막 충전.'],singularity:['✺','#d86cff','특이점 혈맥','처치 누적 시 적을 압축하는 붕괴성 특이점 생성.'],eclipse:['◒','#ff76bd','일식 동력로','상시 피해 증가와 저체력 추가 증폭.'],chrono:['◎','#8fffe0','찰나의 꽃','주기적으로 주변 적의 시간 정지.'],harvest:['✦','#ff9a9a','별의 수확','처치 시 회복, 정예 처치 시 대량 회복.']};
-  const augmentMeta={core:['✷','#eafcff','항성 연사'],blade:['◒','#7ce8ff','공간 절개'],ember:['✦','#ff7b9e','연쇄 성화'],bulwark:['◈','#74f2a7','반사 장벽'],gravity:['◉','#9e79ff','종말 붕괴'],comet:['⟐','#b5f5ff','혜성 편대'],prism:['✧','#c2a7ff','과열 성선'],chrono:['◎','#8fffe0','시간 파쇄'],arc:['☾','#69ffe0','귀환 파편']};
+  const augmentMeta={core:['✷','#eafcff','항성 연사'],blade:['◒','#7ce8ff','공간 절개'],ember:['✦','#ff7b9e','연쇄 성화'],bulwark:['◈','#74f2a7','반사 장벽'],gravity:['◉','#9e79ff','종말 붕괴'],comet:['⟐','#b5f5ff','혜성 편대'],prism:['✧','#c2a7ff','과열 성선'],chrono:['◎','#8fffe0','시간 파쇄'],arc:['☾','#69ffe0','포식 궤도'],ion:['⌁','#72f2ff','초전도 성좌망'],nova:['✹','#ffbd69','역행 초신성'],drone:['⌁','#8fffd0','낙성 표식'],rail:['━','#b7e7ff','궤도 파쇄'],spiral:['◎','#e3a7ff','역나선 은하'],mirror:['◇','#9fffe7','쌍면 반사']};
   const nebulaMeta={power:['▲','#ff7f9f','출력 보정','모든 피해 +10%'],haste:['◎','#8fffe0','시간 보정','공격 주기 -8%'],magnet:['⊕','#ffdc75','중력 보정','자석 범위 +45'],vital:['✚','#ff9eaf','생명 성운','최대 체력 +10%'],navigation:['➤','#9fb4ff','항행 성운','이동 속도 +8%'],photon:['✦','#83e9ff','광자 성운','투사체 속도 +12%, 크기 +8%'],ward:['⬢','#7df0c4','방벽 성운','더 강한 주기적 보호막 충전'],chain:['⌁','#ff83c4','연쇄 성운','연쇄 유지시간 +28%']};
   const apexMeta={chronophage:['⌛','#79ffe1','시간포식자의 잔향'],starforge:['☀','#ffb04e','종말 항성의 용광로'],lastconstellation:['✶','#b7c9ff','마지막 성좌의 가호']};
   const weaponMeta={core:['✷','#eafcff']};
@@ -26,9 +26,9 @@
     if(!Number.isFinite(state.weaponStacks?.core)||state.weaponStacks.core<1)state.weaponStacks.core=1;
   }
   function acquiredCount(){return Object.values(state.weaponStacks||{}).filter(v=>v>0).length+Object.values(state.passives||{}).filter(v=>v>0).length+Object.values(state.bossTraits||{}).filter(Boolean).length+Object.values(state.weaponAugments||{}).filter(Boolean).length+Object.values(state.nebulaBoosts||{}).filter(v=>v>0).length+Object.values(state.nebulaExtras||{}).filter(v=>v>0).length+Object.values(state.apexBoons||{}).filter(v=>v>0).length;}
-  let ledgerOpen=false,openedFromPause=false,resumeAfterLedger=false;
+  let ledgerOpen=false,openedFromPause=false,openedFromChoice=false,resumeAfterLedger=false;
   function hideLedger(){ledgerOpen=false;overlay.classList.add('hidden');overlay.querySelector('.ledger-detail-layer')?.classList.add('hidden');}
-  function syncVisibility(){if(ledgerOpen&&!['playing','paused'].includes(state.mode)){hideLedger();openedFromPause=false;}const settingsOpen=!document.querySelector('#settingsScreen')?.classList.contains('hidden'),visible=['playing','paused'].includes(state.mode)&&!settingsOpen&&!ui.hud.classList.contains('hidden');button.classList.toggle('hidden',!visible);pauseButton.classList.toggle('hidden',state.mode!=='paused'||settingsOpen);}
+  function syncVisibility(){if(ledgerOpen&&!['playing','paused','choice'].includes(state.mode)){hideLedger();openedFromPause=false;openedFromChoice=false;}const settingsOpen=!document.querySelector('#settingsScreen')?.classList.contains('hidden'),visible=['playing','paused','choice'].includes(state.mode)&&!settingsOpen&&!ui.hud.classList.contains('hidden');button.classList.toggle('hidden',!visible);pauseButton.classList.toggle('hidden',state.mode!=='paused'||settingsOpen);}
   window.syncAbilityLedgerVisibility=syncVisibility;
   function updateButton(){button.querySelector('b').textContent=l('open');button.querySelector('i').textContent=acquiredCount();pauseButton.textContent=l('title');syncVisibility();}
   function card(icon,color,name,desc,count='',data=''){return`<article class="ledger-card" ${data} style="--c:${color}"><div class="card-icon">${icon}</div>${count?`<span class="count">${count}</span>`:''}<h4>${name}</h4><p>${desc}</p></article>`;}
@@ -53,20 +53,20 @@
     overlay.dispatchEvent(new CustomEvent('stackfall:ledger-rendered'));
   }
   function openLedger(){
-    if(!['playing','paused'].includes(state.mode)||!document.querySelector('#settingsScreen')?.classList.contains('hidden'))return;
+    if(!['playing','paused','choice'].includes(state.mode)||!document.querySelector('#settingsScreen')?.classList.contains('hidden'))return;
     try{
-      const wasPaused=state.mode==='paused';renderLedger();ledgerOpen=true;openedFromPause=wasPaused;resumeAfterLedger=!wasPaused;state.mode='paused';
+      const originMode=state.mode,wasPaused=originMode==='paused',wasChoice=originMode==='choice';renderLedger();ledgerOpen=true;openedFromPause=wasPaused;openedFromChoice=wasChoice;resumeAfterLedger=originMode==='playing';if(wasChoice)ui.choice.classList.add('hidden');state.mode='paused';
       state.input.keys.clear();state.input.touchX=state.input.touchY=0;
       if(openedFromPause)ui.pauseScreen.classList.add('hidden');
       ui.touch.classList.add('hidden');overlay.classList.remove('hidden');syncVisibility();
     }catch(error){
-      hideLedger();if(openedFromPause)ui.pauseScreen.classList.remove('hidden');openedFromPause=false;
+      hideLedger();if(openedFromPause)ui.pauseScreen.classList.remove('hidden');if(openedFromChoice)ui.choice.classList.remove('hidden');openedFromPause=false;openedFromChoice=false;
       console.error('[Stackfall] ability ledger failed',error);syncVisibility();
     }
   }
-  function closeLedger(force=false){const restorePause=openedFromPause&&state.mode==='paused',resume=resumeAfterLedger;hideLedger();openedFromPause=false;resumeAfterLedger=false;if(!force){if(restorePause)ui.pauseScreen.classList.remove('hidden');else{if(resume&&state.mode==='paused')state.mode='playing';if(state.mode==='playing'&&compact())ui.touch.classList.remove('hidden');}updateHUD();}syncVisibility();}
+  function closeLedger(force=false){const restorePause=openedFromPause&&state.mode==='paused',restoreChoice=openedFromChoice&&state.mode==='paused',resume=resumeAfterLedger;hideLedger();openedFromPause=false;openedFromChoice=false;resumeAfterLedger=false;if(!force){if(restorePause)ui.pauseScreen.classList.remove('hidden');else if(restoreChoice){state.mode='choice';ui.choice.classList.remove('hidden');}else{if(resume&&state.mode==='paused')state.mode='playing';if(state.mode==='playing'&&compact())ui.touch.classList.remove('hidden');}updateHUD();}syncVisibility();}
   function toggleLedger(){ledgerOpen?closeLedger():openLedger();}
-  window.isAbilityLedgerOpen=()=>ledgerOpen;window.openAbilityLedger=openLedger;window.toggleAbilityLedger=toggleLedger;window.closeAbilityLedger=closeLedger;window.resetAbilityLedger=()=>{hideLedger();openedFromPause=false;resumeAfterLedger=false;queueMicrotask(updateButton);};
+  window.isAbilityLedgerOpen=()=>ledgerOpen;window.openAbilityLedger=openLedger;window.toggleAbilityLedger=toggleLedger;window.closeAbilityLedger=closeLedger;window.resetAbilityLedger=()=>{hideLedger();openedFromPause=false;openedFromChoice=false;resumeAfterLedger=false;queueMicrotask(updateButton);};
   button.onclick=toggleLedger;pauseButton.onclick=openLedger;$('#ledgerCloseX').onclick=()=>closeLedger();$('#ledgerCloseBtn').onclick=()=>closeLedger();
 
   const baseRenderLoadout=renderLoadout;
