@@ -98,8 +98,15 @@
     comet:{icon:'⟐',color:'#b5f5ff',name:{ko:'혜성의 잔상',en:'Comet Afterimage'},desc:{ko:'혜성 창 발사 시 약한 추격 창 추가 발사.',en:'Comet lances launch a weaker trailing lance.'}},
     prism:{icon:'✧',color:'#c2a7ff',name:{ko:'과열 성선',en:'Overheat Starline'},desc:{ko:'최대 집속 시 표적 중심의 교차 광선 두 줄과 용광 폭발.',en:'At maximum focus, emits two crossing beams and a furnace burst from the target.'}},
     chrono:{icon:'◎',color:'#8fffe0',name:{ko:'시간 파쇄',en:'Time Fracture'},desc:{ko:'시간 파동에 걸린 적 처치 시 파쇄 폭발.',en:'Enemies killed while time-locked shatter in an explosion.'}},
-    arc:{icon:'☾',color:'#69ffe0',name:{ko:'귀환 파편',en:'Return Shards'},desc:{ko:'귀환 중 적중 시 세 갈래 성운 파편 방출.',en:'Return hits release three nebula shards.'}}
+    arc:{icon:'☾',color:'#69ffe0',name:{ko:'포식 궤도',en:'Predatory Orbit'},desc:{ko:'귀환 타격이 파편을 방출하고, 부메랑으로 처치하면 무작위 적에게 추가 도약.',en:'Return hits release shards, and boomerang kills leap to a random enemy.'}},
+    ion:{icon:'⌁',color:'#72f2ff',name:{ko:'초전도 성좌망',en:'Superconductive Constellation'},desc:{ko:'첫 사슬 뒤에 약한 두 번째 사슬망이 즉시 전개.',en:'A weaker second chain network unfolds after the first cast.'}},
+    nova:{icon:'✹',color:'#ffbd69',name:{ko:'역행 초신성',en:'Reversing Supernova'},desc:{ko:'외곽 폭발 뒤 중심으로 적을 당기는 지연 붕괴파.',en:'A delayed collapse wave pulls enemies inward after the outer blast.'}},
+    drone:{icon:'⌁',color:'#8fffd0',name:{ko:'낙성 표식',en:'Falling-Star Mark'},desc:{ko:'편대가 가장 강한 표적에 지연 유성 타격을 호출.',en:'The squad calls a delayed meteor strike on the strongest target.'}},
+    rail:{icon:'━',color:'#b7e7ff',name:{ko:'궤도 파쇄',en:'Orbital Fracture'},desc:{ko:'주포 궤도 위 세 지점이 잠시 뒤 연쇄 폭발.',en:'Three points along the rail path detonate in sequence.'}},
+    spiral:{icon:'◎',color:'#e3a7ff',name:{ko:'역나선 은하',en:'Counter-Spiral Galaxy'},desc:{ko:'본 나선 뒤 반대 회전의 추적 나선이 한 차례 더 생성.',en:'A counter-rotating homing spiral follows the main galaxy.'}},
+    mirror:{icon:'◇',color:'#9fffe7',name:{ko:'쌍면 반사',en:'Twin-Face Reflection'},desc:{ko:'반사한 적 탄환마다 추가 반사광 두 갈래를 방출.',en:'Every reflected enemy shot emits two additional counter rays.'}}
   };
+  window.stackfallWeaponAugmentDefs=augmentDefs;
 
   state.bossTraits=state.bossTraits||{};state.weaponAugments=state.weaponAugments||{};state.rewardQueue=state.rewardQueue||[];let rewardChoiceLocked=false,pendingApexBundle=null;
   const rrReset=resetGame;resetGame=function(){rrReset();state.bossTraits={};state.weaponAugments={};state.rewardQueue=[];state.rewardTimers={stellar:6,aegis:8,chrono:7};state.rewardKills=0;rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');};
@@ -148,7 +155,7 @@
     if(useWeapon){const key=weapons[Math.floor(Math.random()*weapons.length)],next=weaponCount(key)+1;state.weaponStacks[key]=next;if(key!=='core'&&!state.weaponSlots.includes(key))state.weaponSlots.push(key);title=weaponText(key).name;desc=stackEffectText(key,next)?.desc||'장비 중첩 증가.';}
     else if(passives.length){const key=passives[Math.floor(Math.random()*passives.length)];applyMiniRewardPassive(key);title=passiveText(key).name;desc=passiveText(key).desc;}
     else{player.shield=Math.max(player.shield,18);desc='보호막 충전.';}
-    const kicker=document.querySelector('#resonanceKicker');if(kicker)kicker.textContent='중간보스 자동 보상';ui.resonanceTitle.textContent=title;ui.resonanceDesc.textContent=desc;ui.resonance.classList.remove('hidden');scheduleUiAction(2800,()=>ui.resonance.classList.add('hidden'));audio.pickup();renderLoadout();updateHUD();
+    const kicker=document.querySelector('#resonanceKicker');if(kicker)kicker.textContent='중간보스 자동 보상';ui.resonanceTitle.textContent=title;ui.resonanceDesc.textContent=desc;ui.resonance.classList.remove('hidden');scheduleUiAction(4800,()=>ui.resonance.classList.add('hidden'));audio.pickup();renderLoadout();updateHUD();
   }
 
   const rrKill=killEnemy;killEnemy=function(enemy,opts={}){

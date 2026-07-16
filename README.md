@@ -248,3 +248,11 @@ node scripts/browser-smoke.mjs --soak-ms=120000
 - 적 투사체의 진행 각도는 속도 벡터와 정확히 일치하며 렌더 회전이 이동 물리에 영향을 주지 않는다.
 - 잡몹 직사탄, 보스 방사탄, 지뢰, 공허탄, 시간탄, 항성탄, 성좌 파편은 서로 다른 실루엣을 사용한다.
 - 적 투사체와 플레이어는 프레임 끝점만 비교하지 않고 상대 이동 선분으로 충돌을 검사하므로, 플레이어가 가만히 있거나 프레임이 늦어져도 탄환이 몸을 관통하지 않는다.
+
+## Difficulty and weapon augment audit
+
+- The main menu offers Easy, Normal, and Hard. Normal is the reference balance; the current reference enemy health curve is reduced by 8% before difficulty modifiers.
+- Ranged enemies begin appearing later and their normal-mode share is capped below the previous value.
+- Every weapon, including Ion Chain, Nova Pulse, Meteor Drones, Rail, Galactic Spiral, and Reflector, has a dedicated boss-reward augment. Nebula Boomerang kills can leap from the defeated target to a random nearby enemy.
+- The ability ledger can be opened while a level-up choice is waiting. Combat remains paused and the same choice cards are restored on close.
+- Random upgrade notices remain visible two seconds longer, and off-screen event/elite indicators use stronger arrows plus compact solid nameplates.

@@ -756,3 +756,11 @@ PixiJS WebGL은 `generic`, `core`, `ember`, `comet`, `shard` 텍스처를 따로
 - 초월체는 시간 결정, 항성 화염탄, 성좌 파편을 각각 사용하며 공허 보스는 초승달형 공허탄을 사용한다.
 - 충돌은 투사체와 플레이어의 이전→현재 상대 이동 선분에 대한 연속 충돌 판정으로 처리한다. 정지 플레이어도 동일하게 판정한다.
 - 고부하에서는 그림자와 광미만 줄이고 투사체 실루엣과 충돌 반경은 바꾸지 않는다.
+
+## 18. Difficulty, reward readability, and augment identity
+
+Normal is the canonical tuning target. Its enemy health is 92% of the previous reference curve; Easy and Hard apply explicit health, damage, speed, and ranged-enemy modifiers around Normal. The difficulty selection is made on the main screen and persists locally.
+
+All 15 weapon families have one boss-reward augment with a weapon-specific behavior. The six late arsenal families use a second ion network, a reversing nova implosion, a marked meteor strike, delayed rail-path fractures, a counter-rotating spiral, and twin reflected rays. Nebula Boomerang's augment also launches a real curved ricochet from a defeated enemy toward a random nearby target.
+
+The ability ledger is a non-destructive inspection layer during level-up selection: opening it hides but does not reroll or consume the pending cards. Closing it restores the exact choice state.
