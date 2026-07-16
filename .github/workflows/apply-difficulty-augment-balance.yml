@@ -1,0 +1,61 @@
+name: Apply difficulty and augment balance
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: agent/difficulty-augment-balance
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply exact gameplay patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .tmp-balance/apply.py
+          node scripts/build-fingerprint.mjs
+      - name: Syntax and contract checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
+          node scripts/polish-contract-check.mjs
+          git diff --check
+      - name: Browser smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8000 >/tmp/stackfall-http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in {1..30}; do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep 1; done
+          node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/difficulty-augment-smoke.json
+      - name: Upload smoke diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: difficulty-augment-smoke-diagnostics
+          path: test-results
+          if-no-files-found: warn
+      - name: Commit verified implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'stackfall-maintenance-bot'
+          git config user.email 'stackfall-maintenance-bot@users.noreply.github.com'
+          git add README.md docs/GAME_DESIGN.md docs/WIKI.md index.html scripts/browser-smoke.mjs scripts/polish-contract-check.mjs src/ability-ledger-audit.js src/dark-cosmic-polish.js src/difficulty-augment-expansion.js src/map-event-expansion.js src/performance-guard.js src/reward-refinement.js src/systems-base.js src/systems.js src/weapons.js src/build-info.js
+          git diff --cached --check
+          git commit -m 'Add difficulty modes and complete weapon augments'
+          git push origin HEAD:agent/difficulty-augment-balance
