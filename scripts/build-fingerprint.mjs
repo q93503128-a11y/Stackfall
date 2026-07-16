@@ -5,9 +5,10 @@ import {fileURLToPath} from 'node:url';
 
 const ownPath=fileURLToPath(import.meta.url);
 export const BUILD_INFO_PATH='src/build-info.js';
+export const REQUIRED_PUBLIC_ASSETS=['googlea1b39620fd8849c7.html'];
 function sha256(buffer){return createHash('sha256').update(buffer).digest('hex');}
 function localAssets(index){
-  const paths=['index.html'];
+  const paths=['index.html',...REQUIRED_PUBLIC_ASSETS];
   for(const match of index.matchAll(/(?:src|href)=["']([^"']+)["']/g)){
     const value=match[1].split(/[?#]/,1)[0];
     if(!value||value===BUILD_INFO_PATH||/^(?:https?:|data:)/i.test(value)||value.startsWith('//'))continue;
