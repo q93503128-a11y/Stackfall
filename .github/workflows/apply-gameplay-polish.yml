@@ -8,6 +8,9 @@ on:
     paths:
       - '.tmp-polish/**'
       - '.github/workflows/apply-gameplay-polish.yml'
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
