@@ -1,8 +1,8 @@
 (function(){
   const locale=()=>GAME_SETTINGS?.language||'ko',compact=()=>matchMedia('(pointer:coarse)').matches||innerWidth<760;
   const P={
-    ko:{open:'능력',title:'획득 능력',subtitle:'현재 빌드와 실제 적용 효과 · I / Tab',close:'닫기',summary:'빌드 요약',weapons:'장비',passives:'패시브',traits:'보스 특수 패시브',augments:'무기 특수효과',nebula:'성운·우주선 개조',apex:'초월체 유산',none:'아직 획득하지 않음',stack:'중첩',active:'적용 중',damage:'피해 배율',cdr:'주기 감소',speed:'이동 속도',magnet:'자석 범위',crit:'치명타',reduction:'피해 감소',maxHp:'최대 체력',regen:'초당 재생',xp:'경험치 획득',projSpeed:'투사체 속도',projSize:'투사체 크기',pierce:'추가 관통',elite:'정예 피해',shield:'보호막 재충전',chainTime:'연쇄 유지',chainDamage:'연쇄 피해',orbit:'공전 속도'},
-    en:{open:'ABILITIES',title:'ACQUIRED ABILITIES',subtitle:'Current build and applied effects · I / Tab',close:'CLOSE',summary:'BUILD SUMMARY',weapons:'EQUIPMENT',passives:'PASSIVES',traits:'BOSS TRAITS',augments:'WEAPON AUGMENTS',nebula:'NEBULA & STARSHIP MODS',apex:'APEX LEGACIES',none:'Nothing acquired yet',stack:'STACK',active:'ACTIVE',damage:'Damage',cdr:'Cooldown reduction',speed:'Move speed',magnet:'Pickup radius',crit:'Critical',reduction:'Damage reduction',maxHp:'Max health',regen:'Health regen / s',xp:'Experience gain',projSpeed:'Projectile speed',projSize:'Projectile size',pierce:'Extra pierce',elite:'Elite damage',shield:'Shield recharge',chainTime:'Chain duration',chainDamage:'Chain damage',orbit:'Orbit speed'}
+    ko:{open:'능력',title:'획득 능력',subtitle:'현재 빌드와 실제 적용 효과 · I / Tab',close:'닫기',summary:'빌드 요약',weapons:'장비',passives:'패시브',traits:'보스 특수 패시브',augments:'무기 특수효과',nebula:'성운·우주선 개조',apex:'초월체 유산',none:'아직 획득하지 않음',stack:'중첩',active:'적용 중',damage:'피해 배율',cdr:'주기 감소',speed:'이동 속도',magnet:'자석 범위',crit:'치명타',reduction:'피해 감소',maxHp:'최대 체력',regen:'초당 재생',xp:'경험치 획득',projSpeed:'투사체 속도',projSize:'투사체 크기',pierce:'추가 관통',elite:'정예 피해',shield:'보호막 재충전',chainTime:'연쇄 유지',chainDamage:'연쇄 피해',orbit:'공전 속도',copy:'공격 복제 확률'},
+    en:{open:'ABILITIES',title:'ACQUIRED ABILITIES',subtitle:'Current build and applied effects · I / Tab',close:'CLOSE',summary:'BUILD SUMMARY',weapons:'EQUIPMENT',passives:'PASSIVES',traits:'BOSS TRAITS',augments:'WEAPON AUGMENTS',nebula:'NEBULA & STARSHIP MODS',apex:'APEX LEGACIES',none:'Nothing acquired yet',stack:'STACK',active:'ACTIVE',damage:'Damage',cdr:'Cooldown reduction',speed:'Move speed',magnet:'Pickup radius',crit:'Critical',reduction:'Damage reduction',maxHp:'Max health',regen:'Health regen / s',xp:'Experience gain',projSpeed:'Projectile speed',projSize:'Projectile size',pierce:'Extra pierce',elite:'Elite damage',shield:'Shield recharge',chainTime:'Chain duration',chainDamage:'Chain damage',orbit:'Orbit speed',copy:'Attack copy chance'}
   };
   const l=k=>(P[locale()]||P.en)[k]||P.en[k]||k;
   const traitMeta={stellar:['✹','#ffe49a','항성 왕관','주기적으로 가까운 적들을 관통하는 별빛 광선.'],aegis:['⬢','#83ffd1','공허의 가호','주기적으로 강력한 보호막 충전.'],singularity:['✺','#d86cff','특이점 혈맥','처치 누적 시 적을 압축하는 붕괴성 특이점 생성.'],eclipse:['◒','#ff76bd','일식 동력로','상시 피해 증가와 저체력 추가 증폭.'],chrono:['◎','#8fffe0','찰나의 꽃','주기적으로 주변 적의 시간 정지.'],harvest:['✦','#ff9a9a','별의 수확','처치 시 회복, 정예 처치 시 대량 회복.']};
@@ -26,7 +26,7 @@
     if(!Number.isFinite(state.weaponStacks?.core)||state.weaponStacks.core<1)state.weaponStacks.core=1;
   }
   function acquiredCount(){return Object.values(state.weaponStacks||{}).filter(v=>v>0).length+Object.values(state.passives||{}).filter(v=>v>0).length+Object.values(state.bossTraits||{}).filter(Boolean).length+Object.values(state.weaponAugments||{}).filter(Boolean).length+Object.values(state.nebulaBoosts||{}).filter(v=>v>0).length+Object.values(state.nebulaExtras||{}).filter(v=>v>0).length+Object.values(state.apexBoons||{}).filter(v=>v>0).length;}
-  let ledgerOpen=false,openedFromPause=false;
+  let ledgerOpen=false,openedFromPause=false,resumeAfterLedger=false;
   function hideLedger(){ledgerOpen=false;overlay.classList.add('hidden');overlay.querySelector('.ledger-detail-layer')?.classList.add('hidden');}
   function syncVisibility(){if(ledgerOpen&&!['playing','paused'].includes(state.mode)){hideLedger();openedFromPause=false;}const settingsOpen=!document.querySelector('#settingsScreen')?.classList.contains('hidden'),visible=['playing','paused'].includes(state.mode)&&!settingsOpen&&!ui.hud.classList.contains('hidden');button.classList.toggle('hidden',!visible);pauseButton.classList.toggle('hidden',state.mode!=='paused'||settingsOpen);}
   window.syncAbilityLedgerVisibility=syncVisibility;
@@ -38,10 +38,10 @@
   function apexDescription(key,stack){if(key==='chronophage')return`중첩마다 시간 정지 주기 감소, 범위·지속 증가. 현재 ${Math.max(14,30-stack*3)}초 주기.`;if(key==='starforge')return`중첩마다 항성 폭발 주기·범위·화력 증가. 현재 ${Math.max(10,22-stack*2)}초 주기.`;return`중첩마다 성좌 방벽 주기와 보호막량 증가. 현재 ${Math.max(7,13-stack*1.25).toFixed(1)}초 주기.`;}
   function renderLedger(){
     reconcileWeaponSlots();updateButton();$('#ledgerKicker').textContent=l('summary');$('#ledgerTitle').textContent=l('title');$('#ledgerSubtitle').textContent=l('subtitle');$('#ledgerCloseBtn span').textContent=l('close');
-    const regen=stat('regen')*.625,projSpeed=(1+stat('projectileSpeed')*.10)*(1+(state.nebulaExtras?.photon||0)*.12)-1,projSize=(1+stat('projectileSize')*.10)*(1+(state.nebulaExtras?.photon||0)*.08)-1;
+    const regen=stat('regen')*.625,projSpeed=(1+stat('projectileSpeed')*.10)*(1+(state.nebulaExtras?.photon||0)*.12)-1,projSize=(1+stat('projectileSize')*.10)*(1+(state.nebulaExtras?.photon||0)*.08)-1,echoStacks=stat('echo'),copyChance=echoStacks?Math.min(.60,echoStacks*.075):0;
     const chainTime=(typeof chainDurationMultiplier==='function'?chainDurationMultiplier():(1+stat('chain')*.25)*(1+(state.nebulaExtras?.chain||0)*.28))-1;
     const chainDamage=typeof chainDamageBonus==='function'?chainDamageBonus():Math.min(10,Math.floor((state.combo||0)/5))*.03;
-    const stats=[[l('summary'),`LV.${state.level} · ${state.kills} KILLS`,'hero'],[l('damage'),`×${damageMult().toFixed(2)}`],[l('cdr'),pct(Math.max(0,1-hasteMult()))],[l('speed'),Math.round(player.speed*(1+stat('speed')*.09)*(1+(state.nebulaExtras?.navigation||0)*.08))],[l('magnet'),Math.round(magnetRange())],[l('crit'),pct(clamp(.05+stat('crit')*.06,.05,1))],[l('reduction'),pct(damageReduction())],[l('maxHp'),Math.round(player.maxHp)],[l('regen'),regen.toFixed(1)],[l('xp'),pct(Math.max(0,xpMult()-1))],[l('projSpeed'),pct(projSpeed)],[l('projSize'),pct(projSize)],[l('pierce'),`+${stat('pierce')}`],[l('elite'),pct(stat('eliteHunter')*.12)],[l('shield'),shieldText()],[l('chainTime'),pct(chainTime)],[l('chainDamage'),pct(chainDamage)],[l('orbit'),pct(stat('projectileSpeed')*.08)]];
+    const stats=[[l('summary'),`LV.${state.level} · ${state.kills} KILLS`,'hero'],[l('damage'),`×${damageMult().toFixed(2)}`],[l('cdr'),pct(Math.max(0,1-hasteMult()))],[l('speed'),Math.round(player.speed*(1+stat('speed')*.09)*(1+(state.nebulaExtras?.navigation||0)*.08))],[l('magnet'),Math.round(magnetRange())],[l('crit'),pct(clamp(.05+stat('crit')*.06,.05,1))],[l('reduction'),pct(damageReduction())],[l('maxHp'),Math.round(player.maxHp)],[l('regen'),regen.toFixed(1)],[l('xp'),pct(Math.max(0,xpMult()-1))],[l('projSpeed'),pct(projSpeed)],[l('projSize'),pct(projSize)],[l('pierce'),`+${stat('pierce')}`],[l('elite'),pct(stat('eliteHunter')*.12)],[l('shield'),shieldText()],[l('chainTime'),pct(chainTime)],[l('chainDamage'),pct(chainDamage)],[l('orbit'),pct(stat('projectileSpeed')*.08)],[l('copy'),`${pct(copyChance)}${echoStacks>=8?' · 5회마다 확정':''}`]];
     $('#ledgerSummary').innerHTML=stats.map(([n,v,c])=>`<div class="ledger-stat ${c||''}"><small>${n}</small><b>${v}</b></div>`).join('');
     const weapons=Object.entries(state.weaponStacks||{}).filter(([,v])=>v>0).map(([k,v])=>{const w=WEAPONS[k],m=w?[w.icon,w.color]:(weaponMeta[k]||['✦','#aeeeff']),t=ledgerWeaponText(k),e=stackEffectText(k,v),effect=[e.name,e.desc].filter(Boolean).join(' · ');return card(m[0],m[1],t.name,effect||t.desc,`×${v}`,`data-weapon-key="${k}" tabindex="0"`);});
     const passives=Object.entries(state.passives||{}).filter(([,v])=>v>0).map(([k,v])=>{const p=PASSIVES[k]||{icon:'✦',color:'#ffd98f'},t=passiveText(k);return card(p.icon,p.color,t.name,t.desc,`×${v}`,`data-passive-key="${k}" tabindex="0"`);});
@@ -55,7 +55,7 @@
   function openLedger(){
     if(!['playing','paused'].includes(state.mode)||!document.querySelector('#settingsScreen')?.classList.contains('hidden'))return;
     try{
-      renderLedger();ledgerOpen=true;openedFromPause=state.mode==='paused';
+      const wasPaused=state.mode==='paused';renderLedger();ledgerOpen=true;openedFromPause=wasPaused;resumeAfterLedger=!wasPaused;state.mode='paused';
       state.input.keys.clear();state.input.touchX=state.input.touchY=0;
       if(openedFromPause)ui.pauseScreen.classList.add('hidden');
       ui.touch.classList.add('hidden');overlay.classList.remove('hidden');syncVisibility();
@@ -64,9 +64,9 @@
       console.error('[Stackfall] ability ledger failed',error);syncVisibility();
     }
   }
-  function closeLedger(force=false){const restorePause=openedFromPause&&state.mode==='paused';hideLedger();openedFromPause=false;if(!force){if(restorePause)ui.pauseScreen.classList.remove('hidden');else if(state.mode==='playing'&&compact())ui.touch.classList.remove('hidden');updateHUD();}syncVisibility();}
+  function closeLedger(force=false){const restorePause=openedFromPause&&state.mode==='paused',resume=resumeAfterLedger;hideLedger();openedFromPause=false;resumeAfterLedger=false;if(!force){if(restorePause)ui.pauseScreen.classList.remove('hidden');else{if(resume&&state.mode==='paused')state.mode='playing';if(state.mode==='playing'&&compact())ui.touch.classList.remove('hidden');}updateHUD();}syncVisibility();}
   function toggleLedger(){ledgerOpen?closeLedger():openLedger();}
-  window.isAbilityLedgerOpen=()=>ledgerOpen;window.openAbilityLedger=openLedger;window.toggleAbilityLedger=toggleLedger;window.closeAbilityLedger=closeLedger;window.resetAbilityLedger=()=>{hideLedger();openedFromPause=false;queueMicrotask(updateButton);};
+  window.isAbilityLedgerOpen=()=>ledgerOpen;window.openAbilityLedger=openLedger;window.toggleAbilityLedger=toggleLedger;window.closeAbilityLedger=closeLedger;window.resetAbilityLedger=()=>{hideLedger();openedFromPause=false;resumeAfterLedger=false;queueMicrotask(updateButton);};
   button.onclick=toggleLedger;pauseButton.onclick=openLedger;$('#ledgerCloseX').onclick=()=>closeLedger();$('#ledgerCloseBtn').onclick=()=>closeLedger();
 
   const baseRenderLoadout=renderLoadout;
