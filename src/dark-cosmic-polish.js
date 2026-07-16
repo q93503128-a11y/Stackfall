@@ -50,13 +50,8 @@
 
   const baseStartRealmTransition=startRealmTransition;
   startRealmTransition=function startTaggedRealmTransition(target,options={}){
-    baseStartRealmTransition(target,options);if(state.realmTransition){state.realmTransition.apex=!!options.apex;state.realmTransition.form=options.form||null;state.realmTransition.subtitle=options.subtitle||state.realmTransition.subtitle;}
-    if(options.apex)audio.apexIntro?.(options.form);
-  };
-  beginApexEncounter=function beginCinematicApexEncounter(){
-    if(state.apexActiveId||state.pendingApexForm||state.realmTransition)return false;
-    const form=bossBag('apex'),subtitles={chronophage:'TIME HAS BEGUN TO FEED',starforge:'A DEAD SUN IGNITES',lastconstellation:'THE SKY REMEMBERS ITS LAST NAME'};state.pendingApexForm=form;clearFieldForApex();const title=bossName(form);
-    startRealmTransition(apexTheme(form),{duration:4.25,title,subtitle:subtitles[form],apex:true,form,onMidpoint:()=>{const e=spawnEnemy('apex');if(e){e.eliteForm=form;e.name=title;const s=BOSS_STATS[form];e.color=s.color;e.apexForm=form;e.apexElapsed=0;state.apexActiveId=e.id;state.apexCount++;state.nextApexAt=(state.apexCount+1)*APEX_INTERVAL_SECONDS;state.camera.shake=16;state.flash=.28;}},onComplete:()=>{state.pendingApexForm=null;}});return true;
+    const apex=options.apex??String(target||'').startsWith('apex-'),tagged={...options,apex,owner:options.owner||(apex?'apex':null)};
+    const serial=baseStartRealmTransition(target,tagged);if(apex)audio.apexIntro?.(tagged.form);return serial;
   };
   const baseDrawRealmCinematicOverlay=drawRealmCinematicOverlay;
   function drawApexSigil(form,x,y,t,p,color){
