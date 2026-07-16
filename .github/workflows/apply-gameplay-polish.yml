@@ -1,0 +1,60 @@
+name: Apply Stackfall gameplay polish
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent/stackfall-apex-pacing-ui-polish
+    paths:
+      - '.tmp-polish/**'
+      - '.github/workflows/apply-gameplay-polish.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Rebuild and apply exact patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .tmp-polish/part* | base64 -d > /tmp/apply-gameplay-polish.mjs
+          node --check /tmp/apply-gameplay-polish.mjs
+          node /tmp/apply-gameplay-polish.mjs
+          node scripts/build-fingerprint.mjs
+      - name: Check source and gameplay contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
+          node scripts/polish-contract-check.mjs
+          test -s summ.png
+      - name: Browser smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8000 >/tmp/stackfall-http.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in {1..30}; do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep 1; done
+          node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/polish-smoke.json
+      - name: Commit verified implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .tmp-polish .github/workflows/apply-gameplay-polish.yml
+          git config user.name 'stackfall-maintenance-bot'
+          git config user.email 'stackfall-maintenance-bot@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'Polish combat pacing and reward UX'
+          git push origin HEAD:agent/stackfall-apex-pacing-ui-polish
