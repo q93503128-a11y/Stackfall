@@ -1,8 +1,8 @@
 name: Tune eclipse health and lag guard
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [agent/eclipse-health-performance-tuning]
 
 permissions:
   contents: write
