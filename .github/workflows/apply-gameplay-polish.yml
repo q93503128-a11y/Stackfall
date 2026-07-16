@@ -81,10 +81,20 @@ jobs:
       - name: Check source and gameplay contracts
         shell: bash
         run: |
-          set -euo pipefail
-          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
-          node scripts/polish-contract-check.mjs
-          test -s summ.png
+          set -o pipefail
+          {
+            set -euo pipefail
+            while IFS= read -r -d '' file; do echo "checking $file"; node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
+            node scripts/polish-contract-check.mjs
+            test -s summ.png
+          } 2>&1 | tee /tmp/polish-contract.log
+      - name: Upload contract failure log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: polish-contract-failure
+          path: /tmp/polish-contract.log
+          if-no-files-found: error
       - name: Browser smoke
         shell: bash
         run: |
