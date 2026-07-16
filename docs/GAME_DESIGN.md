@@ -764,3 +764,11 @@ Normal is the canonical tuning target. Its enemy health is 92% of the previous r
 All 15 weapon families have one boss-reward augment with a weapon-specific behavior. The six late arsenal families use a second ion network, a reversing nova implosion, a marked meteor strike, delayed rail-path fractures, a counter-rotating spiral, and twin reflected rays. Nebula Boomerang's augment also launches a real curved ricochet from a defeated enemy toward a random nearby target.
 
 The ability ledger is a non-destructive inspection layer during level-up selection: opening it hides but does not reroll or consume the pending cards. Closing it restores the exact choice state.
+
+## 후반 성장곡선 및 지속 피해 규칙
+
+- 0~4분에는 추가 후반 보정을 적용하지 않는다. 4분 이후 위협 단계와 경과 시간에 따라 적 피해·속도를 점진적으로 높여 중후반 난도를 유지한다.
+- 어려움 난이도는 적 체력·피해 125%, 속도 110%, 원거리 비중 122%를 사용한다.
+- 부메랑은 왕복 경로의 서로 다른 적을 모두 타격하며 5중첩 잔광은 실제 지속 피해와 저강도 파동으로 표시한다.
+- 혜성 창 5중첩 잔광 항로는 0.17초 간격의 실제 지속 피해를 남기고 입자 궤적으로 판독한다.
+- 회복 강화는 획득 경로와 무관하게 동일한 중첩 보정을 적용한다. 재생 장갑은 중첩당 최대 체력 24와 즉시 회복 40, 자가 복원은 4초마다 중첩당 총 3.5 회복에 해당한다.

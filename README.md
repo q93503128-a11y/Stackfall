@@ -256,3 +256,12 @@ node scripts/browser-smoke.mjs --soak-ms=120000
 - Every weapon, including Ion Chain, Nova Pulse, Meteor Drones, Rail, Galactic Spiral, and Reflector, has a dedicated boss-reward augment. Nebula Boomerang kills can leap from the defeated target to a random nearby enemy.
 - The ability ledger can be opened while a level-up choice is waiting. Combat remains paused and the same choice cards are restored on close.
 - Random upgrade notices remain visible two seconds longer, and off-screen event/elite indicators use stronger arrows plus compact solid nameplates.
+
+### 후반 위협·프리즘·선택 조작
+
+- 성좌 프리즘은 0.25초 기본 피해 틱을 사용하며 공격 주기 감소가 틱 간격을 줄인다. 최대 출력 배율을 낮추고 공격 펄스 사이에 시각적 공백을 둔다.
+- 일반 무기 피해는 프리즘을 제외하고 8% 상향하며, 4분 이후 위협 단계에 따라 적 피해와 이동 속도가 추가 상승한다.
+- 이벤트 능력 선택지는 전투가 멈추므로 자동 선택 제한시간을 사용하지 않는다.
+- 레벨업·보스 보상·이벤트 선택지는 숫자 1·2·3으로 선택할 수 있고 카드에 단축키를 표시한다.
+- 다중 투영 코어는 최대 2중첩의 이벤트 전용 패시브로 투사체와 공전 공격체 수를 늘린다. 일반 레벨업 풀에는 등장하지 않는다.
+- 초월체 등장 간격은 600초(10분)다.
