@@ -33,9 +33,9 @@ jobs:
           set -o pipefail
           {
             set -euo pipefail
-            cat .tmp-polish/part* | base64 -d > /tmp/apply-gameplay-polish.mjs
-            node --check /tmp/apply-gameplay-polish.mjs
-            node /tmp/apply-gameplay-polish.mjs
+            cat .tmp-polish/part* | base64 -d > .tmp-polish/apply-gameplay-polish.mjs
+            node --check .tmp-polish/apply-gameplay-polish.mjs
+            node .tmp-polish/apply-gameplay-polish.mjs
             node scripts/build-fingerprint.mjs
           } 2>&1 | tee /tmp/apply-polish.log
       - name: Upload application failure log
