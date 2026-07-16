@@ -34,6 +34,16 @@ jobs:
           {
             set -euo pipefail
             cat .tmp-polish/part* | base64 -d > .tmp-polish/apply-gameplay-polish.mjs
+            python3 - <<'PY'
+          from pathlib import Path
+          path=Path('.tmp-polish/apply-gameplay-polish.mjs')
+          text=path.read_text()
+          old=r"/  function drawVaultGate\(p,t\)\{[\s\S]*?\n  \}\n  function drawCrashBeacon/"
+          new=r"/  function drawVaultGate\(p,t\)\{[\s\S]*?\r?\n  \}\r?\n  function drawCrashBeacon/"
+          if old not in text:
+              raise SystemExit('vault pattern literal missing')
+          path.write_text(text.replace(old,new,1))
+          PY
             node --check .tmp-polish/apply-gameplay-polish.mjs
             node .tmp-polish/apply-gameplay-polish.mjs
             node scripts/build-fingerprint.mjs
