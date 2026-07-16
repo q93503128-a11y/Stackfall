@@ -2,10 +2,15 @@
   const isCompact=()=>matchMedia('(pointer:coarse)').matches||innerWidth<760;
 
   function drawVaultGate(p,t){
-    ctx.save();ctx.translate(p.x,p.y);const pulse=.84+.16*Math.sin(t*2.4);ctx.shadowBlur=28;ctx.shadowColor='#75eaff';
-    const aura=ctx.createRadialGradient(0,0,8,0,0,70);aura.addColorStop(0,'rgba(150,255,255,.30)');aura.addColorStop(.48,'rgba(55,177,255,.12)');aura.addColorStop(1,'rgba(25,100,255,0)');ctx.fillStyle=aura;ctx.beginPath();ctx.arc(0,0,70,0,TAU);ctx.fill();
-    for(let ring=0;ring<2;ring++){ctx.save();ctx.rotate((ring?-.16:.11)*t);ctx.strokeStyle=ring?'rgba(126,184,255,.48)':'rgba(137,255,244,.76)';ctx.lineWidth=2-ring*.4;ctx.beginPath();for(let i=0;i<6;i++){const a=i/6*TAU-Math.PI/2,r=44-ring*10,x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.stroke();for(let i=0;i<6;i++){const a=i/6*TAU-Math.PI/2;ctx.fillStyle=i%2?'#8fefff':'#d7ffff';ctx.beginPath();ctx.arc(Math.cos(a)*(44-ring*10),Math.sin(a)*(44-ring*10),2.2,0,TAU);ctx.fill();}ctx.restore();}
-    ctx.fillStyle='rgba(2,12,30,.94)';ctx.strokeStyle='#b7fbff';ctx.lineWidth=2.2;ctx.beginPath();ctx.roundRect(-19,-29,38,58,9);ctx.fill();ctx.stroke();ctx.fillStyle=`rgba(117,234,255,${.42+.25*pulse})`;ctx.fillRect(-4,-22,8,44);ctx.strokeStyle='rgba(255,255,255,.78)';ctx.beginPath();ctx.moveTo(0,-16);ctx.lineTo(0,16);ctx.stroke();ctx.restore();
+    ctx.save();ctx.translate(p.x,p.y);const pulse=.88+.12*Math.sin(t*1.7);ctx.shadowBlur=18;ctx.shadowColor='#75eaff';
+    const aura=ctx.createRadialGradient(0,0,12,0,0,84);aura.addColorStop(0,'rgba(117,234,255,.20)');aura.addColorStop(.58,'rgba(43,119,180,.08)');aura.addColorStop(1,'rgba(20,62,120,0)');ctx.fillStyle=aura;ctx.fillRect(-88,-88,176,176);
+    ctx.save();ctx.rotate(t*.045);ctx.strokeStyle='rgba(137,255,244,.34)';ctx.lineWidth=1.3;ctx.setLineDash([10,8]);ctx.beginPath();ctx.arc(0,0,65,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+    ctx.fillStyle='rgba(3,15,31,.96)';ctx.strokeStyle='#75eaff';ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(-42,-50);ctx.lineTo(42,-50);ctx.lineTo(52,-38);ctx.lineTo(52,44);ctx.lineTo(38,56);ctx.lineTo(-38,56);ctx.lineTo(-52,44);ctx.lineTo(-52,-38);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='rgba(10,39,62,.96)';for(const side of[-1,1]){ctx.fillRect(side*31-8,-36,16,76);ctx.strokeStyle='rgba(190,251,255,.62)';for(let row=0;row<4;row++){ctx.strokeRect(side*31-6,-31+row*18,12,11);}}
+    ctx.fillStyle='rgba(1,8,20,.98)';ctx.strokeStyle='#c5fbff';ctx.lineWidth=1.8;ctx.beginPath();ctx.roundRect(-20,-35,40,74,5);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='rgba(117,234,255,'+(.55+.28*pulse)+')';ctx.lineWidth=2;for(let row=0;row<3;row++){ctx.beginPath();ctx.moveTo(-12,-21+row*20);ctx.lineTo(12,-21+row*20);ctx.stroke();}
+    ctx.fillStyle='#eaffff';ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(8,0);ctx.lineTo(0,8);ctx.lineTo(-8,0);ctx.closePath();ctx.fill();
+    for(let i=0;i<6;i++){const a=i*TAU/6-t*.11,rr=69+(i%2)*5;ctx.save();ctx.translate(Math.cos(a)*rr,Math.sin(a)*rr);ctx.rotate(-a);ctx.fillStyle=i%2?'#86dfff':'#d7ffff';ctx.fillRect(-4,-2,8,4);ctx.restore();}ctx.restore();
   }
   function drawCrashBeacon(p,t){
     ctx.save();ctx.translate(p.x,p.y);ctx.rotate(-.18);ctx.shadowBlur=24;ctx.shadowColor='#ff8657';
@@ -51,7 +56,7 @@
   beginApexEncounter=function beginCinematicApexEncounter(){
     if(state.apexActiveId||state.pendingApexForm||state.realmTransition)return false;
     const form=bossBag('apex'),subtitles={chronophage:'TIME HAS BEGUN TO FEED',starforge:'A DEAD SUN IGNITES',lastconstellation:'THE SKY REMEMBERS ITS LAST NAME'};state.pendingApexForm=form;clearFieldForApex();const title=bossName(form);
-    startRealmTransition(apexTheme(form),{duration:4.25,title,subtitle:subtitles[form],apex:true,form,onMidpoint:()=>{const e=spawnEnemy('apex');if(e){e.eliteForm=form;e.name=title;const s=BOSS_STATS[form];e.color=s.color;e.apexForm=form;state.apexActiveId=e.id;state.apexCount++;state.nextApexAt=(state.apexCount+1)*APEX_INTERVAL_SECONDS;state.camera.shake=16;state.flash=.28;}},onComplete:()=>{state.pendingApexForm=null;}});return true;
+    startRealmTransition(apexTheme(form),{duration:4.25,title,subtitle:subtitles[form],apex:true,form,onMidpoint:()=>{const e=spawnEnemy('apex');if(e){e.eliteForm=form;e.name=title;const s=BOSS_STATS[form];e.color=s.color;e.apexForm=form;e.apexElapsed=0;state.apexActiveId=e.id;state.apexCount++;state.nextApexAt=(state.apexCount+1)*APEX_INTERVAL_SECONDS;state.camera.shake=16;state.flash=.28;}},onComplete:()=>{state.pendingApexForm=null;}});return true;
   };
   const baseDrawRealmCinematicOverlay=drawRealmCinematicOverlay;
   function drawApexSigil(form,x,y,t,p,color){

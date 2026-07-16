@@ -45,7 +45,7 @@
   }
 
   const rrOldToggle=togglePause;
-  togglePause=function(force){if(state.mode==='bossReward')return;return rrOldToggle(force);};
+  togglePause=function(force){if(['bossReward','apexReward'].includes(state.mode))return;return rrOldToggle(force);};
 
   createGravityWells=function(gravN,echoed=false){
     audio.weapon?.('gravity',echoed);const target=nearestEnemy(player.x,player.y),count=gravN>=6?2:1;
@@ -73,11 +73,17 @@
     .reward-card h3{font-size:21px;margin:0 0 8px}.reward-card p{margin:0;color:#abb5d3;font-size:12px;line-height:1.65}
     @media(max-width:720px){.reward-cards{grid-template-columns:1fr;max-height:65vh;overflow:auto}.reward-card{min-height:155px}.reward-card .reward-icon{margin:14px 0;font-size:34px}}
   `;document.head.appendChild(rewardStyle);
+  const rewardThemeStyle=document.createElement('style');rewardThemeStyle.textContent=`
+    .reward-shell{position:relative;padding:28px;border:1px solid rgba(210,222,255,.18);clip-path:polygon(0 18px,18px 0,calc(100% - 18px) 0,100% 18px,100% calc(100% - 18px) 100%,18px 100%,0 calc(100% - 18px));background:radial-gradient(circle at 50% 0%,rgba(135,116,255,.15),transparent 42%),linear-gradient(155deg,rgba(14,19,48,.97),rgba(3,5,16,.99));box-shadow:0 38px 120px rgba(0,0,0,.68),inset 0 0 90px rgba(120,130,255,.06)}
+    .reward-shell:before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.05);pointer-events:none}.reward-card{border-radius:6px;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));box-shadow:inset 3px 0 0 var(--reward-color),0 22px 58px rgba(0,0,0,.46)}
+    #apexRewardScreen{z-index:70;background:radial-gradient(circle at 50% 38%,rgba(255,211,105,.18),rgba(1,2,9,.98) 68%);backdrop-filter:blur(12px)}.apex-reward-shell{width:min(1120px,96vw);padding:30px;position:relative;border:1px solid rgba(255,234,169,.28);clip-path:polygon(50% 0,100% 12%,96% 100%,4% 100%,0 12%);background:radial-gradient(circle at 50% 0%,rgba(255,205,105,.14),transparent 40%),linear-gradient(155deg,rgba(25,20,43,.98),rgba(3,4,13,.99));box-shadow:0 40px 130px rgba(0,0,0,.74),inset 0 0 110px rgba(255,194,82,.06)}.apex-reward-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.apex-reward-card{min-height:255px;padding:22px;text-align:left;color:#fff;border:1px solid color-mix(in srgb,var(--apex-color) 48%,rgba(255,255,255,.08));background:linear-gradient(150deg,color-mix(in srgb,var(--apex-color) 12%,#151124),#050611 72%);clip-path:polygon(50% 0,100% 18%,93% 100%,7% 100%,0 18%);cursor:pointer;transition:.18s}.apex-reward-card:hover{transform:translateY(-6px);box-shadow:0 0 38px color-mix(in srgb,var(--apex-color) 20%,transparent)}.apex-reward-card span{font-size:42px;color:var(--apex-color);text-shadow:0 0 25px var(--apex-color)}.apex-reward-card h3{font-size:20px;margin:25px 0 9px}.apex-reward-card p{color:#aeb6d1;font-size:12px;line-height:1.65}@media(max-width:720px){.apex-reward-shell{padding:19px 13px}.apex-reward-cards{grid-template-columns:1fr;max-height:66vh;overflow:auto}.apex-reward-card{min-height:145px}}
+  `;document.head.appendChild(rewardThemeStyle);
+  const apexRewardScreen=document.createElement('section');apexRewardScreen.id='apexRewardScreen';apexRewardScreen.className='overlay hidden';apexRewardScreen.innerHTML='<div class="apex-reward-shell"><div class="choice-head"><p>APEX LEGACY</p><h2 id="apexRewardTitle">초월체 유산</h2><span>하나의 유산을 계승하세요</span></div><div id="apexRewardCards" class="apex-reward-cards"></div></div>';document.querySelector('#app').appendChild(apexRewardScreen);
 
   const traitDefs={
     stellar:{icon:'✹',color:'#ffe49a',name:{ko:'항성 왕관',en:'Stellar Crown'},desc:{ko:'주기적으로 가까운 적들을 관통하는 별빛 광선.',en:'Periodically pierces nearby enemies with stellar rays.'}},
     aegis:{icon:'⬢',color:'#83ffd1',name:{ko:'공허의 가호',en:'Void Aegis'},desc:{ko:'주기적인 대형 보호막 충전.',en:'Periodically charges a powerful shield.'}},
-    singularity:{icon:'◉',color:'#a98cff',name:{ko:'특이점 혈맥',en:'Singularity Vein'},desc:{ko:'일정 처치마다 적을 빨아들이는 소형 특이점 생성.',en:'Creates a small singularity after a number of kills.'}},
+    singularity:{icon:'◉',color:'#a98cff',name:{ko:'특이점 혈맥',en:'Singularity Vein'},desc:{ko:'15처치마다 탄환과 적의 시간을 늦추고 붕괴 파편을 방출하는 특이점 생성.',en:'Every 15 kills creates a singularity that slows shots and enemies, then bursts into collapse shards.'}},
     eclipse:{icon:'◒',color:'#ff76bd',name:{ko:'일식 동력로',en:'Eclipse Reactor'},desc:{ko:'상시 피해 증가와 낮은 체력에서의 추가 증폭.',en:'Permanent damage gain with an extra low-health surge.'}},
     chrono:{icon:'◎',color:'#8fffe0',name:{ko:'찰나의 꽃',en:'Chrono Bloom'},desc:{ko:'주기적으로 주변 적의 시간을 정지시키는 파동.',en:'Periodically releases a wave that halts nearby enemies.'}},
     harvest:{icon:'✦',color:'#ff9a9a',name:{ko:'별의 수확',en:'Star Harvest'},desc:{ko:'처치 시 체력 회복, 정예 처치 시 대량 회복.',en:'Restores health on kills and greatly on elite kills.'}}
@@ -95,9 +101,9 @@
   };
 
   state.bossTraits=state.bossTraits||{};state.weaponAugments=state.weaponAugments||{};state.rewardQueue=state.rewardQueue||[];let rewardChoiceLocked=false;
-  const rrReset=resetGame;resetGame=function(){rrReset();state.bossTraits={};state.weaponAugments={};state.rewardQueue=[];state.rewardTimers={stellar:6,aegis:8,chrono:7};state.rewardKills=0;rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;rewardScreen.classList.add('hidden');};
-  const rrShowMenu=showMainMenu;showMainMenu=function(){rewardScreen.classList.add('hidden');state.rewardQueue=[];rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;return rrShowMenu();};
-  const rrEnd=endGame;endGame=function(){rewardScreen.classList.add('hidden');state.rewardQueue=[];return rrEnd();};
+  const rrReset=resetGame;resetGame=function(){rrReset();state.bossTraits={};state.weaponAugments={};state.rewardQueue=[];state.rewardTimers={stellar:6,aegis:8,chrono:7};state.rewardKills=0;rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');};
+  const rrShowMenu=showMainMenu;showMainMenu=function(){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;return rrShowMenu();};
+  const rrEnd=endGame;endGame=function(){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];return rrEnd();};
 
   function rewardOptionPool(){
     const pool=[];
@@ -124,6 +130,16 @@
       card.onclick=()=>{if(rewardChoiceLocked||state.mode!=='bossReward')return;rewardChoiceLocked=true;for(const button of cards.querySelectorAll('button'))button.disabled=true;if(option.kind==='trait')state.bossTraits[option.key]=true;else state.weaponAugments[option.key]=true;state.rewardQueue.shift();rewardScreen.classList.add('hidden');state.mode='playing';if(matchMedia('(pointer:coarse)').matches||innerWidth<760)ui.touch.classList.remove('hidden');audio.resonance();};cards.appendChild(card);}
   }
   window.updateRewardQueue=tryOpenReward;
+  window.openApexRewardSelection=function(form){
+    if(state.mode==='gameover'||state.mode==='menu')return;closeAbilityLedger?.(true);const colors={chronophage:'#79ffe1',starforge:'#ffb04e',lastconstellation:'#b7c9ff'},color=colors[form]||'#fff2a6',cards=document.querySelector('#apexRewardCards');state.mode='apexReward';ui.touch.classList.add('hidden');apexRewardScreen.style.setProperty('--apex-color',color);document.querySelector('#apexRewardTitle').textContent=bossName(form);cards.innerHTML='';
+    const options=[
+      {icon:'✶',name:'고유 유산 계승',desc:'해당 초월체의 전용 영구 효과를 계승한다.',apply:()=>applyApexReward(form)},
+      {icon:'⟐',name:'병기 초월',desc:'보유 중인 무기 하나가 2중첩 강화된다.',apply:()=>{const keys=Object.keys(state.weaponStacks).filter(key=>weaponCount(key)>0&&weaponCount(key)<6);if(keys.length){const key=keys[Math.floor(Math.random()*keys.length)],before=weaponCount(key);state.weaponStacks[key]=Math.min(6,before+2);ui.resonanceTitle.textContent=weaponText(key).name;ui.resonanceDesc.textContent=before+' → '+weaponCount(key)+'중첩';ui.resonance.classList.remove('hidden');scheduleUiAction(2600,()=>ui.resonance.classList.add('hidden'));}else applyApexReward(form);}},
+      {icon:'⬢',name:'성체 재구축',desc:'최대 체력 +12%, 완전 회복, 보호막 36을 획득한다.',apply:()=>{player.maxHp=Math.max(player.maxHp+1,Math.round(player.maxHp*1.12));player.hp=player.maxHp;player.shield=Math.max(player.shield,36);ui.resonanceTitle.textContent='성체 재구축';ui.resonanceDesc.textContent='최대 체력 +12% · 완전 회복 · 보호막 36';ui.resonance.classList.remove('hidden');scheduleUiAction(2600,()=>ui.resonance.classList.add('hidden'));}}
+    ];
+    for(const option of options){const button=document.createElement('button');button.className='apex-reward-card';button.style.setProperty('--apex-color',color);button.innerHTML='<span>'+option.icon+'</span><h3>'+option.name+'</h3><p>'+option.desc+'</p>';button.onclick=()=>{for(const node of cards.querySelectorAll('button'))node.disabled=true;option.apply();apexRewardScreen.classList.add('hidden');state.mode='playing';if(matchMedia('(pointer:coarse)').matches||innerWidth<760)ui.touch.classList.remove('hidden');audio.resonance();renderLoadout();updateHUD();};cards.appendChild(button);}
+    apexRewardScreen.classList.remove('hidden');
+  };
 
   function applyMiniRewardPassive(key){
     state.passives[key]=stat(key)+1;
@@ -137,16 +153,15 @@
     if(useWeapon){const key=weapons[Math.floor(Math.random()*weapons.length)],next=weaponCount(key)+1;state.weaponStacks[key]=next;if(key!=='core'&&!state.weaponSlots.includes(key))state.weaponSlots.push(key);title=weaponText(key).name;desc=stackEffectText(key,next)?.desc||'장비 중첩 증가.';}
     else if(passives.length){const key=passives[Math.floor(Math.random()*passives.length)];applyMiniRewardPassive(key);title=passiveText(key).name;desc=passiveText(key).desc;}
     else{player.shield=Math.max(player.shield,18);desc='보호막 충전.';}
-    const kicker=document.querySelector('#resonanceKicker');if(kicker)kicker.textContent='중간보스 전리품';ui.resonanceTitle.textContent=title;ui.resonanceDesc.textContent=desc;ui.resonance.classList.remove('hidden');scheduleUiAction(1900,()=>ui.resonance.classList.add('hidden'));audio.pickup();renderLoadout();updateHUD();
+    const kicker=document.querySelector('#resonanceKicker');if(kicker)kicker.textContent='중간보스 자동 보상';ui.resonanceTitle.textContent=title;ui.resonanceDesc.textContent=desc;ui.resonance.classList.remove('hidden');scheduleUiAction(2800,()=>ui.resonance.classList.add('hidden'));audio.pickup();renderLoadout();updateHUD();
   }
 
   const rrKill=killEnemy;killEnemy=function(enemy,opts={}){
     const elite=enemy&&(enemy.type==='boss'||enemy.type==='mini'),x=enemy?.x||0,y=enemy?.y||0,locked=enemy?.timeLock>0,before=state.rewardQueue?.length||0,wellsBefore=state.entities.wells.length;
     rrKill(enemy,opts);
     if(state.bossTraits.harvest){const heal=elite?Math.ceil(player.maxHp*.25):1;player.hp=Math.min(player.maxHp,player.hp+heal);}
-    if(state.bossTraits.singularity){state.rewardKills=(state.rewardKills||0)+1;if(state.rewardKills%18===0)state.entities.wells.push({x,y,r:145,life:2.6,max:2.6,strength:390,damage:12,tick:0,color:'#9e79ff'});}
+    if(state.bossTraits.singularity){state.rewardKills=(state.rewardKills||0)+1;if(state.rewardKills%15===0)state.entities.wells.push({x,y,r:138,life:3.4,max:3.4,strength:760,damage:22,tick:0,color:'#e65cff',kind:'trait-singularity',traitCollapse:true,distortionCd:0});}
     if(state.weaponAugments.chrono&&locked)areaDamage(x,y,72,16+weaponCount('chrono')*3,COLORS.chrono,'chrono-burst');
-    if(state.bossTraits?.singularity&&state.entities.wells.length>wellsBefore&&(state.rewardKills||0)%18===0){const well=state.entities.wells[state.entities.wells.length-1];if(well){well.kind='trait-singularity';well.color='#e65cff';well.r=118;well.strength=720;well.damage=Math.max(18,well.damage||0);well.max=well.life=Math.max(2.2,well.life||0);}}
     if(elite){const suppress=enemy?.kind==='apex'||enemy?.eventKind==='void'||enemy?.noEliteReward===true;if(suppress||enemy?.type==='mini')state.rewardQueue.splice(before);else if((state.rewardQueue?.length||0)===before)state.rewardQueue.push(enemy.type);if(!suppress&&enemy?.type==='mini')grantMinibossReward();}
   };
 
@@ -178,7 +193,13 @@
     }
   };
 
-  const rrUpdateWells=updateWells;updateWells=function(dt){const expiring=state.entities.wells.filter(w=>w.rewardBurst&&!w.strongRewardBurstDone&&w.life<=dt+.035);rrUpdateWells(dt);for(const w of expiring){w.strongRewardBurstDone=true;areaDamage(w.x,w.y,195*weaponSizeMultiplier(),34+weaponCount('gravity')*7,COLORS.violet,'gravity-collapse');shockwave(w.x,w.y,'#e8d9ff',245*weaponSizeMultiplier(),.58,5);}};
+  const rrUpdateWells=updateWells;updateWells=function(dt){
+    const gravityExpiring=state.entities.wells.filter(w=>w.rewardBurst&&!w.strongRewardBurstDone&&w.life<=dt+.035),singularityExpiring=state.entities.wells.filter(w=>w.traitCollapse&&!w.traitCollapseDone&&w.life<=dt+.035),singularities=state.entities.wells.filter(w=>w.kind==='trait-singularity'&&w.life>0);
+    for(const w of singularities){w.distortionCd=(w.distortionCd??0)-dt;const radius=w.r*1.08;for(const p of state.entities.enemyProjectiles){if(!p||p.life<=0)continue;if((p.x-w.x)**2+(p.y-w.y)**2<radius*radius){const slow=Math.pow(.18,dt);p.vx*=slow;p.vy*=slow;}}for(const e of state.entities.enemies)if(!e.dead&&e.kind!=='apex'&&(e.x-w.x)**2+(e.y-w.y)**2<(w.r*.86+e.r)**2)e.timeLock=Math.max(e.timeLock||0,.18);if(w.distortionCd<=0){w.distortionCd=.62;shockwave(w.x,w.y,'#ef9cff',w.r*.74,.26,1.4);}}
+    rrUpdateWells(dt);
+    for(const w of gravityExpiring){w.strongRewardBurstDone=true;areaDamage(w.x,w.y,195*weaponSizeMultiplier(),34+weaponCount('gravity')*7,COLORS.violet,'gravity-collapse');shockwave(w.x,w.y,'#e8d9ff',245*weaponSizeMultiplier(),.58,5);}
+    for(const w of singularityExpiring){w.traitCollapseDone=true;for(const p of state.entities.enemyProjectiles)if((p.x-w.x)**2+(p.y-w.y)**2<(w.r*1.25)**2)p.life=0;areaDamage(w.x,w.y,w.r*1.08,34+state.level*.9,'#e65cff','trait-singularity-collapse');for(let i=0;i<8;i++){const a=i*TAU/8;spawnPlayerProjectile({x:w.x,y:w.y,vx:Math.cos(a)*390,vy:Math.sin(a)*390,r:4.8,life:.9,maxRange:330,damage:13+state.level*.45,color:'#f2b1ff',pierce:1,source:'singularity-shard'});}}
+  };
 
   applyLanguage();renderStarterOptions();renderLoadout();
 })();
