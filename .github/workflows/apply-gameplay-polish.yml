@@ -23,17 +23,28 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: agent/stackfall-apex-pacing-ui-polish
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Rebuild and apply exact patch
         shell: bash
         run: |
-          set -euo pipefail
-          cat .tmp-polish/part* | base64 -d > /tmp/apply-gameplay-polish.mjs
-          node --check /tmp/apply-gameplay-polish.mjs
-          node /tmp/apply-gameplay-polish.mjs
-          node scripts/build-fingerprint.mjs
+          set -o pipefail
+          {
+            set -euo pipefail
+            cat .tmp-polish/part* | base64 -d > /tmp/apply-gameplay-polish.mjs
+            node --check /tmp/apply-gameplay-polish.mjs
+            node /tmp/apply-gameplay-polish.mjs
+            node scripts/build-fingerprint.mjs
+          } 2>&1 | tee /tmp/apply-polish.log
+      - name: Upload application failure log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apply-polish-failure
+          path: /tmp/apply-polish.log
+          if-no-files-found: error
       - name: Check source and gameplay contracts
         shell: bash
         run: |
