@@ -34,8 +34,22 @@ function configureElite(enemy,kind){
   enemy.maxHp=enemy.hp;
 }
 function enemyControlFactor(e){if(e?.kind==='apex'||e?.controlImmune)return 0;const radius=Math.max(10,e?.r||10);let f=clamp(22/radius,.18,1);if(e?.type==='tank')f*=.78;if(e?.type==='mini')f*=.52;if(e?.type==='boss')f*=.28;return clamp(f,.08,1);}
-function fireFan(e,count,spread,speed,damage,color,r=5.5){const base=Math.atan2(player.y-e.y,player.x-e.x);for(let i=0;i<count;i++)spawnEnemyProjectile(e.x,e.y,base+(i-(count-1)/2)*spread,speed,damage,color,r,6);}
-function fireRing(e,count,speed,damage,color,offset=0,r=5.2){for(let i=0;i<count;i++)spawnEnemyProjectile(e.x,e.y,i/count*TAU+offset,speed,damage,color,r,6.4);}
+function enemyProjectileVisualFor(e,pattern='ring'){
+  const form=e?.apexForm||e?.eliteForm||'',event=String(e?.eventKind||'');
+  if(form==='chronophage')return'chrono';
+  if(form==='starforge')return'forge';
+  if(form==='lastconstellation')return'constellation';
+  if(event.includes('void')||['maw','oracle','weaver','grave','paradox'].includes(form))return'void';
+  if(['mirror','paradox'].includes(form))return'mirror';
+  if(['heliarch','colossus'].includes(form))return'sun';
+  if(['tempest','warden','seraph'].includes(form))return'storm';
+  if(['archivist','nullengine'].includes(form))return'rune';
+  if(['leviathan','executioner','harvester'].includes(form))return'needle';
+  if(e?.type==='ranged')return event==='crash'?'forge':'ranged-bolt';
+  return pattern==='fan'?'needle':'orb';
+}
+function fireFan(e,count,spread,speed,damage,color,r=5.5){const base=Math.atan2(player.y-e.y,player.x-e.x),visual=enemyProjectileVisualFor(e,'fan');for(let i=0;i<count;i++)spawnEnemyProjectile(e.x,e.y,base+(i-(count-1)/2)*spread,speed,damage,color,r,6,visual);}
+function fireRing(e,count,speed,damage,color,offset=0,r=5.2){const visual=enemyProjectileVisualFor(e,'ring');for(let i=0;i<count;i++)spawnEnemyProjectile(e.x,e.y,i/count*TAU+offset,speed,damage,color,r,6.4,visual);}
 function addCircle(x,y,r,damage,color,life=1.1){if(state.entities.telegraphs.length>=entityCap('telegraphs'))state.entities.telegraphs.shift();state.entities.telegraphs.push({type:'circle',x,y,r,life,max:life,damage,color,impactStyle:'boss-circle',phase:Math.random()*TAU});}
 function addLine(e,a,length,width,damage,color,life=.8){if(state.entities.telegraphs.length>=entityCap('telegraphs'))state.entities.telegraphs.shift();state.entities.telegraphs.push({type:'line',x:e.x,y:e.y,a,length,width,life,max:life,damage,color,impactStyle:'boss-line',phase:Math.random()*TAU});}
 function summonMinions(e,count=4,kind='grunt'){for(let i=0;i<count;i++){const m=spawnEnemy('normal');if(!m)continue;m.type=kind;m.x=e.x+Math.cos(i/count*TAU)*rand(100,170);m.y=e.y+Math.sin(i/count*TAU)*rand(100,170);m.hp*=1.18;m.maxHp=m.hp;m.damage*=1.06;m.color=e.color;m.eventKind=e.eventKind==='void'?'void-minion':m.eventKind;}}
