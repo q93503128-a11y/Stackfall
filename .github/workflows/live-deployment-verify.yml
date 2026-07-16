@@ -44,10 +44,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected='google-site-verification: googlea1b39620fd8849c7.html'
-          body=$(curl -fsS "https://stackfall.pages.dev/googlea1b39620fd8849c7.html?ownership-check=${GITHUB_SHA}")
-          test "$(printf '%s' "$body" | tr -d '\r\n')" = "$expected"
-          printf '%s\n' "$body" > test-results/search-console-verification.txt
+          for attempt in $(seq 1 24); do
+            if curl -fsS "https://stackfall.pages.dev/googlea1b39620fd8849c7.html?ownership-check=${GITHUB_SHA}-${attempt}" -o test-results/search-console-verification.txt && cmp -s googlea1b39620fd8849c7.html test-results/search-console-verification.txt; then
+              echo "ownership file matched on attempt $attempt"
+              exit 0
+            fi
+            echo "attempt $attempt: ownership file not ready"
+            sleep 15
+          done
+          echo "ownership file did not match repository source" >&2
+          exit 1
       - name: Live browser smoke
         env:
           STACKFALL_CHROME: /usr/bin/google-chrome
