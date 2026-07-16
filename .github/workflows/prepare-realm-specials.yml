@@ -1,0 +1,29 @@
+name: Prepare realm and specials refactor
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/realm-continuity-weapon-specials
+          fetch-depth: 0
+      - name: Export refactor source files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p refactor-source/src refactor-source/scripts
+          cp src/core.js src/render-space.js src/performance-guard.js src/dark-cosmic-polish.js src/bosses.js src/boss-catalog.js src/map-event-expansion.js src/reward-refinement.js src/ability-ledger-audit.js src/endgame-balance-expansion.js refactor-source/src/
+          cp index.html refactor-source/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: realm-specials-refactor-source
+          path: refactor-source
