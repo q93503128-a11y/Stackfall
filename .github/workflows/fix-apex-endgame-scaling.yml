@@ -1,0 +1,38 @@
+name: Fix apex endgame scaling input
+
+on:
+  push:
+    branches: [agent/apex-pattern-timer-balance]
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/apex-pattern-timer-balance
+          fetch-depth: 0
+      - name: Update hard late scaling robustly
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('src/endgame-balance-expansion.js');text=p.read_text(encoding='utf-8')
+          if 'hardLate=hard?(minutes*.009+Math.pow(minutes,1.08)*.0025):0' not in text:
+            text,count=re.subn(r"const minutes=lateSeconds\(\)/60,threat=Math\.max\(0,threatLevel\(\)-5\),hard=state\.selectedDifficulty==='hard',growth=1\+minutes\*\.032\+Math\.pow\(minutes,1\.14\)\*\.011\+threat\*\.010\+\(hard\?\.06:0\);","const minutes=lateSeconds()/60,threat=Math.max(0,threatLevel()-5),hard=state.selectedDifficulty==='hard',hardLate=hard?(minutes*.009+Math.pow(minutes,1.08)*.0025):0,growth=1+minutes*.032+Math.pow(minutes,1.14)*.011+threat*.010+(hard?.035:0)+hardLate;",text,count=1)
+            if count!=1:raise SystemExit('late damage expression not replaced')
+          if 'hardLate=hard?(minutes*.004+Math.pow(minutes,1.06)*.0015):0' not in text:
+            text,count=re.subn(r"const minutes=lateSeconds\(\)/60,threat=Math\.max\(0,threatLevel\(\)-5\),hard=state\.selectedDifficulty==='hard',growth=1\+minutes\*\.010\+Math\.pow\(minutes,1\.10\)\*\.0045\+threat\*\.0035\+\(hard\?\.035:0\);","const minutes=lateSeconds()/60,threat=Math.max(0,threatLevel()-5),hard=state.selectedDifficulty==='hard',hardLate=hard?(minutes*.004+Math.pow(minutes,1.06)*.0015):0,growth=1+minutes*.010+Math.pow(minutes,1.10)*.0045+threat*.0035+(hard?.015:0)+hardLate;",text,count=1)
+            if count!=1:raise SystemExit('late speed expression not replaced')
+          p.write_text(text,encoding='utf-8')
+          PY
+          git config user.name 'stackfall-maintenance-bot'
+          git config user.email 'stackfall-maintenance-bot@users.noreply.github.com'
+          git add src/endgame-balance-expansion.js
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Increase Hard late-game pressure progressively'
+          git push origin HEAD:agent/apex-pattern-timer-balance
