@@ -4,6 +4,7 @@ const catalog=read('src/boss-catalog.js'),core=read('src/core.js'),render=read('
 const checks=[
  ['apex interval is 480 game seconds',catalog.includes('APEX_INTERVAL_SECONDS=480')&&core.includes('nextApexAt:480')&&core.includes('state.nextApexAt=480')],
  ['paused wall clock cannot advance apex',!render.includes('state.apexClock=')&&!render.includes('updateApexPriority')&&!catalog.includes('state.apexClock=0')],
+ ['obsolete apex clock removed from runtime',[catalog,core,render,bosses,events].every(text=>!text.includes('apexClock'))],
  ['apex scheduling uses game time',bosses.includes('createdAt:state.time||0')&&bosses.includes('state.nextApexAt=(state.time||0)+30')&&bosses.includes('(state.time||0)>=(state.nextApexAt||APEX_INTERVAL_SECONDS)')&&events.includes('(state.nextApexAt||Infinity)-(state.time||0)')],
  ['pause smoke checks apex invariant',smoke.includes('pausedApexDue')&&smoke.includes('!cooldown.pausedApexDue')],
  ['boss anti idle targeting exists',patterns.includes('function bossAntiIdleSkill')&&patterns.includes('e.antiIdleStill')&&bosses.includes('bossAntiIdleSkill(enemy,dt)')],
