@@ -1,0 +1,16 @@
++  const history=e.apexPlayerHistory||[],now={x:player.x,y:player.y},pastA=history[Math.max(0,history.length-5)]||now,pastB=history[Math.max(0,history.length-10)]||pastA;
++  addCircle(now.x,now.y,48+phase*5,d*1.02,'#79ffe1',.92);addCircle(pastA.x,pastA.y,66+phase*4,d*.86,'#c6fff4',1.18);rawLine(pastB.x,pastB.y,now.x,now.y,21+phase*2,d*1.12,'#8fffe0',1.26,'boss-line');
++  scheduleWeaponAction(560,()=>{if(e.dead)return;const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,20+phase*2,205+phase*10,d*.70,'#e4fffb',-e.phase*.19,aim,.28,4.4);});
++}
++function starforgeSignature(e,d,arena,phase){
++  e.forgeSignaturePhase=(e.forgeSignaturePhase||0)+.73;const spokes=10+phase*2,safe=Math.floor(((e.forgeSignaturePhase%TAU)/TAU)*spokes);
++  for(let i=0;i<spokes;i++){const relative=(i-safe+spokes)%spokes;if(relative===0||relative===1)continue;const a=i*TAU/spokes+e.forgeSignaturePhase*.18;rawLine(arena.x,arena.y,arena.x+Math.cos(a)*arena.r*1.12,arena.y+Math.sin(a)*arena.r*1.12,20+phase*2,d*.84,i%3===0?'#fff1b0':'#ff9d42',1.12+i*.018,'boss-line');}
++  const origin={x:player.x,y:player.y};for(let i=0;i<3+phase;i++){const target=i===0?origin:predictedPlayer(55+i*34),a=i*2.399+e.phase*.05;addCircle(target.x+Math.cos(a)*(i?42:0),target.y+Math.sin(a)*(i?42:0),44+phase*4,d*(i===0?1.12:.74),'#ff7135',.86+i*.12);}
++}
++function constellationSignature(e,d,arena,phase){
++  const count=7+phase*2,points=apexArenaPoints(count,arena.r*.68,e.phase*.035),jump=phase>=3?3:2;
++  for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+jump)%points.length];rawLine(a.x,a.y,b.x,b.y,16+phase*2,d*.92,i%2?'#d8e2ff':'#879be0',1.18+i*.025,'boss-line');}
++  const x=player.x,y=player.y;rawLine(x-190,y-190,x+190,y+190,18,d*1.10,'#ffffff',1.02,'boss-line');
++  scheduleWeaponAction(500,()=>{if(e.dead)return;for(let i=0;i<points.length;i+=2){const point=points[i],aim=Math.atan2(player.y-point.y,player.x-point.x);spawnEnemyProjectile(point.x,point.y,aim,185+phase*14,d*.58,i%4?'#9fb2ef':'#ffffff',4.2,6,'constellation');}});teleportConstellation(e,phase);
++}
+ function apexBossSkill(e,dt){
