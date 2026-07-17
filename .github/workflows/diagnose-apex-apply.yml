@@ -1,0 +1,54 @@
+name: Diagnose apex apply
+
+on:
+  push:
+    branches: [agent/apex-pattern-timer-balance]
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/apex-pattern-timer-balance
+      - name: Locate first mismatched replacement
+        id: diagnose
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          checks=[
+            ('catalog interval','src/boss-catalog.js','const APEX_INTERVAL_SECONDS=600;'),
+            ('catalog reset','src/boss-catalog.js','function resetBossSystems(){state.bossBags={};state.nextApexAt=APEX_INTERVAL_SECONDS;state.apexClock=0;state.apexCount=0;'),
+            ('catalog apex scale','src/boss-catalog.js','enemy.hp*=hpScale*1.9;enemy.damage*=damageScale*1.25;enemy.speed*=speedScale*1.08;'),
+            ('core state','src/core.js','nextApexAt:600'),
+            ('core reset','src/core.js','state.nextApexAt=600;'),
+            ('render wall clock','src/render.js',"    if(!['menu','gameover'].includes(state.mode)){state.apexClock=(state.apexClock||0)+dt;if(typeof updateApexSystems==='function')runRuntimeStage('updateApexPriority',()=>updateApexSystems(0,true));}\n"),
+            ('boss dispatcher','src/bosses.js',"function bossSkill(enemy,dt){if(enemy.type==='mini')return miniSkill(enemy,dt);if(enemy.type!=='boss')return;if(enemy.kind==='apex')return apexBossSkill(enemy,dt);if(enemy.kind==='void'||enemy.eventKind==='void')return voidBossSkill(enemy,dt);return normalBossSkill(enemy,dt);}"),
+            ('boss createdAt','src/bosses.js','createdAt:state.apexClock||0'),
+            ('boss retry','src/bosses.js','state.nextApexAt=(state.apexClock||0)+30'),
+            ('boss due','src/bosses.js','const due=(state.apexClock||0)>=(state.nextApexAt||APEX_INTERVAL_SECONDS);'),
+            ('difficulty base','src/difficulty-augment-expansion.js','c.hp*=.92*d.enemyHp;c.damage*=d.enemyDamage;c.speed*=d.enemySpeed;'),
+            ('late damage','src/endgame-balance-expansion.js',"const minutes=lateSeconds()/60,threat=Math.max(0,threatLevel()-5),hard=state.selectedDifficulty==='hard',growth=1+minutes*.032+Math.pow(minutes,1.14)*.011+threat*.010+(hard?.06:0);"),
+            ('late speed','src/endgame-balance-expansion.js',"const minutes=lateSeconds()/60,threat=Math.max(0,threatLevel()-5),hard=state.selectedDifficulty==='hard',growth=1+minutes*.010+Math.pow(minutes,1.10)*.0045+threat*.0035+(hard?.035:0);")
+          ]
+          detail='all replacement sources present'
+          for name,path,needle in checks:
+            text=Path(path).read_text(encoding='utf-8')
+            if needle not in text:
+              detail=f'missing: {name}'
+              break
+          print(detail)
+          with open(Path(__import__('os').environ['GITHUB_OUTPUT']),'a',encoding='utf-8') as f:f.write('detail='+detail+'\n')
+          PY
+      - name: Publish diagnostic
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const detail = `${{ steps.diagnose.outputs.detail }}` || 'diagnostic failed';
+            await github.rest.repos.createCommitStatus({owner:context.repo.owner,repo:context.repo.repo,sha:context.sha,state:detail.startsWith('all ') ? 'success' : 'failure',context:'stackfall/apex-apply-diagnostic',description:detail.slice(0,140),target_url:`https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`});
