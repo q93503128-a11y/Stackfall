@@ -28,6 +28,6 @@ expect('event grants multiplicity',mapEvents.includes('PASSIVES.multiplicity.max
 expect('ranged centreline shot',bosses.includes('angles=shots===2?[0,'));
 expect('ability detail layer',expansion.includes('ledger-detail-layer')&&expansion.includes('apexDetails'));
 expect('typed boss HUD',expansion.includes("'중간보스':'MINI-BOSS'"));
-expect('apex interval ten minutes',core.includes('nextApexAt:600'));
+expect('apex interval eight game minutes',core.includes('nextApexAt:480'));
 let failed=0;for(const [name,ok] of checks){console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)failed++;}
 console.log(`Checked ${checks.length} contracts; failures=${failed}`);if(failed)process.exit(1);

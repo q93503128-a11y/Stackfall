@@ -1,4 +1,4 @@
-const APEX_INTERVAL_SECONDS=600;
+const APEX_INTERVAL_SECONDS=480;
 const BOSS_NAMES={
   eclipse:{ko:'일식의 군주',en:'Lord of Eclipse'},seraph:{ko:'성운의 세라프',en:'Nebula Seraph'},pulsar:{ko:'맥동성의 심장',en:'Heart of the Pulsar'},leviathan:{ko:'성간의 레비아탄',en:'Interstellar Leviathan'},archivist:{ko:'무한 기록자',en:'Infinite Archivist'},heliarch:{ko:'태양관의 군주',en:'Heliarch'},tempest:{ko:'성뢰의 여왕',en:'Queen of Astral Storms'},nullengine:{ko:'무효기관 제로',en:'Null Engine Zero'},
   knight:{ko:'균열의 기사',en:'Rift Knight'},warden:{ko:'초신성 감시자',en:'Nova Warden'},executioner:{ko:'궤도 집행자',en:'Orbital Executioner'},colossus:{ko:'결정 거상',en:'Crystal Colossus'},harvester:{ko:'성운 수확자',en:'Nebula Harvester'},mirror:{ko:'쌍성의 거울',en:'Twin-Star Mirror'},
@@ -17,14 +17,14 @@ const BOSS_STATS={
   chronophage:{color:'#79ffe1',hp:2.22,speed:.92,damage:1.34,r:1.58,theme:'apex-chrono'},starforge:{color:'#ffb04e',hp:2.48,speed:.80,damage:1.46,r:1.96,theme:'apex-forge'},lastconstellation:{color:'#b7c9ff',hp:2.34,speed:.86,damage:1.40,r:.84,theme:'apex-constellation'}
 };
 function bossBag(kind){state.bossBags=state.bossBags||{};const pool=BOSS_POOLS[kind]||BOSS_POOLS.boss;let bag=state.bossBags[kind];if(!bag?.length){bag=[...pool].sort(()=>Math.random()-.5);state.bossBags[kind]=bag;}return bag.pop();}
-function resetBossSystems(){state.bossBags={};state.nextApexAt=APEX_INTERVAL_SECONDS;state.apexClock=0;state.apexCount=0;state.apexActiveId=null;state.pendingApexForm=null;state.apexArena=null;state.apexExitPending=false;state.apexBoons={};state.apexBoonTimers={chrono:24,forge:18,constellation:12};}
+function resetBossSystems(){state.bossBags={};state.nextApexAt=APEX_INTERVAL_SECONDS;state.apexCount=0;state.apexActiveId=null;state.pendingApexForm=null;state.apexArena=null;state.apexExitPending=false;state.apexBoons={};state.apexBoonTimers={chrono:24,forge:18,constellation:12};}
 function configureElite(enemy,kind){
   const category=kind==='mini'?'mini':kind==='void'?'void':kind==='apex'?'apex':'boss',form=category==='apex'&&state.pendingApexForm?state.pendingApexForm:bossBag(category),s=BOSS_STATS[form],t=state.time||0;
   enemy.eliteCategory=category;enemy.eliteForm=form;enemy.name=bossName(form);enemy.color=s.color;enemy.r*=s.r;enemy.hp*=s.hp;enemy.speed*=s.speed;enemy.damage*=s.damage;
   if(category==='void')enemy.eventKind='void';
   if(category==='apex'){
     const cycle=Math.max(0,t/APEX_INTERVAL_SECONDS-1),hpScale=1+cycle*.62,damageScale=1+cycle*.28,speedScale=1+cycle*.05,cooldownScale=1/(1+cycle*.09);
-    enemy.eventKind='apex';enemy.apexForm=form;enemy.controlImmune=true;enemy.knockbackImmune=true;enemy.timeLock=0;enemy.xp*=3.1+cycle*.45;enemy.apexPhase=1;enemy.hp*=hpScale*1.9;enemy.damage*=damageScale*1.25;enemy.speed*=speedScale*1.08;enemy.skillCd*=cooldownScale*.70;enemy.burstCd*=cooldownScale*.70;enemy.pulseCd*=cooldownScale*.70;
+    enemy.eventKind='apex';enemy.apexForm=form;enemy.controlImmune=true;enemy.knockbackImmune=true;enemy.timeLock=0;enemy.xp*=3.1+cycle*.45;enemy.apexPhase=1;enemy.hp*=hpScale*1.80;enemy.damage*=damageScale*1.18;enemy.speed*=speedScale*1.08;enemy.skillCd*=cooldownScale*.70;enemy.burstCd*=cooldownScale*.70;enemy.pulseCd*=cooldownScale*.70;
   }else{
     const isBoss=enemy.type==='boss',f=clamp((t-110)/520,0,1);enemy.hp*=lerp(isBoss?.56:.74,isBoss?.95:.99,f);enemy.damage*=lerp(isBoss?.66:.80,.98,clamp((t-110)/440,0,1));enemy.speed*=lerp(isBoss?.88:.94,1,clamp((t-110)/360,0,1));enemy.skillCd+=(isBoss?1.25:.65)*(1-f);enemy.burstCd+=(isBoss?1.45:.8)*(1-f);
     if(category!=='mini'){enemy.hp*=2;enemy.damage*=1.75;enemy.skillCd*=.82;enemy.burstCd*=.82;enemy.pulseCd*=.82;}
