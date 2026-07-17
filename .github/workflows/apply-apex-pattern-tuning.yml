@@ -1,0 +1,175 @@
+name: Apply apex encounter tuning
+
+on:
+  push:
+    branches: [agent/apex-pattern-timer-balance]
+
+permissions:
+  contents: write
+
+jobs:
+  tune-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/apex-pattern-timer-balance
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply apex timing, patterns, and balance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          def replace(path, old, new):
+              p=Path(path); text=p.read_text(encoding='utf-8')
+              if new in text:
+                  return
+              if old not in text:
+                  raise SystemExit(f'{path}: replacement source not found: {old[:100]!r}')
+              p.write_text(text.replace(old,new),encoding='utf-8')
+
+          replace('src/boss-catalog.js','const APEX_INTERVAL_SECONDS=600;','const APEX_INTERVAL_SECONDS=480;')
+          replace('src/boss-catalog.js',
+              "function resetBossSystems(){state.bossBags={};state.nextApexAt=APEX_INTERVAL_SECONDS;state.apexClock=0;state.apexCount=0;",
+              "function resetBossSystems(){state.bossBags={};state.nextApexAt=APEX_INTERVAL_SECONDS;state.apexCount=0;")
+          replace('src/boss-catalog.js',
+              "enemy.hp*=hpScale*1.9;enemy.damage*=damageScale*1.25;enemy.speed*=speedScale*1.08;",
+              "enemy.hp*=hpScale*1.80;enemy.damage*=damageScale*1.18;enemy.speed*=speedScale*1.08;")
+
+          replace('src/core.js','nextApexAt:600','nextApexAt:480')
+          replace('src/core.js','state.nextApexAt=600;','state.nextApexAt=480;')
+
+          replace('src/render.js',
+              "    if(!['menu','gameover'].includes(state.mode)){state.apexClock=(state.apexClock||0)+dt;if(typeof updateApexSystems==='function')runRuntimeStage('updateApexPriority',()=>updateApexSystems(0,true));}\n",
+              '')
+
+          replace('src/bosses.js',
+              "function bossSkill(enemy,dt){if(enemy.type==='mini')return miniSkill(enemy,dt);if(enemy.type!=='boss')return;if(enemy.kind==='apex')return apexBossSkill(enemy,dt);if(enemy.kind==='void'||enemy.eventKind==='void')return voidBossSkill(enemy,dt);return normalBossSkill(enemy,dt);}",
+              "function bossSkill(enemy,dt){if(enemy.type==='mini')return miniSkill(enemy,dt);if(enemy.type!=='boss')return;if(enemy.kind==='apex')apexBossSkill(enemy,dt);else if(enemy.kind==='void'||enemy.eventKind==='void')voidBossSkill(enemy,dt);else normalBossSkill(enemy,dt);if(typeof bossAntiIdleSkill==='function')bossAntiIdleSkill(enemy,dt);}")
+          replace('src/bosses.js','createdAt:state.apexClock||0','createdAt:state.time||0')
+          replace('src/bosses.js','state.nextApexAt=(state.apexClock||0)+30','state.nextApexAt=(state.time||0)+30')
+          replace('src/bosses.js',
+              "const due=(state.apexClock||0)>=(state.nextApexAt||APEX_INTERVAL_SECONDS);",
+              "const due=(state.time||0)>=(state.nextApexAt||APEX_INTERVAL_SECONDS);")
+
+          pattern_path=Path('src/boss-patterns.js')
+          pattern_text=pattern_path.read_text(encoding='utf-8')
+          if 'function chronophageSignature(' not in pattern_text:
+              marker='function apexBossSkill(e,dt){'
+              index=pattern_text.find(marker)
+              if index<0: raise SystemExit('apexBossSkill marker not found')
+              replacement=r'''function rememberApexPlayer(e,dt){
+  e.apexHistoryCd=(e.apexHistoryCd||0)-dt;if(e.apexHistoryCd>0)return;e.apexHistoryCd=.30;e.apexPlayerHistory=e.apexPlayerHistory||[];e.apexPlayerHistory.push({x:player.x,y:player.y});if(e.apexPlayerHistory.length>14)e.apexPlayerHistory.shift();
+}
+function bossAntiIdleSkill(e,dt){
+  if(!e||e.dead||e.type!=='boss')return;if(e.kind!=='apex'&&state.bossActiveId&&e.id!==state.bossActiveId)return;
+  e.antiIdleSampleCd=(e.antiIdleSampleCd||0)-dt;e.antiIdleCd=(e.antiIdleCd??3.4)-dt;
+  if(e.antiIdleSampleCd<=0){e.antiIdleSampleCd=.24;const lx=Number.isFinite(e.antiIdlePlayerX)?e.antiIdlePlayerX:player.x,ly=Number.isFinite(e.antiIdlePlayerY)?e.antiIdlePlayerY:player.y,moved=Math.hypot(player.x-lx,player.y-ly);e.antiIdleStill=moved<7?(e.antiIdleStill||0)+.24:Math.max(0,(e.antiIdleStill||0)-.72);e.antiIdlePlayerX=player.x;e.antiIdlePlayerY=player.y;}
+  if((e.antiIdleStill||0)<1.20||e.antiIdleCd>0)return;e.antiIdleStill=.25;e.antiIdleCd=e.kind==='apex'?3.05:4.35;const d=Math.max(4,e.damage*(e.kind==='apex'?.30:.34)),x=player.x,y=player.y,form=e.apexForm||e.eliteForm;
+  if(form==='chronophage'){rawLine(x-185,y-185,x+185,y+185,18,d,'#79ffe1',.96,'boss-line');rawLine(x+185,y-185,x-185,y+185,18,d*.82,'#d9fff8',1.12,'boss-line');}
+  else if(form==='starforge'){addCircle(x,y,58,d*1.08,'#ff8a42',1.02);for(let i=0;i<4;i++){const a=i*TAU/4+e.phase*.08;addCircle(x+Math.cos(a)*105,y+Math.sin(a)*105,40,d*.62,'#ffd26f',1.17+i*.04);}}
+  else if(form==='lastconstellation'){rawLine(x-215,y,x+215,y,17,d,'#d8e2ff',1.02,'boss-line');rawLine(x,y-215,x,y+215,17,d*.88,'#879be0',1.16,'boss-line');}
+  else addCircle(x,y,52,d,e.color||'#ff72cb',1.08);
+}
+function chronophageSignature(e,d,arena,phase){
+  const history=e.apexPlayerHistory||[],now={x:player.x,y:player.y},pastA=history[Math.max(0,history.length-5)]||now,pastB=history[Math.max(0,history.length-10)]||pastA;
+  addCircle(now.x,now.y,48+phase*5,d*1.02,'#79ffe1',.92);addCircle(pastA.x,pastA.y,66+phase*4,d*.86,'#c6fff4',1.18);rawLine(pastB.x,pastB.y,now.x,now.y,21+phase*2,d*1.12,'#8fffe0',1.26,'boss-line');
+  scheduleWeaponAction(560,()=>{if(e.dead)return;const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,20+phase*2,205+phase*10,d*.70,'#e4fffb',-e.phase*.19,aim,.28,4.4);});
+}
+function starforgeSignature(e,d,arena,phase){
+  e.forgeSignaturePhase=(e.forgeSignaturePhase||0)+.73;const spokes=10+phase*2,safe=Math.floor(((e.forgeSignaturePhase%TAU)/TAU)*spokes);
+  for(let i=0;i<spokes;i++){const relative=(i-safe+spokes)%spokes;if(relative===0||relative===1)continue;const a=i*TAU/spokes+e.forgeSignaturePhase*.18;rawLine(e.x,e.y,e.x+Math.cos(a)*arena.r*1.12,e.y+Math.sin(a)*arena.r*1.12,20+phase*2,d*.84,i%3===0?'#fff1b0':'#ff9d42',1.12+i*.018,'boss-line');}
+  const origin={x:player.x,y:player.y};for(let i=0;i<3+phase;i++){const p=i===0?origin:predictedPlayer(55+i*34),a=i*2.399+e.phase*.05;addCircle(p.x+Math.cos(a)*(i?42:0),p.y+Math.sin(a)*(i?42:0),44+phase*4,d*(i===0?1.12:.74),'#ff7135',.86+i*.12);}
+}
+function constellationSignature(e,d,arena,phase){
+  const count=7+phase*2,points=apexArenaPoints(count,arena.r*.68,e.phase*.035),jump=phase>=3?3:2;
+  for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+jump)%points.length];rawLine(a.x,a.y,b.x,b.y,16+phase*2,d*.92,i%2?'#d8e2ff':'#879be0',1.18+i*.025,'boss-line');}
+  const x=player.x,y=player.y;rawLine(x-190,y-190,x+190,y+190,18,d*1.10,'#ffffff',1.02,'boss-line');
+  scheduleWeaponAction(500,()=>{if(e.dead)return;for(let i=0;i<points.length;i+=2){const p=points[i],aim=Math.atan2(player.y-p.y,player.x-p.x);spawnEnemyProjectile(p.x,p.y,aim,185+phase*14,d*.58,i%4?'#9fb2ef':'#ffffff',4.2,6,'constellation');}});teleportConstellation(e,phase);
+}
+function apexBossSkill(e,dt){
+  e.apexElapsed=(e.apexElapsed||0)+dt;rememberApexPlayer(e,dt);const health=e.hp/Math.max(1,e.maxHp),healthPhase=health<.25?4:health<.50?3:health<.75?2:1,timePhase=e.apexElapsed>=240?4:e.apexElapsed>=180?3:e.apexElapsed>=105?2:1,phase=Math.max(healthPhase,timePhase),terminal=phase===4&&e.apexElapsed>=240,k=terminal?.42:[1,.86,.72,.58][phase-1];e.apexPhase=phase;e.timeLock=0;e.skillCd-=dt/k;e.burstCd-=dt/k;e.pulseCd-=dt/k;e.signatureCd=(e.signatureCd??5.8)-dt/k;const d=Math.max(7,e.damage*.40),f=e.eliteForm,arena=state.apexArena||{x:player.x,y:player.y,r:460};
+  if(e.signatureCd<=0){e.signatureCd=Math.max(5.4,8.8-phase*.82);if(f==='chronophage')chronophageSignature(e,d,arena,phase);else if(f==='starforge')starforgeSignature(e,d,arena,phase);else constellationSignature(e,d,arena,phase);}
+  e.apexFrenzyCd=(e.apexFrenzyCd??1.35)-dt;if(terminal&&e.apexFrenzyCd<=0){e.apexFrenzyCd=.95;if(f==='chronophage'){const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,20,235,d*.62,'#d9fff8',e.phase*.27,aim,.27,4.4);}else if(f==='starforge'){addCircle(player.x,player.y,45,d*.74,'#ff8a42',.72);}else{const points=apexArenaPoints(6,arena.r*.58,e.phase*.04);for(const p of points){const a=Math.atan2(player.y-p.y,player.x-p.x);spawnEnemyProjectile(p.x,p.y,a,205,d*.54,'#b7c9ff',4.1,6,'constellation');}}}
+  if(f==='chronophage'){
+    if(e.skillCd<=0){e.skillCd=phase>=3?2.0:2.65;const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,22+phase*2,155+phase*12,d,'#79ffe1',e.phase*.16,aim,.22,5.1);fireRingWithGaps(e,16+phase*2,125+phase*8,d*.72,'#c6fff4',-e.phase*.12,aim+Math.PI/2,.29,4.4);}
+    if(e.burstCd<=0){e.burstCd=phase>=3?4.8:6.0;const hands=5+phase,base=e.phase*.06;for(let i=0;i<hands;i++)rawLine(arena.x,arena.y,arena.x+Math.cos(base+i*TAU/hands)*arena.r*1.14,arena.y+Math.sin(base+i*TAU/hands)*arena.r*1.14,22+phase*2,d*1.10,i%2?'#79ffe1':'#d9fff8',.82+i*.065,'boss-line');}
+    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.8:8.4;const a=Math.atan2(player.y-arena.y,player.x-arena.x),nx=-Math.sin(a),ny=Math.cos(a);for(const side of[-1,1])for(const band of[76,158])rawLine(arena.x+nx*band*side-Math.cos(a)*arena.r,arena.y+ny*band*side-Math.sin(a)*arena.r,arena.x+nx*band*side+Math.cos(a)*arena.r,arena.y+ny*band*side+Math.sin(a)*arena.r,18+phase*2,d*.94,'#8fffe0',1.06+band*.001,'boss-line');}
+  }else if(f==='starforge'){
+    if(e.skillCd<=0){e.skillCd=phase>=3?2.2:2.9;const spokes=8+phase*2,base=e.phase*.055;for(let i=0;i<spokes;i++)addLine(e,base+i*TAU/spokes,arena.r*1.18,21+phase*2,d,i%3===0?'#fff1b0':'#ff9d42',.96+i*.022);}
+    if(e.burstCd<=0){e.burstCd=phase>=3?4.65:5.9;const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,26+phase*2,175+phase*10,d*.92,'#ffd26f',e.phase*.21,aim,.31,5.8);const p={x:player.x,y:player.y};addCircle(p.x,p.y,56+phase*4,d*1.16,'#ff7135',1.02);for(let i=0;i<4+phase;i++){const a=i/(4+phase)*TAU+e.phase*.08;addCircle(p.x+Math.cos(a)*(116+phase*6),p.y+Math.sin(a)*(116+phase*6),42+phase*3,d*.66,'#ff9d42',1.12+i*.055);}}
+    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.4:8.0;const points=apexArenaPoints(6+phase,arena.r*.72,e.phase*.045);for(let i=0;i<points.length;i++){const p=points[i],op=points[(i+Math.floor(points.length/2))%points.length];rawLine(p.x,p.y,op.x,op.y,20+phase*2,d*1.18,i%2?'#ffb04e':'#fff0a8',1.18+i*.035,'boss-line');}}
+  }else{
+    if(e.skillCd<=0){e.skillCd=phase>=3?1.95:2.65;const nodes=apexArenaPoints(5+phase,arena.r*.55,e.phase*.04);for(const [index,p]of nodes.entries()){const base=Math.atan2(player.y-p.y,player.x-p.x);for(let j=-1;j<=1;j++)spawnEnemyProjectile(p.x,p.y,base+j*.11,145+phase*18,d*.64,index%2?'#f0f4ff':'#9fb2ef',4.3,7,'constellation');}}
+    if(e.burstCd<=0){e.burstCd=phase>=3?4.7:6.1;const pts=apexArenaPoints(7+phase,arena.r*.50,-Math.PI/2+e.phase*.025),jump=phase>=3?3:2;for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+jump)%pts.length];rawLine(a.x,a.y,b.x,b.y,17+phase*2,d*1.08,i%2?'#d8e2ff':'#8fa6e8',1.02+i*.038,'boss-line');}teleportConstellation(e,1);}
+    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.35:8.2;teleportConstellation(e,2);const half=170+phase*10,gap=Math.max(58,88-phase*7),x=player.x,y=player.y;rawLine(x-half,y-half,x-gap,y-half,18+phase,d*1.10,'#d8e2ff',1.02,'boss-line');rawLine(x+gap,y-half,x+half,y-half,18+phase,d*1.10,'#d8e2ff',1.02,'boss-line');rawLine(x-half,y+half,x-gap,y+half,18+phase,d*1.10,'#879be0',1.08,'boss-line');rawLine(x+gap,y+half,x+half,y+half,18+phase,d*1.10,'#879be0',1.08,'boss-line');rawLine(x-half,y-half,x-half,y+half,18+phase,d*1.10,'#aebfff',1.14,'boss-line');rawLine(x+half,y-half,x+half,y+half,18+phase,d*1.10,'#aebfff',1.14,'boss-line');rawLine(x-150,y+150,x+150,y-150,16+phase,d*.92,'#ffffff',1.22,'boss-line');}
+  }
+}
+'''
+              pattern_path.write_text(pattern_text[:index]+replacement,encoding='utf-8')
+
+          replace('src/difficulty-augment-expansion.js',
+              "c.hp*=.92*d.enemyHp;c.damage*=d.enemyDamage;c.speed*=d.enemySpeed;",
+              "c.hp*=.88*d.enemyHp;c.damage*=.94*d.enemyDamage;c.speed*=.98*d.enemySpeed;")
+          replace('src/endgame-balance-expansion.js',
+              "const minutes=lateSeconds()/60,threat=Math.max(0,threatLevel()-5),hard=state.selectedDifficulty==='hard',growth=1+minutes*.032+Math.pow(minutes,1.14)*.011+threat*.010+(hard?.06:0);",
+              "const minutes=lateSeconds()/60,threat=Math.max(0,threatLevel()-5),hard=state.selectedDifficulty==='hard',hardLate=hard?(minutes*.009+Math.pow(minutes,1.08)*.0025):0,growth=1+minutes*.032+Math.pow(minutes,1.14)*.011+threat*.010+(hard?.035:0)+hardLate;")
+          replace('src/endgame-balance-expansion.js',
+              "const minutes=lateSeconds()/60,threat=Math.max(0,threatLevel()-5),hard=state.selectedDifficulty==='hard',growth=1+minutes*.010+Math.pow(minutes,1.10)*.0045+threat*.0035+(hard?.035:0);",
+              "const minutes=lateSeconds()/60,threat=Math.max(0,threatLevel()-5),hard=state.selectedDifficulty==='hard',hardLate=hard?(minutes*.004+Math.pow(minutes,1.06)*.0015):0,growth=1+minutes*.010+Math.pow(minutes,1.10)*.0045+threat*.0035+(hard?.015:0)+hardLate;")
+
+          docs=['README.md','docs/GAME_DESIGN.md','docs/WIKI.md']
+          for path in docs:
+              p=Path(path); text=p.read_text(encoding='utf-8')
+              text=text.replace('런 진행 10분 간격','실제 게임 시간 8분 간격')
+              text=text.replace('10분 간격','8분 간격')
+              text=text.replace('600초','480초')
+              text=text.replace('초월체 시계는 선택·보상·이벤트·일시정지·시네마틱 중에도 진행됩니다. 예정 시각이 되면 열린 선택을 안전하게 확정하고 모든 일반 이벤트를 취소한 뒤 초월체 등장 연출을 시작합니다.','초월체 예정 시각은 실제 게임 시간만 사용합니다. 일시정지·능력 선택·보상·이벤트 선택·등장 연출 중에는 게임 시간과 초월체 시계가 함께 멈추며, 8분·16분·24분처럼 누적 게임 시간이 예정 시각에 도달했을 때만 일반 이벤트보다 우선해 등장합니다.')
+              if '정지 대응 패턴' not in text:
+                  text=text.rstrip()+"\n\n- 보스와 초월체는 플레이어가 일정 시간 거의 움직이지 않으면 현재 위치를 직접 겨냥하는 정지 대응 패턴을 사용한다.\n- 시간포식자는 과거 위치 재생과 시계바늘 절단, 종말 항성은 회전 안전구역과 연속 낙성, 마지막 성좌는 전장 노드에서 발사되는 별자리 격자를 핵심 시그니처로 사용한다.\n- 전체 기본 난도는 적 체력·피해·속도를 소폭 낮추고, 어려움 난이도만 4분 이후 피해와 속도 보정이 시간에 따라 조금 더 빠르게 누적된다.\n"
+              p.write_text(text,encoding='utf-8')
+
+          contract=Path('scripts/apex-encounter-contract.mjs')
+          contract.write_text("""import fs from 'node:fs';\nconst read=p=>fs.readFileSync(p,'utf8');\nconst catalog=read('src/boss-catalog.js'),core=read('src/core.js'),render=read('src/render.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),difficulty=read('src/difficulty-augment-expansion.js'),endgame=read('src/endgame-balance-expansion.js');\nconst checks=[\n ['apex interval is 480 game seconds',catalog.includes('APEX_INTERVAL_SECONDS=480')&&core.includes('nextApexAt:480')&&core.includes('state.nextApexAt=480')],\n ['paused wall clock cannot advance apex',!render.includes('state.apexClock=')&&!render.includes('updateApexPriority')&&bosses.includes('(state.time||0)>=(state.nextApexAt||APEX_INTERVAL_SECONDS)')],\n ['apex scheduling uses game time',bosses.includes('createdAt:state.time||0')&&bosses.includes('state.nextApexAt=(state.time||0)+30')],\n ['boss anti idle targeting exists',patterns.includes('function bossAntiIdleSkill')&&patterns.includes('e.antiIdleStill')&&bosses.includes("bossAntiIdleSkill(enemy,dt)" )],\n ['three distinct apex signatures',['chronophageSignature','starforgeSignature','constellationSignature'].every(name=>patterns.includes(`function ${name}`))],\n ['apex has health and time phases',patterns.includes("health<.25?4:health<.50?3:health<.75?2:1")&&patterns.includes('e.apexElapsed>=240?4')],\n ['overall base difficulty slightly reduced',difficulty.includes('c.hp*=.88*d.enemyHp')&&difficulty.includes('c.damage*=.94*d.enemyDamage')&&difficulty.includes('c.speed*=.98*d.enemySpeed')],\n ['hard late scaling increased progressively',endgame.includes("hardLate=hard?(minutes*.009+Math.pow(minutes,1.08)*.0025):0")&&endgame.includes("hardLate=hard?(minutes*.004+Math.pow(minutes,1.06)*.0015):0")],\n ['first apex raw stats softened',catalog.includes('enemy.hp*=hpScale*1.80')&&catalog.includes('enemy.damage*=damageScale*1.18')]\n];\nlet failed=0;for(const [name,ok] of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failed++;}if(failed)process.exit(1);\n""",encoding='utf-8')
+          PY
+          node scripts/build-fingerprint.mjs
+      - name: Verify syntax and contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
+          node scripts/polish-contract-check.mjs
+          node scripts/realm-specials-contract.mjs
+          node scripts/apex-encounter-contract.mjs
+          node scripts/build-fingerprint.mjs --check
+          git diff --check
+      - name: Browser smoke
+        shell: bash
+        env:
+          STACKFALL_CHROME: /usr/bin/google-chrome
+        run: |
+          set -euo pipefail
+          mkdir -p test-results
+          python3 -m http.server 8000 >/tmp/stackfall-apex-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          sleep 2
+          node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000 --result=test-results/apex-pattern-smoke.json
+      - name: Commit tuned sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'stackfall-maintenance-bot'
+          git config user.email 'stackfall-maintenance-bot@users.noreply.github.com'
+          git add README.md docs src scripts
+          git diff --cached --check
+          git commit -m 'Rework apex timing patterns and difficulty curve'
+          git push origin HEAD:agent/apex-pattern-timer-balance
