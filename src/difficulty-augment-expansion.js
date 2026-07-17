@@ -31,7 +31,7 @@
   const baseStarterRender=renderStarterOptions;renderStarterOptions=function difficultyAwareStarterRender(){baseStarterRender();renderDifficulty();};
 
   const baseEnemyConfig=enemyConfig;
-  enemyConfig=function difficultyEnemyConfig(type){const c=baseEnemyConfig(type),d=window.stackfallDifficultyConfig();c.hp*=.92*d.enemyHp;c.damage*=d.enemyDamage;c.speed*=d.enemySpeed;return c;};
+  enemyConfig=function difficultyEnemyConfig(type){const c=baseEnemyConfig(type),d=window.stackfallDifficultyConfig();c.hp*=.88*d.enemyHp;c.damage*=.94*d.enemyDamage;c.speed*=.98*d.enemySpeed;return c;};
 
   const baseIon=fireIonChain;
   fireIonChain=function augmentedIonChain(stacks,echoed=false){baseIon(stacks,echoed);if(state.weaponAugments?.ion&&!echoed)scheduleWeaponAction(115,()=>baseIon(stacks,true));};
