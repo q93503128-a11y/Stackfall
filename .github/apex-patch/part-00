@@ -1,0 +1,155 @@
+diff --git a/README.md b/README.md
+index 4590d27..175e75d 100644
+--- a/README.md
++++ b/README.md
+@@ -40,7 +40,7 @@ python -m http.server 8000
+ - 치명타 확률 상한: 100%
+ - 레벨당 기본 피해 증가: 1.1%
+ - 연쇄 피해: 하드 캡 없이 로그형 소프트 캡
+-- 초월체: 런 진행 10분 간격이며 선택·보상·이벤트·일시정지보다 우선 등장
++- 초월체: 실제 게임 시간 8분 간격이며 선택·보상·이벤트·일시정지보다 우선 등장
+ - 같은 이름의 스탯은 합연산
+ - 이름이 다른 피해 계수는 곱연산
+ 
+@@ -118,9 +118,9 @@ python -m http.server 8000
+ ## 맵 이벤트 제한과 초월체 우선순위
+ 
+ - 이벤트 표식은 46초 뒤 소멸하고 해당 이벤트를 다시 예약하므로 다른 이벤트를 영구 차단하지 않습니다.
+-- 성운 보관소·우주선 잔해·공허 선택 화면은 22초 제한이며 시간이 끝나면 안전한 기본 선택 또는 이탈을 수행합니다.
++- 성운 보관소·우주선 잔해·공허 선택 화면은 전투와 게임 시간이 멈추므로 자동 선택 제한시간을 사용하지 않습니다.
+ - 추락한 우주선 전투 제한은 82초, 공허 균열 보스 제한은 108초입니다. 실패하면 전용 적·탄막·예고를 정리하고 다음 이벤트를 예약합니다.
+-- 초월체 시계는 선택·보상·이벤트·일시정지·시네마틱 중에도 진행됩니다. 예정 시각이 되면 열린 선택을 안전하게 확정하고 모든 일반 이벤트를 취소한 뒤 초월체 등장 연출을 시작합니다.
++- 초월체 예정 시각은 실제 게임 시간만 사용합니다. 일시정지·능력 선택·보상·이벤트 선택·등장 연출 중에는 게임 시간과 초월체 시계가 함께 멈추며, 누적 게임 시간이 8분·16분·24분에 도달했을 때만 일반 이벤트보다 우선해 등장합니다.
+ - 초월체 전투는 전용 봉쇄장 안에서 진행되며 초월체는 넉백, 중력 흡입, 시간 정지와 이동 봉쇄에 면역입니다.
+ - 시간포식자는 부서진 시계판과 시간 절단, 종말 항성은 거대 고정 용광로와 회전 화염선, 마지막 성좌는 소형 본체와 거대 별자리 격자 패턴을 사용합니다.
+ 
+@@ -264,7 +264,7 @@ node scripts/browser-smoke.mjs --soak-ms=120000
+ - 이벤트 능력 선택지는 전투가 멈추므로 자동 선택 제한시간을 사용하지 않는다.
+ - 레벨업·보스 보상·이벤트 선택지는 숫자 1·2·3으로 선택할 수 있고 카드에 단축키를 표시한다.
+ - 다중 투영 코어는 최대 2중첩의 이벤트 전용 패시브로 투사체와 공전 공격체 수를 늘린다. 일반 레벨업 풀에는 등장하지 않는다.
+-- 초월체 등장 간격은 600초(10분)다.
++- 초월체 등장 간격은 480초(8분)다.
+ 
+ ### 맵 전환·장기 특수효과·무제한 위협 성장
+ 
+@@ -275,3 +275,12 @@ node scripts/browser-smoke.mjs --soak-ms=120000
+ - 4분 이후 적 피해·속도는 상한이나 로그함수 없이 선형항과 거듭제곱항으로 계속 증가한다. 적 체력 성장 역시 기존의 무제한 거듭제곱 성장을 유지한다.
+ - 재생 장갑은 중첩당 최대 체력 +24와 즉시 회복 36, 비율형 최대 체력 패시브는 중첩당 +10%로 상향한다.
+ - 성능 보호 단계는 개체 수만으로 화질을 낮추지 않는다. 측정 프레임 지연이 누적된 경우에만 효과 밀도·개체 상한을 줄이며, 해상도 축소는 심각한 지연이 추가로 2.5초 이상 지속될 때만 허용한다.
++
++### 초월체·보스 패턴 보강
++
++- 보스와 초월체는 플레이어가 약 1.2초 이상 거의 움직이지 않으면 현재 위치를 직접 겨냥하는 정지 대응 패턴을 사용한다.
++- 시간포식자는 현재 위치와 과거 이동 기록을 겹쳐 공격하는 시간 잔상·시계바늘 절단을 사용한다.
++- 종말 항성은 회전하는 안전구역이 남는 용광로 방사선과 현재·예측 위치 연속 낙성을 사용한다.
++- 마지막 성좌는 전장 외곽 노드를 잇는 별자리 격자, 노드 사격과 순간이동을 사용한다.
++- 세 초월체는 체력 75%·50%·25%와 전투 105초·180초·240초를 기준으로 최대 4단계까지 패턴이 확장된다.
++- 전체 기본 난도는 적 체력·피해·속도를 소폭 낮췄으며, 어려움 난이도만 4분 이후 피해와 속도 보정이 시간에 따라 조금 더 빠르게 누적된다.
+diff --git a/docs/GAME_DESIGN.md b/docs/GAME_DESIGN.md
+index 0c225b0..d6e66d4 100644
+--- a/docs/GAME_DESIGN.md
++++ b/docs/GAME_DESIGN.md
+@@ -1,6 +1,6 @@
+ # STACKFALL 게임 정보 및 개발 규칙
+ 
+-마지막 동기화: 2026-07-16
++마지막 동기화: 2026-07-17
+ 
+ 이 문서는 STACKFALL의 게임 정보, 실제 수치, 렌더링 구조, 회귀 방지 규칙과 QA 기준을 한곳에 모은 공식 기준 문서다. `README.md`와 이 문서만 공식 문서로 사용한다.
+ 
+@@ -34,7 +34,7 @@
+ - 치명타 확률 상한: 100%
+ - 레벨당 기본 피해 증가: 1.1%
+ - 연쇄 피해: 하드 캡 없음, 로그형 소프트 캡
+-- 초월체 등장: 런 진행 10분 간격, 모든 선택·보상·맵 이벤트·일시정지보다 우선
++- 초월체 등장: 실제 게임 시간 8분 간격, 모든 선택·보상·맵 이벤트·일시정지보다 우선
+ 
+ ### 성장 경험치
+ 
+@@ -85,7 +85,7 @@
+ | echo | 에코 비콘 | 발사·설치형 장비 복제 확률 +7.5% |
+ | power | 출력 증폭 | 모든 피해 +10% |
+ | haste | 가속 회로 | 장비 발동 주기 -10% |
+-| vitality | 재생 장갑 | 최대 체력 +20, 즉시 체력 30 회복 |
++| vitality | 재생 장갑 | 최대 체력 +24, 즉시 체력 36 회복 |
+ | speed | 벡터 부스터 | 이동속도 +9% |
+ | crit | 취약점 해석 | 치명타 확률 +6% |
+ | chain | 연쇄 과부하 | 유지시간 +7%, 연쇄 피해 효율 증가 |
+@@ -697,14 +697,14 @@ PixiJS WebGL은 `generic`, `core`, `ember`, `comet`, `shard` 텍스처를 따로
+ ### 맵 이벤트 생명주기
+ 
+ - 표식 제한: 46초. 미접촉 표식은 제거하고 같은 종류를 38~62초 범위로 다시 예약한다.
+-- 선택 제한: 22초. 성운 보관소·전리품은 첫 안전 선택을 자동 적용하고, 공허 균열 진입 선택은 자동 이탈한다.
++- 선택 화면에서는 전투와 게임 시간이 멈추며 자동 선택 제한시간을 사용하지 않는다.
+ - 추락한 우주선: 82초 제한. 시간 초과 시 이벤트 적·적 탄환·예고를 보상 없이 제거하고 95~130초 뒤 재예약한다.
+ - 공허 균열: 108초 제한. 시간 초과 시 공허 적·탄막·예고를 제거하고 실공간으로 긴급 복귀한 뒤 재예약한다.
+ - 실패·취소·초월체 난입은 `mapEventActive`, 표식, 전용 적, 적 탄환, 위험 예고, 전투 타이머를 한꺼번에 정리해야 한다.
+ 
+ ### 초월체 절대 우선순위
+ 
+-- `apexClock`은 메뉴와 게임 오버를 제외한 런의 모든 상태에서 진행한다.
++- 초월체 예정 시각은 `state.time`만 사용한다. `state.time`이 증가하지 않는 일시정지·능력 선택·보상·이벤트 선택·시네마틱 상태에서는 초월체 예정 시간도 진행하지 않는다.
+ - 등장 시각이 되면 레벨 선택과 보스 보상은 첫 유효 선택을 안전하게 확정한다.
+ - 성운 보관소, 우주선, 공허 균열, 일시정지, 설정, 능력 장부, 일반 차원 전환은 즉시 닫거나 취소한다.
+ - 기존 적·아군 탄환·적 탄환·위험 예고·중력 우물을 정리한 뒤 초월체 전용 시네마틱을 시작한다.
+@@ -782,3 +782,12 @@ The ability ledger is a non-destructive inspection layer during level-up selecti
+ - 후반 적 성장식에는 최대값과 로그함수를 사용하지 않는다. 장시간 플레이에서도 피해·속도·체력 압박이 계속 증가해야 한다.
+ - 재생 장갑은 중첩당 최대 체력 +24와 즉시 회복 36, 비율형 최대 체력 패시브는 중첩당 +10%로 상향한다.
+ - 성능 보호 단계는 개체 수만으로 화질을 낮추지 않는다. 측정 프레임 지연이 누적된 경우에만 효과 밀도·개체 상한을 줄이며, 해상도 축소는 심각한 지연이 추가로 2.5초 이상 지속될 때만 허용한다.
++
++### 초월체·보스 패턴 보강
++
++- 보스와 초월체는 플레이어가 약 1.2초 이상 거의 움직이지 않으면 현재 위치를 직접 겨냥하는 정지 대응 패턴을 사용한다.
++- 시간포식자는 현재 위치와 과거 이동 기록을 겹쳐 공격하는 시간 잔상·시계바늘 절단을 사용한다.
++- 종말 항성은 회전하는 안전구역이 남는 용광로 방사선과 현재·예측 위치 연속 낙성을 사용한다.
++- 마지막 성좌는 전장 외곽 노드를 잇는 별자리 격자, 노드 사격과 순간이동을 사용한다.
++- 세 초월체는 체력 75%·50%·25%와 전투 105초·180초·240초를 기준으로 최대 4단계까지 패턴이 확장된다.
++- 전체 기본 난도는 적 체력·피해·속도를 소폭 낮췄으며, 어려움 난이도만 4분 이후 피해와 속도 보정이 시간에 따라 조금 더 빠르게 누적된다.
+diff --git a/docs/WIKI.md b/docs/WIKI.md
+index a863b04..e5c5eda 100644
+--- a/docs/WIKI.md
++++ b/docs/WIKI.md
+@@ -36,7 +36,7 @@
+ 
+ ### 성운 보관소
+ 
+-청록색 각형 기록 보관소다. 세 개의 봉인 기록 중 하나를 복원해 피해, 속도, 체력, 자석, 투사체, 방벽 또는 연쇄 능력을 강화한다. 선택 제한은 22초이며 시간이 끝나면 첫 안전 선택이 적용된다.
++청록색 각형 기록 보관소다. 세 개의 봉인 기록 중 하나를 복원해 피해, 속도, 체력, 자석, 투사체, 방벽 또는 연쇄 능력을 강화한다. 선택 중에는 전투와 게임 시간이 멈추며 시간 제한 없이 기록을 확인할 수 있다.
+ 
+ ### 추락한 우주선
+ 
+@@ -50,7 +50,7 @@
+ 
+ ## 5. 초월체
+ 
+-초월체는 런 진행 10분마다 등장하는 최종보스급 존재다. 레벨 선택, 보상, 맵 이벤트, 일시정지보다 우선한다. 등장 직전 열려 있던 필수 선택은 안전하게 확정되고 일반 전장은 정리된다.
++초월체는 실제 게임 시간 8분마다 등장하는 최종보스급 존재다. 레벨 선택, 보상, 맵 이벤트, 일시정지보다 우선한다. 등장 직전 열려 있던 필수 선택은 안전하게 확정되고 일반 전장은 정리된다.
+ 
+ 초월체 전투에서는 전용 봉쇄장이 생긴다. 플레이어는 멀리 도망칠 수 없고, 초월체는 넉백·중력 흡입·시간 정지·이동 봉쇄에 면역이다.
+ 
+@@ -115,3 +115,12 @@ I 또는 Tab으로 능력 장부를 열면 게임이 멈춘다. 장부의 공격
+ 보스 보상은 한 번에 최대 4개가 표시됩니다. 무기 특수효과는 현재 가지고 있는 무기에 대해서만 등장합니다. 같은 무기도 피해 증가, 공격 주기 단축, 정예 피해, 높은 체력 대상 피해, 처치 후 대기시간 회수 효과를 여러 번 중첩할 수 있어 장시간 생존할수록 빌드가 계속 확장됩니다. 일식 동력로는 상시 피해 +20%를 제공하며 체력 50% 미만부터 추가 피해가 증가해 체력 30% 이하에서 총 최대 +50%가 됩니다.
+ - 재생 장갑은 중첩당 최대 체력 +24와 즉시 회복 36, 비율형 최대 체력 패시브는 중첩당 +10%로 상향한다.
+ - 성능 보호 단계는 개체 수만으로 화질을 낮추지 않는다. 측정 프레임 지연이 누적된 경우에만 효과 밀도·개체 상한을 줄이며, 해상도 축소는 심각한 지연이 추가로 2.5초 이상 지속될 때만 허용한다.
++
++### 초월체·보스 패턴 보강
++
++- 보스와 초월체는 플레이어가 약 1.2초 이상 거의 움직이지 않으면 현재 위치를 직접 겨냥하는 정지 대응 패턴을 사용한다.
++- 시간포식자는 현재 위치와 과거 이동 기록을 겹쳐 공격하는 시간 잔상·시계바늘 절단을 사용한다.
++- 종말 항성은 회전하는 안전구역이 남는 용광로 방사선과 현재·예측 위치 연속 낙성을 사용한다.
++- 마지막 성좌는 전장 외곽 노드를 잇는 별자리 격자, 노드 사격과 순간이동을 사용한다.
++- 세 초월체는 체력 75%·50%·25%와 전투 105초·180초·240초를 기준으로 최대 4단계까지 패턴이 확장된다.
++- 전체 기본 난도는 적 체력·피해·속도를 소폭 낮췄으며, 어려움 난이도만 4분 이후 피해와 속도 보정이 시간에 따라 조금 더 빠르게 누적된다.
+diff --git a/scripts/browser-smoke.mjs b/scripts/browser-smoke.mjs
+index 046c77b..054d989 100644
+--- a/scripts/browser-smoke.mjs
++++ b/scripts/browser-smoke.mjs
+@@ -183,10 +183,12 @@ async function mainScenario(page,scenario){
+     resetGame();state.spawnTimer=9999;state.encounterTimer=9999;state.mapEventActive={type:'crash',wave:0,waves:[1],remaining:0,spawnCd:99,between:99,remainingTime:.001,maxTime:82,arena:{x:0,y:0,r:210}};state.entities.enemies.push({id:state.nextId++,type:'grunt',kind:'normal',eventKind:'crash',x:20,y:0,r:12,hp:100,maxHp:100,speed:0,damage:0,color:'#fff',xp:0,hit:0,dead:false,phase:0,skillCd:999,burstCd:999,pulseCd:999});updateMapEvents(.01);const crash={active:state.mapEventActive,enemies:state.entities.enemies.filter(e=>e.eventKind==='crash').length,mode:state.mode};
+     resetGame();state.entities.mapEvents=[{type:'vault',x:999,y:999,pulse:0,life:.001,maxLife:46,consumed:false}];updateMapEvents(.01);const marker={count:state.entities.mapEvents.length,clock:state.eventClocks.vault};
+     resetGame();state.apexArena={x:0,y:0,r:220,form:'starforge'};player.x=500;player.y=0;updateMapEventPlayer(0);const bounded=Math.hypot(player.x,player.y)<=220-player.r-19;const control=enemyControlFactor({kind:'apex',type:'boss',r:120,controlImmune:true});
+-    resetGame();openChoices();state.apexClock=APEX_INTERVAL_SECONDS;state.nextApexAt=APEX_INTERVAL_SECONDS;const priority=updateApexSystems(0,true),apex={priority,mode:state.mode,pending:state.pendingApexForm,arena:!!state.apexArena,choiceHidden:ui.choice.classList.contains('hidden'),event:state.mapEventActive};resetGame();return{crash,marker,bounded,control,apex};
++    resetGame();openChoices();state.time=APEX_INTERVAL_SECONDS;state.nextApexAt=APEX_INTERVAL_SECONDS;const priority=updateApexSystems(0),apex={priority,mode:state.mode,pending:state.pendingApexForm,arena:!!state.apexArena,choiceHidden:ui.choice.classList.contains('hidden'),event:state.mapEventActive};resetGame();return{crash,marker,bounded,control,apex};
+   })()`);scenario.observations.eventApex=eventApex;check(!eventApex.crash.active&&eventApex.crash.enemies===0&&eventApex.crash.mode==='playing','crash timeout did not cleanly release the encounter',page.name);check(eventApex.marker.count===0&&eventApex.marker.clock>0,'expired map marker blocked future events',page.name);check(eventApex.bounded&&eventApex.control===0,'apex arena/control immunity invariant failed',page.name);check(eventApex.apex.priority&&eventApex.apex.mode==='cinematic'&&eventApex.apex.pending&&eventApex.apex.arena&&eventApex.apex.choiceHidden&&!eventApex.apex.event,'apex did not override an active choice/event state',page.name);
+ 
+-  const pauseStart=await evaluate(page,`(()=>{resetGame();state.weaponAugments.blade=true;state.time=5;player.strongBladeBurstReadyAt=0;const enemy=state.entities.enemies[0];enemy.hp=enemy.maxHp=1e7;const random=Math.random;Math.random=()=>1;dealDamage(enemy,1,{source:'blade',canCrit:false});Math.random=random;togglePause(true);return{time:state.time,ready:player.strongBladeBurstReadyAt};})()`);await sleep(2050);const cooldown=await evaluate(page,`(()=>{const pausedTime=state.time,readyBefore=player.strongBladeBurstReadyAt;togglePause(false);const enemy=state.entities.enemies[0],random=Math.random;Math.random=()=>1;dealDamage(enemy,1,{source:'blade',canCrit:false});const immediateReady=player.strongBladeBurstReadyAt;state.time=readyBefore;dealDamage(enemy,1,{source:'blade',canCrit:false});Math.random=random;const advancedReady=player.strongBladeBurstReadyAt;resetGame();const resetReady=player.strongBladeBurstReadyAt;showMainMenu();const menuReady=player.strongBladeBurstReadyAt;resetGame();return{pausedTime,readyBefore,immediateReady,advancedReady,resetReady,menuReady};})()`);scenario.observations.cooldown={pauseStart,...cooldown};check(cooldown.pausedTime===pauseStart.time&&cooldown.immediateReady===cooldown.readyBefore&&cooldown.advancedReady>cooldown.readyBefore,'blade augment cooldown advanced on wall clock',page.name);check(cooldown.resetReady===0&&cooldown.menuReady===0,'blade augment cooldown survived reset/menu',page.name);
