@@ -1,8 +1,8 @@
 name: Finalize apex pattern rework
 
 on:
-  push:
-    branches: [agent/apex-pattern-final]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
