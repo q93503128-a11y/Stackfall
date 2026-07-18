@@ -46,3 +46,5 @@ jobs:
         run: OWNERSHIP_GROUP=docs node scripts/source-ownership-contract.mjs
       - name: Check CI ownership
         run: OWNERSHIP_GROUP=ci node scripts/source-ownership-contract.mjs
+      - name: Check community feedback polish
+        run: node scripts/community-feedback-contract.mjs
