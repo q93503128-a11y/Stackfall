@@ -22,6 +22,7 @@ expect('reward paths use canonical health helpers',rewards.includes("if(key==='v
 expect('event paths use canonical health helpers',events.includes("if(key==='vitality')applyStackfallVitalityGrowth(1)")&&events.includes("if(key==='stellarLife')applyStackfallStellarLifeGrowth(1)"));
 expect('no late health reconciliation patch',!endgame.includes('reconcileRecoveryGrowth')&&!endgame.includes('regenBonusTimer'));
 expect('regen has one continuous owner',progression.includes("player.hp=Math.min(player.maxHp,player.hp+n*dt)")&&ledger.includes("const regen=stat('regen'),")&&!endgame.includes("passiveStacks('regen')"));
+expect('regen documentation matches runtime',design.includes('| regen | 자가 복원 | 초당 체력 1 회복 |')&&wiki.includes('자가 복원은 중첩당 초당 체력 1'));
 expect('hard profile has one canonical owner',difficulty.includes("hard:Object.freeze({key:'hard',enemyHp:1.32,enemyDamage:1.30,enemySpeed:1.12,rangedChance:1.28})")&&!endgame.includes('window.stackfallDifficultyConfig=function refinedDifficultyConfig'));
 expect('prism uses accepted lower tuning',endgame.includes("stage===2?(prismN>=6?3.65:prismN>=5?3.45:3.25)")&&design.includes('5중첩 ×3.45')&&design.includes('6중첩 ×3.65'));
 expect('ledger pause rule documented',design.includes('능력 탭을 열면 게임이 일시정지')&&wiki.includes('능력 장부를 열면 게임이 일시정지'));
