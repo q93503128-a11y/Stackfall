@@ -3,12 +3,15 @@ name: Export full source audit
 on:
   push:
     branches: [agent/rebuild-special-effects]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
   export:
+    if: github.head_ref == 'agent/rebuild-special-effects' || github.ref_name == 'agent/rebuild-special-effects'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
