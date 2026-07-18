@@ -259,7 +259,7 @@ node scripts/browser-smoke.mjs --soak-ms=120000
 - Ranged enemies begin appearing later and their normal-mode share is capped below the previous value.
 - Every weapon, including Ion Chain, Nova Pulse, Meteor Drones, Rail, Galactic Spiral, and Reflector, has a dedicated boss-reward augment. Nebula Boomerang kills can leap from the defeated target to a random nearby enemy.
 - The ability ledger can be opened while a level-up choice is waiting. Combat remains paused and the same choice cards are restored on close.
-- Random upgrade notices remain visible two seconds longer. Elite and mini-boss labels are not drawn over the battlefield; their category and name are shown only in the top boss HUD.
+- Random upgrade notices remain visible two seconds longer. Elite and mini-boss labels are not drawn over enemy bodies; the top boss HUD shows their category and name, while off-screen bosses retain compact direction arrows with category and distance.
 
 ### 후반 위협·프리즘·선택 조작
 
