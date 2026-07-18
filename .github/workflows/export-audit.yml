@@ -75,6 +75,8 @@ jobs:
           node scripts/community-feedback-contract.mjs
           for group in health regen-runtime regen-docs hard prism docs ci; do OWNERSHIP_GROUP="$group" node scripts/source-ownership-contract.mjs; done
       - name: Run local browser smoke
+        id: smoke
+        continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
@@ -86,6 +88,18 @@ jobs:
             sleep 0.2
           done
           STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/rebuild-special-effects.json
+      - name: Upload browser diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rebuild-special-effects-smoke
+          path: test-results
+          retention-days: 1
+      - name: Require browser smoke success
+        shell: bash
+        run: |
+          cat test-results/rebuild-special-effects.json || true
+          test '${{ steps.smoke.outcome }}' = 'success'
       - name: Publish validated source
         shell: bash
         run: |
