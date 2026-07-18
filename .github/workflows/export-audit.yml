@@ -21,16 +21,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Assemble and apply reviewed patch
+      - name: Assemble compressed source patch
         shell: bash
         run: |
           set -euo pipefail
-          cat scripts/rebuild-special-effects.patch.b64.* | base64 --decode | gzip --decompress > /tmp/rebuild-special-effects.patch
-          gzip --test < <(cat scripts/rebuild-special-effects.patch.b64.* | base64 --decode)
+          cat scripts/rebuild-special-effects.patch.b64.* | base64 --decode > /tmp/rebuild-special-effects.patch.gz
+          gzip --test /tmp/rebuild-special-effects.patch.gz
+          gzip --decompress --stdout /tmp/rebuild-special-effects.patch.gz > /tmp/rebuild-special-effects.patch
+      - name: Apply primary source patch
+        shell: bash
+        run: |
+          set -euo pipefail
           patch --dry-run -p1 < /tmp/rebuild-special-effects.patch
           patch -p1 < /tmp/rebuild-special-effects.patch
-          python3 scripts/apply-special-effects-followup.py
-          node scripts/build-fingerprint.mjs
+      - name: Apply exact browser follow-up
+        run: python3 scripts/apply-special-effects-followup.py
+      - name: Refresh build fingerprint
+        run: node scripts/build-fingerprint.mjs
       - name: Verify intended source set
         shell: bash
         run: |
