@@ -29,6 +29,7 @@ expect('prism uses accepted lower tuning',endgame.includes("stage===2?(prismN>=6
 expect('obsolete values are absent',!core.includes('최대 체력 +24, 즉시 체력 36 회복')&&!design.includes('4초마다 체력 2.5 회복')&&!design.includes('5중첩 ×4.35'));
 expect('ledger pause rule documented',design.includes('능력 탭을 열면 게임이 일시정지')&&wiki.includes('능력 장부를 열면 게임이 일시정지'));
 expect('all contracts are wired into CI',['polish-contract-check.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','source-ownership-contract.mjs'].every(name=>validate.includes(name)));
+expect('validation workflow is permanent',validate.includes('contents: read')&&!validate.includes('pull_request_target')&&!validate.includes('one-time canonical source migration'));
 expect('no runtime balance hotfix module',!index.includes('balance-hotfix')&&!index.includes('source-sync')&&!index.includes('override.js'));
 expect('temporary migration files are removed',!fs.existsSync('scripts/one-time-balance-source-sync.mjs')&&!fs.existsSync('.github/workflows/one-time-balance-source-sync.yml'));
 
