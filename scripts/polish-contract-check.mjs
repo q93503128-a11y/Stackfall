@@ -25,7 +25,7 @@ const checks=[
 ['random reward notice extended',read('src/map-event-expansion.js').includes('scheduleUiAction(4900')&&read('src/reward-refinement.js').includes('scheduleUiAction(4800')],
 ['all weapon augment definitions',read('src/reward-refinement.js').includes('window.stackfallWeaponAugmentDefs=Object.freeze(augmentDefs)')&&['ion','nova','drone','rail','spiral','mirror'].every(key=>read('src/reward-refinement.js').includes(`${key}:{icon:`))],
 ['arc ricochet source tags',read('src/systems.js').includes("p.ricochet?'arc-ricochet':'arc'")],
-['elite labels live only in top HUD',!read('src/build-audit-ui.js').includes('drawEliteMarkers')&&!read('src/performance-guard.js').includes('drawEliteEdgeIndicator')&&read('src/combat-balance-refinement.js').includes('bossHudType')],
+['elite body labels removed and off-screen arrows retained',!read('src/build-audit-ui.js').includes('drawEliteMarkers')&&!read('src/performance-guard.js').includes('drawEliteEdgeIndicator')&&read('src/build-audit-ui.js').includes('drawEliteEdgeArrows')&&read('src/combat-balance-refinement.js').includes('bossHudType')],
 ['enemy shot swept collision',read('src/bosses.js').includes('relativeProjectileSweepHitsPlayer')],
 ['enemy shot visual families',read('src/boss-catalog.js').includes('enemyProjectileVisualFor')&&read('src/render-entities.js').includes("kind==='constellation'")&&read('src/render-entities.js').includes("kind==='void'")],
 ['enemy shots use cached bullet renderer',read('src/performance-guard.js').includes('cachedEnemyProjectiles')&&read('src/performance-guard.js').includes('drawCachedProjectiles(state.entities.enemyProjectiles,true)')&&!read('src/performance-guard.js').includes('styledEnemyProjectiles')]

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 const read=path=>fs.readFileSync(path,'utf8');
-const core=read('src/core.js'),systems=read('src/systems.js'),runtime=read('src/runtime-config.js'),render=read('src/render-entities.js'),performance=read('src/performance-guard.js'),background=read('src/realm-backgrounds.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),progression=read('src/progression-expansion.js'),styles=read('styles.css'),wiki=read('docs/WIKI.md'),validate=read('.github/workflows/validate.yml');
+const core=read('src/core.js'),systems=read('src/systems.js'),runtime=read('src/runtime-config.js'),render=read('src/render-entities.js'),performance=read('src/performance-guard.js'),buildAudit=read('src/build-audit-ui.js'),renderLoop=read('src/render.js'),gpu=read('src/gpu-renderer.js'),background=read('src/realm-backgrounds.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),progression=read('src/progression-expansion.js'),styles=read('styles.css'),wiki=read('docs/WIKI.md'),validate=read('.github/workflows/validate.yml');
 const checks=[];const expect=(name,ok)=>checks.push([name,Boolean(ok)]);
 expect('player movement telemetry and facing',core.includes('speed:248')&&core.includes('facingAngle')&&systems.includes('player.moveIntensity')&&systems.includes('player.facingAngle=Math.atan2'));
 expect('fixed orbit bands',runtime.includes('ORBIT_RADIUS_BANDS')&&!runtime.includes('ORBIT_EQUIPMENT_ORDER')&&runtime.includes('blade:104')&&runtime.includes('prism:151'));
@@ -13,8 +13,9 @@ expect('teleport warning and contact grace',patterns.includes('constellationTele
 expect('teleport marker stays cosmetic',bosses.includes('function triggerCosmeticTelegraph')&&bosses.includes('if(t.cosmetic){triggerCosmeticTelegraph(t);continue;}'));
 expect('boss chain continuity',progression.includes('registerStackfallBossChainDamage')&&progression.includes('state.bossChainDamage')&&progression.includes('applyChainMilestones'));
 expect('readable compact choice cards',progression.includes('choice-body')&&progression.includes('choice-copy')&&progression.includes('choice-status')&&styles.includes('grid-template-columns:72px minmax(0,1fr)')&&styles.includes('min-height:218px')&&!styles.includes('min-height:302px'));
-expect('elite labels removed from battlefield',!read('src/build-audit-ui.js').includes('drawEliteMarkers')&&!performance.includes('drawEliteEdgeIndicator')&&read('src/combat-balance-refinement.js').includes('bossHudType'));
-expect('ranged overlay and map edge helper remain defined',read('src/build-audit-ui.js').includes('function drawRangedOverlay()')&&read('src/build-audit-ui.js').includes('function safeEdge('));
+expect('elite body labels removed but off-screen arrows retained',!buildAudit.includes('drawEliteMarkers')&&!performance.includes('drawEliteEdgeIndicator')&&buildAudit.includes('drawEliteEdgeArrows')&&buildAudit.includes('stackfallGuidanceDiagnostics')&&read('src/combat-balance-refinement.js').includes('bossHudType'));
+expect('ranged overlay and map edge helper remain defined',buildAudit.includes('function drawRangedOverlay()')&&buildAudit.includes('function safeEdge('));
+expect('map event arrows remain on canvas and GPU paths',buildAudit.includes('drawMapEvents=function auditedEventIndicators')&&buildAudit.includes('guidanceEventArrows')&&renderLoop.includes("runDrawStage('drawMapEvents'")&&gpu.includes("runDrawStage('drawMapEventsForeground'"));
 expect('player wiki synced',wiki.includes('전투가 잘 보이게 바뀐 부분'));
 expect('community contract wired into CI',validate.includes('node scripts/community-feedback-contract.mjs'));
 const temporaryPaths=['.github/workflows/export-community-polish-source.yml','.github/workflows/apply-community-feedback-migration.yml','scripts/apply-community-feedback.sh'];
