@@ -1,0 +1,21 @@
+--- a/src/build-audit-ui.js
++++ b/src/build-audit-ui.js
+@@ -35,6 +35,8 @@
+     ledgerScreen.addEventListener('stackfall:ledger-rendered',annotate);ledgerBody.addEventListener('click',e=>{const item=e.target.closest('.ledger-card');if(item?.dataset.weaponKey)openWeapon(item.dataset.weaponKey);else if(item?.dataset.passiveKey)openPassive(item.dataset.passiveKey);});annotate();
+   }
+ 
++  function safeEdge(dx,dy,bottomGap=154){const cx=vw/2,cy=vh/2,left=76,right=vw-76,top=82,bottom=vh-bottomGap,values=[];if(dx>0)values.push((right-cx)/dx);else if(dx<0)values.push((left-cx)/dx);if(dy>0)values.push((bottom-cy)/dy);else if(dy<0)values.push((top-cy)/dy);const s=Math.min(...values.filter(v=>v>0));return{x:cx+dx*s,y:cy+dy*s};}
++  function drawRangedOverlay(){for(const e of state.entities.enemies){if(e.dead||e.type!=='ranged')continue;const p=worldToScreen(e.x,e.y);if(p.x<-50||p.x>vw+50||p.y<-50||p.y>vh+50)continue;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.atan2(player.y-e.y,player.x-e.x));ctx.strokeStyle=e.eventKind==='crash'?'#ffd078':'#75eaff';ctx.fillStyle='rgba(6,20,34,.92)';ctx.lineWidth=2;ctx.shadowBlur=14;ctx.shadowColor=ctx.strokeStyle;ctx.beginPath();ctx.moveTo(e.r,0);ctx.lineTo(e.r*.22,-e.r*.72);ctx.lineTo(-e.r*.76,-e.r*.44);ctx.lineTo(-e.r*.76,e.r*.44);ctx.lineTo(e.r*.22,e.r*.72);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle=ctx.strokeStyle;ctx.fillRect(e.r*.20,-2,e.r*.92,4);ctx.beginPath();ctx.arc(-e.r*.12,0,3,0,TAU);ctx.fill();ctx.restore();}}
+   const baseDrawEnemies=drawEnemies;drawEnemies=function auditedEnemyDraw(){baseDrawEnemies();drawRangedOverlay();};
+ 
+   function eventMeta(type){return type==='crash'?{label:'우주선',icon:'⌁',color:'#ff9a62'}:type==='void'?{label:'공허 균열',icon:'◉',color:'#b36bff'}:{label:'성운 보관소',icon:'◇',color:'#75eaff'};}
+--- a/scripts/community-feedback-contract.mjs
++++ b/scripts/community-feedback-contract.mjs
+@@ -14,6 +14,7 @@
+ expect('boss chain continuity',progression.includes('registerStackfallBossChainDamage')&&progression.includes('state.bossChainDamage')&&progression.includes('applyChainMilestones'));
+ expect('readable compact choice cards',progression.includes('choice-body')&&progression.includes('choice-copy')&&progression.includes('choice-status')&&styles.includes('grid-template-columns:72px minmax(0,1fr)')&&styles.includes('min-height:218px')&&!styles.includes('min-height:302px'));
+ expect('elite labels removed from battlefield',!read('src/build-audit-ui.js').includes('drawEliteMarkers')&&!performance.includes('drawEliteEdgeIndicator')&&read('src/combat-balance-refinement.js').includes('bossHudType'));
++expect('ranged overlay and map edge helper remain defined',read('src/build-audit-ui.js').includes('function drawRangedOverlay()')&&read('src/build-audit-ui.js').includes('function safeEdge('));
+ expect('player wiki synced',wiki.includes('전투가 잘 보이게 바뀐 부분'));
+ expect('community contract wired into CI',validate.includes('node scripts/community-feedback-contract.mjs'));
+ const temporaryPaths=['.github/workflows/export-community-polish-source.yml','.github/workflows/apply-community-feedback-migration.yml','scripts/apply-community-feedback.sh'];
