@@ -8,6 +8,10 @@ const endgame=read('src/endgame-balance-expansion.js');
 const difficulty=read('src/difficulty-augment-expansion.js');
 const ledger=read('src/ability-ledger-audit.js');
 const core=read('src/core.js');
+const bootstrap=read('src/bootstrap.js');
+const weapons=read('src/weapons.js');
+const auditUi=read('src/build-audit-ui.js');
+const browserSmoke=read('scripts/browser-smoke.mjs');
 const readme=read('README.md');
 const design=read('docs/GAME_DESIGN.md');
 const wiki=read('docs/WIKI.md');
@@ -30,9 +34,10 @@ expect('regen-docs','regen documentation matches runtime',readme.includes('자�
 expect('hard','hard profile has one canonical owner',difficulty.includes("hard:Object.freeze({key:'hard',enemyHp:1.32,enemyDamage:1.30,enemySpeed:1.12,rangedChance:1.28})")&&!endgame.includes('window.stackfallDifficultyConfig=function refinedDifficultyConfig'));
 expect('hard','hard profile documentation matches runtime',wiki.includes('적 체력 1.32배, 피해 1.30배, 속도 1.12배, 원거리 적 등장 비중 1.28배'));
 
-expect('prism','prism uses accepted lower tuning',endgame.includes("stage===2?(prismN>=6?3.65:prismN>=5?3.45:3.25)")&&design.includes('5중첩 ×3.45')&&design.includes('6중첩 ×3.65'));
+expect('prism','prism uses accepted lower tuning',endgame.includes("stage===2?(prismN>=6?3.65:prismN>=5?3.45:3.25)")&&weapons.includes("prismN>=6?3.65:prismN>=5?3.45:3.25")&&bootstrap.includes('최대 출력 ×3.45')&&bootstrap.includes('최대 출력 ×3.65')&&auditUi.includes("n>=6?'3.65':n>=5?'3.45':'3.25'")&&design.includes('5중첩 ×3.45')&&design.includes('6중첩 ×3.65'));
+expect('prism','obsolete prism values removed from player text',!bootstrap.includes('최대 출력 ×4.35')&&!bootstrap.includes('최대 출력 ×4.6')&&!weapons.includes('prismN>=6?4.6')&&!auditUi.includes("n>=6?'4.6'")&&browserSmoke.includes('stressed.prism[0]===3.45&&stressed.prism[1]===3.65'));
 
-expect('docs','obsolete values are absent',!core.includes('최대 체력 +24, 즉시 체력 36 회복')&&!design.includes('4초마다 체력 2.5 회복')&&!design.includes('5중첩 ×4.35')&&!difficulty.includes('enemyHp:1.18,enemyDamage:1.18'));
+expect('docs','obsolete values are absent',!core.includes('최대 체력 +24, 즉시 체력 36 회복')&&!bootstrap.includes('최대 체력 +20, 즉시 체력 30 회복')&&!design.includes('4초마다 체력 2.5 회복')&&!design.includes('5중첩 ×4.35')&&!difficulty.includes('enemyHp:1.18,enemyDamage:1.18'));
 expect('docs','ledger pause rule documented',design.includes('능력 탭을 열면 게임이 일시정지')&&wiki.includes('능력 장부를 열면 게임이 일시정지'));
 
 expect('ci','all contracts are wired into CI',['polish-contract-check.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','source-ownership-contract.mjs'].every(name=>validate.includes(name)));
