@@ -1,17 +1,15 @@
-name: Apply special effects rebuild
+name: Finalize special effects rebuild
 
 on:
   push:
     branches: [agent/rebuild-special-effects]
-  pull_request:
-    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
-  apply-and-validate:
-    if: (github.head_ref == 'agent/rebuild-special-effects' || github.ref_name == 'agent/rebuild-special-effects') && github.event.head_commit.message != 'Rebuild one-time weapon effects and combat HUD'
+  finalize-and-validate:
+    if: github.event.head_commit.message != 'Finalize special effects rebuild source'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,50 +19,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Assemble compressed source patch
-        shell: bash
-        run: |
-          set -euo pipefail
-          cat scripts/rebuild-special-effects.patch.b64.* | base64 --decode > /tmp/rebuild-special-effects.patch.gz
-          gzip --test /tmp/rebuild-special-effects.patch.gz
-          gzip --decompress --stdout /tmp/rebuild-special-effects.patch.gz > /tmp/rebuild-special-effects.patch
-      - name: Apply primary source patch
-        shell: bash
-        run: |
-          set -euo pipefail
-          patch --dry-run -p1 < /tmp/rebuild-special-effects.patch
-          patch -p1 < /tmp/rebuild-special-effects.patch
-      - name: Apply exact browser follow-up
+      - name: Apply idempotent follow-up
         run: python3 scripts/apply-special-effects-followup.py
       - name: Refresh build fingerprint
         run: node scripts/build-fingerprint.mjs
-      - name: Verify intended source set
+      - name: Verify final working diff
         shell: bash
         run: |
           set -euo pipefail
-          cat > /tmp/expected-files <<'EOF'
-          README.md
-          docs/GAME_DESIGN.md
-          docs/WIKI.md
-          scripts/browser-smoke.mjs
-          scripts/community-feedback-contract.mjs
-          scripts/endgame-balance-contract.mjs
-          scripts/polish-contract-check.mjs
-          scripts/realm-specials-contract.mjs
-          src/ability-ledger-audit.js
-          src/build-audit-ui.js
-          src/build-info.js
-          src/combat-balance-refinement.js
-          src/endgame-balance-expansion.js
-          src/map-event-expansion.js
-          src/performance-guard.js
-          src/progression-expansion.js
-          src/render-entities.js
-          src/reward-refinement.js
-          styles.css
-          EOF
           git diff --name-only | sort > /tmp/actual-files
-          sort -o /tmp/expected-files /tmp/expected-files
+          printf '%s\n' scripts/browser-smoke.mjs src/build-info.js | sort > /tmp/expected-files
           diff -u /tmp/expected-files /tmp/actual-files
           git diff --check
       - name: Check JavaScript syntax
@@ -83,8 +47,6 @@ jobs:
           node scripts/community-feedback-contract.mjs
           for group in health regen-runtime regen-docs hard prism docs ci; do OWNERSHIP_GROUP="$group" node scripts/source-ownership-contract.mjs; done
       - name: Run local browser smoke
-        id: smoke
-        continue-on-error: true
         shell: bash
         run: |
           set -euo pipefail
@@ -95,33 +57,21 @@ jobs:
             curl -fsS http://127.0.0.1:8000/ >/dev/null && break
             sleep 0.2
           done
-          STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/rebuild-special-effects.json
+          STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/rebuild-special-effects-final.json
       - name: Upload browser diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rebuild-special-effects-smoke
+          name: rebuild-special-effects-final-smoke
           path: test-results
           retention-days: 1
-      - name: Require browser smoke success
-        shell: bash
-        run: |
-          cat test-results/rebuild-special-effects.json || true
-          test '${{ steps.smoke.outcome }}' = 'success'
-      - name: Publish validated source
+      - name: Publish final source
         shell: bash
         run: |
           set -euo pipefail
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add README.md docs/GAME_DESIGN.md docs/WIKI.md styles.css \
-            src/progression-expansion.js src/reward-refinement.js src/ability-ledger-audit.js \
-            src/build-audit-ui.js src/performance-guard.js src/render-entities.js \
-            src/combat-balance-refinement.js src/endgame-balance-expansion.js \
-            src/map-event-expansion.js src/build-info.js \
-            scripts/browser-smoke.mjs scripts/community-feedback-contract.mjs \
-            scripts/endgame-balance-contract.mjs scripts/polish-contract-check.mjs \
-            scripts/realm-specials-contract.mjs
+          git add scripts/browser-smoke.mjs src/build-info.js
           git diff --cached --check
-          git commit -m 'Rebuild one-time weapon effects and combat HUD'
+          git commit -m 'Finalize special effects rebuild source'
           git push origin HEAD:agent/rebuild-special-effects
