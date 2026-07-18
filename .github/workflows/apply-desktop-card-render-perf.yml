@@ -3,6 +3,7 @@ name: Apply desktop card and render performance fix
 on:
   push:
     branches: [agent/desktop-card-render-perf]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -27,7 +28,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f -name '*.js' -o -name '*.mjs' -print0 | sort -z)
+          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
       - name: Run gameplay contracts
         run: |
           node scripts/polish-contract-check.mjs
