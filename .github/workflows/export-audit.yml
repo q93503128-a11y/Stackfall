@@ -29,8 +29,7 @@ jobs:
           gzip --test < <(cat scripts/rebuild-special-effects.patch.b64.* | base64 --decode)
           patch --dry-run -p1 < /tmp/rebuild-special-effects.patch
           patch -p1 < /tmp/rebuild-special-effects.patch
-          patch --dry-run -p1 < scripts/rebuild-special-effects-followup.patch
-          patch -p1 < scripts/rebuild-special-effects-followup.patch
+          python3 scripts/apply-special-effects-followup.py
           node scripts/build-fingerprint.mjs
       - name: Verify intended source set
         shell: bash
