@@ -81,14 +81,21 @@ jobs:
         run: |
           set -euo pipefail
           while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
-      - name: Run migrated gameplay contracts
+      - name: Check migrated polish contract
         if: steps.state.outputs.already != 'true'
-        run: |
-          node scripts/polish-contract-check.mjs
-          node scripts/apex-encounter-contract.mjs
-          node scripts/endgame-balance-contract.mjs
-          node scripts/realm-specials-contract.mjs
-          node scripts/community-feedback-contract.mjs
+        run: node scripts/polish-contract-check.mjs
+      - name: Check migrated apex contract
+        if: steps.state.outputs.already != 'true'
+        run: node scripts/apex-encounter-contract.mjs
+      - name: Check migrated endgame contract
+        if: steps.state.outputs.already != 'true'
+        run: node scripts/endgame-balance-contract.mjs
+      - name: Check migrated realm contract
+        if: steps.state.outputs.already != 'true'
+        run: node scripts/realm-specials-contract.mjs
+      - name: Check migrated community contract
+        if: steps.state.outputs.already != 'true'
+        run: node scripts/community-feedback-contract.mjs
       - name: Run migrated local browser smoke
         if: steps.state.outputs.already != 'true'
         shell: bash
