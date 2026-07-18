@@ -12,7 +12,9 @@ expect('movement landmarks and streaks',background.includes('SPACE_LANDMARKS')&&
 expect('teleport warning and contact grace',patterns.includes('constellationTeleportDestination')&&patterns.includes('teleportQueued')&&patterns.includes('contactSafeUntil=state.time+.48')&&bosses.includes('(e.contactSafeUntil||0)<=state.time'));
 expect('teleport marker stays cosmetic',bosses.includes('function triggerCosmeticTelegraph')&&bosses.includes('if(t.cosmetic){triggerCosmeticTelegraph(t);continue;}'));
 expect('boss chain continuity',progression.includes('registerStackfallBossChainDamage')&&progression.includes('state.bossChainDamage')&&progression.includes('applyChainMilestones'));
-expect('readable choice cards',progression.includes('choice-status')&&progression.includes('role-tag')&&progression.includes("tr('choice.current')")&&styles.includes('.choice-card .stack-info strong'));
+expect('readable compact choice cards',progression.includes('choice-body')&&progression.includes('choice-copy')&&progression.includes('choice-status')&&styles.includes('grid-template-columns:72px minmax(0,1fr)')&&styles.includes('min-height:218px')&&!styles.includes('min-height:302px'));
+expect('elite labels removed from battlefield',!read('src/build-audit-ui.js').includes('drawEliteMarkers')&&!performance.includes('drawEliteEdgeIndicator')&&read('src/combat-balance-refinement.js').includes('bossHudType'));
+expect('ranged overlay and map edge helper remain defined',read('src/build-audit-ui.js').includes('function drawRangedOverlay()')&&read('src/build-audit-ui.js').includes('function safeEdge('));
 expect('player wiki synced',wiki.includes('전투가 잘 보이게 바뀐 부분'));
 expect('community contract wired into CI',validate.includes('node scripts/community-feedback-contract.mjs'));
 const temporaryPaths=['.github/workflows/export-community-polish-source.yml','.github/workflows/apply-community-feedback-migration.yml','scripts/apply-community-feedback.sh'];

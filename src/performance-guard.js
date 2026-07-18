@@ -205,21 +205,15 @@
   function drawCachedEnemies(){
     for(const e of state.entities.enemies){
       if(!e||e.dead)continue;const sx=e.x-player.x+vw/2,sy=e.y-player.y+vh/2,elite=e.type==='mini'||e.type==='boss';
-      if(sx<-180||sx>vw+180||sy<-180||sy>vh+180){if(elite)drawEliteEdgeIndicator(sx,sy,e);continue;}
+      if(sx<-180||sx>vw+180||sy<-180||sy>vh+180)continue;
       if(elite){ctx.save();ctx.translate(sx,sy);const pulse=1+Math.sin(e.phase)*.05;ctx.scale(pulse,pulse);ctx.shadowBlur=e.kind==='apex'?58:e.type==='boss'?44:30;ctx.shadowColor=e.color;ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;drawEliteShape(e);ctx.restore();}
       else{
         const entry=enemySprite(e),angle=e.type==='fast'||e.type==='ranged'||e.type==='tank'&&e.eventKind==='crash'?Math.atan2(player.y-e.y,player.x-e.x):e.type==='tank'?(e.phase||0)*.035:0;drawSpriteRotated(entry,roundPixel(sx),roundPixel(sy),angle);
       }
-      if(elite||e.hp<e.maxHp){const width=clamp(e.r*2.15,28,e.kind==='apex'?170:e.type==='boss'?132:92),barY=sy-e.r*1.28-17;ctx.fillStyle='rgba(0,0,0,.62)';ctx.fillRect(roundPixel(sx-width/2),roundPixel(barY),Math.ceil(width),5);ctx.fillStyle=e.color;ctx.fillRect(roundPixel(sx-width/2),roundPixel(barY),Math.ceil(width*clamp(e.hp/e.maxHp,0,1)),5);}
+      if(!elite&&e.hp<e.maxHp){const width=clamp(e.r*2.15,28,e.kind==='apex'?170:e.type==='boss'?132:92),barY=sy-e.r*1.28-17;ctx.fillStyle='rgba(0,0,0,.62)';ctx.fillRect(roundPixel(sx-width/2),roundPixel(barY),Math.ceil(width),5);ctx.fillStyle=e.color;ctx.fillRect(roundPixel(sx-width/2),roundPixel(barY),Math.ceil(width*clamp(e.hp/e.maxHp,0,1)),5);}
     }
   }
-  function drawEliteEdgeIndicator(px,py,e){
-    const cx=vw/2,cy=vh/2,dx=px-cx,dy=py-cy,margin=82,bottom=vh-154,scales=[];
-    if(dx>0)scales.push((vw-margin-cx)/dx);else if(dx<0)scales.push((margin-cx)/dx);if(dy>0)scales.push((bottom-cy)/dy);else if(dy<0)scales.push((margin-cy)/dy);
-    const scale=Math.min(...scales.filter(v=>v>0)),x=cx+dx*scale,y=cy+dy*scale,a=Math.atan2(dy,dx),color=e.kind==='apex'?'#fff0a8':e.kind==='void'||e.eventKind==='void'?'#c38cff':e.type==='boss'?'#ff78bd':'#8fdcff',tag=e.kind==='apex'?'APEX':e.type==='boss'?'BOSS':'MINI',name=bossDisplayName(e);
-    ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.shadowBlur=22;ctx.shadowColor=color;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(20,0);ctx.lineTo(-11,-10);ctx.lineTo(-5,0);ctx.lineTo(-11,10);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(13,0);ctx.lineTo(-4,-4);ctx.lineTo(-1,0);ctx.lineTo(-4,4);ctx.closePath();ctx.fill();ctx.restore();
-    ctx.save();ctx.font='800 9px IBM Plex Sans KR,sans-serif';const label=`${tag} · ${name}`,w=Math.min(176,Math.max(74,ctx.measureText(label).width+18)),lx=clamp(x-w/2,8,vw-w-8),ly=clamp(y+16,8,vh-28);ctx.fillStyle='rgba(3,7,19,.88)';ctx.fillRect(lx,ly,w,20);ctx.fillStyle=color;ctx.fillRect(lx,ly,3,20);ctx.fillStyle='#f4f8ff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,lx+w/2,ly+10,w-10);ctx.restore();
-  }
+
 
   const fullDrawEffects=drawEffects,fullDrawEnemyProjectiles=drawEnemyProjectiles;
   // Realm backgrounds remain on the canonical renderer so performance-tier oscillation cannot swap maps mid-run.

@@ -259,7 +259,7 @@ node scripts/browser-smoke.mjs --soak-ms=120000
 - Ranged enemies begin appearing later and their normal-mode share is capped below the previous value.
 - Every weapon, including Ion Chain, Nova Pulse, Meteor Drones, Rail, Galactic Spiral, and Reflector, has a dedicated boss-reward augment. Nebula Boomerang kills can leap from the defeated target to a random nearby enemy.
 - The ability ledger can be opened while a level-up choice is waiting. Combat remains paused and the same choice cards are restored on close.
-- Random upgrade notices remain visible two seconds longer, and off-screen event/elite indicators use stronger arrows plus compact solid nameplates.
+- Random upgrade notices remain visible two seconds longer. Elite and mini-boss labels are not drawn over the battlefield; their category and name are shown only in the top boss HUD.
 
 ### 후반 위협·프리즘·선택 조작
 
@@ -267,17 +267,17 @@ node scripts/browser-smoke.mjs --soak-ms=120000
 - 일반 무기 피해는 프리즘을 제외하고 8% 상향하며, 4분 이후 위협 단계에 따라 적 피해와 이동 속도가 추가 상승한다.
 - 이벤트 능력 선택지는 전투가 멈추므로 자동 선택 제한시간을 사용하지 않는다.
 - 레벨업·보스 보상·이벤트 선택지는 숫자 1·2·3으로 선택할 수 있고 카드에 단축키를 표시한다.
-- 다중 투영 코어는 최대 2중첩의 이벤트 전용 패시브로 투사체와 공전 공격체 수를 늘린다. 일반 레벨업 풀에는 등장하지 않는다.
+- 다중 투영 코어는 최대 2중첩의 이벤트 전용 패시브다. 탄환·펄스 블레이드·중력 우물·성좌 프리즘·유성 드론·레일 광선·은하 나선의 실제 공격체를 중첩당 하나 추가하며, 파동·장판·반사·연쇄 공격은 제외한다. 일반 레벨업 풀에는 등장하지 않는다.
 - 초월체 등장 간격은 480초(8분)다.
 
 ### 맵 전환·장기 특수효과·무제한 위협 성장
 
 - 효과 설명에는 실제 전투 수치나 판정 변화만 기록한다. 단순 외형·광원·장식 변화는 효과로 표기하지 않는다.
 - 일식 동력로는 상시 피해 +20%이며, 체력 50% 미만부터 추가 피해가 증가해 체력 30% 이하에서 총 최대 +50%가 된다.
-- 보스 보상은 4개 카드로 확장하며, 무기 관련 항목은 현재 보유한 무기에 대해서만 생성한다. 각 무기는 고유 특수효과 외에도 피해·주기·정예·초동·회수 계열 장기 중첩을 가진다.
+- 보스 보상은 최대 4개 카드로 표시하며 무기 특수효과는 현재 보유한 무기에 대해서만 생성한다. 각 무기는 고유 특수효과 하나만 가지며 한 판에 한 번만 획득할 수 있다. 무기 특수효과는 단순 피해·주기 수치가 아니라 추가 공격, 반격, 붕괴, 도약, 추적 등 실제 전투 동작을 추가한다.
 - 공허 및 초월체 맵 전환은 단일 전환 소유권과 일련번호를 사용한다. 이전 전환의 지연 콜백은 새 전환이나 복귀 배경을 덮어쓸 수 없다.
 - 4분 이후 적 피해·속도는 상한이나 로그함수 없이 선형항과 거듭제곱항으로 계속 증가한다. 적 체력 성장 역시 기존의 무제한 거듭제곱 성장을 유지한다.
-- 재생 장갑은 중첩당 최대 체력 +24와 즉시 회복 36, 비율형 최대 체력 패시브는 중첩당 +10%로 상향한다.
+- 재생 장갑은 중첩당 최대 체력 +28과 즉시 회복 46, 항성 생명핵은 중첩당 최대 체력 +12%를 적용한다.
 - 성능 보호 단계는 개체 수만으로 화질을 낮추지 않는다. 측정 프레임 지연이 누적된 경우에만 효과 밀도·개체 상한을 줄이며, 해상도 축소는 심각한 지연이 추가로 2.5초 이상 지속될 때만 허용한다.
 
 ### 초월체·보스 패턴 보강
@@ -297,4 +297,4 @@ node scripts/browser-smoke.mjs --soak-ms=120000
 - 기본 이동속도를 높이고 이동 방향 표시, 속도 비례 별빛 궤적, 반복되지 않는 우주 랜드마크를 추가했다.
 - 마지막 성좌의 순간이동은 도착 지점을 먼저 예고하며 도착 후 0.48초 동안 몸체 접촉 피해가 없다.
 - 보스 누적 피해도 연쇄를 진행시키므로 단일 보스전에서 연쇄·연쇄 회수 빌드가 중단되지 않는다.
-- 레벨업 카드에는 신규/중첩 강화, 현재/선택 후 중첩, 장비 역할 태그가 크게 표시된다.
+- 레벨업 카드는 PC에서 아이콘과 설명을 가로로 배치하고, 신규/중첩 강화와 현재/선택 후 중첩 영역을 분리해 빈 공간과 겹침을 줄인다.

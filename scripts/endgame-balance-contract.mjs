@@ -9,6 +9,8 @@ const progression=read('src/progression-expansion.js');
 const bosses=read('src/bosses.js');
 const index=read('index.html');
 const core=read('src/core.js');
+const combat=read('src/combat-balance-refinement.js');
+const styles=read('styles.css');
 expect('expansion loaded',index.includes('src/endgame-balance-expansion.js'));
 expect('uncapped prism cycle tick',expansion.includes("tickInterval=Math.max(.060,.25*hasteMult()*(typeof weaponCycleMultiplier==='function'?weaponCycleMultiplier('prism'):1))"));
 expect('prism ricochet',expansion.includes("source:'prism-ricochet'"));
@@ -27,9 +29,11 @@ expect('hard difficulty increased',difficulty.includes('enemyHp:1.32')&&difficul
 expect('difficulty has one canonical owner',!expansion.includes('window.stackfallDifficultyConfig=function refinedDifficultyConfig'));
 expect('event choices have no clock',!mapEvents.includes('armChoiceClock(LIMITS.choice'));
 expect('event grants multiplicity',mapEvents.includes('PASSIVES.multiplicity.max'));
+expect('multiplicity covers wells rail and spiral',expansion.includes('multiplicityGravityWells')&&expansion.includes('multiplicityRailgun')&&expansion.includes('multiplicityGalacticSpiral')&&expansion.includes("'rail-multiplicity'")&&expansion.includes("source:'spiral-multiplicity'"));
 expect('ranged centreline shot',bosses.includes('angles=shots===2?[0,'));
 expect('ability detail layer',expansion.includes('ledger-detail-layer')&&expansion.includes('apexDetails'));
-expect('typed boss HUD',expansion.includes("'중간보스':'MINI-BOSS'"));
+expect('typed boss HUD',combat.includes('bossHudType')&&combat.includes("'중간보스':'MINI-BOSS'")&&!expansion.includes('typedBossHud'));
+expect('compact desktop choice cards',styles.includes('grid-template-columns:72px minmax(0,1fr)')&&styles.includes('min-height:218px')&&!styles.includes('min-height:302px'));
 expect('apex interval eight game minutes',core.includes('nextApexAt:480'));
 let failed=0;for(const [name,ok] of checks){console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)failed++;}
 console.log(`Checked ${checks.length} contracts; failures=${failed}`);if(failed)process.exit(1);

@@ -67,9 +67,9 @@
   const rewardStyle=document.createElement('style');rewardStyle.textContent=`
     #bossRewardScreen{z-index:65;background:radial-gradient(circle at 50% 42%,rgba(83,65,174,.42),rgba(2,4,13,.94));backdrop-filter:blur(10px)}
     .reward-shell{width:min(1260px,97vw)}.reward-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-    .reward-card{min-height:250px;text-align:left;color:#f6f8ff;border-radius:21px;padding:19px;cursor:pointer;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.14);background:linear-gradient(145deg,rgba(28,34,72,.98),rgba(7,10,27,.99));box-shadow:0 22px 58px rgba(0,0,0,.42);transition:.18s}
+    .reward-card{min-height:208px;text-align:left;color:#f6f8ff;border-radius:21px;padding:19px;cursor:pointer;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.14);background:linear-gradient(145deg,rgba(28,34,72,.98),rgba(7,10,27,.99));box-shadow:0 22px 58px rgba(0,0,0,.42);transition:.18s}
     .reward-card:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 18% 0%,var(--reward-glow),transparent 48%)}.reward-card:hover{transform:translateY(-6px);border-color:var(--reward-color)}
-    .reward-card>*{position:relative}.reward-card .reward-type{font-size:9px;font-weight:900;letter-spacing:.14em;color:var(--reward-color)}.reward-card .reward-icon{font-size:44px;margin:27px 0 20px;color:var(--reward-color);text-shadow:0 0 24px var(--reward-color)}
+    .reward-card>*{position:relative}.reward-card .reward-type{font-size:9px;font-weight:900;letter-spacing:.14em;color:var(--reward-color)}.reward-card .reward-once{position:absolute;right:14px;top:13px;padding:4px 7px;border:1px solid color-mix(in srgb,var(--reward-color) 42%,transparent);background:rgba(3,6,18,.72);color:#dce8ff;font-size:8px;font-weight:900;letter-spacing:.06em}.reward-card .reward-icon{font-size:38px;margin:20px 0 13px;color:var(--reward-color);text-shadow:0 0 24px var(--reward-color)}
     .reward-card h3{font-size:21px;margin:0 0 8px}.reward-card p{margin:0;color:#abb5d3;font-size:12px;line-height:1.65}
     @media(max-width:1040px){.reward-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:720px){.reward-cards{grid-template-columns:1fr;max-height:65vh;overflow:auto}.reward-card{min-height:155px}.reward-card .reward-icon{margin:14px 0;font-size:34px}}
   `;document.head.appendChild(rewardStyle);
@@ -90,59 +90,38 @@
     harvest:{icon:'✦',color:'#ff9a9a',name:{ko:'별의 수확',en:'Star Harvest'},desc:{ko:'처치 시 체력 회복, 정예 처치 시 대량 회복.',en:'Restores health on kills and greatly on elite kills.'}}
   };
   const augmentDefs={
-    core:{icon:'✷',color:'#eafcff',name:{ko:'항성 연사',en:'Stellar Volley'},desc:{ko:'일정 발사마다 방사형 광자탄 난사.',en:'Every few activations releases a radial photon volley.'}},
-    blade:{icon:'◒',color:'#7ce8ff',name:{ko:'공간 절개',en:'Space Rend'},desc:{ko:'칼날 적중 시 짧은 간격으로 절단 폭발.',en:'Blade hits periodically create a cutting burst.'}},
-    ember:{icon:'✦',color:'#ff7b9e',name:{ko:'연쇄 성화',en:'Chain Starfire'},desc:{ko:'별빛 폭발이 가까운 적 하나에게 추가 전이.',en:'Starlight explosions jump to one nearby enemy.'}},
-    bulwark:{icon:'◈',color:'#74f2a7',name:{ko:'반사 장벽',en:'Reflective Barrier'},desc:{ko:'피격 시 주변으로 반격 광자탄 방출.',en:'Taking damage releases countering photon bolts.'}},
-    gravity:{icon:'◉',color:'#9e79ff',name:{ko:'종말 붕괴',en:'Terminal Collapse'},desc:{ko:'중력 우물 소멸 시 강력한 붕괴 폭발.',en:'Gravity wells detonate when they expire.'}},
-    comet:{icon:'⟐',color:'#b5f5ff',name:{ko:'혜성의 잔상',en:'Comet Afterimage'},desc:{ko:'혜성 창 발사 시 약한 추격 창 추가 발사.',en:'Comet lances launch a weaker trailing lance.'}},
-    prism:{icon:'✧',color:'#c2a7ff',name:{ko:'과열 성선',en:'Overheat Starline'},desc:{ko:'최대 집속 시 표적 중심의 교차 광선 두 줄과 용광 폭발.',en:'At maximum focus, emits two crossing beams and a furnace burst from the target.'}},
-    chrono:{icon:'◎',color:'#8fffe0',name:{ko:'시간 파쇄',en:'Time Fracture'},desc:{ko:'시간 파동에 걸린 적 처치 시 파쇄 폭발.',en:'Enemies killed while time-locked shatter in an explosion.'}},
-    arc:{icon:'☾',color:'#69ffe0',name:{ko:'포식 궤도',en:'Predatory Orbit'},desc:{ko:'귀환 타격이 파편을 방출하고, 부메랑으로 처치하면 무작위 적에게 추가 도약.',en:'Return hits release shards, and boomerang kills leap to a random enemy.'}},
-    ion:{icon:'⌁',color:'#72f2ff',name:{ko:'초전도 성좌망',en:'Superconductive Constellation'},desc:{ko:'첫 사슬 뒤에 약한 두 번째 사슬망이 즉시 전개.',en:'A weaker second chain network unfolds after the first cast.'}},
-    nova:{icon:'✹',color:'#ffbd69',name:{ko:'역행 초신성',en:'Reversing Supernova'},desc:{ko:'외곽 폭발 뒤 중심으로 적을 당기는 지연 붕괴파.',en:'A delayed collapse wave pulls enemies inward after the outer blast.'}},
-    drone:{icon:'⌁',color:'#8fffd0',name:{ko:'낙성 표식',en:'Falling-Star Mark'},desc:{ko:'편대가 가장 강한 표적에 지연 유성 타격을 호출.',en:'The squad calls a delayed meteor strike on the strongest target.'}},
-    rail:{icon:'━',color:'#b7e7ff',name:{ko:'궤도 파쇄',en:'Orbital Fracture'},desc:{ko:'주포 궤도 위 세 지점이 잠시 뒤 연쇄 폭발.',en:'Three points along the rail path detonate in sequence.'}},
-    spiral:{icon:'◎',color:'#e3a7ff',name:{ko:'역나선 은하',en:'Counter-Spiral Galaxy'},desc:{ko:'본 나선 뒤 반대 회전의 추적 나선이 한 차례 더 생성.',en:'A counter-rotating homing spiral follows the main galaxy.'}},
-    mirror:{icon:'◇',color:'#9fffe7',name:{ko:'쌍면 반사',en:'Twin-Face Reflection'},desc:{ko:'반사한 적 탄환마다 추가 반사광 두 갈래를 방출.',en:'Every reflected enemy shot emits two additional counter rays.'}}
+    core:{icon:'✷',color:'#eafcff',name:{ko:'항성 연사',en:'Stellar Volley'},desc:{ko:'4번째 발사마다 전방위 광자탄을 방출하고, 코어 적중 누적 시 다른 적에게 굴절 펄스가 도약한다.',en:'Every fourth volley fires photons in all directions, while repeated core hits ricochet a refracted pulse to another enemy.'}},
+    blade:{icon:'◒',color:'#7ce8ff',name:{ko:'공간 절개',en:'Space Rend'},desc:{ko:'칼날 적중 지점에 짧은 재사용 대기시간의 절개 폭발이 생기며, 적중 누적 시 관통 절단파를 발사한다.',en:'Blade hits create cooldown-limited rending bursts, and repeated hits release a piercing shear wave.'}},
+    ember:{icon:'✦',color:'#ff7b9e',name:{ko:'연쇄 성화',en:'Chain Starfire'},desc:{ko:'별빛 탄환이 주변 적 둘에게 불꽃을 전이하고, 같은 적을 반복 타격하면 잔광 연소가 세 차례 이어진다.',en:'Starlight jumps fire to two nearby enemies, while repeated hits ignite three delayed afterburn ticks.'}},
+    bulwark:{icon:'◈',color:'#74f2a7',name:{ko:'반사 장벽',en:'Reflective Barrier'},desc:{ko:'피격 시 사방으로 반격 창을 방출하고 보호막을 즉시 충전하며, 전투 중 장벽이 주기적으로 자체 재충전된다.',en:'Taking damage launches counter lances and restores shield, while the barrier also recharges itself during combat.'}},
+    gravity:{icon:'◉',color:'#9e79ff',name:{ko:'종말 붕괴',en:'Terminal Collapse'},desc:{ko:'모든 중력 우물이 사라질 때 넓은 붕괴 폭발을 일으켜 끌어모은 적을 한꺼번에 타격한다.',en:'Every gravity well detonates in a wide terminal collapse when it expires.'}},
+    comet:{icon:'⟐',color:'#b5f5ff',name:{ko:'혜성 편대',en:'Comet Squadron'},desc:{ko:'혜성 창 발사 뒤 서로 다른 각도에서 추적하는 잔상 창 두 개가 시간차로 합류한다.',en:'Two delayed homing afterimage lances converge from different angles after every comet cast.'}},
+    prism:{icon:'✧',color:'#c2a7ff',name:{ko:'과열 성선',en:'Overheat Starline'},desc:{ko:'집속 광선이 주변 적 둘에게 굴절 도약하고, 최대 출력에서는 표적을 가르는 교차 성선을 발사한다.',en:'Focused beams ricochet to two nearby enemies, and maximum focus draws crossing starlines through the target.'}},
+    chrono:{icon:'◎',color:'#8fffe0',name:{ko:'시간 파쇄',en:'Time Fracture'},desc:{ko:'시간 봉쇄 중인 적은 추가 피해를 받고, 그 상태에서 처치되면 주변을 휩쓰는 파쇄 폭발을 일으킨다.',en:'Time-locked enemies take extra damage and shatter in an area explosion when killed.'}},
+    arc:{icon:'☾',color:'#69ffe0',name:{ko:'포식 궤도',en:'Predatory Orbit'},desc:{ko:'귀환 타격이 관통 파편을 흩뿌리고, 부메랑으로 처치하면 살아 있는 다른 적에게 새 부메랑이 도약한다.',en:'Return hits scatter piercing shards, and boomerang kills launch a new boomerang toward another living enemy.'}},
+    ion:{icon:'⌁',color:'#72f2ff',name:{ko:'초전도 성좌망',en:'Superconductive Constellation'},desc:{ko:'첫 이온 사슬이 끝난 직후 약한 두 번째 사슬망이 전개되어 별도의 적 무리를 다시 연결한다.',en:'A weaker second ion network unfolds immediately after the first chain to reconnect another group.'}},
+    nova:{icon:'✹',color:'#ffbd69',name:{ko:'역행 초신성',en:'Reversing Supernova'},desc:{ko:'가까운 표적 위치에 지연 붕괴점을 만들고 적을 중심으로 끌어당긴 뒤 압축 폭발을 일으킨다.',en:'Creates a delayed collapse at a nearby target, pulls enemies inward, then detonates the compressed group.'}},
+    drone:{icon:'⌁',color:'#8fffd0',name:{ko:'낙성 표식',en:'Falling-Star Mark'},desc:{ko:'편대가 사격할 때 가장 체력이 높은 적에게 표식을 남기고 잠시 뒤 유성 폭격을 호출한다.',en:'Each squad attack marks the strongest enemy and calls a delayed meteor strike.'}},
+    rail:{icon:'━',color:'#b7e7ff',name:{ko:'궤도 파쇄',en:'Orbital Fracture'},desc:{ko:'주포가 지나간 경로의 세 지점이 순서대로 폭발해 광선 뒤에 연쇄 파쇄 지대를 만든다.',en:'Three points along the rail path detonate in sequence, leaving a chain of fractures behind the beam.'}},
+    spiral:{icon:'◎',color:'#e3a7ff',name:{ko:'역나선 은하',en:'Counter-Spiral Galaxy'},desc:{ko:'본 나선 뒤 반대 회전의 추적 나선이 한 차례 더 생성되고, 나선 적중 누적 시 중력 매듭이 폭발한다.',en:'A counter-rotating homing spiral follows the main galaxy, while repeated spiral hits detonate gravity knots.'}},
+    mirror:{icon:'◇',color:'#9fffe7',name:{ko:'쌍면 반사',en:'Twin-Face Reflection'},desc:{ko:'반사한 적 탄환마다 두 갈래 반사광을 추가 발사하고, 반사 공격이 적중할 때마다 보호막을 충전한다.',en:'Every reflected shot emits two extra counter rays, and reflection hits recharge shield.'}}
   };
-  window.stackfallWeaponAugmentDefs=augmentDefs;
+  window.stackfallWeaponAugmentDefs=Object.freeze(augmentDefs);
 
 
   const ECLIPSE_BASE_DAMAGE=.20,ECLIPSE_LOW_HEALTH_DAMAGE=.30,ECLIPSE_SURGE_START=.50,ECLIPSE_THRESHOLD=.30;
   function eclipseDamageBonus(){if(!state.bossTraits?.eclipse)return 0;const ratio=clamp(player.hp/Math.max(1,player.maxHp),0,1),surge=clamp((ECLIPSE_SURGE_START-ratio)/(ECLIPSE_SURGE_START-ECLIPSE_THRESHOLD),0,1);return ECLIPSE_BASE_DAMAGE+ECLIPSE_LOW_HEALTH_DAMAGE*surge;}
   window.stackfallEclipseDamageBonus=eclipseDamageBonus;
-
-  const weaponSpecialDefs={
-    overcharge:{icon:'▲',color:'#ff8aa8',max:5,name:{ko:'과충전 회로',en:'Overcharge Circuit'},desc:{ko:'이 무기의 피해가 중첩당 12% 증가.',en:'This weapon deals 12% more damage per stack.'}},
-    cycle:{icon:'»',color:'#7ce8ff',max:5,name:{ko:'주기 재편',en:'Cycle Refit'},desc:{ko:'이 무기의 공격 주기가 중첩당 7% 단축.',en:'This weapon attacks 7% faster per stack.'}},
-    elite:{icon:'◆',color:'#ffd071',max:4,name:{ko:'정예 파쇄',en:'Elite Breaker'},desc:{ko:'이 무기가 중간보스·보스·초월체에게 주는 피해가 중첩당 15% 증가.',en:'This weapon deals 15% more damage per stack to minibosses, bosses and apex enemies.'}},
-    opening:{icon:'✧',color:'#bca8ff',max:4,name:{ko:'초동 폭압',en:'Opening Pressure'},desc:{ko:'체력 80% 이상인 적에게 이 무기가 주는 피해가 중첩당 18% 증가.',en:'This weapon deals 18% more damage per stack to enemies above 80% health.'}},
-    recycle:{icon:'↻',color:'#89f0c8',max:4,name:{ko:'회수 루프',en:'Recycle Loop'},desc:{ko:'이 무기로 처치할 때 다음 공격 대기시간이 중첩당 0.22초 감소.',en:'Kills with this weapon reduce its next attack wait by 0.22 seconds per stack.'}}
-  };
-  window.stackfallWeaponSpecialDefs=weaponSpecialDefs;
-  const weaponCooldownProps={core:['coreCd'],blade:['bladeTick'],ember:['emberCd'],bulwark:['bulwarkCd','fortressCd'],gravity:['wellCd'],comet:['cometCd'],prism:['prismCd'],chrono:['chronoCd'],arc:['arcCd'],ion:['ionCd'],nova:['novaCd'],drone:['droneCd'],rail:['railCd'],spiral:['spiralCd'],mirror:['mirrorCd']};
-  function weaponSpecialStack(key,branch){return Math.max(0,Number(state.weaponSpecialStacks?.[key]?.[branch])||0);}
-  function weaponCycleMultiplier(key){return Math.max(.45,1-weaponSpecialStack(key,'cycle')*.07);}
-  window.weaponCycleMultiplier=weaponCycleMultiplier;window.stackfallWeaponSpecialStack=weaponSpecialStack;
-  function weaponSourceKey(source){const s=String(source||'').toLowerCase();if(!s)return null;if(s.includes('core'))return'core';if(s.includes('blade')||s==='wave')return'blade';if(s.includes('ember')||s.includes('echo-star')||s.includes('star-spark'))return'ember';if(s.includes('bulwark')||s.includes('barrier-lance'))return'bulwark';if(s.includes('gravity')||s==='well')return'gravity';if(s.includes('comet'))return'comet';if(s.includes('prism'))return'prism';if(s.includes('chrono'))return'chrono';if(s.startsWith('arc')||s.includes('boomerang'))return'arc';if(s.includes('ion'))return'ion';if(s.includes('nova'))return'nova';if(s.includes('drone')||s.includes('meteor'))return'drone';if(s.includes('rail'))return'rail';if(s.includes('spiral'))return'spiral';if(s.includes('mirror')||s.includes('reflect'))return'mirror';return null;}
-  window.stackfallWeaponSourceKey=weaponSourceKey;
-  function weaponSpecialEffectText(branch,stack,language=lang()){const n=Math.max(0,Number(stack)||0),ko=language==='ko';if(branch==='overcharge')return ko?`이 무기 피해 +${n*12}%`:`This weapon damage +${n*12}%`;if(branch==='cycle')return ko?`이 무기 공격 주기 ${n*7}% 단축`:`This weapon attack interval -${n*7}%`;if(branch==='elite')return ko?`정예 대상 피해 +${n*15}%`:`Elite target damage +${n*15}%`;if(branch==='opening')return ko?`체력 80% 이상 대상 피해 +${n*18}%`:`Damage to targets above 80% health +${n*18}%`;if(branch==='recycle')return ko?`처치 시 다음 공격 대기시간 ${(n*.22).toFixed(2)}초 감소`:`Kills reduce the next attack wait by ${(n*.22).toFixed(2)}s`;return'';}
-  window.stackfallWeaponSpecialEffectText=weaponSpecialEffectText;
-  function weaponSpecialDamageMultiplier(key,enemy){if(!key)return 1;let mult=1+weaponSpecialStack(key,'overcharge')*.12;const elite=enemy&&(enemy.type==='mini'||enemy.type==='boss'||enemy.kind==='apex');if(elite)mult*=1+weaponSpecialStack(key,'elite')*.15;if(enemy&&enemy.maxHp>0&&enemy.hp/enemy.maxHp>=.80)mult*=1+weaponSpecialStack(key,'opening')*.18;return mult;}
-  function adjustWeaponCooldown(key,seconds){if(!key||seconds<=0)return;for(const prop of weaponCooldownProps[key]||[])if(Number.isFinite(player[prop]))player[prop]=Math.max(0,player[prop]-seconds);if(key==='prism')for(const lock of player.prismLocks||[])if(Number.isFinite(lock?.tick))lock.tick=Math.min(lock.tick,Math.max(0,lock.tick-seconds));}
-  function accelerateWeaponCycles(dt){for(const key of Object.keys(state.weaponSpecialStacks||{})){const mult=weaponCycleMultiplier(key);if(mult>=.999)continue;adjustWeaponCooldown(key,dt*(1/mult-1));}}
-  function applyWeaponRecycle(key){const stacks=weaponSpecialStack(key,'recycle');if(stacks)adjustWeaponCooldown(key,stacks*.22);}
   function ownedWeaponKeys(){const keys=['core'];for(const key of Object.keys(state.weaponStacks||{}))if(weaponCount(key)>0&&!keys.includes(key))keys.push(key);return keys.filter(key=>key==='core'||WEAPONS[key]);}
 
-  state.bossTraits=state.bossTraits||{};state.weaponAugments=state.weaponAugments||{};state.weaponSpecialStacks=state.weaponSpecialStacks||{};state.rewardQueue=state.rewardQueue||[];let rewardChoiceLocked=false,pendingApexBundle=null;
-  const rrReset=resetGame;resetGame=function(){rrReset();state.bossTraits={};state.weaponAugments={};state.weaponSpecialStacks={};state.rewardQueue=[];state.rewardTimers={stellar:6,aegis:8,chrono:7};state.rewardKills=0;rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');};
+  state.bossTraits=state.bossTraits||{};state.weaponAugments=state.weaponAugments||{};state.rewardQueue=state.rewardQueue||[];let rewardChoiceLocked=false,pendingApexBundle=null;
+  const rrReset=resetGame;resetGame=function(){rrReset();state.bossTraits={};state.weaponAugments={};state.rewardQueue=[];state.rewardTimers={stellar:6,aegis:8,chrono:7};state.rewardKills=0;rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');};
   const rrShowMenu=showMainMenu;showMainMenu=function(){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;return rrShowMenu();};
   const rrEnd=endGame;endGame=function(){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];return rrEnd();};
 
   function rewardOptionPool(){
     const pool=[];for(const [key,d]of Object.entries(traitDefs))if(!state.bossTraits[key])pool.push({kind:'trait',key,...d});
-    for(const key of ownedWeaponKeys()){if(augmentDefs[key]&&!state.weaponAugments[key])pool.push({kind:'augment',key,...augmentDefs[key]});for(const[branch,d]of Object.entries(weaponSpecialDefs)){const current=weaponSpecialStack(key,branch);if(current<d.max)pool.push({kind:'weaponSpecial',key,branch,current,next:current+1,...d});}}return pool;
+    for(const key of ownedWeaponKeys())if(augmentDefs[key]&&!state.weaponAugments[key])pool.push({kind:'augment',key,...augmentDefs[key]});return pool;
   }
   function chooseRewards(){
     const pool=rewardOptionPool(),traits=pool.filter(x=>x.kind==='trait').sort(()=>Math.random()-.5),weapons=pool.filter(x=>x.kind!=='trait').sort(()=>Math.random()-.5),out=[];while(out.length<3&&weapons.length)out.push(weapons.pop());if(out.length<4&&traits.length)out.push(traits.pop());const rest=[...weapons,...traits].sort(()=>Math.random()-.5);while(out.length<4&&rest.length)out.push(rest.pop());return out;
@@ -155,9 +134,9 @@
     rewardChoiceLocked=false;state.mode='bossReward';ui.touch.classList.add('hidden');rewardScreen.classList.remove('hidden');
     document.querySelector('#rewardKicker').textContent=tr('boss.warning');document.querySelector('#rewardTitle').textContent=tr('reward.title');document.querySelector('#rewardPrompt').textContent=tr('reward.prompt');
     const cards=document.querySelector('#rewardCards');cards.innerHTML='';
-    for(const option of choices){const card=document.createElement('button'),special=option.kind==='weaponSpecial',weaponName=special?(option.key==='core'?(lang()==='ko'?'코어 펄스':'Core Pulse'):weaponText(option.key).name):'';card.className='reward-card';if(option.kind==='trait')card.dataset.traitKey=option.key;else if(special){card.dataset.specialWeapon=option.key;card.dataset.specialBranch=option.branch;}else card.dataset.augmentKey=option.key;card.style.setProperty('--reward-color',option.color);card.style.setProperty('--reward-glow',hexToRgba(option.color,.22));const title=special?`${weaponName} · ${pick(option.name)}`:pick(option.name),desc=special?`${pick(option.desc)} ${weaponSpecialEffectText(option.branch,option.next)}`:pick(option.desc);
-      card.innerHTML=`<span class="reward-type">${tr(option.kind==='trait'?'reward.passive':'reward.augment')}</span><div class="reward-icon">${option.icon}</div><h3>${title}</h3><p>${desc}</p>`;
-      card.onclick=()=>{if(rewardChoiceLocked||state.mode!=='bossReward')return;rewardChoiceLocked=true;for(const button of cards.querySelectorAll('button'))button.disabled=true;if(option.kind==='trait')state.bossTraits[option.key]=true;else if(special){const row=state.weaponSpecialStacks[option.key]||(state.weaponSpecialStacks[option.key]={});row[option.branch]=Math.min(option.max,(row[option.branch]||0)+1);}else state.weaponAugments[option.key]=true;state.rewardQueue.shift();rewardScreen.classList.add('hidden');state.mode='playing';if(matchMedia('(pointer:coarse)').matches||innerWidth<760)ui.touch.classList.remove('hidden');audio.resonance();renderLoadout();updateHUD();};cards.appendChild(card);}
+    for(const option of choices){const card=document.createElement('button'),augment=option.kind==='augment',weaponName=augment?(option.key==='core'?(lang()==='ko'?'코어 펄스':'Core Pulse'):weaponText(option.key).name):'';card.className='reward-card';if(option.kind==='trait')card.dataset.traitKey=option.key;else card.dataset.augmentKey=option.key;card.style.setProperty('--reward-color',option.color);card.style.setProperty('--reward-glow',hexToRgba(option.color,.22));const title=augment?`${weaponName} · ${pick(option.name)}`:pick(option.name),desc=pick(option.desc);
+      card.innerHTML=`<span class="reward-type">${tr(option.kind==='trait'?'reward.passive':'reward.augment')}</span>${augment?'<span class="reward-once">1회 한정 · 중첩 없음</span>':''}<div class="reward-icon">${option.icon}</div><h3>${title}</h3><p>${desc}</p>`;
+      card.onclick=()=>{if(rewardChoiceLocked||state.mode!=='bossReward')return;rewardChoiceLocked=true;for(const button of cards.querySelectorAll('button'))button.disabled=true;if(option.kind==='trait')state.bossTraits[option.key]=true;else state.weaponAugments[option.key]=true;state.rewardQueue.shift();rewardScreen.classList.add('hidden');state.mode='playing';if(matchMedia('(pointer:coarse)').matches||innerWidth<760)ui.touch.classList.remove('hidden');audio.resonance();renderLoadout();updateHUD();};cards.appendChild(card);}
   }
   window.updateRewardQueue=tryOpenReward;
   function planApexPassiveRewards(total=3){const planned={},entries=[];for(let i=0;i<total;i++){const eligible=Object.keys(PASSIVES).filter(key=>(planned[key]??stat(key))<PASSIVES[key].max);if(!eligible.length)break;const fresh=eligible.filter(key=>!entries.some(entry=>entry.key===key)),pool=fresh.length?fresh:eligible,key=pool[Math.floor(Math.random()*pool.length)],before=planned[key]??stat(key),after=before+1;planned[key]=after;const existing=entries.find(entry=>entry.key===key);if(existing)existing.after=after;else entries.push({key,before,after});}return entries;}
@@ -181,8 +160,8 @@
   }
 
   const rrKill=killEnemy;killEnemy=function(enemy,opts={}){
-    const wasAlive=enemy&&!enemy.dead,elite=enemy&&(enemy.type==='boss'||enemy.type==='mini'),x=enemy?.x||0,y=enemy?.y||0,locked=enemy?.timeLock>0,before=state.rewardQueue?.length||0,weaponKey=weaponSourceKey(opts.source);
-    rrKill(enemy,opts);if(wasAlive&&enemy?.dead&&weaponKey)applyWeaponRecycle(weaponKey);
+    const wasAlive=enemy&&!enemy.dead,elite=enemy&&(enemy.type==='boss'||enemy.type==='mini'),x=enemy?.x||0,y=enemy?.y||0,locked=enemy?.timeLock>0,before=state.rewardQueue?.length||0;
+    rrKill(enemy,opts);
     if(state.bossTraits.harvest){const heal=elite?Math.ceil(player.maxHp*.25):1;player.hp=Math.min(player.maxHp,player.hp+heal);}
     if(state.bossTraits.singularity){state.rewardKills=(state.rewardKills||0)+1;if(state.rewardKills%15===0)state.entities.wells.push({x,y,r:138,life:3.4,max:3.4,strength:760,damage:22,tick:0,color:'#e65cff',kind:'trait-singularity',traitCollapse:true,distortionCd:0});}
     if(state.weaponAugments.chrono&&locked)areaDamage(x,y,72,16+weaponCount('chrono')*3,COLORS.chrono,'chrono-burst');
@@ -190,7 +169,7 @@
   };
 
   const rrUpdateWeapons=updateWeapons;updateWeapons=function(dt){
-    rrUpdateWeapons(dt);if(state.mode!=='playing')return;accelerateWeaponCycles(dt);
+    rrUpdateWeapons(dt);if(state.mode!=='playing')return;
     state.rewardTimers=state.rewardTimers||{stellar:6,aegis:8,chrono:7};
     if(state.bossTraits.stellar){state.rewardTimers.stellar-=dt;if(state.rewardTimers.stellar<=0){state.rewardTimers.stellar=7.5;const targets=nearestEnemies(player.x,player.y,6);for(const e of targets){dealDamage(e,32+state.level*1.5,{color:'#ffe49a',source:'stellar-crown'});state.entities.beams.push({x1:player.x,y1:player.y,x2:e.x,y2:e.y,life:.22,max:.22,color:'#ffe49a',width:2.6});}}}
     if(state.bossTraits.aegis){state.rewardTimers.aegis-=dt;if(state.rewardTimers.aegis<=0){state.rewardTimers.aegis=10;player.shield=Math.min(60,player.shield+18);shockwave(player.x,player.y,'#83ffd1',120,.42,4);}}
@@ -199,7 +178,7 @@
 
   const rrDeal=dealDamage;let chainGuard=false,bladeGuard=false,augmentBurstGuard=false;
   dealDamage=function(enemy,amount,opts={}){
-    const wasAlive=enemy&&!enemy.dead,source=opts.source||'',locked=enemy?.timeLock>0,x=enemy?.x||0,y=enemy?.y||0,weaponKey=weaponSourceKey(source);amount*=1+eclipseDamageBonus();amount*=weaponSpecialDamageMultiplier(weaponKey,enemy);rrDeal(enemy,amount,opts);
+    const wasAlive=enemy&&!enemy.dead,source=opts.source||'',locked=enemy?.timeLock>0,x=enemy?.x||0,y=enemy?.y||0;amount*=1+eclipseDamageBonus();rrDeal(enemy,amount,opts);
     if(!wasAlive||augmentBurstGuard)return;
     const gameTime=state.time||0;
     if(state.weaponAugments.blade&&source==='blade'&&!bladeGuard&&gameTime>=(player.strongBladeBurstReadyAt||0)){player.strongBladeBurstReadyAt=gameTime+.43;bladeGuard=true;augmentBurstGuard=true;areaDamage(x,y,88*weaponSizeMultiplier(),18+weaponCount('blade')*4.5,COLORS.cyan,'blade-burst');augmentBurstGuard=false;bladeGuard=false;}
