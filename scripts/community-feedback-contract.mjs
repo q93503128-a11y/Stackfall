@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+const read=path=>fs.readFileSync(path,'utf8');
+const core=read('src/core.js'),systems=read('src/systems.js'),runtime=read('src/runtime-config.js'),render=read('src/render-entities.js'),background=read('src/realm-backgrounds.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),progression=read('src/progression-expansion.js'),styles=read('styles.css'),wiki=read('docs/WIKI.md'),validate=read('.github/workflows/validate.yml');
+const checks=[];const expect=(name,ok)=>checks.push([name,Boolean(ok)]);
+expect('player movement telemetry and facing',core.includes('speed:248')&&core.includes('facingAngle')&&systems.includes('player.moveIntensity')&&systems.includes('player.facingAngle=Math.atan2'));
+expect('fixed orbit bands',runtime.includes('ORBIT_RADIUS_BANDS')&&!runtime.includes('ORBIT_EQUIPMENT_ORDER')&&runtime.includes('blade:104')&&runtime.includes('prism:151'));
+expect('pickup and enemy projectile silhouettes differ',render.includes("shadowColor='#8dff9a'")&&render.includes("fillStyle='#ff315f'")&&render.includes('drawPlayerFacingIndicator'));
+expect('single render owners',render.match(/function drawPlayer\(/g)?.length===1&&render.match(/function drawWells\(/g)?.length===1);
+expect('movement landmarks and streaks',background.includes('SPACE_LANDMARKS')&&background.includes('drawSpaceLandmarks')&&background.includes('drawMotionStreaks'));
+expect('teleport warning and contact grace',patterns.includes('constellationTeleportDestination')&&patterns.includes('teleportQueued')&&patterns.includes('contactSafeUntil=state.time+.48')&&bosses.includes('(e.contactSafeUntil||0)<=state.time'));
+expect('teleport marker stays cosmetic',bosses.includes('function triggerCosmeticTelegraph')&&bosses.includes('if(t.cosmetic){triggerCosmeticTelegraph(t);continue;}'));
+expect('boss chain continuity',progression.includes('registerStackfallBossChainDamage')&&progression.includes('state.bossChainDamage')&&progression.includes('applyChainMilestones'));
+expect('readable choice cards',progression.includes('choice-status')&&progression.includes('role-tag')&&progression.includes("tr('choice.current')")&&styles.includes('.choice-card .stack-info strong'));
+expect('player wiki synced',wiki.includes('전투가 잘 보이게 바뀐 부분'));
+expect('community contract wired into CI',validate.includes('node scripts/community-feedback-contract.mjs'));
+const temporaryPaths=['.github/workflows/export-community-polish-source.yml','.github/workflows/apply-community-feedback-migration.yml','scripts/apply-community-feedback.sh'];
+expect('temporary migration files removed',temporaryPaths.every(path=>!fs.existsSync(path))&&!fs.readdirSync('scripts').some(name=>name.startsWith('community-patch-')));
+let failed=0;for(const[name,ok]of checks){console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)failed++;}console.log(`Checked ${checks.length} community feedback contracts; failures=${failed}`);if(failed)process.exit(1);

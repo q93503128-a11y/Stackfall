@@ -22,7 +22,7 @@ function nearestEnemies(x,y,count,excluded=null,maxRange=Infinity){if(typeof per
 function segmentDistance(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1,len=dx*dx+dy*dy||1,t=clamp(((px-x1)*dx+(py-y1)*dy)/len,0,1);return Math.hypot(px-(x1+dx*t),py-(y1+dy*t));}
 function enemyById(id){if(typeof getEnemyById==='function')return getEnemyById(id);for(const enemy of state.entities.enemies)if(enemy?.id===id&&!enemy.dead)return enemy;return null;}
 function prismStage(heat,prismN){const first=prismN>=4?.68:.88,second=prismN>=6?1.55:prismN>=4?1.78:2.18;return heat>=second?2:heat>=first?1:0;}
-function prismMultiplier(stage,prismN){return stage===2?(prismN>=6?4.6:prismN>=5?4.35:4.1):stage===1?1.9:1;}
+function prismMultiplier(stage,prismN){return stage===2?(prismN>=6?3.65:prismN>=5?3.45:3.25):stage===1?1.65:1;}
 function updateFocusedPrisms(dt,prismN){
   const count=prismN>=6?3:prismN>=2?2:1,positions=prismPositions(count),range=weaponRange('prism'),locks=player.prismLocks||(player.prismLocks=[]),used=new Set(),size=weaponSizeMultiplier(),stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed();locks.length=count;
   for(let i=0;i<count;i++){

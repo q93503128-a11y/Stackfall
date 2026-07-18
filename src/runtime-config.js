@@ -24,9 +24,9 @@ function weaponSizeMultiplier(){return(1+stat('projectileSize')*.10)*(1+(state.n
 const WEAPON_BALANCE={core:{range:500},blade:{range:190},ember:{range:560},bulwark:{range:150},gravity:{range:430},comet:{range:760},prism:{range:520},chrono:{range:250},arc:{range:570},ion:{range:450},nova:{range:245},drone:{range:540},rail:{range:920},spiral:{range:500},mirror:{range:350}};
 function weaponRange(key){return WEAPON_BALANCE[key]?.range||520;}
 function nearestWeaponTarget(key,x=player.x,y=player.y,predicate=null){return nearestEnemy(x,y,weaponRange(key),predicate);}
-const ORBIT_EQUIPMENT_ORDER=['bulwark','blade','prism','drone'];
+const ORBIT_RADIUS_BANDS=Object.freeze({bulwark:47,blade:104,prism:151,drone:186});
 function orbitHalfExtent(key){const size=weaponSizeMultiplier();if(key==='blade'){const n=weaponCount('blade');return(n>=6?31:n>=3?25:22)*size;}if(key==='prism')return 11*size;if(key==='drone')return 12;return 9;}
-function orbitRadiusFor(key){let edge=30;for(const candidate of ORBIT_EQUIPMENT_ORDER){if(weaponCount(candidate)<=0)continue;const half=orbitHalfExtent(candidate),radius=edge+half+5;if(candidate===key)return radius;edge=radius+half+7;}return{bulwark:44,blade:78,prism:112,drone:146}[key]||78;}
+function orbitRadiusFor(key){const base=ORBIT_RADIUS_BANDS[key]||104;if(key==='blade')return Math.max(base,72+orbitHalfExtent('blade'));return base;}
 for(const[key,weapon]of Object.entries(WEAPONS)){weapon.key=key;weapon.stackEffects=STACK_EFFECTS[key]||[];}
 for(const[key,passive]of Object.entries(PASSIVES))passive.key=key;
 damageReduction=function damageReductionWithStacks(){const armor=stat('armor')*.075,bulwark=weaponCount('bulwark')*.034+(weaponCount('bulwark')>=5?.05:0),constellation=(state.apexBoons?.lastconstellation||0)*.02;return clamp(armor+bulwark+constellation,0,.78);};
