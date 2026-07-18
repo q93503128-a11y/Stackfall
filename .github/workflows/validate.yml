@@ -30,15 +30,16 @@ jobs:
             echo "Checking $file"
             node --check "$file"
           done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
-      - name: Check all gameplay contracts before publishing
-        shell: bash
-        run: |
-          set -euo pipefail
-          node scripts/polish-contract-check.mjs
-          node scripts/apex-encounter-contract.mjs
-          node scripts/endgame-balance-contract.mjs
-          node scripts/realm-specials-contract.mjs
-          node scripts/source-ownership-contract.mjs
+      - name: Check polish contract
+        run: node scripts/polish-contract-check.mjs
+      - name: Check apex contract
+        run: node scripts/apex-encounter-contract.mjs
+      - name: Check endgame contract
+        run: node scripts/endgame-balance-contract.mjs
+      - name: Check realm contract
+        run: node scripts/realm-specials-contract.mjs
+      - name: Check source ownership contract
+        run: node scripts/source-ownership-contract.mjs
       - name: Check patch integrity
         run: git diff --check
       - name: Publish canonical source migration
