@@ -5,6 +5,7 @@
   const lowPrioritySources=new Set(['star-spark','comet-fragment','arc-strong-shard','comet-afterimage','arc-shard','drone-burst','spiral-bolt','echo-spiral','mirror-counter','core-nova']);
   const projectileSpriteCache=new Map();
   const enemySpriteCache=new Map();
+  const gemSpriteCache=new Map();
   const projectilePool=window.stackfallProjectilePool=window.stackfallProjectilePool||[];
   let heavyFrame=false;
   let frameMs=16.7;
@@ -156,15 +157,16 @@
   function projectileSprite(p,enemy=false){
     const kind=projectileKind(p,enemy),radius=Math.max(2,Math.min(22,Math.round((p.r||4)*2)/2)),color=safeColor(p.color,enemy?'#ff6ccf':COLORS.white),key=`${kind}|${radius}|${color}`;
     let entry=projectileSpriteCache.get(key);if(entry)return entry;
-    const trail=kind==='comet'?82:kind==='star'?42:enemy?32:28,pad=kind==='comet'?40:26,width=Math.ceil(trail+radius*4+pad*2),height=Math.ceil(radius*6+pad*2),surface=makeSurface(width,height),g=surface.getContext('2d'),cx=trail+pad+radius,cy=height/2;
+    const trail=kind==='comet'?82:kind==='star'?42:enemy?14:28,pad=kind==='comet'?40:26,width=Math.ceil(trail+radius*4+pad*2),height=Math.ceil(radius*6+pad*2),surface=makeSurface(width,height),g=surface.getContext('2d'),cx=trail+pad+radius,cy=height/2;
     g.clearRect(0,0,width,height);g.lineCap='round';
     const trailGradient=g.createLinearGradient(pad,cy,cx,cy);trailGradient.addColorStop(0,'rgba(0,0,0,0)');trailGradient.addColorStop(.45,colorAlpha(color));trailGradient.addColorStop(1,color);g.strokeStyle=trailGradient;g.lineWidth=Math.max(2,radius*.8);g.beginPath();g.moveTo(pad,cy);g.lineTo(cx,cy);g.stroke();
-    g.shadowColor=color;g.shadowBlur=kind==='comet'?28:enemy?16:18;
+    g.shadowColor=color;g.shadowBlur=kind==='comet'?28:enemy?7:18;
     if(kind==='comet'){
       const coma=g.createRadialGradient(cx,cy,0,cx,cy,radius*1.8);coma.addColorStop(0,'#ffffff');coma.addColorStop(.38,color);coma.addColorStop(1,'rgba(181,245,255,0)');g.fillStyle=coma;g.beginPath();g.arc(cx,cy,radius*1.8,0,TAU);g.fill();g.fillStyle='#fff';g.beginPath();g.arc(cx+radius*.18,cy,radius*.62,0,TAU);g.fill();
-    }else if(kind==='star'||kind==='enemy'){
-      g.fillStyle=kind==='enemy'?color:'#ffffff';g.strokeStyle=color;g.lineWidth=kind==='enemy'?2:0;
-      const points=kind==='enemy'?5:4,outer=radius*1.42,inner=radius*.42;g.beginPath();for(let i=0;i<points*2;i++){const a=i*Math.PI/points,r=i%2?inner:outer,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();g.fill();if(kind==='enemy')g.stroke();
+    }else if(kind==='enemy'){
+      g.fillStyle=color;g.strokeStyle='rgba(255,238,244,.72)';g.lineWidth=1.2;g.beginPath();g.moveTo(cx+radius*1.75,cy);g.quadraticCurveTo(cx+radius*.25,cy-radius*.62,cx-radius*.92,cy);g.quadraticCurveTo(cx+radius*.25,cy+radius*.62,cx+radius*1.75,cy);g.closePath();g.fill();g.stroke();g.fillStyle='rgba(255,255,255,.84)';g.beginPath();g.ellipse(cx+radius*.72,cy-radius*.12,Math.max(1,radius*.28),Math.max(.7,radius*.15),0,0,TAU);g.fill();
+    }else if(kind==='star'){
+      g.fillStyle='#ffffff';const points=4,outer=radius*1.42,inner=radius*.42;g.beginPath();for(let i=0;i<points*2;i++){const a=i*Math.PI/points,r=i%2?inner:outer,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();g.fill();
     }else{
       g.fillStyle=color;g.beginPath();g.arc(cx,cy,radius,0,TAU);g.fill();g.fillStyle='#fff';g.beginPath();g.arc(cx-radius*.2,cy-radius*.25,Math.max(1,radius*.34),0,TAU);g.fill();
     }
@@ -177,9 +179,12 @@
     for(let i=0;i<list.length;i++){
       const p=list[i];if(!p||p.life<=0)continue;
       const sx=p.x-player.x+vw/2,sy=p.y-player.y+vh/2;if(sx<-120||sx>vw+120||sy<-120||sy>vh+120)continue;
-      const entry=projectileSprite(p,enemy),angle=enemy?(p.phase||0):Math.atan2(p.vy||0,p.vx||0);drawSpriteRotated(entry,roundPixel(sx),roundPixel(sy),angle);
+      const entry=projectileSprite(p,enemy),angle=Math.atan2(p.vy||0,p.vx||0);drawSpriteRotated(entry,roundPixel(sx),roundPixel(sy),angle);
     }
   }
+
+  function gemSprite(radius){const key=Math.max(2,Math.min(18,Math.round(radius*2)/2));let entry=gemSpriteCache.get(key);if(entry)return entry;const pad=12,size=Math.ceil((key+pad)*2),surface=makeSurface(size,size),g=surface.getContext('2d'),c=size/2;g.translate(c,c);g.shadowColor='#72e69a';g.shadowBlur=7;g.fillStyle='#72e69a';g.strokeStyle='#dfffe9';g.lineWidth=1.1;g.beginPath();for(let i=0;i<6;i++){const a=i/6*TAU-Math.PI/2,x=Math.cos(a)*key,y=Math.sin(a)*key;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();g.fill();g.stroke();g.shadowBlur=0;g.fillStyle='rgba(255,255,255,.86)';g.beginPath();g.arc(-key*.18,-key*.2,Math.max(.8,key*.2),0,TAU);g.fill();entry={surface,anchorX:c,anchorY:c};gemSpriteCache.set(key,entry);trimCache(gemSpriteCache,32);return entry;}
+  drawGems=function cachedGemRenderer(){const list=state.entities.gems||[];for(let i=0;i<list.length;i++){const gem=list[i];if(!gem||gem.life<=0)continue;const sx=gem.x-player.x+vw/2,sy=gem.y-player.y+vh/2;if(sx<-32||sx>vw+32||sy<-32||sy>vh+32)continue;const entry=gemSprite(gem.r||4);ctx.drawImage(entry.surface,roundPixel(sx-entry.anchorX),roundPixel(sy-entry.anchorY));}};
 
   function enemySprite(e){
     const phaseBucket=e.type==='grunt'?Math.floor(((e.phase||0)%TAU+TAU)%TAU/TAU*12):0,radius=Math.max(7,Math.min(28,Math.round(e.r||13))),color=safeColor(e.hit?'#ffffff':e.color,'#7769ff'),key=`${e.type}|${e.eventKind||e.variant||'base'}|${radius}|${color}|${phaseBucket}`;
@@ -219,7 +224,7 @@
   const fullDrawEffects=drawEffects,fullDrawEnemyProjectiles=drawEnemyProjectiles;
   // Realm backgrounds remain on the canonical renderer so performance-tier oscillation cannot swap maps mid-run.
   drawProjectiles=function cachedPlayerProjectiles(){if(GAME_SETTINGS.hideProjectiles===true)return;drawCachedProjectiles(state.entities.projectiles,false);};
-  drawEnemyProjectiles=function styledEnemyProjectiles(){return fullDrawEnemyProjectiles();};
+  drawEnemyProjectiles=function cachedEnemyProjectiles(){drawCachedProjectiles(state.entities.enemyProjectiles,true);};
   drawEnemies=function cachedEnemyRenderer(){drawCachedEnemies();};
 
   function minimalEffects(){
