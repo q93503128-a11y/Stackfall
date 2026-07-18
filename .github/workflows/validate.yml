@@ -6,7 +6,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   javascript-syntax:
@@ -48,75 +48,3 @@ jobs:
         run: OWNERSHIP_GROUP=ci node scripts/source-ownership-contract.mjs
       - name: Check community feedback polish
         run: node scripts/community-feedback-contract.mjs
-
-  desktop-render-migration:
-    if: github.event_name == 'pull_request' && github.head_ref == 'agent/desktop-card-render-perf'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: agent/desktop-card-render-perf
-          fetch-depth: 1
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Inspect migration state
-        id: state
-        shell: bash
-        run: |
-          if [ "$(git log -1 --pretty=%s)" = 'Improve desktop choices and render performance' ]; then
-            echo 'already=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'already=false' >> "$GITHUB_OUTPUT"
-          fi
-      - name: Apply source changes
-        if: steps.state.outputs.already != 'true'
-        run: python3 scripts/apply-desktop-card-and-render-perf.py
-      - name: Refresh build fingerprint
-        if: steps.state.outputs.already != 'true'
-        run: node scripts/build-fingerprint.mjs
-      - name: Check migrated JavaScript syntax
-        if: steps.state.outputs.already != 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
-      - name: Check migrated polish contract
-        if: steps.state.outputs.already != 'true'
-        run: node scripts/polish-contract-check.mjs
-      - name: Check migrated apex contract
-        if: steps.state.outputs.already != 'true'
-        run: node scripts/apex-encounter-contract.mjs
-      - name: Check migrated endgame contract
-        if: steps.state.outputs.already != 'true'
-        run: node scripts/endgame-balance-contract.mjs
-      - name: Check migrated realm contract
-        if: steps.state.outputs.already != 'true'
-        run: node scripts/realm-specials-contract.mjs
-      - name: Check migrated community contract
-        if: steps.state.outputs.already != 'true'
-        run: node scripts/community-feedback-contract.mjs
-      - name: Run migrated local browser smoke
-        if: steps.state.outputs.already != 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 -m http.server 8000 >/tmp/stackfall-http.log 2>&1 &
-          server_pid=$!
-          trap 'kill $server_pid || true' EXIT
-          for attempt in $(seq 1 30); do
-            curl -fsS http://127.0.0.1:8000/ >/dev/null && break
-            sleep 0.2
-          done
-          STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/desktop-card-render-perf.json
-      - name: Publish migrated source
-        if: steps.state.outputs.already != 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add styles.css src/progression-expansion.js src/render-entities.js src/performance-guard.js src/realm-backgrounds.js src/build-info.js scripts/community-feedback-contract.mjs
-          git diff --cached --check
-          git commit -m 'Improve desktop choices and render performance'
-          git push origin HEAD:agent/desktop-card-render-perf
