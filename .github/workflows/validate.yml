@@ -23,6 +23,46 @@ jobs:
           node-version: '22'
       - name: Apply one-time canonical source migration
         run: node scripts/one-time-balance-source-sync.mjs
+      - name: Install permanent validation workflow
+        shell: bash
+        run: |
+          cat > .github/workflows/validate.yml <<'YAML'
+          name: Validate Stackfall
+
+          on:
+            push:
+              branches: [main]
+            pull_request:
+
+          permissions:
+            contents: read
+
+          jobs:
+            javascript-syntax:
+              runs-on: ubuntu-latest
+              steps:
+                - uses: actions/checkout@v4
+                - uses: actions/setup-node@v4
+                  with:
+                    node-version: '22'
+                - name: Check JavaScript syntax
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    while IFS= read -r -d '' file; do
+                      echo "Checking $file"
+                      node --check "$file"
+                    done < <(find src -type f -name '*.js' -print0 | sort -z)
+                - name: Check gameplay contracts
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    node scripts/polish-contract-check.mjs
+                    node scripts/apex-encounter-contract.mjs
+                    node scripts/endgame-balance-contract.mjs
+                    node scripts/realm-specials-contract.mjs
+                    node scripts/source-ownership-contract.mjs
+          YAML
       - name: Refresh build fingerprint
         run: node scripts/build-fingerprint.mjs
       - name: Check JavaScript syntax
@@ -41,6 +81,8 @@ jobs:
         run: node scripts/endgame-balance-contract.mjs
       - name: Check realm contract
         run: node scripts/realm-specials-contract.mjs
+      - name: Check source ownership contract
+        run: node scripts/source-ownership-contract.mjs
       - name: Check patch integrity
         run: git diff --check
       - name: Publish canonical source migration
@@ -53,8 +95,3 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m 'Unify balance sources and documentation'
           git push --force origin HEAD:refs/heads/automation/canonical-balance-sync
-      - name: Audit canonical source ownership
-        continue-on-error: true
-        run: node scripts/source-ownership-contract.mjs
-      - name: Check gameplay polish contracts
-        run: node scripts/polish-contract-check.mjs
