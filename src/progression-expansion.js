@@ -6,7 +6,7 @@
     chainField:{name:'전리품 공명',icon:'⊙',color:'#ffcc5c',desc:'현재 연쇄에 따라 결정 흡수 범위 증가.',max:8},
     eliteHunter:{name:'거성 사냥꾼',icon:'♜',color:'#e6b2ff',desc:'중간보스·보스 피해 +15%.',max:6},
     pierce:{name:'관통 렌즈',icon:'⇢',color:'#b5f5ff',desc:'투사체 관통 +1.',max:4},
-    regen:{name:'자가 복원',icon:'♻',color:'#88f0ad',desc:'4초마다 체력 2.5 회복.',max:6},
+    regen:{name:'자가 복원',icon:'♻',color:'#88f0ad',desc:'초당 체력 1 회복.',max:6},
     wisdom:{name:'성운 통찰',icon:'✧',color:'#bba6ff',desc:'경험치 획득량 +10%.',max:8},
     overdrive:{name:'임계 과출력',icon:'▲',color:'#ff806f',desc:'체력 45% 미만일 때 피해 +14%.',max:5},
     projectileSize:{name:'광자 팽창',icon:'◉',color:'#8fe9ff',desc:'투사체·광선·공격 판정 크기 +10%.',max:6},
@@ -20,7 +20,7 @@
     chainField:{ko:['전리품 공명','현재 연쇄에 따라 결정 흡수 범위 증가.'],en:['Loot Resonance','Pickup range increases with current chain.']},
     eliteHunter:{ko:['거성 사냥꾼','중간보스·보스 피해 +15%.'],en:['Giant Hunter','Damage to mini-bosses and bosses +15%.']},
     pierce:{ko:['관통 렌즈','투사체 관통 +1.'],en:['Piercing Lens','Projectile pierce +1.']},
-    regen:{ko:['자가 복원','4초마다 체력 2.5 회복.'],en:['Self Repair','Restores 2.5 health every 4 seconds.']},
+    regen:{ko:['자가 복원','초당 체력 1 회복.'],en:['Self Repair','Restores 1 health per second.']},
     wisdom:{ko:['성운 통찰','경험치 획득량 +10%.'],en:['Nebula Insight','Experience gained +10%.']},
     overdrive:{ko:['임계 과출력','체력 45% 미만일 때 피해 +14%.'],en:['Critical Overdrive','Damage +14% below 45% health.']},
     projectileSize:{ko:['광자 팽창','투사체·광선·공격 판정 크기 +10%.'],en:['Photon Expansion','Projectile, beam, and attack size +10%.']},
@@ -28,6 +28,13 @@
   };
   for(const row of Object.values(PT))for(const code of['ja','zh-CN','es','fr'])row[code]=row.en;
   Object.assign(PASSIVE_TEXT,PT);
+
+  const VITALITY_MAX_HP=28,VITALITY_INSTANT_HEAL=46,STELLAR_LIFE_MULT=1.12;
+  function applyVitalityGrowth(stacks=1){const count=Math.max(0,Math.floor(Number(stacks)||0));if(!count)return;player.maxHp+=VITALITY_MAX_HP*count;player.hp=Math.min(player.maxHp,player.hp+VITALITY_INSTANT_HEAL*count);}
+  function applyStellarLifeGrowth(stacks=1){const count=Math.max(0,Math.floor(Number(stacks)||0));if(!count)return;const ratio=player.hp/Math.max(1,player.maxHp);for(let i=0;i<count;i++)player.maxHp=Math.max(player.maxHp+1,Math.round(player.maxHp*STELLAR_LIFE_MULT));player.hp=Math.max(1,Math.min(player.maxHp,Math.round(player.maxHp*ratio)));}
+  window.stackfallHealthGrowth=Object.freeze({vitalityMaxHp:VITALITY_MAX_HP,vitalityHeal:VITALITY_INSTANT_HEAL,stellarLifeMultiplier:STELLAR_LIFE_MULT});
+  window.applyStackfallVitalityGrowth=applyVitalityGrowth;
+  window.applyStackfallStellarLifeGrowth=applyStellarLifeGrowth;
 
   const currentChain=()=>Math.max(0,Number(state.combo)||0);
 
@@ -37,7 +44,7 @@
   weaponRange=function progressionWeaponRange(key){return baseWeaponRange(key)*(1+stat('range')*.10);};
   xpMult=function progressionXp(){return 1+stat('greed')*.30+stat('wisdom')*.10;};
   const baseUpdatePlayer=updatePlayer;
-  updatePlayer=function progressionPlayer(dt){baseUpdatePlayer(dt);const n=stat('regen');if(!n)return;player.regenTimer=(player.regenTimer||4)-dt;if(player.regenTimer<=0){player.regenTimer+=4;player.hp=Math.min(player.maxHp,player.hp+n*2.5);}};
+  updatePlayer=function progressionPlayer(dt){baseUpdatePlayer(dt);const n=stat('regen');if(n&&dt>0)player.hp=Math.min(player.maxHp,player.hp+n*dt);};
 
   let chainEffectGuard=false;
   const baseKill=killEnemy;
@@ -60,7 +67,7 @@
   function choiceText(c){const weaponLike=c.kind==='weapon'||c.kind==='core';return weaponLike?weaponText(c.key):passiveText(c.key);}
   function normalizeChoice(c){if(!c||!['core','weapon','passive'].includes(c.kind)||!c.key)return null;const source=c.kind==='passive'?PASSIVES[c.key]:WEAPONS[c.key];if(!source)return null;return{...source,...c,color:c.color||source.color||'#aeeeff',icon:c.icon||source.icon||'✦'};}
   function collectChoices(count){const result=[],seen=new Set(),take=list=>{for(const item of list||[]){const c=normalizeChoice(item);if(!c)continue;const id=`${c.kind}:${c.key}`;if(seen.has(id))continue;seen.add(id);result.push(c);if(result.length>=count)break;}};take(rollChoices(Math.max(9,count*3)));if(result.length<count){const fallback=[],coreCount=weaponCount('core');if(coreCount<6)fallback.push({kind:'core',key:'core',...WEAPONS.core,weight:1});for(const[key,w]of Object.entries(WEAPONS)){if(key==='core'||w.starter===false)continue;const owned=weaponCount(key),slots=state.weaponSlots.length;if(owned<6&&(owned>0||slots<6))fallback.push({kind:'weapon',key,...w,weight:1});}for(const[key,p]of Object.entries(PASSIVES))if(!p.eventOnly&&stat(key)<p.max)fallback.push({kind:'passive',key,...p,weight:1});take(fallback.sort(()=>Math.random()-.5));}return result.slice(0,count);}
-  function applyChoiceSafely(c){if(c.kind==='core'){const after=weaponCount('core')+1;state.weaponStacks.core=after;showStackEffect?.('core',after);return;}if(c.kind==='weapon'){const before=weaponCount(c.key),after=before+1;state.weaponStacks[c.key]=after;if(before===0&&!state.weaponSlots.includes(c.key))state.weaponSlots.push(c.key);showStackEffect?.(c.key,after);if(c.key==='bulwark'){player.maxHp+=8;player.hp=Math.min(player.maxHp,player.hp+8);}return;}state.passives[c.key]=stat(c.key)+1;if(c.key==='vitality'){player.maxHp+=24;player.hp=Math.min(player.maxHp,player.hp+36);}if(c.key==='stellarLife'){const ratio=player.hp/Math.max(1,player.maxHp);player.maxHp=Math.max(player.maxHp+1,Math.round(player.maxHp*1.10));player.hp=Math.max(1,Math.min(player.maxHp,Math.round(player.maxHp*ratio)));}}
+  function applyChoiceSafely(c){if(c.kind==='core'){const after=weaponCount('core')+1;state.weaponStacks.core=after;showStackEffect?.('core',after);return;}if(c.kind==='weapon'){const before=weaponCount(c.key),after=before+1;state.weaponStacks[c.key]=after;if(before===0&&!state.weaponSlots.includes(c.key))state.weaponSlots.push(c.key);showStackEffect?.(c.key,after);if(c.key==='bulwark'){player.maxHp+=8;player.hp=Math.min(player.maxHp,player.hp+8);}return;}state.passives[c.key]=stat(c.key)+1;if(c.key==='vitality')applyVitalityGrowth(1);if(c.key==='stellarLife')applyStellarLifeGrowth(1);}
   function finishChoiceSafely(){state.choiceOpening=false;state.choiceLocked=false;ui.choice.classList.add('hidden');ui.choiceCards.innerHTML='';state.mode='playing';renderLoadout();updateHUD();syncAbilityLedgerVisibility?.();queueMicrotask(()=>{if(state.mode==='playing')tryLevelUp?.();});}
   function buildChoiceCard(c){const weaponLike=c.kind==='weapon'||c.kind==='core',text=choiceText(c),current=weaponLike?weaponCount(c.key):stat(c.key),next=weaponLike?stackEffectText(c.key,current+1):null,el=document.createElement('button');el.type='button';el.className='choice-card';el.style.setProperty('--card-accent',c.color);el.style.setProperty('--card-glow',hexToRgba(c.color,.22));const type=c.kind==='core'?tr('choice.basic'):c.kind==='weapon'?tr('choice.equipment'):tr('choice.passive'),countLabel=weaponLike?tr('choice.stack'):tr('choice.owned');el.innerHTML=`<span class="type">${type}</span><span class="stack-info">${countLabel} ${current} → ${current+1}</span><div class="big-icon">${c.icon}</div><h3>${text.name}</h3><p>${text.desc}</p>${next?`<div class="resonance-preview"><b>${current+1} · ${next.name}</b><span>${next.desc}</span></div>`:''}`;el.addEventListener('click',()=>selectChoice(c),{once:true});return el;}
   openChoices=function openChoicesStable(){if(state.choiceOpening||state.choiceLocked||state.mode==='gameover'||state.mode==='menu')return;closeAbilityLedger?.(true);state.choiceOpening=true;ui.choice.classList.add('hidden');ui.choiceCards.innerHTML='';try{const choices=collectChoices(3);if(!choices.length){finishChoiceSafely();return;}const fragment=document.createDocumentFragment();for(const c of choices)fragment.appendChild(buildChoiceCard(c));ui.choiceCards.appendChild(fragment);state.choiceLocked=false;state.mode='choice';ui.choiceTitle.textContent=`${tr('choice.title')} ${state.level}`;ui.choiceKicker.textContent=tr('choice.kicker');ui.choice.classList.remove('hidden');audio.level();syncAbilityLedgerVisibility?.();}catch(error){console.error('[Stackfall] level-up choices failed',error);state.choiceLocked=false;state.mode='playing';ui.choice.classList.add('hidden');ui.choiceCards.innerHTML='';}finally{state.choiceOpening=false;}};
