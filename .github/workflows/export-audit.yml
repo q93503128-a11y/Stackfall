@@ -3,13 +3,15 @@ name: Finalize special effects rebuild
 on:
   push:
     branches: [agent/rebuild-special-effects]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
   finalize-and-validate:
-    if: github.event.head_commit.message != 'Finalize special effects rebuild source'
+    if: github.event_name == 'pull_request' || github.event.head_commit.message != 'Finalize special effects rebuild source'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
