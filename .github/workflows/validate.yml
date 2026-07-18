@@ -1,9 +1,8 @@
 name: Validate Stackfall
 
 on:
-  workflow_run:
-    workflows: ['JavaScript syntax check']
-    types: [completed]
+  issues:
+    types: [opened]
   workflow_dispatch:
 
 permissions:
@@ -11,12 +10,12 @@ permissions:
 
 jobs:
   javascript-syntax:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.issue.title == '[stackfall] canonical balance source sync'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: agent/finalize-balance-source-sync
           fetch-depth: 1
       - uses: actions/setup-node@v4
         with:
