@@ -3,7 +3,7 @@
   const profiles=Object.freeze({
     easy:Object.freeze({key:'easy',enemyHp:.82,enemyDamage:.78,enemySpeed:.94,rangedChance:.72}),
     normal:Object.freeze({key:'normal',enemyHp:1,enemyDamage:1,enemySpeed:1,rangedChance:1}),
-    hard:Object.freeze({key:'hard',enemyHp:1.18,enemyDamage:1.18,enemySpeed:1.06,rangedChance:1.18})
+    hard:Object.freeze({key:'hard',enemyHp:1.32,enemyDamage:1.30,enemySpeed:1.12,rangedChance:1.28})
   });
   let saved='normal';try{saved=localStorage.getItem('stackfall:difficulty')||'normal';}catch{}
   state.selectedDifficulty=profiles[state.selectedDifficulty]?state.selectedDifficulty:profiles[saved]?saved:'normal';

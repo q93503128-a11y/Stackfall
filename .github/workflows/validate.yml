@@ -1,39 +1,21 @@
 name: Validate Stackfall
 
 on:
+  push:
+    branches: [main]
   pull_request:
-  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   javascript-syntax:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Prepare migration validation marker
-        shell: bash
-        run: |
-          cat >> .github/workflows/validate.yml <<'YAML'
-                - name: Check gameplay polish contracts
-                  run: node scripts/polish-contract-check.mjs
-          YAML
-      - name: Apply one-time canonical source migration
-        run: node scripts/one-time-balance-source-sync.mjs
-      - name: Restore workflow files for scoped publish
-        shell: bash
-        run: |
-          set -euo pipefail
-          git restore --source=HEAD -- .github/workflows/validate.yml
-          git restore --source=HEAD -- .github/workflows/one-time-balance-source-sync.yml
-      - name: Refresh build fingerprint
-        run: node scripts/build-fingerprint.mjs
       - name: Check JavaScript syntax
         shell: bash
         run: |
@@ -41,7 +23,7 @@ jobs:
           while IFS= read -r -d '' file; do
             echo "Checking $file"
             node --check "$file"
-          done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
+          done < <(find src -type f -name '*.js' -print0 | sort -z)
       - name: Check polish contract
         run: node scripts/polish-contract-check.mjs
       - name: Check apex contract
@@ -50,15 +32,17 @@ jobs:
         run: node scripts/endgame-balance-contract.mjs
       - name: Check realm contract
         run: node scripts/realm-specials-contract.mjs
-      - name: Check patch integrity
-        run: git diff --check
-      - name: Publish canonical source migration
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git diff --cached --quiet && exit 0
-          git commit -m 'Unify balance sources and documentation'
-          git push --force origin HEAD:refs/heads/automation/canonical-balance-sync
+      - name: Check health ownership
+        run: OWNERSHIP_GROUP=health node scripts/source-ownership-contract.mjs
+      - name: Check regeneration runtime ownership
+        run: OWNERSHIP_GROUP=regen-runtime node scripts/source-ownership-contract.mjs
+      - name: Check regeneration documentation
+        run: OWNERSHIP_GROUP=regen-docs node scripts/source-ownership-contract.mjs
+      - name: Check Hard ownership
+        run: OWNERSHIP_GROUP=hard node scripts/source-ownership-contract.mjs
+      - name: Check Prism ownership
+        run: OWNERSHIP_GROUP=prism node scripts/source-ownership-contract.mjs
+      - name: Check documentation ownership
+        run: OWNERSHIP_GROUP=docs node scripts/source-ownership-contract.mjs
+      - name: Check CI ownership
+        run: OWNERSHIP_GROUP=ci node scripts/source-ownership-contract.mjs

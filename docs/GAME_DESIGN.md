@@ -85,7 +85,7 @@
 | echo | 에코 비콘 | 발사·설치형 장비 복제 확률 +7.5% |
 | power | 출력 증폭 | 모든 피해 +10% |
 | haste | 가속 회로 | 장비 발동 주기 -10% |
-| vitality | 재생 장갑 | 최대 체력 +24, 즉시 체력 36 회복 |
+| vitality | 재생 장갑 | 최대 체력 +28, 즉시 체력 46 회복 |
 | speed | 벡터 부스터 | 이동속도 +9% |
 | crit | 취약점 해석 | 치명타 확률 +6% |
 | chain | 연쇄 과부하 | 유지시간 +7%, 연쇄 피해 효율 증가 |
@@ -97,7 +97,7 @@
 | chainField | 전리품 공명 | 현재 연쇄에 따라 결정 흡수 범위 증가 |
 | eliteHunter | 거성 사냥꾼 | 중간보스·보스 피해 +15% |
 | pierce | 관통 렌즈 | 투사체 관통 +1 |
-| regen | 자가 복원 | 4초마다 체력 2.5 회복 |
+| regen | 자가 복원 | 초당 체력 1 회복 |
 | wisdom | 성운 통찰 | 경험치 획득량 +10% |
 | overdrive | 임계 과출력 | 체력 45% 미만일 때 피해 +14% |
 | projectileSize | 광자 팽창 | 투사체·광선·공격 판정 크기 +10% |
@@ -178,10 +178,10 @@
 |---:|---|
 | 1 | 프리즘 1개, 기본 출력 ×1 |
 | 2 | 프리즘 2개가 서로 다른 표적 조준 |
-| 3 | 0.88초 유지 시 ×1.9, 2.18초 유지 시 ×4.1 |
+| 3 | 집속 단계가 ×1 → ×1.65 → ×3.25로 상승 |
 | 4 | 전환 시간이 0.68초와 1.78초로 단축 |
-| 5 | 최대 출력 ×4.35, 광선 굵기 증가 |
-| 6 | 프리즘 3개, 최대 출력 ×4.6, 최종 집속 1.55초 |
+| 5 | 최대 출력 ×3.45, 광선 굵기 증가 |
+| 6 | 프리즘 3개, 최대 출력 ×3.65 |
 
 - 표적 사망 또는 사거리 이탈 시 해당 프리즘의 집속 열 초기화
 - 에코 비콘 복제는 순간 집속 광선을 발사
@@ -469,6 +469,7 @@ Canvas 2D의 아군 투사체 렌더링은 다음 조건이 모두 확인된 뒤
 최종 전체 로딩 순서:
 
 ```text
+src/build-info.js
 src/bootstrap.js
 src/core.js
 src/language-pack.js
@@ -487,6 +488,7 @@ src/elite-renderers.js
 src/render-entities.js
 src/feature-pack.js
 src/reward-refinement.js
+src/difficulty-augment-expansion.js
 src/combat-balance-refinement.js
 src/progression-expansion.js
 src/map-event-expansion.js
@@ -498,6 +500,7 @@ src/dark-cosmic-polish.js
 src/performance-guard.js
 src/build-audit-ui.js
 src/gpu-renderer.js
+src/endgame-balance-expansion.js
 ```
 
 이 순서의 의미:
@@ -520,7 +523,7 @@ src/gpu-renderer.js
 
 - 설정과 localStorage: `src/settings.js`, 기본 로드 `src/bootstrap.js`
 - 무기 발사와 에코 복제: `src/weapons.js`, 조준 보정: `src/combat-guidance-refinement.js`
-- 프리즘 기본 수치·집속·lock·배율: `src/weapons.js`, 보상 정의·강화 적용: `src/reward-refinement.js`
+- 프리즘 생성·lock 기반 구조: `src/weapons.js`, 최종 집속 피해·배율: `src/endgame-balance-expansion.js`, 보상 정의: `src/reward-refinement.js`
 - 부메랑 생성: `src/weapons.js`, 이동·충돌·귀환: `src/systems.js`, 표시: `src/render-entities.js`
 - 투사체 유도, 투사체 기본 갱신, 빔 수명: `src/systems.js`
 - 적 이동, 원거리 적 사격, 시간 정지 이동: `src/bosses.js`
@@ -534,6 +537,8 @@ src/gpu-renderer.js
 - 제자리 배열 압축과 런 세대 기반 예약기: `src/systems-base.js`, 각 배열 갱신 소유 시스템
 - 공간 인덱스, 적 ID 조회, 가까운 표적 선택, sprite/cache, 부하 예산: `src/performance-guard.js`
 - 단일 RAF, 공유 shake, 반복 오류 진단: `src/render.js`
+- 최대 체력 패시브와 초당 재생: `src/progression-expansion.js`; 레벨업·이벤트·보스 보상은 공용 helper만 호출
+- 난이도 기본 profile: `src/difficulty-augment-expansion.js`; 어려움 후반 시간 성장: `src/endgame-balance-expansion.js`
 - 장면별 BGM과 무기별 공격음: `src/runtime-config.js`, 장면 동기화 호출: `src/render.js`
 - PixiJS/WebGL 아군 투사체, 전투 파티클과 texture 수명: `src/gpu-renderer.js`
 
@@ -563,7 +568,7 @@ src/gpu-renderer.js
 - 일반 주황 중장갑 적을 중첩 육각형으로 되돌리지 않음
 - 중간보스·보스·공허 보스·초월체 종류 표시 삭제 금지
 - 우주선 이벤트 진입 표식 재생성 금지
-- 능력 탭이 게임 시간을 멈추게 하지 않음
+- 능력 탭을 열면 게임이 일시정지되고 닫을 때 이전 상태로 정확히 복귀함
 - 새 무기 쿨다운 HUD가 멈추지 않음
 - 패시브 선택지에 오래된 수치 복원 금지
 - `%p` 표기 복원 금지
@@ -576,7 +581,7 @@ src/gpu-renderer.js
 ## 11. 인터페이스
 
 - `I` 또는 `Tab`: 능력 탭 열기·닫기
-- 능력 탭은 게임을 일시정지하지 않음
+- 능력 탭을 열면 게임이 일시정지됨
 - 레벨업·보스 보상·게임 오버가 능력 탭보다 우선
 - 패시브 목록은 데스크톱에서 세로 스크롤
 - 현재 장비·패시브 카드를 눌러 상세 효과 확인
@@ -625,8 +630,8 @@ src/gpu-renderer.js
 - 집속 단계 전환 시간 확인
 - 표적 사망 시 열 초기화
 - 사거리 이탈 시 열 초기화
-- 5중첩 ×4.35
-- 6중첩 ×4.6
+- 5중첩 ×3.45
+- 6중첩 ×3.65
 - 과열 성선은 최대 출력에서만 발동
 
 ### WebGL 폴백

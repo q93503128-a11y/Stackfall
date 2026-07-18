@@ -167,8 +167,8 @@
 
   function applyMiniRewardPassive(key){
     state.passives[key]=stat(key)+1;
-    if(key==='vitality'){player.maxHp+=24;player.hp=Math.min(player.maxHp,player.hp+36);}
-    if(key==='stellarLife'){const ratio=player.hp/Math.max(1,player.maxHp);player.maxHp=Math.max(player.maxHp+1,Math.round(player.maxHp*1.10));player.hp=Math.max(1,Math.round(player.maxHp*ratio));}
+    if(key==='vitality')applyStackfallVitalityGrowth(1);
+    if(key==='stellarLife')applyStackfallStellarLifeGrowth(1);
   }
   function grantMinibossReward(){
     const weapons=Object.keys(state.weaponStacks||{}).filter(key=>weaponCount(key)>0&&weaponCount(key)<6),passives=Object.keys(PASSIVES).filter(key=>stat(key)<PASSIVES[key].max);
