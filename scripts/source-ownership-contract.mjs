@@ -36,5 +36,5 @@ expect('temporary migration files are removed',!fs.existsSync('scripts/one-time-
 
 let failed=0;
 for(const [name,ok] of checks){console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)failed++;}
-console.log(`Checked ${checks.length} canonical balance ownership contracts; failures=${failed}`);
+console.log(`Checked ${checks.length} source ownership contracts; failures=${failed}`);
 if(failed)process.exit(1);
