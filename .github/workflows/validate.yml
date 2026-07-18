@@ -34,8 +34,10 @@ jobs:
         run: node scripts/realm-specials-contract.mjs
       - name: Check health ownership
         run: OWNERSHIP_GROUP=health node scripts/source-ownership-contract.mjs
-      - name: Check regeneration ownership
-        run: OWNERSHIP_GROUP=regen node scripts/source-ownership-contract.mjs
+      - name: Check regeneration runtime ownership
+        run: OWNERSHIP_GROUP=regen-runtime node scripts/source-ownership-contract.mjs
+      - name: Check regeneration documentation
+        run: OWNERSHIP_GROUP=regen-docs node scripts/source-ownership-contract.mjs
       - name: Check Hard ownership
         run: OWNERSHIP_GROUP=hard node scripts/source-ownership-contract.mjs
       - name: Check Prism ownership
