@@ -11,6 +11,7 @@ const core=read('src/core.js');
 const design=read('docs/GAME_DESIGN.md');
 const wiki=read('docs/WIKI.md');
 const validate=read('.github/workflows/validate.yml');
+const index=read('index.html');
 
 const checks=[];
 const expect=(name,condition)=>checks.push([name,Boolean(condition)]);
@@ -25,6 +26,7 @@ expect('hard profile has one canonical owner',difficulty.includes("hard:Object.f
 expect('prism uses accepted lower tuning',endgame.includes("stage===2?(prismN>=6?3.65:prismN>=5?3.45:3.25)")&&design.includes('5중첩 ×3.45')&&design.includes('6중첩 ×3.65'));
 expect('ledger pause rule documented',design.includes('능력 탭을 열면 게임이 일시정지')&&wiki.includes('능력 장부를 열면 게임이 일시정지'));
 expect('all contracts are wired into CI',['polish-contract-check.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','source-ownership-contract.mjs'].every(name=>validate.includes(name)));
+expect('no runtime balance hotfix module',!index.includes('balance-hotfix')&&!index.includes('source-sync')&&!index.includes('override.js'));
 
 let failed=0;
 for(const [name,ok] of checks){console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)failed++;}
