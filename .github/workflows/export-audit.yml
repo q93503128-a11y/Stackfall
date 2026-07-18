@@ -18,9 +18,9 @@ jobs:
         with:
           ref: agent/rebuild-special-effects
       - name: Archive repository
-        run: tar --exclude=.git --exclude=node_modules -czf stackfall-audit.tar.gz .
+        run: tar --exclude=.git --exclude=node_modules -C "$GITHUB_WORKSPACE" -czf /tmp/stackfall-audit.tar.gz .
       - uses: actions/upload-artifact@v4
         with:
           name: stackfall-full-audit
-          path: stackfall-audit.tar.gz
+          path: /tmp/stackfall-audit.tar.gz
           retention-days: 1
