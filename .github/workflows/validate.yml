@@ -17,6 +17,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Prepare migration validation marker
+        shell: bash
+        run: |
+          cat >> .github/workflows/validate.yml <<'YAML'
+                - name: Check gameplay polish contracts
+                  run: node scripts/polish-contract-check.mjs
+          YAML
       - name: Apply one-time canonical source migration
         run: node scripts/one-time-balance-source-sync.mjs
       - name: Restore workflow files for scoped publish
