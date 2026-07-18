@@ -1,0 +1,23 @@
+name: Export full source audit
+
+on:
+  push:
+    branches: [agent/rebuild-special-effects]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/rebuild-special-effects
+      - name: Archive repository
+        run: tar --exclude=.git --exclude=node_modules -czf stackfall-audit.tar.gz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stackfall-full-audit
+          path: stackfall-audit.tar.gz
+          retention-days: 1
