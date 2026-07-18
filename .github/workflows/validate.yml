@@ -1,19 +1,22 @@
 name: Validate Stackfall
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   javascript-syntax:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.event.pull_request.head.ref, 'agent/'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 1
       - uses: actions/setup-node@v4
         with:
