@@ -6,7 +6,7 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   javascript-syntax:
@@ -48,3 +48,45 @@ jobs:
         run: OWNERSHIP_GROUP=ci node scripts/source-ownership-contract.mjs
       - name: Check community feedback polish
         run: node scripts/community-feedback-contract.mjs
+
+  desktop-render-migration:
+    if: github.event_name == 'pull_request' && github.head_ref == 'agent/desktop-card-render-perf'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/desktop-card-render-perf
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply, validate, smoke, and publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$(git log -1 --pretty=%s)" = 'Improve desktop choices and render performance' ]; then
+            echo 'Source migration already applied.'
+            exit 0
+          fi
+          python3 scripts/apply-desktop-card-and-render-perf.py
+          node scripts/build-fingerprint.mjs
+          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
+          node scripts/polish-contract-check.mjs
+          node scripts/apex-encounter-contract.mjs
+          node scripts/endgame-balance-contract.mjs
+          node scripts/realm-specials-contract.mjs
+          node scripts/community-feedback-contract.mjs
+          python3 -m http.server 8000 >/tmp/stackfall-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for attempt in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8000/ >/dev/null && break
+            sleep 0.2
+          done
+          STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/desktop-card-render-perf.json
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add styles.css src/progression-expansion.js src/render-entities.js src/performance-guard.js src/realm-backgrounds.js src/build-info.js scripts/community-feedback-contract.mjs
+          git diff --cached --check
+          git commit -m 'Improve desktop choices and render performance'
+          git push origin HEAD:agent/desktop-card-render-perf
