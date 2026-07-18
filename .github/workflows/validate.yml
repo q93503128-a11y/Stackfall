@@ -32,5 +32,15 @@ jobs:
         run: node scripts/endgame-balance-contract.mjs
       - name: Check realm contract
         run: node scripts/realm-specials-contract.mjs
-      - name: Check source ownership contract
-        run: node scripts/source-ownership-contract.mjs
+      - name: Check health ownership
+        run: OWNERSHIP_GROUP=health node scripts/source-ownership-contract.mjs
+      - name: Check regeneration ownership
+        run: OWNERSHIP_GROUP=regen node scripts/source-ownership-contract.mjs
+      - name: Check Hard ownership
+        run: OWNERSHIP_GROUP=hard node scripts/source-ownership-contract.mjs
+      - name: Check Prism ownership
+        run: OWNERSHIP_GROUP=prism node scripts/source-ownership-contract.mjs
+      - name: Check documentation ownership
+        run: OWNERSHIP_GROUP=docs node scripts/source-ownership-contract.mjs
+      - name: Check CI ownership
+        run: OWNERSHIP_GROUP=ci node scripts/source-ownership-contract.mjs
