@@ -26,7 +26,7 @@
     state.weaponSlots=valid.slice(0,6);
     if(!Number.isFinite(state.weaponStacks?.core)||state.weaponStacks.core<1)state.weaponStacks.core=1;
   }
-  function acquiredCount(){const specials=Object.values(state.weaponSpecialStacks||{}).reduce((sum,row)=>sum+Object.values(row||{}).filter(v=>v>0).length,0);return Object.values(state.weaponStacks||{}).filter(v=>v>0).length+Object.values(state.passives||{}).filter(v=>v>0).length+Object.values(state.bossTraits||{}).filter(Boolean).length+Object.values(state.weaponAugments||{}).filter(Boolean).length+specials+Object.values(state.nebulaBoosts||{}).filter(v=>v>0).length+Object.values(state.nebulaExtras||{}).filter(v=>v>0).length+Object.values(state.apexBoons||{}).filter(v=>v>0).length;}
+  function acquiredCount(){return Object.values(state.weaponStacks||{}).filter(v=>v>0).length+Object.values(state.passives||{}).filter(v=>v>0).length+Object.values(state.bossTraits||{}).filter(Boolean).length+Object.values(state.weaponAugments||{}).filter(Boolean).length+Object.values(state.nebulaBoosts||{}).filter(v=>v>0).length+Object.values(state.nebulaExtras||{}).filter(v=>v>0).length+Object.values(state.apexBoons||{}).filter(v=>v>0).length;}
   let ledgerOpen=false,openedFromPause=false,openedFromChoice=false,resumeAfterLedger=false;
   function hideLedger(){ledgerOpen=false;overlay.classList.add('hidden');overlay.querySelector('.ledger-detail-layer')?.classList.add('hidden');}
   function syncVisibility(){if(ledgerOpen&&!['playing','paused','choice'].includes(state.mode)){hideLedger();openedFromPause=false;openedFromChoice=false;}const settingsOpen=!document.querySelector('#settingsScreen')?.classList.contains('hidden'),visible=['playing','paused','choice'].includes(state.mode)&&!settingsOpen&&!ui.hud.classList.contains('hidden');button.classList.toggle('hidden',!visible);pauseButton.classList.toggle('hidden',state.mode!=='paused'||settingsOpen);}
@@ -48,7 +48,6 @@
     const passives=Object.entries(state.passives||{}).filter(([,v])=>v>0).map(([k,v])=>{const p=PASSIVES[k]||{icon:'✦',color:'#ffd98f'},t=passiveText(k);return card(p.icon,p.color,t.name,t.desc,`×${v}`,`data-passive-key="${k}" tabindex="0"`);});
     const traits=Object.entries(state.bossTraits||{}).filter(([,v])=>v).map(([k])=>{const m=traitMeta[k]||['✦','#ffd98f',k,''];return card(m[0],m[1],m[2],m[3],l('active'));});
     const augments=Object.entries(state.weaponAugments||{}).filter(([,v])=>v).map(([k])=>{const m=augmentMeta[k]||['✦','#aeeeff',k],wt=ledgerWeaponText(k),def=window.stackfallWeaponAugmentDefs?.[k],name=localized(def?.name)||m[2],desc=localized(def?.desc)||wt.desc;return card(m[0],m[1],`${wt.name} · ${name}`,desc,l('active'),`data-augment-key="${k}"`);});
-    for(const[k,row]of Object.entries(state.weaponSpecialStacks||{}))for(const[branch,value]of Object.entries(row||{})){if(value<=0)continue;const def=window.stackfallWeaponSpecialDefs?.[branch],wt=ledgerWeaponText(k);if(!def)continue;augments.push(card(def.icon,def.color,`${wt.name} · ${localized(def.name)}`,window.stackfallWeaponSpecialEffectText?.(branch,value,locale())||localized(def.desc),`×${value}`,`data-special-weapon="${k}" data-special-branch="${branch}" tabindex="0"`));}
     const nebula=[];for(const[k,v]of Object.entries(state.nebulaBoosts||{}))if(v>0&&nebulaMeta[k]){const m=nebulaMeta[k];nebula.push(card(m[0],m[1],m[2],m[3],`×${v}`));}for(const[k,v]of Object.entries(state.nebulaExtras||{}))if(v>0&&nebulaMeta[k]){const m=nebulaMeta[k];nebula.push(card(m[0],m[1],m[2],m[3],`×${v}`));}if(state.salvageHullStacks)nebula.push(card('✚','#ff9eaf','강화 선체','최대 체력 10% 증가.',`×${state.salvageHullStacks}`));if(state.salvageBarrierStacks)nebula.push(card('⬢','#78f0c2','자동 방벽 발생기','일정 시간마다 보호막 재충전.',`×${state.salvageBarrierStacks}`));if(state.voidImprintStacks)nebula.push(card('◈','#c37aff','공허 각인','피해와 공격 주기를 함께 강화.',`×${state.voidImprintStacks}`));
     const apex=Object.entries(state.apexBoons||{}).filter(([,v])=>v).map(([k,v])=>{const m=apexMeta[k]||['✶','#fff',k];return card(m[0],m[1],m[2],apexDescription(k,v),`×${v}`);});
     $('#ledgerBody').innerHTML=section(l('weapons'),'#79e6ff',weapons)+section(l('passives'),'#ffcb70',passives)+section(l('traits'),'#e7b0ff',traits)+section(l('augments'),'#ff75ad',augments)+section(l('nebula'),'#77f0d6',nebula)+section(l('apex'),'#fff2a6',apex);
@@ -76,7 +75,7 @@
   function loadoutSignature(){
     const slots=(state.weaponSlots||[]).map(key=>[key,weaponCount(key)]);
     const passives=Object.entries(state.passives||{}).sort(([a],[b])=>a.localeCompare(b));
-    return JSON.stringify([weaponCount('core'),slots,passives,state.weaponSpecialStacks||{}]);
+    return JSON.stringify([weaponCount('core'),slots,passives,state.weaponAugments||{},state.bossTraits||{}]);
   }
   function renderSyncedLoadout(force=false){
     reconcileWeaponSlots();
