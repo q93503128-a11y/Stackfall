@@ -17,9 +17,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tar --exclude='.git' -czf stackfall-community-polish-source.tar.gz .
+          tar --exclude='.git' -czf /tmp/stackfall-community-polish-source.tar.gz .
       - uses: actions/upload-artifact@v4
         with:
           name: stackfall-community-polish-source
-          path: stackfall-community-polish-source.tar.gz
+          path: /tmp/stackfall-community-polish-source.tar.gz
           retention-days: 1
