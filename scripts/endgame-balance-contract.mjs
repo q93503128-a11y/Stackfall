@@ -3,6 +3,7 @@ const read=path=>fs.readFileSync(path,'utf8');
 const checks=[];
 const expect=(name,condition)=>checks.push([name,Boolean(condition)]);
 const expansion=read('src/endgame-balance-expansion.js');
+const difficulty=read('src/difficulty-augment-expansion.js');
 const mapEvents=read('src/map-event-expansion.js');
 const progression=read('src/progression-expansion.js');
 const bosses=read('src/bosses.js');
@@ -22,7 +23,8 @@ expect('boomerang trail visual',expansion.includes("source:'arc-trail'")&&expans
 expect('comet trail damage',expansion.includes("source:'comet-trail'"));
 expect('uncapped late enemy damage curve',expansion.includes('Math.pow(minutes,1.14)'));
 expect('uncapped late enemy speed curve',expansion.includes('Math.pow(minutes,1.10)'));
-expect('hard difficulty increased',expansion.includes('enemyHp:1.25')&&expansion.includes('enemyDamage:1.25'));
+expect('hard difficulty increased',difficulty.includes('enemyHp:1.32')&&difficulty.includes('enemyDamage:1.30')&&difficulty.includes('enemySpeed:1.12')&&difficulty.includes('rangedChance:1.28'));
+expect('difficulty has one canonical owner',!expansion.includes('window.stackfallDifficultyConfig=function refinedDifficultyConfig'));
 expect('event choices have no clock',!mapEvents.includes('armChoiceClock(LIMITS.choice'));
 expect('event grants multiplicity',mapEvents.includes('PASSIVES.multiplicity.max'));
 expect('ranged centreline shot',bosses.includes('angles=shots===2?[0,'));

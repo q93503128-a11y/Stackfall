@@ -11,7 +11,7 @@ const checks=[
  ['three distinct apex signatures',['chronophageSignature','starforgeSignature','constellationSignature'].every(name=>patterns.includes(`function ${name}`))],
  ['apex has health and time phases',patterns.includes('health<.25?4:health<.50?3:health<.75?2:1')&&patterns.includes('e.apexElapsed>=240?4')],
  ['overall base difficulty slightly reduced',difficulty.includes('c.hp*=.88*d.enemyHp')&&difficulty.includes('c.damage*=.94*d.enemyDamage')&&difficulty.includes('c.speed*=.98*d.enemySpeed')],
- ['hard late scaling increased progressively',endgame.includes("hardLate=hard?(minutes*.009+Math.pow(minutes,1.08)*.0025):0")&&endgame.includes("hardLate=hard?(minutes*.004+Math.pow(minutes,1.06)*.0015):0")],
+ ['hard late scaling increased progressively',endgame.includes("hardLate=hard?(minutes*.014+Math.pow(minutes,1.08)*.0040):0")&&endgame.includes("hardLate=hard?(minutes*.0065+Math.pow(minutes,1.06)*.0022):0")],
  ['first apex raw stats softened',catalog.includes('enemy.hp*=hpScale*1.80')&&catalog.includes('enemy.damage*=damageScale*1.18')],
  ['balance audit reports 480',endgame.includes("APEX_INTERVAL_SECONDS==='number'?APEX_INTERVAL_SECONDS:480")]
 ];
