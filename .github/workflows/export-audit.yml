@@ -1,4 +1,4 @@
-name: Finalize special effects rebuild
+name: Remove special effects migration artifacts
 
 on:
   push:
@@ -10,70 +10,33 @@ permissions:
   contents: write
 
 jobs:
-  finalize-and-validate:
-    if: github.event_name == 'pull_request' || github.event.head_commit.message != 'Finalize special effects rebuild source'
+  cleanup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: agent/rebuild-special-effects
           fetch-depth: 1
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Apply idempotent follow-up
-        run: python3 scripts/apply-special-effects-followup.py
-      - name: Refresh build fingerprint
-        run: node scripts/build-fingerprint.mjs
-      - name: Verify final working diff
+      - name: Remove temporary migration files
         shell: bash
         run: |
           set -euo pipefail
-          git diff --name-only | sort > /tmp/actual-files
-          printf '%s\n' scripts/browser-smoke.mjs > /tmp/expected-files
-          diff -u /tmp/expected-files /tmp/actual-files
-          git diff --check
-      - name: Check JavaScript syntax
-        shell: bash
-        run: |
-          set -euo pipefail
-          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
-      - name: Run gameplay and ownership contracts
-        shell: bash
-        run: |
-          set -euo pipefail
-          node scripts/polish-contract-check.mjs
-          node scripts/apex-encounter-contract.mjs
-          node scripts/endgame-balance-contract.mjs
-          node scripts/realm-specials-contract.mjs
-          node scripts/community-feedback-contract.mjs
-          for group in health regen-runtime regen-docs hard prism docs ci; do OWNERSHIP_GROUP="$group" node scripts/source-ownership-contract.mjs; done
-      - name: Run local browser smoke
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 -m http.server 8000 >/tmp/stackfall-http.log 2>&1 &
-          server_pid=$!
-          trap 'kill $server_pid || true' EXIT
-          for attempt in $(seq 1 40); do
-            curl -fsS http://127.0.0.1:8000/ >/dev/null && break
-            sleep 0.2
+          shopt -s nullglob
+          files=(
+            scripts/apply-special-effects-followup.py
+            scripts/rebuild-special-effects-followup.patch
+            scripts/rebuild-special-effects.patch.b64.*
+          )
+          existing=()
+          for file in "${files[@]}"; do
+            [ -e "$file" ] && existing+=("$file")
           done
-          STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/rebuild-special-effects-final.json
-      - name: Upload browser diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: rebuild-special-effects-final-smoke
-          path: test-results
-          retention-days: 1
-      - name: Publish final source
-        shell: bash
-        run: |
-          set -euo pipefail
+          if [ ${#existing[@]} -eq 0 ]; then
+            echo 'Migration artifacts already removed.'
+            exit 0
+          fi
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add scripts/browser-smoke.mjs
-          git diff --cached --check
-          git commit -m 'Finalize special effects rebuild source'
+          git rm -- "${existing[@]}"
+          git commit -m 'Remove special effects migration artifacts'
           git push origin HEAD:agent/rebuild-special-effects
