@@ -28,6 +28,6 @@ const checks=[
 ['solid elite name indicators',read('src/performance-guard.js').includes("tag=e.kind==='apex'?'APEX':e.type==='boss'?'BOSS':'MINI'")],
 ['enemy shot swept collision',read('src/bosses.js').includes('relativeProjectileSweepHitsPlayer')],
 ['enemy shot visual families',read('src/boss-catalog.js').includes('enemyProjectileVisualFor')&&read('src/render-entities.js').includes("kind==='constellation'")&&read('src/render-entities.js').includes("kind==='void'")],
-['enemy shots use styled renderer',read('src/performance-guard.js').includes('fullDrawEnemyProjectiles')&&!read('src/performance-guard.js').includes('cachedEnemyProjectiles(){drawCachedProjectiles(state.entities.enemyProjectiles,true)')]
+['enemy shots use cached bullet renderer',read('src/performance-guard.js').includes('cachedEnemyProjectiles')&&read('src/performance-guard.js').includes('drawCachedProjectiles(state.entities.enemyProjectiles,true)')&&!read('src/performance-guard.js').includes('styledEnemyProjectiles')]
 ];
 const failed=checks.filter(([,ok])=>!ok);for(const [name,ok]of checks)console.log(ok?'PASS':'FAIL',name);if(failed.length)process.exit(1);

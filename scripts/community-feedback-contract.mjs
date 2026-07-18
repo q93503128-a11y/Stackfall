@@ -1,10 +1,12 @@
 import fs from 'node:fs';
 const read=path=>fs.readFileSync(path,'utf8');
-const core=read('src/core.js'),systems=read('src/systems.js'),runtime=read('src/runtime-config.js'),render=read('src/render-entities.js'),background=read('src/realm-backgrounds.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),progression=read('src/progression-expansion.js'),styles=read('styles.css'),wiki=read('docs/WIKI.md'),validate=read('.github/workflows/validate.yml');
+const core=read('src/core.js'),systems=read('src/systems.js'),runtime=read('src/runtime-config.js'),render=read('src/render-entities.js'),performance=read('src/performance-guard.js'),background=read('src/realm-backgrounds.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),progression=read('src/progression-expansion.js'),styles=read('styles.css'),wiki=read('docs/WIKI.md'),validate=read('.github/workflows/validate.yml');
 const checks=[];const expect=(name,ok)=>checks.push([name,Boolean(ok)]);
 expect('player movement telemetry and facing',core.includes('speed:248')&&core.includes('facingAngle')&&systems.includes('player.moveIntensity')&&systems.includes('player.facingAngle=Math.atan2'));
 expect('fixed orbit bands',runtime.includes('ORBIT_RADIUS_BANDS')&&!runtime.includes('ORBIT_EQUIPMENT_ORDER')&&runtime.includes('blade:104')&&runtime.includes('prism:151'));
-expect('pickup and enemy projectile silhouettes differ',render.includes("shadowColor='#8dff9a'")&&render.includes("fillStyle='#ff315f'")&&render.includes('drawPlayerFacingIndicator'));
+expect('pickup and enemy projectile silhouettes differ',render.includes("fillStyle='#72e69a'")&&render.includes("projectileColor(p,'#ff6c91')")&&render.includes('drawPlayerFacingIndicator'));
+expect('enemy bullets use cached lean sprites',performance.includes('cachedEnemyProjectiles')&&performance.includes('drawCachedProjectiles(state.entities.enemyProjectiles,true)')&&!performance.includes('styledEnemyProjectiles'));
+expect('gems are culled and cached',performance.includes('cachedGemRenderer')&&render.includes("if(p.x<-32||p.x>vw+32||p.y<-32||p.y>vh+32)continue"));
 expect('single render owners',render.match(/function drawPlayer\(/g)?.length===1&&render.match(/function drawWells\(/g)?.length===1&&render.match(/function drawEquippedOrbits\(/g)?.length===1);
 expect('movement landmarks and streaks',background.includes('SPACE_LANDMARKS')&&background.includes('drawSpaceLandmarks')&&background.includes('drawMotionStreaks'));
 expect('teleport warning and contact grace',patterns.includes('constellationTeleportDestination')&&patterns.includes('teleportQueued')&&patterns.includes('contactSafeUntil=state.time+.48')&&bosses.includes('(e.contactSafeUntil||0)<=state.time'));
