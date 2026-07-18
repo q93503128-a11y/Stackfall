@@ -1,4 +1,4 @@
-name: Apply community feedback migration
+name: Cleanup community feedback migration
 
 on:
   pull_request:
@@ -8,46 +8,26 @@ permissions:
   contents: write
 
 jobs:
-  apply:
+  cleanup:
     if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'agent/community-feedback-polish'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
           ref: agent/community-feedback-polish
           fetch-depth: 1
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Apply reviewed source patch
-        run: bash scripts/apply-community-feedback.sh
-      - name: Refresh build fingerprint
-        run: node scripts/build-fingerprint.mjs
-      - name: Check JavaScript syntax
+      - name: Remove temporary migration scripts
         shell: bash
         run: |
           set -euo pipefail
-          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src scripts -type f \( -name '*.js' -o -name '*.mjs' \) -print0 | sort -z)
-      - name: Run gameplay contracts
-        shell: bash
-        run: |
-          set -euo pipefail
-          node scripts/polish-contract-check.mjs
-          node scripts/apex-encounter-contract.mjs
-          node scripts/endgame-balance-contract.mjs
-          node scripts/realm-specials-contract.mjs
-          node scripts/source-ownership-contract.mjs
-          node scripts/community-feedback-contract.mjs
-      - name: Check patch integrity
-        run: git diff --cached --check
-      - name: Publish source changes
+          rm -f scripts/apply-community-feedback.sh scripts/community-patch-*.b64
+      - name: Publish cleanup
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add README.md docs scripts src styles.css
+          git add -A scripts
           git diff --cached --quiet && exit 0
-          git commit -m 'Improve combat readability and movement feel'
+          git commit -m 'Remove temporary community migration scripts'
           git push origin HEAD:agent/community-feedback-polish
