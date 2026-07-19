@@ -30,6 +30,10 @@ expect('difficulty has one canonical owner',!expansion.includes('window.stackfal
 expect('event choices have no clock',!mapEvents.includes('armChoiceClock(LIMITS.choice'));
 expect('event grants multiplicity',mapEvents.includes('PASSIVES.multiplicity.max'));
 expect('multiplicity covers wells rail and spiral',expansion.includes('multiplicityGravityWells')&&expansion.includes('multiplicityRailgun')&&expansion.includes('multiplicityGalacticSpiral')&&expansion.includes("'rail-multiplicity'")&&expansion.includes("source:'spiral-multiplicity'"));
+expect('multiplicity extras prefer separate targets',expansion.includes('const multiplicityTargets=')&&expansion.includes("multiplicityTargets(target,extra,'core')")&&expansion.includes("multiplicityTargets(target,extra,'arc')")&&expansion.includes("multiplicityTargets(target,extra,'rail')")&&expansion.includes("multiplicityTargets(null,extra,'drone'")&&expansion.includes('multiplicityTargetId'));
+expect('ion chain remains excluded from multiplicity',expansion.includes('이온 사슬 같은 연쇄 공격은 제외')&&!expansion.includes('multiplicityIon'));
+expect('opening boss relief',difficulty.includes('enemy.hp*=.78')&&difficulty.includes('enemy.damage*=.72')&&difficulty.includes('Math.ceil(count*.72)')&&difficulty.includes('dt/1.22'));
+expect('early ranged suppression',difficulty.includes('function openingRangedChance')&&difficulty.includes('clamp((t-90)/900,0,.09)')&&difficulty.includes('rangedAlive>=2?0')&&difficulty.includes('base*difficulty*.45'));
 expect('ranged centreline shot',bosses.includes('angles=shots===2?[0,'));
 expect('ability detail layer',expansion.includes('ledger-detail-layer')&&expansion.includes('apexDetails'));
 expect('typed boss HUD',combat.includes('bossHudType')&&combat.includes("'중간보스':'MINI-BOSS'")&&!expansion.includes('typedBossHud'));
