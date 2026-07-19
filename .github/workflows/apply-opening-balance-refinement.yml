@@ -1,15 +1,15 @@
 name: Apply opening balance refinement
 
 on:
-  push:
-    branches: [agent/first-boss-ranged-multiplicity]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
   apply-validate-publish:
-    if: github.event.head_commit.message != 'Ease first boss and separate multiplicity targets'
+    if: github.head_ref == 'agent/first-boss-ranged-multiplicity'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
