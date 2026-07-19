@@ -1,9 +1,46 @@
-function bossSkill(enemy,dt){if(enemy.type==='mini')return miniSkill(enemy,dt);if(enemy.type!=='boss')return;if(enemy.kind==='apex')apexBossSkill(enemy,dt);else if(enemy.kind==='void'||enemy.eventKind==='void')voidBossSkill(enemy,dt);else normalBossSkill(enemy,dt);if(typeof bossAntiIdleSkill==='function')bossAntiIdleSkill(enemy,dt);}
+function bossSkill(enemy,dt){
+  if(enemy.type==='mini')return miniSkill(enemy,dt);if(enemy.type!=='boss')return;
+  if(enemy.kind==='apex'){apexBossSkill(enemy,dt);apexPhaseDirector(enemy,dt);}else if(enemy.kind==='void'||enemy.eventKind==='void')voidBossSkill(enemy,dt);else normalBossSkill(enemy,dt);
+  if(typeof bossAntiIdleSkill==='function')bossAntiIdleSkill(enemy,dt);
+}
+function apexPhaseTransition(e,phase){
+  const form=e.apexForm||e.eliteForm,arena=state.apexArena||{x:player.x,y:player.y,r:460},d=Math.max(9,e.damage*(.27+phase*.025)),color=form==='chronophage'?'#79ffe1':form==='starforge'?'#ffb04e':'#b7c9ff';
+  e.attackLockUntil=Math.max(e.attackLockUntil||0,(state.time||0)+.38);e.contactSafeUntil=Math.max(e.contactSafeUntil||0,(state.time||0)+.48);state.camera.shake=Math.max(state.camera.shake,7+phase*2);state.flash=Math.max(state.flash,.08+phase*.025);shockwave(e.x,e.y,color,115+phase*42,.44+phase*.05,3+phase);
+  showBossNotice(`${bossName(form)} · PHASE ${phase}`,'APEX THREAT');
+  if(form==='chronophage'){
+    const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,18+phase*4,178+phase*18,d*.70,'#d9fff8',e.phase*.21,aim,.30-phase*.025,4.6);
+    const history=e.apexPlayerHistory||[],past=history[Math.max(0,history.length-8)]||{x:player.x,y:player.y};rawLine(past.x,past.y,player.x,player.y,18+phase*3,d,'#79ffe1',1.06,'boss-line');
+    if(phase>=3){for(let i=0;i<4+phase;i++){const a=i/(4+phase)*TAU+e.phase*.04;rawLine(arena.x,arena.y,arena.x+Math.cos(a)*arena.r*1.12,arena.y+Math.sin(a)*arena.r*1.12,18+phase*2,d*.82,i%2?'#79ffe1':'#d9fff8',.92+i*.04,'boss-line');}}
+  }else if(form==='starforge'){
+    const target=predictedPlayer(45+phase*38);addCircle(target.x,target.y,52+phase*8,d*1.12,'#ff7135',.86);for(let i=0;i<3+phase;i++){const a=i/(3+phase)*TAU+e.phase*.05;addCircle(target.x+Math.cos(a)*(92+phase*12),target.y+Math.sin(a)*(92+phase*12),36+phase*4,d*.66,'#ffd26f',.96+i*.055);}
+    if(phase>=3){for(let i=0;i<8+phase*2;i++)addLine(e,e.phase*.04+i*TAU/(8+phase*2),arena.r*1.18,18+phase*2,d*.86,i%3?'#ff9d42':'#fff1b0',.92+i*.018);}
+    if(phase===4)placeMines(e,9,'#ff7135',d*.72);
+  }else{
+    const points=apexArenaPoints(6+phase*2,arena.r*.58,e.phase*.03),jump=phase>=3?3:2;for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+jump)%points.length];rawLine(a.x,a.y,b.x,b.y,15+phase*2,d*.82,i%2?'#d8e2ff':'#879be0',1.0+i*.025,'boss-line');}
+    for(let i=0;i<points.length;i+=2){const point=points[i],a=Math.atan2(player.y-point.y,player.x-point.x);spawnEnemyProjectile(point.x,point.y,a,170+phase*20,d*.55,'#dce6ff',4.2,6,'constellation');}
+    if(phase>=3)teleportConstellation(e,phase,.58);
+  }
+}
+function apexVariantAttack(e,phase){
+  const form=e.apexForm||e.eliteForm,arena=state.apexArena||{x:player.x,y:player.y,r:460},d=Math.max(8,e.damage*(.25+phase*.022));
+  if(form==='chronophage'){
+    const history=e.apexPlayerHistory||[],now={x:player.x,y:player.y},pastA=history[Math.max(0,history.length-(4+phase))]||now,pastB=history[Math.max(0,history.length-(8+phase*2))]||pastA;addCircle(now.x,now.y,42+phase*5,d*.88,'#79ffe1',.78);addCircle(pastA.x,pastA.y,54+phase*6,d*.72,'#c6fff4',1.02);rawLine(pastB.x,pastB.y,now.x,now.y,17+phase*2,d*.94,'#8fffe0',1.10,'boss-line');if(phase>=3){const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,16+phase*3,210+phase*12,d*.60,'#e4fffb',-e.phase*.23,aim,.24,4.2);}
+  }else if(form==='starforge'){
+    const p=predictedPlayer(80+phase*32);for(let i=0;i<2+phase;i++){const a=i*2.399+e.phase*.04;addCircle(p.x+Math.cos(a)*(i?48+phase*5:0),p.y+Math.sin(a)*(i?48+phase*5:0),38+phase*4,d*(i? .58:1.0),'#ff8a42',.72+i*.10);}if(phase>=2){const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,20+phase*3,185+phase*12,d*.62,'#ffd26f',e.phase*.19,aim,.28,5.0);}if(phase===4){const span=arena.r*.76,gap=92;for(const offset of[-gap,gap]){rawLine(arena.x-span,player.y+offset,arena.x+span,player.y+offset,22,d*.86,'#fff1b0',.98,'boss-line');rawLine(player.x+offset,arena.y-span,player.x+offset,arena.y+span,22,d*.86,'#ff9d42',1.06,'boss-line');}}
+  }else{
+    const points=apexArenaPoints(5+phase*2,arena.r*.50,-e.phase*.025);for(const [index,point]of points.entries()){const base=Math.atan2(player.y-point.y,player.x-point.x),shots=phase>=3?3:2;for(let j=0;j<shots;j++){const spread=(j-(shots-1)/2)*.13;spawnEnemyProjectile(point.x,point.y,base+spread,165+phase*18,d*.50,index%2?'#f0f4ff':'#9fb2ef',4.0,6,'constellation');}}if(phase>=2){const half=135+phase*18,x=player.x,y=player.y;rawLine(x-half,y-half,x+half,y-half,16+phase,d*.82,'#d8e2ff',.92,'boss-line');rawLine(x-half,y+half,x+half,y+half,16+phase,d*.82,'#879be0',1.00,'boss-line');rawLine(x-half,y-half,x-half,y+half,16+phase,d*.82,'#aebfff',1.08,'boss-line');rawLine(x+half,y-half,x+half,y+half,16+phase,d*.82,'#aebfff',1.16,'boss-line');}if(phase===4)teleportConstellation(e,4,.50);
+  }
+}
+function apexPhaseDirector(e,dt){
+  if(!e||e.dead||e.kind!=='apex'||state.mode!=='playing')return;const phase=Math.max(1,Math.min(4,e.apexPhase||1));
+  if((e.apexPhaseEntered||0)<phase){e.apexPhaseEntered=phase;e.apexVariantCd=.75;apexPhaseTransition(e,phase);return;}
+  e.apexVariantCd=(e.apexVariantCd??4.0)-dt;const growth=Math.max(1,e.apexGrowthScale||1);if(e.apexVariantCd<=0){e.apexVariantCd=Math.max(2.15,5.45-phase*.58-(growth-1)*.32);apexVariantAttack(e,phase);}
+}
 function apexMotionVelocity(e){
   const arena=state.apexArena;if(!arena)return{x:0,y:0};const form=e.apexForm||e.eliteForm,dx=arena.x-e.x,dy=arena.y-e.y,centerD=Math.hypot(dx,dy)||1;
   if(form==='starforge'){const anchorX=arena.x,anchorY=arena.y-arena.r*.24,ax=anchorX-e.x,ay=anchorY-e.y,d=Math.hypot(ax,ay)||1;return{x:ax/d*Math.min(170,d*2.8),y:ay/d*Math.min(170,d*2.8)};}
   if(form==='chronophage'){const a=e.phase*.065+(e.id%7)*.31,rr=arena.r*.28,targetX=arena.x+Math.cos(a)*rr,targetY=arena.y+Math.sin(a)*rr*.58,tx=targetX-e.x,ty=targetY-e.y,d=Math.hypot(tx,ty)||1;return{x:tx/d*e.speed*.94,y:ty/d*e.speed*.94};}
-  const desired=arena.r*.46,radial=(centerD-desired)*1.8,tangent=e.speed*(e.apexPhase===2?1.35:1.08);return{x:dx/centerD*radial+(-dy/centerD)*tangent,y:dy/centerD*radial+(dx/centerD)*tangent};
+  const desired=arena.r*.46,radial=(centerD-desired)*1.8,tangent=e.speed*(e.apexPhase>=3?1.48:e.apexPhase===2?1.35:1.08);return{x:dx/centerD*radial+(-dy/centerD)*tangent,y:dy/centerD*radial+(dx/centerD)*tangent};
 }
 function clampApexToArena(e){const arena=state.apexArena;if(!arena||e.kind!=='apex')return;const dx=e.x-arena.x,dy=e.y-arena.y,d=Math.hypot(dx,dy)||1,limit=Math.max(70,arena.r-e.r*.58-20);if(d>limit){e.x=arena.x+dx/d*limit;e.y=arena.y+dy/d*limit;}}
 function updateEnemies(dt){

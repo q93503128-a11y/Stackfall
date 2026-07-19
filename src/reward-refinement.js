@@ -74,7 +74,7 @@
     @media(max-width:1040px){.reward-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:720px){.reward-cards{grid-template-columns:1fr;max-height:65vh;overflow:auto}.reward-card{min-height:155px}.reward-card .reward-icon{margin:14px 0;font-size:34px}}
   `;document.head.appendChild(rewardStyle);
   const rewardThemeStyle=document.createElement('style');rewardThemeStyle.textContent=`
-    .reward-shell{position:relative;padding:28px;border:1px solid rgba(210,222,255,.18);clip-path:polygon(0 18px,18px 0,calc(100% - 18px) 0,100% 18px,100% calc(100% - 18px) 100%,18px 100%,0 calc(100% - 18px));background:radial-gradient(circle at 50% 0%,rgba(135,116,255,.15),transparent 42%),linear-gradient(155deg,rgba(14,19,48,.97),rgba(3,5,16,.99));box-shadow:0 38px 120px rgba(0,0,0,.68),inset 0 0 90px rgba(120,130,255,.06)}
+    .reward-shell{position:relative;padding:28px;border:1px solid rgba(210,222,255,.18);clip-path:polygon(0 18px,18px 0,calc(100% - 18px) 0,100% 18px,100% calc(100% - 18px),calc(100% - 18px) 100%,18px 100%,0 calc(100% - 18px));background:radial-gradient(circle at 50% 0%,rgba(135,116,255,.15),transparent 42%),linear-gradient(155deg,rgba(14,19,48,.97),rgba(3,5,16,.99));box-shadow:0 38px 120px rgba(0,0,0,.68),inset 0 0 90px rgba(120,130,255,.06)}
     .reward-shell:before{content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.05);pointer-events:none}.reward-card{border-radius:6px;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));box-shadow:inset 3px 0 0 var(--reward-color),0 22px 58px rgba(0,0,0,.46)}
     #apexRewardScreen{z-index:70;background:radial-gradient(circle at 50% 38%,rgba(255,211,105,.18),rgba(1,2,9,.98) 68%);backdrop-filter:blur(12px)}.apex-reward-shell{width:min(1120px,96vw);padding:30px;position:relative;border:1px solid rgba(255,234,169,.28);clip-path:polygon(50% 0,100% 12%,96% 100%,4% 100%,0 12%);background:radial-gradient(circle at 50% 0%,rgba(255,205,105,.14),transparent 40%),linear-gradient(155deg,rgba(25,20,43,.98),rgba(3,4,13,.99));box-shadow:0 40px 130px rgba(0,0,0,.74),inset 0 0 110px rgba(255,194,82,.06)}.apex-reward-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.apex-reward-card{min-height:255px;padding:22px;text-align:left;color:#fff;border:1px solid color-mix(in srgb,var(--apex-color) 48%,rgba(255,255,255,.08));background:linear-gradient(150deg,color-mix(in srgb,var(--apex-color) 12%,#151124),#050611 72%);clip-path:polygon(50% 0,100% 18%,93% 100%,7% 100%,0 18%);cursor:pointer;transition:.18s}.apex-reward-card:hover{transform:translateY(-6px);box-shadow:0 0 38px color-mix(in srgb,var(--apex-color) 20%,transparent)}.apex-reward-card span{font-size:42px;color:var(--apex-color);text-shadow:0 0 25px var(--apex-color)}.apex-reward-card h3{font-size:20px;margin:25px 0 9px}.apex-reward-card p{color:#aeb6d1;font-size:12px;line-height:1.65}@media(max-width:720px){.apex-reward-shell{padding:19px 13px}.apex-reward-cards{grid-template-columns:1fr;max-height:66vh;overflow:auto}.apex-reward-card{min-height:145px}}
   `;document.head.appendChild(rewardThemeStyle);
@@ -93,10 +93,10 @@
     core:{icon:'✷',color:'#eafcff',name:{ko:'항성 연사',en:'Stellar Volley'},desc:{ko:'4번째 발사마다 전방위 광자탄을 방출하고, 코어 적중 누적 시 다른 적에게 굴절 펄스가 도약한다.',en:'Every fourth volley fires photons in all directions, while repeated core hits ricochet a refracted pulse to another enemy.'}},
     blade:{icon:'◒',color:'#7ce8ff',name:{ko:'공간 절개',en:'Space Rend'},desc:{ko:'칼날 적중 지점에 짧은 재사용 대기시간의 절개 폭발이 생기며, 적중 누적 시 관통 절단파를 발사한다.',en:'Blade hits create cooldown-limited rending bursts, and repeated hits release a piercing shear wave.'}},
     ember:{icon:'✦',color:'#ff7b9e',name:{ko:'연쇄 성화',en:'Chain Starfire'},desc:{ko:'별빛 탄환이 주변 적 둘에게 불꽃을 전이하고, 같은 적을 반복 타격하면 잔광 연소가 세 차례 이어진다.',en:'Starlight jumps fire to two nearby enemies, while repeated hits ignite three delayed afterburn ticks.'}},
-    bulwark:{icon:'◈',color:'#74f2a7',name:{ko:'반사 장벽',en:'Reflective Barrier'},desc:{ko:'피격 시 사방으로 반격 창을 방출하고 보호막을 즉시 충전하며, 전투 중 장벽이 주기적으로 자체 재충전된다.',en:'Taking damage launches counter lances and restores shield, while the barrier also recharges itself during combat.'}},
+    bulwark:{icon:'◈',color:'#74f2a7',name:{ko:'반사 장벽',en:'Reflective Barrier'},desc:{ko:'피격 시 반격 창은 항상 발사하지만 보호막 충전에는 3초의 내부 재사용 대기시간이 있다. 전투 중 장벽 자체 재충전은 별도로 작동한다.',en:'Taking damage always launches counter lances, but the on-hit shield recharge has a 3-second internal cooldown. Passive barrier recharge remains separate.'}},
     gravity:{icon:'◉',color:'#9e79ff',name:{ko:'종말 붕괴',en:'Terminal Collapse'},desc:{ko:'모든 중력 우물이 사라질 때 넓은 붕괴 폭발을 일으켜 끌어모은 적을 한꺼번에 타격한다.',en:'Every gravity well detonates in a wide terminal collapse when it expires.'}},
     comet:{icon:'⟐',color:'#b5f5ff',name:{ko:'혜성 편대',en:'Comet Squadron'},desc:{ko:'혜성 창 발사 뒤 서로 다른 각도에서 추적하는 잔상 창 두 개가 시간차로 합류한다.',en:'Two delayed homing afterimage lances converge from different angles after every comet cast.'}},
-    prism:{icon:'✧',color:'#c2a7ff',name:{ko:'과열 성선',en:'Overheat Starline'},desc:{ko:'집속 광선이 주변 적 둘에게 굴절 도약하고, 최대 출력에서는 표적을 가르는 교차 성선을 발사한다.',en:'Focused beams ricochet to two nearby enemies, and maximum focus draws crossing starlines through the target.'}},
+    prism:{icon:'✧',color:'#c2a7ff',name:{ko:'과열 성선',en:'Overheat Starline'},desc:{ko:'집속 광선이 주변 적 둘에게 굴절 도약하고, 최대 출력에서는 실제 판정 굵기와 일치하는 교차 성선을 발사한다.',en:'Focused beams ricochet to two nearby enemies, and maximum focus draws crossing starlines whose visible thickness matches their hit area.'}},
     chrono:{icon:'◎',color:'#8fffe0',name:{ko:'시간 파쇄',en:'Time Fracture'},desc:{ko:'시간 봉쇄 중인 적은 추가 피해를 받고, 그 상태에서 처치되면 주변을 휩쓰는 파쇄 폭발을 일으킨다.',en:'Time-locked enemies take extra damage and shatter in an area explosion when killed.'}},
     arc:{icon:'☾',color:'#69ffe0',name:{ko:'포식 궤도',en:'Predatory Orbit'},desc:{ko:'귀환 타격이 관통 파편을 흩뿌리고, 부메랑으로 처치하면 살아 있는 다른 적에게 새 부메랑이 도약한다.',en:'Return hits scatter piercing shards, and boomerang kills launch a new boomerang toward another living enemy.'}},
     ion:{icon:'⌁',color:'#72f2ff',name:{ko:'초전도 성좌망',en:'Superconductive Constellation'},desc:{ko:'첫 이온 사슬이 끝난 직후 약한 두 번째 사슬망이 전개되어 별도의 적 무리를 다시 연결한다.',en:'A weaker second ion network unfolds immediately after the first chain to reconnect another group.'}},
@@ -108,15 +108,14 @@
   };
   window.stackfallWeaponAugmentDefs=Object.freeze(augmentDefs);
 
-
   const ECLIPSE_BASE_DAMAGE=.20,ECLIPSE_LOW_HEALTH_DAMAGE=.30,ECLIPSE_SURGE_START=.50,ECLIPSE_THRESHOLD=.30;
   function eclipseDamageBonus(){if(!state.bossTraits?.eclipse)return 0;const ratio=clamp(player.hp/Math.max(1,player.maxHp),0,1),surge=clamp((ECLIPSE_SURGE_START-ratio)/(ECLIPSE_SURGE_START-ECLIPSE_THRESHOLD),0,1);return ECLIPSE_BASE_DAMAGE+ECLIPSE_LOW_HEALTH_DAMAGE*surge;}
   window.stackfallEclipseDamageBonus=eclipseDamageBonus;
   function ownedWeaponKeys(){const keys=['core'];for(const key of Object.keys(state.weaponStacks||{}))if(weaponCount(key)>0&&!keys.includes(key))keys.push(key);return keys.filter(key=>key==='core'||WEAPONS[key]);}
 
   state.bossTraits=state.bossTraits||{};state.weaponAugments=state.weaponAugments||{};state.rewardQueue=state.rewardQueue||[];let rewardChoiceLocked=false,pendingApexBundle=null;
-  const rrReset=resetGame;resetGame=function(){rrReset();state.bossTraits={};state.weaponAugments={};state.rewardQueue=[];state.rewardTimers={stellar:6,aegis:8,chrono:7};state.rewardKills=0;rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');};
-  const rrShowMenu=showMainMenu;showMainMenu=function(){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;return rrShowMenu();};
+  const rrReset=resetGame;resetGame=function(){rrReset();state.bossTraits={};state.weaponAugments={};state.rewardQueue=[];state.rewardTimers={stellar:6,aegis:8,chrono:7};state.rewardKills=0;rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;player.reflectBarrierRechargeReadyAt=0;rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');};
+  const rrShowMenu=showMainMenu;showMainMenu=function(){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;player.reflectBarrierRechargeReadyAt=0;return rrShowMenu();};
   const rrEnd=endGame;endGame=function(){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];return rrEnd();};
 
   function rewardOptionPool(){
@@ -187,7 +186,12 @@
     if(state.weaponAugments.chrono&&locked&&enemy.dead){augmentBurstGuard=true;areaDamage(x,y,118*weaponSizeMultiplier(),24+weaponCount('chrono')*4.2,COLORS.chrono,'chrono-burst');augmentBurstGuard=false;}
   };
 
-  const rrHurt=hurtPlayer;hurtPlayer=function(amount,source){rrHurt(amount,source);if(!state.weaponAugments?.bulwark||state.mode==='gameover')return;const n=Math.max(1,weaponCount('bulwark'));player.shield=Math.min(58+n*8,player.shield+5+n*1.5);for(let i=0;i<4;i++){const a=i*TAU/4+Math.PI/4;spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*455,vy:Math.sin(a)*455,r:5.2,life:1.0,damage:18+n*4,color:'#b5ffe5',pierce:2,source:'barrier-lance'});}};
+  const rrHurt=hurtPlayer;hurtPlayer=function(amount,source){
+    rrHurt(amount,source);if(!state.weaponAugments?.bulwark||state.mode==='gameover')return;
+    const n=Math.max(1,weaponCount('bulwark')),now=state.time||0;
+    if(now>=(player.reflectBarrierRechargeReadyAt||0)){player.reflectBarrierRechargeReadyAt=now+3;player.shield=Math.min(58+n*8,player.shield+5+n*1.5);shockwave(player.x,player.y,'#b5ffe5',64+n*2,.22,1.5);}
+    for(let i=0;i<4;i++){const a=i*TAU/4+Math.PI/4;spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*455,vy:Math.sin(a)*455,r:5.2,life:1.0,damage:18+n*4,color:'#b5ffe5',pierce:2,source:'barrier-lance'});}
+  };
   const rrSpawnCore=spawnCoreShot;spawnCoreShot=function(target,echoed=false){
     rrSpawnCore(target,echoed);
     if(state.weaponAugments.core&&!echoed&&player.coreVolley%5===0){

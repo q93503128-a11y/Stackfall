@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
-const catalog=read('src/boss-catalog.js'),core=read('src/core.js'),render=read('src/render.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),events=read('src/map-event-expansion.js'),difficulty=read('src/difficulty-augment-expansion.js'),endgame=read('src/endgame-balance-expansion.js'),smoke=read('scripts/browser-smoke.mjs');
+const catalog=read('src/boss-catalog.js'),core=read('src/core.js'),render=read('src/render.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),events=read('src/map-event-expansion.js'),difficulty=read('src/difficulty-augment-expansion.js'),endgame=read('src/endgame-balance-expansion.js'),combat=read('src/combat-balance-refinement.js'),smoke=read('scripts/browser-smoke.mjs');
 const checks=[
  ['apex interval is 480 game seconds',catalog.includes('APEX_INTERVAL_SECONDS=480')&&core.includes('nextApexAt:480')&&core.includes('state.nextApexAt=480')],
  ['paused wall clock cannot advance apex',!render.includes('state.apexClock=')&&!render.includes('updateApexPriority')&&!catalog.includes('state.apexClock=0')],
@@ -10,9 +10,14 @@ const checks=[
  ['boss anti idle targeting exists',patterns.includes('function bossAntiIdleSkill')&&patterns.includes('e.antiIdleStill')&&bosses.includes('bossAntiIdleSkill(enemy,dt)')],
  ['three distinct apex signatures',['chronophageSignature','starforgeSignature','constellationSignature'].every(name=>patterns.includes(`function ${name}`))],
  ['apex has health and time phases',patterns.includes('health<.25?4:health<.50?3:health<.75?2:1')&&patterns.includes('e.apexElapsed>=240?4')],
+ ['apex scales against player growth',catalog.includes('function apexPlayerGrowthScale')&&catalog.includes('weaponTotal')&&catalog.includes('passiveTotal')&&catalog.includes('clamp(1+score,1,3.2)')],
+ ['apex health and damage are substantially raised',catalog.includes('enemy.hp*=hpScale*4.80*growth')&&catalog.includes('enemy.damage*=damageScale*1.85*growthDamage')&&catalog.includes('enemy.skillCd*=cooldownScale*.62/growthCooldown')],
+ ['four explicit phase transitions',bosses.includes('function apexPhaseTransition')&&bosses.includes('PHASE ${phase}')&&bosses.includes('apexPhaseEntered')),
+ ['phase-specific variant attacks',bosses.includes('function apexVariantAttack')&&bosses.includes("form==='chronophage'")&&bosses.includes("form==='starforge'")&&bosses.includes('apexArenaPoints(5+phase*2'))],
+ ['apex variant cadence accelerates',bosses.includes('5.45-phase*.58-(growth-1)*.32')],
+ ['apex phase visible in HUD',combat.includes('초월체 · P${phase}')&&combat.includes('APEX · P${phase}')],
  ['overall base difficulty slightly reduced',difficulty.includes('c.hp*=.88*d.enemyHp')&&difficulty.includes('c.damage*=.94*d.enemyDamage')&&difficulty.includes('c.speed*=.98*d.enemySpeed')],
  ['hard late scaling increased progressively',endgame.includes("hardLate=hard?(minutes*.014+Math.pow(minutes,1.08)*.0040):0")&&endgame.includes("hardLate=hard?(minutes*.0065+Math.pow(minutes,1.06)*.0022):0")],
- ['first apex raw stats softened',catalog.includes('enemy.hp*=hpScale*1.80')&&catalog.includes('enemy.damage*=damageScale*1.18')],
  ['balance audit reports 480',endgame.includes("APEX_INTERVAL_SECONDS==='number'?APEX_INTERVAL_SECONDS:480")]
 ];
 let failed=0;for(const [name,ok] of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failed++;}console.log(`Checked ${checks.length} apex contracts; failures=${failed}`);if(failed)process.exit(1);

@@ -1,11 +1,14 @@
 import {createHash} from 'node:crypto';
-import {readFileSync,writeFileSync} from 'node:fs';
-import {dirname,resolve} from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {readFileSync,readdirSync,writeFileSync} from 'node:fs';
+import {dirname,join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const ownPath=fileURLToPath(import.meta.url);
 export const BUILD_INFO_PATH='src/build-info.js';
 export const REQUIRED_PUBLIC_ASSETS=['googlea1b39620fd8849c7.html'];
+const CONTRACTS=['polish-contract-check.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','community-feedback-contract.mjs'];
+const OWNERSHIP_GROUPS=['health','regen-runtime','regen-docs','hard','prism','docs','ci'];
 function sha256(buffer){return createHash('sha256').update(buffer).digest('hex');}
 function localAssets(index){
   const paths=['index.html',...REQUIRED_PUBLIC_ASSETS];
@@ -15,6 +18,16 @@ function localAssets(index){
     if(!paths.includes(value))paths.push(value);
   }
   return paths.sort();
+}
+function sourceJavaScriptFiles(projectRoot){
+  const root=resolve(projectRoot,'src'),out=[];
+  const walk=dir=>{for(const entry of readdirSync(dir,{withFileTypes:true})){const path=join(dir,entry.name);if(entry.isDirectory())walk(path);else if(entry.isFile()&&entry.name.endsWith('.js'))out.push(path);}};
+  walk(root);return out.sort();
+}
+export function validateBuildSources(projectRoot){
+  for(const file of sourceJavaScriptFiles(projectRoot))execFileSync(process.execPath,['--check',file],{cwd:projectRoot,stdio:'inherit'});
+  for(const contract of CONTRACTS)execFileSync(process.execPath,[resolve(projectRoot,'scripts',contract)],{cwd:projectRoot,stdio:'inherit'});
+  for(const group of OWNERSHIP_GROUPS)execFileSync(process.execPath,[resolve(projectRoot,'scripts','source-ownership-contract.mjs')],{cwd:projectRoot,stdio:'inherit',env:{...process.env,OWNERSHIP_GROUP:group}});
 }
 export function computeBuildFingerprint(projectRoot){
   const index=readFileSync(resolve(projectRoot,'index.html'),'utf8');
@@ -33,6 +46,7 @@ export function writeBuildInfo(projectRoot){
 }
 if(process.argv[1]&&resolve(process.argv[1])===resolve(ownPath)){
   const projectRoot=resolve(dirname(ownPath),'..');
+  validateBuildSources(projectRoot);
   const info=writeBuildInfo(projectRoot);
   console.log(JSON.stringify(info));
 }
