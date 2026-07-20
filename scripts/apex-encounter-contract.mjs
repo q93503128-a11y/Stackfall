@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
-const catalog=read('src/boss-catalog.js'),core=read('src/core.js'),render=read('src/render.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),events=read('src/map-event-expansion.js'),difficulty=read('src/difficulty-augment-expansion.js'),endgame=read('src/endgame-balance-expansion.js'),combat=read('src/combat-balance-refinement.js'),smoke=read('scripts/browser-smoke.mjs');
+const catalog=read('src/boss-catalog.js'),core=read('src/core.js'),render=read('src/render.js'),eliteRenderers=read('src/elite-renderers.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),events=read('src/map-event-expansion.js'),difficulty=read('src/difficulty-augment-expansion.js'),endgame=read('src/endgame-balance-expansion.js'),combat=read('src/combat-balance-refinement.js'),smoke=read('scripts/browser-smoke.mjs');
 const checks=[
  ['apex interval is 480 game seconds',catalog.includes('APEX_INTERVAL_SECONDS=480')&&core.includes('nextApexAt:480')&&core.includes('state.nextApexAt=480')],
  ['paused wall clock cannot advance apex',!render.includes('state.apexClock=')&&!catalog.includes('state.apexClock=0')],
@@ -8,6 +8,7 @@ const checks=[
  ['pause smoke checks apex invariant',smoke.includes('pausedApexDue')&&smoke.includes('!cooldown.pausedApexDue')],
  ['boss anti idle targeting exists',patterns.includes('function bossAntiIdleSkill')&&bosses.includes('bossAntiIdleSkill(enemy,dt)')],
  ['three distinct apex signatures',['chronophageSignature','starforgeSignature','constellationSignature'].every(name=>patterns.includes(`function ${name}`))],
+ ['three distinct apex silhouettes',['drawChronophageApex','drawStarforgeApex','drawLastConstellationApex'].every(name=>eliteRenderers.includes(`function ${name}`))],
  ['apex has four phases',patterns.includes('health<.25?4:health<.50?3:health<.75?2:1')&&patterns.includes('e.apexElapsed>=240?4')],
  ['apex ignores player build strength',!catalog.includes('apexPlayerGrowthScale')&&!catalog.includes('weaponTotal')&&!catalog.includes('passiveTotal')],
  ['apex escalates cumulatively by appearance',catalog.includes('function cumulativeApexFactor')&&catalog.includes('function apexEscalationForCycle')&&catalog.includes('2.40,.34')&&catalog.includes('1.58,.15')&&catalog.includes('state.apexCount||0')],
