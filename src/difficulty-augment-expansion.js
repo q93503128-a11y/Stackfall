@@ -52,10 +52,10 @@
   fireGalacticSpiral=function augmentedGalacticSpiral(stacks,echoed=false){baseSpiral(stacks,echoed);triggerSpiralAugment(stacks,echoed);};
   fireGalacticSpiral.__stackfallAugmentAware=true;
 
-  queueMicrotask(()=>{
+  window.addEventListener('DOMContentLoaded',()=>{
     if(!fireMeteorDrones.__stackfallAugmentAware){const focusedDrone=fireMeteorDrones;fireMeteorDrones=function augmentAwareFocusedDrones(stacks,echoed=false){const target=nearestWeaponTarget('drone'),targetId=target?.id;focusedDrone(stacks,echoed);triggerDroneAugment(stacks,echoed,targetId);};fireMeteorDrones.__stackfallAugmentAware=true;}
     if(!fireGalacticSpiral.__stackfallAugmentAware){const focusedSpiral=fireGalacticSpiral;fireGalacticSpiral=function augmentAwareFocusedSpiral(stacks,echoed=false){focusedSpiral(stacks,echoed);triggerSpiralAugment(stacks,echoed);};fireGalacticSpiral.__stackfallAugmentAware=true;}
-  });
+  },{once:true});
 
   const baseMirror=fireReflector;
   fireReflector=function augmentedReflector(stacks,echoed=false){const radius=Math.min(weaponRange('mirror'),(210+stacks*24)*weaponSizeMultiplier()),shots=state.weaponAugments?.mirror&&!echoed?state.entities.enemyProjectiles.filter(p=>p&&p.life>0&&Math.hypot(p.x-player.x,p.y-player.y)<radius).slice(0,6).map(p=>({x:p.x,y:p.y,r:p.r})):[];baseMirror(stacks,echoed);for(const shot of shots){const target=nearestEnemy(shot.x,shot.y,weaponRange('mirror'));if(!target)continue;const base=Math.atan2(target.y-shot.y,target.x-shot.x);for(const offset of[-.13,.13]){const a=base+offset;spawnPlayerProjectile({x:shot.x,y:shot.y,vx:Math.cos(a)*(470+stacks*16),vy:Math.sin(a)*(470+stacks*16),r:Math.max(3.8,(shot.r||4)*.72),life:1.05,maxRange:weaponRange('mirror'),damage:7+stacks*2.2,color:'#d7fff4',pierce:1,source:'mirror-twin-reflect'});}}};
