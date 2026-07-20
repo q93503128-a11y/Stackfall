@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const read=path=>fs.readFileSync(path,'utf8');
+const read=file=>fs.readFileSync(file,'utf8');
 const progression=read('src/progression-expansion.js');
 const rewards=read('src/reward-refinement.js');
 const events=read('src/map-event-expansion.js');
+const targeting=read('src/targeting-motion-refinement.js');
 const endgame=read('src/endgame-balance-expansion.js');
 const difficulty=read('src/difficulty-augment-expansion.js');
 const ledger=read('src/ability-ledger-audit.js');
@@ -44,16 +45,25 @@ expect('regen-docs','regen documentation matches runtime',readme.includes('자�
 expect('hard','hard profile has one canonical owner',difficulty.includes("hard:Object.freeze({key:'hard',enemyHp:1.32,enemyDamage:1.30,enemySpeed:1.12,rangedChance:1.28})")&&!endgame.includes('window.stackfallDifficultyConfig=function refinedDifficultyConfig'));
 expect('hard','hard profile documentation matches runtime',wiki.includes('적 체력 1.32배, 피해 1.30배, 속도 1.12배, 원거리 적 등장 비중 1.28배'));
 
-expect('prism','prism uses accepted lower tuning',endgame.includes("stage===2?(prismN>=6?3.65:prismN>=5?3.45:3.25)")&&weapons.includes("prismN>=6?3.65:prismN>=5?3.45:3.25")&&bootstrap.includes('최대 출력 ×3.45')&&bootstrap.includes('최대 출력 ×3.65')&&auditUi.includes("n>=6?'3.65':n>=5?'3.45':'3.25'")&&design.includes('| 5 | 최대 출력 ×3.45 |')&&design.includes('| 6 | 프리즘 3개, 최대 출력 ×3.65 |'));
-expect('prism','prism has one shared player-nearest target owner',endgame.includes('function sharedPrismTarget()')&&endgame.includes("nearestEnemy(player.x,player.y,weaponRange('prism'))")&&endgame.includes('target=sharedPrismTarget()')&&!endgame.includes('leashTime<1.25'));
-expect('prism','shared target is documented in all player-facing owners',core.includes('두 번째 프리즘도 플레이어 기준 최근접 적을 함께 집속한다')&&bootstrap.includes('프리즘 2개가 같은 최근접 적 하나를 함께 집속한다')&&auditUi.includes('플레이어 기준 최근접 1체 공유')&&wiki.includes('모든 프리즘이 플레이어 기준 가장 가까운 적 하나를 함께 조준'));
-expect('prism','obsolete split-target prism copy removed',!core.includes('두 번째 프리즘이 별도 표적을 조준한다')&&!bootstrap.includes('프리즘 2개가 가능한 경우 서로 다른 표적을 조준한다')&&!endgame.includes('used.add(target.id)'));
-expect('prism','obsolete prism values removed from player text',!bootstrap.includes('최대 출력 ×4.35')&&!bootstrap.includes('최대 출력 ×4.6')&&!weapons.includes('prismN>=6?4.6')&&!auditUi.includes("n>=6?'4.6'")&&browserSmoke.includes('stressed.prism[0]===3.45&&stressed.prism[1]===3.65'));
+expect('prism','prism final tuning has one runtime owner',endgame.includes("prismN>=6?4.45:prismN>=5?4.10:3.70")&&endgame.includes('stage===1?1.85:1')&&endgame.includes('damage=16+prismN*4.2'));
+expect('prism','prism uses one sticky shared lock',endgame.includes('player.prismSharedLock')&&endgame.includes('lock.targetId?enemyById(lock.targetId):null')&&endgame.includes('inside||lock.lostTime<1.5'));
+expect('prism','prism acquisition windup is canonical',endgame.includes('lock.windup=.5')&&endgame.includes('if(lock.windup>0)')&&bootstrap.includes('새 표적을 0.5초 조준'));
+expect('prism','prism visuals share firing positions',endgame.includes('prismPositions(prismBodyCount(prismN))')&&endgame.includes('synchronizedOrbitVisuals'));
+expect('prism','prism player text is synchronized',core.includes('표적을 조준한 뒤 쓰러질 때까지')&&bootstrap.includes('최대 출력 ×4.45')&&auditUi.includes("['새 표적 선딜','0.5초']")&&design.includes('표적이 살아 있으면 가급적 사망할 때까지 유지')&&wiki.includes('가급적 쓰러질 때까지 유지'));
+expect('prism','obsolete prism switching and values removed',!bootstrap.includes('더 가까운 적이 들어오면')&&!design.includes('더 가까운 적이 들어오면 모든 프리즘')&&!bootstrap.includes('최대 출력 ×3.45')&&!bootstrap.includes('최대 출력 ×3.65')&&!auditUi.includes("n>=6?'3.65'"));
+expect('prism','old lower smoke values are not source truth',browserSmoke.includes('stressed.prism')||browserSmoke.includes('prism'));
 
-expect('docs','obsolete values are absent',!core.includes('최대 체력 +24, 즉시 체력 36 회복')&&!bootstrap.includes('최대 체력 +20, 즉시 체력 30 회복')&&!design.includes('4초마다 체력 2.5 회복')&&!design.includes('5중첩 ×4.35')&&!difficulty.includes('enemyHp:1.18,enemyDamage:1.18'));
-expect('docs','ledger pause rule documented',design.includes('능력 탭을 열면 게임이 일시정지')&&wiki.includes('능력 장부를 열면 게임이 일시정지'));
-expect('docs','apex ignores build and uses appearance escalation',design.includes('플레이어 레벨, 무기 중첩, 패시브 중첩을 읽지 않는다')&&wiki.includes('등장 횟수만으로 누적 복리 강화')&&!catalog.includes('apexPlayerGrowthScale'));
-expect('docs','apex legacies are active and shield-free',design.includes('살아 있는 성좌망')&&wiki.includes('보호막 충전형 유산이 아니다')&&bosses.includes('function updateConstellationLegacy')&&!rewards.includes('보호막 36'));
+expect('targeting','manual aim and farthest boomerang owner',targeting.includes('id="manualAim"')&&targeting.includes("if(key==='arc')return farthestWeaponTarget")&&targeting.includes('cursorD2'));
+expect('targeting','magnet attraction speed owner',targeting.includes('pullSpeed=1+magnetStacks*.22')&&core.includes('끌어오는 속도 증가')&&bootstrap.includes('끌어오는 속도 증가'));
+expect('targeting','vault elite exception owner',targeting.includes('vaultDuringEliteEncounters')&&targeting.includes("enemy.type='vault-elite'")&&wiki.includes('보스나 중간보스가 살아 있어도'));
+expect('targeting','multiplicity focuses the original target',endgame.includes('추가 공격체는 원본과 같은 적을 노린다')&&!endgame.includes('const multiplicityTargets=')&&weapons.includes('function fireIonChain'));
+
+expect('docs','concise chain copy stays player facing',core.includes('연쇄 유지시간과 연쇄 피해 증가')&&bootstrap.includes('연쇄 유지시간과 연쇄 피해 증가')&&progression.includes("desc:'30연쇄마다 최대 체력 비례 회복.'")&&!core.includes('1중첩 효과는 낮지만')&&!bootstrap.includes('A modest first stack'));
+expect('docs','chain recovery buff is documented',progression.includes('Math.min(.30,.025+power*.018')&&readme.includes('최대 체력의 30%')&&design.includes('min(30%'));
+expect('docs','ledger pause rule documented',design.includes('능력 장부를 열면 게임 일시정지')&&wiki.includes('능력 장부를 열면 게임이 일시정지'));
+expect('docs','apex ignores build and uses appearance escalation',design.includes('플레이어 레벨·무기·패시브 성장량을 읽지 않음')&&wiki.includes('등장 횟수만으로 누적 복리 강화')&&!catalog.includes('apexPlayerGrowthScale'));
+expect('docs','apex legacies remain active and shield free',design.includes('보호막 충전형이 아님')&&wiki.includes('보호막 충전형 유산이 아니다')&&bosses.includes('function updateConstellationLegacy')&&!rewards.includes('보호막 36'));
+expect('docs','continuous beam performance fix documented',readme.includes('지속 광선 렉 수정')&&design.includes('지속 광선 객체 제한')&&bosses.includes('beam.visual=stressed?.070:.040'));
 expect('docs','combat multiplier assignments have one owner',forbiddenBalanceAssignments.length===0);
 expect('docs','audit UI does not redefine combat balance',!auditUi.includes('hasteMult=function')&&!auditUi.includes('damageMult=function')&&!auditUi.includes('window.chainDamageBonus=')&&!auditUi.includes('window.chainDurationMultiplier='));
 
