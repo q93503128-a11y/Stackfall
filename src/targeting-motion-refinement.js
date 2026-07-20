@@ -5,7 +5,7 @@
   PASSIVE_TEXT.projectileSpeed={
     ko:['광자 가속기','투사체 속도 +10%, 공전형 장비 회전속도 +8%'],
     en:['Photon Accelerator','Projectile speed +10%, orbiting equipment rotation speed +8%'],
-    ja:['光子加速器','投射物速度+10%、周回装備の回転速度+8%'],
+    ja:['光子加速器','投射物速度+10%、周回装備回転速度+8%'],
     'zh-CN':['光子加速器','投射物速度+10%，环绕装备旋转速度+8%'],
     es:['Acelerador Fotónico','Velocidad de proyectiles +10% y rotación orbital +8%'],
     fr:['Accélérateur Photonique','Vitesse des projectiles +10 % et rotation orbitale +8 %']
@@ -44,6 +44,8 @@
   window.farthestWeaponTarget=farthestWeaponTarget;
   const baseNearestWeaponTarget=nearestWeaponTarget;
   nearestWeaponTarget=function refinedWeaponTarget(key,x=player.x,y=player.y,predicate=null){const manual=manualTarget(key,x,y,predicate);if(manual)return manual;if(key==='arc')return farthestWeaponTarget(key,x,y,predicate);return baseNearestWeaponTarget(key,x,y,predicate);};
+
+  updateGems=function acceleratedMagnetGems(dt){const range=Math.max(24,Number(magnetRange())||74),magnetStacks=stat('magnet'),eventMagnet=state.nebulaBoosts?.magnet||0,pullSpeed=1+magnetStacks*.22+eventMagnet*.10,gems=state.entities.gems;for(const g of gems){if(!g||!Number.isFinite(g.x)||!Number.isFinite(g.y)){if(g)g.life=0;continue;}g.life=Number.isFinite(g.life)?g.life-dt:0;g.pulse=Number.isFinite(g.pulse)?g.pulse+dt*5:dt*5;g.vx=Number.isFinite(g.vx)?g.vx:0;g.vy=Number.isFinite(g.vy)?g.vy:0;g.r=Number.isFinite(g.r)?clamp(g.r,2,14):4;g.value=Number.isFinite(g.value)?Math.max(0,g.value):0;g.x+=g.vx*dt;g.y+=g.vy*dt;g.vx*=Math.pow(.04,dt);g.vy*=Math.pow(.04,dt);const dx=player.x-g.x,dy=player.y-g.y,d=Math.hypot(dx,dy)||1;if(d<range){const force=(270+(range-d)*(7.5+magnetStacks*.55))*pullSpeed;g.vx+=dx/d*force*dt;g.vy+=dy/d*force*dt;}if(d<player.r+10){g.life=0;gainXp(g.value*xpMult());audio.pickup();spawnParticle(g.x,g.y,COLORS.cyan,3,70,2);}}compactInPlace(gems,g=>g&&g.life>0);};
 
   drawMagnetField=function differentiatedMagnetField(){
     const x=vw/2,y=vh/2,r=magnetRange(),stacks=stat('magnet'),t=performance.now();
