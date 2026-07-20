@@ -11,6 +11,40 @@
     fr:['Accélérateur Photonique','Vitesse des projectiles +10 % et rotation orbitale +8 %']
   };
 
+  PASSIVES.magnet.desc='결정 흡수 범위 +34, 끌어오는 속도 증가.';
+  PASSIVE_TEXT.magnet={
+    ko:['자석 코어','결정 흡수 범위 +34, 끌어오는 속도 증가.'],
+    en:['Magnet Core','Pickup range +34 and faster attraction.'],
+    ja:['マグネットコア','回収範囲+34、吸引速度上昇。'],
+    'zh-CN':['磁力核心','拾取范围+34，吸引速度提升。'],
+    es:['Núcleo Magnético','Alcance de recogida +34 y atracción más rápida.'],
+    fr:['Noyau Magnétique','Portée de collecte +34 et attraction accélérée.']
+  };
+
+  try{const saved=JSON.parse(localStorage.getItem('stackfall.settings')||'{}');GAME_SETTINGS.manualAim=saved.manualAim===true;}catch{GAME_SETTINGS.manualAim=false;}
+  const manualAimText={ko:'수동 조준',en:'Manual aim',ja:'手動照準','zh-CN':'手动瞄准',es:'Apuntado manual',fr:'Visée manuelle'};
+  for(const[code,text]of Object.entries(manualAimText))if(TEXT[code])TEXT[code]['settings.manualAim']=text;
+  let manualAim=document.querySelector('#manualAim');
+  if(!manualAim){
+    const close=document.querySelector('#settingsCloseBtn'),row=document.createElement('label');row.className='settings-row';row.innerHTML='<span data-i18n="settings.manualAim">수동 조준</span><input id="manualAim" type="checkbox"><i></i>';close?.before(row);manualAim=row.querySelector('input');
+  }
+  const baseSyncSettings=syncSettingsControls;
+  syncSettingsControls=function syncSettingsWithManualAim(){baseSyncSettings();if(manualAim)manualAim.checked=GAME_SETTINGS.manualAim===true;};
+  manualAim?.addEventListener('change',()=>{GAME_SETTINGS.manualAim=manualAim.checked;saveGameSettings();if(!GAME_SETTINGS.manualAim)state.input.aimActive=false;audio.pickup();});
+
+  state.input.aimActive=false;state.input.aimWorldX=player.x;state.input.aimWorldY=player.y;
+  const canvasAimPoint=event=>{const rect=canvas.getBoundingClientRect(),sx=(event.clientX-rect.left)/Math.max(1,rect.width)*vw,sy=(event.clientY-rect.top)/Math.max(1,rect.height)*vh;state.input.aimWorldX=player.x+sx-vw/2;state.input.aimWorldY=player.y+sy-vh/2;state.input.aimActive=event.pointerType!=='touch';};
+  canvas.addEventListener('pointermove',canvasAimPoint,{passive:true});
+  canvas.addEventListener('pointerdown',canvasAimPoint,{passive:true});
+  canvas.addEventListener('pointerleave',event=>{if(event.pointerType!=='touch')state.input.aimActive=false;},{passive:true});
+
+  function targetCandidates(x,y,range,predicate){const rr=range*range,out=[];for(const enemy of state.entities.enemies){if(!enemy||enemy.dead||predicate&&!predicate(enemy))continue;const dx=enemy.x-x,dy=enemy.y-y,d2=dx*dx+dy*dy;if(d2<=rr)out.push({enemy,d2});}return out;}
+  function manualTarget(key,x,y,predicate){if(GAME_SETTINGS.manualAim!==true||!state.input.aimActive)return null;const range=weaponRange(key),ax=state.input.aimWorldX,ay=state.input.aimWorldY,candidates=targetCandidates(x,y,range,predicate);let best=null,bestScore=Infinity;for(const row of candidates){const cursorD2=(row.enemy.x-ax)**2+(row.enemy.y-ay)**2,score=cursorD2+row.d2*.035;if(score<bestScore){bestScore=score;best=row.enemy;}}return best;}
+  function farthestWeaponTarget(key,x=player.x,y=player.y,predicate=null){const manual=manualTarget(key,x,y,predicate);if(manual)return manual;let best=null,bestD2=-1;for(const row of targetCandidates(x,y,weaponRange(key),predicate))if(row.d2>bestD2){bestD2=row.d2;best=row.enemy;}return best;}
+  window.farthestWeaponTarget=farthestWeaponTarget;
+  const baseNearestWeaponTarget=nearestWeaponTarget;
+  nearestWeaponTarget=function refinedWeaponTarget(key,x=player.x,y=player.y,predicate=null){const manual=manualTarget(key,x,y,predicate);if(manual)return manual;if(key==='arc')return farthestWeaponTarget(key,x,y,predicate);return baseNearestWeaponTarget(key,x,y,predicate);};
+
   drawMagnetField=function differentiatedMagnetField(){
     const x=vw/2,y=vh/2,r=magnetRange(),stacks=stat('magnet'),t=performance.now();
     const rgb=stacks>0?'255,204,92':'104,220,255';ctx.save();
@@ -31,5 +65,5 @@
     ctx.closePath();ctx.stroke();if(player.shield>0){ctx.globalAlpha=.20;ctx.fillStyle=COLORS.green;ctx.fill();}ctx.restore();
   };
 
-  applyLanguage();renderLoadout();updateHUD();
+  applyLanguage();syncSettingsControls();renderLoadout();updateHUD();
 })();
