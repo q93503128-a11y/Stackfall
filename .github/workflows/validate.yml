@@ -42,6 +42,8 @@ jobs:
         run: OWNERSHIP_GROUP=hard node scripts/source-ownership-contract.mjs
       - name: Check Prism ownership
         run: OWNERSHIP_GROUP=prism node scripts/source-ownership-contract.mjs
+      - name: Check targeting ownership
+        run: OWNERSHIP_GROUP=targeting node scripts/source-ownership-contract.mjs
       - name: Check documentation ownership
         run: OWNERSHIP_GROUP=docs node scripts/source-ownership-contract.mjs
       - name: Check CI ownership
