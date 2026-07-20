@@ -17,17 +17,18 @@ const BOSS_STATS={
   chronophage:{color:'#79ffe1',hp:2.22,speed:.92,damage:1.34,r:1.58,theme:'apex-chrono'},starforge:{color:'#ffb04e',hp:2.48,speed:.80,damage:1.46,r:1.96,theme:'apex-forge'},lastconstellation:{color:'#b7c9ff',hp:2.34,speed:.86,damage:1.40,r:.84,theme:'apex-constellation'}
 };
 function bossBag(kind){state.bossBags=state.bossBags||{};const pool=BOSS_POOLS[kind]||BOSS_POOLS.boss;let bag=state.bossBags[kind];if(!bag?.length){bag=[...pool].sort(()=>Math.random()-.5);state.bossBags[kind]=bag;}return bag.pop();}
-function resetBossSystems(){state.bossBags={};state.nextApexAt=APEX_INTERVAL_SECONDS;state.apexCount=0;state.apexActiveId=null;state.pendingApexForm=null;state.apexArena=null;state.apexExitPending=false;state.apexBoons={};state.apexBoonTimers={chrono:24,forge:18,constellation:12};}
-function apexPlayerGrowthScale(){const level=Math.max(1,Number(state.level)||1),weaponTotal=Object.values(state.weaponStacks||{}).reduce((sum,value)=>sum+(Number(value)||0),0),passiveTotal=Object.values(state.passives||{}).reduce((sum,value)=>sum+(Number(value)||0),0),score=Math.max(0,level-18)*.035+Math.max(0,weaponTotal-10)*.055+Math.max(0,passiveTotal-7)*.035;return clamp(1+score,1,3.2);}
-window.stackfallApexPlayerGrowthScale=apexPlayerGrowthScale;
+function resetBossSystems(){state.bossBags={};state.nextApexAt=APEX_INTERVAL_SECONDS;state.apexCount=0;state.apexActiveId=null;state.pendingApexForm=null;state.apexArena=null;state.apexExitPending=false;state.apexBoons={};state.apexBoonTimers={chrono:6,forge:4,constellation:3};state.apexChronoActiveUntil=0;state.apexChronoPulseCd=0;state.apexLegacyStars=[];state.apexLegacyConstellation=null;}
+function cumulativeApexFactor(cycle,base,step){let value=1;for(let i=0;i<Math.min(10,cycle);i++)value*=base+i*step;return value;}
+function apexEscalationForCycle(cycle){const c=Math.max(0,Math.floor(Number(cycle)||0));return{cycle:c,hp:cumulativeApexFactor(c,2.40,.34),damage:cumulativeApexFactor(c,1.58,.15),pattern:1+c*.30+c*c*.06,speed:1+Math.min(.72,c*.10+c*c*.018)};}
+window.stackfallApexEscalationForCycle=apexEscalationForCycle;
 function configureElite(enemy,kind){
   const category=kind==='mini'?'mini':kind==='void'?'void':kind==='apex'?'apex':'boss',form=category==='apex'&&state.pendingApexForm?state.pendingApexForm:bossBag(category),s=BOSS_STATS[form],t=state.time||0;
   enemy.eliteCategory=category;enemy.eliteForm=form;enemy.name=bossName(form);enemy.color=s.color;enemy.r*=s.r;enemy.hp*=s.hp;enemy.speed*=s.speed;enemy.damage*=s.damage;
   if(category==='void')enemy.eventKind='void';
   if(category==='apex'){
-    const cycle=Math.max(0,t/APEX_INTERVAL_SECONDS-1),growth=apexPlayerGrowthScale(),hpScale=1+cycle*.78,damageScale=1+cycle*.36,speedScale=1+cycle*.065,cooldownScale=1/(1+cycle*.12),growthDamage=1+(growth-1)*.50,growthSpeed=1+(growth-1)*.06,growthCooldown=1+(growth-1)*.12;
-    enemy.eventKind='apex';enemy.apexForm=form;enemy.controlImmune=true;enemy.knockbackImmune=true;enemy.timeLock=0;enemy.xp*=4.0+cycle*.65;enemy.apexPhase=1;enemy.apexGrowthScale=growth;enemy.apexPhaseEntered=0;enemy.signatureCd=4.8;enemy.apexVariantCd=3.8;
-    enemy.hp*=hpScale*4.80*growth;enemy.damage*=damageScale*1.85*growthDamage;enemy.speed*=speedScale*1.12*growthSpeed;enemy.skillCd*=cooldownScale*.62/growthCooldown;enemy.burstCd*=cooldownScale*.62/growthCooldown;enemy.pulseCd*=cooldownScale*.62/growthCooldown;
+    const cycle=Math.max(0,Math.floor(state.apexCount||0)),escalation=apexEscalationForCycle(cycle);
+    enemy.eventKind='apex';enemy.apexForm=form;enemy.controlImmune=true;enemy.knockbackImmune=true;enemy.timeLock=0;enemy.xp*=6+cycle*2;enemy.apexPhase=1;enemy.apexCycle=cycle+1;enemy.apexEscalation=escalation.pattern;enemy.apexPhaseEntered=0;enemy.signatureCd=4.6;enemy.apexVariantCd=3.5;enemy.apexSetpieceCd=5.2;
+    enemy.hp*=7.60*escalation.hp;enemy.damage*=2.15*escalation.damage;enemy.speed*=1.15*escalation.speed;enemy.skillCd*=.52/escalation.pattern;enemy.burstCd*=.52/escalation.pattern;enemy.pulseCd*=.52/escalation.pattern;
   }else{
     const isBoss=enemy.type==='boss',f=clamp((t-110)/520,0,1);enemy.hp*=lerp(isBoss?.56:.74,isBoss?.95:.99,f);enemy.damage*=lerp(isBoss?.66:.80,.98,clamp((t-110)/440,0,1));enemy.speed*=lerp(isBoss?.88:.94,1,clamp((t-110)/360,0,1));enemy.skillCd+=(isBoss?1.25:.65)*(1-f);enemy.burstCd+=(isBoss?1.45:.8)*(1-f);
     if(category!=='mini'){enemy.hp*=2;enemy.damage*=1.75;enemy.skillCd*=.82;enemy.burstCd*=.82;enemy.pulseCd*=.82;}
