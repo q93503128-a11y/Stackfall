@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
-const core=read('src/core.js'),bootstrap=read('src/bootstrap.js'),progression=read('src/progression-expansion.js'),catalog=read('src/boss-catalog.js'),bosses=read('src/bosses.js'),endgame=read('src/endgame-balance-expansion.js'),rewards=read('src/reward-refinement.js'),combat=read('src/combat-balance-refinement.js'),auditUi=read('src/build-audit-ui.js');
+const core=read('src/core.js'),bootstrap=read('src/bootstrap.js'),progression=read('src/progression-expansion.js'),targeting=read('src/targeting-motion-refinement.js'),catalog=read('src/boss-catalog.js'),bosses=read('src/bosses.js'),endgame=read('src/endgame-balance-expansion.js'),rewards=read('src/reward-refinement.js'),combat=read('src/combat-balance-refinement.js'),auditUi=read('src/build-audit-ui.js');
 const checks=[
   ['ledger pauses',read('src/ability-ledger-audit.js').includes("resumeAfterLedger=originMode==='playing'")&&read('src/ability-ledger-audit.js').includes("state.mode='paused'")],
   ['copy chance starts at zero',read('src/weapons.js').includes('Math.min(.60,n*.075)')],
@@ -8,11 +8,10 @@ const checks=[
   ['damage numbers are deterministic',read('src/systems-base.js').includes('damageNumbers!==false&&(!stressed||crit||elite)')],
   ['enemy shots face velocity',bosses.includes('p.phase=p.heading')&&!bosses.includes('p.phase=Math.atan2(p.vy,p.vx)+Math.PI/2')],
   ['apex terminal frenzy',read('src/boss-patterns.js').includes('e.apexElapsed>=240')],
-  ['apex is independent from player build',!catalog.includes('apexPlayerGrowthScale')&&!catalog.includes('weaponTotal')&&!catalog.includes('passiveTotal')],
-  ['apex escalates by appearance',catalog.includes('function apexEscalationForCycle')&&catalog.includes('enemy.hp*=7.60*escalation.hp')&&catalog.includes('enemy.damage*=2.15*escalation.damage')],
+  ['apex ignores build strength',!catalog.includes('apexPlayerGrowthScale')&&!catalog.includes('weaponTotal')&&!catalog.includes('passiveTotal')],
   ['apex has visible four-phase variants',bosses.includes('function apexPhaseDirector')&&bosses.includes('function apexVariantAttack')&&combat.includes('초월체 · P${phase}')],
-  ['apex uses nonstandard set pieces',bosses.includes('startChronoPursuit')&&bosses.includes('startForgeTidalCore')&&bosses.includes('summonConstellationHeralds')&&bosses.includes('startConstellationSweep')],
-  ['apex legacies are active combat systems',bosses.includes('updateChronophageLegacy')&&bosses.includes('updateStarforgeLegacy')&&bosses.includes('updateConstellationLegacy')],
+  ['apex tracking beam sweeps from an offset',bosses.includes('aim+side*(.92+phase*.07)')&&bosses.includes('angleToward(beam.angle,target,turnRate*dt)')],
+  ['continuous apex beams are visually throttled',bosses.includes('beam.visual=stressed?.070:.040')&&bosses.includes('sweep.visual=stressed?.075:.045')&&bosses.includes('network.visual=stressed?.085:.050')],
   ['singularity distortion',rewards.includes("kind==='trait-singularity'")],
   ['random upgrade notice',read('src/map-event-expansion.js').includes('showUpgradeNotice')],
   ['thumbnail metadata',read('index.html').includes('summ.png')],
@@ -28,20 +27,28 @@ const checks=[
   ['level choice ledger access',read('src/ability-ledger-audit.js').includes("['playing','paused','choice']")&&read('src/ability-ledger-audit.js').includes('restoreChoice')],
   ['reduced ranged spawn chance',read('src/difficulty-augment-expansion.js').includes('function openingRangedChance')&&read('src/difficulty-augment-expansion.js').includes('clamp((t-90)/900,0,.09)')&&read('src/difficulty-augment-expansion.js').includes('rangedAlive>=2?0')],
   ['first boss receives opening relief',read('src/difficulty-augment-expansion.js').includes('enemy.firstBoss=true')&&read('src/difficulty-augment-expansion.js').includes('enemy.hp*=.78')&&read('src/difficulty-augment-expansion.js').includes('dt/1.22')],
-  ['multiplicity attacks split targets except prism',endgame.includes('const multiplicityTargets=')&&endgame.includes('multiplicityTargetId')&&endgame.includes('성좌 프리즘은 모든 프리즘이 플레이어 기준 가장 가까운 적 하나를 함께 집속')],
-  ['all prisms share the player-nearest target',endgame.includes('function sharedPrismTarget()')&&endgame.includes('target=sharedPrismTarget()')&&endgame.includes("firePrism=function sharedPrismEcho")],
-  ['prism starline hit effect matches size',endgame.includes('hitHalfWidth=7*size')&&endgame.includes('width:hitHalfWidth*2')&&endgame.includes('e.r+hitHalfWidth')],
-  ['prism width removed from false stack claim',!bootstrap.includes('최대 출력 ×3.45와 광선 굵기 증가')],
+  ['multiplicity extras focus original target',endgame.includes('추가 공격체는 원본과 같은 적을 노린다')&&!endgame.includes('const multiplicityTargets=')&&endgame.includes('homingTargetId:target.id')],
+  ['ion chain remains multi-target exception',read('src/weapons.js').includes('function fireIonChain')&&!endgame.includes('multiplicityIon')],
+  ['prism shared lock survives nearer enemies',endgame.includes('player.prismSharedLock')&&endgame.includes('inside||lock.lostTime<1.5')&&!endgame.includes('used=new Set()')],
+  ['prism has acquisition windup',endgame.includes('lock.windup=.5')&&auditUi.includes("['새 표적 선딜','0.5초']"))],
+  ['prism amplification and overheat are raised',endgame.includes("prismN>=6?4.45:prismN>=5?4.10:3.70")&&endgame.includes('damage=16+prismN*4.2')&&bootstrap.includes('최대 출력 ×4.45')],
+  ['prism rendering uses firing positions',endgame.includes('prismPositions(prismBodyCount(prismN))')&&endgame.includes('synchronizedOrbitVisuals')],
+  ['manual aim setting exists',targeting.includes('id="manualAim"')&&targeting.includes('aimWorldX')&&targeting.includes('saveGameSettings()')],
+  ['boomerang automatically selects farthest target',targeting.includes("if(key==='arc')return farthestWeaponTarget")&&auditUi.includes("['자동 표적','사거리 내 가장 먼 적']"))],
+  ['magnet accelerates gems',targeting.includes('pullSpeed=1+magnetStacks*.22')&&bootstrap.includes('끌어오는 속도 증가')&&auditUi.includes('추가 흡인 속도')],
+  ['vault can be collected during elite combat',targeting.includes('vaultDuringEliteEncounters')&&targeting.includes("enemy.type='vault-elite'"))],
+  ['chain descriptions contain no developer TMI',progression.includes("desc:'30연쇄마다 최대 체력 비례 회복.'")&&!progression.includes('첫 중첩은')&&!core.includes('1중첩 효과는 낮지만')],
+  ['chain recovery is stronger',progression.includes('Math.min(.30,.025+power*.018')],
   ['haste is seven percent',core.includes("stat('haste')*.07")&&bootstrap.includes('장비 발동 주기 -7%')],
-  ['chain stacks accelerate',progression.includes('function curvedStackPower')&&progression.includes('function chainDurationBonus')&&progression.includes('chainDriveReduction')&&endgame.includes('registerStackfallBossChainDamage')],
-  ['audit UI owns display only',!auditUi.includes('hasteMult=function')&&!auditUi.includes('damageMult=function')&&!auditUi.includes('window.chainDamageBonus=')&&!auditUi.includes('window.chainDurationMultiplier=')&&auditUi.includes('displayedChainDriveBonus')],
+  ['chain stacks accelerate internally',progression.includes('function curvedStackPower')&&progression.includes('function chainDurationBonus')&&progression.includes('chainDriveReduction')&&endgame.includes('registerStackfallBossChainDamage')],
   ['ion chain distance buff',read('src/weapons.js').includes('range=190+ionN*26')],
   ['random reward notice extended',read('src/map-event-expansion.js').includes('scheduleUiAction(4900')&&rewards.includes('scheduleUiAction(4800')],
   ['all weapon augment definitions',rewards.includes('window.stackfallWeaponAugmentDefs=Object.freeze(augmentDefs)')&&['ion','nova','drone','rail','spiral','mirror'].every(key=>rewards.includes(`${key}:{icon:`))],
   ['arc ricochet source tags',read('src/systems.js').includes("p.ricochet?'arc-ricochet':'arc'")],
-  ['elite body labels removed and off-screen arrows retained',!read('src/build-audit-ui.js').includes('drawEliteMarkers')&&!read('src/performance-guard.js').includes('drawEliteEdgeIndicator')&&read('src/build-audit-ui.js').includes('drawEliteEdgeArrows')&&combat.includes('bossHudType')],
+  ['elite body labels removed and off-screen arrows retained',!auditUi.includes('drawEliteMarkers')&&!read('src/performance-guard.js').includes('drawEliteEdgeIndicator')&&auditUi.includes('drawEliteEdgeArrows')&&combat.includes('bossHudType')],
   ['enemy shot swept collision',bosses.includes('relativeProjectileSweepHitsPlayer')],
   ['enemy shot visual families',catalog.includes('enemyProjectileVisualFor')&&read('src/render-entities.js').includes("kind==='constellation'")&&read('src/render-entities.js').includes("kind==='void'")],
-  ['enemy shots use cached bullet renderer',read('src/performance-guard.js').includes('cachedEnemyProjectiles')&&read('src/performance-guard.js').includes('drawCachedProjectiles(state.entities.enemyProjectiles,true)')&&!read('src/performance-guard.js').includes('styledEnemyProjectiles')]
+  ['enemy shots use cached bullet renderer',read('src/performance-guard.js').includes('cachedEnemyProjectiles')&&read('src/performance-guard.js').includes('drawCachedProjectiles(state.entities.enemyProjectiles,true)')&&!read('src/performance-guard.js').includes('styledEnemyProjectiles')],
+  ['ability UI is display only',!auditUi.includes('hasteMult=function')&&!auditUi.includes('damageMult=function')&&!auditUi.includes('window.chainDamageBonus=')]
 ];
 const failed=checks.filter(([,ok])=>!ok);for(const [name,ok]of checks)console.log(ok?'PASS':'FAIL',name);if(failed.length)process.exit(1);
