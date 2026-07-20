@@ -14,6 +14,7 @@ const bootstrap=read('src/bootstrap.js');
 const weapons=read('src/weapons.js');
 const auditUi=read('src/build-audit-ui.js');
 const browserSmoke=read('scripts/browser-smoke.mjs');
+const buildFingerprint=read('scripts/build-fingerprint.mjs');
 const readme=read('README.md');
 const design=read('docs/GAME_DESIGN.md');
 const wiki=read('docs/WIKI.md');
@@ -58,7 +59,7 @@ expect('targeting','manual aim and farthest boomerang owner',targeting.includes(
 expect('targeting','magnet attraction speed owner',targeting.includes('pullSpeed=1+magnetStacks*.22')&&core.includes('끌어오는 속도 증가')&&bootstrap.includes('끌어오는 속도 증가'));
 expect('targeting','vault elite exception owner',targeting.includes('vaultDuringEliteEncounters')&&targeting.includes("enemy.type='vault-elite'")&&wiki.includes('보스나 중간보스가 살아 있어도'));
 expect('targeting','multiplicity focuses the original target',endgame.includes('추가 공격체는 원본과 같은 적을 노린다')&&!endgame.includes('const multiplicityTargets=')&&weapons.includes('function fireIonChain'));
-expect('targeting','late focused wrappers preserve augment owners',difficulty.includes('function triggerDroneAugment')&&difficulty.includes('function triggerSpiralAugment')&&difficulty.includes('__stackfallAugmentAware'));
+expect('targeting','late focused wrappers preserve augment owners',difficulty.includes('function triggerDroneAugment')&&difficulty.includes('function triggerSpiralAugment')&&difficulty.includes('__stackfallAugmentAware')&&difficulty.includes("window.addEventListener('DOMContentLoaded'")&&!difficulty.includes('queueMicrotask'));
 
 expect('docs','concise chain copy stays player facing',core.includes('연쇄 유지시간과 연쇄 피해 증가')&&bootstrap.includes('연쇄 유지시간과 연쇄 피해 증가')&&progression.includes("desc:'30연쇄마다 최대 체력 비례 회복.'")&&!core.includes('1중첩 효과는 낮지만')&&!bootstrap.includes('A modest first stack'));
 expect('docs','chain recovery buff is documented',progression.includes('Math.min(.30,.025+power*.018')&&readme.includes('최대 체력의 30%')&&design.includes('min(30%'));
@@ -70,6 +71,7 @@ expect('docs','combat multiplier assignments have one owner',forbiddenBalanceAss
 expect('docs','audit UI does not redefine combat balance',!auditUi.includes('hasteMult=function')&&!auditUi.includes('damageMult=function')&&!auditUi.includes('window.chainDamageBonus=')&&!auditUi.includes('window.chainDurationMultiplier='));
 
 expect('ci','all contracts are wired into CI',['polish-contract-check.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','source-ownership-contract.mjs'].every(name=>validate.includes(name)));
+expect('ci','targeting ownership group runs in build fingerprint',buildFingerprint.includes("'prism','targeting','docs'"));
 expect('ci','validation workflow is permanent',validate.includes('contents: read')&&!validate.includes('one-time canonical source migration'));
 expect('ci','no runtime balance hotfix module',!index.includes('balance-hotfix')&&!index.includes('source-sync')&&!index.includes('override.js'));
 expect('ci','temporary migration files are removed',!fs.existsSync('scripts/one-time-balance-source-sync.mjs')&&!fs.existsSync('.github/workflows/one-time-balance-source-sync.yml'));
