@@ -1,7 +1,7 @@
 (function(){
   Object.assign(STACK_EFFECTS,{
     core:[['초기 점화','기본 광자탄 1발 자동 발사.'],['쌍발 코어','광자탄 2발 동시 발사.'],['코어 관통','각 광자탄이 적 1명을 추가 관통.'],['펄스 폭발','명중 지점에 소형 범위 폭발.'],['삼중 코어','광자탄 3발 동시 발사.'],['항성 펄스','주기적으로 대형 관통 광자탄 발사.']],
-    ember:[['첫 별','별빛 탄환 1발 발사.'],['쌍성 사격','별빛 탄환 2발 동시 발사.'],['성핵 관통','각 탄환이 적 1명을 추가 관통.'],['성운 분열','명중 시 별가루 3개로 분열.'],['삼중 성렬','별빛 탄환 3발 동시 발사.'],['초신성 탄두','주기적으로 대형 관통 초신성탄 발사.']],
+    ember:[['첫 별','별빛 탄환 1발 발사.'],['쌍성 사격','별빛 탄환 2발 동시 발사.'],['성핵 관통','각 탄환이 적 1명을 추가 관통.'],['성운 분열','적중 시 별가루 3개로 분열.'],['삼중 성렬','별빛 탄환 3발 동시 발사.'],['초신성 탄두','주기적으로 대형 관통 초신성탄 발사.']],
     comet:[['결정 장창','장거리 관통 혜성 창 1개 발사.'],['이중 궤적','혜성 창 2개 동시 발사.'],['심층 관통','창 크기와 관통 횟수 증가.'],['혜성 파편','적중 시 파편 4개 방출.'],['잔광 궤도','비행 경로에 지속 피해.'],['대충돌','소멸 지점에 대형 폭발.']],
     arc:[['성운 비행','사거리 안 가장 먼 적을 타격하고 귀환한다.'],['쌍곡선','같은 표적을 향하는 칼날 2개.'],['광폭 곡선','곡선 폭과 칼날 판정 증가.'],['귀환 절단','귀환 타격 피해 ×1.38.'],['잔광 띠','왕복 경로에 지속 피해.'],['삼중 나선','같은 표적을 향하는 칼날 3개.']],
     blade:[['월광 기동','광자 칼날 1개 공전.'],['쌍월 궤도','광자 칼날 2개 공전.'],['가속 궤도','공전 속도와 공격 반경 증가.'],['성흔 파동','적중 지점에서 관통 절단파 발사.'],['삼월식','광자 칼날 3개 공전.'],['천체 분쇄기','연쇄 처치마다 별빛 폭발.']],
@@ -74,7 +74,7 @@
 
   function eventMeta(type){return type==='crash'?{label:'우주선',icon:'⌁',color:'#ff9a62'}:type==='void'?{label:'공허 균열',icon:'◉',color:'#b36bff'}:{label:'성운 보관소',icon:'◇',color:'#75eaff'};}
   function drawMapEventEdgeArrows(){guidanceEventArrows=0;if(state.mapEventActive)return;const bottomGap=compactDevice()?180:154,left=76,right=vw-76,top=82,bottom=vh-bottomGap;for(const marker of state.entities.mapEvents||[]){if(!marker||marker.consumed)continue;const p=worldToScreen(marker.x,marker.y);if(p.x>left&&p.x<right&&p.y>top&&p.y<bottom)continue;const dx=p.x-vw/2,dy=p.y-vh/2,angle=Math.atan2(dy,dx),edge=safeEdge(dx,dy,bottomGap),meta=eventMeta(marker.type),distance=Math.round(Math.hypot(marker.x-player.x,marker.y-player.y));drawEdgeArrow(edge,angle,meta,`${meta.icon} ${meta.label} · ${distance}`);guidanceEventArrows++;}}
-  const baseDrawMapEvents=drawMapEvents;drawMapEvents=function auditedEventIndicators(){baseDrawMapEvents();drawMapEventEdgeArrows();};
+  const baseDrawMapEvents=drawMapEvents;drawMapEvents=function auditedEventIndicators(){baseDrawMapEvents();if(typeof drawApexArena==='function')drawApexArena();drawMapEventEdgeArrows();};
   window.stackfallGuidanceDiagnostics=()=>({eliteArrows:guidanceEliteArrows,eventArrows:guidanceEventArrows});
 
   renderLoadout();updateHUD();
