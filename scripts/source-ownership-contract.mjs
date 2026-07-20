@@ -49,6 +49,7 @@ expect('prism','prism final tuning has one runtime owner',endgame.includes("pris
 expect('prism','prism uses one sticky shared lock',endgame.includes('player.prismSharedLock')&&endgame.includes('lock.targetId?enemyById(lock.targetId):null')&&endgame.includes('inside||lock.lostTime<1.5'));
 expect('prism','prism acquisition windup is canonical',endgame.includes('lock.windup=.5')&&endgame.includes('if(lock.windup>0)')&&bootstrap.includes('새 표적을 0.5초 조준'));
 expect('prism','prism visuals share firing positions',endgame.includes('prismPositions(prismBodyCount(prismN))')&&endgame.includes('synchronizedOrbitVisuals'));
+expect('prism','prism runtime resets with every new run',core.includes('prismSharedLock:null')&&core.includes('player.prismSharedLock=null'));
 expect('prism','prism player text is synchronized',core.includes('표적을 조준한 뒤 쓰러질 때까지')&&bootstrap.includes('최대 출력 ×4.45')&&auditUi.includes("['새 표적 선딜','0.5초']")&&design.includes('표적이 살아 있으면 가급적 사망할 때까지 유지')&&wiki.includes('가급적 쓰러질 때까지 유지'));
 expect('prism','obsolete prism switching and values removed',!bootstrap.includes('더 가까운 적이 들어오면')&&!design.includes('더 가까운 적이 들어오면 모든 프리즘')&&!bootstrap.includes('최대 출력 ×3.45')&&!bootstrap.includes('최대 출력 ×3.65')&&!auditUi.includes("n>=6?'3.65'"));
 expect('prism','old lower smoke values are not source truth',browserSmoke.includes('stressed.prism')||browserSmoke.includes('prism'));
@@ -57,6 +58,7 @@ expect('targeting','manual aim and farthest boomerang owner',targeting.includes(
 expect('targeting','magnet attraction speed owner',targeting.includes('pullSpeed=1+magnetStacks*.22')&&core.includes('끌어오는 속도 증가')&&bootstrap.includes('끌어오는 속도 증가'));
 expect('targeting','vault elite exception owner',targeting.includes('vaultDuringEliteEncounters')&&targeting.includes("enemy.type='vault-elite'")&&wiki.includes('보스나 중간보스가 살아 있어도'));
 expect('targeting','multiplicity focuses the original target',endgame.includes('추가 공격체는 원본과 같은 적을 노린다')&&!endgame.includes('const multiplicityTargets=')&&weapons.includes('function fireIonChain'));
+expect('targeting','late focused wrappers preserve augment owners',difficulty.includes('function triggerDroneAugment')&&difficulty.includes('function triggerSpiralAugment')&&difficulty.includes('__stackfallAugmentAware'));
 
 expect('docs','concise chain copy stays player facing',core.includes('연쇄 유지시간과 연쇄 피해 증가')&&bootstrap.includes('연쇄 유지시간과 연쇄 피해 증가')&&progression.includes("desc:'30연쇄마다 최대 체력 비례 회복.'")&&!core.includes('1중첩 효과는 낮지만')&&!bootstrap.includes('A modest first stack'));
 expect('docs','chain recovery buff is documented',progression.includes('Math.min(.30,.025+power*.018')&&readme.includes('최대 체력의 30%')&&design.includes('min(30%'));
