@@ -45,6 +45,7 @@ export function writeBuildInfo(projectRoot){
   return info;
 }
 if(process.argv[1]&&resolve(process.argv[1])===resolve(ownPath)){
+  throw new Error('STACKFALL_BUILD_PIPELINE_PROBE');
   const projectRoot=resolve(dirname(ownPath),'..');
   validateBuildSources(projectRoot);
   const info=writeBuildInfo(projectRoot);
