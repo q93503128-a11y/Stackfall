@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
-const core=read('src/core.js'),bootstrap=read('src/bootstrap.js'),progression=read('src/progression-expansion.js'),catalog=read('src/boss-catalog.js'),bosses=read('src/bosses.js'),endgame=read('src/endgame-balance-expansion.js'),rewards=read('src/reward-refinement.js'),combat=read('src/combat-balance-refinement.js');
+const core=read('src/core.js'),bootstrap=read('src/bootstrap.js'),progression=read('src/progression-expansion.js'),catalog=read('src/boss-catalog.js'),bosses=read('src/bosses.js'),endgame=read('src/endgame-balance-expansion.js'),rewards=read('src/reward-refinement.js'),combat=read('src/combat-balance-refinement.js'),auditUi=read('src/build-audit-ui.js');
 const checks=[
   ['ledger pauses',read('src/ability-ledger-audit.js').includes("resumeAfterLedger=originMode==='playing'")&&read('src/ability-ledger-audit.js').includes("state.mode='paused'")],
   ['copy chance starts at zero',read('src/weapons.js').includes('Math.min(.60,n*.075)')],
@@ -24,7 +24,7 @@ const checks=[
   ['reflective barrier recharge cooldown',rewards.includes('reflectBarrierRechargeReadyAt=now+3')&&rewards.includes('반격 창은 항상 발사')&&core.includes('reflectBarrierRechargeReadyAt:0')],
   ['browser favicon',read('index.html').includes('favicon.svg?v=3')],
   ['site manifest',read('index.html').includes('site.webmanifest')],
-  ['difficulty selector module',read('index.html').includes('difficulty-augment-expansion.js')&&read('src/difficulty-augment-expansion.js').includes("normal:Object.freeze({key:'normal'")],
+  ['difficulty selector module',read('index.html').includes('difficulty-augment-expansion.js')&&read('src/difficulty-augment-expansion.js').includes("normal:Object.freeze({key:'normal'"))],
   ['level choice ledger access',read('src/ability-ledger-audit.js').includes("['playing','paused','choice']")&&read('src/ability-ledger-audit.js').includes('restoreChoice')],
   ['reduced ranged spawn chance',read('src/difficulty-augment-expansion.js').includes('function openingRangedChance')&&read('src/difficulty-augment-expansion.js').includes('clamp((t-90)/900,0,.09)')&&read('src/difficulty-augment-expansion.js').includes('rangedAlive>=2?0')],
   ['first boss receives opening relief',read('src/difficulty-augment-expansion.js').includes('enemy.firstBoss=true')&&read('src/difficulty-augment-expansion.js').includes('enemy.hp*=.78')&&read('src/difficulty-augment-expansion.js').includes('dt/1.22')],
@@ -34,6 +34,7 @@ const checks=[
   ['prism width removed from false stack claim',!bootstrap.includes('최대 출력 ×3.45와 광선 굵기 증가')],
   ['haste is seven percent',core.includes("stat('haste')*.07")&&bootstrap.includes('장비 발동 주기 -7%')],
   ['chain stacks accelerate',progression.includes('function curvedStackPower')&&progression.includes('function chainDurationBonus')&&progression.includes('chainDriveReduction')&&endgame.includes('registerStackfallBossChainDamage')],
+  ['audit UI owns display only',!auditUi.includes('hasteMult=function')&&!auditUi.includes('damageMult=function')&&!auditUi.includes('window.chainDamageBonus=')&&!auditUi.includes('window.chainDurationMultiplier=')&&auditUi.includes('displayedChainDriveBonus')],
   ['ion chain distance buff',read('src/weapons.js').includes('range=190+ionN*26')],
   ['random reward notice extended',read('src/map-event-expansion.js').includes('scheduleUiAction(4900')&&rewards.includes('scheduleUiAction(4800')],
   ['all weapon augment definitions',rewards.includes('window.stackfallWeaponAugmentDefs=Object.freeze(augmentDefs)')&&['ion','nova','drone','rail','spiral','mirror'].every(key=>rewards.includes(`${key}:{icon:`))],
