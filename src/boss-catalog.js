@@ -18,7 +18,7 @@ const BOSS_STATS={
 };
 function bossBag(kind){state.bossBags=state.bossBags||{};const pool=BOSS_POOLS[kind]||BOSS_POOLS.boss;let bag=state.bossBags[kind];if(!bag?.length){bag=[...pool].sort(()=>Math.random()-.5);state.bossBags[kind]=bag;}return bag.pop();}
 function resetBossSystems(){state.bossBags={};state.nextApexAt=APEX_INTERVAL_SECONDS;state.apexCount=0;state.apexActiveId=null;state.pendingApexForm=null;state.apexArena=null;state.apexExitPending=false;state.apexBoons={};state.apexBoonTimers={chrono:6,forge:4,constellation:3};state.apexChronoActiveUntil=0;state.apexChronoPulseCd=0;state.apexLegacyStars=[];state.apexLegacyConstellation=null;}
-function cumulativeApexFactor(cycle,base,step){let value=1;for(let i=0;i<Math.min(10,cycle);i++)value*=base+i*step;return value;}
+function cumulativeApexFactor(cycle,base,step){let value=1;for(let i=0;i<cycle;i++){value*=base+i*step;if(value>=1e120)return 1e120;}return value;}
 function apexEscalationForCycle(cycle){const c=Math.max(0,Math.floor(Number(cycle)||0));return{cycle:c,hp:cumulativeApexFactor(c,2.40,.34),damage:cumulativeApexFactor(c,1.58,.15),pattern:1+c*.30+c*c*.06,speed:1+Math.min(.72,c*.10+c*c*.018)};}
 window.stackfallApexEscalationForCycle=apexEscalationForCycle;
 function configureElite(enemy,kind){
