@@ -6,6 +6,7 @@ const progression=read('src/progression-expansion.js');
 const rewards=read('src/reward-refinement.js');
 const events=read('src/map-event-expansion.js');
 const targeting=read('src/targeting-motion-refinement.js');
+const settings=read('src/settings.js');
 const endgame=read('src/endgame-balance-expansion.js');
 const difficulty=read('src/difficulty-augment-expansion.js');
 const ledger=read('src/ability-ledger-audit.js');
@@ -56,6 +57,7 @@ expect('prism','obsolete prism switching and values removed',!bootstrap.includes
 expect('prism','old lower smoke values are not source truth',browserSmoke.includes('stressed.prism')||browserSmoke.includes('prism'));
 
 expect('targeting','manual aim and farthest boomerang owner',targeting.includes('id="manualAim"')&&targeting.includes("if(key==='arc')return farthestWeaponTarget")&&targeting.includes('cursorD2'));
+expect('targeting','manual aim survives settings bootstrap save',settings.includes('GAME_SETTINGS.manualAim=saved.manualAim===true')&&settings.includes('saveGameSettings();')&&targeting.includes('GAME_SETTINGS.manualAim'));
 expect('targeting','magnet attraction speed owner',targeting.includes('pullSpeed=1+magnetStacks*.22')&&core.includes('끌어오는 속도 증가')&&bootstrap.includes('끌어오는 속도 증가'));
 expect('targeting','vault elite exception owner',targeting.includes('vaultDuringEliteEncounters')&&targeting.includes("enemy.type='vault-elite'")&&wiki.includes('보스나 중간보스가 살아 있어도'));
 expect('targeting','multiplicity focuses the original target',endgame.includes('추가 공격체는 원본과 같은 적을 노린다')&&!endgame.includes('const multiplicityTargets=')&&weapons.includes('function fireIonChain'));
@@ -72,6 +74,7 @@ expect('docs','audit UI does not redefine combat balance',!auditUi.includes('has
 
 expect('ci','all contracts are wired into CI',['polish-contract-check.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','source-ownership-contract.mjs'].every(name=>validate.includes(name)));
 expect('ci','targeting ownership group runs in build fingerprint',buildFingerprint.includes("'prism','targeting','docs'"));
+expect('ci','targeting ownership group runs in validation workflow',validate.includes('OWNERSHIP_GROUP=targeting node scripts/source-ownership-contract.mjs'));
 expect('ci','validation workflow is permanent',validate.includes('contents: read')&&!validate.includes('one-time canonical source migration'));
 expect('ci','no runtime balance hotfix module',!index.includes('balance-hotfix')&&!index.includes('source-sync')&&!index.includes('override.js'));
 expect('ci','temporary migration files are removed',!fs.existsSync('scripts/one-time-balance-source-sync.mjs')&&!fs.existsSync('.github/workflows/one-time-balance-source-sync.yml'));
