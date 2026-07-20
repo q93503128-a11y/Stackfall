@@ -1,9 +1,9 @@
 (function(){
   const NEW_PASSIVES={
-    chainDrive:{name:'연쇄 추진기',icon:'»',color:'#7ce8ff',desc:'연쇄 12회마다 장비 주기 단축. 첫 중첩은 작고 이후 중첩 효율이 크게 증가.',max:12},
-    chainBurst:{name:'연쇄 폭심',icon:'✹',color:'#ff7b9e',desc:'20연쇄마다 플레이어 중심 폭발. 첫 중첩은 약하고 중첩 성장률이 높음.',max:8},
-    chainRecovery:{name:'연쇄 회수',icon:'✚',color:'#74f2a7',desc:'30연쇄마다 최대 체력 비례 회복. 중첩할수록 회복 성장폭이 커짐.',max:8},
-    chainField:{name:'전리품 공명',icon:'⊙',color:'#ffcc5c',desc:'현재 연쇄에 따라 결정 흡수 범위 증가. 고중첩에서 증가폭이 크게 상승.',max:8},
+    chainDrive:{name:'연쇄 추진기',icon:'»',color:'#7ce8ff',desc:'12연쇄마다 장비 발동 주기 추가 단축.',max:12},
+    chainBurst:{name:'연쇄 폭심',icon:'✹',color:'#ff7b9e',desc:'20연쇄마다 플레이어 중심 폭발.',max:8},
+    chainRecovery:{name:'연쇄 회수',icon:'✚',color:'#74f2a7',desc:'30연쇄마다 최대 체력 비례 회복.',max:8},
+    chainField:{name:'전리품 공명',icon:'⊙',color:'#ffcc5c',desc:'현재 연쇄에 따라 결정 흡수 범위 증가.',max:8},
     eliteHunter:{name:'거성 사냥꾼',icon:'♜',color:'#e6b2ff',desc:'중간보스·보스 피해 +15%.',max:6},
     pierce:{name:'관통 렌즈',icon:'⇢',color:'#b5f5ff',desc:'투사체 관통 +1.',max:4},
     regen:{name:'자가 복원',icon:'♻',color:'#88f0ad',desc:'초당 체력 1 회복.',max:6},
@@ -13,11 +13,13 @@
     range:{name:'심우주 조준기',icon:'⌖',color:'#8fd8ff',desc:'무기의 기본 조준·비행 사거리 +10%.',max:6}
   };
   Object.assign(PASSIVES,NEW_PASSIVES);
+  PASSIVES.chain.desc='연쇄 유지시간과 연쇄 피해 증가.';
   const PT={
-    chainDrive:{ko:['연쇄 추진기','연쇄 12회마다 장비 주기 단축. 첫 중첩은 작고 이후 중첩 효율이 크게 증가.'],en:['Chain Thruster','Every 12 chain reduces equipment intervals. The first stack is modest and later stacks scale sharply.']},
-    chainBurst:{ko:['연쇄 폭심','20연쇄마다 플레이어 중심 폭발. 첫 중첩은 약하고 중첩 성장률이 높습니다.'],en:['Chain Detonation','Every 20 chain triggers a player-centered blast. The first stack is weaker and later stacks scale faster.']},
-    chainRecovery:{ko:['연쇄 회수','30연쇄마다 최대 체력 비례 회복. 중첩할수록 회복 성장폭이 커지며 보스 피해도 연쇄를 진행합니다.'],en:['Chain Recovery','Every 30 chain restores max-health-based healing with accelerating stack growth. Boss damage also advances the chain.']},
-    chainField:{ko:['전리품 공명','현재 연쇄에 따라 결정 흡수 범위 증가. 고중첩에서 증가폭이 크게 상승합니다.'],en:['Loot Resonance','Pickup range rises with current chain and scales much harder at high stacks.']},
+    chain:{ko:['연쇄 과부하','연쇄 유지시간과 연쇄 피해 증가.'],en:['Chain Overload','Increases chain duration and chain damage.']},
+    chainDrive:{ko:['연쇄 추진기','12연쇄마다 장비 발동 주기 추가 단축.'],en:['Chain Thruster','Every 12 chain further reduces equipment intervals.']},
+    chainBurst:{ko:['연쇄 폭심','20연쇄마다 플레이어 중심 폭발.'],en:['Chain Detonation','Every 20 chain triggers a player-centered blast.']},
+    chainRecovery:{ko:['연쇄 회수','30연쇄마다 최대 체력 비례 회복.'],en:['Chain Recovery','Every 30 chain restores a portion of maximum health.']},
+    chainField:{ko:['전리품 공명','현재 연쇄에 따라 결정 흡수 범위 증가.'],en:['Loot Resonance','Pickup range increases with current chain.']},
     eliteHunter:{ko:['거성 사냥꾼','중간보스·보스 피해 +15%.'],en:['Giant Hunter','Damage to mini-bosses and bosses +15%.']},
     pierce:{ko:['관통 렌즈','투사체 관통 +1.'],en:['Piercing Lens','Projectile pierce +1.']},
     regen:{ko:['자가 복원','초당 체력 1 회복.'],en:['Self Repair','Restores 1 health per second.']},
@@ -57,7 +59,7 @@
   updatePlayer=function progressionPlayer(dt){baseUpdatePlayer(dt);const n=stat('regen');if(n&&dt>0)player.hp=Math.min(player.maxHp,player.hp+n*dt);};
 
   let chainEffectGuard=false;
-  function applyChainMilestones(chain,x=player.x,y=player.y){const burst=stat('chainBurst'),recovery=stat('chainRecovery');if(burst&&chain>0&&chain%20===0){const power=curvedStackPower(burst,.48,1.18,1.22),radius=72+power*8+Math.min(82,chain*.68),damage=8+power*6.2+chain*(.14+power*.018)+state.level*.22;chainEffectGuard=true;areaDamage(x,y,radius,damage,'#ff7b9e','nova-chain-burst');chainEffectGuard=false;}if(recovery&&chain>0&&chain%30===0){const power=curvedStackPower(recovery,.45,.96,1.20),fraction=Math.min(.18,.002+power*.004+chain*.00012);player.hp=Math.min(player.maxHp,player.hp+player.maxHp*fraction);shockwave(player.x,player.y,'#74f2a7',74+power*7+Math.min(68,chain*.42),.32,2.4);}}
+  function applyChainMilestones(chain,x=player.x,y=player.y){const burst=stat('chainBurst'),recovery=stat('chainRecovery');if(burst&&chain>0&&chain%20===0){const power=curvedStackPower(burst,.48,1.18,1.22),radius=72+power*8+Math.min(82,chain*.68),damage=8+power*6.2+chain*(.14+power*.018)+state.level*.22;chainEffectGuard=true;areaDamage(x,y,radius,damage,'#ff7b9e','nova-chain-burst');chainEffectGuard=false;}if(recovery&&chain>0&&chain%30===0){const power=curvedStackPower(recovery,.80,1.08,1.16),fraction=Math.min(.30,.025+power*.018+Math.min(.10,chain*.00035));player.hp=Math.min(player.maxHp,player.hp+player.maxHp*fraction);shockwave(player.x,player.y,'#74f2a7',82+power*9+Math.min(76,chain*.46),.38,3.0);}}
   window.registerStackfallBossChainDamage=function registerStackfallBossChainDamage(enemy,amount){if(chainEffectGuard||!enemy||amount<=0||!['mini','boss'].includes(enemy.type))return;const duration=2.15*chainDurationMultiplier();state.comboTimer=Math.max(state.comboTimer,duration*.62);const threshold=Math.max(72,enemy.maxHp*.018);state.bossChainDamage=(state.bossChainDamage||0)+amount;let advances=0;while(state.bossChainDamage>=threshold&&advances<3){state.bossChainDamage-=threshold;state.combo++;state.comboTimer=duration;state.maxCombo=Math.max(state.maxCombo,state.combo);applyChainMilestones(state.combo,enemy.x,enemy.y);advances++;}};
   const baseKill=killEnemy;
   killEnemy=function progressionKill(enemy,opts={}){baseKill(enemy,opts);if(chainEffectGuard||!enemy)return;applyChainMilestones(currentChain(),enemy.x,enemy.y);};
