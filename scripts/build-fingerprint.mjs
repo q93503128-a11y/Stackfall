@@ -8,7 +8,7 @@ const ownPath=fileURLToPath(import.meta.url);
 export const BUILD_INFO_PATH='src/build-info.js';
 export const REQUIRED_PUBLIC_ASSETS=['googlea1b39620fd8849c7.html'];
 const CONTRACTS=['polish-contract-check.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','community-feedback-contract.mjs'];
-const OWNERSHIP_GROUPS=['health','regen-runtime','regen-docs','hard','prism','docs','ci'];
+const OWNERSHIP_GROUPS=['health','regen-runtime','regen-docs','hard','prism','targeting','docs','ci'];
 function sha256(buffer){return createHash('sha256').update(buffer).digest('hex');}
 function localAssets(index){
   const paths=['index.html',...REQUIRED_PUBLIC_ASSETS];
