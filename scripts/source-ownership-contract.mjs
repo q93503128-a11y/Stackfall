@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
 const read=path=>fs.readFileSync(path,'utf8');
 const progression=read('src/progression-expansion.js');
@@ -20,6 +21,13 @@ const index=read('index.html');
 const catalog=read('src/boss-catalog.js');
 const bosses=read('src/bosses.js');
 const selected=process.env.OWNERSHIP_GROUP||'all';
+
+function javascriptSources(root='src'){
+  const out=[];
+  const walk=dir=>{for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isDirectory())walk(file);else if(entry.isFile()&&entry.name.endsWith('.js'))out.push({file:file.replaceAll('\\','/'),text:read(file)});}};
+  walk(root);return out;
+}
+const forbiddenBalanceAssignments=javascriptSources().filter(({file,text})=>file!=='src/progression-expansion.js'&&(/\b(?:damageMult|hasteMult)\s*=\s*function\b/.test(text)||/window\.(?:chainDamageBonus|chainDurationMultiplier|weaponCycleMultiplier)\s*=/.test(text)));
 
 const checks=[];
 const expect=(group,name,condition)=>{if(selected==='all'||selected===group)checks.push([group,name,Boolean(condition)]);};
@@ -46,6 +54,7 @@ expect('docs','obsolete values are absent',!core.includes('최대 체력 +24, �
 expect('docs','ledger pause rule documented',design.includes('능력 탭을 열면 게임이 일시정지')&&wiki.includes('능력 장부를 열면 게임이 일시정지'));
 expect('docs','apex ignores build and uses appearance escalation',design.includes('플레이어 레벨, 무기 중첩, 패시브 중첩을 읽지 않는다')&&wiki.includes('등장 횟수만으로 누적 복리 강화')&&!catalog.includes('apexPlayerGrowthScale'));
 expect('docs','apex legacies are active and shield-free',design.includes('살아 있는 성좌망')&&wiki.includes('보호막 충전형 유산이 아니다')&&bosses.includes('function updateConstellationLegacy')&&!rewards.includes('보호막 36'));
+expect('docs','combat multiplier assignments have one owner',forbiddenBalanceAssignments.length===0);
 expect('docs','audit UI does not redefine combat balance',!auditUi.includes('hasteMult=function')&&!auditUi.includes('damageMult=function')&&!auditUi.includes('window.chainDamageBonus=')&&!auditUi.includes('window.chainDurationMultiplier='));
 
 expect('ci','all contracts are wired into CI',['polish-contract-check.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','source-ownership-contract.mjs'].every(name=>validate.includes(name)));
@@ -53,6 +62,7 @@ expect('ci','validation workflow is permanent',validate.includes('contents: read
 expect('ci','no runtime balance hotfix module',!index.includes('balance-hotfix')&&!index.includes('source-sync')&&!index.includes('override.js'));
 expect('ci','temporary migration files are removed',!fs.existsSync('scripts/one-time-balance-source-sync.mjs')&&!fs.existsSync('.github/workflows/one-time-balance-source-sync.yml'));
 
+if(forbiddenBalanceAssignments.length)console.error('Unexpected combat multiplier owners:',forbiddenBalanceAssignments.map(entry=>entry.file).join(', '));
 let failed=0;
 for(const [group,name,ok] of checks){console.log(`${ok?'PASS':'FAIL'} [${group}] ${name}`);if(!ok)failed++;}
 console.log(`Checked ${checks.length} ownership contracts in ${selected}; failures=${failed}`);
