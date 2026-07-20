@@ -11,6 +11,7 @@ const checks=[
  ['apex has four phases',patterns.includes('health<.25?4:health<.50?3:health<.75?2:1')&&patterns.includes('e.apexElapsed>=240?4')],
  ['apex ignores player build strength',!catalog.includes('apexPlayerGrowthScale')&&!catalog.includes('weaponTotal')&&!catalog.includes('passiveTotal')],
  ['apex escalates cumulatively by appearance',catalog.includes('function cumulativeApexFactor')&&catalog.includes('function apexEscalationForCycle')&&catalog.includes('2.40,.34')&&catalog.includes('1.58,.15')&&catalog.includes('state.apexCount||0')],
+ ['appearance escalation has no finite appearance cap',!catalog.includes('Math.min(10,cycle)')&&catalog.includes('for(let i=0;i<cycle;i++')&&catalog.includes('if(value>=1e120)return 1e120')],
  ['first apex has extreme fixed base strength',catalog.includes('enemy.hp*=7.60*escalation.hp')&&catalog.includes('enemy.damage*=2.15*escalation.damage')&&catalog.includes('enemy.skillCd*=.52/escalation.pattern')],
  ['phase transitions and variants',bosses.includes('function apexPhaseTransition')&&bosses.includes('function apexVariantAttack')&&bosses.includes('PHASE ${phase}')],
  ['tracking beam set piece',bosses.includes('function startChronoPursuit')&&bosses.includes('function updateChronoPursuit')&&bosses.includes('angleToward(beam.angle,target,turn)')],
