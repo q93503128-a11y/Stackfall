@@ -27,11 +27,11 @@ expect('prism keeps a living target',endgame.includes('player.prismSharedLock')&
 expect('prism has half-second acquisition',endgame.includes('lock.windup=.5')&&wiki.includes('0.5초 동안 얇은 조준선'));
 expect('prism visual and shot positions are synchronized',endgame.includes('prismPositions(prismBodyCount(prismN))')&&endgame.includes('synchronizedOrbitVisuals')&&wiki.includes('실제 광선 시작점이 일치'));
 expect('new run clears prism runtime state',core.includes('prismSharedLock:null')&&core.includes('player.prismSharedLock=null'));
-expect('drone and spiral augments survive late targeting wrappers',difficulty.includes('function triggerDroneAugment')&&difficulty.includes('function triggerSpiralAugment')&&difficulty.includes('__stackfallAugmentAware')&&difficulty.includes("'drone-meteor'")&&difficulty.includes("source:'spiral-counter'"));
+expect('drone and spiral augments survive late targeting wrappers',difficulty.includes('function triggerDroneAugment')&&difficulty.includes('function triggerSpiralAugment')&&difficulty.includes('__stackfallAugmentAware')&&difficulty.includes("window.addEventListener('DOMContentLoaded'")&&!difficulty.includes('queueMicrotask')&&difficulty.includes("'drone-meteor'")&&difficulty.includes("source:'spiral-counter'"));
 expect('apex tracking beam sweeps instead of snapping',bosses.includes('aim+side*(.92+phase*.07)')&&bosses.includes('angleToward(beam.angle,target,turnRate*dt)')&&wiki.includes('즉시 꽂히는 레이저가 아니다'));
 expect('continuous beam object churn is bounded',bosses.includes('beam.visual=stressed?.070:.040')&&bosses.includes('sweep.visual=stressed?.075:.045')&&bosses.includes('network.visual=stressed?.085:.050'));
 expect('vault remains available during elite combat',targeting.includes('vaultDuringEliteEncounters')&&wiki.includes('보스나 중간보스가 살아 있어도'));
-expect('player wiki synced',wiki.includes('수동 조준')&&wiki.includes('최대 출력: ×4.45')||wiki.includes('6중첩 최대 출력: ×4.45'));
+expect('player wiki synced',(wiki.includes('수동 조준')&&wiki.includes('최대 출력: ×4.45'))||wiki.includes('6중첩 최대 출력: ×4.45'));
 expect('community contract wired into CI',validate.includes('node scripts/community-feedback-contract.mjs'));
 const temporaryPaths=['.github/workflows/export-community-polish-source.yml','.github/workflows/apply-community-feedback-migration.yml','scripts/apply-community-feedback.sh'];
 expect('temporary migration files removed',temporaryPaths.every(path=>!fs.existsSync(path))&&!fs.readdirSync('scripts').some(name=>name.startsWith('community-patch-')));
