@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 const read=path=>fs.readFileSync(path,'utf8');
-const core=read('src/core.js'),systems=read('src/systems.js'),runtime=read('src/runtime-config.js'),render=read('src/render-entities.js'),performance=read('src/performance-guard.js'),buildAudit=read('src/build-audit-ui.js'),renderLoop=read('src/render.js'),gpu=read('src/gpu-renderer.js'),background=read('src/realm-backgrounds.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),progression=read('src/progression-expansion.js'),targeting=read('src/targeting-motion-refinement.js'),endgame=read('src/endgame-balance-expansion.js'),styles=read('styles.css'),wiki=read('docs/WIKI.md'),validate=read('.github/workflows/validate.yml');
+const core=read('src/core.js'),systems=read('src/systems.js'),runtime=read('src/runtime-config.js'),render=read('src/render-entities.js'),performance=read('src/performance-guard.js'),buildAudit=read('src/build-audit-ui.js'),renderLoop=read('src/render.js'),gpu=read('src/gpu-renderer.js'),background=read('src/realm-backgrounds.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),progression=read('src/progression-expansion.js'),targeting=read('src/targeting-motion-refinement.js'),difficulty=read('src/difficulty-augment-expansion.js'),endgame=read('src/endgame-balance-expansion.js'),styles=read('styles.css'),wiki=read('docs/WIKI.md'),validate=read('.github/workflows/validate.yml');
 const checks=[];const expect=(name,ok)=>checks.push([name,Boolean(ok)]);
 expect('player movement telemetry and facing',core.includes('speed:248')&&core.includes('facingAngle')&&systems.includes('player.moveIntensity')&&systems.includes('player.facingAngle=Math.atan2'));
 expect('fixed orbit bands',runtime.includes('ORBIT_RADIUS_BANDS')&&!runtime.includes('ORBIT_EQUIPMENT_ORDER')&&runtime.includes('blade:104')&&runtime.includes('prism:151'));
@@ -17,6 +17,7 @@ expect('readable compact choice cards',progression.includes('choice-body')&&prog
 expect('elite body labels removed but off-screen arrows retained',!buildAudit.includes('drawEliteMarkers')&&!performance.includes('drawEliteEdgeIndicator')&&buildAudit.includes('drawEliteEdgeArrows')&&buildAudit.includes('stackfallGuidanceDiagnostics')&&read('src/combat-balance-refinement.js').includes('bossHudType'));
 expect('ranged overlay and edge helper remain defined',buildAudit.includes('function drawRangedOverlay()')&&buildAudit.includes('function safeEdge('));
 expect('map event arrows remain on canvas path',buildAudit.includes('drawMapEventEdgeArrows')&&buildAudit.includes('guidanceEventArrows')&&renderLoop.includes("runDrawStage('drawMapEvents'"));
+expect('apex arena remains visible',buildAudit.includes("typeof drawApexArena==='function'")&&buildAudit.includes('drawApexArena()'));
 expect('manual aim is optional and persistent',targeting.includes('id="manualAim"')&&targeting.includes('GAME_SETTINGS.manualAim')&&targeting.includes('saveGameSettings()'));
 expect('magnet stacks accelerate pickup',targeting.includes('pullSpeed=1+magnetStacks*.22')&&wiki.includes('더 빠르게 끌려온다'));
 expect('most multi-body attacks focus one target',endgame.includes('추가 공격체는 원본과 같은 적을 노린다')&&!endgame.includes('const multiplicityTargets=')&&wiki.includes('대부분 같은 적을 노린다'));
@@ -25,6 +26,8 @@ expect('boomerang chooses the farthest enemy',targeting.includes("if(key==='arc'
 expect('prism keeps a living target',endgame.includes('player.prismSharedLock')&&endgame.includes('inside||lock.lostTime<1.5')&&wiki.includes('가급적 쓰러질 때까지 유지'));
 expect('prism has half-second acquisition',endgame.includes('lock.windup=.5')&&wiki.includes('0.5초 동안 얇은 조준선'));
 expect('prism visual and shot positions are synchronized',endgame.includes('prismPositions(prismBodyCount(prismN))')&&endgame.includes('synchronizedOrbitVisuals')&&wiki.includes('실제 광선 시작점이 일치'));
+expect('new run clears prism runtime state',core.includes('prismSharedLock:null')&&core.includes('player.prismSharedLock=null'));
+expect('drone and spiral augments survive late targeting wrappers',difficulty.includes('function triggerDroneAugment')&&difficulty.includes('function triggerSpiralAugment')&&difficulty.includes('__stackfallAugmentAware')&&difficulty.includes("'drone-meteor'")&&difficulty.includes("source:'spiral-counter'"));
 expect('apex tracking beam sweeps instead of snapping',bosses.includes('aim+side*(.92+phase*.07)')&&bosses.includes('angleToward(beam.angle,target,turnRate*dt)')&&wiki.includes('즉시 꽂히는 레이저가 아니다'));
 expect('continuous beam object churn is bounded',bosses.includes('beam.visual=stressed?.070:.040')&&bosses.includes('sweep.visual=stressed?.075:.045')&&bosses.includes('network.visual=stressed?.085:.050'));
 expect('vault remains available during elite combat',targeting.includes('vaultDuringEliteEncounters')&&wiki.includes('보스나 중간보스가 살아 있어도'));
