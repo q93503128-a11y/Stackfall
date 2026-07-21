@@ -75,7 +75,7 @@
   function eventMeta(type){return type==='crash'?{label:'우주선',icon:'⌁',color:'#ff9a62'}:type==='void'?{label:'공허 균열',icon:'◉',color:'#b36bff'}:{label:'성운 보관소',icon:'◇',color:'#75eaff'};}
   function drawMapEventEdgeArrows(){guidanceEventArrows=0;if(state.mapEventActive)return;const bottomGap=compactDevice()?180:154,left=76,right=vw-76,top=82,bottom=vh-bottomGap;for(const marker of state.entities.mapEvents||[]){if(!marker||marker.consumed)continue;const p=worldToScreen(marker.x,marker.y);if(p.x>left&&p.x<right&&p.y>top&&p.y<bottom)continue;const dx=p.x-vw/2,dy=p.y-vh/2,angle=Math.atan2(dy,dx),edge=safeEdge(dx,dy,bottomGap),meta=eventMeta(marker.type),distance=Math.round(Math.hypot(marker.x-player.x,marker.y-player.y));drawEdgeArrow(edge,angle,meta,`${meta.icon} ${meta.label} · ${distance}`);guidanceEventArrows++;}}
   const baseDrawMapEvents=drawMapEvents,baseOwnsEventArrows=baseDrawMapEvents.name==='drawPolishedMapEvents';drawMapEvents=function auditedEventIndicators(){baseDrawMapEvents();if(typeof drawApexArena==='function')drawApexArena();if(baseOwnsEventArrows)guidanceEventArrows=0;else drawMapEventEdgeArrows();};
-  window.stackfallGuidanceDiagnostics=()=>({eliteArrows:guidanceEliteArrows,eventArrows:guidanceEventArrows});
+  window.stackfallGuidanceDiagnostics=()=>({eliteArrows:guidanceEliteArrows,eventArrows:guidanceEventArrows,eventArrowOwner:baseOwnsEventArrows?'polished':'audit-fallback'});
 
   renderLoadout();updateHUD();
 })();

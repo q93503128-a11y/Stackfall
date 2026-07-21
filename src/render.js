@@ -47,7 +47,8 @@ function loop(now){
     }
     if(state.mode==='choice'&&ui.choice.classList.contains('hidden')){state.choiceLocked=false;state.mode='playing';}
     if(typeof syncAbilityLedgerVisibility==='function')syncAbilityLedgerVisibility();
-    if(shouldDraw)runRuntimeStage('drawFrame',draw);
+    const simplifiedGpu=liveGameplay&&typeof stackfallCanUseSimplifiedGpuFrame==='function'&&stackfallCanUseSimplifiedGpuFrame();
+    if(shouldDraw&&!simplifiedGpu)runRuntimeStage('drawFrame',draw);
   }finally{if(window.__stackfallLoopGeneration===stackfallLoopGeneration)requestAnimationFrame(loop);}
 }
 requestAnimationFrame(loop);

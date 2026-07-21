@@ -32,19 +32,30 @@
   let projectileTextures={};
   let solidTexture=null;
   let particleTexture=null;
+  let emergencyRingTexture=null;
   let textureGeneration=0;
   let texturesCreated=0;
   let texturesDestroyed=0;
   const projectileSprites=[];
   const particleSprites=[];
+  const emergencyEnemySprites=[];
+  const emergencyHostileSprites=[];
+  const emergencyCueSprites=[];
+  const emergencyPlayerSprites=[];
   let projectileLayer=null;
   let particleLayer=null;
+  let emergencyEnemyLayer=null;
+  let emergencyHostileLayer=null;
+  let emergencyCueLayer=null;
+  let emergencyPlayerLayer=null;
   let tickerRegistered=false;
   let tickerRegistrationCount=0;
   let contextListenerRegistrationCount=0;
   const rendererGeneration=window.__stackfallRendererGeneration=(window.__stackfallRendererGeneration||0)+1;
   let foregroundCanvas=null;
   let foregroundCtx=null;
+  let gpuCanvasReady=false;
+  let gpuFrameRateCap=0;
   const warned=new Set();
 
   const sparklesEnabled=()=>GAME_SETTINGS.sparkles!==false;
@@ -54,9 +65,11 @@
     foregroundCanvas=document.querySelector('#combatForeground')||document.createElement('canvas');foregroundCanvas.id='combatForeground';foregroundCanvas.setAttribute('aria-hidden','true');Object.assign(foregroundCanvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',display:'block',pointerEvents:'none',touchAction:'none',zIndex:'2',background:'transparent'});if(!foregroundCanvas.isConnected)canvas.insertAdjacentElement('afterend',foregroundCanvas);foregroundCtx=foregroundCanvas.getContext('2d',{alpha:true});resizeForegroundCanvas();
   }
   function resizeForegroundCanvas(){if(!foregroundCanvas||!foregroundCtx)return;const width=Math.max(1,Math.floor(vw*dpr)),height=Math.max(1,Math.floor(vh*dpr));if(foregroundCanvas.width!==width)foregroundCanvas.width=width;if(foregroundCanvas.height!==height)foregroundCanvas.height=height;foregroundCtx.setTransform(dpr,0,0,dpr,0,0);}
+  function resizeGpuCombatLayer(){if(!app?.renderer)return;const scale=clamp(Number(window.stackfallResolutionScale)||1,.30,1),resolution=Math.max(.30,Math.min(window.devicePixelRatio||1,1.5)*scale);app.renderer.resize(window.innerWidth,window.innerHeight,resolution);const surface=safeGpuCanvas();if(surface){surface.style.width=`${window.innerWidth}px`;surface.style.height=`${window.innerHeight}px`;}}
   window.resizeForegroundCanvas=resizeForegroundCanvas;
+  window.resizeGpuCombatLayer=resizeGpuCombatLayer;
   window.drawForegroundCombat=function drawForegroundCombat(){
-    if(!foregroundCanvas||!foregroundCtx)return;resizeForegroundCanvas();foregroundCanvas.style.display=state.mode==='menu'?'none':'block';foregroundCtx.setTransform(1,0,0,1,0,0);foregroundCtx.clearRect(0,0,foregroundCanvas.width,foregroundCanvas.height);if(state.mode==='menu')return;
+    if(!foregroundCanvas||!foregroundCtx)return;resizeForegroundCanvas();foregroundCanvas.style.display=state.mode==='menu'?'none':'block';foregroundCanvas.style.visibility='visible';foregroundCtx.setTransform(1,0,0,1,0,0);foregroundCtx.clearRect(0,0,foregroundCanvas.width,foregroundCanvas.height);if(state.mode==='menu')return;
     const previousCtx=ctx;ctx=foregroundCtx;try{ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.setLineDash([]);ctx.save();ctx.translate(state.camera.shakeX||0,state.camera.shakeY||0);runDrawStage('drawTelegraphsForeground',drawTelegraphs);if(typeof drawMapEvents==='function')runDrawStage('drawMapEventsForeground',drawMapEvents);runDrawStage('drawEnemiesForeground',drawEnemies);if(typeof drawBeamEffects==='function')runDrawStage('drawBeamEffectsForeground',drawBeamEffects);runDrawStage('drawEnemyProjectilesForeground',drawEnemyProjectiles);runDrawStage('drawMagnetFieldForeground',drawMagnetField);runDrawStage('drawChronoFieldForeground',drawChronoField);runDrawStage('drawPlayerForeground',drawPlayer);runDrawStage('drawEffectsForeground',canvasDrawForegroundEffects);ctx.restore();ctx.setTransform(dpr,0,0,dpr,0,0);const performanceTier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0;if(performanceTier===0){const vignette=ctx.createRadialGradient(vw/2,vh/2,Math.min(vw,vh)*.18,vw/2,vh/2,Math.max(vw,vh)*.74);vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(0,1,8,.58)');ctx.fillStyle=vignette;ctx.fillRect(0,0,vw,vh);}else if(performanceTier===1){ctx.fillStyle='rgba(0,1,8,.08)';ctx.fillRect(0,0,vw,vh);}if(sparklesEnabled()&&state.flash>0){ctx.fillStyle=`rgba(225,242,255,${Math.min(.42,state.flash*.72)})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlayForeground',drawRealmCinematicOverlay);}finally{ctx=previousCtx;}
   };
   ensureForegroundCanvas();
@@ -94,6 +107,9 @@
     g.beginPath();g.arc(c,c,soft?c:c*.72,0,Math.PI*2);g.fill();
     return PIXI.Texture.from(surface);
   }
+  function makeRingTexture(size=96){
+    const surface=document.createElement('canvas');surface.width=surface.height=size;const g=surface.getContext('2d'),c=size/2;g.strokeStyle='#fff';g.lineWidth=4;g.beginPath();g.arc(c,c,c-5,0,Math.PI*2);g.stroke();return PIXI.Texture.from(surface);
+  }
   function makeProjectileTexture(kind){
     const width=kind==='comet'?192:kind==='ember'?96:kind==='core'?104:kind==='shard'?84:72,height=kind==='comet'?72:72,surface=document.createElement('canvas');surface.width=width;surface.height=height;const g=surface.getContext('2d'),cx=width/2,cy=height/2;g.translate(cx,cy);g.fillStyle='#fff';g.strokeStyle='rgba(255,255,255,.86)';g.lineCap='round';g.lineJoin='round';
     if(kind==='comet'){const len=width*.45,h=height*.18,grad=g.createLinearGradient(-len,0,len,0);grad.addColorStop(0,'rgba(255,255,255,0)');grad.addColorStop(.3,'rgba(255,255,255,.42)');grad.addColorStop(.72,'#fff');g.fillStyle=grad;g.beginPath();g.moveTo(-len,-h*.18);g.lineTo(len*.18,-h*.32);g.lineTo(len*.56,-h);g.lineTo(len,0);g.lineTo(len*.56,h);g.lineTo(len*.18,h*.32);g.lineTo(-len,h*.18);g.closePath();g.fill();g.lineWidth=2;g.beginPath();g.moveTo(-len*.58,0);g.lineTo(len*.78,0);g.stroke();}
@@ -108,9 +124,9 @@
     try{texture.destroy(true);texturesDestroyed++;}catch(error){console.error('[Stackfall] texture cleanup failed',error);}
   }
   function rebuildTextures(){
-    const safeTexture=PIXI.Texture.WHITE;for(const sprite of projectileSprites)if(sprite)sprite.texture=safeTexture;for(const sprite of particleSprites)if(sprite)sprite.texture=safeTexture;
-    for(const texture of Object.values(projectileTextures))destroyTexture(texture);destroyTexture(solidTexture);destroyTexture(particleTexture);
-    projectileTextures={generic:makeProjectileTexture('generic'),core:makeProjectileTexture('core'),ember:makeProjectileTexture('ember'),comet:makeProjectileTexture('comet'),shard:makeProjectileTexture('shard')};solidTexture=makeTexture(48,false);particleTexture=makeTexture(40,true);texturesCreated+=Object.keys(projectileTextures).length+2;textureGeneration++;
+    const safeTexture=PIXI.Texture.WHITE;for(const pool of[projectileSprites,particleSprites,emergencyEnemySprites,emergencyHostileSprites,emergencyCueSprites,emergencyPlayerSprites])for(const sprite of pool)if(sprite)sprite.texture=safeTexture;
+    for(const texture of Object.values(projectileTextures))destroyTexture(texture);destroyTexture(solidTexture);destroyTexture(particleTexture);destroyTexture(emergencyRingTexture);
+    projectileTextures={generic:makeProjectileTexture('generic'),core:makeProjectileTexture('core'),ember:makeProjectileTexture('ember'),comet:makeProjectileTexture('comet'),shard:makeProjectileTexture('shard')};solidTexture=makeTexture(48,false);particleTexture=makeTexture(40,true);emergencyRingTexture=makeRingTexture();texturesCreated+=Object.keys(projectileTextures).length+3;textureGeneration++;
     for(const sprite of projectileSprites)if(sprite)sprite.texture=projectileTextures.generic;for(const sprite of particleSprites)if(sprite)sprite.texture=particleTexture;
   }
   function ensureSprite(pool,index,layer,texture){
@@ -128,11 +144,12 @@
   function hideUnused(pool,start){
     for(let i=start;i<pool.length;i++)pool[i].visible=false;
   }
-  function canvasReady(){
+  function canvasReady(force=false){
+    if(gpuCanvasReady&&!force)return true;
     const canvas=safeGpuCanvas();
     if(!canvas||!document.body.contains(canvas))return false;
     const rect=canvas.getBoundingClientRect();
-    return canvas.width>0&&canvas.height>0&&rect.width>0&&rect.height>0;
+    gpuCanvasReady=canvas.width>0&&canvas.height>0&&rect.width>0&&rect.height>0;return gpuCanvasReady;
   }
   function safeGpuCanvas(){
     try{return app?.canvas||null;}catch{return null;}
@@ -143,9 +160,8 @@
     const name=String(renderer.constructor?.name||renderer.name||'');
     return /webgl|gpu/i.test(name)||!!renderer.gl||!!renderer.context?.gl||!!renderer.runners;
   }
-  function activeGpuProjectiles(){
-    return rendererState==='active'&&app&&!contextLost&&canvasReady();
-  }
+  function activeGpuProjectiles(){return rendererState==='active'&&app&&!contextLost&&canvasReady();}
+  function syncGpuFrameBudget(){if(!app?.ticker)return;const tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,emergency=typeof stackfallEmergencyRendering==='function'&&stackfallEmergencyRendering(),cap=emergency||tier===2?24:tier===1?40:0;if(cap===gpuFrameRateCap)return;gpuFrameRateCap=cap;app.ticker.maxFPS=cap;}
   function countRenderableProjectiles(){
     const list=state.entities.projectiles||[];
     let count=0;
@@ -159,8 +175,8 @@
   }
   function projectileVisual(source){const s=String(source||'');if(s.includes('comet')&&!s.includes('fragment'))return{kind:'comet',texture:projectileTextures.comet,width:8.6,height:3.15,alpha:.98};if(s==='ember'||s==='echo-star')return{kind:'ember',texture:projectileTextures.ember,width:4.7,height:4.1,alpha:.96};if(s==='core'||s==='core-echo'||s==='core-nova')return{kind:'core',texture:projectileTextures.core,width:4.35,height:2.65,alpha:.93};if(s.includes('fragment')||s.includes('shard')||s.includes('lance')||s.includes('mirror'))return{kind:'shard',texture:projectileTextures.shard,width:4.4,height:2.45,alpha:.92};return{kind:'generic',texture:projectileTextures.generic||solidTexture,width:3.8,height:2.5,alpha:.90};}
   function syncProjectileSprites(){
-    visibleProjectileSprites=0;if(!app||contextLost)return;const visible=shouldShowAlliedVisuals();if(!visible){hideUnused(projectileSprites,0);return;}const list=state.entities.projectiles||[];let used=0;
-    for(let i=0;i<list.length;i++){const p=list[i];if(!p||p.life<=0||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;const x=p.x-player.x+vw/2,y=p.y-player.y+vh/2;if(x<-150||x>vw+150||y<-150||y>vh+150)continue;const speed=Math.hypot(p.vx||0,p.vy||0),radius=Math.max(1.5,Math.min(24,Number(p.r)||4)),visual=projectileVisual(p.source),sprite=ensureSprite(projectileSprites,used++,projectileLayer,visual.texture||solidTexture);sprite.visible=true;sprite.x=Math.round(x);sprite.y=Math.round(y);sprite.rotation=Math.atan2(p.vy||0,p.vx||0);sprite.tint=parseColor(p.color,0xffffff);sprite.alpha=sparklesEnabled()?visual.alpha:Math.min(.9,visual.alpha);sprite.width=Math.max(4,radius*visual.width+(visual.kind==='generic'?Math.min(18,speed*.012):0));sprite.height=Math.max(3.5,radius*visual.height);}
+    visibleProjectileSprites=0;if(!app||contextLost)return;const visible=shouldShowAlliedVisuals();if(!visible){hideUnused(projectileSprites,0);return;}const list=state.entities.projectiles||[],tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,visualLimit=tier===2?48:tier===1?96:Infinity;let used=0;
+    for(let i=0;i<list.length&&used<visualLimit;i++){const p=list[i];if(!p||p.life<=0||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;const x=p.x-player.x+vw/2,y=p.y-player.y+vh/2;if(x<-150||x>vw+150||y<-150||y>vh+150)continue;const speed=Math.hypot(p.vx||0,p.vy||0),radius=Math.max(1.5,Math.min(24,Number(p.r)||4)),visual=projectileVisual(p.source),sprite=ensureSprite(projectileSprites,used++,projectileLayer,visual.texture||solidTexture);sprite.visible=true;sprite.x=Math.round(x);sprite.y=Math.round(y);sprite.rotation=Math.atan2(p.vy||0,p.vx||0);sprite.tint=parseColor(p.color,0xffffff);sprite.alpha=sparklesEnabled()?visual.alpha:Math.min(.9,visual.alpha);sprite.width=Math.max(4,radius*visual.width+(visual.kind==='generic'?Math.min(18,speed*.012):0));sprite.height=Math.max(3.5,radius*visual.height);}
     visibleProjectileSprites=used;if(used>0)firstProjectileSpriteSeen=true;hideUnused(projectileSprites,used);
   }
   function syncParticleSprites(){
@@ -169,7 +185,7 @@
     if(!sparklesEnabled()||GAME_SETTINGS.hideProjectiles===true||state.mode==='menu'){hideUnused(particleSprites,0);return;}
     const list=state.entities.particles||[];
     let used=0;
-    const limit=Math.min(list.length,compactDevice()?120:220);
+    const tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,limit=Math.min(list.length,tier===2?24:tier===1?72:compactDevice()?120:220);
     for(let i=0;i<limit;i++){
       const p=list[i];
       if(!p||p.life<=0||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;
@@ -185,6 +201,35 @@
     }
     visibleParticleSprites=used;
     hideUnused(particleSprites,used);
+  }
+  function emergencyRenderingActive(){return!!(app&&!contextLost&&rendererState==='active'&&typeof stackfallEmergencyRendering==='function'&&stackfallEmergencyRendering());}
+  window.stackfallCanUseSimplifiedGpuFrame=emergencyRenderingActive;
+  window.stackfallGpuEmergencyAvailable=()=>!!(app&&!contextLost&&rendererState==='active');
+  function syncEmergencySprites(){
+    const active=emergencyRenderingActive();
+    if(foregroundCanvas){foregroundCanvas.style.display=state.mode==='menu'?'none':'block';foregroundCanvas.style.visibility=active?'hidden':'visible';}
+    if(!active){hideUnused(emergencyEnemySprites,0);hideUnused(emergencyHostileSprites,0);hideUnused(emergencyCueSprites,0);hideUnused(emergencyPlayerSprites,0);return;}
+    let enemyUsed=0;
+    for(const enemy of state.entities.enemies||[]){
+      if(!enemy||enemy.dead||enemyUsed>=140)continue;const x=enemy.x-player.x+vw/2,y=enemy.y-player.y+vh/2,r=Math.max(5,Math.min(68,Number(enemy.r)||13));if(x<-90||x>vw+90||y<-90||y>vh+90)continue;
+      const sprite=ensureSprite(emergencyEnemySprites,enemyUsed++,emergencyEnemyLayer,solidTexture);sprite.visible=true;sprite.x=Math.round(x);sprite.y=Math.round(y);sprite.tint=parseColor(enemy.color,enemy.type==='boss'?0xff6ccf:0x8b79ff);sprite.alpha=enemy.hit>0?.98:.84;sprite.width=sprite.height=r*2;sprite.rotation=(Number(enemy.phase)||0)*.12;
+    }
+    hideUnused(emergencyEnemySprites,enemyUsed);
+    let hostileUsed=0;
+    for(const shot of state.entities.enemyProjectiles||[]){
+      if(!shot||shot.life<=0||hostileUsed>=190)continue;const x=shot.x-player.x+vw/2,y=shot.y-player.y+vh/2,r=Math.max(2,Math.min(14,Number(shot.r)||4));if(x<-40||x>vw+40||y<-40||y>vh+40)continue;
+      const sprite=ensureSprite(emergencyHostileSprites,hostileUsed++,emergencyHostileLayer,solidTexture);sprite.visible=true;sprite.x=Math.round(x);sprite.y=Math.round(y);sprite.tint=parseColor(shot.color,0xff4d91);sprite.alpha=.94;sprite.width=r*3.4;sprite.height=r*1.6;sprite.rotation=Math.atan2(shot.vy||0,shot.vx||0);
+    }
+    hideUnused(emergencyHostileSprites,hostileUsed);
+    const hero=ensureSprite(emergencyPlayerSprites,0,emergencyPlayerLayer,projectileTextures.core||solidTexture);hero.visible=state.mode!=='menu';hero.x=Math.round(vw/2);hero.y=Math.round(vh/2);hero.tint=0xdffbff;hero.alpha=player.invuln>0&&Math.floor((state.time||0)*18)%2?.52:1;hero.width=46;hero.height=30;hero.rotation=Number(player.facingAngle)||0;hideUnused(emergencyPlayerSprites,1);
+    let cueUsed=0;
+    const cue=(texture,x,y,width,height,color,rotation=0,alpha=.68)=>{if(cueUsed>=96||!Number.isFinite(x)||!Number.isFinite(y))return;const sprite=ensureSprite(emergencyCueSprites,cueUsed++,emergencyCueLayer,texture);sprite.visible=true;sprite.x=Math.round(x-player.x+vw/2);sprite.y=Math.round(y-player.y+vh/2);sprite.width=Math.max(1,width);sprite.height=Math.max(1,height);sprite.tint=parseColor(color,0xffffff);sprite.rotation=rotation;sprite.alpha=alpha;};
+    const arena=state.mapEventActive?.arena||state.apexArena;if(arena?.r)cue(emergencyRingTexture,arena.x,arena.y,arena.r*2,arena.r*2,state.mapEventActive?.dreadnought?'#ff9a62':'#b7c9ff',0,.56);
+    for(const well of state.entities.wells||[])if(well?.life>0)cue(emergencyRingTexture,well.x,well.y,(well.r||40)*2,(well.r||40)*2,well.color||'#b792ff',0,.42);
+    for(const mark of state.entities.telegraphs||[]){if(!mark||mark.life<=0)continue;if(mark.type==='circle')cue(emergencyRingTexture,mark.x,mark.y,(mark.r||24)*2,(mark.r||24)*2,mark.color||'#ff6c93',0,.82);else{const length=Math.max(1,mark.length||120),a=mark.a||0;cue(PIXI.Texture.WHITE,mark.x+Math.cos(a)*length/2,mark.y+Math.sin(a)*length/2,length,Math.max(2,mark.width||4),mark.color||'#ff6c93',a,.68);}}
+    for(const beam of state.entities.beams||[]){if(!beam||beam.life<=0)continue;const length=Math.hypot(beam.x2-beam.x1,beam.y2-beam.y1),a=Math.atan2(beam.y2-beam.y1,beam.x2-beam.x1);cue(PIXI.Texture.WHITE,(beam.x1+beam.x2)/2,(beam.y1+beam.y2)/2,length,Math.max(1.5,beam.width||2),beam.color||'#ffffff',a,.88);}
+    for(const marker of state.entities.mapEvents||[]){if(!marker||marker.consumed)continue;cue(emergencyRingTexture,marker.x,marker.y,58,58,marker.type==='crash'?'#ff9a62':marker.type==='void'?'#b792ff':'#77efff',0,.86);}
+    hideUnused(emergencyCueSprites,cueUsed);
   }
   function evaluateReadiness(){
     if(!app||contextLost||!['warming-up','active'].includes(rendererState))return;
@@ -204,10 +249,12 @@
       tickerFrames++;
       firstGpuFrame=true;
       const canvas=safeGpuCanvas();
+      syncGpuFrameBudget();
       if(canvas)canvas.style.display=state.mode==='menu'||contextLost?'none':'block';
       if(app?.stage)app.stage.position.set(state.camera.shakeX||0,state.camera.shakeY||0);
       syncParticleSprites();
       syncProjectileSprites();
+      syncEmergencySprites();
       evaluateReadiness();
     }catch(error){
       disableGpuRenderer('frame update failed',error);
@@ -217,6 +264,7 @@
     lastFailure=reason;
     const canvas=safeGpuCanvas();
     if(canvas)canvas.style.display='none';
+    if(foregroundCanvas)foregroundCanvas.style.visibility='visible';
     hideUnused(projectileSprites,0);hideUnused(particleSprites,0);
     setRendererState(contextLost?'context-lost':initStarted&&!app?'failed':'canvas-fallback');
     warnOnce(reason,`[Stackfall] PixiJS renderer disabled: ${reason}`,error);
@@ -231,7 +279,7 @@
         backgroundAlpha:0,
         antialias:false,
         autoDensity:true,
-        resolution:Math.min(window.devicePixelRatio||1,1.5),
+        resolution:Math.max(.30,Math.min(window.devicePixelRatio||1,1.5)*clamp(Number(window.stackfallResolutionScale)||1,.30,1)),
         preference:'webgl',
         powerPreference:'high-performance',
         failIfMajorPerformanceCaveat:false,
@@ -247,14 +295,24 @@
       gameCanvas.style.zIndex='0';
       gameCanvas.insertAdjacentElement('afterend',canvas);
 
+      emergencyCueLayer=new PIXI.Container();
+      emergencyEnemyLayer=new PIXI.Container();
       particleLayer=new PIXI.Container();
       projectileLayer=new PIXI.Container();
+      emergencyHostileLayer=new PIXI.Container();
+      emergencyPlayerLayer=new PIXI.Container();
+      app.stage.addChild(emergencyCueLayer);
+      app.stage.addChild(emergencyEnemyLayer);
       app.stage.addChild(particleLayer);
       app.stage.addChild(projectileLayer);
+      app.stage.addChild(emergencyHostileLayer);
+      app.stage.addChild(emergencyPlayerLayer);
       rebuildTextures();
+      for(let i=0;i<240;i++){ensureSprite(projectileSprites,i,projectileLayer,projectileTextures.generic);ensureSprite(particleSprites,i,particleLayer,particleTexture);}
+      hideUnused(projectileSprites,0);hideUnused(particleSprites,0);
 
-      canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;contextLossCount++;lastFailure='WebGL context lost';hideUnused(projectileSprites,0);hideUnused(particleSprites,0);canvas.style.display='none';setRendererState('context-lost');});
-      canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;contextRestoreCount++;lastFailure='';firstGpuFrame=false;firstProjectileSpriteSeen=false;projectileWarmupDeadline=0;rebuildTextures();app.renderer.resize(window.innerWidth,window.innerHeight);app.start();setRendererState('warming-up');if(canvasReady())canvas.style.display='block';});
+      canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;gpuCanvasReady=false;contextLossCount++;lastFailure='WebGL context lost';hideUnused(projectileSprites,0);hideUnused(particleSprites,0);canvas.style.display='none';if(foregroundCanvas)foregroundCanvas.style.visibility='visible';setRendererState('context-lost');});
+      canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;gpuCanvasReady=false;contextRestoreCount++;lastFailure='';firstGpuFrame=false;firstProjectileSpriteSeen=false;projectileWarmupDeadline=0;rebuildTextures();app.start();setRendererState('warming-up');resizeGpuCombatLayer();if(canvasReady(true))canvas.style.display='block';});
       contextListenerRegistrationCount++;
       if(!tickerRegistered){app.ticker.add(syncGpuLayer,undefined,PIXI.UPDATE_PRIORITY.HIGH);tickerRegistered=true;tickerRegistrationCount++;}
       evaluateReadiness();
@@ -339,7 +397,9 @@
     firstProjectileSpriteSeen,
     projectileSprites:{pool:projectileSprites.length,visible:visibleProjectileSprites},
     particleSprites:{pool:particleSprites.length,visible:visibleParticleSprites},
-    textures:{generation:textureGeneration,created:texturesCreated,destroyed:texturesDestroyed,live:Object.values(projectileTextures).filter(Boolean).length+[solidTexture,particleTexture].filter(Boolean).length},
+    textures:{generation:textureGeneration,created:texturesCreated,destroyed:texturesDestroyed,live:Object.values(projectileTextures).filter(Boolean).length+[solidTexture,particleTexture,emergencyRingTexture].filter(Boolean).length},
+    emergencySimplified:emergencyRenderingActive(),
+    emergencySprites:{enemies:emergencyEnemySprites.filter(sprite=>sprite.visible).length,hostile:emergencyHostileSprites.filter(sprite=>sprite.visible).length,cues:emergencyCueSprites.filter(sprite=>sprite.visible).length,player:emergencyPlayerSprites.filter(sprite=>sprite.visible).length},
     projectileVisuals:{generic:'orb',core:'diamond-pulse',ember:'explosive-sigil',comet:'crystal-lance',shard:'angular-shard'},
     projectileCount:countRenderableProjectiles(),
     hierarchy:['game-background','gpu-allied','combat-foreground','html-ui'],

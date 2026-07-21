@@ -26,7 +26,7 @@ expect('most multi-body attacks focus one target',endgame.includes('추가 공�
 expect('ion chain remains the multi-target exception',read('src/weapons.js').includes('function fireIonChain')&&wiki.includes('이온 사슬만은 여러 적을 이어 공격'));
 expect('boomerang chooses the farthest enemy',targeting.includes("if(key==='arc')return farthestWeaponTarget")&&wiki.includes('사거리 안에서 가장 먼 적'));
 expect('prism keeps a living target',endgame.includes('player.prismSharedLock')&&endgame.includes('inside||lock.lostTime<1.5')&&wiki.includes('가급적 쓰러질 때까지 유지'));
-expect('prism has half-second acquisition',endgame.includes('lock.windup=.5')&&wiki.includes('0.5초 동안 얇은 조준선'));
+expect('prism has target-scoped half-second acquisition',endgame.includes('PRISM_ACQUISITION_SECONDS=.5')&&endgame.includes('lock.readyAt=now+PRISM_ACQUISITION_SECONDS')&&endgame.includes('lock.readyAt-(state.time||0)')&&wiki.includes('0.5초 동안 얇은 조준선'));
 expect('prism visual and shot positions are synchronized',endgame.includes('prismPositions(prismBodyCount(prismN))')&&endgame.includes('synchronizedOrbitVisuals')&&wiki.includes('실제 광선 시작점이 일치'));
 expect('new run clears prism runtime state',core.includes('prismSharedLock:null')&&core.includes('player.prismSharedLock=null'));
 expect('drone and spiral augments survive late targeting wrappers',difficulty.includes('function triggerDroneAugment')&&difficulty.includes('function triggerSpiralAugment')&&difficulty.includes('__stackfallAugmentAware')&&difficulty.includes("window.addEventListener('DOMContentLoaded'")&&!difficulty.includes('queueMicrotask')&&difficulty.includes("'drone-meteor'")&&difficulty.includes("source:'spiral-counter'"));

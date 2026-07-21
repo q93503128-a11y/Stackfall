@@ -14,7 +14,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=(a,b)=>a+Math.random()*(b-a);
 const lerp=(a,b,t)=>a+(b-a)*t;
 let vw=1280,vh=720,dpr=1;
-function resize(){const compact=matchMedia('(pointer:coarse)').matches||innerWidth<760,scale=clamp(Number(window.stackfallResolutionScale)||1,.55,1),cap=compact?1.35:1.75;dpr=Math.max(.55,Math.min(window.devicePixelRatio||1,cap)*scale);vw=window.innerWidth;vh=window.innerHeight;canvas.width=Math.max(1,Math.floor(vw*dpr));canvas.height=Math.max(1,Math.floor(vh*dpr));ctx.setTransform(dpr,0,0,dpr,0,0);window.resizeForegroundCanvas?.();}
+function resize(){const compact=matchMedia('(pointer:coarse)').matches||innerWidth<760,scale=clamp(Number(window.stackfallResolutionScale)||1,.30,1),cap=compact?1.35:1.75;dpr=Math.max(.30,Math.min(window.devicePixelRatio||1,cap)*scale);vw=window.innerWidth;vh=window.innerHeight;canvas.width=Math.max(1,Math.floor(vw*dpr));canvas.height=Math.max(1,Math.floor(vh*dpr));ctx.setTransform(dpr,0,0,dpr,0,0);window.resizeForegroundCanvas?.();window.resizeGpuCombatLayer?.();}
 window.addEventListener('resize',resize);resize();
 const COLORS={cyan:'#7ce8ff',violet:'#9e79ff',pink:'#ff61b0',amber:'#ffcc5c',green:'#74f2a7',red:'#ff6d7a',white:'#f5f7ff',bg:'#050814',blue:'#4ab7ff',deep:'#0d1330',comet:'#b5f5ff',chrono:'#8fffe0'};
 const WEAPONS={

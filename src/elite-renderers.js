@@ -26,7 +26,14 @@ function drawLastConstellationApex(e,t,enraged){
 function drawEliteShape(e){
   const f=e.eliteForm||e.apexForm||e.variant,t=e.phase,enraged=e.kind==='apex'&&e.apexPhase===2;
   ctx.save();ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;ctx.lineWidth=e.kind==='apex'?4:3;ctx.lineCap='round';ctx.lineJoin='round';
-  if(f==='eclipse'){
+  if(f==='dreadnought'){
+    const r=e.r,aim=Math.atan2(player.y-e.y,player.x-e.x);ctx.rotate(aim);ctx.fillStyle=e.hit?'#fff':'#180b0d';ctx.strokeStyle=e.hit?'#fff':'#ff7557';ctx.lineWidth=4;
+    ctx.beginPath();ctx.moveTo(r*1.62,0);ctx.lineTo(r*.62,-r*.54);ctx.lineTo(-r*.72,-r*.70);ctx.lineTo(-r*1.35,-r*.34);ctx.lineTo(-r*1.62,0);ctx.lineTo(-r*1.35,r*.34);ctx.lineTo(-r*.72,r*.70);ctx.lineTo(r*.62,r*.54);ctx.closePath();ctx.fill();ctx.stroke();
+    for(const side of[-1,1]){ctx.fillStyle='#3a1110';ctx.beginPath();ctx.moveTo(r*.18,side*r*.50);ctx.lineTo(-r*.72,side*r*1.02);ctx.lineTo(-r*1.28,side*r*.86);ctx.lineTo(-r*.82,side*r*.47);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#ffad6f';ctx.fillRect(-r*.94,side*r*.84-r*.07,r*.42,r*.14);}
+    ctx.fillStyle='#ffcb72';for(const y of[-.32,0,.32]){ctx.beginPath();ctx.arc(r*.38,y*r,r*.10,0,TAU);ctx.fill();ctx.strokeStyle='#fff2c4';ctx.beginPath();ctx.moveTo(r*.38,y*r);ctx.lineTo(r*.92,y*r);ctx.stroke();}
+    const core=ctx.createRadialGradient(-r*.18,0,1,-r*.18,0,r*.38);core.addColorStop(0,'#fff9dc');core.addColorStop(.28,'#ff8f5a');core.addColorStop(1,'#4a0808');ctx.fillStyle=core;ctx.beginPath();ctx.arc(-r*.18,0,r*.38,0,TAU);ctx.fill();
+    ctx.strokeStyle='rgba(255,221,173,.78)';ctx.lineWidth=2;for(const side of[-1,1]){ctx.beginPath();ctx.moveTo(-r*1.52,side*r*.19);ctx.lineTo(-r*2.08,side*r*.34);ctx.stroke();}
+  }else if(f==='eclipse'){
     ctx.rotate(t*.045);for(let ring=0;ring<3;ring++){ctx.save();ctx.rotate((ring%2?1:-1)*t*(.07+ring*.02));ctx.globalAlpha=.82-ring*.18;ctx.beginPath();ctx.ellipse(0,0,e.r*(1.28-ring*.18),e.r*(.44-ring*.05),ring*.55,0,TAU);ctx.stroke();ctx.restore();}
     for(let i=0;i<8;i++){const a=i/8*TAU-t*.11,rr=e.r*1.12;ctx.save();ctx.translate(Math.cos(a)*rr,Math.sin(a)*rr);ctx.rotate(a);ctx.beginPath();ctx.moveTo(-4,-8);ctx.lineTo(10,0);ctx.lineTo(-4,8);ctx.stroke();ctx.restore();}eliteGlowCore(e,'#ffe8f7','#b94cff','#05010c',.68);
   }else if(f==='seraph'){

@@ -49,7 +49,7 @@ expect('hard','hard profile documentation matches runtime',wiki.includes('적 �
 
 expect('prism','prism final tuning has one runtime owner',endgame.includes("prismN>=6?4.45:prismN>=5?4.10:3.70")&&endgame.includes('stage===1?1.85:1')&&endgame.includes('damage=16+prismN*4.2'));
 expect('prism','prism uses one sticky shared lock',endgame.includes('player.prismSharedLock')&&endgame.includes('lock.targetId?enemyById(lock.targetId):null')&&endgame.includes('inside||lock.lostTime<1.5'));
-expect('prism','prism acquisition windup is canonical',endgame.includes('lock.windup=.5')&&endgame.includes('if(lock.windup>0)')&&bootstrap.includes('새 표적을 0.5초 조준'));
+expect('prism','prism acquisition windup is canonical',endgame.includes('PRISM_ACQUISITION_SECONDS=.5')&&endgame.includes('lock.readyAt=now+PRISM_ACQUISITION_SECONDS')&&endgame.includes('lock.readyAt-(state.time||0)')&&bootstrap.includes('새 표적을 0.5초 조준'));
 expect('prism','prism visuals share firing positions',endgame.includes('prismPositions(prismBodyCount(prismN))')&&endgame.includes('synchronizedOrbitVisuals'));
 expect('prism','prism runtime resets with every new run',core.includes('prismSharedLock:null')&&core.includes('player.prismSharedLock=null'));
 expect('prism','prism player text is synchronized',core.includes('표적을 조준한 뒤 쓰러질 때까지')&&bootstrap.includes('최대 출력 ×4.45')&&auditUi.includes("['새 표적 선딜','0.5초']")&&design.includes('표적이 살아 있으면 가급적 사망할 때까지 유지')&&wiki.includes('가급적 쓰러질 때까지 유지'));

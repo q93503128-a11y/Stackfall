@@ -2,6 +2,7 @@
   const CELL=160;
   const grid=new Map();
   const enemyIndex=new Map();
+  const gridBucketPool=[];
   const lowPrioritySources=new Set(['star-spark','comet-fragment','arc-strong-shard','comet-afterimage','arc-shard','drone-burst','spiral-bolt','echo-spiral','mirror-counter','core-nova']);
   const projectileSpriteCache=new Map();
   const enemySpriteCache=new Map();
@@ -14,6 +15,7 @@
   let emergencyResolution=false;
   let resolutionDropTime=0;
   let resolutionRecoverTime=0;
+  let lastObservedAt=performance.now();
 
   const gridKey=(x,y)=>(x*73856093)^(y*19349663);
   const roundPixel=value=>Math.round(value);
@@ -40,14 +42,16 @@
   function applyEmergencyResolution(enabled){
     if(enabled===emergencyResolution)return;
     emergencyResolution=enabled;
-    window.stackfallResolutionScale=enabled?.80:1;
-    resize();
+    const simplifiedGpu=enabled&&typeof stackfallGpuEmergencyAvailable==='function'&&stackfallGpuEmergencyAvailable();
+    const nextScale=enabled&&!simplifiedGpu?.30:1,scaleChanged=(Number(window.stackfallResolutionScale)||1)!==nextScale;
+    window.stackfallResolutionScale=nextScale;
+    if(scaleChanged)resize();
   }
   function syncResolution(dt){
-    const shouldDrop=performanceTier===2&&frameMs>38&&slowDebt>=5.5;
+    const shouldDrop=frameMs>38&&slowDebt>=.4;
     if(shouldDrop){
       resolutionDropTime+=dt;resolutionRecoverTime=0;
-      if(resolutionDropTime>2.5)applyEmergencyResolution(true);
+      if(resolutionDropTime>.35)applyEmergencyResolution(true);
     }else if(emergencyResolution){
       resolutionDropTime=0;
       if(frameMs<23&&slowDebt<.7)resolutionRecoverTime+=dt;else resolutionRecoverTime=0;
@@ -57,7 +61,8 @@
     }
   }
   function observeFrame(dt){
-    const seconds=clamp(Number(dt)||.0167,.004,.25),ms=seconds*1000;
+    const fallbackSeconds=clamp(Number(dt)||.0167,.004,.25),now=performance.now(),elapsed=now-lastObservedAt;lastObservedAt=now;
+    const ms=elapsed>350?fallbackSeconds*1000:clamp(elapsed,4,200),seconds=clamp(ms/1000,.004,.20);
     frameMs=frameMs*.94+ms*.06;
     if(frameMs>42)slowDebt=Math.min(12,slowDebt+seconds*2.4);
     else if(frameMs>31)slowDebt=Math.min(12,slowDebt+seconds);
@@ -65,15 +70,17 @@
     else slowDebt=Math.max(0,slowDebt-seconds*.45);
     performanceTier=slowDebt>=5.5?2:slowDebt>=2?1:0;
     syncResolution(seconds);
+    const proactiveLimit=compactDevice()?140:180;
+    if(!emergencyResolution&&pressureScore()>proactiveLimit)applyEmergencyResolution(true);
   }
   function stressed(){return tier()>0;}
   function rebuildEnemyGrid(){
-    grid.clear();enemyIndex.clear();
+    for(const bucket of grid.values()){bucket.length=0;if(gridBucketPool.length<192)gridBucketPool.push(bucket);}grid.clear();enemyIndex.clear();
     for(const e of state.entities.enemies){
       if(!e||e.dead)continue;
       enemyIndex.set(e.id,e);
       const cx=Math.floor(e.x/CELL),cy=Math.floor(e.y/CELL),key=gridKey(cx,cy),bucket=grid.get(key);
-      if(bucket)bucket.push(e);else grid.set(key,[e]);
+      if(bucket)bucket.push(e);else{const next=gridBucketPool.pop()||[];next.push(e);grid.set(key,next);}
     }
   }
   function forEachNearbyEnemy(x,y,range,visit){
@@ -86,23 +93,31 @@
   function getEnemyById(id){if(!grid.size)rebuildEnemyGrid();const indexed=enemyIndex.get(id);if(indexed&&!indexed.dead)return indexed;for(const enemy of state.entities.enemies)if(enemy?.id===id&&!enemy.dead){enemyIndex.set(id,enemy);return enemy;}return null;}
   function nearestIndexedEnemies(x,y,count,excluded=null,maxRange=Infinity){
     if(!grid.size)rebuildEnemyGrid();
-    const limit=Number.isFinite(maxRange)?maxRange*maxRange:Infinity,out=[],visit=e=>{
+    const limit=Number.isFinite(maxRange)?maxRange*maxRange:Infinity,out=[],distances=[],visit=e=>{
       if(!e||e.dead||excluded?.has(e.id))return;const distance=(e.x-x)**2+(e.y-y)**2;if(distance>limit)return;
-      let index=out.length;while(index>0&&out[index-1].distance>distance)index--;out.splice(index,0,{enemy:e,distance});if(out.length>count)out.pop();
+      let index=distances.length;while(index>0&&distances[index-1]>distance)index--;out.splice(index,0,e);distances.splice(index,0,distance);if(out.length>count){out.pop();distances.pop();}
     };
     if(Number.isFinite(maxRange))forEachNearbyEnemy(x,y,maxRange,visit);else for(const enemy of enemyIndex.values())visit(enemy);
-    return out.map(entry=>entry.enemy);
+    return out;
+  }
+  function nearestIndexedEnemy(x,y,maxRange=Infinity,predicate=null){
+    if(!grid.size)rebuildEnemyGrid();let best=null,bestDistance=Number.isFinite(maxRange)?maxRange*maxRange:Infinity;
+    const visit=e=>{if(!e||e.dead||(predicate&&!predicate(e)))return;const distance=(e.x-x)**2+(e.y-y)**2;if(distance<bestDistance){bestDistance=distance;best=e;}};
+    if(Number.isFinite(maxRange))forEachNearbyEnemy(x,y,maxRange,visit);else for(const enemy of enemyIndex.values())visit(enemy);return best;
   }
 
   window.stackfallPerformanceStressed=stressed;
   window.stackfallPerformanceTier=()=>tier();
-  window.stackfallPerformanceDiagnostics=()=>({tier:tier(),measuredTier:performanceTier,pressureTier:pressureTier(),frameMs,slowDebt,emergencyResolution});
+  window.stackfallEmergencyRendering=()=>emergencyResolution;
+  window.stackfallPerformanceDiagnostics=()=>({tier:tier(),measuredTier:performanceTier,pressureTier:pressureTier(),pressureScore:pressureScore(),frameMs,slowDebt,emergencyResolution,resolutionScale:Number(window.stackfallResolutionScale)||1,gridBuckets:grid.size,pooledGridBuckets:gridBucketPool.length});
   window.rebuildEnemyIndex=rebuildEnemyGrid;
   window.getEnemyById=getEnemyById;
+  window.performanceNearestEnemy=nearestIndexedEnemy;
   window.performanceNearestEnemies=nearestIndexedEnemies;
-  window.performanceNearbyEnemies=(x,y,range=96)=>{
+  window.performanceForEachNearbyEnemy=(x,y,range,visit)=>{if(!grid.size)rebuildEnemyGrid();forEachNearbyEnemy(x,y,range,visit);};
+  window.performanceNearbyEnemies=(x,y,range=96,out=[])=>{
     if(!grid.size)rebuildEnemyGrid();
-    const out=[];forEachNearbyEnemy(x,y,range,e=>out.push(e));return out;
+    out.length=0;forEachNearbyEnemy(x,y,range,e=>out.push(e));return out;
   };
 
   entityCap=function adaptiveEntityCap(kind){
@@ -148,7 +163,7 @@
     for(const key of cache.keys()){cache.delete(key);if(++count>=remove)break;}
   }
   function projectileKind(p,enemy=false){
-    if(enemy)return'enemy';
+    if(enemy)return p.visual==='missile'?'missile':'enemy';
     const source=String(p.source||'');
     if(source.includes('comet'))return'comet';
     if(['ember','echo-star','core','core-echo','star-spark'].includes(source))return'star';
@@ -157,12 +172,14 @@
   function projectileSprite(p,enemy=false){
     const kind=projectileKind(p,enemy),radius=Math.max(2,Math.min(22,Math.round((p.r||4)*2)/2)),color=safeColor(p.color,enemy?'#ff6ccf':COLORS.white),key=`${kind}|${radius}|${color}`;
     let entry=projectileSpriteCache.get(key);if(entry)return entry;
-    const trail=kind==='comet'?82:kind==='star'?42:enemy?14:28,pad=kind==='comet'?40:26,width=Math.ceil(trail+radius*4+pad*2),height=Math.ceil(radius*6+pad*2),surface=makeSurface(width,height),g=surface.getContext('2d'),cx=trail+pad+radius,cy=height/2;
+    const trail=kind==='comet'?82:kind==='star'?42:kind==='missile'?34:enemy?14:28,pad=kind==='comet'?40:26,width=Math.ceil(trail+radius*4+pad*2),height=Math.ceil(radius*6+pad*2),surface=makeSurface(width,height),g=surface.getContext('2d'),cx=trail+pad+radius,cy=height/2;
     g.clearRect(0,0,width,height);g.lineCap='round';
     const trailGradient=g.createLinearGradient(pad,cy,cx,cy);trailGradient.addColorStop(0,'rgba(0,0,0,0)');trailGradient.addColorStop(.45,colorAlpha(color));trailGradient.addColorStop(1,color);g.strokeStyle=trailGradient;g.lineWidth=Math.max(2,radius*.8);g.beginPath();g.moveTo(pad,cy);g.lineTo(cx,cy);g.stroke();
     g.shadowColor=color;g.shadowBlur=kind==='comet'?28:enemy?7:18;
     if(kind==='comet'){
       const coma=g.createRadialGradient(cx,cy,0,cx,cy,radius*1.8);coma.addColorStop(0,'#ffffff');coma.addColorStop(.38,color);coma.addColorStop(1,'rgba(181,245,255,0)');g.fillStyle=coma;g.beginPath();g.arc(cx,cy,radius*1.8,0,TAU);g.fill();g.fillStyle='#fff';g.beginPath();g.arc(cx+radius*.18,cy,radius*.62,0,TAU);g.fill();
+    }else if(kind==='missile'){
+      g.fillStyle='#ffdec4';g.strokeStyle=color;g.lineWidth=1.4;g.beginPath();g.moveTo(cx+radius*2.25,cy);g.lineTo(cx+radius*.58,cy-radius*.62);g.lineTo(cx-radius*1.08,cy-radius*.52);g.lineTo(cx-radius*.82,cy);g.lineTo(cx-radius*1.08,cy+radius*.52);g.lineTo(cx+radius*.58,cy+radius*.62);g.closePath();g.fill();g.stroke();g.fillStyle=color;g.beginPath();g.moveTo(cx-radius*.72,cy-radius*.34);g.lineTo(cx-radius*1.55,cy-radius*.92);g.lineTo(cx-radius*1.18,cy);g.lineTo(cx-radius*1.55,cy+radius*.92);g.lineTo(cx-radius*.72,cy+radius*.34);g.closePath();g.fill();g.fillStyle='#fff7bc';g.beginPath();g.moveTo(cx-radius*1.08,cy-radius*.24);g.lineTo(cx-radius*2.15,cy);g.lineTo(cx-radius*1.08,cy+radius*.24);g.closePath();g.fill();
     }else if(kind==='enemy'){
       g.fillStyle=color;g.strokeStyle='rgba(255,238,244,.72)';g.lineWidth=1.2;g.beginPath();g.moveTo(cx+radius*1.75,cy);g.quadraticCurveTo(cx+radius*.25,cy-radius*.62,cx-radius*.92,cy);g.quadraticCurveTo(cx+radius*.25,cy+radius*.62,cx+radius*1.75,cy);g.closePath();g.fill();g.stroke();g.fillStyle='rgba(255,255,255,.84)';g.beginPath();g.ellipse(cx+radius*.72,cy-radius*.12,Math.max(1,radius*.28),Math.max(.7,radius*.15),0,0,TAU);g.fill();
     }else if(kind==='star'){
@@ -241,13 +258,13 @@
       if(Number.isFinite(p.maxRange)){const ox=Number.isFinite(p.originX)?p.originX:player.x,oy=Number.isFinite(p.originY)?p.originY:player.y;if((p.x-ox)**2+(p.y-oy)**2>p.maxRange*p.maxRange)p.life=0;}
       const source=String(p.source||'');p.source=source;const cometTrail=source.includes('comet'),trailSource=cometTrail||['ember','echo-star','core','core-echo','star-spark','wave','meteor-drone','echo-drone','drone-burst','spiral-bolt','echo-spiral','mirror-return','mirror-counter'].includes(source);
       if(p.life>0&&p.trailTick<=0&&trailSource&&state.entities.particles.length<particleCap&&!heavyFrame&&GAME_SETTINGS.hideProjectiles!==true){p.trailTick=compactDevice()?.09:cometTrail?.052:.075;state.entities.particles.push({x:p.x-p.vx*.018,y:p.y-p.vy*.018,vx:rand(-10,10),vy:rand(-10,10),life:cometTrail?.26:.16,max:cometTrail?.26:.16,size:cometTrail?rand(1.8,3.2):rand(.9,2),color:p.color||COLORS.white,star:true});}
-      if(p.life>0&&p.trailDamage){p.trailDamageCd=(p.trailDamageCd||0)-dt;if(p.trailDamageCd<=0){p.trailDamageCd=heavyFrame?.38:.24;const rr=24+weaponCount('comet')*2;forEachNearbyEnemy(p.x,p.y,rr+76,e=>{if(!e.dead&&(e.x-p.x)**2+(e.y-p.y)**2<(e.r+rr)**2)dealDamage(e,2.6+weaponCount('comet')*.85,{color:COLORS.comet,source:'comet-trail',canCrit:false});});}}
+      if(p.life>0&&p.trailDamage){p.trailDamageCd=(p.trailDamageCd||0)-dt;if(p.trailDamageCd<=0){p.trailDamageCd=.24;const rr=24+weaponCount('comet')*2;forEachNearbyEnemy(p.x,p.y,rr+76,e=>{if(!e.dead&&(e.x-p.x)**2+(e.y-p.y)**2<(e.r+rr)**2)dealDamage(e,2.6+weaponCount('comet')*.85,{color:COLORS.comet,source:'comet-trail',canCrit:false});});}}
       if(p.life>0)forEachNearbyEnemy(p.x,p.y,p.r+86,e=>{
         if(p.life<=0||e.dead||p.hitIds?.has(e.id))return;
         if((e.x-p.x)**2+(e.y-p.y)**2<(e.r+p.r)**2){
           dealDamage(e,p.damage,{color:p.color,source});if(!p.hitIds)p.hitIds=new Set();p.hitIds.add(e.id);
-          if(p.split&&(p.splitCount||0)<(heavyFrame?1:2)&&spawned.length<(heavyFrame?10:24)){p.splitCount=(p.splitCount||0)+1;for(let i=0;i<3;i++){const a=Math.atan2(p.vy,p.vx)+(i-1)*.58;spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*350,vy:Math.sin(a)*350,r:3.1,life:.58,maxRange:210,damage:p.damage*.30,color:'#ffb3d0',pierce:0,source:'star-spark'});}}
-          if(p.fragment&&(p.fragmentCount||0)<(heavyFrame?1:2)&&spawned.length<(heavyFrame?10:24)){p.fragmentCount=(p.fragmentCount||0)+1;for(let i=0;i<4;i++){const a=i/4*TAU+Math.atan2(p.vy,p.vx);spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*285,vy:Math.sin(a)*285,r:3.4,life:.60,maxRange:190,damage:p.damage*.22,color:'#d9fbff',pierce:0,source:'comet-fragment'});}}
+          if(p.split&&(p.splitCount||0)<2&&spawned.length<24){p.splitCount=(p.splitCount||0)+1;for(let i=0;i<3;i++){const a=Math.atan2(p.vy,p.vx)+(i-1)*.58;spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*350,vy:Math.sin(a)*350,r:3.1,life:.58,maxRange:210,damage:p.damage*.30,color:'#ffb3d0',pierce:0,source:'star-spark'});}}
+          if(p.fragment&&(p.fragmentCount||0)<2&&spawned.length<24){p.fragmentCount=(p.fragmentCount||0)+1;for(let i=0;i<4;i++){const a=i/4*TAU+Math.atan2(p.vy,p.vx);spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*285,vy:Math.sin(a)*285,r:3.4,life:.60,maxRange:190,damage:p.damage*.22,color:'#d9fbff',pierce:0,source:'comet-fragment'});}}
           if(p.pierce>0)p.pierce--;else p.life=0;
         }
       });
@@ -263,7 +280,7 @@
     if(!grid.size)rebuildEnemyGrid();const list=state.entities.wells;
     for(let i=0;i<list.length;i++){
       const w=list[i];if(!w||!normalizeWell(w)){if(w)w.life=0;continue;}w.life-=dt;w.tick-=dt;
-      if(w.damage>0&&w.tick<=0){w.tick=tier()===2?.46:tier()===1?.38:.32;const rr=w.r*.42;forEachNearbyEnemy(w.x,w.y,rr+78,e=>{if(!e.dead&&(e.x-w.x)**2+(e.y-w.y)**2<(rr+e.r)**2)dealDamage(e,w.damage,{color:w.color,source:'well',canCrit:false});});}
+      if(w.damage>0&&w.tick<=0){w.tick=.30;const rr=w.r*.42;forEachNearbyEnemy(w.x,w.y,rr+78,e=>{if(!e.dead&&(e.x-w.x)**2+(e.y-w.y)**2<(rr+e.r)**2)dealDamage(e,w.damage,{color:w.color,source:'well',canCrit:false});});}
     }
     compactInPlace(list,w=>w&&w.life>0&&Number.isFinite(w.x)&&Number.isFinite(w.y));const maxWells=tier()===2?7:tier()===1?9:11;if(list.length>maxWells)list.splice(0,list.length-maxWells);
   };

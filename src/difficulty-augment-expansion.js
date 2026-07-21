@@ -39,9 +39,10 @@
   const baseNova=fireNovaPulse;
   fireNovaPulse=function augmentedNovaPulse(stacks,echoed=false){const x=player.x,y=player.y,size=weaponSizeMultiplier(),radius=(145+(stacks>=2?38:0)+(stacks>=5?18:0))*size;baseNova(stacks,echoed);if(state.weaponAugments?.nova&&!echoed)scheduleWeaponAction(420,()=>{for(const enemy of state.entities.enemies){if(enemy.dead)continue;const dx=x-enemy.x,dy=y-enemy.y,d=Math.hypot(dx,dy)||1;if(d<radius*1.05){const pull=(42+stacks*4)*enemyControlFactor(enemy);enemy.x+=dx/d*pull;enemy.y+=dy/d*pull;}}areaDamage(x,y,radius*.58,12+stacks*3.5,'#fff0c8','nova-implosion',{shake:false});shockwave(x,y,'#ffbd69',radius*.68,.38,2.6);});};
 
-  function triggerDroneAugment(stacks,echoed=false,targetId=null){if(!state.weaponAugments?.drone||echoed||!targetId)return;scheduleWeaponAction(360,()=>{const live=enemyById(targetId);if(!live)return;areaDamage(live.x,live.y,72+stacks*6,16+stacks*4.2,'#d8fff1','drone-meteor');shockwave(live.x,live.y,'#8fffd0',96+stacks*7,.42,3.2);});}
+  function strongestDroneTarget(){const range=weaponRange('drone'),rangeSq=range*range;let strongest=null;for(const enemy of state.entities.enemies){if(!enemy||enemy.dead||(enemy.x-player.x)**2+(enemy.y-player.y)**2>rangeSq)continue;if(!strongest||enemy.hp>strongest.hp)strongest=enemy;}return strongest;}
+  function triggerDroneAugment(stacks,echoed=false,targetId=null){if(!state.weaponAugments?.drone||echoed||!targetId)return;scheduleWeaponAction(360,()=>{const live=enemyById(targetId);if(!live)return;areaDamage(live.x,live.y,78+stacks*7,24+stacks*5.8,'#d8fff1','drone-meteor');shockwave(live.x,live.y,'#8fffd0',104+stacks*8,.42,3.2);});}
   const baseDrone=fireMeteorDrones;
-  fireMeteorDrones=function augmentedMeteorDrones(stacks,echoed=false){const target=state.entities.enemies.filter(e=>!e.dead&&Math.hypot(e.x-player.x,e.y-player.y)<=weaponRange('drone')).sort((a,b)=>b.hp-a.hp)[0],targetId=target?.id;baseDrone(stacks,echoed);triggerDroneAugment(stacks,echoed,targetId);};
+  fireMeteorDrones=function augmentedMeteorDrones(stacks,echoed=false){const targetId=strongestDroneTarget()?.id;baseDrone(stacks,echoed);triggerDroneAugment(stacks,echoed,targetId);};
   fireMeteorDrones.__stackfallAugmentAware=true;
 
   const baseRail=fireRailgun;
@@ -53,7 +54,7 @@
   fireGalacticSpiral.__stackfallAugmentAware=true;
 
   window.addEventListener('DOMContentLoaded',()=>{
-    if(!fireMeteorDrones.__stackfallAugmentAware){const focusedDrone=fireMeteorDrones;fireMeteorDrones=function augmentAwareFocusedDrones(stacks,echoed=false){const target=nearestWeaponTarget('drone'),targetId=target?.id;focusedDrone(stacks,echoed);triggerDroneAugment(stacks,echoed,targetId);};fireMeteorDrones.__stackfallAugmentAware=true;}
+    if(!fireMeteorDrones.__stackfallAugmentAware){const focusedDrone=fireMeteorDrones;fireMeteorDrones=function augmentAwareFocusedDrones(stacks,echoed=false){const targetId=strongestDroneTarget()?.id;focusedDrone(stacks,echoed);triggerDroneAugment(stacks,echoed,targetId);};fireMeteorDrones.__stackfallAugmentAware=true;}
     if(!fireGalacticSpiral.__stackfallAugmentAware){const focusedSpiral=fireGalacticSpiral;fireGalacticSpiral=function augmentAwareFocusedSpiral(stacks,echoed=false){focusedSpiral(stacks,echoed);triggerSpiralAugment(stacks,echoed);};fireGalacticSpiral.__stackfallAugmentAware=true;}
   },{once:true});
 
