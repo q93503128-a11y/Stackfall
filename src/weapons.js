@@ -1,6 +1,8 @@
+const CORE_PULSE_COOLDOWN=.76,CORE_PULSE_SPEED=520,CORE_PULSE_RADIUS=4.8;
+function corePulseDamage(stacks){return 11+Math.max(1,stacks)*2.5;}
 function spawnCoreShot(target,echoed=false){
   if(!target)return;const a=Math.atan2(target.y-player.y,target.x-player.x),range=weaponRange('core');
-  spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*520,vy:Math.sin(a)*520,r:4.8,life:1.3,maxRange:range,damage:(11+weaponCount('core')*2.5)*(echoed?.72:1),color:echoed?COLORS.pink:'#d7f8ff',pierce:weaponCount('core')>=4?1:0,source:echoed?'core-echo':'core'});
+  spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*CORE_PULSE_SPEED,vy:Math.sin(a)*CORE_PULSE_SPEED,r:CORE_PULSE_RADIUS,life:1.3,maxRange:range,damage:corePulseDamage(weaponCount('core'))*(echoed?.72:1),color:echoed?COLORS.pink:'#d7f8ff',pierce:weaponCount('core')>=4?1:0,source:echoed?'core-echo':'core'});
 }
 function fireEmber(target,emberN,echoed=false){
   if(!target)return;player.emberVolley=(player.emberVolley||0)+1;const base=Math.atan2(target.y-player.y,target.x-player.x),shots=emberN>=5?3:emberN>=2?2:1,superShot=emberN>=6&&player.emberVolley%7===0,range=weaponRange('ember');
@@ -65,7 +67,7 @@ function fireReflector(mirrorN,echoed=false){
 }
 function updateWeapons(dt){
   const bladeN=weaponCount('blade'),prismN=weaponCount('prism');player.angle+=dt*(2.05+bladeN*.12+prismN*.05+(bladeN>=3?.42:0))/hasteMult()*(1+stat('projectileSpeed')*.08);
-  player.coreCd-=dt;if(player.coreCd<=0){player.coreCd=.76*hasteMult();const target=nearestWeaponTarget('core');if(target){spawnCoreShot(target);echoTrigger(()=>spawnCoreShot(target,true));}}
+  player.coreCd-=dt;if(player.coreCd<=0){player.coreCd=CORE_PULSE_COOLDOWN*hasteMult();const target=nearestWeaponTarget('core');if(target){spawnCoreShot(target);echoTrigger(()=>spawnCoreShot(target,true));}}
   if(bladeN){player.bladeTick-=dt;if(player.bladeTick<=0){player.bladeTick=.13*hasteMult();const count=bladeN>=5?3:bladeN>=2?2:1,orbit=orbitRadiusFor('blade'),bladeR=(bladeN>=6?31:bladeN>=3?25:22)*weaponSizeMultiplier();for(const e of state.entities.enemies){if(e.dead)continue;for(let i=0;i<count;i++){const a=player.angle+i*TAU/count,bx=player.x+Math.cos(a)*orbit,by=player.y+Math.sin(a)*orbit;if((e.x-bx)**2+(e.y-by)**2<(e.r+bladeR)**2){dealDamage(e,5+bladeN*1.7,{color:COLORS.cyan,source:'blade'});if(bladeN>=4){const dx=e.x-player.x,dy=e.y-player.y,d=Math.hypot(dx,dy)||1;spawnPlayerProjectile({x:e.x,y:e.y,vx:dx/d*455,vy:dy/d*455,r:7,life:.28,maxRange:155,damage:7+bladeN*1.4,color:COLORS.cyan,pierce:2+(bladeN>=5?1:0),source:'wave'});}break;}}}}}
   const emberN=weaponCount('ember');if(emberN){player.emberCd-=dt;if(player.emberCd<=0){player.emberCd=(.82-Math.min(.28,emberN*.04))*hasteMult();const target=nearestWeaponTarget('ember');if(target){fireEmber(target,emberN);echoTrigger(()=>fireEmber(target,emberN,true));}}}
   const gravN=weaponCount('gravity');if(gravN){player.wellCd-=dt;if(player.wellCd<=0){player.wellCd=(6.1-Math.min(2.2,gravN*.32))*hasteMult();createGravityWells(gravN);echoTrigger(()=>createGravityWells(gravN,true));}}
