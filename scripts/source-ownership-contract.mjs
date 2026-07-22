@@ -74,6 +74,7 @@ expect('docs','audit UI does not redefine combat balance',!auditUi.includes('has
 
 expect('ci','all contracts are wired into CI',['polish-contract-check.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','source-ownership-contract.mjs'].every(name=>validate.includes(name)));
 expect('ci','targeting ownership group runs in build fingerprint',buildFingerprint.includes("'prism','targeting','docs'"));
+expect('ci','build fingerprint is checkout-EOL independent',buildFingerprint.includes('TEXT_ASSET_PATTERN')&&buildFingerprint.includes("replace(/\\r\\n?/g,'\\n')"));
 expect('ci','targeting ownership group runs in validation workflow',validate.includes('OWNERSHIP_GROUP=targeting node scripts/source-ownership-contract.mjs'));
 expect('ci','validation workflow is permanent',validate.includes('contents: read')&&!validate.includes('one-time canonical source migration'));
 expect('ci','no runtime balance hotfix module',!index.includes('balance-hotfix')&&!index.includes('source-sync')&&!index.includes('override.js'));
