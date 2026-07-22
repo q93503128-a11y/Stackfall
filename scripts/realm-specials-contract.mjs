@@ -32,7 +32,7 @@ expect('stable realm serial ownership',realm.includes('realmTransitionSerial')&&
 expect('realm cancel helper',realm.includes('function cancelRealmTransition')&&realm.includes('window.cancelRealmTransition'));
 expect('no duplicate apex encounter override',!dark.includes('beginApexEncounter=function beginCinematicApexEncounter'));
 expect('canonical background only',!perf.includes('drawBackground=function optimizedBackground')&&!perf.includes('function themeVisual(theme)'));
-expect('quality reduction requires measured lag',perf.includes('function tier(){return performanceTier;}')&&perf.includes('slowDebt>=5.5?2:slowDebt>=2?1:0')&&perf.includes('const shouldDrop=frameMs>38&&slowDebt>=.4'));
+expect('quality reduction requires measured lag',perf.includes("performanceTestMode=new URLSearchParams(location.search).has('build-check')")&&perf.includes('function tier(){return performanceTestMode&&forcedPerformanceTier!==null?forcedPerformanceTier:performanceTier;}')&&perf.includes('slowDebt>=5.5?2:slowDebt>=2?1:0')&&perf.includes('const shouldDrop=frameMs>38&&slowDebt>=.4'));
 expect('void owned transitions',events.includes("owner:'void-entry'")&&events.includes("owner:'void-exit'")&&events.includes("owner:'void-abort'"));
 expect('apex owned transitions',bosses.includes("owner:'apex-entry'")&&bosses.includes("owner:'apex-exit'")&&bosses.includes('state.apexArena=apexArena'));
 expect('uncapped late damage growth',endgame.includes('Math.pow(minutes,1.14)')&&!endgame.includes('Math.min(.58'));
