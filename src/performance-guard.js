@@ -122,6 +122,7 @@
   window.stackfallPerformanceStressed=stressed;
   window.stackfallPerformanceTier=()=>tier();
   window.stackfallSetPerformanceTierForTest=value=>{if(!performanceTestMode)return performanceTier;const next=value===null?NaN:Number(value);forcedPerformanceTier=Number.isInteger(next)&&next>=0&&next<=2?next:null;return tier();};
+  window.stackfallSetEmergencyRenderingForTest=value=>{if(!performanceTestMode)return emergencyResolution;applyEmergencyResolution(value===true);return emergencyResolution;};
   window.stackfallEmergencyRendering=()=>emergencyResolution;
   window.stackfallPerformanceDiagnostics=()=>({tier:tier(),measuredTier:performanceTier,pressureTier:pressureTier(),pressureScore:pressureScore(),frameMs,slowDebt,emergencyResolution,resolutionScale:Number(window.stackfallResolutionScale)||1,gridBuckets:grid.size,pooledGridBuckets:gridBucketPool.length});
   window.rebuildEnemyIndex=rebuildEnemyGrid;

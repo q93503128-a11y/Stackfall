@@ -22,6 +22,7 @@ const systems=read('src/systems.js');
 const gpu=read('src/gpu-renderer.js');
 const render=read('src/render.js');
 const runtimeConfig=read('src/runtime-config.js');
+const browserSmoke=read('scripts/browser-smoke.mjs');
 expect('expansion loaded',index.includes('src/endgame-balance-expansion.js'));
 expect('prism cycle remains haste driven',expansion.includes("tickInterval=Math.max(.065,.25*hasteMult())"));
 expect('prism holds one shared target',expansion.includes('player.prismSharedLock')&&expansion.includes('lock.targetId?enemyById(lock.targetId):null')&&expansion.includes('inside||lock.lostTime<1.5'));
@@ -87,7 +88,8 @@ expect('emergency resolution covers every combat canvas',core.includes('window.r
 expect('severe lag throttles visual GPU ticks only',gpu.includes('function syncGpuFrameBudget()')&&gpu.includes('cap=emergency||tier===2?24:tier===1?40:0')&&gpu.includes('app.ticker.maxFPS=cap')&&gpu.includes('syncGpuFrameBudget();'));
 expect('severe lag caps decorative GPU sprites without changing entities',gpu.includes('visualLimit=tier===2?48:tier===1?96:Infinity')&&gpu.includes('tier===2?24:tier===1?72')&&!gpu.includes('state.entities.projectiles.splice'));
 expect('emergency mode moves critical combat silhouettes to GPU',performance.includes('window.stackfallEmergencyRendering=()=>emergencyResolution')&&performance.includes('pressureScore()>proactiveLimit')&&render.includes('stackfallCanUseSimplifiedGpuFrame')&&gpu.includes('function syncEmergencySprites()')&&gpu.includes('state.entities.enemyProjectiles')&&gpu.includes('state.entities.telegraphs')&&gpu.includes("foregroundCanvas.style.visibility=active?'hidden':'visible'"));
-expect('GPU sprite pools are allocation stable',gpu.includes('for(let i=0;i<240;i++){ensureSprite(projectileSprites')&&gpu.includes('ensureSprite(particleSprites,i,particleLayer,particleTexture)'));
+expect('emergency GPU retains off-screen boss and event guidance',gpu.includes('function makeArrowTexture')&&gpu.includes('emergencyGuidanceSprites')&&gpu.includes("enemy.type==='mini'||enemy.type==='boss'")&&gpu.includes("guide(marker.x,marker.y,color,'event')")&&performance.includes('stackfallSetEmergencyRenderingForTest')&&browserSmoke.includes('emergencyGuidance.renderer.emergencyGuidance?.eventArrows===3'));
+expect('GPU sprite pools are allocation stable',gpu.includes('for(let i=0;i<240;i++){ensureSprite(projectileSprites')&&gpu.includes('ensureSprite(particleSprites,i,particleLayer,particleTexture)')&&gpu.includes('for(let i=0;i<16;i++)ensureSprite(emergencyGuidanceSprites'));
 expect('GPU loss restores the visible Canvas combat layer',gpu.includes("canvas.style.display='none';if(foregroundCanvas)foregroundCanvas.style.visibility='visible';setRendererState('context-lost')")&&gpu.includes("if(foregroundCanvas)foregroundCanvas.style.visibility='visible';"));
 let failed=0;for(const [name,ok] of checks){console.log(`${ok?'PASS':'FAIL'} ${name}`);if(!ok)failed++;}
 console.log(`Checked ${checks.length} contracts; failures=${failed}`);if(failed)process.exit(1);
