@@ -45,6 +45,10 @@
     ledgerScreen.addEventListener('stackfall:ledger-rendered',annotate);ledgerBody.addEventListener('click',event=>{const item=event.target.closest('.ledger-card');if(item?.dataset.weaponKey)openWeapon(item.dataset.weaponKey);else if(item?.dataset.passiveKey)openPassive(item.dataset.passiveKey);});annotate();
   }
 
+  const worldEventCards=document.querySelector('#worldEventCards');
+  function sanitizeWorldEventCopy(){if(!worldEventCards)return;for(const button of worldEventCards.querySelectorAll('.world-event-card')){const name=button.querySelector('b')?.textContent?.trim(),desc=button.querySelector('p');if(name==='다중 투영 코어'||name==='PROJECTION CORE'){if(desc)desc.textContent=GAME_SETTINGS.language==='ko'?'지원되는 공격체 +1.':'Supported attack bodies +1.';}}}
+  if(worldEventCards){new MutationObserver(sanitizeWorldEventCopy).observe(worldEventCards,{childList:true});sanitizeWorldEventCopy();}
+
   let guidanceEliteArrows=0,guidanceEventArrows=0;
   function safeEdge(dx,dy,bottomGap=154){const cx=vw/2,cy=vh/2,left=76,right=vw-76,top=82,bottom=vh-bottomGap,values=[];if(dx>0)values.push((right-cx)/dx);else if(dx<0)values.push((left-cx)/dx);if(dy>0)values.push((bottom-cy)/dy);else if(dy<0)values.push((top-cy)/dy);const positive=values.filter(value=>value>0),scale=positive.length?Math.min(...positive):1;return{x:cx+dx*scale,y:cy+dy*scale};}
   function drawRangedOverlay(){for(const enemy of state.entities.enemies){if(enemy.dead||enemy.type!=='ranged')continue;const p=worldToScreen(enemy.x,enemy.y);if(p.x<-50||p.x>vw+50||p.y<-50||p.y>vh+50)continue;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.atan2(player.y-enemy.y,player.x-enemy.x));ctx.strokeStyle=enemy.eventKind==='crash'?'#ffd078':'#75eaff';ctx.fillStyle='rgba(6,20,34,.92)';ctx.lineWidth=2;ctx.shadowBlur=14;ctx.shadowColor=ctx.strokeStyle;ctx.beginPath();ctx.moveTo(enemy.r,0);ctx.lineTo(enemy.r*.22,-enemy.r*.72);ctx.lineTo(-enemy.r*.76,-enemy.r*.44);ctx.lineTo(-enemy.r*.76,enemy.r*.44);ctx.lineTo(enemy.r*.22,enemy.r*.72);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle=ctx.strokeStyle;ctx.fillRect(enemy.r*.20,-2,enemy.r*.92,4);ctx.restore();}}
