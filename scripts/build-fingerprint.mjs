@@ -7,8 +7,9 @@ import {fileURLToPath} from 'node:url';
 const ownPath=fileURLToPath(import.meta.url);
 export const BUILD_INFO_PATH='src/build-info.js';
 export const REQUIRED_PUBLIC_ASSETS=['googlea1b39620fd8849c7.html'];
+const TEXT_ASSET_PATTERN=/\.(?:css|html|js|json|svg|webmanifest)$/i;
 const CONTRACTS=['polish-contract-check.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','community-feedback-contract.mjs'];
-const OWNERSHIP_GROUPS=['health','regen-runtime','regen-docs','hard','prism','docs','ci'];
+const OWNERSHIP_GROUPS=['health','regen-runtime','regen-docs','hard','prism','targeting','docs','ci'];
 function sha256(buffer){return createHash('sha256').update(buffer).digest('hex');}
 function localAssets(index){
   const paths=['index.html',...REQUIRED_PUBLIC_ASSETS];
@@ -33,7 +34,8 @@ export function computeBuildFingerprint(projectRoot){
   const index=readFileSync(resolve(projectRoot,'index.html'),'utf8');
   const assets=localAssets(index);
   const manifest=assets.map(path=>{
-    const bytes=readFileSync(resolve(projectRoot,path));
+    const source=readFileSync(resolve(projectRoot,path));
+    const bytes=TEXT_ASSET_PATTERN.test(path)?Buffer.from(source.toString('utf8').replace(/\r\n?/g,'\n')):source;
     return `${path}\0${sha256(bytes)}\n`;
   }).join('');
   return {sha:`sha256-${sha256(Buffer.from(manifest))}`,assets};

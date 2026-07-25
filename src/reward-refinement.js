@@ -138,7 +138,7 @@
       card.onclick=()=>{if(rewardChoiceLocked||state.mode!=='bossReward')return;rewardChoiceLocked=true;for(const button of cards.querySelectorAll('button'))button.disabled=true;if(option.kind==='trait')state.bossTraits[option.key]=true;else state.weaponAugments[option.key]=true;state.rewardQueue.shift();rewardScreen.classList.add('hidden');state.mode='playing';if(matchMedia('(pointer:coarse)').matches||innerWidth<760)ui.touch.classList.remove('hidden');audio.resonance();renderLoadout();updateHUD();};cards.appendChild(card);}
   }
   window.updateRewardQueue=tryOpenReward;
-  function planApexPassiveRewards(total=3){const planned={},entries=[];for(let i=0;i<total;i++){const eligible=Object.keys(PASSIVES).filter(key=>(planned[key]??stat(key))<PASSIVES[key].max);if(!eligible.length)break;const fresh=eligible.filter(key=>!entries.some(entry=>entry.key===key)),pool=fresh.length?fresh:eligible,key=pool[Math.floor(Math.random()*pool.length)],before=planned[key]??stat(key),after=before+1;planned[key]=after;const existing=entries.find(entry=>entry.key===key);if(existing)existing.after=after;else entries.push({key,before,after});}return entries;}
+  function planApexPassiveRewards(total=3){const planned={},entries=[];for(let i=0;i<total;i++){const eligible=Object.keys(PASSIVES).filter(key=>stat(key)>0&&(planned[key]??stat(key))<PASSIVES[key].max);if(!eligible.length)break;const fresh=eligible.filter(key=>!entries.some(entry=>entry.key===key)),pool=fresh.length?fresh:eligible,key=pool[Math.floor(Math.random()*pool.length)],before=planned[key]??stat(key),after=before+1;planned[key]=after;const existing=entries.find(entry=>entry.key===key);if(existing)existing.after=after;else entries.push({key,before,after});}return entries;}
   function applyApexPassivePlan(entries){for(const entry of entries)while(stat(entry.key)<entry.after)applyMiniRewardPassive(entry.key);}
   function apexLegacyPreview(form){if(form==='chronophage')return'시간 탈취 · 적과 탄환 둔화 · 모든 장비 과가속 · 시간 파쇄';if(form==='starforge')return'미니어처 항성 · 추적 광선 · 방사형 관통탄 · 붕괴 폭발';return'살아 있는 성좌망 · 지속 절단 · 적 탄환 삭제 · 노드 포격';}
   function resetApexEquipmentCooldowns(){for(const key of['coreCd','emberCd','wellCd','fortressCd','cometCd','prismCd','chronoCd','arcCd','ionCd','novaCd','droneCd','railCd','spiralCd','mirrorCd'])if(Number.isFinite(player[key]))player[key]=Math.min(0,player[key]);}
@@ -150,7 +150,7 @@
     if(key==='stellarLife')applyStackfallStellarLifeGrowth(1);
   }
   function grantMinibossReward(){
-    const weapons=Object.keys(state.weaponStacks||{}).filter(key=>weaponCount(key)>0&&weaponCount(key)<6),passives=Object.keys(PASSIVES).filter(key=>stat(key)<PASSIVES[key].max);
+    const weapons=Object.keys(state.weaponStacks||{}).filter(key=>weaponCount(key)>0&&weaponCount(key)<6),passives=Object.keys(PASSIVES).filter(key=>stat(key)>0&&stat(key)<PASSIVES[key].max);
     const useWeapon=weapons.length&&(!passives.length||Math.random()<.45);
     let title='정예 전리품',desc='';
     if(useWeapon){const key=weapons[Math.floor(Math.random()*weapons.length)],next=weaponCount(key)+1;state.weaponStacks[key]=next;if(key!=='core'&&!state.weaponSlots.includes(key))state.weaponSlots.push(key);title=weaponText(key).name;desc=stackEffectText(key,next)?.desc||'장비 중첩 증가.';}

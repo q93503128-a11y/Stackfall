@@ -1,3 +1,4 @@
+const SCREEN_SHAKE_VISIBLE_THRESHOLD=11,SCREEN_FLASH_VISIBLE_THRESHOLD=.18;
 const runtimeErrorLog=new Set(),runtimeStageDiagnostics=new Map(),runtimeSanitizeDiagnostics={passes:0,totalRemoved:0,removed:{}};
 function sanitizeRuntimeState(){
   runtimeSanitizeDiagnostics.passes++;if(!Number.isFinite(player.x))player.x=0;if(!Number.isFinite(player.y))player.y=0;if(!Number.isFinite(player.hp))player.hp=Math.max(1,player.maxHp||100);if(!Number.isFinite(player.maxHp)||player.maxHp<=0)player.maxHp=100;
@@ -18,7 +19,7 @@ updateSpawning=function updateSpawningAccelerated(dt){
   if(typeof updateEncounterDirector==='function')updateEncounterDirector(dt);
 };
 function draw(){
-  state.renderFrame++;const rawShake=GAME_SETTINGS.screenShake===false?0:Math.max(0,state.camera.shake||0),shake=rawShake>=7?Math.min(15,rawShake*.72):0;state.camera.shakeX=shake?rand(-shake,shake):0;state.camera.shakeY=shake?rand(-shake,shake):0;
+  state.renderFrame++;const rawShake=GAME_SETTINGS.screenShake===false?0:Math.max(0,state.camera.shake||0),shake=rawShake>=SCREEN_SHAKE_VISIBLE_THRESHOLD?Math.min(15,rawShake*.72):0;state.camera.shakeX=shake?rand(-shake,shake):0;state.camera.shakeY=shake?rand(-shake,shake):0;
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.setLineDash([]);
   runDrawStage('drawBackground',drawBackground);
   ctx.save();ctx.translate(state.camera.shakeX,state.camera.shakeY);
@@ -28,7 +29,7 @@ function draw(){
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.setLineDash([]);
   const performanceTier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0;
   if(performanceTier===0){const vignette=ctx.createRadialGradient(vw/2,vh/2,Math.min(vw,vh)*.18,vw/2,vh/2,Math.max(vw,vh)*.74);vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(0,1,8,.58)');ctx.fillStyle=vignette;ctx.fillRect(0,0,vw,vh);}else if(performanceTier===1){ctx.fillStyle='rgba(0,1,8,.08)';ctx.fillRect(0,0,vw,vh);}
-  if(GAME_SETTINGS.sparkles!==false&&state.flash>0){ctx.fillStyle=`rgba(225,242,255,${Math.min(.42,state.flash*.72)})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlay',drawRealmCinematicOverlay);
+  if(GAME_SETTINGS.sparkles!==false&&state.flash>=SCREEN_FLASH_VISIBLE_THRESHOLD){ctx.fillStyle=`rgba(225,242,255,${Math.min(.42,state.flash*.72)})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlay',drawRealmCinematicOverlay);
 }
 const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0;
 function loop(now){
@@ -47,7 +48,8 @@ function loop(now){
     }
     if(state.mode==='choice'&&ui.choice.classList.contains('hidden')){state.choiceLocked=false;state.mode='playing';}
     if(typeof syncAbilityLedgerVisibility==='function')syncAbilityLedgerVisibility();
-    if(shouldDraw)runRuntimeStage('drawFrame',draw);
+    const simplifiedGpu=liveGameplay&&typeof stackfallCanUseSimplifiedGpuFrame==='function'&&stackfallCanUseSimplifiedGpuFrame();
+    if(shouldDraw&&!simplifiedGpu)runRuntimeStage('drawFrame',draw);
   }finally{if(window.__stackfallLoopGeneration===stackfallLoopGeneration)requestAnimationFrame(loop);}
 }
 requestAnimationFrame(loop);

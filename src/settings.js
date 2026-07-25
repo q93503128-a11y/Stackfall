@@ -4,9 +4,11 @@ try{
   const saved=JSON.parse(localStorage.getItem('stackfall.settings')||'{}');
   GAME_SETTINGS.hideProjectiles=saved.hideProjectiles===true;
   GAME_SETTINGS.sparkles=saved.sparkles!==false;
+  GAME_SETTINGS.manualAim=saved.manualAim===true;
 }catch{
   GAME_SETTINGS.hideProjectiles=false;
   GAME_SETTINGS.sparkles=true;
+  GAME_SETTINGS.manualAim=false;
 }
 
 const settingsUi = {
