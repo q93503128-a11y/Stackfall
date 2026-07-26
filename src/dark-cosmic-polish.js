@@ -25,7 +25,7 @@
   function drawCrashArena(ev,t){
     const p=worldToScreen(ev.arena.x,ev.arena.y),r=ev.arena.r;ctx.save();ctx.translate(p.x,p.y);ctx.strokeStyle='rgba(255,119,82,.62)';ctx.shadowBlur=17;ctx.shadowColor='#ff754f';ctx.lineWidth=2.6;ctx.setLineDash([22,10]);ctx.lineDashOffset=-t*38;ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.stroke();ctx.setLineDash([]);
     for(let i=0;i<8;i++){const a=i/8*TAU;ctx.save();ctx.rotate(a);ctx.translate(r,0);ctx.fillStyle=i%2?'rgba(255,190,92,.86)':'rgba(255,87,74,.84)';ctx.beginPath();ctx.moveTo(-17,-5);ctx.lineTo(13,-5);ctx.lineTo(20,0);ctx.lineTo(13,5);ctx.lineTo(-17,5);ctx.closePath();ctx.fill();ctx.restore();}
-    ctx.save();ctx.translate(0,-r+30);ctx.scale(.8,.8);drawCrashBeacon({x:0,y:0},t);ctx.restore();ctx.restore();
+    ctx.restore();
   }
   drawMapEvents=function drawPolishedMapEvents(){
     const t=performance.now()/1000,colors={vault:'#75eaff',crash:'#ff9a62',void:'#b36bff'};

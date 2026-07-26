@@ -33,17 +33,26 @@
   manualAim?.addEventListener('change',()=>{GAME_SETTINGS.manualAim=manualAim.checked;saveGameSettings();if(!GAME_SETTINGS.manualAim)state.input.aimActive=false;audio.pickup();});
 
   state.input.aimActive=false;state.input.aimWorldX=player.x;state.input.aimWorldY=player.y;
-  const canvasAimPoint=event=>{const rect=canvas.getBoundingClientRect(),sx=(event.clientX-rect.left)/Math.max(1,rect.width)*vw,sy=(event.clientY-rect.top)/Math.max(1,rect.height)*vh;state.input.aimWorldX=player.x+sx-vw/2;state.input.aimWorldY=player.y+sy-vh/2;state.input.aimActive=event.pointerType!=='touch';};
+  const canvasAimPoint=event=>{const rect=canvas.getBoundingClientRect(),sx=(event.clientX-rect.left)/Math.max(1,rect.width)*vw,sy=(event.clientY-rect.top)/Math.max(1,rect.height)*vh;state.input.aimWorldX=player.x+sx-vw/2;state.input.aimWorldY=player.y+sy-vh/2;state.input.aimActive=event.pointerType!=='touch';if(GAME_SETTINGS.manualAim===true&&state.input.aimActive){const dx=state.input.aimWorldX-player.x,dy=state.input.aimWorldY-player.y;if(Math.hypot(dx,dy)>2)player.facingAngle=Math.atan2(dy,dx);}};
   canvas.addEventListener('pointermove',canvasAimPoint,{passive:true});
   canvas.addEventListener('pointerdown',canvasAimPoint,{passive:true});
   canvas.addEventListener('pointerleave',event=>{if(event.pointerType!=='touch')state.input.aimActive=false;},{passive:true});
 
   function targetCandidates(x,y,range,predicate){const rr=range*range,out=[];for(const enemy of state.entities.enemies){if(!enemy||enemy.dead||predicate&&!predicate(enemy))continue;const dx=enemy.x-x,dy=enemy.y-y,d2=dx*dx+dy*dy;if(d2<=rr)out.push({enemy,d2});}return out;}
-  function manualTarget(key,x,y,predicate){if(GAME_SETTINGS.manualAim!==true||!state.input.aimActive)return null;const range=weaponRange(key),ax=state.input.aimWorldX,ay=state.input.aimWorldY,candidates=targetCandidates(x,y,range,predicate);let best=null,bestScore=Infinity;for(const row of candidates){const cursorD2=(row.enemy.x-ax)**2+(row.enemy.y-ay)**2,score=cursorD2+row.d2*.035;if(score<bestScore){bestScore=score;best=row.enemy;}}return best;}
+  function manualTarget(key,x,y,predicate){if(GAME_SETTINGS.manualAim!==true||!state.input.aimActive)return null;const range=weaponRange(key),ax=state.input.aimWorldX,ay=state.input.aimWorldY,candidates=targetCandidates(x,y,range,predicate);let best=null,bestScore=Infinity;for(const row of candidates){const cursorD2=(row.enemy.x-ax)**2+(row.enemy.y-ay)**2,score=cursorD2+row.d2*.002;if(score<bestScore){bestScore=score;best=row.enemy;}}return best;}
   function farthestWeaponTarget(key,x=player.x,y=player.y,predicate=null){const manual=manualTarget(key,x,y,predicate);if(manual)return manual;let best=null,bestD2=-1;for(const row of targetCandidates(x,y,weaponRange(key),predicate))if(row.d2>bestD2){bestD2=row.d2;best=row.enemy;}return best;}
   window.farthestWeaponTarget=farthestWeaponTarget;
   const baseNearestWeaponTarget=nearestWeaponTarget;
   nearestWeaponTarget=function refinedWeaponTarget(key,x=player.x,y=player.y,predicate=null){const manual=manualTarget(key,x,y,predicate);if(manual)return manual;if(key==='arc')return farthestWeaponTarget(key,x,y,predicate);return baseNearestWeaponTarget(key,x,y,predicate);};
+
+  const baseDrawPlayer=drawPlayer;
+  drawPlayer=function drawPlayerWithManualAim(){
+    baseDrawPlayer();
+    if(GAME_SETTINGS.manualAim!==true||!state.input.aimActive||state.mode!=='playing')return;
+    const dx=state.input.aimWorldX-player.x,dy=state.input.aimWorldY-player.y,d=Math.hypot(dx,dy);if(d<3)return;
+    const a=Math.atan2(dy,dx),cx=vw/2,cy=vh/2,start=32,end=68,head=10;
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(a);ctx.lineCap='round';ctx.shadowBlur=12;ctx.shadowColor='#8fffe7';ctx.strokeStyle='rgba(143,255,231,.82)';ctx.fillStyle='rgba(221,255,249,.94)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(start,0);ctx.lineTo(end,0);ctx.stroke();ctx.beginPath();ctx.moveTo(end+5,0);ctx.lineTo(end-head,-head*.62);ctx.lineTo(end-head,head*.62);ctx.closePath();ctx.fill();ctx.globalAlpha=.48;ctx.beginPath();ctx.arc(end+8,0,4,0,TAU);ctx.stroke();ctx.restore();
+  };
 
   updateGems=function acceleratedMagnetGems(dt){const range=Math.max(24,Number(magnetRange())||74),magnetStacks=stat('magnet'),eventMagnet=state.nebulaBoosts?.magnet||0,pullSpeed=1+magnetStacks*.22+eventMagnet*.10,gems=state.entities.gems;for(const g of gems){if(!g||!Number.isFinite(g.x)||!Number.isFinite(g.y)){if(g)g.life=0;continue;}g.life=Number.isFinite(g.life)?g.life-dt:0;g.pulse=Number.isFinite(g.pulse)?g.pulse+dt*5:dt*5;g.vx=Number.isFinite(g.vx)?g.vx:0;g.vy=Number.isFinite(g.vy)?g.vy:0;g.r=Number.isFinite(g.r)?clamp(g.r,2,14):4;g.value=Number.isFinite(g.value)?Math.max(0,g.value):0;g.x+=g.vx*dt;g.y+=g.vy*dt;g.vx*=Math.pow(.04,dt);g.vy*=Math.pow(.04,dt);const dx=player.x-g.x,dy=player.y-g.y,d=Math.hypot(dx,dy)||1;if(d<range){const force=(270+(range-d)*(7.5+magnetStacks*.55))*pullSpeed;g.vx+=dx/d*force*dt;g.vy+=dy/d*force*dt;}if(d<player.r+10){g.life=0;gainXp(g.value*xpMult());audio.pickup();spawnParticle(g.x,g.y,COLORS.cyan,3,70,2);}}compactInPlace(gems,g=>g&&g.life>0);};
 
