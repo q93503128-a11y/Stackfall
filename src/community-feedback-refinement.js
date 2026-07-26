@@ -5,8 +5,8 @@
   if(STACK_EFFECTS.prism?.[0])STACK_EFFECTS.prism[0][1]='새 표적을 1초 조준한 뒤 집속한다.';
   const multishotStacks=()=>Math.min(2,Math.max(0,Number(stat('multiplicity'))||0));
   const clampScale=(n,table)=>table[Math.max(0,Math.min(table.length-1,n))]??1;
-  let forcedCriticalResolution=false;
-  function resetCommunityRunState(){player.communityCoreRicochetCycle=0;player.communityBulwarkCd=0;forcedCriticalResolution=false;if((Number(window.stackfallResolutionScale)||1)!==1){window.stackfallResolutionScale=1;resize();}}
+  let forcedCriticalResolution=false,criticalResolutionPreviousScale=1;
+  function resetCommunityRunState(){player.communityCoreRicochetCycle=0;player.communityBulwarkCd=0;forcedCriticalResolution=false;criticalResolutionPreviousScale=1;if((Number(window.stackfallResolutionScale)||1)!==1){window.stackfallResolutionScale=1;resize();}}
   const previousResetGame=resetGame;resetGame=function communityResetGame(){const result=previousResetGame();resetCommunityRunState();return result;};
   const previousShowMainMenu=showMainMenu;showMainMenu=function communityShowMainMenu(){const result=previousShowMainMenu();resetCommunityRunState();return result;};
   const previousEndGame=endGame;endGame=function communityEndGame(){const result=previousEndGame();resetCommunityRunState();return result;};
@@ -56,7 +56,7 @@
         if(target){feedbackDamageGuard=true;try{previousDealDamage(target,amount*.42,{color:'#dffbff',source:'core-ricochet',canCrit:false});}finally{feedbackDamageGuard=false;}state.entities.beams.push({x1:x,y1:y,x2:target.x,y2:target.y,life:.12,max:.12,color:'#dffbff',width:2});}
       }
     }
-    if(suppressChrono&&wasAlive&&enemy.dead){feedbackDamageGuard=true;try{areaDamage(x,y,96*weaponSizeMultiplier(),20+weaponStacks('chrono')*3.6,COLORS.chrono,'chrono-burst');}finally{feedbackDamageGuard=false;}}
+    if(suppressChrono&&wasAlive&&enemy.dead){const chronoSaved=state.weaponAugments.chrono;feedbackDamageGuard=true;state.weaponAugments.chrono=false;try{areaDamage(x,y,96*weaponSizeMultiplier(),20+weaponStacks('chrono')*3.6,COLORS.chrono,'chrono-burst');}finally{state.weaponAugments.chrono=chronoSaved;feedbackDamageGuard=false;}}
   };
 
   const PRISM_ACQUISITION_SECONDS=1.0,PRISM_RELEASE_GRACE_SECONDS=2.25;
@@ -109,7 +109,7 @@
   updatePlayer=function communityFeedbackPlayer(dt){
     previousUpdatePlayer(dt);
     const n=weaponStacks('bulwark');if(n>0&&n<3){player.communityBulwarkCd=(player.communityBulwarkCd??0)-dt;if(player.communityBulwarkCd<=0){player.communityBulwarkCd=n===1?7.4:6.8;const cap=n===1?20:28,gain=n===1?5:7;player.shield=Math.min(cap,player.shield+gain);shockwave(player.x,player.y,COLORS.green,70+n*8,.25,1.8);}}
-    const emergency=typeof rawEmergencyRendering==='function'&&rawEmergencyRendering(),critical=criticalVisualCombat();if(critical&&emergency&&!forcedCriticalResolution){forcedCriticalResolution=true;window.stackfallResolutionScale=.55;resize();}else if(forcedCriticalResolution&&(!critical||!emergency)){forcedCriticalResolution=false;window.stackfallResolutionScale=1;resize();}
+    const emergency=typeof rawEmergencyRendering==='function'&&rawEmergencyRendering(),critical=criticalVisualCombat();if(critical&&emergency&&!forcedCriticalResolution){criticalResolutionPreviousScale=Number(window.stackfallResolutionScale)||1;forcedCriticalResolution=true;window.stackfallResolutionScale=.55;resize();}else if(forcedCriticalResolution&&(!critical||!emergency)){const restoreScale=emergency?criticalResolutionPreviousScale:1;forcedCriticalResolution=false;criticalResolutionPreviousScale=1;window.stackfallResolutionScale=restoreScale;resize();}
   };
 
   const previousEnemyProjectileRenderer=drawEnemyProjectiles;
@@ -118,7 +118,7 @@
   };
 
   function drawStarlightProjectiles(){
-    const fg=document.querySelector('#combatForeground');if(!fg||fg.style.visibility==='hidden'||state.mode==='menu')return;const g=fg.getContext('2d',{alpha:true});if(!g)return;g.save();g.setTransform(dpr,0,0,dpr,0,0);g.globalCompositeOperation='lighter';for(const p of state.entities.projectiles||[]){const source=String(p?.source||'');if(!p||p.life<=0||!['ember','echo-star','ember-multiplicity'].includes(source))continue;const s=worldToScreen(p.x,p.y);if(s.x<-48||s.x>vw+48||s.y<-48||s.y>vh+48)continue;const speed=Math.hypot(p.vx||0,p.vy||0)||1,nx=(p.vx||0)/speed,ny=(p.vy||0)/speed,r=Math.max(3,Math.min(10,p.r||5)),tail=18+r*2.3,color=source==='echo-star'?COLORS.pink:'#ff789b';const grad=g.createLinearGradient(s.x-nx*tail,s.y-ny*tail,s.x+nx*r,s.y+ny*r);grad.addColorStop(0,'rgba(255,120,155,0)');grad.addColorStop(.55,color);grad.addColorStop(1,'#fff7fb');g.strokeStyle=grad;g.lineWidth=Math.max(2,r*.75);g.lineCap='round';g.beginPath();g.moveTo(s.x-nx*tail,s.y-ny*tail);g.lineTo(s.x+nx*r*.7,s.y+ny*r*.7);g.stroke();const px=-ny,py=nx;g.fillStyle='#fff7fb';g.beginPath();g.moveTo(s.x+nx*r*1.7,s.y+ny*r*1.7);g.lineTo(s.x-nx*r*.65+px*r*.55,s.y-ny*r*.65+py*r*.55);g.lineTo(s.x-nx*r*.85,s.y-ny*r*.85);g.lineTo(s.x-nx*r*.65-px*r*.55,s.y-ny*r*.65-py*r*.55);g.closePath();g.fill();}g.restore();
+    const fg=document.querySelector('#combatForeground');if(GAME_SETTINGS.hideProjectiles===true||!fg||fg.style.visibility==='hidden'||state.mode==='menu')return;const g=fg.getContext('2d',{alpha:true});if(!g)return;g.save();g.setTransform(dpr,0,0,dpr,0,0);g.globalCompositeOperation='lighter';for(const p of state.entities.projectiles||[]){const source=String(p?.source||'');if(!p||p.life<=0||!['ember','echo-star','ember-multiplicity'].includes(source))continue;const s=worldToScreen(p.x,p.y);if(s.x<-48||s.x>vw+48||s.y<-48||s.y>vh+48)continue;const speed=Math.hypot(p.vx||0,p.vy||0)||1,nx=(p.vx||0)/speed,ny=(p.vy||0)/speed,r=Math.max(3,Math.min(10,p.r||5)),tail=18+r*2.3,color=source==='echo-star'?COLORS.pink:'#ff789b';const grad=g.createLinearGradient(s.x-nx*tail,s.y-ny*tail,s.x+nx*r,s.y+ny*r);grad.addColorStop(0,'rgba(255,120,155,0)');grad.addColorStop(.55,color);grad.addColorStop(1,'#fff7fb');g.strokeStyle=grad;g.lineWidth=Math.max(2,r*.75);g.lineCap='round';g.beginPath();g.moveTo(s.x-nx*tail,s.y-ny*tail);g.lineTo(s.x+nx*r*.7,s.y+ny*r*.7);g.stroke();const px=-ny,py=nx;g.fillStyle='#fff7fb';g.beginPath();g.moveTo(s.x+nx*r*1.7,s.y+ny*r*1.7);g.lineTo(s.x-nx*r*.65+px*r*.55,s.y-ny*r*.65+py*r*.55);g.lineTo(s.x-nx*r*.85,s.y-ny*r*.85);g.lineTo(s.x-nx*r*.65-px*r*.55,s.y-ny*r*.65-py*r*.55);g.closePath();g.fill();}g.restore();
   }
   const previousForegroundCombat=window.drawForegroundCombat;
   if(typeof previousForegroundCombat==='function')window.drawForegroundCombat=function communityForegroundCombat(){previousForegroundCombat();drawStarlightProjectiles();};
