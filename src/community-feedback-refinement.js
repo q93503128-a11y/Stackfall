@@ -5,6 +5,12 @@
   if(STACK_EFFECTS.prism?.[0])STACK_EFFECTS.prism[0][1]='새 표적을 1초 조준한 뒤 집속한다.';
   const multishotStacks=()=>Math.min(2,Math.max(0,Number(stat('multiplicity'))||0));
   const clampScale=(n,table)=>table[Math.max(0,Math.min(table.length-1,n))]??1;
+  let forcedCriticalResolution=false;
+  function resetCommunityRunState(){player.communityCoreRicochetCycle=0;player.communityBulwarkCd=0;forcedCriticalResolution=false;if((Number(window.stackfallResolutionScale)||1)!==1){window.stackfallResolutionScale=1;resize();}}
+  const previousResetGame=resetGame;resetGame=function communityResetGame(){const result=previousResetGame();resetCommunityRunState();return result;};
+  const previousShowMainMenu=showMainMenu;showMainMenu=function communityShowMainMenu(){const result=previousShowMainMenu();resetCommunityRunState();return result;};
+  const previousEndGame=endGame;endGame=function communityEndGame(){const result=previousEndGame();resetCommunityRunState();return result;};
+
   const sourceFamily=source=>{
     const s=String(source||'');
     if(['ember','echo-star','ember-multiplicity','ember-burn','ember-strong-chain','star-spark','ember-burst'].includes(s))return'ember';
@@ -99,7 +105,6 @@
   function criticalVisualCombat(){return state.mode==='playing'&&(state.mapEventActive||state.apexActiveId||state.entities.enemies.some(e=>e&&!e.dead&&e.type==='boss'));}
   if(typeof rawEmergencyRendering==='function')window.stackfallEmergencyRendering=()=>criticalVisualCombat()?false:rawEmergencyRendering();
   if(typeof rawGpuEmergencyAvailable==='function')window.stackfallGpuEmergencyAvailable=()=>criticalVisualCombat()?false:rawGpuEmergencyAvailable();
-  let forcedCriticalResolution=false;
   const previousUpdatePlayer=updatePlayer;
   updatePlayer=function communityFeedbackPlayer(dt){
     previousUpdatePlayer(dt);
