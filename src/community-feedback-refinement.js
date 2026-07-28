@@ -62,27 +62,61 @@
   const PRISM_ACQUISITION_SECONDS=1.0,PRISM_RELEASE_GRACE_SECONDS=2.25;
   const prismBodyCount=n=>Math.min(5,(n>=6?3:n>=2?2:1)+multishotStacks());
   const prismReleaseDistance=()=>Math.max(1500,weaponRange('prism')*3+orbitRadiusFor('prism'));
-  function sharedPrismLock(){
-    const now=state.time||0,lock=player.prismSharedLock||(player.prismSharedLock={targetId:null,windup:0,readyAt:now,lostTime:0,heat:0,tick:0,visual:0,augmentCd:0,pulseCd:0});
-    if(!Number.isFinite(lock.readyAt))lock.readyAt=now+Math.max(0,Number(lock.windup)||0);return lock;
+  function clearPrismAimBeams(lock){
+    if(!Array.isArray(lock?.aimBeams))return;
+    for(const beam of lock.aimBeams)if(beam)beam.life=0;
+    lock.aimBeams.length=0;
   }
-  function acquirePrismTarget(lock,target){const now=state.time||0;lock.targetId=target.id;lock.readyAt=now+PRISM_ACQUISITION_SECONDS;lock.windup=PRISM_ACQUISITION_SECONDS;lock.lostTime=0;lock.heat=0;lock.tick=0;lock.visual=0;lock.augmentCd=.65;lock.pulseCd=.45;}
+  function sharedPrismLock(){
+    const now=state.time||0,lock=player.prismSharedLock||(player.prismSharedLock={targetId:null,windup:0,readyAt:now,lostTime:0,heat:0,tick:0,visual:0,augmentCd:0,aimBeams:[],attackStarted:false,attackFlash:0,flashVisual:0});
+    if(!Number.isFinite(lock.readyAt))lock.readyAt=now+Math.max(0,Number(lock.windup)||0);
+    if(!Array.isArray(lock.aimBeams))lock.aimBeams=[];
+    if(typeof lock.attackStarted!=='boolean')lock.attackStarted=false;
+    if(!Number.isFinite(lock.attackFlash))lock.attackFlash=0;
+    if(!Number.isFinite(lock.flashVisual))lock.flashVisual=0;
+    return lock;
+  }
+  function acquirePrismTarget(lock,target){
+    clearPrismAimBeams(lock);
+    const now=state.time||0;lock.targetId=target.id;lock.readyAt=now+PRISM_ACQUISITION_SECONDS;lock.windup=PRISM_ACQUISITION_SECONDS;lock.lostTime=0;lock.heat=0;lock.tick=0;lock.visual=0;lock.augmentCd=.65;lock.attackStarted=false;lock.attackFlash=0;lock.flashVisual=0;
+  }
   function sharedPrismTarget(dt=0){
     const lock=sharedPrismLock(),now=state.time||0;let target=lock.targetId?enemyById(lock.targetId):null;
     if(target&&!target.dead){const inside=Math.hypot(target.x-player.x,target.y-player.y)<=prismReleaseDistance();lock.lostTime=inside?0:lock.lostTime+Math.max(0,dt);if(inside||lock.lostTime<PRISM_RELEASE_GRACE_SECONDS)return target;}
     lock.targetId=null;target=nearestWeaponTarget('prism');
-    if(target)acquirePrismTarget(lock,target);else{lock.readyAt=now;lock.windup=0;lock.lostTime=0;lock.heat=Math.max(0,lock.heat-Math.max(0,dt)*2.2);}return target;
+    if(target)acquirePrismTarget(lock,target);else{clearPrismAimBeams(lock);lock.readyAt=now;lock.windup=0;lock.lostTime=0;lock.heat=Math.max(0,lock.heat-Math.max(0,dt)*2.2);lock.attackStarted=false;lock.attackFlash=0;}return target;
   }
   function pushPrismBeam(pos,index,count,target,beam){state.entities.beams.push({x1:pos.x,y1:pos.y,x2:target.x,y2:target.y,prismOriginIndex:index,prismOriginCount:count,prismTargetId:target.id,...beam});}
-  function prismRicochet(target,n,stage,damage){
-    const excluded=new Set([target.id]),targets=nearestEnemies(target.x,target.y,2,excluded,230+n*10);for(const other of targets){dealDamage(other,damage*(stage===2?.58:.42),{color:'#f4ddff',source:'prism-ricochet',canCrit:false});state.entities.beams.push({x1:target.x,y1:target.y,x2:other.x,y2:other.y,life:.16,max:.16,color:'#e7ccff',width:2.4*weaponSizeMultiplier()});}
+  function syncPrismAimBeams(lock,positions,target,count,size){
+    const progress=clamp(1-lock.windup/PRISM_ACQUISITION_SECONDS,0,1),width=Math.max(.9,(1.05+progress*1.35)*size),life=.18;
+    while(lock.aimBeams.length>count){const stale=lock.aimBeams.pop();if(stale)stale.life=0;}
+    positions.forEach((pos,index)=>{
+      let beam=lock.aimBeams[index];
+      if(!beam||beam.life<=0||!state.entities.beams.includes(beam)){
+        beam={x1:pos.x,y1:pos.y,x2:target.x,y2:target.y,life,max:life,color:'#bfaeff',width,prismOriginIndex:index,prismOriginCount:count,prismTargetId:target.id,prismAim:true};
+        state.entities.beams.push(beam);lock.aimBeams[index]=beam;
+      }else{
+        beam.x1=pos.x;beam.y1=pos.y;beam.x2=target.x;beam.y2=target.y;beam.life=life;beam.max=life;beam.color='#bfaeff';beam.width=width;beam.prismOriginIndex=index;beam.prismOriginCount=count;beam.prismTargetId=target.id;
+      }
+    });
+  }
+  function beginPrismAttack(lock,positions,target,count,size){
+    clearPrismAimBeams(lock);lock.attackStarted=true;lock.attackFlash=.22;lock.flashVisual=0;lock.visual=0;
+    shockwave(target.x,target.y,'#eadcff',30+count*4,.16,1.5);
+    for(const pos of positions)shockwave(pos.x,pos.y,'#d7c6ff',18*size,.12,1.1);
+  }
+  function prismRicochet(target,n,totalDamage){
+    const excluded=new Set([target.id]),targets=nearestEnemies(target.x,target.y,2,excluded,260+n*12);if(!targets.length)return;
+    let from=target;targets.forEach((other,index)=>{const damage=totalDamage*(index?.24:.30);dealDamage(other,damage,{color:'#f4ddff',source:'prism-ricochet',canCrit:false});state.entities.beams.push({x1:from.x,y1:from.y,x2:other.x,y2:other.y,life:.18,max:.18,color:index?'#d8c5ff':'#f2e7ff',width:(index?2.1:2.7)*weaponSizeMultiplier()});from=other;});
   }
   updateFocusedPrisms=function communityFocusedPrisms(dt,n){
     const count=prismBodyCount(n),positions=prismPositions(count),lock=sharedPrismLock(),size=weaponSizeMultiplier(),stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed(),target=sharedPrismTarget(dt);if(!target)return;
-    lock.windup=Math.max(0,lock.readyAt-(state.time||0));lock.tick-=dt;lock.visual-=dt;lock.augmentCd-=dt;lock.pulseCd-=dt;
-    if(lock.windup>0){if(lock.visual<=0){lock.visual=stressed?.18:.11;const alpha=1-lock.windup/PRISM_ACQUISITION_SECONDS;positions.forEach((pos,index)=>pushPrismBeam(pos,index,count,target,{life:.07,max:.07,color:'#c8b3ff',width:Math.max(.8,(1+alpha*1.2)*size)}));}trimOldest(state.entities.beams,entityCap('beams'));return;}
+    lock.windup=Math.max(0,lock.readyAt-(state.time||0));lock.tick-=dt;lock.visual-=dt;lock.augmentCd-=dt;lock.attackFlash=Math.max(0,lock.attackFlash-dt);lock.flashVisual-=dt;
+    if(lock.windup>0){lock.attackStarted=false;lock.attackFlash=0;syncPrismAimBeams(lock,positions,target,count,size);trimOldest(state.entities.beams,entityCap('beams'));return;}
+    if(!lock.attackStarted)beginPrismAttack(lock,positions,target,count,size);
     lock.heat=Math.min(3.2,lock.heat+dt);const stage=prismStage(lock.heat,n),mult=stage===2?(n>=6?4.45:n>=5?4.10:3.70):stage===1?1.85:1,color=stage===2?'#fff1a8':stage===1?'#ffae7f':'#c8b3ff',width=(2.6+stage*1.85+n*.14)*size,tickInterval=Math.max(.065,.25*hasteMult());
-    if(lock.tick<=0){lock.tick+=tickInterval;const damage=(2.65+n*.86)*mult;for(const pos of positions)dealDamage(target,damage,{color,source:'prism-focus'});if(state.weaponAugments?.prism&&stage>=1&&lock.pulseCd<=0){lock.pulseCd=Math.max(.28,.62*hasteMult());const pulse=(7+n*2.2)*(stage===2?1.8:1);dealDamage(target,pulse,{color:'#f7dcff',source:'prism-focus-pulse',canCrit:false});prismRicochet(target,n,stage,pulse);}}
+    if(lock.tick<=0){lock.tick+=tickInterval;const damage=(2.65+n*.86)*mult;for(const pos of positions)dealDamage(target,damage,{color,source:'prism-focus'});if(state.weaponAugments?.prism)prismRicochet(target,n,damage*positions.length);}
+    if(lock.attackFlash>0&&lock.flashVisual<=0){lock.flashVisual=.065;positions.forEach((pos,index)=>pushPrismBeam(pos,index,count,target,{life:.045,max:.045,color:'#fff8ff',width:Math.max(2.8,width*.82)}));}
     if(lock.visual<=0){lock.visual=stressed?.18:.11;positions.forEach((pos,index)=>pushPrismBeam(pos,index,count,target,{life:.075,max:.075,color,width:Math.max(1,width*.42)}));}
     if(state.weaponAugments?.prism&&stage===2&&lock.augmentCd<=0){lock.augmentCd=1.20;const len=(150+n*9)*Math.sqrt(size),hitHalfWidth=7.5*size,damage=16+n*4.2,base=Math.atan2(target.y-player.y,target.x-player.x);for(const offset of[-Math.PI/4,Math.PI/4]){const a=base+offset,x1=target.x-Math.cos(a)*len,y1=target.y-Math.sin(a)*len,x2=target.x+Math.cos(a)*len,y2=target.y+Math.sin(a)*len;state.entities.beams.push({x1,y1,x2,y2,life:.20,max:.20,color:'#fff6d7',width:hitHalfWidth*2});forEachNearbyEnemyCandidate(target.x,target.y,len+80,e=>{if(!e.dead&&segmentDistance(e.x,e.y,x1,y1,x2,y2)<e.r+hitHalfWidth)dealDamage(e,damage,{color:'#fff4dc',source:'prism-overheat-line',canCrit:false});});}dealDamage(target,damage*.85,{color:'#ffba72',source:'prism-overheat',canCrit:false});}
     trimOldest(state.entities.beams,entityCap('beams'));
@@ -123,6 +157,14 @@
   const previousForegroundCombat=window.drawForegroundCombat;
   if(typeof previousForegroundCombat==='function')window.drawForegroundCombat=function communityForegroundCombat(){previousForegroundCombat();drawStarlightProjectiles();};
 
+  const previousDrawEquippedOrbits=drawEquippedOrbits;
+  drawEquippedOrbits=function prismAttackStartOrbitFlash(x,y,t){
+    previousDrawEquippedOrbits(x,y,t);
+    const lock=player.prismSharedLock,flash=Math.max(0,Number(lock?.attackFlash)||0),n=weaponCount('prism');if(!n||flash<=0)return;
+    const visible=Math.floor(flash/.045)%2===0;if(!visible)return;const size=weaponSizeMultiplier();
+    for(const point of prismPositions(prismBodyCount(n))){const s=worldToScreen(point.x,point.y);ctx.save();ctx.translate(s.x,s.y);ctx.rotate(-point.a+t*.00057);ctx.scale(size*1.18,size*1.18);ctx.globalAlpha=clamp(flash/.22,.2,1);ctx.fillStyle='#fffaff';ctx.shadowBlur=28;ctx.shadowColor='#f2e5ff';ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(8,0);ctx.lineTo(0,10);ctx.lineTo(-8,0);ctx.closePath();ctx.fill();ctx.restore();}
+  };
+
   const oldAudit=window.stackfallBalanceAudit;
-  window.stackfallBalanceAudit=()=>({...oldAudit?.(),prism:{...(oldAudit?.().prism||{}),windup:PRISM_ACQUISITION_SECONDS},communityFeedback:{railBossPriority:true,criticalVisualPreservation:true,hostileProjectileShapes:true,bulwarkLowStackRecharge:true}});
+  window.stackfallBalanceAudit=()=>({...oldAudit?.(),prism:{...(oldAudit?.().prism||{}),windup:PRISM_ACQUISITION_SECONDS,ricochetPerTick:state.weaponAugments?.prism===true},communityFeedback:{railBossPriority:true,criticalVisualPreservation:true,hostileProjectileShapes:true,bulwarkLowStackRecharge:true,prismContinuousAim:true,prismAttackStartFlash:true}});
 })();
