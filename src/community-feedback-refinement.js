@@ -5,6 +5,9 @@
   if(STACK_EFFECTS.prism?.[0])STACK_EFFECTS.prism[0][1]='새 표적을 1초 조준한 뒤 집속한다.';
   const multishotStacks=()=>Math.min(2,Math.max(0,Number(stat('multiplicity'))||0));
   const clampScale=(n,table)=>table[Math.max(0,Math.min(table.length-1,n))]??1;
+  const PRISM_AUGMENT_COPY_KO='집속 광선이 주변 적에게 굴절 도약한다.',PRISM_AUGMENT_COPY_EN='Focused beams ricochet to nearby enemies.';
+  const prismAugmentDef=window.stackfallWeaponAugmentDefs?.prism;if(prismAugmentDef?.desc){prismAugmentDef.desc.ko=PRISM_AUGMENT_COPY_KO;prismAugmentDef.desc.en=PRISM_AUGMENT_COPY_EN;}
+  const prismLedger=document.querySelector('#abilityLedgerScreen');prismLedger?.addEventListener('click',event=>{if(!event.target.closest('.ledger-card[data-augment-key="prism"]'))return;queueMicrotask(()=>{for(const layer of prismLedger.querySelectorAll('.ledger-detail-layer:not(.hidden)')){const copy=layer.querySelector('.ledger-detail-card p');if(copy)copy.textContent=GAME_SETTINGS.language==='ko'?PRISM_AUGMENT_COPY_KO:PRISM_AUGMENT_COPY_EN;}});});
   let forcedCriticalResolution=false,criticalResolutionPreviousScale=1;
   function resetCommunityRunState(){player.communityCoreRicochetCycle=0;player.communityBulwarkCd=0;forcedCriticalResolution=false;criticalResolutionPreviousScale=1;if((Number(window.stackfallResolutionScale)||1)!==1){window.stackfallResolutionScale=1;resize();}}
   const previousResetGame=resetGame;resetGame=function communityResetGame(){const result=previousResetGame();resetCommunityRunState();return result;};
@@ -112,7 +115,7 @@
   updateFocusedPrisms=function communityFocusedPrisms(dt,n){
     const count=prismBodyCount(n),positions=prismPositions(count),lock=sharedPrismLock(),size=weaponSizeMultiplier(),stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed(),target=sharedPrismTarget(dt);if(!target)return;
     lock.windup=Math.max(0,lock.readyAt-(state.time||0));lock.tick-=dt;lock.visual-=dt;lock.augmentCd-=dt;lock.attackFlash=Math.max(0,lock.attackFlash-dt);lock.flashVisual-=dt;
-    if(lock.windup>0){lock.attackStarted=false;lock.attackFlash=0;syncPrismAimBeams(lock,positions,target,count,size);trimOldest(state.entities.beams,entityCap('beams'));return;}
+    if(lock.windup>0){lock.attackStarted=false;lock.attackFlash=0;trimOldest(state.entities.beams,Math.max(0,entityCap('beams')-count));syncPrismAimBeams(lock,positions,target,count,size);return;}
     if(!lock.attackStarted)beginPrismAttack(lock,positions,target,count,size);
     lock.heat=Math.min(3.2,lock.heat+dt);const stage=prismStage(lock.heat,n),mult=stage===2?(n>=6?4.45:n>=5?4.10:3.70):stage===1?1.85:1,color=stage===2?'#fff1a8':stage===1?'#ffae7f':'#c8b3ff',width=(2.6+stage*1.85+n*.14)*size,tickInterval=Math.max(.065,.25*hasteMult());
     if(lock.tick<=0){lock.tick+=tickInterval;const damage=(2.65+n*.86)*mult;for(const pos of positions)dealDamage(target,damage,{color,source:'prism-focus'});if(state.weaponAugments?.prism)prismRicochet(target,n,damage*positions.length);}
