@@ -40,14 +40,14 @@ function registerRunDamage(amount,source){
   const damage=Number(amount);
   if(!Number.isFinite(damage)||damage<=0||state.mode==='menu'||state.mode==='gameover')return;
   if(!state.runDamage)resetRunDamageStats();
-  const stats=state.runDamage,key=damageSourceWeaponKey(source),bucketSeconds=stats.bucketSeconds||DAMAGE_BUCKET_SECONDS,bucket=Math.max(0,Math.floor(Math.max(0,Number(state.time)||0)/bucketSeconds));
+  const stats=state.runDamage,key=damageSourceWeaponKey(source),bucketSeconds=stats.bucketSeconds||DAMAGE_BUCKET_SECONDS,sampleTime=Math.max(0,(Number(state.time)||0)-1e-6),bucket=Math.max(0,Math.floor(sampleTime/bucketSeconds));
   stats.total+=damage;
   stats.byWeapon[key]=(stats.byWeapon[key]||0)+damage;
   stats.timeline[bucket]=(stats.timeline[bucket]||0)+damage;
 }
 
 function runDamageSnapshot(){
-  const stats=state.runDamage||freshRunDamageStats(),totalSeconds=Math.max(0,Number(state.time)||0),bucketSeconds=stats.bucketSeconds||DAMAGE_BUCKET_SECONDS,bucketCount=Math.max(1,Math.ceil(totalSeconds/bucketSeconds));
+  const stats=state.runDamage||freshRunDamageStats(),totalSeconds=Math.max(0,Number(state.time)||0),bucketSeconds=stats.bucketSeconds||DAMAGE_BUCKET_SECONDS,bucketCount=Math.max(1,stats.timeline.length,Math.ceil(totalSeconds/bucketSeconds));
   const timeline=Array.from({length:bucketCount},(_,index)=>{
     const start=index*bucketSeconds,available=Math.max(0,totalSeconds-start),duration=Math.max(1,Math.min(bucketSeconds,available||1)),damage=Number(stats.timeline[index])||0;
     return{start,end:Math.min(totalSeconds,(index+1)*bucketSeconds),damage,dps:damage/duration};
