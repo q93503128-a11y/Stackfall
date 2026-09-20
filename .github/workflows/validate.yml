@@ -50,3 +50,5 @@ jobs:
         run: OWNERSHIP_GROUP=ci node scripts/source-ownership-contract.mjs
       - name: Check community feedback polish
         run: node scripts/community-feedback-contract.mjs
+      - name: Check damage result analytics
+        run: node scripts/damage-results-contract.mjs

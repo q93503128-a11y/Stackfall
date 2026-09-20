@@ -65,3 +65,13 @@ function localizedRow(table,key){return table?.[key]?.[GAME_SETTINGS.language]||
 function weaponText(key){const row=localizedRow(WEAPON_TEXT,key);return{name:row?.[0]||WEAPONS[key]?.name||key,role:row?.[1]||WEAPONS[key]?.role||'',desc:row?.[2]||WEAPONS[key]?.desc||''};}
 function passiveText(key){const row=localizedRow(PASSIVE_TEXT,key);return{name:row?.[0]||PASSIVES[key]?.name||key,desc:row?.[1]||PASSIVES[key]?.desc||''};}
 function stackEffectText(key,stack){const row=STACK_EFFECTS[key]?.[Math.max(0,Math.min(5,stack-1))]||['',''];return{name:row[0],desc:row[1]};}
+
+Object.assign(TEXT.ko,{
+  'gameover.damage.title':'피해 분석','gameover.damage.total':'총 피해량','gameover.damage.average':'평균 DPS','gameover.damage.peak':'최고 구간 DPS','gameover.damage.breakdown':'장비별 피해량','gameover.damage.trend':'딜 추이','gameover.damage.other':'기타 효과','gameover.damage.mvp':'MVP','gameover.damage.empty':'기록된 피해 없음'
+});
+Object.assign(TEXT.en,{
+  'gameover.damage.title':'DAMAGE ANALYSIS','gameover.damage.total':'TOTAL DAMAGE','gameover.damage.average':'AVERAGE DPS','gameover.damage.peak':'PEAK WINDOW DPS','gameover.damage.breakdown':'DAMAGE BY EQUIPMENT','gameover.damage.trend':'DAMAGE TREND','gameover.damage.other':'OTHER EFFECTS','gameover.damage.mvp':'MVP','gameover.damage.empty':'NO DAMAGE RECORDED'
+});
+Object.assign(TEXT.ja,{
+  'gameover.damage.title':'ダメージ分析','gameover.damage.total':'総ダメージ','gameover.damage.average':'平均DPS','gameover.damage.peak':'最高区間DPS','gameover.damage.breakdown':'装備別ダメージ','gameover.damage.trend':'ダメージ推移','gameover.damage.other':'その他の効果','gameover.damage.mvp':'MVP','gameover.damage.empty':'ダメージ記録なし'
+});
