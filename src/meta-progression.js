@@ -1,23 +1,33 @@
 (()=>{
   const STORAGE_KEY='stackfall.meta.v1';
   const INITIAL_WEAPONS=Object.freeze(['blade','ember','bulwark','gravity']);
+  const CURRENCY_KEYS=Object.freeze(['stardust','coreShard']);
   const sanitizeList=value=>Array.isArray(value)?[...new Set(value.filter(item=>typeof item==='string'))]:[];
+  const sanitizeNumber=value=>Math.max(0,Math.floor(Number(value)||0));
+  const sanitizeMap=value=>value&&typeof value==='object'&&!Array.isArray(value)?{...value}:{};
   function load(){
     try{
       const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
       const unlocked=[...new Set([...INITIAL_WEAPONS,...sanitizeList(saved.unlockedWeapons)])].filter(key=>key==='core'||WEAPONS[key]);
+      const currencies={stardust:0,coreShard:0,...sanitizeMap(saved.currencies)};
+      for(const key of CURRENCY_KEYS)currencies[key]=sanitizeNumber(currencies[key]);
+      const upgrades=sanitizeMap(saved.upgrades);
+      for(const key of Object.keys(upgrades))upgrades[key]=sanitizeNumber(upgrades[key]);
       return{
-        version:1,
+        version:2,
         unlockedWeapons:unlocked,
         clearedStages:sanitizeList(saved.clearedStages),
-        bestStageTimes:{...(saved.bestStageTimes||{})}
+        bestStageTimes:sanitizeMap(saved.bestStageTimes),
+        currencies,
+        upgrades,
+        lifetime:{runs:sanitizeNumber(saved.lifetime?.runs),kills:sanitizeNumber(saved.lifetime?.kills),bosses:sanitizeNumber(saved.lifetime?.bosses)}
       };
     }catch{
-      return{version:1,unlockedWeapons:[...INITIAL_WEAPONS],clearedStages:[],bestStageTimes:{}};
+      return{version:2,unlockedWeapons:[...INITIAL_WEAPONS],clearedStages:[],bestStageTimes:{},currencies:{stardust:0,coreShard:0},upgrades:{},lifetime:{runs:0,kills:0,bosses:0}};
     }
   }
   const meta=load();
-  function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(meta));}catch{}}
+  function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(meta));}catch{}window.renderStackfallMetaUi?.();}
   function isWeaponUnlocked(key){return key==='core'||meta.unlockedWeapons.includes(key);}
   function unlockWeapon(key){
     if(!WEAPONS[key]||isWeaponUnlocked(key))return false;
@@ -25,6 +35,19 @@
     if(typeof renderStarterOptions==='function')renderStarterOptions();
     return true;
   }
+  function currency(key){return sanitizeNumber(meta.currencies?.[key]);}
+  function grantCurrency(key,amount){
+    if(!CURRENCY_KEYS.includes(key))return 0;
+    const add=sanitizeNumber(amount);if(!add)return 0;
+    meta.currencies[key]=currency(key)+add;save();return add;
+  }
+  function spendCurrency(cost={}){
+    for(const key of CURRENCY_KEYS)if(currency(key)<sanitizeNumber(cost[key]))return false;
+    for(const key of CURRENCY_KEYS)meta.currencies[key]=currency(key)-sanitizeNumber(cost[key]);
+    save();return true;
+  }
+  function upgradeLevel(key){return sanitizeNumber(meta.upgrades?.[key]);}
+  function setUpgradeLevel(key,level){if(typeof key!=='string'||!key)return false;meta.upgrades[key]=sanitizeNumber(level);save();return true;}
   function stageStatus(stage){
     if(!stage)return'locked';
     if(meta.clearedStages.includes(stage.id))return'cleared';
@@ -33,21 +56,37 @@
     return stage.status||'planned';
   }
   function recordStageClear(stageId,timeSeconds){
-    const stage=window.stackfallStageById?.(stageId);if(!stage)return{newWeapons:[],firstClear:false,best:false};
+    const stage=window.stackfallStageById?.(stageId);if(!stage)return{newWeapons:[],firstClear:false,best:false,currency:{}};
     const firstClear=!meta.clearedStages.includes(stageId);
     if(firstClear)meta.clearedStages.push(stageId);
     const previous=Number(meta.bestStageTimes[stageId]),time=Math.max(0,Number(timeSeconds)||0),best=!Number.isFinite(previous)||time<previous;
     if(best)meta.bestStageTimes[stageId]=time;
-    const newWeapons=[];
-    for(const reward of stage.rewards||[])if(reward.type==='weapon'&&unlockWeapon(reward.key))newWeapons.push(reward.key);
+    const newWeapons=[],currencyReward={stardust:0,coreShard:0};
+    for(const reward of stage.rewards||[]){
+      if(reward.type==='weapon'&&unlockWeapon(reward.key))newWeapons.push(reward.key);
+      if(reward.type==='currency'&&(!reward.firstClearOnly||firstClear)){
+        const multiplier=reward.key==='stardust'?(window.stackfallCurrencyMultiplier?.()||1):1;
+        const amount=Math.max(0,Math.floor((Number(reward.amount)||0)*multiplier));
+        if(amount){meta.currencies[reward.key]=currency(reward.key)+amount;currencyReward[reward.key]=(currencyReward[reward.key]||0)+amount;}
+      }
+    }
+    meta.lifetime.bosses=sanitizeNumber(meta.lifetime.bosses)+1;
     save();
-    return{newWeapons,firstClear,best,bestTime:meta.bestStageTimes[stageId]};
+    return{newWeapons,firstClear,best,bestTime:meta.bestStageTimes[stageId],currency:currencyReward};
   }
+  function recordRun(kills=0){meta.lifetime.runs=sanitizeNumber(meta.lifetime.runs)+1;meta.lifetime.kills=sanitizeNumber(meta.lifetime.kills)+sanitizeNumber(kills);save();}
   window.STACKFALL_INITIAL_WEAPONS=INITIAL_WEAPONS;
+  window.STACKFALL_CURRENCY_KEYS=CURRENCY_KEYS;
   window.stackfallMeta=meta;
   window.stackfallSaveMeta=save;
   window.stackfallIsWeaponUnlocked=isWeaponUnlocked;
   window.stackfallUnlockWeapon=unlockWeapon;
+  window.stackfallCurrency=currency;
+  window.stackfallGrantCurrency=grantCurrency;
+  window.stackfallSpendCurrency=spendCurrency;
+  window.stackfallUpgradeLevel=upgradeLevel;
+  window.stackfallSetUpgradeLevel=setUpgradeLevel;
+  window.stackfallRecordRun=recordRun;
   window.stackfallStageStatus=stageStatus;
   window.stackfallRecordStageClear=recordStageClear;
 })();
