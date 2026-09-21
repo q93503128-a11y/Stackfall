@@ -137,3 +137,88 @@ Object.assign(TEXT.fr,{
   'stageClear.targetDown':'GARDIEN EFFONDRÉ','stageClear.operationComplete':'OPÉRATION TERMINÉE'
 });
 
+Object.assign(TEXT.ko,{
+  'profile.local':'LOCAL PILOT','profile.name':'개척자','profile.clears':'클리어',
+  'menu.upgradeKicker':'CORE DEVELOPMENT','menu.upgrade':'코어 성장','menu.upgradeDesc':'재화를 사용해 영구 능력과 장착 슬롯을 확장합니다.',
+  'currency.stardust':'성진','currency.coreShard':'코어 조각','currency.earned':'획득 재화',
+  'upgrade.kicker':'CORE DEVELOPMENT','upgrade.title':'코어 성장','upgrade.subtitle':'중앙 코어를 중심으로 영구 성장을 확장합니다.','upgrade.level':'레벨','upgrade.buy':'업그레이드','upgrade.maxed':'최대 레벨','upgrade.insufficient':'재화가 부족합니다.','upgrade.requires':'선행 업그레이드 필요 · {n}',
+  'upgrade.vitality.name':'생명 코어','upgrade.vitality.desc':'코어 외피를 강화해 모든 런의 최대 체력을 높인다.','upgrade.vitality.effect':'영구 최대 체력 +{n}%',
+  'upgrade.output.name':'출력 증폭기','upgrade.output.desc':'기본 출력 회로를 증폭해 모든 공격 피해를 높인다.','upgrade.output.effect':'영구 피해 +{n}%',
+  'upgrade.cycle.name':'가속 동기화','upgrade.cycle.desc':'무기 발동 회로의 지연을 줄여 공격 주기를 단축한다.','upgrade.cycle.effect':'영구 공격 주기 -{n}%',
+  'upgrade.magnet.name':'회수 자장','upgrade.magnet.desc':'결정과 경험치를 끌어당기는 기본 자장을 확장한다.','upgrade.magnet.effect':'영구 흡수 반경 +{n}',
+  'upgrade.salvage.name':'성진 회수기','upgrade.salvage.desc':'작전 종료와 엘리트 격파에서 회수하는 성진의 양을 늘린다.','upgrade.salvage.effect':'성진 획득량 +{n}%',
+  'upgrade.armor.name':'충격 격자','upgrade.armor.desc':'코어 프레임의 충격 분산율을 높여 받는 피해를 줄인다.','upgrade.armor.effect':'영구 피해 감소 +{n}%',
+  'upgrade.slot5.name':'장착 슬롯 V','upgrade.slot5.desc':'기본 무기를 제외한 장비 슬롯을 4칸에서 5칸으로 확장한다.','upgrade.slot5.effect':'장비 슬롯 5칸 해금',
+  'upgrade.slot6.name':'장착 슬롯 VI','upgrade.slot6.desc':'장비 슬롯을 최종 6칸으로 확장한다.','upgrade.slot6.effect':'장비 슬롯 6칸 해금'
+});
+Object.assign(TEXT.en,{
+  'profile.local':'LOCAL PILOT','profile.name':'Pioneer','profile.clears':'CLEARS',
+  'menu.upgradeKicker':'CORE DEVELOPMENT','menu.upgrade':'CORE DEVELOPMENT','menu.upgradeDesc':'Spend recovered resources on permanent stats and equipment slots.',
+  'currency.stardust':'STARDUST','currency.coreShard':'CORE SHARD','currency.earned':'RECOVERED',
+  'upgrade.kicker':'CORE DEVELOPMENT','upgrade.title':'CORE DEVELOPMENT','upgrade.subtitle':'Expand permanent growth around the central core.','upgrade.level':'LEVEL','upgrade.buy':'UPGRADE','upgrade.maxed':'MAX LEVEL','upgrade.insufficient':'Insufficient resources.','upgrade.requires':'Requires · {n}',
+  'upgrade.vitality.name':'Vital Core','upgrade.vitality.desc':'Reinforce the core shell to increase maximum health in every run.','upgrade.vitality.effect':'Permanent max HP +{n}%',
+  'upgrade.output.name':'Output Amplifier','upgrade.output.desc':'Amplify the base power circuit to increase all outgoing damage.','upgrade.output.effect':'Permanent damage +{n}%',
+  'upgrade.cycle.name':'Cycle Sync','upgrade.cycle.desc':'Reduce weapon-system delay and shorten attack cycles.','upgrade.cycle.effect':'Permanent attack cycle -{n}%',
+  'upgrade.magnet.name':'Recovery Field','upgrade.magnet.desc':'Expand the core field that draws experience and crystals inward.','upgrade.magnet.effect':'Permanent pickup radius +{n}',
+  'upgrade.salvage.name':'Stardust Reclaimer','upgrade.salvage.desc':'Recover more Stardust from completed runs and elite kills.','upgrade.salvage.effect':'Stardust gain +{n}%',
+  'upgrade.armor.name':'Impact Lattice','upgrade.armor.desc':'Improve shock dispersion across the core frame.','upgrade.armor.effect':'Permanent damage reduction +{n}%',
+  'upgrade.slot5.name':'Equipment Slot V','upgrade.slot5.desc':'Expand non-basic equipment capacity from four slots to five.','upgrade.slot5.effect':'Unlock 5 equipment slots',
+  'upgrade.slot6.name':'Equipment Slot VI','upgrade.slot6.desc':'Expand non-basic equipment capacity to the final six slots.','upgrade.slot6.effect':'Unlock 6 equipment slots'
+});
+Object.assign(TEXT.ja,{
+  'profile.local':'LOCAL PILOT','profile.name':'開拓者','profile.clears':'クリア',
+  'menu.upgradeKicker':'CORE DEVELOPMENT','menu.upgrade':'コア成長','menu.upgradeDesc':'資源を使って恒久能力と装備スロットを拡張します。',
+  'currency.stardust':'星塵','currency.coreShard':'コア欠片','currency.earned':'獲得資源',
+  'upgrade.kicker':'CORE DEVELOPMENT','upgrade.title':'コア成長','upgrade.subtitle':'中央コアを中心に恒久成長を拡張します。','upgrade.level':'レベル','upgrade.buy':'強化','upgrade.maxed':'最大レベル','upgrade.insufficient':'資源が不足しています。','upgrade.requires':'前提強化 · {n}',
+  'upgrade.vitality.name':'生命コア','upgrade.vitality.desc':'コア外殻を強化し、全ランの最大体力を増加。','upgrade.vitality.effect':'恒久最大体力 +{n}%',
+  'upgrade.output.name':'出力増幅器','upgrade.output.desc':'基礎出力回路を増幅し、全攻撃のダメージを増加。','upgrade.output.effect':'恒久ダメージ +{n}%',
+  'upgrade.cycle.name':'加速同期','upgrade.cycle.desc':'武器システムの遅延を減らし攻撃周期を短縮。','upgrade.cycle.effect':'恒久攻撃周期 -{n}%',
+  'upgrade.magnet.name':'回収磁場','upgrade.magnet.desc':'経験値と結晶を引き寄せる磁場を拡張。','upgrade.magnet.effect':'恒久吸収半径 +{n}',
+  'upgrade.salvage.name':'星塵回収器','upgrade.salvage.desc':'作戦終了とエリート撃破で得る星塵を増加。','upgrade.salvage.effect':'星塵獲得量 +{n}%',
+  'upgrade.armor.name':'衝撃格子','upgrade.armor.desc':'コアフレームの衝撃分散性能を強化。','upgrade.armor.effect':'恒久被ダメージ軽減 +{n}%',
+  'upgrade.slot5.name':'装備スロット V','upgrade.slot5.desc':'基本武器を除く装備枠を4から5へ拡張。','upgrade.slot5.effect':'装備スロット5枠解放',
+  'upgrade.slot6.name':'装備スロット VI','upgrade.slot6.desc':'装備枠を最終6枠へ拡張。','upgrade.slot6.effect':'装備スロット6枠解放'
+});
+Object.assign(TEXT['zh-CN'],{
+  'profile.local':'LOCAL PILOT','profile.name':'开拓者','profile.clears':'通关',
+  'menu.upgradeKicker':'CORE DEVELOPMENT','menu.upgrade':'核心成长','menu.upgradeDesc':'使用资源强化永久能力并扩展装备槽。',
+  'currency.stardust':'星尘','currency.coreShard':'核心碎片','currency.earned':'获得资源',
+  'upgrade.kicker':'CORE DEVELOPMENT','upgrade.title':'核心成长','upgrade.subtitle':'围绕中央核心扩展永久成长。','upgrade.level':'等级','upgrade.buy':'升级','upgrade.maxed':'已满级','upgrade.insufficient':'资源不足。','upgrade.requires':'需要前置升级 · {n}',
+  'upgrade.vitality.name':'生命核心','upgrade.vitality.desc':'强化核心外壳，提高每次作战的最大生命。','upgrade.vitality.effect':'永久最大生命 +{n}%',
+  'upgrade.output.name':'输出增幅器','upgrade.output.desc':'增强基础输出回路，提高所有攻击伤害。','upgrade.output.effect':'永久伤害 +{n}%',
+  'upgrade.cycle.name':'加速同步','upgrade.cycle.desc':'降低武器系统延迟，缩短攻击周期。','upgrade.cycle.effect':'永久攻击周期 -{n}%',
+  'upgrade.magnet.name':'回收磁场','upgrade.magnet.desc':'扩大吸引经验与结晶的基础磁场。','upgrade.magnet.effect':'永久拾取半径 +{n}',
+  'upgrade.salvage.name':'星尘回收器','upgrade.salvage.desc':'提高作战结束和精英击杀获得的星尘。','upgrade.salvage.effect':'星尘获取 +{n}%',
+  'upgrade.armor.name':'冲击晶格','upgrade.armor.desc':'提高核心框架的冲击分散能力。','upgrade.armor.effect':'永久减伤 +{n}%',
+  'upgrade.slot5.name':'装备槽 V','upgrade.slot5.desc':'将基础武器之外的装备槽从4扩展至5。','upgrade.slot5.effect':'解锁5个装备槽',
+  'upgrade.slot6.name':'装备槽 VI','upgrade.slot6.desc':'将装备槽最终扩展至6。','upgrade.slot6.effect':'解锁6个装备槽'
+});
+Object.assign(TEXT.es,{
+  'profile.local':'LOCAL PILOT','profile.name':'Pionero','profile.clears':'COMPLETADAS',
+  'menu.upgradeKicker':'CORE DEVELOPMENT','menu.upgrade':'DESARROLLO DEL NÚCLEO','menu.upgradeDesc':'Usa recursos para mejorar estadísticas permanentes y ranuras.',
+  'currency.stardust':'POLVO ESTELAR','currency.coreShard':'FRAGMENTO DE NÚCLEO','currency.earned':'RECURSOS',
+  'upgrade.kicker':'CORE DEVELOPMENT','upgrade.title':'DESARROLLO DEL NÚCLEO','upgrade.subtitle':'Expande el crecimiento permanente alrededor del núcleo.','upgrade.level':'NIVEL','upgrade.buy':'MEJORAR','upgrade.maxed':'NIVEL MÁX.','upgrade.insufficient':'Recursos insuficientes.','upgrade.requires':'Requiere · {n}',
+  'upgrade.vitality.name':'Núcleo Vital','upgrade.vitality.desc':'Refuerza el núcleo para aumentar la vida máxima en cada partida.','upgrade.vitality.effect':'Vida máxima permanente +{n}%',
+  'upgrade.output.name':'Amplificador','upgrade.output.desc':'Aumenta la potencia base de todos los ataques.','upgrade.output.effect':'Daño permanente +{n}%',
+  'upgrade.cycle.name':'Sincronía','upgrade.cycle.desc':'Reduce el retraso de los sistemas de armas.','upgrade.cycle.effect':'Ciclo de ataque permanente -{n}%',
+  'upgrade.magnet.name':'Campo de Recuperación','upgrade.magnet.desc':'Amplía el campo que atrae experiencia y cristales.','upgrade.magnet.effect':'Radio de recogida permanente +{n}',
+  'upgrade.salvage.name':'Recolector Estelar','upgrade.salvage.desc':'Recupera más polvo estelar al terminar partidas y vencer élites.','upgrade.salvage.effect':'Ganancia de polvo estelar +{n}%',
+  'upgrade.armor.name':'Malla de Impacto','upgrade.armor.desc':'Mejora la dispersión de impactos del armazón.','upgrade.armor.effect':'Reducción de daño permanente +{n}%',
+  'upgrade.slot5.name':'Ranura V','upgrade.slot5.desc':'Amplía de cuatro a cinco las ranuras de equipo no básico.','upgrade.slot5.effect':'Desbloquea 5 ranuras',
+  'upgrade.slot6.name':'Ranura VI','upgrade.slot6.desc':'Amplía el equipo no básico hasta seis ranuras.','upgrade.slot6.effect':'Desbloquea 6 ranuras'
+});
+Object.assign(TEXT.fr,{
+  'profile.local':'LOCAL PILOT','profile.name':'Pionnier','profile.clears':'TERMINÉES',
+  'menu.upgradeKicker':'CORE DEVELOPMENT','menu.upgrade':'DÉVELOPPEMENT DU CŒUR','menu.upgradeDesc':'Dépensez des ressources pour les bonus permanents et les emplacements.',
+  'currency.stardust':'POUSSIÈRE D’ÉTOILE','currency.coreShard':'FRAGMENT DE CŒUR','currency.earned':'RESSOURCES',
+  'upgrade.kicker':'CORE DEVELOPMENT','upgrade.title':'DÉVELOPPEMENT DU CŒUR','upgrade.subtitle':'Développez la progression permanente autour du cœur central.','upgrade.level':'NIVEAU','upgrade.buy':'AMÉLIORER','upgrade.maxed':'NIVEAU MAX','upgrade.insufficient':'Ressources insuffisantes.','upgrade.requires':'Requiert · {n}',
+  'upgrade.vitality.name':'Cœur Vital','upgrade.vitality.desc':'Renforce la coque du cœur et augmente la vie maximale de chaque partie.','upgrade.vitality.effect':'PV max permanents +{n}%',
+  'upgrade.output.name':'Amplificateur','upgrade.output.desc':'Amplifie la puissance de base de toutes les attaques.','upgrade.output.effect':'Dégâts permanents +{n}%',
+  'upgrade.cycle.name':'Synchronisation','upgrade.cycle.desc':'Réduit le délai des systèmes d’armes.','upgrade.cycle.effect':'Cycle d’attaque permanent -{n}%',
+  'upgrade.magnet.name':'Champ de Récupération','upgrade.magnet.desc':'Étend le champ qui attire expérience et cristaux.','upgrade.magnet.effect':'Rayon de collecte permanent +{n}',
+  'upgrade.salvage.name':'Récupérateur Stellaire','upgrade.salvage.desc':'Récupère plus de poussière après les parties et les élites.','upgrade.salvage.effect':'Gain de poussière +{n}%',
+  'upgrade.armor.name':'Treillis d’Impact','upgrade.armor.desc':'Améliore la dispersion des chocs du châssis.','upgrade.armor.effect':'Réduction permanente des dégâts +{n}%',
+  'upgrade.slot5.name':'Emplacement V','upgrade.slot5.desc':'Passe de quatre à cinq emplacements d’équipement hors arme de base.','upgrade.slot5.effect':'Débloque 5 emplacements',
+  'upgrade.slot6.name':'Emplacement VI','upgrade.slot6.desc':'Étend l’équipement hors arme de base à six emplacements.','upgrade.slot6.effect':'Débloque 6 emplacements'
+});
+
