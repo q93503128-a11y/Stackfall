@@ -8,7 +8,7 @@ const BOSS_NAMES={
 Object.assign(TEXT.ko,{'pause.restart':'게임 다시 시작','gameover.title':'게임 오버'});Object.assign(TEXT.en,{'pause.restart':'RESTART GAME','gameover.title':'GAME OVER'});Object.assign(TEXT.ja,{'pause.restart':'ゲームをやり直す','gameover.title':'ゲームオーバー'});if(TEXT['zh-CN'])Object.assign(TEXT['zh-CN'],{'gameover.title':'游戏结束'});
 const bossLang=()=>GAME_SETTINGS?.language||'ko';
 const bossName=id=>BOSS_NAMES[id]?.[bossLang()]||BOSS_NAMES[id]?.en||id;
-bossDisplayName=function(enemy){if(!enemy)return'';let name=enemy.eliteForm?bossName(enemy.eliteForm):(enemy.name||'');if(enemy.twinGroup)name+=enemy.twinSide<0?' α':' β';return name;};
+bossDisplayName=function(enemy){if(!enemy)return'';let name=enemy.kind==='stage-boss'?(enemy.name||bossName(enemy.eliteForm)):enemy.eliteForm?bossName(enemy.eliteForm):(enemy.name||'');if(enemy.twinGroup)name+=enemy.twinSide<0?' α':' β';return name;};
 const BOSS_POOLS={boss:['eclipse','seraph','pulsar','leviathan','archivist','heliarch','tempest','nullengine'],mini:['knight','warden','executioner','colossus','harvester','mirror'],void:['maw','oracle','weaver','grave','paradox'],apex:['chronophage','starforge','lastconstellation']};
 const BOSS_STATS={
   eclipse:{color:'#ff72cb',hp:1,speed:1,damage:1,r:1},seraph:{color:'#91ffe7',hp:.90,speed:1.10,damage:.92,r:.96},pulsar:{color:'#67b7ff',hp:1.08,speed:.92,damage:1.02,r:1.04},leviathan:{color:'#ff9b68',hp:1.22,speed:.76,damage:1.12,r:1.13},archivist:{color:'#d7b0ff',hp:.97,speed:.88,damage:.96,r:1.02},heliarch:{color:'#ffd66f',hp:1.05,speed:.94,damage:1.06,r:1.06},tempest:{color:'#76d9ff',hp:.94,speed:1.14,damage:.98,r:.96},nullengine:{color:'#a9b4d8',hp:1.16,speed:.82,damage:1.08,r:1.10},
