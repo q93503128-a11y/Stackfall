@@ -71,7 +71,7 @@ expect('apex has explicit set pieces',bosses.includes('function startChronoPursu
 expect('apex legacies are unique active systems',bosses.includes('function updateChronophageLegacy')&&bosses.includes('function updateStarforgeLegacy')&&bosses.includes('function updateConstellationLegacy')&&expansion.includes('시간 탈취')&&expansion.includes('미니어처 항성')&&expansion.includes('살아 있는 성좌망'));
 expect('apex has explicit phase variants',bosses.includes('function apexPhaseTransition')&&bosses.includes('function apexVariantAttack')&&bosses.includes('function apexPhaseDirector')&&combat.includes('초월체 · P${phase}'));
 expect('apex arena is larger and opening separation is enforced',expansion.includes('expandedApexEncounter')&&expansion.includes('compactDevice()?350:540')&&expansion.includes("options?.owner!=='apex-entry'")&&expansion.includes('minDistance=arena.r*.54'));
-expect('player hit grace is shorter',expansion.includes('shorterHitInvulnerability')&&expansion.includes('Math.min(player.invuln,.62)'));
+expect('player hit grace is shorter',expansion.includes('shorterHitInvulnerability')&&expansion.includes('Math.min(player.invuln,.5)'));
 expect('opening boss relief',difficulty.includes('enemy.hp*=.78')&&difficulty.includes('enemy.damage*=.72')&&difficulty.includes('Math.ceil(count*.72)')&&difficulty.includes('dt/1.22'));
 expect('early ranged suppression',difficulty.includes('function openingRangedChance')&&difficulty.includes('clamp((t-90)/900,0,.09)')&&difficulty.includes('rangedAlive>=2?0')&&difficulty.includes('base*difficulty*.45'));
 expect('ranged shots retain centreline',bosses.includes("shots===3?[-.14,0,.14]:shots===2?[0,"));
