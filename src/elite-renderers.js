@@ -26,7 +26,12 @@ function drawLastConstellationApex(e,t,enraged){
 function drawEliteShape(e){
   const f=e.eliteForm||e.apexForm||e.variant,t=e.phase,enraged=e.kind==='apex'&&e.apexPhase===2;
   ctx.save();ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;ctx.lineWidth=e.kind==='apex'?4:3;ctx.lineCap='round';ctx.lineJoin='round';
-  if(f==='dreadnought'){
+  if(f==='collapse-warden'){
+    const r=e.r,phase=e.stagePhase||1;ctx.rotate(t*.035);ctx.fillStyle=e.hit?'#fff':'#0b1028';ctx.strokeStyle=e.hit?'#fff':'#aeb9ff';ctx.lineWidth=4;
+    for(let ring=0;ring<3;ring++){ctx.save();ctx.rotate((ring%2?1:-1)*t*(.035+ring*.012));ctx.globalAlpha=.78-ring*.16;ctx.setLineDash(ring?[8+ring*3,7]:[]);ctx.beginPath();ctx.arc(0,0,r*(.72+ring*.34),0,TAU);ctx.stroke();ctx.restore();}ctx.setLineDash([]);ctx.globalAlpha=1;
+    for(let i=0;i<6;i++){ctx.save();ctx.rotate(i*TAU/6+t*.025);ctx.fillStyle=i%2?'#354177':'#6170b9';ctx.beginPath();ctx.moveTo(r*.26,-r*.18);ctx.lineTo(r*1.18,-r*.36);ctx.lineTo(r*1.48,0);ctx.lineTo(r*1.18,r*.36);ctx.lineTo(r*.26,r*.18);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
+    ctx.fillStyle='#080c1b';ctx.beginPath();ctx.arc(0,0,r*.58,0,TAU);ctx.fill();ctx.stroke();ctx.fillStyle=phase>=3?'#ffffff':phase===2?'#d9ddff':'#aab7ff';drawStarPath(6,r*.17,r*.42,t*.04);ctx.fill();ctx.strokeStyle='rgba(232,238,255,.78)';ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(-r*.42,0);ctx.lineTo(r*.42,0);ctx.moveTo(0,-r*.42);ctx.lineTo(0,r*.42);ctx.stroke();
+  }else if(f==='dreadnought'){
     const r=e.r,aim=Math.atan2(player.y-e.y,player.x-e.x);ctx.rotate(aim);ctx.fillStyle=e.hit?'#fff':'#180b0d';ctx.strokeStyle=e.hit?'#fff':'#ff7557';ctx.lineWidth=4;
     ctx.beginPath();ctx.moveTo(r*1.62,0);ctx.lineTo(r*.62,-r*.54);ctx.lineTo(-r*.72,-r*.70);ctx.lineTo(-r*1.35,-r*.34);ctx.lineTo(-r*1.62,0);ctx.lineTo(-r*1.35,r*.34);ctx.lineTo(-r*.72,r*.70);ctx.lineTo(r*.62,r*.54);ctx.closePath();ctx.fill();ctx.stroke();
     for(const side of[-1,1]){ctx.fillStyle='#3a1110';ctx.beginPath();ctx.moveTo(r*.18,side*r*.50);ctx.lineTo(-r*.72,side*r*1.02);ctx.lineTo(-r*1.28,side*r*.86);ctx.lineTo(-r*.82,side*r*.47);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#ffad6f';ctx.fillRect(-r*.94,side*r*.84-r*.07,r*.42,r*.14);}
