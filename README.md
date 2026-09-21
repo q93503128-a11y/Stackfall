@@ -323,7 +323,7 @@ node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-r
 
 Stage 1, **Collapse Frontier / 붕괴 전초구역**, is a boss-arrival operation: fixed incidents occur at 90/210/300/420/500 seconds and the Collapse Frontier Warden enters at exactly 600 seconds. The timer does not force a clear or timeout; the run ends only on defeat or after the boss is killed. Boss death plays a short destruction/operation-complete cinematic before the result screen, then records persistent progress and unlocks the Comet Lance.
 
-`src/meta-progression.js` now persists clears, best times, weapon unlocks, Stardust, Core Shards, lifetime stats, and permanent upgrade levels. Fresh saves begin with four starter weapons. The basic Core weapon is separate from equipment capacity: a fresh profile has four non-basic equipment slots, while permanent Slot V and Slot VI upgrades expand that capacity to five and six. `src/meta-upgrades.js` applies bounded permanent health, damage, cycle, pickup, mitigation, and Stardust-yield upgrades.
+`src/meta-progression.js` now persists clears, per-stage clear counts, best times, weapon unlocks, Stardust, Core Shards, lifetime stats, and permanent upgrade levels. Fresh saves begin with four starter weapons. The basic Core weapon is separate from equipment capacity: a fresh profile has four non-basic equipment slots, while permanent Slot V and Slot VI upgrades expand that capacity to five and six. Stage 1 guarantees one Core Shard on first clear and grants another after every three repeat clears; Apex kills remain another repeatable Core Shard source. `src/meta-upgrades.js` applies bounded permanent health, damage, cycle, pickup, mitigation, and Stardust-yield upgrades.
 
 #### Galaxy map
 
