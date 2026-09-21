@@ -188,11 +188,13 @@
 
 ## Run modes
 
-- `endless`: current playable default; no fixed end, random world events enabled, all enemy families available, Apex every 600 seconds.
-- `stage`: finite-run configuration used by the upcoming galaxy map and stage runtime. Random repeating world events are disabled in the mode model so stages can use fixed event schedules.
-- `stage-01`: currently a planned ~10 minute catalog shell only. Its enemy set, gimmicks, fixed events, boss, unlocks, and challenges are filled during the Stage 1 implementation pass.
+- `endless`: the default infinite mode. Random world events remain enabled, all enemy families are available, and Apex encounters recur every 600 seconds.
+- `stage`: finite operations driven by stage-owned enemy pools and fixed event timelines. Random repeating world events and Apex scheduling are suppressed while a stage run is active.
+- `stage-01` — **Collapse Frontier / 붕괴 전초구역**: a playable 600-second operation. Shard Feeder starts immediately, Rift Dart enters at 90 seconds, Debris Bombardier at 210 seconds, and Collapse Bulwark at 330 seconds. Fixed incidents occur at 90/210/300/420/500 seconds, with the Collapse Frontier Warden spawning at 540 seconds.
+- Clearing Stage 1 records the clear/best time and permanently unlocks the Comet Lance.
+- Fresh saves begin with four unlocked starter weapons: Pulse Blade, Starlight Caster, Radiant Bulwark, and Gravity Well. Locked weapons do not appear in starter selection or level-up acquisition.
 
-### Galaxy map shell
+### Galaxy map
 
-The main menu exposes `ENDLESS` and a separate galaxy map. Stage nodes are generated from the stage catalog and display their metadata in a dedicated detail panel rather than placing dense text on the map. The layout is two-column on wider screens and stacked on compact/mobile screens. Planned nodes are selectable for inspection but cannot launch until their finite-stage runtime exists.
+The main menu exposes `ENDLESS` and a separate galaxy map. Stage nodes come from the stage catalog while availability and cleared state come from persistent meta progression. Available/cleared nodes can launch; future planned or progression-locked nodes can be inspected but not launched. The layout stays two-column on wider screens and stacks the detail panel below the map on compact/mobile screens.
 
