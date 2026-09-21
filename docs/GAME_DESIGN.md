@@ -393,3 +393,10 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - The map and operation details are separated: star-shaped nodes and constellation links stay on the map, while the detail panel carries game time, threat, unlock progress, boss, and launch state. Internal gimmick/event counts are not exposed as stage-detail stats.
 - Starter weapon and difficulty selection are shared by Stage and Endless in the sortie-preparation screen immediately before launch. Desktop keeps map and details side by side; compact/mobile layouts stack the detail sheet below the map.
 
+### Stage enemy and boss identity rules
+
+- Stage backgrounds are not palette swaps of Endless. Each stage owns a recognizable spatial concept, major silhouettes/landmarks, and environmental composition; Stage 1 uses a ruined defense gate, severed route lanes, wreckage, and a fractured frontier body.
+- Normal enemies may be reused between stages. A new stage does **not** require an entirely new trash roster; new common enemies should be introduced periodically and then may join later pools where appropriate.
+- Every named miniboss, boss, Void Rift boss, and stage final boss must have both a dedicated silhouette branch and a dedicated combat-pattern branch.
+- Apex encounters require a stronger identity layer: unique signature attacks, set-piece behavior, silhouette, arena behavior, and legacy/reward impact rather than stat or projectile-color swaps.
+
