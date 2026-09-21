@@ -5,18 +5,20 @@
   const sanitizeList=value=>Array.isArray(value)?[...new Set(value.filter(item=>typeof item==='string'))]:[];
   const sanitizeNumber=value=>Math.max(0,Math.floor(Number(value)||0));
   const sanitizeMap=value=>value&&typeof value==='object'&&!Array.isArray(value)?{...value}:{};
+  function canonicalClearedStages(value){const saved=new Set(sanitizeList(value)),accepted=[];for(const stage of [...(window.STACKFALL_STAGE_CATALOG||[])].sort((a,b)=>a.order-b.order)){if(!saved.has(stage.id))continue;const previous=stage.requirements?.previous;if(previous&&!accepted.includes(previous))continue;accepted.push(stage.id);}return accepted;}
+  function progressionUnlockedWeapons(clearedStages){const unlocked=new Set(INITIAL_WEAPONS);for(const stage of window.STACKFALL_STAGE_CATALOG||[]){if(!clearedStages.includes(stage.id))continue;for(const reward of stage.rewards||[])if(reward.type==='weapon'&&WEAPONS[reward.key])unlocked.add(reward.key);}return[...unlocked];}
   function load(){
     try{
       const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
-      const unlocked=[...new Set([...INITIAL_WEAPONS,...sanitizeList(saved.unlockedWeapons)])].filter(key=>key==='core'||WEAPONS[key]);
+      const clearedStages=canonicalClearedStages(saved.clearedStages),unlocked=progressionUnlockedWeapons(clearedStages);
       const currencies={stardust:0,coreShard:0,...sanitizeMap(saved.currencies)};
       for(const key of CURRENCY_KEYS)currencies[key]=sanitizeNumber(currencies[key]);
       const upgrades=sanitizeMap(saved.upgrades);
       for(const key of Object.keys(upgrades))upgrades[key]=sanitizeNumber(upgrades[key]);
       return{
-        version:2,
+        version:3,
         unlockedWeapons:unlocked,
-        clearedStages:sanitizeList(saved.clearedStages),
+        clearedStages,
         bestStageTimes:sanitizeMap(saved.bestStageTimes),
         stageClearCounts:sanitizeMap(saved.stageClearCounts),
         currencies,
@@ -24,7 +26,7 @@
         lifetime:{runs:sanitizeNumber(saved.lifetime?.runs),kills:sanitizeNumber(saved.lifetime?.kills),bosses:sanitizeNumber(saved.lifetime?.bosses)}
       };
     }catch{
-      return{version:2,unlockedWeapons:[...INITIAL_WEAPONS],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},lifetime:{runs:0,kills:0,bosses:0}};
+      return{version:3,unlockedWeapons:[...INITIAL_WEAPONS],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},lifetime:{runs:0,kills:0,bosses:0}};
     }
   }
   const meta=load();
@@ -74,7 +76,7 @@
       }
     }
     const repeatClearCount=Math.max(0,clearCount-1);
-    if(repeatClearCount>0&&repeatClearCount%3===0){
+    if(stageId==='stage-01'&&repeatClearCount>0&&repeatClearCount%3===0){
       meta.currencies.coreShard=currency('coreShard')+1;
       currencyReward.coreShard=(currencyReward.coreShard||0)+1;
     }
@@ -97,4 +99,5 @@
   window.stackfallRecordRun=recordRun;
   window.stackfallStageStatus=stageStatus;
   window.stackfallRecordStageClear=recordStageClear;
+  save();
 })();

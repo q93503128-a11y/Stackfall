@@ -9,7 +9,9 @@ const checks=[
  ['stable normalizer rejects injected locked weapon choices',progression.includes("c.kind==='weapon'&&window.stackfallIsWeaponUnlocked&&!window.stackfallIsWeaponUnlocked(c.key)")],
  ['stable fallback pool rejects locked weapons',progression.includes("w.starter===false||(window.stackfallIsWeaponUnlocked&&!window.stackfallIsWeaponUnlocked(key))")],
  ['fresh profile still exposes exactly four starter weapons',meta.includes("INITIAL_WEAPONS=Object.freeze(['blade','ember','bulwark','gravity'])")],
+ ['saved unlocks are rebuilt from valid cleared-stage rewards',meta.includes('function canonicalClearedStages(value)')&&meta.includes('function progressionUnlockedWeapons(clearedStages)')&&meta.includes("if(reward.type==='weapon'&&WEAPONS[reward.key])unlocked.add(reward.key)")&&!meta.includes('...sanitizeList(saved.unlockedWeapons)')],
  ['Nebula Boomerang is only granted by Stage 2 progression',catalog.includes("id:'stage-02'")&&catalog.includes("rewards:[{type:'weapon',key:'arc'}")&&!catalog.slice(catalog.indexOf("id:'stage-01'"),catalog.indexOf("id:'stage-02'")).includes("key:'arc'")],
+ ['repeat Core Shard cadence belongs only to Stage 1',meta.includes("if(stageId==='stage-01'&&repeatClearCount>0&&repeatClearCount%3===0)")],
  ['choice pool still obeys unlocked equipment capacity',feature.includes("limit=window.stackfallEquipmentSlotLimit?.()||4")&&progression.includes("limit=window.stackfallEquipmentSlotLimit?.()||4")],
  ['level-choice owners load after settings and progression remains final owner',index.indexOf('src/settings.js')<index.indexOf('src/progression-expansion.js')&&index.indexOf('src/feature-pack.js')<index.indexOf('src/progression-expansion.js')]
 ];

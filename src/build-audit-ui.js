@@ -5,9 +5,9 @@
     comet:[['결정 장창','장거리 관통 혜성 창 1개 발사.'],['이중 궤적','혜성 창 2개 동시 발사.'],['심층 관통','창 크기와 관통 횟수 증가.'],['혜성 파편','적중 시 파편 4개 방출.'],['잔광 궤도','비행 경로에 지속 피해.'],['대충돌','소멸 지점에 대형 폭발.']],
     arc:[['성운 비행','사거리 안 가장 먼 적을 타격하고 귀환한다.'],['쌍곡선','칼날 +1.'],['광폭 곡선','곡선 폭과 칼날 판정 증가.'],['귀환 절단','귀환 타격 피해 ×1.38.'],['잔광 띠','왕복 경로에 지속 피해.'],['삼중 나선','칼날 +1.']],
     blade:[['월광 기동','광자 칼날 1개 공전.'],['쌍월 궤도','광자 칼날 +1.'],['가속 궤도','공전 속도와 공격 반경 증가.'],['성흔 파동','적중 지점에서 관통 절단파 발사.'],['삼월식','광자 칼날 +1.'],['천체 분쇄기','연쇄 처치마다 별빛 폭발.']],
-    bulwark:[['성광 피막','최대 체력과 피해 감소 증가.'],['겹빛 장벽','피해 감소율 추가 증가.'],['재충전 장벽','일정 시간마다 보호막 6 충전.'],['보복 장막','피격 시 주변 충격파.'],['요새 장막','보호막 용량과 충전량 증가.'],['천체 성벽','강한 보호막을 주기적으로 충전.']],
+    bulwark:[['성광 피막','피해 감소와 보호막 재충전.'],['겹빛 장벽','최대 체력·피해 감소·재충전 강화.'],['재충전 장벽','보호막 용량과 충전량 증가.'],['보복 장막','피격 시 주변 충격파.'],['요새 장막','보호막 용량과 충전이 크게 강화.'],['천체 성벽','빠른 재충전과 강한 추가 충전.']],
     gravity:[['특이점 씨앗','중력 우물 1개 생성.'],['조석 고정','흡입 반경과 흡입력 증가.'],['장수 특이점','지속시간 증가.'],['붕괴핵','중심부 지속 피해.'],['압축 붕괴','중심 피해와 흡입력 추가 증가.'],['쌍둥이 특이점','중력 우물 +1.']],
-    prism:[['점화 광선','새 표적을 0.5초 조준한 뒤 집속한다.'],['쌍둥이 프리즘','공전 프리즘 +1.'],['용광 단계','0.88초 유지 시 ×1.85, 최대 출력 ×3.70.'],['과열 결정','집속 전환 시간 단축.'],['항성 초점','최대 출력 ×4.10.'],['천구 소각','공전 프리즘 +1, 최대 출력 ×4.45.']],
+    prism:[['점화 광선','새 표적을 1초 조준한 뒤 집속한다.'],['쌍둥이 프리즘','공전 프리즘 +1.'],['용광 단계','0.88초 유지 시 ×1.85, 최대 출력 ×3.70.'],['과열 결정','집속 전환 시간 단축.'],['항성 초점','최대 출력 ×4.10.'],['천구 소각','공전 프리즘 +1, 최대 출력 ×4.45.']],
     chrono:[['느린 시간','주변 적 이동속도 감소.'],['느린 궤도','감속 범위 증가.'],['시간 가속','장비 발동 주기 추가 단축.'],['시간 파동','주기적인 범위 피해 파동.'],['찰나 정지','파동 적중 적을 강하게 감속.'],['영원의 원환','감속 범위와 장비 가속 강화.']],
     ion:[['첫 방전','적 사이를 잇는 이온 사슬.'],['연결 확장','연결 대상 +1.'],['고전압','연결 거리와 피해 증가.'],['분기 방전','첫 대상에서 두 갈래로 분기.'],['잔류 전하','마지막 대상 주변 폭발.'],['쌍중 낙뢰','짧은 간격으로 2회 방전.']],
     nova:[['항성 점화','플레이어 중심 초신성 파동.'],['팽창권','파동 반경 증가.'],['잔광 파동','잠시 뒤 내부에 두 번째 파동.'],['충격 전선','적을 바깥으로 밀어냄.'],['과열 코일','반경과 발동 속도 증가.'],['이중 초신성','더 넓은 후속 폭발.']],
@@ -45,9 +45,6 @@
     ledgerScreen.addEventListener('stackfall:ledger-rendered',annotate);ledgerBody.addEventListener('click',event=>{const item=event.target.closest('.ledger-card');if(item?.dataset.weaponKey)openWeapon(item.dataset.weaponKey);else if(item?.dataset.passiveKey)openPassive(item.dataset.passiveKey);});annotate();
   }
 
-  const worldEventCards=document.querySelector('#worldEventCards');
-  function sanitizeWorldEventCopy(){if(!worldEventCards)return;for(const button of worldEventCards.querySelectorAll('.world-event-card')){const name=button.querySelector('b')?.textContent?.trim(),desc=button.querySelector('p');if(name==='다중 투영 코어'||name==='PROJECTION CORE'){if(desc)desc.textContent=GAME_SETTINGS.language==='ko'?'지원되는 공격체 +1.':'Supported attack bodies +1.';}}}
-  if(worldEventCards){new MutationObserver(sanitizeWorldEventCopy).observe(worldEventCards,{childList:true});sanitizeWorldEventCopy();}
 
   let guidanceEliteArrows=0,guidanceEventArrows=0;
   function safeEdge(dx,dy,bottomGap=154){const cx=vw/2,cy=vh/2,left=76,right=vw-76,top=82,bottom=vh-bottomGap,values=[];if(dx>0)values.push((right-cx)/dx);else if(dx<0)values.push((left-cx)/dx);if(dy>0)values.push((bottom-cy)/dy);else if(dy<0)values.push((top-cy)/dy);const positive=values.filter(value=>value>0),scale=positive.length?Math.min(...positive):1;return{x:cx+dx*scale,y:cy+dy*scale};}

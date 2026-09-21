@@ -45,22 +45,22 @@ Object.assign(TEXT.fr,{
 });
 
 Object.assign(TEXT.ko,{
-  'menu.endless':'ENDLESS','menu.stageMap':'은하 지도','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'은하 작전 지도','stageMap.planned':'계획 중','stageMap.available':'출격 가능','stageMap.cleared':'클리어','stageMap.locked':'잠김','stageMap.time':'예상 작전 시간','stageMap.threat':'위협도','stageMap.gimmicks':'기믹','stageMap.weapons':'무기','stageMap.events':'이벤트','stageMap.boss':'보스','stageMap.launch':'출격','stageMap.building':'STAGE BUILDING','stageMap.hint':'노드를 선택하면 해당 작전의 정보가 표시됩니다.'
+  'menu.endless':'ENDLESS','menu.stageMap':'은하 지도','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'은하 작전 지도','stageMap.planned':'잠김','stageMap.available':'출격 가능','stageMap.cleared':'클리어','stageMap.locked':'잠김','stageMap.time':'예상 작전 시간','stageMap.threat':'위협도','stageMap.gimmicks':'기믹','stageMap.weapons':'무기','stageMap.events':'이벤트','stageMap.boss':'보스','stageMap.launch':'출격','stageMap.building':'출격 불가','stageMap.hint':'노드를 선택하면 해당 작전의 정보가 표시됩니다.'
 });
 Object.assign(TEXT.en,{
-  'menu.endless':'ENDLESS','menu.stageMap':'GALAXY MAP','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'GALACTIC OPERATIONS','stageMap.planned':'PLANNED','stageMap.available':'AVAILABLE','stageMap.cleared':'CLEARED','stageMap.locked':'LOCKED','stageMap.time':'EST. OPERATION','stageMap.threat':'THREAT','stageMap.gimmicks':'GIMMICKS','stageMap.weapons':'WEAPONS','stageMap.events':'EVENTS','stageMap.boss':'BOSS','stageMap.launch':'DEPLOY','stageMap.building':'STAGE BUILDING','stageMap.hint':'Select a node to inspect the operation.'
+  'menu.endless':'ENDLESS','menu.stageMap':'GALAXY MAP','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'GALACTIC OPERATIONS','stageMap.planned':'LOCKED','stageMap.available':'AVAILABLE','stageMap.cleared':'CLEARED','stageMap.locked':'LOCKED','stageMap.time':'EST. OPERATION','stageMap.threat':'THREAT','stageMap.gimmicks':'GIMMICKS','stageMap.weapons':'WEAPONS','stageMap.events':'EVENTS','stageMap.boss':'BOSS','stageMap.launch':'DEPLOY','stageMap.building':'UNAVAILABLE','stageMap.hint':'Select a node to inspect the operation.'
 });
 Object.assign(TEXT.ja,{
-  'menu.endless':'ENDLESS','menu.stageMap':'銀河マップ','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'銀河作戦マップ','stageMap.planned':'計画中','stageMap.available':'出撃可能','stageMap.cleared':'クリア','stageMap.locked':'ロック','stageMap.time':'予想作戦時間','stageMap.threat':'脅威度','stageMap.gimmicks':'ギミック','stageMap.weapons':'武器','stageMap.events':'イベント','stageMap.boss':'ボス','stageMap.launch':'出撃','stageMap.building':'STAGE BUILDING','stageMap.hint':'ノードを選ぶと作戦情報を確認できます。'
+  'menu.endless':'ENDLESS','menu.stageMap':'銀河マップ','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'銀河作戦マップ','stageMap.planned':'ロック','stageMap.available':'出撃可能','stageMap.cleared':'クリア','stageMap.locked':'ロック','stageMap.time':'予想作戦時間','stageMap.threat':'脅威度','stageMap.gimmicks':'ギミック','stageMap.weapons':'武器','stageMap.events':'イベント','stageMap.boss':'ボス','stageMap.launch':'出撃','stageMap.building':'出撃不可','stageMap.hint':'ノードを選ぶと作戦情報を確認できます。'
 });
 Object.assign(TEXT['zh-CN'],{
-  'menu.endless':'ENDLESS','menu.stageMap':'银河地图','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'银河作战地图','stageMap.planned':'规划中','stageMap.available':'可出击','stageMap.cleared':'已通关','stageMap.locked':'已锁定','stageMap.time':'预计作战时间','stageMap.threat':'威胁度','stageMap.gimmicks':'机制','stageMap.weapons':'武器','stageMap.events':'事件','stageMap.boss':'首领','stageMap.launch':'出击','stageMap.building':'STAGE BUILDING','stageMap.hint':'选择节点以查看作战信息。'
+  'menu.endless':'ENDLESS','menu.stageMap':'银河地图','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'银河作战地图','stageMap.planned':'已锁定','stageMap.available':'可出击','stageMap.cleared':'已通关','stageMap.locked':'已锁定','stageMap.time':'预计作战时间','stageMap.threat':'威胁度','stageMap.gimmicks':'机制','stageMap.weapons':'武器','stageMap.events':'事件','stageMap.boss':'首领','stageMap.launch':'出击','stageMap.building':'无法出击','stageMap.hint':'选择节点以查看作战信息。'
 });
 Object.assign(TEXT.es,{
-  'menu.endless':'ENDLESS','menu.stageMap':'MAPA GALÁCTICO','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'OPERACIONES GALÁCTICAS','stageMap.planned':'PLANEADO','stageMap.available':'DISPONIBLE','stageMap.cleared':'SUPERADO','stageMap.locked':'BLOQUEADO','stageMap.time':'DURACIÓN EST.','stageMap.threat':'AMENAZA','stageMap.gimmicks':'MECÁNICAS','stageMap.weapons':'ARMAS','stageMap.events':'EVENTOS','stageMap.boss':'JEFE','stageMap.launch':'DESPLEGAR','stageMap.building':'STAGE BUILDING','stageMap.hint':'Selecciona un nodo para ver la operación.'
+  'menu.endless':'ENDLESS','menu.stageMap':'MAPA GALÁCTICO','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'OPERACIONES GALÁCTICAS','stageMap.planned':'BLOQUEADO','stageMap.available':'DISPONIBLE','stageMap.cleared':'SUPERADO','stageMap.locked':'BLOQUEADO','stageMap.time':'DURACIÓN EST.','stageMap.threat':'AMENAZA','stageMap.gimmicks':'MECÁNICAS','stageMap.weapons':'ARMAS','stageMap.events':'EVENTOS','stageMap.boss':'JEFE','stageMap.launch':'DESPLEGAR','stageMap.building':'NO DISPONIBLE','stageMap.hint':'Selecciona un nodo para ver la operación.'
 });
 Object.assign(TEXT.fr,{
-  'menu.endless':'ENDLESS','menu.stageMap':'CARTE GALACTIQUE','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'OPÉRATIONS GALACTIQUES','stageMap.planned':'PLANIFIÉ','stageMap.available':'DISPONIBLE','stageMap.cleared':'TERMINÉ','stageMap.locked':'VERROUILLÉ','stageMap.time':'DURÉE EST.','stageMap.threat':'MENACE','stageMap.gimmicks':'MÉCANIQUES','stageMap.weapons':'ARMES','stageMap.events':'ÉVÉNEMENTS','stageMap.boss':'BOSS','stageMap.launch':'DÉPLOYER','stageMap.building':'STAGE BUILDING','stageMap.hint':'Sélectionnez un nœud pour afficher l’opération.'
+  'menu.endless':'ENDLESS','menu.stageMap':'CARTE GALACTIQUE','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'OPÉRATIONS GALACTIQUES','stageMap.planned':'VERROUILLÉ','stageMap.available':'DISPONIBLE','stageMap.cleared':'TERMINÉ','stageMap.locked':'VERROUILLÉ','stageMap.time':'DURÉE EST.','stageMap.threat':'MENACE','stageMap.gimmicks':'MÉCANIQUES','stageMap.weapons':'ARMES','stageMap.events':'ÉVÉNEMENTS','stageMap.boss':'BOSS','stageMap.launch':'DÉPLOYER','stageMap.building':'INDISPONIBLE','stageMap.hint':'Sélectionnez un nœud pour afficher l’opération.'
 });
 
 Object.assign(TEXT.ko,{
@@ -223,22 +223,22 @@ Object.assign(TEXT.fr,{
 });
 
 Object.assign(TEXT.ko,{
-  'profile.localSave':'이 진행도는 현재 기기에 저장됩니다.','profile.runs':'총 출격','profile.kills':'누적 처치','profile.slots':'장비 슬롯','profile.weapons':'해금 무기','profile.bestStage1':'Stage 1 최고 기록','profile.cloudLater':'온라인 계정과 클라우드 동기화는 추후 확장 예정입니다.'
+  'profile.localSave':'이 진행도는 현재 기기에 저장됩니다.','profile.runs':'총 출격','profile.kills':'누적 처치','profile.slots':'장비 슬롯','profile.weapons':'해금 무기','profile.bestStage1':'Stage 1 최고 기록'
 });
 Object.assign(TEXT.en,{
-  'profile.localSave':'Progress is currently stored on this device.','profile.runs':'TOTAL RUNS','profile.kills':'TOTAL KILLS','profile.slots':'EQUIPMENT SLOTS','profile.weapons':'UNLOCKED WEAPONS','profile.bestStage1':'STAGE 1 BEST','profile.cloudLater':'Online accounts and cloud sync are planned for a later expansion.'
+  'profile.localSave':'Progress is currently stored on this device.','profile.runs':'TOTAL RUNS','profile.kills':'TOTAL KILLS','profile.slots':'EQUIPMENT SLOTS','profile.weapons':'UNLOCKED WEAPONS','profile.bestStage1':'STAGE 1 BEST'
 });
 Object.assign(TEXT.ja,{
-  'profile.localSave':'進行状況は現在この端末に保存されます。','profile.runs':'総出撃','profile.kills':'累計撃破','profile.slots':'装備スロット','profile.weapons':'解放武器','profile.bestStage1':'STAGE 1 ベスト','profile.cloudLater':'オンラインアカウントとクラウド同期は後日拡張予定です。'
+  'profile.localSave':'進行状況は現在この端末に保存されます。','profile.runs':'総出撃','profile.kills':'累計撃破','profile.slots':'装備スロット','profile.weapons':'解放武器','profile.bestStage1':'STAGE 1 ベスト'
 });
 Object.assign(TEXT['zh-CN'],{
-  'profile.localSave':'当前进度保存在此设备上。','profile.runs':'总出击','profile.kills':'累计击杀','profile.slots':'装备槽','profile.weapons':'已解锁武器','profile.bestStage1':'STAGE 1 最佳记录','profile.cloudLater':'在线账号与云同步将在后续扩展。'
+  'profile.localSave':'当前进度保存在此设备上。','profile.runs':'总出击','profile.kills':'累计击杀','profile.slots':'装备槽','profile.weapons':'已解锁武器','profile.bestStage1':'STAGE 1 最佳记录'
 });
 Object.assign(TEXT.es,{
-  'profile.localSave':'El progreso se guarda actualmente en este dispositivo.','profile.runs':'PARTIDAS','profile.kills':'BAJAS TOTALES','profile.slots':'RANURAS','profile.weapons':'ARMAS DESBLOQUEADAS','profile.bestStage1':'MEJOR STAGE 1','profile.cloudLater':'Las cuentas en línea y la sincronización en la nube llegarán más adelante.'
+  'profile.localSave':'El progreso se guarda actualmente en este dispositivo.','profile.runs':'PARTIDAS','profile.kills':'BAJAS TOTALES','profile.slots':'RANURAS','profile.weapons':'ARMAS DESBLOQUEADAS','profile.bestStage1':'MEJOR STAGE 1'
 });
 Object.assign(TEXT.fr,{
-  'profile.localSave':'La progression est actuellement enregistrée sur cet appareil.','profile.runs':'SORTIES','profile.kills':'ÉLIMINATIONS','profile.slots':'EMPLACEMENTS','profile.weapons':'ARMES DÉBLOQUÉES','profile.bestStage1':'MEILLEUR STAGE 1','profile.cloudLater':'Les comptes en ligne et la synchronisation cloud seront ajoutés ultérieurement.'
+  'profile.localSave':'La progression est actuellement enregistrée sur cet appareil.','profile.runs':'SORTIES','profile.kills':'ÉLIMINATIONS','profile.slots':'EMPLACEMENTS','profile.weapons':'ARMES DÉBLOQUÉES','profile.bestStage1':'MEILLEUR STAGE 1'
 });
 
 Object.assign(TEXT.ko,{

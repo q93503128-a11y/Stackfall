@@ -15,7 +15,7 @@ const checks=[
  ['permanent upgrades affect damage haste health magnet and armor',upgrade.includes('metaUpgradeDamageMult')&&upgrade.includes('metaUpgradeHasteMult')&&upgrade.includes('metaUpgradeResetGame')&&upgrade.includes('metaUpgradeMagnetRange')&&upgrade.includes('metaUpgradeDamageReduction')],
  ['Stardust gain upgrade affects resource income',upgrade.includes('stackfallCurrencyMultiplier')&&upgrade.includes("level('salvage')*.08")],
  ['Stage 1 grants repeat Stardust and first-clear Core Shard',stage.includes("{type:'currency',key:'stardust',amount:140}")&&stage.includes("{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}")],
- ['Core Shards remain repeatably earnable every third repeat stage clear',meta.includes('const repeatClearCount=Math.max(0,clearCount-1)')&&meta.includes('repeatClearCount%3===0')&&meta.includes("meta.currencies.coreShard=currency('coreShard')+1")],
+ ['Stage 1 Core Shards remain repeatably earnable every third repeat clear',meta.includes('const repeatClearCount=Math.max(0,clearCount-1)')&&meta.includes("stageId==='stage-01'&&repeatClearCount>0&&repeatClearCount%3===0")&&meta.includes("meta.currencies.coreShard=currency('coreShard')+1")],
  ['stage result displays recovered currencies',runtime.includes('result.currency?.stardust')&&runtime.includes('result.currency?.coreShard')],
  ['failed or Endless runs award Stardust and record lifetime runs',upgrade.includes('function runStardustReward')&&upgrade.includes('stackfallRecordRun?.(kills)')],
  ['Apex and Void kills feed long-term currencies without twin double rewards',upgrade.includes("kind==='apex'")&&upgrade.includes("kind==='void'&&isRewardTwin")&&upgrade.includes("grantRunCurrency('coreShard',1)")&&upgrade.includes('twinGroup')],
