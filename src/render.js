@@ -26,7 +26,8 @@ function draw(){
   runDrawStage('drawWells',drawWells);runDrawStage('drawGems',drawGems);
   if(typeof drawForegroundCombat==='function'){if(GAME_SETTINGS.hideProjectiles!==true){runDrawStage('drawProjectiles',drawProjectiles);runDrawStage('drawBoomerangs',drawBoomerangs);}runDrawStage('drawAlliedEffects',drawAlliedEffects);ctx.restore();runRuntimeStage('drawForegroundCombat',drawForegroundCombat);return;}
   runDrawStage('drawTelegraphs',drawTelegraphs);if(typeof drawMapEvents==='function')runDrawStage('drawMapEvents',drawMapEvents);runDrawStage('drawEnemies',drawEnemies);if(GAME_SETTINGS.hideProjectiles!==true){runDrawStage('drawProjectiles',drawProjectiles);runDrawStage('drawBoomerangs',drawBoomerangs);}if(typeof drawBeamEffects==='function')runDrawStage('drawBeamEffects',drawBeamEffects);runDrawStage('drawEnemyProjectiles',drawEnemyProjectiles);if(state.mode!=='menu'){runDrawStage('drawMagnetField',drawMagnetField);runDrawStage('drawChronoField',drawChronoField);runDrawStage('drawPlayer',drawPlayer);}runDrawStage('drawEffects',drawEffects);ctx.restore();
-  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.setLineDash([]);
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.setLineDash([]);if(typeof drawStageVictoryCinematic==='function'&&state.mode==='stageVictory')runDrawStage('drawStageVictoryCinematic',drawStageVictoryCinematic);
+
   const performanceTier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0;
   if(performanceTier===0){const vignette=ctx.createRadialGradient(vw/2,vh/2,Math.min(vw,vh)*.18,vw/2,vh/2,Math.max(vw,vh)*.74);vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(0,1,8,.58)');ctx.fillStyle=vignette;ctx.fillRect(0,0,vw,vh);}else if(performanceTier===1){ctx.fillStyle='rgba(0,1,8,.08)';ctx.fillRect(0,0,vw,vh);}
   if(GAME_SETTINGS.sparkles!==false&&state.flash>=SCREEN_FLASH_VISIBLE_THRESHOLD){ctx.fillStyle=`rgba(225,242,255,${Math.min(.42,state.flash*.72)})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlay',drawRealmCinematicOverlay);
@@ -45,6 +46,9 @@ function loop(now){
       if(typeof updateRewardQueue==='function')runRuntimeStage('updateRewardQueue',updateRewardQueue);runRuntimeStage('updateEffects',()=>updateEffects(dt));hudRefresh-=dt;if(hudRefresh<=0){hudRefresh=.08;runRuntimeStage('updateHUD',updateHUD);}shouldDraw=true;
     }else if(state.mode==='cinematic'){
       if(typeof updateRealmTransition==='function')runRuntimeStage('updateRealmTransition',()=>updateRealmTransition(dt));runRuntimeStage('updateEffectsCinematic',()=>updateEffects(dt*.35));shouldDraw=true;
+    }else if(state.mode==='stageVictory'){
+      if(typeof updateStageVictoryCinematic==='function')runRuntimeStage('updateStageVictoryCinematic',()=>updateStageVictoryCinematic(dt));
+      runRuntimeStage('updateEffectsStageVictory',()=>updateEffects(dt*.72));shouldDraw=true;
     }
     if(state.mode==='choice'&&ui.choice.classList.contains('hidden')){state.choiceLocked=false;state.mode='playing';}
     if(typeof syncAbilityLedgerVisibility==='function')syncAbilityLedgerVisibility();
