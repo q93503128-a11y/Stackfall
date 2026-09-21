@@ -198,7 +198,7 @@
 
 ### Galaxy map
 
-The main menu is a mode hub rather than a direct loadout/start screen. `GALACTIC OPERATIONS` opens the galaxy map and `ENDLESS` opens sortie preparation. Both modes share the same pre-launch starter-weapon and difficulty screen. Galaxy nodes use star silhouettes with separate stage-number badges so constellation links remain visually readable. The detail panel exposes only game time, threat, unlock progress, boss, and launch state. Available/cleared nodes can prepare a sortie; future planned or progression-locked nodes can be inspected but not launched. The layout stays two-column on wider screens and stacks the detail panel below the map on compact/mobile screens.
+The main menu is a mode hub rather than a direct loadout/start screen. `GALACTIC OPERATIONS` opens the galaxy map, `ENDLESS` opens sortie preparation, and `CORE DEVELOPMENT` opens the permanent upgrade field. A local-pilot card in the upper-left shows clear count plus Stardust/Core Shards; it is local save UI, not an online account. The upgrade field keeps the player core centered with floating orbital nodes; skins are deferred. Both combat modes share the same pre-launch starter-weapon and difficulty screen. Galaxy nodes use luminous stellar points with separate stage-number badges so constellation links remain readable. The detail panel exposes only game time, threat, unlock progress, boss, and launch state.
 
 ### Stage content identity
 
