@@ -321,11 +321,11 @@ node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-r
 
 `ENDLESS` remains the default infinite mode with random world events, the full enemy family pool, and the 600-second Apex cadence. Finite stages use `src/stage-catalog.js`, `src/run-modes.js`, and `src/stage-runtime.js` instead of reusing the Endless encounter director.
 
-Stage 1, **Collapse Frontier / 붕괴 전초구역**, is now playable as a 600-second operation. It introduces four stage-specific enemy variants over time, fires fixed events at 90/210/300/420/500 seconds, and spawns the Collapse Frontier Warden at 540 seconds. Clearing it records persistent progress and unlocks the Comet Lance.
+Stage 1, **Collapse Frontier / 붕괴 전초구역**, is a boss-arrival operation: fixed incidents occur at 90/210/300/420/500 seconds and the Collapse Frontier Warden enters at exactly 600 seconds. The timer does not force a clear or timeout; the run ends only on defeat or after the boss is killed. Boss death plays a short destruction/operation-complete cinematic before the result screen, then records persistent progress and unlocks the Comet Lance.
 
 `src/meta-progression.js` persists clears, best times, and weapon unlocks. Fresh saves begin with four starter weapons: Pulse Blade, Starlight Caster, Radiant Bulwark, and Gravity Well; locked weapons are also excluded from level-up acquisition until unlocked.
 
 #### Galaxy map
 
-The menu separates direct `ENDLESS` play from the responsive constellation-style galaxy map. Stage status comes from persistent progression, so available/cleared stages can launch while planned or progression-locked nodes remain inspection-only.
+The main menu is now a mode hub: `GALACTIC OPERATIONS` opens the constellation-style galaxy map and `ENDLESS` opens the same sortie-preparation flow. Starter weapon and difficulty selection live in the shared sortie screen immediately before launch. Stage nodes use visible star silhouettes with separate number badges, and the detail panel is limited to game time, threat, unlock progress, and boss information. Available/cleared stages can prepare a sortie while planned or progression-locked nodes remain inspection-only.
 
