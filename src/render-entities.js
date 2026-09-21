@@ -41,6 +41,16 @@ function drawStageEnemyBody(g,e){
     for(const side of[-1,1]){g.strokeStyle=side>0?'#ff9cba':'#82d8c1';g.beginPath();g.moveTo(-r*.18,side*r*.24);g.lineTo(-r*.92,side*r*.78);g.stroke();}
     g.fillStyle='#fce3ec';g.beginPath();g.arc(r*.24,0,r*.13*pulse,0,TAU);g.fill();
   }
+  else if(v==='spiral-pod'){
+    const pulse=.88+.12*Math.sin((e.phase||0)*1.35);g.rotate((e.phase||0)*.045);g.strokeStyle=e.hit?'#fff':'#d59cff';g.fillStyle=e.hit?'#fff':'#10091a';g.lineWidth=1.9;
+    for(let arm=0;arm<5;arm++){g.save();g.rotate(arm*TAU/5);g.strokeStyle=arm%2?'#79dbc5':'#d59cff';g.beginPath();g.moveTo(r*.20,0);g.bezierCurveTo(r*.52,-r*.40,r*1.18,-r*.26,r*1.32,0);g.stroke();g.beginPath();g.arc(r*.92,0,r*.18,0,TAU);g.stroke();g.restore();}
+    g.fillStyle='#08060f';g.beginPath();g.arc(0,0,r*.54,0,TAU);g.fill();g.stroke();g.fillStyle='#f3e4ff';g.beginPath();g.arc(0,0,r*.15*pulse,0,TAU);g.fill();
+  }
+  else if(v==='husk-warden'){
+    const pulse=.90+.10*Math.sin((e.phase||0)*.9);g.rotate((e.phase||0)*.018);g.strokeStyle=e.hit?'#fff':'#e4b36c';g.fillStyle=e.hit?'#fff':'#1a1209';g.lineWidth=2.4;
+    for(let plate=0;plate<6;plate++){g.save();g.rotate(plate*TAU/6);g.fillStyle=plate%2?'rgba(201,151,255,.18)':'rgba(228,179,108,.28)';g.beginPath();g.moveTo(r*.28,-r*.26);g.lineTo(r*1.18,-r*.40);g.lineTo(r*1.46,0);g.lineTo(r*1.18,r*.40);g.lineTo(r*.28,r*.26);g.closePath();g.fill();g.stroke();g.restore();}
+    g.fillStyle='#0c0a08';g.beginPath();g.arc(0,0,r*.68,0,TAU);g.fill();g.stroke();g.strokeStyle='#9fd8c8';for(let seam=0;seam<3;seam++){const a=seam*TAU/3;g.beginPath();g.moveTo(Math.cos(a)*r*.18,Math.sin(a)*r*.18);g.lineTo(Math.cos(a)*r*.58,Math.sin(a)*r*.58);g.stroke();}g.fillStyle='#fff2d2';g.beginPath();g.arc(0,0,r*.12*pulse,0,TAU);g.fill();
+  }
   else return false;return true;
 }
 function drawEnemies(){for(const e of state.entities.enemies){const p=worldToScreen(e.x,e.y);if(p.x<-180||p.x>vw+180||p.y<-180||p.y>vh+180)continue;ctx.save();ctx.translate(p.x,p.y);const pulse=1+Math.sin(e.phase)*.05;ctx.scale(pulse,pulse);ctx.shadowBlur=e.kind==='apex'?58:e.type==='boss'?44:e.type==='mini'?30:13;ctx.shadowColor=e.color;ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;

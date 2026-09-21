@@ -407,6 +407,11 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - Stage 7 permanently unlocks Meteor Drones.
 - `stage-08`, **Black Sap Ravine / 흑수액 협곡**, unlocks after Stage 7, introduces Rootlance, uses sap-geyser/vascular-rail/arterial-rupture incidents, and fields the Abyssal Rootcrown at 600 seconds.
 - Stage 8 permanently unlocks Interstellar Rail.
+- `stage-09`, **Spiral Seedbed / 나선 종자층**, introduces Spiral Pod and the Helix Nursery; clearing it unlocks Galactic Spiral.
+- `stage-10`, **Mirrorpetal Sanctum / 반사 화관 성소**, uses reflection/echo hazards without forcing a new common enemy; clearing it unlocks Reflective Constellation.
+- `stage-11`, **Seedhusk Bastion / 종자 갑각층**, introduces Husk Warden and the Seedvault Custodian. With the current weapon roster fully unlocked by Stage 10, later stage rewards may use currency/core rewards instead of inventing weapons solely to fill a slot.
+- `stage-12`, **Abyssal Bloomheart / 심연 개화핵**, is the second constellation finale. It recombines the major Abyssal Bloom enemy families and ends against the Abyssal Bloomheart at 600 seconds. Its first clear grants two Core Shards.
+- Constellations 1 and 2 each contain six stages in the current authored campaign.
 - Galaxy stages are grouped into constellation pages. A finished constellation hands progression to the first stage of the next constellation; the map never stretches every constellation into one endless canvas.
 
 ### Galaxy map
