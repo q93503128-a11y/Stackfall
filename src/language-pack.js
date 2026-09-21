@@ -222,3 +222,22 @@ Object.assign(TEXT.fr,{
   'upgrade.slot6.name':'Emplacement VI','upgrade.slot6.desc':'Étend l’équipement hors arme de base à six emplacements.','upgrade.slot6.effect':'Débloque 6 emplacements'
 });
 
+Object.assign(TEXT.ko,{
+  'profile.localSave':'이 진행도는 현재 기기에 저장됩니다.','profile.runs':'총 출격','profile.kills':'누적 처치','profile.slots':'장비 슬롯','profile.weapons':'해금 무기','profile.bestStage1':'Stage 1 최고 기록','profile.cloudLater':'온라인 계정과 클라우드 동기화는 추후 확장 예정입니다.'
+});
+Object.assign(TEXT.en,{
+  'profile.localSave':'Progress is currently stored on this device.','profile.runs':'TOTAL RUNS','profile.kills':'TOTAL KILLS','profile.slots':'EQUIPMENT SLOTS','profile.weapons':'UNLOCKED WEAPONS','profile.bestStage1':'STAGE 1 BEST','profile.cloudLater':'Online accounts and cloud sync are planned for a later expansion.'
+});
+Object.assign(TEXT.ja,{
+  'profile.localSave':'進行状況は現在この端末に保存されます。','profile.runs':'総出撃','profile.kills':'累計撃破','profile.slots':'装備スロット','profile.weapons':'解放武器','profile.bestStage1':'STAGE 1 ベスト','profile.cloudLater':'オンラインアカウントとクラウド同期は後日拡張予定です。'
+});
+Object.assign(TEXT['zh-CN'],{
+  'profile.localSave':'当前进度保存在此设备上。','profile.runs':'总出击','profile.kills':'累计击杀','profile.slots':'装备槽','profile.weapons':'已解锁武器','profile.bestStage1':'STAGE 1 最佳记录','profile.cloudLater':'在线账号与云同步将在后续扩展。'
+});
+Object.assign(TEXT.es,{
+  'profile.localSave':'El progreso se guarda actualmente en este dispositivo.','profile.runs':'PARTIDAS','profile.kills':'BAJAS TOTALES','profile.slots':'RANURAS','profile.weapons':'ARMAS DESBLOQUEADAS','profile.bestStage1':'MEJOR STAGE 1','profile.cloudLater':'Las cuentas en línea y la sincronización en la nube llegarán más adelante.'
+});
+Object.assign(TEXT.fr,{
+  'profile.localSave':'La progression est actuellement enregistrée sur cet appareil.','profile.runs':'SORTIES','profile.kills':'ÉLIMINATIONS','profile.slots':'EMPLACEMENTS','profile.weapons':'ARMES DÉBLOQUÉES','profile.bestStage1':'MEILLEUR STAGE 1','profile.cloudLater':'Les comptes en ligne et la synchronisation cloud seront ajoutés ultérieurement.'
+});
+
