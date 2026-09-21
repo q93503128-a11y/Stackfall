@@ -96,7 +96,7 @@ rollChoices=function rollChoicesWithBasicCore(n){
   const coreCount=weaponCount('core');
   if(coreCount<6)pool.push({kind:'core',key:'core',...WEAPONS.core,weight:coreCount<3?1.28:1.08});
   for(const [key,w] of Object.entries(WEAPONS)){
-    if(w.starter===false)continue;
+    if(w.starter===false||(window.stackfallIsWeaponUnlocked&&!window.stackfallIsWeaponUnlocked(key)))continue;
     const count=weaponCount(key),has=count>0,slots=state.weaponSlots.length,limit=window.stackfallEquipmentSlotLimit?.()||4;
     if(count<6&&(has||slots<limit))pool.push({kind:'weapon',key,...w,weight:has?1.34:1});
   }
