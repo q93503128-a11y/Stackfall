@@ -241,3 +241,34 @@ Object.assign(TEXT.fr,{
   'profile.localSave':'La progression est actuellement enregistrée sur cet appareil.','profile.runs':'SORTIES','profile.kills':'ÉLIMINATIONS','profile.slots':'EMPLACEMENTS','profile.weapons':'ARMES DÉBLOQUÉES','profile.bestStage1':'MEILLEUR STAGE 1','profile.cloudLater':'Les comptes en ligne et la synchronisation cloud seront ajoutés ultérieurement.'
 });
 
+Object.assign(TEXT.ko,{
+  'stage02.enemy.wisp':'성운 유영체','stage02.boss':'성운의 심장','stage02.boss.warning':'성운 중심핵이 각성합니다',
+  'stage02.event.shear':'이온 전단','stage02.event.deep':'심층 전단','stage02.event.warning':'전리 흐름이 전장을 절단합니다','stage02.event.bloom':'유영체 군집','stage02.event.fixed':'고정 사건',
+  'stage02.objective.boss':'성운의 심장을 파괴하라'
+});
+Object.assign(TEXT.en,{
+  'stage02.enemy.wisp':'Nebula Wisp','stage02.boss':'Nebula Heart','stage02.boss.warning':'THE NEBULA CORE AWAKENS',
+  'stage02.event.shear':'ION SHEAR','stage02.event.deep':'DEEP SHEAR','stage02.event.warning':'IONIZED CURRENTS ARE CUTTING THE FIELD','stage02.event.bloom':'WISP BLOOM','stage02.event.fixed':'FIXED EVENT',
+  'stage02.objective.boss':'DESTROY THE NEBULA HEART'
+});
+Object.assign(TEXT.ja,{
+  'stage02.enemy.wisp':'星雲遊泳体','stage02.boss':'星雲の心臓','stage02.boss.warning':'星雲中枢核が覚醒します',
+  'stage02.event.shear':'イオン剪断','stage02.event.deep':'深層剪断','stage02.event.warning':'電離流が戦場を切り裂きます','stage02.event.bloom':'遊泳体群','stage02.event.fixed':'固定イベント',
+  'stage02.objective.boss':'星雲の心臓を破壊せよ'
+});
+Object.assign(TEXT['zh-CN'],{
+  'stage02.enemy.wisp':'星云游体','stage02.boss':'星云之心','stage02.boss.warning':'星云核心正在苏醒',
+  'stage02.event.shear':'离子切变','stage02.event.deep':'深层切变','stage02.event.warning':'电离流正在切割战场','stage02.event.bloom':'游体群落','stage02.event.fixed':'固定事件',
+  'stage02.objective.boss':'摧毁星云之心'
+});
+Object.assign(TEXT.es,{
+  'stage02.enemy.wisp':'Espectro Nebular','stage02.boss':'Corazón de Nébula','stage02.boss.warning':'EL NÚCLEO NEBULAR DESPIERTA',
+  'stage02.event.shear':'CIZALLA IÓNICA','stage02.event.deep':'CIZALLA PROFUNDA','stage02.event.warning':'LAS CORRIENTES IONIZADAS CORTAN EL CAMPO','stage02.event.bloom':'FLORACIÓN DE ESPECTROS','stage02.event.fixed':'EVENTO FIJO',
+  'stage02.objective.boss':'DESTRUYE EL CORAZÓN DE NÉBULA'
+});
+Object.assign(TEXT.fr,{
+  'stage02.enemy.wisp':'Spectre Nébulaire','stage02.boss':'Cœur de Nébuleuse','stage02.boss.warning':'LE CŒUR NÉBULAIRE S’ÉVEILLE',
+  'stage02.event.shear':'CISAILLEMENT IONIQUE','stage02.event.deep':'CISAILLEMENT PROFOND','stage02.event.warning':'LES COURANTS IONISÉS TRANCHENT LE CHAMP','stage02.event.bloom':'ESSAIM NÉBULAIRE','stage02.event.fixed':'ÉVÉNEMENT FIXE',
+  'stage02.objective.boss':'DÉTRUISEZ LE CŒUR DE NÉBULEUSE'
+});
+
