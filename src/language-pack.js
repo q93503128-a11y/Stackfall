@@ -101,37 +101,37 @@ Object.assign(TEXT.fr,{
 });
 
 Object.assign(TEXT.ko,{
-  'menu.chooseMode':'어떤 항로로 출격할지 선택하세요.','menu.stageKicker':'GALACTIC OPERATIONS','menu.stageDesc':'고유한 공간과 보스를 가진 유한 작전을 진행합니다.','menu.endlessKicker':'ENDLESS EXPEDITION','menu.endlessDesc':'모든 적과 이벤트가 뒤섞이는 끝없는 항해에 도전합니다.',
+  'menu.endless':'엔드리스','menu.stageMap':'은하 작전','menu.chooseMode':'어떤 항로로 출격할지 선택하세요.','menu.stageKicker':'GALACTIC OPERATIONS','menu.stageDesc':'고유한 공간과 보스를 가진 유한 작전을 진행합니다.','menu.endlessKicker':'ENDLESS EXPEDITION','menu.endlessDesc':'모든 적과 이벤트가 뒤섞이는 끝없는 항해에 도전합니다.',
   'stageMap.gameTime':'게임 시간','stageMap.unlockable':'해금 가능','stageMap.weaponProgress':'무기','stageMap.minutes':'{n}분','stageMap.none':'없음','stageMap.launch':'출격 준비',
   'sortie.title':'출격 준비','sortie.kicker.stage':'GALACTIC OPERATION','sortie.kicker.endless':'ENDLESS EXPEDITION','sortie.stageMode':'은하 작전','sortie.endlessMode':'엔드리스','sortie.endlessTitle':'끝없는 항해','sortie.endlessDesc':'정해진 종료 없이 모든 적군과 월드 이벤트, 초월체가 이어지는 무한 생존 항해.','sortie.time':'게임 시간','sortie.difficulty':'난이도','sortie.minutes':'{n}분','sortie.noLimit':'무제한','sortie.back':'뒤로','sortie.launch':'출격','sortie.difficulty.easy':'쉬움','sortie.difficulty.normal':'보통','sortie.difficulty.hard':'어려움',
   'stageClear.targetDown':'수호자 붕괴','stageClear.operationComplete':'작전 완료'
 });
 Object.assign(TEXT.en,{
-  'menu.chooseMode':'Choose your route.','menu.stageKicker':'GALACTIC OPERATIONS','menu.stageDesc':'Enter finite operations with distinct regions and bosses.','menu.endlessKicker':'ENDLESS EXPEDITION','menu.endlessDesc':'Survive an endless route where every enemy and event can appear.',
+  'menu.endless':'ENDLESS','menu.stageMap':'GALACTIC OPERATIONS','menu.chooseMode':'Choose your route.','menu.stageKicker':'GALACTIC OPERATIONS','menu.stageDesc':'Enter finite operations with distinct regions and bosses.','menu.endlessKicker':'ENDLESS EXPEDITION','menu.endlessDesc':'Survive an endless route where every enemy and event can appear.',
   'stageMap.gameTime':'GAME TIME','stageMap.unlockable':'UNLOCKABLE','stageMap.weaponProgress':'WEAPON','stageMap.minutes':'{n} min','stageMap.none':'NONE','stageMap.launch':'PREPARE SORTIE',
   'sortie.title':'SORTIE PREPARATION','sortie.kicker.stage':'GALACTIC OPERATION','sortie.kicker.endless':'ENDLESS EXPEDITION','sortie.stageMode':'GALACTIC OPERATION','sortie.endlessMode':'ENDLESS','sortie.endlessTitle':'Endless Voyage','sortie.endlessDesc':'An unlimited survival route with the full enemy roster, world events, and recurring Apex threats.','sortie.time':'GAME TIME','sortie.difficulty':'DIFFICULTY','sortie.minutes':'{n} min','sortie.noLimit':'UNLIMITED','sortie.back':'BACK','sortie.launch':'LAUNCH','sortie.difficulty.easy':'EASY','sortie.difficulty.normal':'NORMAL','sortie.difficulty.hard':'HARD',
   'stageClear.targetDown':'WARDEN COLLAPSED','stageClear.operationComplete':'OPERATION COMPLETE'
 });
 Object.assign(TEXT.ja,{
-  'menu.chooseMode':'出撃する航路を選択してください。','menu.stageKicker':'GALACTIC OPERATIONS','menu.stageDesc':'固有の空間とボスを持つ有限作戦へ出撃します。','menu.endlessKicker':'ENDLESS EXPEDITION','menu.endlessDesc':'すべての敵とイベントが混ざる終わりなき航路に挑みます。',
+  'menu.endless':'エンドレス','menu.stageMap':'銀河作戦','menu.chooseMode':'出撃する航路を選択してください。','menu.stageKicker':'GALACTIC OPERATIONS','menu.stageDesc':'固有の空間とボスを持つ有限作戦へ出撃します。','menu.endlessKicker':'ENDLESS EXPEDITION','menu.endlessDesc':'すべての敵とイベントが混ざる終わりなき航路に挑みます。',
   'stageMap.gameTime':'ゲーム時間','stageMap.unlockable':'解放可能','stageMap.weaponProgress':'武器','stageMap.minutes':'{n}分','stageMap.none':'なし','stageMap.launch':'出撃準備',
   'sortie.title':'出撃準備','sortie.kicker.stage':'GALACTIC OPERATION','sortie.kicker.endless':'ENDLESS EXPEDITION','sortie.stageMode':'銀河作戦','sortie.endlessMode':'エンドレス','sortie.endlessTitle':'終わりなき航海','sortie.endlessDesc':'全敵勢力・ワールドイベント・超越体が続く無制限サバイバル航路。','sortie.time':'ゲーム時間','sortie.difficulty':'難易度','sortie.minutes':'{n}分','sortie.noLimit':'無制限','sortie.back':'戻る','sortie.launch':'出撃','sortie.difficulty.easy':'簡単','sortie.difficulty.normal':'普通','sortie.difficulty.hard':'難しい',
   'stageClear.targetDown':'守護者崩壊','stageClear.operationComplete':'作戦完了'
 });
 Object.assign(TEXT['zh-CN'],{
-  'menu.chooseMode':'选择要出击的航路。','menu.stageKicker':'GALACTIC OPERATIONS','menu.stageDesc':'进入拥有独特区域与首领的有限作战。','menu.endlessKicker':'ENDLESS EXPEDITION','menu.endlessDesc':'挑战所有敌人与事件都会出现的无尽航路。',
+  'menu.endless':'无尽模式','menu.stageMap':'银河作战','menu.chooseMode':'选择要出击的航路。','menu.stageKicker':'GALACTIC OPERATIONS','menu.stageDesc':'进入拥有独特区域与首领的有限作战。','menu.endlessKicker':'ENDLESS EXPEDITION','menu.endlessDesc':'挑战所有敌人与事件都会出现的无尽航路。',
   'stageMap.gameTime':'游戏时间','stageMap.unlockable':'可解锁','stageMap.weaponProgress':'武器','stageMap.minutes':'{n}分钟','stageMap.none':'无','stageMap.launch':'出击准备',
   'sortie.title':'出击准备','sortie.kicker.stage':'GALACTIC OPERATION','sortie.kicker.endless':'ENDLESS EXPEDITION','sortie.stageMode':'银河作战','sortie.endlessMode':'无尽模式','sortie.endlessTitle':'无尽航行','sortie.endlessDesc':'所有敌人、世界事件与超越体持续出现的无限生存航路。','sortie.time':'游戏时间','sortie.difficulty':'难度','sortie.minutes':'{n}分钟','sortie.noLimit':'无限','sortie.back':'返回','sortie.launch':'出击','sortie.difficulty.easy':'简单','sortie.difficulty.normal':'普通','sortie.difficulty.hard':'困难',
   'stageClear.targetDown':'守卫崩解','stageClear.operationComplete':'作战完成'
 });
 Object.assign(TEXT.es,{
-  'menu.chooseMode':'Elige tu ruta de salida.','menu.stageKicker':'GALACTIC OPERATIONS','menu.stageDesc':'Entra en operaciones finitas con regiones y jefes propios.','menu.endlessKicker':'ENDLESS EXPEDITION','menu.endlessDesc':'Sobrevive una ruta infinita con todos los enemigos y eventos.',
+  'menu.endless':'ENDLESS','menu.stageMap':'OPERACIONES GALÁCTICAS','menu.chooseMode':'Elige tu ruta de salida.','menu.stageKicker':'GALACTIC OPERATIONS','menu.stageDesc':'Entra en operaciones finitas con regiones y jefes propios.','menu.endlessKicker':'ENDLESS EXPEDITION','menu.endlessDesc':'Sobrevive una ruta infinita con todos los enemigos y eventos.',
   'stageMap.gameTime':'TIEMPO DE JUEGO','stageMap.unlockable':'DESBLOQUEABLE','stageMap.weaponProgress':'ARMA','stageMap.minutes':'{n} min','stageMap.none':'NINGUNO','stageMap.launch':'PREPARAR SALIDA',
   'sortie.title':'PREPARAR SALIDA','sortie.kicker.stage':'GALACTIC OPERATION','sortie.kicker.endless':'ENDLESS EXPEDITION','sortie.stageMode':'OPERACIÓN GALÁCTICA','sortie.endlessMode':'ENDLESS','sortie.endlessTitle':'Viaje Infinito','sortie.endlessDesc':'Ruta de supervivencia ilimitada con todos los enemigos, eventos y amenazas Apex.','sortie.time':'TIEMPO DE JUEGO','sortie.difficulty':'DIFICULTAD','sortie.minutes':'{n} min','sortie.noLimit':'ILIMITADO','sortie.back':'VOLVER','sortie.launch':'SALIR','sortie.difficulty.easy':'FÁCIL','sortie.difficulty.normal':'NORMAL','sortie.difficulty.hard':'DIFÍCIL',
   'stageClear.targetDown':'GUARDIÁN COLAPSADO','stageClear.operationComplete':'OPERACIÓN COMPLETA'
 });
 Object.assign(TEXT.fr,{
-  'menu.chooseMode':'Choisissez votre route de sortie.','menu.stageKicker':'GALACTIC OPERATIONS','menu.stageDesc':'Lancez des opérations finies avec des zones et des boss distincts.','menu.endlessKicker':'ENDLESS EXPEDITION','menu.endlessDesc':'Survivez à une route infinie mêlant tous les ennemis et événements.',
+  'menu.endless':'ENDLESS','menu.stageMap':'OPÉRATIONS GALACTIQUES','menu.chooseMode':'Choisissez votre route de sortie.','menu.stageKicker':'GALACTIC OPERATIONS','menu.stageDesc':'Lancez des opérations finies avec des zones et des boss distincts.','menu.endlessKicker':'ENDLESS EXPEDITION','menu.endlessDesc':'Survivez à une route infinie mêlant tous les ennemis et événements.',
   'stageMap.gameTime':'TEMPS DE JEU','stageMap.unlockable':'À DÉBLOQUER','stageMap.weaponProgress':'ARME','stageMap.minutes':'{n} min','stageMap.none':'AUCUN','stageMap.launch':'PRÉPARER LA SORTIE',
   'sortie.title':'PRÉPARATION','sortie.kicker.stage':'GALACTIC OPERATION','sortie.kicker.endless':'ENDLESS EXPEDITION','sortie.stageMode':'OPÉRATION GALACTIQUE','sortie.endlessMode':'ENDLESS','sortie.endlessTitle':'Voyage Sans Fin','sortie.endlessDesc':'Route de survie illimitée avec tous les ennemis, événements et menaces Apex.','sortie.time':'TEMPS DE JEU','sortie.difficulty':'DIFFICULTÉ','sortie.minutes':'{n} min','sortie.noLimit':'ILLIMITÉ','sortie.back':'RETOUR','sortie.launch':'LANCER','sortie.difficulty.easy':'FACILE','sortie.difficulty.normal':'NORMAL','sortie.difficulty.hard':'DIFFICILE',
   'stageClear.targetDown':'GARDIEN EFFONDRÉ','stageClear.operationComplete':'OPÉRATION TERMINÉE'
