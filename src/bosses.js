@@ -1,5 +1,6 @@
 function bossSkill(enemy,dt){
   if(enemy.eventVariant==='stage01-warden'&&typeof window.updateStage01BossSkill==='function')return window.updateStage01BossSkill(enemy,dt);
+  if(enemy.eventVariant==='stage02-heart'&&typeof window.updateStage02BossSkill==='function')return window.updateStage02BossSkill(enemy,dt);
   if(enemy.eventVariant==='dreadnought'&&typeof window.updateCrashDreadnoughtSkill==='function')return window.updateCrashDreadnoughtSkill(enemy,dt);
   if(enemy.type==='mini')return miniSkill(enemy,dt);if(enemy.type!=='boss')return;
   if(enemy.kind==='apex'){apexBossSkill(enemy,dt);apexPhaseDirector(enemy,dt);}else if(enemy.kind==='void'||enemy.eventKind==='void')voidBossSkill(enemy,dt);else normalBossSkill(enemy,dt);
