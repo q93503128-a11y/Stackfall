@@ -26,6 +26,8 @@ jobs:
           done < <(find src -type f -name '*.js' -print0 | sort -z)
       - name: Check polish contract
         run: node scripts/polish-contract-check.mjs
+      - name: Check run mode contract
+        run: node scripts/run-mode-contract.mjs
       - name: Check void boss contract
         run: node scripts/void-boss-contract.mjs
       - name: Check apex contract
