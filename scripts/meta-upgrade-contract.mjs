@@ -16,7 +16,7 @@ const checks=[
  ['Stage 1 grants repeat Stardust and first-clear Core Shard',stage.includes("{type:'currency',key:'stardust',amount:140}")&&stage.includes("{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}")],
  ['stage result displays recovered currencies',runtime.includes('result.currency?.stardust')&&runtime.includes('result.currency?.coreShard')],
  ['failed or Endless runs award Stardust and record lifetime runs',upgrade.includes('function runStardustReward')&&upgrade.includes('stackfallRecordRun?.(kills)')],
- ['Apex and Void kills feed long-term currencies',upgrade.includes("kind==='apex'")&&upgrade.includes("kind==='void'")&&upgrade.includes("stackfallGrantCurrency?.('coreShard',1)")],
+ ['Apex and Void kills feed long-term currencies without twin double rewards',upgrade.includes("kind==='apex'")&&upgrade.includes("kind==='void'&&isRewardTwin")&&upgrade.includes("grantRunCurrency('coreShard',1)")&&upgrade.includes('twinGroup')],
  ['game-over screen exposes recovered currency result',index.includes('id="resultCurrencyReward"')&&styles.includes('.result-currency-reward')],
  ['all supported languages include upgrade and currency labels',(lang.match(/'upgrade\.title'/g)||[]).length>=6&&(lang.match(/'currency\.stardust'/g)||[]).length>=6]
 ];
