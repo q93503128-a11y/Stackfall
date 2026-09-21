@@ -379,7 +379,7 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - Endless stays non-finite, keeps random world events, exposes all enemy families, and keeps the 600-second Apex cadence.
 - `src/meta-progression.js` owns persistent stage clears, best times, and weapon unlocks. A fresh save exposes four starter weapons: Pulse Blade, Starlight Caster, Radiant Bulwark, and Gravity Well.
 - Locked weapons are filtered from both starter selection and level-up acquisition pools.
-- `src/stage-catalog.js` now defines a playable `stage-01`, **Collapse Frontier / 붕괴 전초구역**, as a finite 600-second operation.
+- `src/stage-catalog.js` defines playable `stage-01`, **Collapse Frontier / 붕괴 전초구역**, with its final boss scheduled at 600 seconds; the actual run continues until the boss is defeated or the player dies.
 - Stage 1 gradually introduces four dedicated enemy families: Shard Feeder, Rift Dart, Debris Bombardier, and Collapse Bulwark.
 - Its fixed timeline triggers events at 90, 210, 300, 420, and 500 seconds, followed by the Collapse Frontier Warden at exactly 600 seconds.
 - Stage runs bypass the Endless spawn director, random world-event scheduler, and Apex scheduling. Their progression comes from their own catalog timeline instead.
