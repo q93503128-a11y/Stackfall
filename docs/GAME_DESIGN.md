@@ -373,19 +373,23 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - 개발 TMI를 선택 카드 설명에 다시 넣지 않는다.
 - 배포 지문 생성 전에 JavaScript 문법·영구 계약·소유권 검사를 실행한다.
 
-## Run mode foundation (2026-09-21)
+## Run modes and Stage 1 (2026-09-21)
 
-- `src/stage-catalog.js`: finite-stage metadata schema and the planned `stage-01` shell. Stage 1 currently carries only the canonical ~10 minute target and future content slots; enemy sets, gimmicks, fixed events, boss, rewards, and challenges are intentionally not fabricated yet.
-- `src/run-modes.js`: run-selection model for `endless` and `stage`. The default and fallback mode is always Endless.
-- Endless remains non-finite, keeps random world events, exposes all enemy families, and keeps the 600-second Apex cadence.
-- Stage mode is modeled as finite, with random repeating world events disabled at the configuration level. Stage runtime integration is not wired into spawning or `resetGame()` yet, so the currently playable game path remains the existing Endless path.
-- The next implementation layer is the galaxy-map stage selector, then explicit Stage 1 runtime scheduling using this catalog instead of rewriting the Endless loop.
+- `src/run-modes.js` separates `endless` and `stage`. The default and fallback mode remains Endless.
+- Endless stays non-finite, keeps random world events, exposes all enemy families, and keeps the 600-second Apex cadence.
+- `src/meta-progression.js` owns persistent stage clears, best times, and weapon unlocks. A fresh save exposes four starter weapons: Pulse Blade, Starlight Caster, Radiant Bulwark, and Gravity Well.
+- Locked weapons are filtered from both starter selection and level-up acquisition pools.
+- `src/stage-catalog.js` now defines a playable `stage-01`, **Collapse Frontier / 붕괴 전초구역**, as a finite 600-second operation.
+- Stage 1 gradually introduces four dedicated enemy families: Shard Feeder, Rift Dart, Debris Bombardier, and Collapse Bulwark.
+- Its fixed timeline triggers events at 90, 210, 300, 420, and 500 seconds, followed by the Collapse Frontier Warden at 540 seconds.
+- Stage runs bypass the Endless spawn director, random world-event scheduler, and Apex scheduling. Their progression comes from their own catalog timeline instead.
+- Defeating the Stage 1 boss completes the operation, records the clear and best time, and permanently unlocks the Comet Lance.
 
-### Galaxy map shell
+### Galaxy map
 
-- The main menu now keeps `ENDLESS` as the direct-start path and exposes a separate galaxy-map entry.
-- `src/stage-map.js` renders stage nodes from `STACKFALL_STAGE_CATALOG`, draws constellation connections, and fills the separate detail panel with operation time, threat, discoveries, events, boss state, and launch status.
-- Desktop keeps map and details side by side; compact/mobile layouts stack the map over the detail sheet.
-- Planned stages cannot launch. This prevents the Stage 1 shell from accidentally falling through to Endless before finite-stage runtime scheduling exists.
-- Future playable stages use the existing launch hook: select the stage run mode first, then call the normal reset path only after the stage definition is marked available.
+- The main menu keeps `ENDLESS` as the direct-start path and exposes the galaxy map separately.
+- `src/stage-map.js` renders nodes from `STACKFALL_STAGE_CATALOG` and resolves availability/clear state through persistent meta progression.
+- Stage 1 is launchable while its status is `available` or `cleared`. Future `planned` or progression-locked stages remain inspectable but cannot launch.
+- The map and operation details are separated: the map carries nodes and constellation links, while the detail panel carries time, threat, discoveries, events, boss, and launch state.
+- Desktop keeps map and details side by side; compact/mobile layouts stack the detail sheet below the map.
 
