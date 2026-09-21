@@ -74,6 +74,8 @@ expect('targeting','late focused wrappers preserve augment owners',difficulty.in
 
 expect('docs','concise chain copy stays player facing',core.includes('연쇄 유지시간과 연쇄 피해 증가')&&bootstrap.includes('연쇄 유지시간과 연쇄 피해 증가')&&progression.includes("desc:'30연쇄마다 최대 체력 비례 회복.'")&&!core.includes('1중첩 효과는 낮지만')&&!bootstrap.includes('A modest first stack')&&!progression.includes('성장률')&&!progression.includes('낮지만'));
 expect('docs','player-facing detail UI excludes implementation commentary',!auditUi.includes('현재 복제 확률')&&!auditUi.includes('현재 주기 단축')&&!auditUi.includes('추가 흡인 속도')&&!auditUi.includes('sanitizeWorldEventCopy')&&!endgame.includes('현재 ${stat(card.dataset.passiveKey)}')&&!community.includes('현재 ${'));
+expect('docs','defense copy has no obsolete drone identity or stale shield values',!bootstrap.includes('불워크 드론')&&!bootstrap.includes('Bulwark Drone')&&!bootstrap.includes('보호막 6 충전')&&!combat.includes('보호막 6 충전')&&!bootstrap.includes('새 표적을 0.5초 조준'));
+expect('docs','augment details match concise canonical effects',endgame.includes("bulwark:'반사 장벽: 피격 시 반격 창을 발사하고 보호막을 충전한다.'")&&endgame.includes("prism:'과열 성선: 집속 광선이 주변 적에게 굴절 도약한다.'")&&!endgame.includes('보호막 충전은 3초마다 발동'));
 expect('docs','chain recovery buff is documented',progression.includes('Math.min(.30,.025+power*.018')&&readme.includes('최대 체력의 30%')&&design.includes('min(30%'));
 expect('docs','ledger pause rule documented',design.includes('능력 장부를 열면 게임 일시정지')&&wiki.includes('능력 장부를 열면 게임이 일시정지'));
 expect('docs','apex ignores build and uses appearance escalation',design.includes('플레이어 레벨·무기·패시브 성장량을 읽지 않음')&&wiki.includes('등장 횟수만으로 누적 복리 강화')&&!catalog.includes('apexPlayerGrowthScale'));
