@@ -20,7 +20,7 @@ const checks=[
  ['failed or Endless runs award Stardust and record lifetime runs',upgrade.includes('function runStardustReward')&&upgrade.includes('stackfallRecordRun?.(kills)')],
  ['Apex and Void kills feed long-term currencies without twin double rewards',upgrade.includes("kind==='apex'")&&upgrade.includes("kind==='void'&&isRewardTwin")&&upgrade.includes("grantRunCurrency('coreShard',1)")&&upgrade.includes('twinGroup')],
  ['game-over screen exposes recovered currency result',index.includes('id="resultCurrencyReward"')&&styles.includes('.result-currency-reward')],
- ['desktop upgrade screen is viewport-contained while compact layouts may scroll',styles.includes('.upgrade-screen{position:absolute')&&styles.includes('overflow:hidden')&&styles.includes('height:calc(100dvh - 36px)')&&styles.includes('@media(max-width:900px){.upgrade-screen{padding:12px;overflow:auto}'))],
+ ['desktop upgrade screen is viewport-contained while compact layouts may scroll',styles.includes('.upgrade-screen{position:absolute')&&styles.includes('overflow:hidden')&&styles.includes('height:calc(100dvh - 36px)')&&styles.includes('@media(max-width:900px){.upgrade-screen{padding:12px;overflow:auto}')],
  ['profile emblem avoids the old crosshair construction',styles.includes('.profile-emblem-large')&&styles.includes('rotate(-18deg)')&&!styles.includes('.hub-profile-core:before{width:2px;height:56px}')],
  ['all supported languages include upgrade currency and profile labels',(lang.match(/'upgrade\.title'/g)||[]).length>=6&&(lang.match(/'currency\.stardust'/g)||[]).length>=6&&(lang.match(/'profile\.localSave'/g)||[]).length>=6]
 ];
