@@ -381,3 +381,11 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - Stage mode is modeled as finite, with random repeating world events disabled at the configuration level. Stage runtime integration is not wired into spawning or `resetGame()` yet, so the currently playable game path remains the existing Endless path.
 - The next implementation layer is the galaxy-map stage selector, then explicit Stage 1 runtime scheduling using this catalog instead of rewriting the Endless loop.
 
+### Galaxy map shell
+
+- The main menu now keeps `ENDLESS` as the direct-start path and exposes a separate galaxy-map entry.
+- `src/stage-map.js` renders stage nodes from `STACKFALL_STAGE_CATALOG`, draws constellation connections, and fills the separate detail panel with operation time, threat, discoveries, events, boss state, and launch status.
+- Desktop keeps map and details side by side; compact/mobile layouts stack the map over the detail sheet.
+- Planned stages cannot launch. This prevents the Stage 1 shell from accidentally falling through to Endless before finite-stage runtime scheduling exists.
+- Future playable stages use the existing launch hook: select the stage run mode first, then call the normal reset path only after the stage definition is marked available.
+
