@@ -390,7 +390,7 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 
 ### Galaxy map
 
-- The main menu is a mode-selection hub. `GALACTIC OPERATIONS` opens the galaxy map, `ENDLESS` opens sortie preparation, and `CORE DEVELOPMENT` opens persistent upgrades; none starts combat accidentally. The upper-left local-pilot card surfaces clear count and progression currencies without implying online-account sync.
+- The main menu is a mode-selection hub. `GALACTIC OPERATIONS` opens the galaxy map, `ENDLESS` opens sortie preparation, and `CORE DEVELOPMENT` opens persistent upgrades; none starts combat accidentally. The upper-left local-pilot card is clickable and exposes detailed local-save stats without implying online-account sync.
 - `src/stage-map.js` renders nodes from `STACKFALL_STAGE_CATALOG` and resolves availability/clear state through persistent meta progression.
 - Stage 1 is launchable while its status is `available` or `cleared`. Future `planned` or progression-locked stages remain inspectable but cannot launch.
 - The map and operation details are separated: luminous stellar points with separate number badges and constellation links stay on the map, while the detail panel carries game time, threat, unlock progress, boss, and launch state. Internal gimmick/event counts are not exposed as stage-detail stats.
