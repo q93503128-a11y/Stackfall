@@ -20,9 +20,12 @@ function miniSkill(e,dt){e.skillCd-=dt;e.burstCd-=dt;const d=Math.max(4,e.damage
   }else if(f==='mirror'){
     const side=e.twinSide||1;if(e.skillCd<=0){e.skillCd=2.8;for(let i=0;i<5;i++)spawnEnemyProjectile(e.x,e.y,Math.atan2(player.y-e.y,player.x-e.x)+side*(i-2)*.16,190+i*12,d,side>0?'#e0d7ff':'#9d82ff',5,6);}
     if(e.burstCd<=0){e.burstCd=6.4;const twin=nearbyTwin(e);if(twin){const x=e.x,y=e.y;e.x=twin.x;e.y=twin.y;twin.x=x;twin.y=y;shockwave(e.x,e.y,e.color,78,.32,2.5);shockwave(twin.x,twin.y,twin.color,78,.32,2.5);}else{const a=Math.random()*TAU;e.x=player.x+Math.cos(a)*380;e.y=player.y+Math.sin(a)*380;}}
-  }else{
+  }else if(f==='knight'){
     if(e.skillCd<=0){e.skillCd=3.25;fireRing(e,7,145,d,'#c79cff',e.phase*.15);}
     if(e.burstCd<=0){e.burstCd=6.6;const a=Math.atan2(player.y-e.y,player.x-e.x);e.dash=.58;e.dashX=Math.cos(a)*380;e.dashY=Math.sin(a)*380;addLine(e,a,300,27,d*.85,'#e7c4ff',.62);}
+  }else{
+    if(e.skillCd<=0){e.skillCd=3.4;fireFan(e,4,.16,180,d,'#d7b6ff');}
+    if(e.burstCd<=0){e.burstCd=7.0;addCircle(player.x,player.y,82,d,'#cda8ff',1.1);}
   }
 }
 
