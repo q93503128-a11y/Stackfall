@@ -97,8 +97,8 @@ rollChoices=function rollChoicesWithBasicCore(n){
   if(coreCount<6)pool.push({kind:'core',key:'core',...WEAPONS.core,weight:coreCount<3?1.28:1.08});
   for(const [key,w] of Object.entries(WEAPONS)){
     if(w.starter===false)continue;
-    const count=weaponCount(key),has=count>0,slots=state.weaponSlots.length;
-    if(count<6&&(has||slots<6))pool.push({kind:'weapon',key,...w,weight:has?1.34:1});
+    const count=weaponCount(key),has=count>0,slots=state.weaponSlots.length,limit=window.stackfallEquipmentSlotLimit?.()||4;
+    if(count<6&&(has||slots<limit))pool.push({kind:'weapon',key,...w,weight:has?1.34:1});
   }
   for(const [key,p] of Object.entries(PASSIVES))if(stat(key)<p.max)pool.push({kind:'passive',key,...p,weight:key==='magnet'||key==='echo'?1.3:1.18});
   const out=[];
@@ -116,7 +116,8 @@ function sf2SlotMarkup(key,basic=false){
 }
 renderLoadout=function renderLoadoutWithBasicCore(){
   let html=sf2SlotMarkup('core',true)+'<div class="slot-divider" aria-hidden="true"></div>';
-  for(let i=0;i<6;i++){
+  const limit=window.stackfallEquipmentSlotLimit?.()||4;
+  for(let i=0;i<limit;i++){
     const key=state.weaponSlots[i];
     if(key)html+=sf2SlotMarkup(key,false);
     else html+=`<div class="weapon-slot empty"><div class="icon-wrap"><div class="icon">+</div></div><div class="name">${tr('empty')}</div></div>`;
