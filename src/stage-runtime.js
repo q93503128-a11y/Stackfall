@@ -1,5 +1,5 @@
 (()=>{
-  const STAGE_ID='stage-01';
+  const STAGE_ID='stage-01',VICTORY_DURATION=2.85;
   const objective=document.querySelector('#stageObjective');
   const completeScreen=document.querySelector('#stageCompleteScreen');
   const completeTitle=document.querySelector('#stageCompleteTitle');
@@ -18,7 +18,7 @@
   };
   const isStage=()=>window.stackfallIsStageRun?.()===true&&state.runSelection?.stageId===STAGE_ID;
   function stageRuntime(){return isStage()?state.stageRun:null;}
-  function clearStageUi(){objective?.classList.add('hidden');completeScreen?.classList.add('hidden');}
+  function clearStageUi(){objective?.classList.add('hidden');completeScreen?.classList.add('hidden');state.stageVictory=null;}
   function spawnStageEnemy(variant='shardling',origin=null){
     const data=variantData[variant]||variantData.shardling;if(!makeEnemyRoom('normal'))return null;
     const cfg=enemyConfig(data.type),angle=Math.random()*TAU,radius=Math.min(Math.max(vw,vh)*.52,690)+rand(45,125),enemy={
@@ -74,33 +74,58 @@
     }
   }
   function updateObjective(run){
-    if(!objective)return;objective.classList.remove('hidden');
+    if(!objective)return;
     const boss=run.bossId?state.entities.enemies.find(e=>!e.dead&&e.id===run.bossId):null;
-    if(boss){objective.textContent=tr('stage01.objective.boss');return;}
-    const until=Math.max(0,(run.stage.boss?.spawnAt||540)-state.time);
-    objective.textContent=tr('stage01.objective.next')+' '+formatTime(until);
+    if(!boss){objective.classList.add('hidden');return;}
+    objective.textContent=tr('stage01.objective.boss');objective.classList.remove('hidden');
   }
   function updateStage(dt){
     const run=stageRuntime();if(!run||run.completed)return;
     updateObjective(run);
     for(const event of run.stage.fixedEvents)if(state.time>=event.at&&!run.eventsTriggered[event.id])triggerEvent(event);
     if(!run.bossSpawned&&state.time>=run.stage.boss.spawnAt)spawnStageBoss();
+    if(run.bossSpawned)return;
     const active=state.entities.enemies.filter(e=>!e.dead&&e.kind!=='stage-boss').length,cap=state.time>=450?48:state.time>=300?42:36;
-    if(run.bossSpawned&&state.time>=run.stage.durationSeconds){if(active>20)return;}
     state.spawnTimer-=dt;if(state.spawnTimer>0||active>=cap)return;
     const late=Math.max(0,state.time-240),rate=Math.max(.56,1.36-state.time*.00135),count=state.time>=450?2:state.time>=300&&Math.random()<.34?2:1;
     state.spawnTimer=Math.max(.50,rate-Math.min(.20,late/1800));
     const pool=stagePoolAt(state.time);for(let i=0;i<count;i++)spawnStageEnemy(chooseVariant(pool));
   }
-  function completeStage(enemy){
-    const run=stageRuntime();if(!run||run.completed)return;run.completed=true;run.completedAt=state.time;
-    state.mode='stageComplete';state.runSerial++;state.pendingActions.length=0;clearRunUiActions?.();state.entities.enemyProjectiles.length=0;state.entities.telegraphs.length=0;state.entities.beams.length=0;ui.touch.classList.add('hidden');ui.hud.classList.add('hidden');objective?.classList.add('hidden');
-    const result=window.stackfallRecordStageClear?.(run.stage.id,state.time)||{newWeapons:[]};
-    completeTitle.textContent=tr('stageClear.title');completeName.textContent=localized(run.stage.title);completeTime.textContent=formatTime(state.time);completeKills.textContent=String(state.kills);
+  function finalizeStageComplete(){
+    const run=stageRuntime();if(!run||run.resultShown)return;run.resultShown=true;
+    const clearTime=run.completedAt||state.time;state.stageVictory=null;state.mode='stageComplete';state.runSerial++;state.pendingActions.length=0;clearRunUiActions?.();
+    ui.touch.classList.add('hidden');ui.hud.classList.add('hidden');objective?.classList.add('hidden');
+    const result=window.stackfallRecordStageClear?.(run.stage.id,clearTime)||{newWeapons:[]};
+    completeTitle.textContent=tr('stageClear.title');completeName.textContent=localized(run.stage.title);completeTime.textContent=formatTime(clearTime);completeKills.textContent=String(state.kills);
     if(result.newWeapons.length){const names=result.newWeapons.map(key=>weaponText(key).name).join(', ');completeReward.textContent=tr('stageClear.unlock')+' · '+names;}
     else completeReward.textContent=tr('stageClear.rewardDone');
     completeScreen.classList.remove('hidden');window.renderStackfallGalaxyMap?.();audio.resonance();
   }
+  function beginStageVictory(enemy){
+    const run=stageRuntime();if(!run||run.completed||!enemy)return;
+    run.completed=true;run.completedAt=state.time;run.victoryStarted=true;
+    state.stageVictory={x:enemy.x,y:enemy.y,color:enemy.color||'#aeb9ff',elapsed:0,duration:VICTORY_DURATION,pulseA:false,pulseB:false};
+    state.mode='stageVictory';state.pendingActions.length=0;clearRunUiActions?.();state.bossActiveId=null;ui.bossBar.classList.add('hidden');objective?.classList.add('hidden');
+    state.entities.enemyProjectiles.length=0;state.entities.telegraphs.length=0;state.entities.beams.length=0;
+    for(const other of state.entities.enemies){if(other!==enemy&&!other.dead){other.dead=true;spawnParticle(other.x,other.y,other.color||'#9aa7ff',4,120,3);}}
+    state.camera.shake=Math.max(state.camera.shake,24);state.flash=Math.max(state.flash,.34);
+    shockwave(enemy.x,enemy.y,'#eef2ff',220,.90,8);spawnParticle(enemy.x,enemy.y,'#ffffff',54,410,9);spawnParticle(enemy.x,enemy.y,enemy.color||'#9aa7ff',42,300,7);
+  }
+  window.updateStageVictoryCinematic=function(dt){
+    const v=state.stageVictory;if(state.mode!=='stageVictory'||!v)return;
+    v.elapsed+=dt;
+    if(!v.pulseA&&v.elapsed>=.48){v.pulseA=true;shockwave(v.x,v.y,'#9aa7ff',340,.85,7);spawnParticle(v.x,v.y,'#b7c5ff',24,260,6);state.camera.shake=Math.max(state.camera.shake,18);state.flash=Math.max(state.flash,.22);}
+    if(!v.pulseB&&v.elapsed>=1.18){v.pulseB=true;shockwave(v.x,v.y,'#ffffff',470,1.05,5);state.camera.shake=Math.max(state.camera.shake,11);state.flash=Math.max(state.flash,.16);}
+    if(v.elapsed>=v.duration)finalizeStageComplete();
+  };
+  window.drawStageVictoryCinematic=function(){
+    const v=state.stageVictory;if(state.mode!=='stageVictory'||!v)return;
+    const p=worldToScreen(v.x,v.y),progress=clamp(v.elapsed/v.duration,0,1),burst=clamp(v.elapsed/.85,0,1),fade=1-clamp((v.elapsed-2.25)/.60,0,1);
+    ctx.save();ctx.globalCompositeOperation='lighter';ctx.translate(p.x,p.y);
+    for(let i=0;i<14;i++){const a=i/14*TAU+v.elapsed*.34,inner=24+burst*25,outer=58+burst*(125+(i%4)*16);ctx.globalAlpha=(.62-progress*.30)*fade;ctx.strokeStyle=i%3===0?'#ffffff':i%2?'#91a6ff':'#c0a8ff';ctx.lineWidth=1.2+(i%3)*.8;ctx.beginPath();ctx.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);ctx.lineTo(Math.cos(a)*outer,Math.sin(a)*outer);ctx.stroke();}
+    ctx.globalAlpha=Math.max(0,.9-progress*.45)*fade;const glow=ctx.createRadialGradient(0,0,0,0,0,120+burst*90);glow.addColorStop(0,'rgba(255,255,255,.95)');glow.addColorStop(.12,'rgba(190,210,255,.78)');glow.addColorStop(.42,'rgba(121,132,255,.22)');glow.addColorStop(1,'rgba(92,65,180,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(0,0,120+burst*90,0,TAU);ctx.fill();ctx.restore();
+    ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';const reveal=clamp((v.elapsed-.70)/.50,0,1)*fade;ctx.globalAlpha=reveal;ctx.shadowBlur=28;ctx.shadowColor='#9aa7ff';ctx.fillStyle='#f4f7ff';ctx.font='900 clamp(28px,4vw,54px) "Black Han Sans",sans-serif';ctx.fillText(v.elapsed<1.55?tr('stageClear.targetDown'):tr('stageClear.operationComplete'),vw/2,vh*.27);ctx.restore();
+  };
   window.updateStage01BossSkill=function(e,dt){
     if(!e||e.dead||e.eventVariant!=='stage01-warden')return;
     const hp=e.hp/Math.max(1,e.maxHp),phase=hp<.34?3:hp<.68?2:1,k=[1,.82,.67][phase-1],damage=Math.max(5,e.damage*.43);e.stagePhase=phase;e.skillCd-=dt/k;e.burstCd-=dt/k;e.pulseCd-=dt/k;
@@ -108,7 +133,7 @@
     if(e.burstCd<=0){e.burstCd=5.4;const p=typeof predictedPlayer==='function'?predictedPlayer(125+phase*35):{x:player.x,y:player.y},half=150+phase*24,gap=Math.max(48,76-phase*8);rawLine(p.x-half,p.y,p.x-gap,p.y,18+phase*2,damage,'#879cff',.96,'boss-line');rawLine(p.x+gap,p.y,p.x+half,p.y,18+phase*2,damage,'#879cff',.96,'boss-line');rawLine(p.x,p.y-half,p.x,p.y-gap,18+phase*2,damage*.88,'#c2b4ff',1.08,'boss-line');rawLine(p.x,p.y+gap,p.x,p.y+half,18+phase*2,damage*.88,'#c2b4ff',1.08,'boss-line');}
     if(e.pulseCd<=0){e.pulseCd=7.6-phase*.45;if(typeof fireRingWithGaps==='function'){const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,16+phase*4,150+phase*12,damage*.72,'#b8c3ff',e.phase*.13,aim,.30-phase*.03,4.8);}else fireRing(e,14+phase*3,150+phase*12,damage*.68,'#b8c3ff',e.phase*.13,4.8);if(phase>=2)spawnStageBurst(phase===3?'bombardier':'dart',phase);}
   };
-  window.handleStageBossDefeated=function(enemy){if(enemy?.eventVariant==='stage01-warden')completeStage(enemy);};
+  window.handleStageBossDefeated=function(enemy){if(enemy?.eventVariant==='stage01-warden')beginStageVictory(enemy);};
   const baseSpawning=updateSpawning;
   updateSpawning=function stageAwareSpawning(dt){if(isStage()){updateStage(dt);return;}baseSpawning(dt);};
   const baseMapEvents=window.updateMapEvents;
@@ -117,7 +142,7 @@
   resetGame=function stageAwareReset(){
     const config=window.stackfallCurrentRunConfig?.();baseReset();clearStageUi();
     if(config?.mode!=='stage'||config.stage?.id!==STAGE_ID){state.stageRun=null;return;}
-    const stage=config.stage;state.stageRun={stage,eventsTriggered:{},bossSpawned:false,bossId:null,completed:false,completedAt:null};state.nextApexAt=Infinity;state.mapEventActive=null;state.entities.mapEvents.length=0;state.entities.enemies.length=0;state.entities.enemyProjectiles.length=0;state.realmTheme='stage-01';state.spawnTimer=.72;
+    const stage=config.stage;state.stageRun={stage,eventsTriggered:{},bossSpawned:false,bossId:null,completed:false,completedAt:null,resultShown:false};state.nextApexAt=Infinity;state.mapEventActive=null;state.entities.mapEvents.length=0;state.entities.enemies.length=0;state.entities.enemyProjectiles.length=0;state.realmTheme='stage-01';state.spawnTimer=.72;
     for(let i=0;i<3;i++)spawnStageEnemy('shardling');showBossNotice(localized(stage.title),'STAGE 01');updateObjective(state.stageRun);
   };
   completeMap?.addEventListener('click',()=>{completeScreen.classList.add('hidden');showMainMenu();window.openStackfallGalaxyMap?.();});
