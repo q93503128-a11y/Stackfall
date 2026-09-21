@@ -156,7 +156,7 @@
     if(useWeapon){const key=weapons[Math.floor(Math.random()*weapons.length)],next=weaponCount(key)+1;state.weaponStacks[key]=next;if(key!=='core'&&!state.weaponSlots.includes(key))state.weaponSlots.push(key);title=weaponText(key).name;desc=stackEffectText(key,next)?.desc||'장비 중첩 증가.';}
     else if(passives.length){const key=passives[Math.floor(Math.random()*passives.length)];applyMiniRewardPassive(key);title=passiveText(key).name;desc=passiveText(key).desc;}
     else{player.shield=Math.max(player.shield,18);desc='보호막 충전.';}
-    const kicker=document.querySelector('#resonanceKicker');if(kicker)kicker.textContent='중간보스 자동 보상';ui.resonanceTitle.textContent=title;ui.resonanceDesc.textContent=desc;ui.resonance.classList.remove('hidden');scheduleUiAction(4800,()=>ui.resonance.classList.add('hidden'));audio.pickup();renderLoadout();updateHUD();
+    const kicker=document.querySelector('#resonanceKicker');if(kicker)kicker.textContent='중간보스 자동 보상';ui.resonanceTitle.textContent=title;ui.resonanceDesc.textContent=desc;showTimedResonance(5200);audio.pickup();renderLoadout();updateHUD();
   }
 
   const rrKill=killEnemy;killEnemy=function(enemy,opts={}){
