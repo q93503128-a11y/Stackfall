@@ -316,3 +316,8 @@ node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-r
 `build-fingerprint.mjs`는 실제 로드되는 JavaScript 문법과 영구 계약·소유권 검사를 먼저 실행하고 로컬 자산 SHA-256 지문을 `src/build-info.js`에 기록합니다. 브라우저 smoke는 페이지의 `window.STACKFALL_BUILD_SHA`와 로컬 계산값을 비교해 이전 배포 자산이 제공되는 경우에도 실패합니다.
 
 부하 검사의 p95 `50.5ms`, 50ms 이상 프레임 비율 `8%`, 최대 `100ms` 기준은 급격한 회귀를 막는 상한이며 60FPS 보장 기준이 아닙니다. 결과에는 평균 프레임 시간과 그 값으로 계산한 추정 FPS를 함께 기록합니다.
+
+### Run modes foundation
+
+The runtime now has a non-invasive run-mode data layer: `src/stage-catalog.js` defines finite-stage metadata and `src/run-modes.js` models `endless` versus `stage`. Endless is still the default and the only wired gameplay path; the Stage 1 shell is a ~10 minute planned definition for the upcoming galaxy-map and stage-runtime work. Existing `resetGame()`, spawning, and random world-event behavior are intentionally unchanged until that integration step.
+
