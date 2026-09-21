@@ -199,7 +199,7 @@
 
 ### Galaxy map
 
-The main menu is a mode hub rather than a direct loadout/start screen. `GALACTIC OPERATIONS` opens the galaxy map, `ENDLESS` opens sortie preparation, and `CORE DEVELOPMENT` opens the permanent upgrade field. The upper-left local-pilot card is clickable and shows a detailed local-save panel with clears, runs, kills, equipment slots, unlocked weapons, best Stage 1 time, Stardust, and Core Shards; it is not an online account. The upgrade field keeps a circular player-core representation centered with floating orbital nodes and fits within one normal desktop viewport; compact/mobile layouts may scroll. Skins are deferred.
+The main menu is a mode hub rather than a direct loadout/start screen. `GALACTIC OPERATIONS` opens the galaxy map, `ENDLESS` opens sortie preparation, and `CORE DEVELOPMENT` opens the permanent upgrade field. The upper-left local-pilot card is clickable and shows a detailed local-save panel with clears, runs, kills, equipment slots, unlocked weapons, best Stage 1 time, Stardust, and Core Shards; it is not an online account. The upgrade field keeps the exact shared in-game player-core renderer centered with floating orbital nodes and fits within one normal desktop viewport; compact/mobile layouts may scroll. Future skins can therefore propagate through the shared renderer automatically. Skins are otherwise deferred.
 
 ### Stage content identity
 
