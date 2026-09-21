@@ -61,7 +61,14 @@
       enemySet:[{id:'glass-wing',type:'fast',unlockAt:0},{id:'phase-drifter',type:'ranged',unlockAt:0},{id:'abyss-spore',type:'ranged',unlockAt:120},{id:'conduit-leech',type:'tank',unlockAt:300},{id:'bombardier',type:'ranged',unlockAt:430}],
       fixedEvents:[{id:'spore-tide',at:120,kind:'wave',variant:'abyss-spore',count:8},{id:'root-cage',at:240,kind:'hazard',variant:'root-cage'},{id:'spore-rain',at:355,kind:'hazard',variant:'spore-rain'},{id:'root-procession',at:470,kind:'wave',variant:'abyss-spore',count:10},{id:'black-bloom',at:550,kind:'hazard',variant:'black-bloom'},{id:'final-boss',at:600,kind:'boss',variant:'nightbloom-matriarch'}],
       boss:{id:'nightbloom-matriarch',spawnAt:600,name:{ko:'밤꽃 모체',en:'Nightbloom Matriarch'}},rewards:[{type:'weapon',key:'drone'},{type:'currency',key:'stardust',amount:410},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
+    }),
+    createStage({
+      id:'stage-08',order:8,constellationId:'constellation-02',status:'available',title:{ko:'흑수액 협곡',en:'Black Sap Ravine'},description:{ko:'살아 있는 성운의 거대한 수액관이 협곡처럼 갈라진 구역. 뿌리창 유영체와 맥동하는 수액 분출을 돌파하고 협곡의 혈류를 지배하는 심연 수관을 파괴해야 한다.',en:'A ravine carved through the colossal sap-vessels of the living nebula. Break through Rootlancers and pulsing sap eruptions, then destroy the Abyssal Rootcrown controlling the flow.'},durationSeconds:600,estimatedMinutes:10,threat:8,node:{x:.37,y:.31},requirements:{previous:'stage-07'},
+      discoveries:{gimmicks:['sap-geyser','vascular-rail','arterial-rupture'],weapons:['rail'],events:['rootlance-migration','spore-convoy','arterial-rupture']},
+      enemySet:[{id:'glass-wing',type:'fast',unlockAt:0},{id:'abyss-spore',type:'ranged',unlockAt:0},{id:'rootlance',type:'fast',unlockAt:135},{id:'phase-drifter',type:'ranged',unlockAt:300},{id:'conduit-leech',type:'tank',unlockAt:430}],
+      fixedEvents:[{id:'rootlance-migration',at:135,kind:'wave',variant:'rootlance',count:9},{id:'sap-geyser',at:250,kind:'hazard',variant:'sap-geyser'},{id:'vascular-rail',at:365,kind:'hazard',variant:'vascular-rail'},{id:'spore-convoy',at:475,kind:'wave',variant:'abyss-spore',count:10},{id:'arterial-rupture',at:555,kind:'hazard',variant:'arterial-rupture'},{id:'final-boss',at:600,kind:'boss',variant:'abyssal-rootcrown'}],
+      boss:{id:'abyssal-rootcrown',spawnAt:600,name:{ko:'심연 수관',en:'Abyssal Rootcrown'}},rewards:[{type:'weapon',key:'rail'},{type:'currency',key:'stardust',amount:460},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
     })
   ]);
-  window.STACKFALL_STAGE_SCHEMA_VERSION=7;window.STACKFALL_CONSTELLATIONS=constellations;window.STACKFALL_STAGE_CATALOG=catalog;window.stackfallStageById=id=>catalog.find(stage=>stage.id===id)||null;window.stackfallConstellationById=id=>constellations.find(page=>page.id===id)||null;
+  window.STACKFALL_STAGE_SCHEMA_VERSION=8;window.STACKFALL_CONSTELLATIONS=constellations;window.STACKFALL_STAGE_CATALOG=catalog;window.stackfallStageById=id=>catalog.find(stage=>stage.id===id)||null;window.stackfallConstellationById=id=>constellations.find(page=>page.id===id)||null;
 })();

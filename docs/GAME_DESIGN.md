@@ -405,6 +405,8 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - Constellation 2 is **Abyssal Bloom / 심연의 개화**.
 - `stage-07`, **Blackbloom Expanse / 검은 꽃밭**, opens constellation two, introduces Abyss Spore, living-root/spore hazards, and the Nightbloom Matriarch at 600 seconds.
 - Stage 7 permanently unlocks Meteor Drones.
+- `stage-08`, **Black Sap Ravine / 흑수액 협곡**, unlocks after Stage 7, introduces Rootlance, uses sap-geyser/vascular-rail/arterial-rupture incidents, and fields the Abyssal Rootcrown at 600 seconds.
+- Stage 8 permanently unlocks Interstellar Rail.
 - Galaxy stages are grouped into constellation pages. A finished constellation hands progression to the first stage of the next constellation; the map never stretches every constellation into one endless canvas.
 
 ### Galaxy map

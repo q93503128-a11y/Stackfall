@@ -260,6 +260,26 @@ Object.assign(TEXT.fr,{
   'stage06.boss':'Nexus de Shardway','stage06.boss.warning':'TOUTES LES ANOMALIES DE LA PREMIÈRE CONSTELLATION CONVERGENT','stage06.event.frontierEcho':'ÉCHO DE FRONTIÈRE','stage06.event.magnetarEcho':'ÉCHO MAGNÉTAR','stage06.event.cross':'CROIX DE CONVERGENCE','stage06.event.timefold':'RÉSEAU TEMPOREL','stage06.event.collapse':'EFFONDREMENT DE ROUTE','stage06.event.warning':'LE NEXUS REPLIE PLUSIEURS ROUTES EN UN POINT','stage06.event.fixed':'ÉVÉNEMENT FIXE','stage06.objective.boss':'DÉTRUISEZ LE NEXUS DE SHARDWAY'
 });
 Object.assign(TEXT.ko,{
+  'stage08.enemy.rootlance':'뿌리창 유영체','stage08.boss':'심연 수관','stage08.boss.warning':'협곡의 주수관이 개방됩니다','stage08.event.migration':'뿌리창 이동군','stage08.event.convoy':'포자 수송군','stage08.event.geyser':'수액 분출','stage08.event.rail':'맥관 절단선','stage08.event.rupture':'동맥 파열','stage08.event.warning':'살아 있는 수액관이 전장을 절단합니다','stage08.event.fixed':'고정 사건','stage08.objective.boss':'심연 수관을 파괴하라'
+});
+Object.assign(TEXT.en,{
+  'stage08.enemy.rootlance':'Rootlance','stage08.boss':'Abyssal Rootcrown','stage08.boss.warning':'THE RAVINE\'S PRIMARY VESSEL OPENS','stage08.event.migration':'ROOTLANCE MIGRATION','stage08.event.convoy':'SPORE CONVOY','stage08.event.geyser':'SAP GEYSER','stage08.event.rail':'VASCULAR RAIL','stage08.event.rupture':'ARTERIAL RUPTURE','stage08.event.warning':'LIVING VESSELS ARE CUTTING THE BATTLEFIELD','stage08.event.fixed':'FIXED EVENT','stage08.objective.boss':'DESTROY THE ABYSSAL ROOTCROWN'
+});
+Object.assign(TEXT.ja,{
+  'stage08.enemy.rootlance':'根槍遊泳体','stage08.boss':'深淵根冠','stage08.boss.warning':'峡谷の主導管が開きます','stage08.event.migration':'根槍移動群','stage08.event.convoy':'胞子輸送群','stage08.event.geyser':'樹液噴出','stage08.event.rail':'脈管切断線','stage08.event.rupture':'動脈破裂','stage08.event.warning':'生きた導管が戦場を切り裂きます','stage08.event.fixed':'固定イベント','stage08.objective.boss':'深淵根冠を破壊せよ'
+});
+Object.assign(TEXT['zh-CN'],{
+  'stage08.enemy.rootlance':'根枪游体','stage08.boss':'深渊根冠','stage08.boss.warning':'峡谷主导管正在开启','stage08.event.migration':'根枪迁徙群','stage08.event.convoy':'孢子运输群','stage08.event.geyser':'树液喷涌','stage08.event.rail':'脉管切割线','stage08.event.rupture':'动脉破裂','stage08.event.warning':'活体导管正在切割战场','stage08.event.fixed':'固定事件','stage08.objective.boss':'摧毁深渊根冠'
+});
+Object.assign(TEXT.es,{
+  'stage08.enemy.rootlance':'Lanza Raíz','stage08.boss':'Corona Raíz Abisal','stage08.boss.warning':'SE ABRE EL VASO PRINCIPAL DEL BARRANCO','stage08.event.migration':'MIGRACIÓN DE LANZAS RAÍZ','stage08.event.convoy':'CONVOY DE ESPORAS','stage08.event.geyser':'GÉISER DE SAVIA','stage08.event.rail':'RIEL VASCULAR','stage08.event.rupture':'RUPTURA ARTERIAL','stage08.event.warning':'LOS VASOS VIVOS CORTAN EL CAMPO','stage08.event.fixed':'EVENTO FIJO','stage08.objective.boss':'DESTRUYE LA CORONA RAÍZ ABISAL'
+});
+Object.assign(TEXT.fr,{
+  'stage08.enemy.rootlance':'Lance-Racine','stage08.boss':'Couronne-Racine Abyssale','stage08.boss.warning':'LE VAISSEAU PRINCIPAL DU RAVIN S’OUVRE','stage08.event.migration':'MIGRATION DE LANCES-RACINES','stage08.event.convoy':'CONVOI DE SPORES','stage08.event.geyser':'GEYSER DE SÈVE','stage08.event.rail':'RAIL VASCULAIRE','stage08.event.rupture':'RUPTURE ARTÉRIELLE','stage08.event.warning':'LES VAISSEAUX VIVANTS TRANCHENT LE CHAMP','stage08.event.fixed':'ÉVÉNEMENT FIXE','stage08.objective.boss':'DÉTRUISEZ LA COURONNE-RACINE ABYSSALE'
+});
+
+
+Object.assign(TEXT.ko,{
   'stage07.enemy.abyssSpore':'심연 포자체','stage07.boss':'밤꽃 모체','stage07.boss.warning':'살아 있는 성운의 중심 꽃이 개방됩니다','stage07.event.sporeTide':'포자 범람','stage07.event.rootProcession':'뿌리 행렬','stage07.event.rootCage':'뿌리 감옥','stage07.event.sporeRain':'포자 낙하','stage07.event.blackBloom':'검은 개화','stage07.event.warning':'살아 있는 뿌리가 안전 지대를 조입니다','stage07.event.fixed':'고정 사건','stage07.objective.boss':'밤꽃 모체를 제거하라'
 });
 Object.assign(TEXT.en,{
