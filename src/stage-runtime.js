@@ -95,11 +95,14 @@
     const run=stageRuntime();if(!run||run.resultShown)return;run.resultShown=true;
     const clearTime=run.completedAt||state.time;state.stageVictory=null;state.mode='stageComplete';state.runSerial++;state.pendingActions.length=0;clearRunUiActions?.();
     ui.touch.classList.add('hidden');ui.hud.classList.add('hidden');objective?.classList.add('hidden');
-    const result=window.stackfallRecordStageClear?.(run.stage.id,clearTime)||{newWeapons:[]};
+    const result=window.stackfallRecordStageClear?.(run.stage.id,clearTime)||{newWeapons:[],currency:{}};
     completeTitle.textContent=tr('stageClear.title');completeName.textContent=localized(run.stage.title);completeTime.textContent=formatTime(clearTime);completeKills.textContent=String(state.kills);
-    if(result.newWeapons.length){const names=result.newWeapons.map(key=>weaponText(key).name).join(', ');completeReward.textContent=tr('stageClear.unlock')+' · '+names;}
-    else completeReward.textContent=tr('stageClear.rewardDone');
-    completeScreen.classList.remove('hidden');window.renderStackfallGalaxyMap?.();audio.resonance();
+    const rewards=[];
+    if(result.newWeapons.length){const names=result.newWeapons.map(key=>weaponText(key).name).join(', ');rewards.push(tr('stageClear.unlock')+' · '+names);}
+    if(result.currency?.stardust)rewards.push('✦ '+tr('currency.stardust')+' +'+result.currency.stardust);
+    if(result.currency?.coreShard)rewards.push('◆ '+tr('currency.coreShard')+' +'+result.currency.coreShard);
+    completeReward.textContent=rewards.length?rewards.join('   ·   '):tr('stageClear.rewardDone');
+    window.renderStackfallMetaUi?.();completeScreen.classList.remove('hidden');window.renderStackfallGalaxyMap?.();audio.resonance();
   }
   function beginStageVictory(enemy){
     const run=stageRuntime();if(!run||run.completed||!enemy)return;
