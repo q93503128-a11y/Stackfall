@@ -48,9 +48,9 @@
         {id:'collapse-pulse-a',at:300,kind:'hazard',variant:'collapse-pulse'},
         {id:'warden-line',at:420,kind:'wave',variant:'bulwark',count:4},
         {id:'collapse-pulse-b',at:500,kind:'hazard',variant:'collapse-pulse'},
-        {id:'final-boss',at:540,kind:'boss',variant:'collapse-warden'}
+        {id:'final-boss',at:600,kind:'boss',variant:'collapse-warden'}
       ],
-      boss:{id:'collapse-warden',spawnAt:540,name:{ko:'붕괴의 전초 수호자',en:'Collapse Frontier Warden'}},
+      boss:{id:'collapse-warden',spawnAt:600,name:{ko:'붕괴의 전초 수호자',en:'Collapse Frontier Warden'}},
       rewards:[{type:'weapon',key:'comet'}],
       challenges:[{id:'clear',type:'clear'}]
     })
