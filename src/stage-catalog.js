@@ -54,7 +54,38 @@
       rewards:[{type:'weapon',key:'comet'},{type:'currency',key:'stardust',amount:140},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],
       challenges:[{id:'clear',type:'clear'}]
     })
-  ]);
+,
+    createStage({
+      id:'stage-02',
+      order:2,
+      status:'available',
+      title:{ko:'이온 성운 해구',en:'Ion Nebula Trench'},
+      description:{ko:'전리된 성운이 항로를 집어삼킨 구역. 기존 파편 개체 사이로 성운 유영체가 나타나며, 주기적으로 전장을 가르는 이온 전단을 버틴 뒤 성운의 심장을 파괴해야 한다.',en:'An ionized nebula has swallowed the route. Familiar fragment hosts mix with new nebula wisps; survive repeated ion shears and destroy the Nebula Heart.'},
+      durationSeconds:600,
+      estimatedMinutes:10,
+      threat:2,
+      node:{x:.34,y:.38},
+      requirements:{previous:'stage-01'},
+      discoveries:{gimmicks:['ion-shear'],weapons:['arc'],events:['wisp-bloom','ion-storm','deep-shear']},
+      enemySet:[
+        {id:'shardling',type:'grunt',unlockAt:0},
+        {id:'dart',type:'fast',unlockAt:0},
+        {id:'nebula-wisp',type:'ranged',unlockAt:120},
+        {id:'bombardier',type:'ranged',unlockAt:240},
+        {id:'bulwark',type:'tank',unlockAt:420}
+      ],
+      fixedEvents:[
+        {id:'ion-shear-a',at:120,kind:'hazard',variant:'ion-shear'},
+        {id:'wisp-bloom',at:220,kind:'wave',variant:'nebula-wisp',count:7},
+        {id:'ion-shear-b',at:330,kind:'hazard',variant:'ion-shear'},
+        {id:'bombardment',at:450,kind:'wave',variant:'bombardier',count:6},
+        {id:'deep-shear',at:530,kind:'hazard',variant:'deep-shear'},
+        {id:'final-boss',at:600,kind:'boss',variant:'nebula-heart'}
+      ],
+      boss:{id:'nebula-heart',spawnAt:600,name:{ko:'성운의 심장',en:'Nebula Heart'}},
+      rewards:[{type:'weapon',key:'arc'},{type:'currency',key:'stardust',amount:180},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],
+      challenges:[{id:'clear',type:'clear'}]
+    })  ]);
   window.STACKFALL_STAGE_SCHEMA_VERSION=2;
   window.STACKFALL_STAGE_CATALOG=catalog;
   window.stackfallStageById=id=>catalog.find(stage=>stage.id===id)||null;
