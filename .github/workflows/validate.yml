@@ -28,6 +28,10 @@ jobs:
         run: node scripts/polish-contract-check.mjs
       - name: Check Stage 1 runtime contract
         run: node scripts/stage01-runtime-contract.mjs
+      - name: Check sortie preparation contract
+        run: node scripts/sortie-prep-contract.mjs
+      - name: Check boss identity contract
+        run: node scripts/boss-identity-contract.mjs
       - name: Check stage map contract
         run: node scripts/stage-map-contract.mjs
       - name: Check run mode contract
