@@ -13,7 +13,7 @@ const checks=[
  ['boss death starts a victory cinematic instead of the result modal',bosses.includes("enemy.kind==='stage-boss'")&&runtime.includes('beginStageVictory(enemy)')&&runtime.includes("state.mode='stageVictory'")],
  ['victory cinematic advances and renders before result',render.includes("state.mode==='stageVictory'")&&render.includes('updateStageVictoryCinematic')&&render.includes('drawStageVictoryCinematic')],
  ['result appears only after the victory duration',runtime.includes('if(v.elapsed>=v.duration)finalizeStageComplete()')&&runtime.includes("state.mode='stageComplete'")],
- ['clear records persistent progression and unlocks comet',catalog.includes("rewards:[{type:'weapon',key:'comet'}]")&&runtime.includes('stackfallRecordStageClear')&&meta.includes('unlockWeapon(reward.key)')],
+ ['clear records persistent progression, currencies, and comet unlock',catalog.includes("{type:'weapon',key:'comet'}")&&catalog.includes("{type:'currency',key:'stardust',amount:140}")&&catalog.includes("{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}")&&runtime.includes('stackfallRecordStageClear')&&runtime.includes('result.currency?.stardust')&&meta.includes('unlockWeapon(reward.key)')],
  ['fresh players have exactly four named starter unlocks',meta.includes("INITIAL_WEAPONS=Object.freeze(['blade','ember','bulwark','gravity'])")],
  ['locked weapons are filtered from starter and level-up pools',iface.includes('stackfallIsWeaponUnlocked')&&feature.includes('stackfallIsWeaponUnlocked')&&progression.includes('stackfallIsWeaponUnlocked')],
  ['Stage 1 enemy silhouettes have dedicated renderer',entities.includes('function drawStageEnemyBody')&&['shardling','dart','bombardier','bulwark'].every(id=>entities.includes("v==='"+id+"'"))],
