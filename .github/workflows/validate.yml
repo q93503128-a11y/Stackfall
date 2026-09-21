@@ -40,6 +40,8 @@ jobs:
         run: node scripts/stage03-runtime-contract.mjs
       - name: Check Stage 4 runtime contract
         run: node scripts/stage04-runtime-contract.mjs
+      - name: Check Stage 5 runtime contract
+        run: node scripts/stage05-runtime-contract.mjs
       - name: Check sortie preparation contract
         run: node scripts/sortie-prep-contract.mjs
       - name: Check boss identity contract

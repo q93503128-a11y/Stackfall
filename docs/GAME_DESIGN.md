@@ -398,6 +398,8 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - Stage 3 permanently unlocks Constellation Prism.
 - `stage-04`, **Stasis Orbit Corridor / 정지궤도 회랑**, unlocks after Stage 3, introduces Phase Drifter, uses second-hand cuts/stasis pulses/zero-hour lattices, and fields the Zero-Hour Regulator at 600 seconds.
 - Stage 4 permanently unlocks Chrono Ring.
+- `stage-05`, **Magnetar Stormbelt / 자기극 폭풍대**, unlocks after Stage 4, introduces Conduit Leech, rotates between magnetic-arc/polarity-reversal pressure, and fields the Dipole Crown at 600 seconds.
+- Stage 5 permanently unlocks Ion Chain.
 - Galaxy stages are grouped into constellation pages. A finished constellation hands progression to the first stage of the next constellation; the map never stretches every constellation into one endless canvas.
 
 ### Galaxy map

@@ -242,6 +242,26 @@ Object.assign(TEXT.fr,{
 });
 
 Object.assign(TEXT.ko,{
+  'stage05.enemy.conduitLeech':'도체 기생체','stage05.boss':'쌍극 왕관','stage05.boss.warning':'자기폭풍 중심핵이 극성을 고정합니다','stage05.event.breach':'도체 균열','stage05.event.chargedFlight':'대전 비행단','stage05.event.arc':'자기선 방전','stage05.event.reversal':'극성 반전','stage05.event.collapse':'자기폭풍 붕괴','stage05.event.warning':'고에너지 자기장이 전장을 가릅니다','stage05.event.fixed':'고정 사건','stage05.objective.boss':'쌍극 왕관을 파괴하라'
+});
+Object.assign(TEXT.en,{
+  'stage05.enemy.conduitLeech':'Conduit Leech','stage05.boss':'Dipole Crown','stage05.boss.warning':'THE MAGNETAR CORE LOCKS ITS POLARITY','stage05.event.breach':'CONDUIT BREACH','stage05.event.chargedFlight':'CHARGED FLIGHT','stage05.event.arc':'MAGNETIC ARC','stage05.event.reversal':'POLARITY REVERSAL','stage05.event.collapse':'MAGNETAR COLLAPSE','stage05.event.warning':'HIGH-ENERGY FIELD LINES CUT THE BATTLEFIELD','stage05.event.fixed':'FIXED EVENT','stage05.objective.boss':'DESTROY THE DIPOLE CROWN'
+});
+Object.assign(TEXT.ja,{
+  'stage05.enemy.conduitLeech':'導体寄生体','stage05.boss':'双極冠','stage05.boss.warning':'マグネター中枢が極性を固定します','stage05.event.breach':'導体亀裂','stage05.event.chargedFlight':'帯電飛行隊','stage05.event.arc':'磁力線放電','stage05.event.reversal':'極性反転','stage05.event.collapse':'マグネター崩壊','stage05.event.warning':'高エネルギー磁場が戦場を切り裂きます','stage05.event.fixed':'固定イベント','stage05.objective.boss':'双極冠を破壊せよ'
+});
+Object.assign(TEXT['zh-CN'],{
+  'stage05.enemy.conduitLeech':'导体寄生体','stage05.boss':'双极王冠','stage05.boss.warning':'磁星核心正在锁定极性','stage05.event.breach':'导体裂口','stage05.event.chargedFlight':'带电飞行队','stage05.event.arc':'磁力线放电','stage05.event.reversal':'极性反转','stage05.event.collapse':'磁星崩塌','stage05.event.warning':'高能磁场正在切割战场','stage05.event.fixed':'固定事件','stage05.objective.boss':'摧毁双极王冠'
+});
+Object.assign(TEXT.es,{
+  'stage05.enemy.conduitLeech':'Sanguijuela Conductora','stage05.boss':'Corona Dipolar','stage05.boss.warning':'EL NÚCLEO MAGNETAR FIJA SU POLARIDAD','stage05.event.breach':'BRECHA CONDUCTORA','stage05.event.chargedFlight':'VUELO CARGADO','stage05.event.arc':'ARCO MAGNÉTICO','stage05.event.reversal':'INVERSIÓN DE POLARIDAD','stage05.event.collapse':'COLAPSO MAGNETAR','stage05.event.warning':'LAS LÍNEAS MAGNÉTICAS CORTAN EL CAMPO','stage05.event.fixed':'EVENTO FIJO','stage05.objective.boss':'DESTRUYE LA CORONA DIPOLAR'
+});
+Object.assign(TEXT.fr,{
+  'stage05.enemy.conduitLeech':'Sangsue Conductrice','stage05.boss':'Couronne Dipolaire','stage05.boss.warning':'LE CŒUR DU MAGNÉTAR VERROUILLE SA POLARITÉ','stage05.event.breach':'BRÈCHE CONDUCTRICE','stage05.event.chargedFlight':'VOL CHARGÉ','stage05.event.arc':'ARC MAGNÉTIQUE','stage05.event.reversal':'INVERSION DE POLARITÉ','stage05.event.collapse':'EFFONDREMENT MAGNÉTAR','stage05.event.warning':'LES LIGNES MAGNÉTIQUES TRANCHENT LE CHAMP','stage05.event.fixed':'ÉVÉNEMENT FIXE','stage05.objective.boss':'DÉTRUISEZ LA COURONNE DIPOLAIRE'
+});
+
+
+Object.assign(TEXT.ko,{
   'stage04.enemy.phaseDrifter':'시차 방랑체','stage04.boss':'영점 조율기','stage04.boss.warning':'회랑의 시간이 영점에 고정됩니다','stage04.event.procession':'시차 행렬','stage04.event.echoFlight':'잔향 비행단','stage04.event.secondHand':'초침 절단','stage04.event.stasis':'정지 파동','stage04.event.zeroHour':'영점 격자','stage04.event.warning':'시간축이 전장을 절단합니다','stage04.event.fixed':'고정 사건','stage04.objective.boss':'영점 조율기를 파괴하라'
 });
 Object.assign(TEXT.en,{
