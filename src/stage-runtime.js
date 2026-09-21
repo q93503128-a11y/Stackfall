@@ -95,7 +95,7 @@
     const run=stageRuntime();if(!run||run.resultShown)return;run.resultShown=true;
     const clearTime=run.completedAt||state.time;state.stageVictory=null;state.mode='stageComplete';state.runSerial++;state.pendingActions.length=0;clearRunUiActions?.();
     ui.touch.classList.add('hidden');ui.hud.classList.add('hidden');objective?.classList.add('hidden');
-    const result=window.stackfallRecordStageClear?.(run.stage.id,clearTime)||{newWeapons:[],currency:{}};
+    const result=window.stackfallRecordStageClear?.(run.stage.id,clearTime)||{newWeapons:[],currency:{}};window.stackfallRecordRun?.(state.kills||0);
     completeTitle.textContent=tr('stageClear.title');completeName.textContent=localized(run.stage.title);completeTime.textContent=formatTime(clearTime);completeKills.textContent=String(state.kills);
     const rewards=[];
     if(result.newWeapons.length){const names=result.newWeapons.map(key=>weaponText(key).name).join(', ');rewards.push(tr('stageClear.unlock')+' · '+names);}
