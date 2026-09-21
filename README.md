@@ -317,11 +317,15 @@ node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-r
 
 부하 검사의 p95 `50.5ms`, 50ms 이상 프레임 비율 `8%`, 최대 `100ms` 기준은 급격한 회귀를 막는 상한이며 60FPS 보장 기준이 아닙니다. 결과에는 평균 프레임 시간과 그 값으로 계산한 추정 FPS를 함께 기록합니다.
 
-### Run modes foundation
+### Run modes and Stage 1
 
-The runtime now has a non-invasive run-mode data layer: `src/stage-catalog.js` defines finite-stage metadata and `src/run-modes.js` models `endless` versus `stage`. Endless is still the default and the only wired gameplay path; the Stage 1 shell is a ~10 minute planned definition for the upcoming galaxy-map and stage-runtime work. Existing `resetGame()`, spawning, and random world-event behavior are intentionally unchanged until that integration step.
+`ENDLESS` remains the default infinite mode with random world events, the full enemy family pool, and the 600-second Apex cadence. Finite stages use `src/stage-catalog.js`, `src/run-modes.js`, and `src/stage-runtime.js` instead of reusing the Endless encounter director.
 
-#### Galaxy map shell
+Stage 1, **Collapse Frontier / 붕괴 전초구역**, is now playable as a 600-second operation. It introduces four stage-specific enemy variants over time, fires fixed events at 90/210/300/420/500 seconds, and spawns the Collapse Frontier Warden at 540 seconds. Clearing it records persistent progress and unlocks the Comet Lance.
 
-The menu now separates direct `ENDLESS` play from the finite-stage galaxy map. The map is constellation-style, responsive on desktop/mobile, and its detail panel is catalog-driven. The current Stage 1 node remains intentionally non-launchable until Stage 1 runtime scheduling is implemented, so the existing Endless loop cannot be mislabeled as a stage run.
+`src/meta-progression.js` persists clears, best times, and weapon unlocks. Fresh saves begin with four starter weapons: Pulse Blade, Starlight Caster, Radiant Bulwark, and Gravity Well; locked weapons are also excluded from level-up acquisition until unlocked.
+
+#### Galaxy map
+
+The menu separates direct `ENDLESS` play from the responsive constellation-style galaxy map. Stage status comes from persistent progression, so available/cleared stages can launch while planned or progression-locked nodes remain inspection-only.
 
