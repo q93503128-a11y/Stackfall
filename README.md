@@ -321,3 +321,7 @@ node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-r
 
 The runtime now has a non-invasive run-mode data layer: `src/stage-catalog.js` defines finite-stage metadata and `src/run-modes.js` models `endless` versus `stage`. Endless is still the default and the only wired gameplay path; the Stage 1 shell is a ~10 minute planned definition for the upcoming galaxy-map and stage-runtime work. Existing `resetGame()`, spawning, and random world-event behavior are intentionally unchanged until that integration step.
 
+#### Galaxy map shell
+
+The menu now separates direct `ENDLESS` play from the finite-stage galaxy map. The map is constellation-style, responsive on desktop/mobile, and its detail panel is catalog-driven. The current Stage 1 node remains intentionally non-launchable until Stage 1 runtime scheduling is implemented, so the existing Endless loop cannot be mislabeled as a stage run.
+
