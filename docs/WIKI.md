@@ -190,11 +190,11 @@
 
 - `endless`: the default infinite mode. Random world events remain enabled, all enemy families are available, and Apex encounters recur every 600 seconds.
 - `stage`: finite operations driven by stage-owned enemy pools and fixed event timelines. Random repeating world events and Apex scheduling are suppressed while a stage run is active.
-- `stage-01` — **Collapse Frontier / 붕괴 전초구역**: a playable 600-second operation. Shard Feeder starts immediately, Rift Dart enters at 90 seconds, Debris Bombardier at 210 seconds, and Collapse Bulwark at 330 seconds. Fixed incidents occur at 90/210/300/420/500 seconds, with the Collapse Frontier Warden spawning at 540 seconds.
-- Clearing Stage 1 records the clear/best time and permanently unlocks the Comet Lance.
+- `stage-01` — **Collapse Frontier / 붕괴 전초구역**: Shard Feeder starts immediately, Rift Dart enters at 90 seconds, Debris Bombardier at 210 seconds, and Collapse Bulwark at 330 seconds. Fixed incidents occur at 90/210/300/420/500 seconds, with the Collapse Frontier Warden spawning at exactly 600 seconds. The timer never clears or terminates the run; completion requires killing the boss, while player death is the failure condition.
+- Killing the Stage 1 boss first plays a dedicated destruction/operation-complete cinematic, then records the clear/best time and permanently unlocks the Comet Lance.
 - Fresh saves begin with four unlocked starter weapons: Pulse Blade, Starlight Caster, Radiant Bulwark, and Gravity Well. Locked weapons do not appear in starter selection or level-up acquisition.
 
 ### Galaxy map
 
-The main menu exposes `ENDLESS` and a separate galaxy map. Stage nodes come from the stage catalog while availability and cleared state come from persistent meta progression. Available/cleared nodes can launch; future planned or progression-locked nodes can be inspected but not launched. The layout stays two-column on wider screens and stacks the detail panel below the map on compact/mobile screens.
+The main menu is a mode hub rather than a direct loadout/start screen. `GALACTIC OPERATIONS` opens the galaxy map and `ENDLESS` opens sortie preparation. Both modes share the same pre-launch starter-weapon and difficulty screen. Galaxy nodes use star silhouettes with separate stage-number badges so constellation links remain visually readable. The detail panel exposes only game time, threat, unlock progress, boss, and launch state. Available/cleared nodes can prepare a sortie; future planned or progression-locked nodes can be inspected but not launched. The layout stays two-column on wider screens and stacks the detail panel below the map on compact/mobile screens.
 
