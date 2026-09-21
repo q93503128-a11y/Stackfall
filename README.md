@@ -327,5 +327,5 @@ Stage 1, **Collapse Frontier / 붕괴 전초구역**, is a boss-arrival operatio
 
 #### Galaxy map
 
-The main menu is a mode hub: `GALACTIC OPERATIONS`, `ENDLESS`, and `CORE DEVELOPMENT`. A local pilot card in the upper-left shows clears and the two progression currencies. Core Development places the player core in the center of an orbital upgrade field with floating upgrade nodes; skins are intentionally deferred. Starter weapon and difficulty selection still live in the shared sortie screen. Galaxy-map stage nodes use luminous stellar points with separate number badges, and the detail panel is limited to game time, threat, unlock progress, and boss information.
+The main menu is a mode hub: `GALACTIC OPERATIONS`, `ENDLESS`, and `CORE DEVELOPMENT`. The upper-left local pilot card is now interactive and opens detailed local-save stats: clears, runs, kills, equipment capacity, unlocked weapons, Stage 1 best time, and currencies. Core Development keeps the player core centered inside an orbital upgrade field with floating nodes and is viewport-contained on normal desktop screens; compact/mobile layouts may scroll. Skins are intentionally deferred. Starter weapon and difficulty selection still live in the shared sortie screen. Galaxy-map stage nodes use luminous stellar points with separate number badges.
 
