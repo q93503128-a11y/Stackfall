@@ -185,3 +185,10 @@
 - 실제 프레임 지연이 지속될 때 배경 장식과 렌더 해상도를 줄이고, 심각 단계에서는 적·적탄·플레이어·위험 예고를 간소화한 WebGL 실루엣으로 전환하지만 화면 밖 보스·맵 이벤트 화살표와 실제 투사체·분열·파편·부메랑·중력 우물·피해 주기는 줄이지 않음
 
 반짝임 효과를 꺼도 적 탄환과 위험 예고는 남는다. 성능이 불안정한 기기에서는 반짝임과 아군 투사체 표시를 줄여도 보스 위험 표시는 유지된다.
+
+## Run modes
+
+- `endless`: current playable default; no fixed end, random world events enabled, all enemy families available, Apex every 600 seconds.
+- `stage`: finite-run configuration used by the upcoming galaxy map and stage runtime. Random repeating world events are disabled in the mode model so stages can use fixed event schedules.
+- `stage-01`: currently a planned ~10 minute catalog shell only. Its enemy set, gimmicks, fixed events, boss, unlocks, and challenges are filled during the Stage 1 implementation pass.
+
