@@ -161,16 +161,9 @@
   },true);
 
   function drawCore(now=0){
-    if(!coreCanvas)return;const g=coreCanvas.getContext('2d'),w=coreCanvas.width,h=coreCanvas.height,cx=w/2,cy=h/2,t=now/1000;
+    if(!coreCanvas)return;const g=coreCanvas.getContext('2d'),w=coreCanvas.width,h=coreCanvas.height;
     g.clearRect(0,0,w,h);
-    const aura=g.createRadialGradient(cx,cy,2,cx,cy,104);aura.addColorStop(0,'rgba(242,255,255,.62)');aura.addColorStop(.20,'rgba(125,224,255,.24)');aura.addColorStop(.52,'rgba(107,123,255,.09)');aura.addColorStop(1,'rgba(60,54,166,0)');g.fillStyle=aura;g.fillRect(42,42,w-84,h-84);
-    g.save();g.translate(cx,cy);
-    for(let ring=0;ring<3;ring++){g.save();g.rotate((ring%2?1:-1)*t*(.12+ring*.025)+ring*.83);g.strokeStyle=ring===0?'rgba(202,246,255,.50)':'rgba(156,178,255,.26)';g.lineWidth=ring===0?1.6:1.1;g.beginPath();g.ellipse(0,0,64+ring*13,18+ring*6,ring*.46,0,Math.PI*2);g.stroke();g.restore();}
-    g.shadowBlur=30;g.shadowColor='#78ddff';const outer=g.createRadialGradient(-12,-14,4,0,0,49);outer.addColorStop(0,'#ffffff');outer.addColorStop(.18,'#d8fbff');outer.addColorStop(.52,'#87b8ff');outer.addColorStop(.78,'#6671df');outer.addColorStop(1,'#25265f');g.fillStyle=outer;g.beginPath();g.arc(0,0,47,0,Math.PI*2);g.fill();
-    g.shadowBlur=0;g.strokeStyle='rgba(237,254,255,.92)';g.lineWidth=2.1;g.beginPath();g.arc(0,0,47,0,Math.PI*2);g.stroke();g.strokeStyle='rgba(13,25,66,.85)';g.lineWidth=5.2;g.beginPath();g.arc(0,0,38,0,Math.PI*2);g.stroke();g.strokeStyle='rgba(176,236,255,.58)';g.lineWidth=1.3;g.beginPath();g.arc(0,0,31,0,Math.PI*2);g.stroke();
-    g.save();g.rotate(t*.13);g.fillStyle='#f8ffff';g.shadowBlur=18;g.shadowColor='#d7f8ff';g.beginPath();for(let i=0;i<16;i++){const a=-Math.PI/2+i*Math.PI/8,r=i%2?8:25,x=Math.cos(a)*r,y=Math.sin(a)*r;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();g.fill();g.restore();
-    g.shadowBlur=0;g.fillStyle='#11193d';g.beginPath();g.arc(0,0,8.5,0,Math.PI*2);g.fill();g.fillStyle='#ffffff';g.beginPath();g.arc(-2.4,-2.8,2.4,0,Math.PI*2);g.fill();
-    g.restore();
+    if(typeof window.stackfallDrawPlayerCorePreview==='function'){window.stackfallDrawPlayerCorePreview(g,w/2,h/2,now,2.55);return;}
   }
   function animateCore(now){if(!screen||screen.classList.contains('hidden')){animationFrame=0;return;}drawCore(now);animationFrame=requestAnimationFrame(animateCore);}
   function startCoreAnimation(){if(animationFrame)return;animationFrame=requestAnimationFrame(animateCore);}
