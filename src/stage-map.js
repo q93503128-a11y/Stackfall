@@ -1,77 +1,25 @@
 (()=>{
-  const screen=document.querySelector('#galaxyMapScreen'),entry=document.querySelector('#stageMapBtn'),closeButton=document.querySelector('#galaxyMapClose'),canvas=document.querySelector('#galaxyMapCanvas'),starfield=document.querySelector('#galaxyStarfield'),nodeLayer=document.querySelector('#galaxyStageNodes'),connections=document.querySelector('#galaxyConnections'),launch=document.querySelector('#galaxyLaunchBtn');
+  const screen=document.querySelector('#galaxyMapScreen'),entry=document.querySelector('#stageMapBtn'),closeButton=document.querySelector('#galaxyMapClose'),canvas=document.querySelector('#galaxyMapCanvas'),starfield=document.querySelector('#galaxyStarfield'),nodeLayer=document.querySelector('#galaxyStageNodes'),connections=document.querySelector('#galaxyConnections'),launch=document.querySelector('#galaxyLaunchBtn'),prevPage=document.querySelector('#galaxyConstellationPrev'),nextPage=document.querySelector('#galaxyConstellationNext'),pageName=document.querySelector('#galaxyConstellationName'),pageCount=document.querySelector('#galaxyConstellationPage');
   if(!screen||!entry||!closeButton||!canvas||!starfield||!nodeLayer||!connections||!launch)return;
-  const detail={
-    number:document.querySelector('#galaxyStageNumber'),status:document.querySelector('#galaxyStageStatus'),name:document.querySelector('#galaxyStageName'),desc:document.querySelector('#galaxyStageDesc'),
-    time:document.querySelector('#galaxyStageTime'),threat:document.querySelector('#galaxyStageThreat'),unlocks:document.querySelector('#galaxyStageUnlocks'),boss:document.querySelector('#galaxyStageBoss')
-  };
-  let selectedId=window.STACKFALL_STAGE_CATALOG?.[0]?.id||null,lastFocus=null;
-  const localized=value=>value?.[GAME_SETTINGS.language]||value?.en||value?.ko||'';
-  const statusText=status=>status==='available'?tr('stageMap.available'):status==='cleared'?tr('stageMap.cleared'):status==='locked'?tr('stageMap.locked'):tr('stageMap.planned');
-  const minuteText=minutes=>String(tr('stageMap.minutes')).replace('{n}',String(minutes));
-  function unlockText(stage){
-    const weaponRewards=(stage.rewards||[]).filter(reward=>reward.type==='weapon');
-    if(!weaponRewards.length)return tr('stageMap.none');
-    const unlocked=weaponRewards.filter(reward=>window.stackfallIsWeaponUnlocked?.(reward.key)).length;
-    return tr('stageMap.weaponProgress')+' '+unlocked+'/'+weaponRewards.length;
-  }
-  function renderStarfield(){
-    if(starfield.childElementCount)return;
-    const fragment=document.createDocumentFragment();
-    for(let i=0;i<54;i++){
-      const star=document.createElement('i'),x=(17+i*73)%997,y=(43+i*137)%641,size=1+(i%5===0?2:i%3===0?1:0);
-      star.style.setProperty('--x',(x/10)+'%');star.style.setProperty('--y',(y/6.5)+'%');star.style.setProperty('--s',size+'px');star.style.setProperty('--d',((i%9)*-.31)+'s');fragment.appendChild(star);
-    }
-    starfield.appendChild(fragment);
-  }
-  function renderConnections(){
-    connections.innerHTML='';
-    const stages=[...(window.STACKFALL_STAGE_CATALOG||[])].sort((a,b)=>a.order-b.order);
-    for(let i=1;i<stages.length;i++){
-      const a=stages[i-1],b=stages[i],line=document.createElementNS('http://www.w3.org/2000/svg','line');
-      line.setAttribute('x1',String(a.node.x*1000));line.setAttribute('y1',String(a.node.y*650));line.setAttribute('x2',String(b.node.x*1000));line.setAttribute('y2',String(b.node.y*650));line.classList.add('galaxy-path');connections.appendChild(line);
-    }
-  }
-  function selectStage(id){
-    const stage=window.stackfallStageById?.(id);if(!stage)return;
-    selectedId=stage.id;
-    for(const button of nodeLayer.querySelectorAll('.galaxy-stage-node'))button.classList.toggle('selected',button.dataset.stageId===stage.id);
-    const resolvedStatus=window.stackfallStageStatus?.(stage)||stage.status;
-    detail.number.textContent='STAGE '+String(stage.order).padStart(2,'0');
-    detail.status.textContent=statusText(resolvedStatus);detail.status.dataset.status=resolvedStatus;
-    detail.name.textContent=localized(stage.title)||('STAGE '+stage.order);
-    detail.desc.textContent=localized(stage.description);
-    const gameMinutes=Math.max(1,Math.round(Number(stage.boss?.spawnAt||stage.durationSeconds||stage.estimatedMinutes*60)/60));
-    detail.time.textContent=minuteText(gameMinutes);detail.threat.textContent=String(stage.threat);detail.unlocks.textContent=unlockText(stage);
-    detail.boss.textContent=resolvedStatus==='planned'||!stage.boss?'???':localized(stage.boss.name)||String(stage.boss.form||stage.boss.id||'???');
-    const playable=resolvedStatus==='available'||resolvedStatus==='cleared';
-    launch.disabled=!playable;launch.querySelector('span').textContent=playable?tr('stageMap.launch'):tr('stageMap.building');
-  }
-  function renderNodes(){
-    nodeLayer.innerHTML='';const fragment=document.createDocumentFragment();
-    for(const stage of window.STACKFALL_STAGE_CATALOG||[]){
-      const button=document.createElement('button');button.type='button';const resolvedStatus=window.stackfallStageStatus?.(stage)||stage.status||'planned';button.className='galaxy-stage-node '+resolvedStatus;button.dataset.stageId=stage.id;button.style.left=(stage.node.x*100)+'%';button.style.top=(stage.node.y*100)+'%';button.setAttribute('aria-label',(localized(stage.title)||('Stage '+stage.order))+' · '+statusText(resolvedStatus));
-      button.innerHTML='<span class="galaxy-node-star"><i></i></span><small>'+String(stage.order).padStart(2,'0')+'</small>';button.addEventListener('click',()=>selectStage(stage.id));fragment.appendChild(button);
-    }
-    nodeLayer.appendChild(fragment);selectStage(selectedId||window.STACKFALL_STAGE_CATALOG?.[0]?.id);
-  }
-  function openMap(){
-    lastFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
-    renderStarfield();renderConnections();renderNodes();screen.classList.remove('hidden');closeButton.focus();try{audio.pickup();}catch{}
-  }
-  function closeMap(){
-    screen.classList.add('hidden');if(lastFocus?.isConnected)lastFocus.focus();lastFocus=null;
-  }
-  entry.addEventListener('click',openMap);closeButton.addEventListener('click',closeMap);
-  screen.addEventListener('pointerdown',event=>{if(event.target===screen)closeMap();});
-  window.addEventListener('keydown',event=>{const sortieOpen=!document.querySelector('#sortiePrepScreen')?.classList.contains('hidden');if(event.code==='Escape'&&!screen.classList.contains('hidden')&&!sortieOpen){event.preventDefault();event.stopImmediatePropagation();closeMap();}},true);
-  launch.addEventListener('click',()=>{
-    const stage=window.stackfallStageById?.(selectedId);if(!stage||launch.disabled)return;
-    if(window.openStackfallSortiePrep?.('stage',stage.id,{returnTo:'map'}))return;
-    if(window.stackfallSetRunSelection?.('stage',stage.id)!==true)return;
-    closeMap();audio.init();resetGame();
-  });
-  window.openStackfallGalaxyMap=openMap;
-  window.closeStackfallGalaxyMap=closeMap;
-  window.renderStackfallGalaxyMap=()=>{if(!screen.classList.contains('hidden')){renderConnections();renderNodes();}};
+  const detail={number:document.querySelector('#galaxyStageNumber'),status:document.querySelector('#galaxyStageStatus'),name:document.querySelector('#galaxyStageName'),desc:document.querySelector('#galaxyStageDesc'),time:document.querySelector('#galaxyStageTime'),threat:document.querySelector('#galaxyStageThreat'),unlocks:document.querySelector('#galaxyStageUnlocks'),boss:document.querySelector('#galaxyStageBoss')};
+  const constellations=()=>[...(window.STACKFALL_CONSTELLATIONS||[])].sort((a,b)=>a.order-b.order),allStages=()=>[...(window.STACKFALL_STAGE_CATALOG||[])].sort((a,b)=>a.order-b.order);
+  let selectedId=allStages()[0]?.id||null,currentConstellationId=allStages()[0]?.constellationId||constellations()[0]?.id||null,lastFocus=null;
+  const localized=value=>value?.[GAME_SETTINGS.language]||value?.en||value?.ko||'',statusText=status=>status==='available'?tr('stageMap.available'):status==='cleared'?tr('stageMap.cleared'):status==='locked'?tr('stageMap.locked'):tr('stageMap.planned'),minuteText=minutes=>String(tr('stageMap.minutes')).replace('{n}',String(minutes));
+  const stagesFor=id=>allStages().filter(stage=>stage.constellationId===id);
+  function constellationAccessible(page){const first=stagesFor(page.id)[0];if(!first)return false;if(page.order===1)return true;const status=window.stackfallStageStatus?.(first)||first.status;return status==='available'||status==='cleared';}
+  function pages(){const list=constellations();return list.filter(constellationAccessible);}
+  function visibleStages(){return stagesFor(currentConstellationId);}
+  function unlockText(stage){const rewards=(stage.rewards||[]).filter(reward=>reward.type==='weapon');if(!rewards.length)return tr('stageMap.none');const unlocked=rewards.filter(reward=>window.stackfallIsWeaponUnlocked?.(reward.key)).length;return tr('stageMap.weaponProgress')+' '+unlocked+'/'+rewards.length;}
+  function renderStarfield(){if(starfield.childElementCount)return;const fragment=document.createDocumentFragment();for(let i=0;i<54;i++){const star=document.createElement('i'),x=(17+i*73)%997,y=(43+i*137)%641,size=1+(i%5===0?2:i%3===0?1:0);star.style.setProperty('--x',(x/10)+'%');star.style.setProperty('--y',(y/6.5)+'%');star.style.setProperty('--s',size+'px');star.style.setProperty('--d',((i%9)*-.31)+'s');fragment.appendChild(star);}starfield.appendChild(fragment);}
+  function renderConstellationHeader(){const list=pages(),index=Math.max(0,list.findIndex(page=>page.id===currentConstellationId)),page=list[index]||list[0]||null;if(page&&page.id!==currentConstellationId)currentConstellationId=page.id;if(pageName)pageName.textContent=localized(page?.title)||tr('stageMap.title');if(pageCount)pageCount.textContent=list.length?String(index+1)+' / '+String(list.length):'0 / 0';if(prevPage)prevPage.disabled=index<=0;if(nextPage)nextPage.disabled=index<0||index>=list.length-1;}
+  function renderConnections(){connections.innerHTML='';const stages=visibleStages(),ids=new Set(stages.map(stage=>stage.id));for(const stage of stages){const previous=window.stackfallStageById?.(stage.requirements?.previous);if(!previous||!ids.has(previous.id))continue;const line=document.createElementNS('http://www.w3.org/2000/svg','line');line.setAttribute('x1',String(previous.node.x*1000));line.setAttribute('y1',String(previous.node.y*650));line.setAttribute('x2',String(stage.node.x*1000));line.setAttribute('y2',String(stage.node.y*650));line.classList.add('galaxy-path');connections.appendChild(line);}}
+  function selectStage(id){const stage=window.stackfallStageById?.(id);if(!stage||stage.constellationId!==currentConstellationId)return;selectedId=stage.id;for(const button of nodeLayer.querySelectorAll('.galaxy-stage-node'))button.classList.toggle('selected',button.dataset.stageId===stage.id);const resolvedStatus=window.stackfallStageStatus?.(stage)||stage.status;detail.number.textContent='STAGE '+String(stage.order).padStart(2,'0');detail.status.textContent=statusText(resolvedStatus);detail.status.dataset.status=resolvedStatus;detail.name.textContent=localized(stage.title)||('STAGE '+stage.order);detail.desc.textContent=localized(stage.description);const gameMinutes=Math.max(1,Math.round(Number(stage.boss?.spawnAt||stage.durationSeconds||stage.estimatedMinutes*60)/60));detail.time.textContent=minuteText(gameMinutes);detail.threat.textContent=String(stage.threat);detail.unlocks.textContent=unlockText(stage);detail.boss.textContent=resolvedStatus==='planned'||!stage.boss?'???':localized(stage.boss.name)||String(stage.boss.id||'???');const playable=resolvedStatus==='available'||resolvedStatus==='cleared';launch.disabled=!playable;launch.querySelector('span').textContent=playable?tr('stageMap.launch'):tr('stageMap.building');}
+  function renderNodes(){nodeLayer.innerHTML='';const fragment=document.createDocumentFragment(),stages=visibleStages();for(const stage of stages){const button=document.createElement('button'),resolvedStatus=window.stackfallStageStatus?.(stage)||stage.status||'planned';button.type='button';button.className='galaxy-stage-node '+resolvedStatus;button.dataset.stageId=stage.id;button.style.left=(stage.node.x*100)+'%';button.style.top=(stage.node.y*100)+'%';button.setAttribute('aria-label',(localized(stage.title)||('Stage '+stage.order))+' · '+statusText(resolvedStatus));button.innerHTML='<span class="galaxy-node-star"><i></i></span><small>'+String(stage.order).padStart(2,'0')+'</small>';button.addEventListener('click',()=>selectStage(stage.id));fragment.appendChild(button);}nodeLayer.appendChild(fragment);const selected=stages.find(stage=>stage.id===selectedId)||stages[0];if(selected)selectStage(selected.id);}
+  function renderPage(){renderConstellationHeader();renderConnections();renderNodes();}
+  function changePage(delta){const list=pages(),index=list.findIndex(page=>page.id===currentConstellationId),target=list[index+delta];if(!target)return;currentConstellationId=target.id;selectedId=stagesFor(target.id)[0]?.id||null;renderPage();try{audio.pickup();}catch{}}
+  function openMap(){lastFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;renderStarfield();const selected=window.stackfallStageById?.(selectedId);if(selected?.constellationId)currentConstellationId=selected.constellationId;if(!pages().some(page=>page.id===currentConstellationId))currentConstellationId=pages()[0]?.id||currentConstellationId;renderPage();screen.classList.remove('hidden');closeButton.focus();try{audio.pickup();}catch{}}
+  function closeMap(){screen.classList.add('hidden');if(lastFocus?.isConnected)lastFocus.focus();lastFocus=null;}
+  entry.addEventListener('click',openMap);closeButton.addEventListener('click',closeMap);prevPage?.addEventListener('click',()=>changePage(-1));nextPage?.addEventListener('click',()=>changePage(1));screen.addEventListener('pointerdown',event=>{if(event.target===screen)closeMap();});window.addEventListener('keydown',event=>{const sortieOpen=!document.querySelector('#sortiePrepScreen')?.classList.contains('hidden');if(event.code==='Escape'&&!screen.classList.contains('hidden')&&!sortieOpen){event.preventDefault();event.stopImmediatePropagation();closeMap();}},true);
+  launch.addEventListener('click',()=>{const stage=window.stackfallStageById?.(selectedId);if(!stage||launch.disabled)return;if(window.openStackfallSortiePrep?.('stage',stage.id,{returnTo:'map'}))return;if(window.stackfallSetRunSelection?.('stage',stage.id)!==true)return;closeMap();audio.init();resetGame();});
+  window.openStackfallGalaxyMap=openMap;window.closeStackfallGalaxyMap=closeMap;window.renderStackfallGalaxyMap=()=>{if(!screen.classList.contains('hidden'))renderPage();};
 })();

@@ -394,6 +394,9 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - `stage-02`, **Ion Nebula Trench / 이온 성운 해구**, unlocks after Stage 1. It intentionally reuses Shardling, Dart, Bombardier, and Bulwark while introducing only one new common enemy, Nebula Wisp.
 - Stage 2 uses fixed ion-shear/deep-shear incidents, owns a separate ion-nebula background, and fields the Nebula Heart with its own silhouette and multi-phase shear/wisp pattern. Its boss also arrives at 600 seconds.
 - Stage 1 permanently unlocks Comet Lance; Stage 2 permanently unlocks Nebula Boomerang.
+- `stage-03`, **Glassstar Necropolis / 유리별 묘역**, unlocks after Stage 2, introduces Glasswing, uses refraction-lattice and prism-rain fixed incidents, and fields the dedicated Refracted Reliquary at 600 seconds.
+- Stage 3 permanently unlocks Constellation Prism.
+- Galaxy stages are grouped into constellation pages. A finished constellation hands progression to the first stage of the next constellation; the map never stretches every constellation into one endless canvas.
 
 ### Galaxy map
 

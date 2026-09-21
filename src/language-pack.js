@@ -242,6 +242,26 @@ Object.assign(TEXT.fr,{
 });
 
 Object.assign(TEXT.ko,{
+  'stage03.enemy.glassWing':'유리날개','stage03.boss':'굴절 성물함','stage03.boss.warning':'묘역 중심 결정체가 개방됩니다','stage03.event.refraction':'굴절 격자','stage03.event.deep':'심층 굴절','stage03.event.rain':'프리즘 낙하','stage03.event.swarm':'유리날개 군집','stage03.event.procession':'성운 장송열','stage03.event.warning':'결정 격자가 전장을 접습니다','stage03.event.fixed':'고정 사건','stage03.objective.boss':'굴절 성물함을 파괴하라'
+});
+Object.assign(TEXT.en,{
+  'stage03.enemy.glassWing':'Glasswing','stage03.boss':'Refracted Reliquary','stage03.boss.warning':'THE NECROPOLIS CORE OPENS','stage03.event.refraction':'REFRACTION LATTICE','stage03.event.deep':'DEEP REFRACTION','stage03.event.rain':'PRISM RAIN','stage03.event.swarm':'GLASSWING SWARM','stage03.event.procession':'NEBULA PROCESSION','stage03.event.warning':'CRYSTAL LATTICES ARE FOLDING THE FIELD','stage03.event.fixed':'FIXED EVENT','stage03.objective.boss':'DESTROY THE REFRACTED RELIQUARY'
+});
+Object.assign(TEXT.ja,{
+  'stage03.enemy.glassWing':'グラスウィング','stage03.boss':'屈折の聖櫃','stage03.boss.warning':'墓域の中枢結晶が開きます','stage03.event.refraction':'屈折格子','stage03.event.deep':'深層屈折','stage03.event.rain':'プリズム降下','stage03.event.swarm':'グラスウィング群','stage03.event.procession':'星雲葬列','stage03.event.warning':'結晶格子が戦場を折り畳みます','stage03.event.fixed':'固定イベント','stage03.objective.boss':'屈折の聖櫃を破壊せよ'
+});
+Object.assign(TEXT['zh-CN'],{
+  'stage03.enemy.glassWing':'玻璃翼','stage03.boss':'折射圣匣','stage03.boss.warning':'墓域核心晶体正在开启','stage03.event.refraction':'折射晶格','stage03.event.deep':'深层折射','stage03.event.rain':'棱镜坠落','stage03.event.swarm':'玻璃翼群','stage03.event.procession':'星云送葬列','stage03.event.warning':'晶格正在折叠战场','stage03.event.fixed':'固定事件','stage03.objective.boss':'摧毁折射圣匣'
+});
+Object.assign(TEXT.es,{
+  'stage03.enemy.glassWing':'Ala de Vidrio','stage03.boss':'Relicario Refractado','stage03.boss.warning':'EL NÚCLEO DE LA NECRÓPOLIS SE ABRE','stage03.event.refraction':'RETÍCULA DE REFRACCIÓN','stage03.event.deep':'REFRACCIÓN PROFUNDA','stage03.event.rain':'LLUVIA PRISMÁTICA','stage03.event.swarm':'ENJAMBRE DE ALAS DE VIDRIO','stage03.event.procession':'PROCESIÓN NEBULAR','stage03.event.warning':'LAS RETÍCULAS CRISTALINAS PLIEGAN EL CAMPO','stage03.event.fixed':'EVENTO FIJO','stage03.objective.boss':'DESTRUYE EL RELICARIO REFRACTADO'
+});
+Object.assign(TEXT.fr,{
+  'stage03.enemy.glassWing':'Aile de Verre','stage03.boss':'Reliquaire Réfracté','stage03.boss.warning':'LE CŒUR DE LA NÉCROPOLE S’OUVRE','stage03.event.refraction':'RÉSEAU DE RÉFRACTION','stage03.event.deep':'RÉFRACTION PROFONDE','stage03.event.rain':'PLUIE PRISMATIQUE','stage03.event.swarm':'ESSAIM D’AILES DE VERRE','stage03.event.procession':'PROCESSION NÉBULAIRE','stage03.event.warning':'LES RÉSEAUX CRISTALLINS REPLIENT LE CHAMP','stage03.event.fixed':'ÉVÉNEMENT FIXE','stage03.objective.boss':'DÉTRUISEZ LE RELIQUAIRE RÉFRACTÉ'
+});
+
+
+Object.assign(TEXT.ko,{
   'stage02.enemy.wisp':'성운 유영체','stage02.boss':'성운의 심장','stage02.boss.warning':'성운 중심핵이 각성합니다',
   'stage02.event.shear':'이온 전단','stage02.event.deep':'심층 전단','stage02.event.warning':'전리 흐름이 전장을 절단합니다','stage02.event.bloom':'유영체 군집','stage02.event.fixed':'고정 사건',
   'stage02.objective.boss':'성운의 심장을 파괴하라'

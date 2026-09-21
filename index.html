@@ -114,6 +114,12 @@
             <button id="galaxyMapClose" class="galaxy-close" type="button" aria-label="Close">×</button>
           </div>
           <div id="galaxyMapCanvas" class="galaxy-map-canvas" aria-label="Stage constellation map">
+            <div class="galaxy-constellation-bar">
+              <button id="galaxyConstellationPrev" type="button" aria-label="Previous constellation">‹</button>
+              <div><small>CONSTELLATION</small><strong id="galaxyConstellationName">파편의 항로</strong></div>
+              <span id="galaxyConstellationPage">1 / 1</span>
+              <button id="galaxyConstellationNext" type="button" aria-label="Next constellation">›</button>
+            </div>
             <div id="galaxyStarfield" class="galaxy-starfield" aria-hidden="true"></div>
             <svg id="galaxyConnections" class="galaxy-connections" viewBox="0 0 1000 650" preserveAspectRatio="none" aria-hidden="true"></svg>
             <div id="galaxyStageNodes" class="galaxy-stage-nodes"></div>
@@ -250,6 +256,7 @@
   <script src="src/sortie-prep.js"></script>
   <script src="src/stage-runtime.js"></script>
   <script src="src/stage02-runtime.js"></script>
+  <script src="src/stage03-runtime.js"></script>
   <script src="src/dark-cosmic-polish.js"></script>
   <script src="src/performance-guard.js"></script>
   <script src="src/build-audit-ui.js"></script>

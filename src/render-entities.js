@@ -12,6 +12,11 @@ function drawStageEnemyBody(g,e){
     g.fillStyle=e.hit?'#fff':'#32113f';g.beginPath();g.moveTo(r*.90,0);g.quadraticCurveTo(r*.18,-r*.62,-r*.58,-r*.34);g.quadraticCurveTo(-r*.22,0,-r*.58,r*.34);g.quadraticCurveTo(r*.18,r*.62,r*.90,0);g.fill();g.stroke();
     g.fillStyle='#f7edff';g.beginPath();g.arc(r*.20,0,r*.15,0,TAU);g.fill();
   }
+  else if(v==='glass-wing'){
+    g.rotate(Math.atan2(player.y-e.y,player.x-e.x));const pulse=.86+.14*Math.sin((e.phase||0)*1.3);g.fillStyle=e.hit?'#fff':'#0b1a29';g.strokeStyle=e.hit?'#fff':'#baf7ff';g.lineWidth=1.8;
+    for(const side of[-1,1]){g.save();g.scale(1,side);const grad=g.createLinearGradient(-r*.6,0,r*1.3,0);grad.addColorStop(0,'rgba(120,179,255,.12)');grad.addColorStop(.55,'rgba(186,247,255,.62)');grad.addColorStop(1,'rgba(255,255,255,.90)');g.fillStyle=grad;g.beginPath();g.moveTo(-r*.48,0);g.lineTo(r*.18,-r*.18);g.lineTo(r*1.28,-r*.74*pulse);g.lineTo(r*.72,-r*.08);g.lineTo(r*1.05,r*.34);g.lineTo(r*.08,r*.20);g.closePath();g.fill();g.stroke();g.restore();}
+    g.fillStyle='#f7ffff';g.beginPath();g.moveTo(r*.72,0);g.lineTo(-r*.18,-r*.20);g.lineTo(-r*.58,0);g.lineTo(-r*.18,r*.20);g.closePath();g.fill();g.stroke();g.fillStyle='#7feeff';g.beginPath();g.arc(r*.12,0,r*.11,0,TAU);g.fill();
+  }
   else return false;return true;
 }
 function drawEnemies(){for(const e of state.entities.enemies){const p=worldToScreen(e.x,e.y);if(p.x<-180||p.x>vw+180||p.y<-180||p.y>vh+180)continue;ctx.save();ctx.translate(p.x,p.y);const pulse=1+Math.sin(e.phase)*.05;ctx.scale(pulse,pulse);ctx.shadowBlur=e.kind==='apex'?58:e.type==='boss'?44:e.type==='mini'?30:13;ctx.shadowColor=e.color;ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;

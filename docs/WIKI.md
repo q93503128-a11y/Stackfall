@@ -195,11 +195,14 @@
 - `stage-01` — **Collapse Frontier / 붕괴 전초구역**: Shard Feeder starts immediately, Rift Dart enters at 90 seconds, Debris Bombardier at 210 seconds, and Collapse Bulwark at 330 seconds. Fixed incidents occur at 90/210/300/420/500 seconds, with the Collapse Frontier Warden spawning at exactly 600 seconds. The timer never clears or terminates the run; completion requires killing the boss, while player death is the failure condition.
 - Killing the Stage 1 boss first plays a dedicated destruction/operation-complete cinematic, then records the clear/best time and permanently unlocks the Comet Lance.
 - `stage-02` — **Ion Nebula Trench / 이온 성운 해구**: unlocks after Stage 1. It reuses the established fragment enemies, introduces the ranged Nebula Wisp at 120 seconds, triggers fixed ion-shear incidents, and spawns the unique Nebula Heart at exactly 600 seconds. Clearing it unlocks Nebula Boomerang.
+- `stage-03` — **Glassstar Necropolis / 유리별 묘역**: unlocks after Stage 2. Glasswing enters the common pool, fixed refraction lattices and prism rain reshape safe lanes, and the Refracted Reliquary arrives at exactly 600 seconds. Clearing it unlocks Constellation Prism.
 - Fresh saves begin with four unlocked starter weapons: Pulse Blade, Starlight Caster, Radiant Bulwark, and Gravity Well. Locked weapons do not appear in starter selection or level-up acquisition.
 - The basic Core weapon is separate from equipment capacity. A fresh profile has four non-basic equipment slots; Slot V and Slot VI permanent upgrades expand that limit to five and six.
 - Persistent progression uses Stardust for repeat upgrades and rarer Core Shards for high-value expansion. Stage 1 guarantees one Core Shard on first clear and then one after every three repeat clears; Apex kills also grant Core Shards. Permanent upgrade categories currently cover health, damage, attack cycle, pickup radius, mitigation, currency yield, and equipment capacity.
 
 ### Galaxy map
+
+The galaxy map is divided into constellation pages. Only one constellation is displayed at a time; after a constellation is completed, the next constellation page becomes reachable when its first stage is unlocked.
 
 The main menu is a mode hub rather than a direct loadout/start screen. `GALACTIC OPERATIONS` opens the galaxy map, `ENDLESS` opens sortie preparation, and `CORE DEVELOPMENT` opens the permanent upgrade field. The upper-left local-pilot card is clickable and shows a detailed local-save panel with clears, runs, kills, equipment slots, unlocked weapons, best Stage 1 time, Stardust, and Core Shards; it is not an online account. The upgrade field keeps the exact shared in-game player-core renderer centered with floating orbital nodes and fits within one normal desktop viewport; compact/mobile layouts may scroll. Future skins can therefore propagate through the shared renderer automatically. Skins are otherwise deferred.
 
