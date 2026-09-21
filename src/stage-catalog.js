@@ -51,7 +51,7 @@
         {id:'final-boss',at:600,kind:'boss',variant:'collapse-warden'}
       ],
       boss:{id:'collapse-warden',spawnAt:600,name:{ko:'붕괴의 전초 수호자',en:'Collapse Frontier Warden'}},
-      rewards:[{type:'weapon',key:'comet'}],
+      rewards:[{type:'weapon',key:'comet'},{type:'currency',key:'stardust',amount:140},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],
       challenges:[{id:'clear',type:'clear'}]
     })
   ]);
