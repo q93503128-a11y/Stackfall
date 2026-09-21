@@ -30,20 +30,21 @@
     const stage=window.stackfallStageById?.(id);if(!stage)return;
     selectedId=stage.id;
     for(const button of nodeLayer.querySelectorAll('.galaxy-stage-node'))button.classList.toggle('selected',button.dataset.stageId===stage.id);
+    const resolvedStatus=window.stackfallStageStatus?.(stage)||stage.status;
     detail.number.textContent='STAGE '+String(stage.order).padStart(2,'0');
-    detail.status.textContent=statusText(stage.status);detail.status.dataset.status=stage.status;
+    detail.status.textContent=statusText(resolvedStatus);detail.status.dataset.status=resolvedStatus;
     detail.name.textContent=localized(stage.title)||('STAGE '+stage.order);
     detail.desc.textContent=localized(stage.description);
     detail.time.textContent='~'+stage.estimatedMinutes+'m';detail.threat.textContent=String(stage.threat);
     detail.gimmicks.textContent=countText(stage,'gimmicks');detail.weapons.textContent=countText(stage,'weapons');detail.events.textContent=countText(stage,'events');
-    detail.boss.textContent=stage.status==='planned'||!stage.boss?'???':String(stage.boss.name||stage.boss.form||'???');
-    const playable=stage.status==='available'||stage.status==='cleared';
+    detail.boss.textContent=resolvedStatus==='planned'||!stage.boss?'???':localized(stage.boss.name)||String(stage.boss.form||stage.boss.id||'???');
+    const playable=resolvedStatus==='available'||resolvedStatus==='cleared';
     launch.disabled=!playable;launch.querySelector('span').textContent=playable?tr('stageMap.launch'):tr('stageMap.building');
   }
   function renderNodes(){
     nodeLayer.innerHTML='';const fragment=document.createDocumentFragment();
     for(const stage of window.STACKFALL_STAGE_CATALOG||[]){
-      const button=document.createElement('button');button.type='button';button.className='galaxy-stage-node '+(stage.status||'planned');button.dataset.stageId=stage.id;button.style.left=(stage.node.x*100)+'%';button.style.top=(stage.node.y*100)+'%';button.setAttribute('aria-label',(localized(stage.title)||('Stage '+stage.order))+' · '+statusText(stage.status));
+      const button=document.createElement('button');button.type='button';const resolvedStatus=window.stackfallStageStatus?.(stage)||stage.status||'planned';button.className='galaxy-stage-node '+resolvedStatus;button.dataset.stageId=stage.id;button.style.left=(stage.node.x*100)+'%';button.style.top=(stage.node.y*100)+'%';button.setAttribute('aria-label',(localized(stage.title)||('Stage '+stage.order))+' · '+statusText(resolvedStatus));
       button.innerHTML='<span>'+String(stage.order).padStart(2,'0')+'</span><i></i>';button.addEventListener('click',()=>selectStage(stage.id));fragment.appendChild(button);
     }
     nodeLayer.appendChild(fragment);selectStage(selectedId||window.STACKFALL_STAGE_CATALOG?.[0]?.id);
