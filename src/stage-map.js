@@ -64,7 +64,7 @@
   }
   entry.addEventListener('click',openMap);closeButton.addEventListener('click',closeMap);
   screen.addEventListener('pointerdown',event=>{if(event.target===screen)closeMap();});
-  window.addEventListener('keydown',event=>{if(event.code==='Escape'&&!screen.classList.contains('hidden')){event.preventDefault();event.stopImmediatePropagation();closeMap();}},true);
+  window.addEventListener('keydown',event=>{const sortieOpen=!document.querySelector('#sortiePrepScreen')?.classList.contains('hidden');if(event.code==='Escape'&&!screen.classList.contains('hidden')&&!sortieOpen){event.preventDefault();event.stopImmediatePropagation();closeMap();}},true);
   launch.addEventListener('click',()=>{
     const stage=window.stackfallStageById?.(selectedId);if(!stage||launch.disabled)return;
     if(window.openStackfallSortiePrep?.('stage',stage.id,{returnTo:'map'}))return;
