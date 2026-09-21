@@ -372,3 +372,12 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - 성운 보관소를 정예 존재만으로 차단하지 않는다.
 - 개발 TMI를 선택 카드 설명에 다시 넣지 않는다.
 - 배포 지문 생성 전에 JavaScript 문법·영구 계약·소유권 검사를 실행한다.
+
+## Run mode foundation (2026-09-21)
+
+- `src/stage-catalog.js`: finite-stage metadata schema and the planned `stage-01` shell. Stage 1 currently carries only the canonical ~10 minute target and future content slots; enemy sets, gimmicks, fixed events, boss, rewards, and challenges are intentionally not fabricated yet.
+- `src/run-modes.js`: run-selection model for `endless` and `stage`. The default and fallback mode is always Endless.
+- Endless remains non-finite, keeps random world events, exposes all enemy families, and keeps the 600-second Apex cadence.
+- Stage mode is modeled as finite, with random repeating world events disabled at the configuration level. Stage runtime integration is not wired into spawning or `resetGame()` yet, so the currently playable game path remains the existing Endless path.
+- The next implementation layer is the galaxy-map stage selector, then explicit Stage 1 runtime scheduling using this catalog instead of rewriting the Endless loop.
+
