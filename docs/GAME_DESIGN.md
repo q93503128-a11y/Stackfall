@@ -373,7 +373,7 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - 개발 TMI를 선택 카드 설명에 다시 넣지 않는다.
 - 배포 지문 생성 전에 JavaScript 문법·영구 계약·소유권 검사를 실행한다.
 
-## Run modes and Stage 1 (2026-09-21)
+## Run modes and finite stages (2026-09-21)
 
 - `src/run-modes.js` separates `endless` and `stage`. The default and fallback mode remains Endless.
 - Endless stays non-finite, keeps random world events, exposes all enemy families, and keeps the 600-second Apex cadence.
