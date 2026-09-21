@@ -23,7 +23,37 @@
 <body>
   <main id="app">
     <canvas id="game" role="img" aria-label="Stackfall game screen"></canvas>
-    <section id="menu" class="screen active" aria-labelledby="title"><div class="menu-noise"></div><button id="menuSettingsBtn" class="settings-icon-btn" type="button" aria-label="Settings">⚙</button><div class="brand-wrap"><h1 id="title"><span>STACK</span><strong>FALL</strong></h1></div><div class="menu-panel glass"><div class="starter-head"><span data-i18n="menu.startEquipment">시작 장비</span><strong id="starterName">펄스 블레이드</strong><p id="starterDesc"></p></div><div id="starterOptions" class="starter-options" role="radiogroup" aria-label="Starting equipment"></div><button id="startBtn" class="primary-btn" type="button"><span data-i18n="menu.start">RUN START</span></button></div></section>
+    <section id="menu" class="screen active" aria-labelledby="title"><div class="menu-noise"></div><button id="menuSettingsBtn" class="settings-icon-btn" type="button" aria-label="Settings">⚙</button><div class="brand-wrap"><h1 id="title"><span>STACK</span><strong>FALL</strong></h1></div><div class="menu-panel glass"><div class="starter-head"><span data-i18n="menu.startEquipment">시작 장비</span><strong id="starterName">펄스 블레이드</strong><p id="starterDesc"></p></div><div id="starterOptions" class="starter-options" role="radiogroup" aria-label="Starting equipment"></div><div class="menu-run-actions"><button id="startBtn" class="primary-btn" type="button"><span data-i18n="menu.endless">ENDLESS</span></button><button id="stageMapBtn" class="secondary-btn stage-map-entry" type="button"><span data-i18n="menu.stageMap">GALAXY MAP</span></button></div></div></section>
+    <section id="galaxyMapScreen" class="galaxy-map-screen hidden" aria-labelledby="galaxyMapTitle">
+      <div class="galaxy-shell">
+        <div class="galaxy-map-pane">
+          <div class="galaxy-map-heading">
+            <div><span data-i18n="stageMap.kicker">GALACTIC OPERATIONS</span><h2 id="galaxyMapTitle" data-i18n="stageMap.title">은하 작전 지도</h2></div>
+            <button id="galaxyMapClose" class="galaxy-close" type="button" aria-label="Close">×</button>
+          </div>
+          <div id="galaxyMapCanvas" class="galaxy-map-canvas" aria-label="Stage constellation map">
+            <div id="galaxyStarfield" class="galaxy-starfield" aria-hidden="true"></div>
+            <svg id="galaxyConnections" class="galaxy-connections" viewBox="0 0 1000 650" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <div id="galaxyStageNodes" class="galaxy-stage-nodes"></div>
+          </div>
+        </div>
+        <aside class="galaxy-detail glass" aria-live="polite">
+          <div class="galaxy-detail-top"><span id="galaxyStageNumber">STAGE 1</span><strong id="galaxyStageStatus" data-i18n="stageMap.planned">PLANNED</strong></div>
+          <h3 id="galaxyStageName">STAGE 1</h3>
+          <p id="galaxyStageDesc"></p>
+          <div class="galaxy-stat-grid">
+            <div><span data-i18n="stageMap.time">예상 작전 시간</span><b id="galaxyStageTime">10m</b></div>
+            <div><span data-i18n="stageMap.threat">위협도</span><b id="galaxyStageThreat">1</b></div>
+            <div><span data-i18n="stageMap.gimmicks">기믹</span><b id="galaxyStageGimmicks">—</b></div>
+            <div><span data-i18n="stageMap.weapons">무기</span><b id="galaxyStageWeapons">—</b></div>
+            <div><span data-i18n="stageMap.events">이벤트</span><b id="galaxyStageEvents">—</b></div>
+            <div><span data-i18n="stageMap.boss">보스</span><b id="galaxyStageBoss">???</b></div>
+          </div>
+          <button id="galaxyLaunchBtn" class="primary-btn galaxy-launch" type="button" disabled><span data-i18n="stageMap.building">STAGE BUILDING</span></button>
+          <p class="galaxy-hint" data-i18n="stageMap.hint">노드를 선택하면 해당 작전의 정보가 표시됩니다.</p>
+        </aside>
+      </div>
+    </section>
     <section id="hud" class="hud hidden" aria-live="polite"><div class="top-left glass compact"><div class="hp-line"><span data-i18n="hud.core">CORE</span><div class="bar"><i id="hpBar"></i></div><b id="hpText">100 / 100</b></div><div class="xp-line"><span>LV.<b id="levelText">1</b></span><div class="bar xp"><i id="xpBar"></i></div></div></div><div class="top-center"><b id="timerText">00:00</b><span id="threatText">THREAT 1</span></div><div id="bossBar" class="boss-bar hidden"><span id="bossName">Boss</span><div><i id="bossHpBar"></i></div></div><button id="pauseBtn" class="icon-btn" type="button" aria-label="Pause">Ⅱ</button><div id="comboBox" class="combo-box"><span data-i18n="hud.chain">CHAIN</span><b id="comboText">0</b><i id="comboBar"></i></div><div id="weaponSlots" class="weapon-slots"></div><div id="passiveList" class="passive-list glass compact"></div></section>
     <section id="choiceScreen" class="overlay hidden" aria-labelledby="choiceTitle"><div class="choice-head"><p id="choiceKicker" data-i18n="choice.kicker">시스템 재구성</p><h2 id="choiceTitle" data-i18n="choice.title">레벨 업</h2><span data-i18n="choice.prompt">하나를 선택하세요</span></div><div id="choiceCards" class="choice-cards"></div></section>
     <section id="resonanceBanner" class="resonance-banner hidden"><span id="resonanceKicker">RESONANCE</span><strong id="resonanceTitle">공명 개방</strong><p id="resonanceDesc"></p></section>
@@ -78,6 +108,7 @@
   <script src="src/bosses.js"></script>
   <script src="src/systems.js"></script>
   <script src="src/interface.js"></script>
+  <script src="src/stage-map.js"></script>
   <script src="src/settings.js"></script>
   <script src="src/realm-backgrounds.js"></script>
   <script src="src/render-space.js"></script>
