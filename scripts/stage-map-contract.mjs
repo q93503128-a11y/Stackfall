@@ -6,7 +6,7 @@ const checks=[
  ['main menu no longer owns starter selection',!index.slice(index.indexOf('id="menu"'),index.indexOf('id="galaxyMapScreen"')).includes('id="starterOptions"')],
  ['galaxy screen separates map and detail panel',index.includes('id="galaxyMapCanvas"')&&index.includes('class="galaxy-detail glass"')&&index.includes('id="galaxyStageNodes"')],
  ['stage nodes are rendered from the catalog',map.includes('window.STACKFALL_STAGE_CATALOG||[]')&&map.includes('window.stackfallStageById?.(id)')],
- ['stage nodes use visible star silhouettes with separate number badges',map.includes('class="galaxy-node-star"')&&styles.includes('clip-path:polygon(50% 0%')&&styles.includes('.galaxy-stage-node>small')],
+ ['stage nodes use luminous stellar points with separate number badges',map.includes('class="galaxy-node-star"')&&styles.includes('galaxyStellarPulse')&&styles.includes('.galaxy-node-star:before')&&styles.includes('.galaxy-node-star:after')&&styles.includes('clip-path:none')&&styles.includes('.galaxy-stage-node>small')],
  ['constellation connections remain catalog-order driven',map.includes("line.setAttribute('x1'")&&map.includes("line.setAttribute('x2'")&&styles.includes('.galaxy-path')],
  ['node status comes from persistent progression',map.includes('window.stackfallStageStatus?.(stage)')&&meta.includes('function stageStatus(stage)')],
  ['detail panel only exposes game time threat unlockable and boss',index.includes('id="galaxyStageTime"')&&index.includes('id="galaxyStageThreat"')&&index.includes('id="galaxyStageUnlocks"')&&index.includes('id="galaxyStageBoss"')&&!index.includes('id="galaxyStageGimmicks"')&&!index.includes('id="galaxyStageEvents"')],
