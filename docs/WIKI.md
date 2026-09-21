@@ -192,3 +192,7 @@
 - `stage`: finite-run configuration used by the upcoming galaxy map and stage runtime. Random repeating world events are disabled in the mode model so stages can use fixed event schedules.
 - `stage-01`: currently a planned ~10 minute catalog shell only. Its enemy set, gimmicks, fixed events, boss, unlocks, and challenges are filled during the Stage 1 implementation pass.
 
+### Galaxy map shell
+
+The main menu exposes `ENDLESS` and a separate galaxy map. Stage nodes are generated from the stage catalog and display their metadata in a dedicated detail panel rather than placing dense text on the map. The layout is two-column on wider screens and stacked on compact/mobile screens. Planned nodes are selectable for inspection but cannot launch until their finite-stage runtime exists.
+
