@@ -50,7 +50,7 @@ expect('hard difficulty increased',difficulty.includes('enemyHp:1.32')&&difficul
 expect('difficulty has one canonical owner',!expansion.includes('window.stackfallDifficultyConfig=function refinedDifficultyConfig'));
 expect('event choices have no clock',!mapEvents.includes('armChoiceClock(LIMITS.choice'));
 expect('endless events arrive faster and announce their signal',mapEvents.includes("INTERVALS={vault:[54,74],crash:[82,112],void:[132,178]}")&&mapEvents.includes("FIRST={vault:38,crash:68,void:104}")&&mapEvents.includes("showBossNotice(m.name,tx('eventDetected'))"));
-expect('auto level choice skips the choice overlay and picks first option',index.includes('id="autoLevelChoice"')&&settingsJs.includes("GAME_SETTINGS.autoLevelChoice=saved.autoLevelChoice===true")&&interfaceJs.includes("if(GAME_SETTINGS.autoLevelChoice===true&&choices[0]){selectChoice(choices[0]);return;}"));
+expect('auto level choice survives the final stable choice owner',index.includes('id="autoLevelChoice"')&&settingsJs.includes("GAME_SETTINGS.autoLevelChoice=saved.autoLevelChoice===true")&&progression.includes("state.mode='choice';if(GAME_SETTINGS.autoLevelChoice===true){selectChoice(choices[0]);return;}"));
 expect('miniboss reward notice has readable lifetime',rewards.includes('showTimedResonance(5200)')&&interfaceJs.includes('function showTimedResonance(duration=2400)'));
 expect('event grants multiplicity through max two',mapEvents.includes('PASSIVES.multiplicity.max')&&expansion.includes("Math.min(2,passiveStacks('multiplicity'))"));
 expect('extra attack bodies focus original target without copy TMI',expansion.includes('homingTargetId:target.id')&&!expansion.includes('const multiplicityTargets=')&&!expansion.includes('원본과 같은 적을 노린다'));
