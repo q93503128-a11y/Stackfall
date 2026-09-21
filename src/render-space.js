@@ -58,4 +58,4 @@ function drawTelegraphs(){
     ctx.setLineDash([]);ctx.restore();
   }
 }
-function drawStarPath(points,inner,outer,rotation=-Math.PI/2){ctx.beginPath();for(let i=0;i<points*2;i++){const a=rotation+i*Math.PI/points,r=i%2?inner:outer,x=Math.cos(a)*r,y=Math.sin(a)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();}
+function drawStarPath(points,inner,outer,rotation=-Math.PI/2,g=ctx){g.beginPath();for(let i=0;i<points*2;i++){const a=rotation+i*Math.PI/points,r=i%2?inner:outer,x=Math.cos(a)*r,y=Math.sin(a)*r;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();}
