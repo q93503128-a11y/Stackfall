@@ -20,9 +20,13 @@
   window.STACKFALL_RUN_MODES=MODES;
   window.STACKFALL_ENDLESS_CONFIG=ENDLESS;
   window.stackfallSetRunSelection=(mode,stageId=null)=>{
-    if(!validMode(mode)||!['menu','gameover'].includes(state.mode))return false;
+    if(!validMode(mode)||!['menu','gameover','stageComplete'].includes(state.mode))return false;
     const next=normalize(mode,stageId);
-    if(mode===MODES.STAGE&&next.mode!==MODES.STAGE)return false;
+    if(mode===MODES.STAGE){
+      if(next.mode!==MODES.STAGE)return false;
+      const stage=stageById(next.stageId),status=window.stackfallStageStatus?.(stage)||stage?.status;
+      if(!['available','cleared'].includes(status))return false;
+    }
     state.runSelection=next;
     return true;
   };
