@@ -136,6 +136,7 @@
     if(e.burstCd<=0){e.burstCd=5.4;const p=typeof predictedPlayer==='function'?predictedPlayer(125+phase*35):{x:player.x,y:player.y},half=150+phase*24,gap=Math.max(48,76-phase*8);rawLine(p.x-half,p.y,p.x-gap,p.y,18+phase*2,damage,'#879cff',.96,'boss-line');rawLine(p.x+gap,p.y,p.x+half,p.y,18+phase*2,damage,'#879cff',.96,'boss-line');rawLine(p.x,p.y-half,p.x,p.y-gap,18+phase*2,damage*.88,'#c2b4ff',1.08,'boss-line');rawLine(p.x,p.y+gap,p.x,p.y+half,18+phase*2,damage*.88,'#c2b4ff',1.08,'boss-line');}
     if(e.pulseCd<=0){e.pulseCd=7.6-phase*.45;if(typeof fireRingWithGaps==='function'){const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,16+phase*4,150+phase*12,damage*.72,'#b8c3ff',e.phase*.13,aim,.30-phase*.03,4.8);}else fireRing(e,14+phase*3,150+phase*12,damage*.68,'#b8c3ff',e.phase*.13,4.8);if(phase>=2)spawnStageBurst(phase===3?'bombardier':'dart',phase);}
   };
+  window.stackfallBeginStageVictory=beginStageVictory;
   window.handleStageBossDefeated=function(enemy){if(enemy?.eventVariant==='stage01-warden')beginStageVictory(enemy);};
   const baseSpawning=updateSpawning;
   updateSpawning=function stageAwareSpawning(dt){if(isStage()){updateStage(dt);return;}baseSpawning(dt);};
