@@ -198,3 +198,7 @@
 
 The main menu is a mode hub rather than a direct loadout/start screen. `GALACTIC OPERATIONS` opens the galaxy map and `ENDLESS` opens sortie preparation. Both modes share the same pre-launch starter-weapon and difficulty screen. Galaxy nodes use star silhouettes with separate stage-number badges so constellation links remain visually readable. The detail panel exposes only game time, threat, unlock progress, boss, and launch state. Available/cleared nodes can prepare a sortie; future planned or progression-locked nodes can be inspected but not launched. The layout stays two-column on wider screens and stacks the detail panel below the map on compact/mobile screens.
 
+### Stage content identity
+
+Stage environments are authored as distinct places rather than Endless background recolors. Ordinary enemies may be reused across stages; new common enemies are introduced only when useful and can enter later pools. Named minibosses/bosses require dedicated silhouettes and attack branches. Apex threats additionally require distinct signature attacks, set pieces, arena behavior, and persistent identity effects.
+
