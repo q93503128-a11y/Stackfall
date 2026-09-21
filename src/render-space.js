@@ -1,5 +1,5 @@
 let realmTransitionSerial=0;
-function normalizedRealmTheme(theme){const value=String(theme||'space');return /^stage-\\d{2}$/.test(value)||value==='void'||value==='apex-chrono'||value==='apex-forge'||value==='apex-constellation'?value:'space';}
+function normalizedRealmTheme(theme){const value=String(theme||'space');return /^stage-\d{2}$/.test(value)||value==='void'||value==='apex-chrono'||value==='apex-forge'||value==='apex-constellation'?value:'space';}
 function restoreRealmInput(){if(state.mode==='cinematic')state.mode='playing';if(state.mode==='playing'&&(matchMedia('(pointer:coarse)').matches||innerWidth<760))ui.touch.classList.remove('hidden');}
 function resetRealmState(){realmTransitionSerial++;state.realmTheme='space';state.realmTransition=null;}
 function stabilizeRealmTheme(theme='space'){state.realmTheme=normalizedRealmTheme(theme);return state.realmTheme;}

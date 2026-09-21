@@ -9,7 +9,7 @@
     enemySet:freezeRows(definition.enemySet),fixedEvents:freezeRows(definition.fixedEvents),boss:definition.boss?freeze({...definition.boss}):null,rewards:freezeRows(definition.rewards),challenges:freezeRows(definition.challenges)
   });
   const constellations=freeze([
-    createConstellation({id:'constellation-01',order:1,title:{ko:'파편의 항로',en:'Shardway'},description:{ko:'붕괴한 전초선에서 유리별 묘역까지 이어지는 첫 항로.',en:'The first route, from the collapsed frontier to the Glassstar Necropolis.'}})
+    createConstellation({id:'constellation-01',order:1,title:{ko:'파편의 항로',en:'Shardway'},description:{ko:'붕괴한 외곽 항로를 따라 점점 깊은 이상 지대로 진입하는 첫 작전 별자리.',en:'The first operation constellation, pushing from the collapsed outer route into increasingly unstable deep space.'}})
   ]);
   const catalog=freeze([
     createStage({
@@ -32,7 +32,14 @@
       enemySet:[{id:'shardling',type:'grunt',unlockAt:0},{id:'dart',type:'fast',unlockAt:0},{id:'nebula-wisp',type:'ranged',unlockAt:0},{id:'glass-wing',type:'fast',unlockAt:140},{id:'bombardier',type:'ranged',unlockAt:320},{id:'bulwark',type:'tank',unlockAt:440}],
       fixedEvents:[{id:'glasswing-swarm',at:140,kind:'wave',variant:'glass-wing',count:8},{id:'refraction-lattice-a',at:260,kind:'hazard',variant:'refraction-lattice'},{id:'wisp-procession',at:380,kind:'wave',variant:'nebula-wisp',count:8},{id:'prism-rain',at:490,kind:'hazard',variant:'prism-rain'},{id:'deep-refraction',at:555,kind:'hazard',variant:'deep-refraction'},{id:'final-boss',at:600,kind:'boss',variant:'prism-reliquary'}],
       boss:{id:'prism-reliquary',spawnAt:600,name:{ko:'굴절 성물함',en:'Refracted Reliquary'}},rewards:[{type:'weapon',key:'prism'},{type:'currency',key:'stardust',amount:220},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
+    }),
+    createStage({
+      id:'stage-04',order:4,constellationId:'constellation-01',status:'available',title:{ko:'정지궤도 회랑',en:'Stasis Orbit Corridor'},description:{ko:'시간이 서로 다른 속도로 흐르는 고리형 항로. 시차 방랑체와 회전하는 초침 절단을 돌파하고 항로의 시간을 고정한 영점 조율기를 파괴해야 한다.',en:'A ring-route where local time moves at conflicting speeds. Break through Phase Drifters and rotating second-hand cuts, then destroy the Zero-Hour Regulator anchoring the corridor.'},durationSeconds:600,estimatedMinutes:10,threat:4,node:{x:.72,y:.42},requirements:{previous:'stage-03'},
+      discoveries:{gimmicks:['second-hand-cut','stasis-burst'],weapons:['chrono'],events:['phase-procession','reverse-clock','zero-hour-lattice']},
+      enemySet:[{id:'dart',type:'fast',unlockAt:0},{id:'nebula-wisp',type:'ranged',unlockAt:0},{id:'glass-wing',type:'fast',unlockAt:0},{id:'phase-drifter',type:'ranged',unlockAt:115},{id:'bombardier',type:'ranged',unlockAt:300},{id:'bulwark',type:'tank',unlockAt:430}],
+      fixedEvents:[{id:'phase-procession',at:115,kind:'wave',variant:'phase-drifter',count:7},{id:'second-hand-cut',at:235,kind:'hazard',variant:'second-hand-cut'},{id:'stasis-burst',at:355,kind:'hazard',variant:'stasis-burst'},{id:'echo-flight',at:465,kind:'wave',variant:'glass-wing',count:9},{id:'zero-hour-lattice',at:545,kind:'hazard',variant:'zero-hour-lattice'},{id:'final-boss',at:600,kind:'boss',variant:'zero-hour-regulator'}],
+      boss:{id:'zero-hour-regulator',spawnAt:600,name:{ko:'영점 조율기',en:'Zero-Hour Regulator'}},rewards:[{type:'weapon',key:'chrono'},{type:'currency',key:'stardust',amount:260},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
     })
   ]);
-  window.STACKFALL_STAGE_SCHEMA_VERSION=3;window.STACKFALL_CONSTELLATIONS=constellations;window.STACKFALL_STAGE_CATALOG=catalog;window.stackfallStageById=id=>catalog.find(stage=>stage.id===id)||null;window.stackfallConstellationById=id=>constellations.find(page=>page.id===id)||null;
+  window.STACKFALL_STAGE_SCHEMA_VERSION=4;window.STACKFALL_CONSTELLATIONS=constellations;window.STACKFALL_STAGE_CATALOG=catalog;window.stackfallStageById=id=>catalog.find(stage=>stage.id===id)||null;window.stackfallConstellationById=id=>constellations.find(page=>page.id===id)||null;
 })();

@@ -242,6 +242,26 @@ Object.assign(TEXT.fr,{
 });
 
 Object.assign(TEXT.ko,{
+  'stage04.enemy.phaseDrifter':'시차 방랑체','stage04.boss':'영점 조율기','stage04.boss.warning':'회랑의 시간이 영점에 고정됩니다','stage04.event.procession':'시차 행렬','stage04.event.echoFlight':'잔향 비행단','stage04.event.secondHand':'초침 절단','stage04.event.stasis':'정지 파동','stage04.event.zeroHour':'영점 격자','stage04.event.warning':'시간축이 전장을 절단합니다','stage04.event.fixed':'고정 사건','stage04.objective.boss':'영점 조율기를 파괴하라'
+});
+Object.assign(TEXT.en,{
+  'stage04.enemy.phaseDrifter':'Phase Drifter','stage04.boss':'Zero-Hour Regulator','stage04.boss.warning':'THE CORRIDOR LOCKS TO ZERO HOUR','stage04.event.procession':'PHASE PROCESSION','stage04.event.echoFlight':'ECHO FLIGHT','stage04.event.secondHand':'SECOND-HAND CUT','stage04.event.stasis':'STASIS PULSE','stage04.event.zeroHour':'ZERO-HOUR LATTICE','stage04.event.warning':'THE TIME AXIS IS CUTTING THE FIELD','stage04.event.fixed':'FIXED EVENT','stage04.objective.boss':'DESTROY THE ZERO-HOUR REGULATOR'
+});
+Object.assign(TEXT.ja,{
+  'stage04.enemy.phaseDrifter':'位相漂流体','stage04.boss':'零時調律機','stage04.boss.warning':'回廊の時間が零時に固定されます','stage04.event.procession':'位相行列','stage04.event.echoFlight':'残響飛行隊','stage04.event.secondHand':'秒針断ち','stage04.event.stasis':'静止波動','stage04.event.zeroHour':'零時格子','stage04.event.warning':'時間軸が戦場を切断します','stage04.event.fixed':'固定イベント','stage04.objective.boss':'零時調律機を破壊せよ'
+});
+Object.assign(TEXT['zh-CN'],{
+  'stage04.enemy.phaseDrifter':'时差漂流体','stage04.boss':'零时调律器','stage04.boss.warning':'回廊时间正在锁定为零时','stage04.event.procession':'相位行列','stage04.event.echoFlight':'回响飞行队','stage04.event.secondHand':'秒针切割','stage04.event.stasis':'停滞脉冲','stage04.event.zeroHour':'零时晶格','stage04.event.warning':'时间轴正在切割战场','stage04.event.fixed':'固定事件','stage04.objective.boss':'摧毁零时调律器'
+});
+Object.assign(TEXT.es,{
+  'stage04.enemy.phaseDrifter':'Errante de Fase','stage04.boss':'Regulador de Hora Cero','stage04.boss.warning':'EL CORREDOR SE FIJA EN HORA CERO','stage04.event.procession':'PROCESIÓN DE FASE','stage04.event.echoFlight':'VUELO DE ECO','stage04.event.secondHand':'CORTE DEL SEGUNDERO','stage04.event.stasis':'PULSO DE ESTASIS','stage04.event.zeroHour':'RETÍCULA DE HORA CERO','stage04.event.warning':'EL EJE TEMPORAL CORTA EL CAMPO','stage04.event.fixed':'EVENTO FIJO','stage04.objective.boss':'DESTRUYE EL REGULADOR DE HORA CERO'
+});
+Object.assign(TEXT.fr,{
+  'stage04.enemy.phaseDrifter':'Dériveur de Phase','stage04.boss':'Régulateur Zéro-Heure','stage04.boss.warning':'LE CORRIDOR SE VERROUILLE À ZÉRO HEURE','stage04.event.procession':'PROCESSION DE PHASE','stage04.event.echoFlight':'VOL D’ÉCHO','stage04.event.secondHand':'COUPE DE SECONDE','stage04.event.stasis':'IMPULSION DE STASE','stage04.event.zeroHour':'RÉSEAU ZÉRO-HEURE','stage04.event.warning':'L’AXE TEMPOREL TRANCHE LE CHAMP','stage04.event.fixed':'ÉVÉNEMENT FIXE','stage04.objective.boss':'DÉTRUISEZ LE RÉGULATEUR ZÉRO-HEURE'
+});
+
+
+Object.assign(TEXT.ko,{
   'stage03.enemy.glassWing':'유리날개','stage03.boss':'굴절 성물함','stage03.boss.warning':'묘역 중심 결정체가 개방됩니다','stage03.event.refraction':'굴절 격자','stage03.event.deep':'심층 굴절','stage03.event.rain':'프리즘 낙하','stage03.event.swarm':'유리날개 군집','stage03.event.procession':'성운 장송열','stage03.event.warning':'결정 격자가 전장을 접습니다','stage03.event.fixed':'고정 사건','stage03.objective.boss':'굴절 성물함을 파괴하라'
 });
 Object.assign(TEXT.en,{

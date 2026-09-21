@@ -396,6 +396,8 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - Stage 1 permanently unlocks Comet Lance; Stage 2 permanently unlocks Nebula Boomerang.
 - `stage-03`, **Glassstar Necropolis / 유리별 묘역**, unlocks after Stage 2, introduces Glasswing, uses refraction-lattice and prism-rain fixed incidents, and fields the dedicated Refracted Reliquary at 600 seconds.
 - Stage 3 permanently unlocks Constellation Prism.
+- `stage-04`, **Stasis Orbit Corridor / 정지궤도 회랑**, unlocks after Stage 3, introduces Phase Drifter, uses second-hand cuts/stasis pulses/zero-hour lattices, and fields the Zero-Hour Regulator at 600 seconds.
+- Stage 4 permanently unlocks Chrono Ring.
 - Galaxy stages are grouped into constellation pages. A finished constellation hands progression to the first stage of the next constellation; the map never stretches every constellation into one endless canvas.
 
 ### Galaxy map
