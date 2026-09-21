@@ -381,15 +381,15 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - Locked weapons are filtered from both starter selection and level-up acquisition pools.
 - `src/stage-catalog.js` now defines a playable `stage-01`, **Collapse Frontier / 붕괴 전초구역**, as a finite 600-second operation.
 - Stage 1 gradually introduces four dedicated enemy families: Shard Feeder, Rift Dart, Debris Bombardier, and Collapse Bulwark.
-- Its fixed timeline triggers events at 90, 210, 300, 420, and 500 seconds, followed by the Collapse Frontier Warden at 540 seconds.
+- Its fixed timeline triggers events at 90, 210, 300, 420, and 500 seconds, followed by the Collapse Frontier Warden at exactly 600 seconds.
 - Stage runs bypass the Endless spawn director, random world-event scheduler, and Apex scheduling. Their progression comes from their own catalog timeline instead.
-- Defeating the Stage 1 boss completes the operation, records the clear and best time, and permanently unlocks the Comet Lance.
+- Reaching 600 seconds never ends the stage by itself. Stage 1 ends only on player defeat or after the final boss is killed. Boss death enters a short dedicated victory state with destruction pulses and an `OPERATION COMPLETE` beat before the result modal, then records the clear/best time and permanently unlocks the Comet Lance.
 
 ### Galaxy map
 
-- The main menu keeps `ENDLESS` as the direct-start path and exposes the galaxy map separately.
+- The main menu is a mode-selection hub. `GALACTIC OPERATIONS` opens the galaxy map and `ENDLESS` opens sortie preparation; neither path starts combat directly.
 - `src/stage-map.js` renders nodes from `STACKFALL_STAGE_CATALOG` and resolves availability/clear state through persistent meta progression.
 - Stage 1 is launchable while its status is `available` or `cleared`. Future `planned` or progression-locked stages remain inspectable but cannot launch.
-- The map and operation details are separated: the map carries nodes and constellation links, while the detail panel carries time, threat, discoveries, events, boss, and launch state.
-- Desktop keeps map and details side by side; compact/mobile layouts stack the detail sheet below the map.
+- The map and operation details are separated: star-shaped nodes and constellation links stay on the map, while the detail panel carries game time, threat, unlock progress, boss, and launch state. Internal gimmick/event counts are not exposed as stage-detail stats.
+- Starter weapon and difficulty selection are shared by Stage and Endless in the sortie-preparation screen immediately before launch. Desktop keeps map and details side by side; compact/mobile layouts stack the detail sheet below the map.
 
