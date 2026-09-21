@@ -381,7 +381,7 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - Locked weapons are filtered from both starter selection and level-up acquisition pools.
 - The basic Core weapon is not counted against equipment capacity. Non-basic equipment starts at four slots; permanent Slot V and Slot VI upgrades expand it to five and six.
 - `src/meta-upgrades.js` provides bounded permanent health, output, cycle, pickup-radius, mitigation, and Stardust-yield upgrades. Permanent growth supports progression but must not replace run-build decisions or player execution.
-- Stardust is the repeatable upgrade currency. Core Shards are rarer and gate higher-value expansion nodes such as equipment-slot unlocks. Stage 1 grants repeat Stardust plus one Core Shard on first clear; Apex kills can also supply Core Shards.
+- Stardust is the repeatable upgrade currency. Core Shards are rarer and gate higher-value expansion nodes such as equipment-slot unlocks. Stage 1 grants repeat Stardust, one Core Shard on first clear, and one additional Core Shard after every three repeat clears. Apex kills are another repeatable Core Shard source, leaving room for future cosmetic sinks without making the rare currency finite.
 - `src/stage-catalog.js` defines playable `stage-01`, **Collapse Frontier / 붕괴 전초구역**, with its final boss scheduled at 600 seconds; the actual run continues until the boss is defeated or the player dies.
 - Stage 1 gradually introduces four dedicated enemy families: Shard Feeder, Rift Dart, Debris Bombardier, and Collapse Bulwark.
 - Its fixed timeline triggers events at 90, 210, 300, 420, and 500 seconds, followed by the Collapse Frontier Warden at exactly 600 seconds.
