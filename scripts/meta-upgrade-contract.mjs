@@ -11,7 +11,7 @@ const checks=[
  ['feature-pack HUD renders only unlocked non-basic slots',feature.includes("const limit=window.stackfallEquipmentSlotLimit?.()||4")&&feature.includes('for(let i=0;i<limit;i++)')],
  ['feature-pack level-up pool respects slot limit',feature.includes("slots=state.weaponSlots.length,limit=window.stackfallEquipmentSlotLimit?.()||4")&&feature.includes('slots<limit')],
  ['base and stable fallback pools also respect slot limit',iface.includes('stackfallEquipmentSlotLimit')&&progression.includes('stackfallEquipmentSlotLimit')&&!iface.includes('slots<6')&&!progression.includes('slots<6')],
- ['basic core remains visually separate from non-basic capacity',feature.includes("sf2SlotMarkup('core',true)")&&feature.includes("'<div class="slot-divider"")],
+ ['basic core remains visually separate from non-basic capacity',feature.includes("sf2SlotMarkup('core',true)")&&feature.includes('<div class="slot-divider"')],
  ['permanent upgrades affect damage haste health magnet and armor',upgrade.includes('metaUpgradeDamageMult')&&upgrade.includes('metaUpgradeHasteMult')&&upgrade.includes('metaUpgradeResetGame')&&upgrade.includes('metaUpgradeMagnetRange')&&upgrade.includes('metaUpgradeDamageReduction')],
  ['Stardust gain upgrade affects resource income',upgrade.includes('stackfallCurrencyMultiplier')&&upgrade.includes("level('salvage')*.08")],
  ['Stage 1 grants repeat Stardust and first-clear Core Shard',stage.includes("{type:'currency',key:'stardust',amount:140}")&&stage.includes("{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}")],
