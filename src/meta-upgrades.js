@@ -33,7 +33,7 @@
   damageReduction=function metaUpgradeDamageReduction(){return Math.min(.82,baseDamageReduction()+level('armor')*.02);};
   const baseResetGame=resetGame;
   resetGame=function metaUpgradeResetGame(){
-    baseResetGame();
+    baseResetGame();state.runCurrencyEarned={stardust:0,coreShard:0};
     const hpBonus=1+level('vitality')*.04;
     if(hpBonus>1){player.maxHp=Math.max(1,Math.round(player.maxHp*hpBonus));player.hp=player.maxHp;updateHUD?.();}
   };
@@ -42,24 +42,28 @@
     const raw=Math.floor(Math.max(0,state.time||0)/12)+Math.floor(Math.max(0,state.kills||0)*.55);
     return Math.max(state.time>=15?2:0,Math.floor(raw*window.stackfallCurrencyMultiplier()));
   }
+  function grantRunCurrency(key,amount){
+    const granted=window.stackfallGrantCurrency?.(key,amount)||0;if(!granted)return 0;
+    state.runCurrencyEarned=state.runCurrencyEarned||{stardust:0,coreShard:0};state.runCurrencyEarned[key]=(state.runCurrencyEarned[key]||0)+granted;return granted;
+  }
   const baseEndGame=endGame;
   endGame=function metaRewardEndGame(){
     if(state.mode==='gameover')return;
     const reward=runStardustReward(),kills=state.kills||0;
-    if(reward>0)window.stackfallGrantCurrency?.('stardust',reward);
+    if(reward>0)grantRunCurrency('stardust',reward);
     window.stackfallRecordRun?.(kills);
-    state.lastMetaReward={stardust:reward,coreShard:0};
+    state.lastMetaReward={...(state.runCurrencyEarned||{stardust:reward,coreShard:0})};
     baseEndGame();
     renderResultReward();
   };
 
   const baseKillEnemy=killEnemy;
   killEnemy=function metaRewardKillEnemy(enemy,opts={}){
-    const alive=enemy&&!enemy.dead,kind=enemy?.kind;
+    const alive=enemy&&!enemy.dead,kind=enemy?.kind,isRewardTwin=!enemy?.twinGroup||(enemy?.twinSide??-1)<0;
     baseKillEnemy(enemy,opts);
     if(!alive||!enemy?.dead)return;
-    if(kind==='apex'){window.stackfallGrantCurrency?.('coreShard',1);window.stackfallGrantCurrency?.('stardust',Math.floor(80*window.stackfallCurrencyMultiplier()));}
-    else if(kind==='void')window.stackfallGrantCurrency?.('stardust',Math.floor(30*window.stackfallCurrencyMultiplier()));
+    if(kind==='apex'){grantRunCurrency('coreShard',1);grantRunCurrency('stardust',Math.floor(80*window.stackfallCurrencyMultiplier()));}
+    else if(kind==='void'&&isRewardTwin)grantRunCurrency('stardust',Math.floor(30*window.stackfallCurrencyMultiplier()));
   };
 
   const screen=document.querySelector('#upgradeScreen'),entry=document.querySelector('#upgradeHubBtn'),closeBtn=document.querySelector('#upgradeCloseBtn'),nodeRoot=document.querySelector('#upgradeNodes'),links=document.querySelector('#upgradeLinks'),buyBtn=document.querySelector('#upgradeBuyBtn'),coreCanvas=document.querySelector('#upgradeCoreCanvas');
