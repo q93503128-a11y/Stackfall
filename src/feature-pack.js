@@ -87,7 +87,7 @@ renderStarterOptions=function renderStarterOptionsWithoutCore(){
     el.title=`${text.name} · ${text.role}`;el.innerHTML=`<span class="starter-icon">${w.icon}</span><span class="starter-label">${text.name}</span>`;
     el.onclick=()=>selectStarter(key);ui.starterOptions.appendChild(el);
   }
-  const key=WEAPONS[state.selectedStarter]&&WEAPONS[state.selectedStarter].starter!==false?state.selectedStarter:'blade';
+  const allowed=WEAPONS[state.selectedStarter]&&WEAPONS[state.selectedStarter].starter!==false&&(!window.stackfallIsWeaponUnlocked||window.stackfallIsWeaponUnlocked(state.selectedStarter)),key=allowed?state.selectedStarter:(Object.keys(WEAPONS).find(key=>WEAPONS[key].starter!==false&&(!window.stackfallIsWeaponUnlocked||window.stackfallIsWeaponUnlocked(key)))||'blade');state.selectedStarter=key;
   const selected=weaponText(key);ui.starterName.textContent=selected.name;ui.starterDesc.textContent=selected.desc;
 };
 
