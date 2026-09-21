@@ -10,6 +10,10 @@ function bulwarkRechargeProfile(stacks){
   return{interval:5.8,cap:60,gain:12};
 }
 function mirrorShieldProfile(stacks){const n=Math.max(0,Math.min(6,Math.floor(Number(stacks)||0)));return n>=5?{cap:36+n*6,gain:4+n*1.5}:null;}
+function bulwarkAugmentShieldProfile(stacks){const n=Math.max(1,Math.min(6,Math.floor(Number(stacks)||1)));return{cap:Math.max(62+n*7,58+n*8),interval:Math.max(4.6,7.8-n*.42),periodicGain:4+n*1.35,hitGain:5+n*1.5};}
+function mirrorAugmentShieldProfile(stacks){const n=Math.max(1,Math.min(6,Math.floor(Number(stacks)||1)));return{cap:52+n*8,gain:1.8+n*.35};}
+registerShieldCapacitySource('weapon-bulwark',()=>bulwarkRechargeProfile(weaponCount('bulwark'))?.cap||0);
+registerShieldCapacitySource('weapon-mirror',()=>mirrorShieldProfile(weaponCount('mirror'))?.cap||0);
 function spawnCoreShot(target,echoed=false){
   if(!target)return;const a=Math.atan2(target.y-player.y,target.x-player.x),range=weaponRange('core');
   spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*CORE_PULSE_SPEED,vy:Math.sin(a)*CORE_PULSE_SPEED,r:CORE_PULSE_RADIUS,life:1.3,maxRange:range,damage:corePulseDamage(weaponCount('core'))*(echoed?.72:1),color:echoed?COLORS.pink:'#d7f8ff',pierce:weaponCount('core')>=4?1:0,source:echoed?'core-echo':'core'});
