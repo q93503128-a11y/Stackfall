@@ -386,7 +386,10 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - Stage 1 gradually introduces four dedicated enemy families: Shard Feeder, Rift Dart, Debris Bombardier, and Collapse Bulwark.
 - Its fixed timeline triggers events at 90, 210, 300, 420, and 500 seconds, followed by the Collapse Frontier Warden at exactly 600 seconds.
 - Stage runs bypass the Endless spawn director, random world-event scheduler, and Apex scheduling. Their progression comes from their own catalog timeline instead.
-- Reaching 600 seconds never ends the stage by itself. Stage 1 ends only on player defeat or after the final boss is killed. Boss death enters a short dedicated victory state with destruction pulses and an `OPERATION COMPLETE` beat before the result modal, then records the clear/best time and permanently unlocks the Comet Lance.
+- Reaching 600 seconds never ends a stage by itself. A stage ends only on player defeat or after the final boss is killed. Boss death enters the shared short victory state with destruction pulses and an `OPERATION COMPLETE` beat before the result modal.
+- `stage-02`, **Ion Nebula Trench / 이온 성운 해구**, unlocks after Stage 1. It intentionally reuses Shardling, Dart, Bombardier, and Bulwark while introducing only one new common enemy, Nebula Wisp.
+- Stage 2 uses fixed ion-shear/deep-shear incidents, owns a separate ion-nebula background, and fields the Nebula Heart with its own silhouette and multi-phase shear/wisp pattern. Its boss also arrives at 600 seconds.
+- Stage 1 permanently unlocks Comet Lance; Stage 2 permanently unlocks Nebula Boomerang.
 
 ### Galaxy map
 
