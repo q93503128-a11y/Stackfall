@@ -1,0 +1,38 @@
+(()=>{
+  const MODES=Object.freeze({ENDLESS:'endless',STAGE:'stage'});
+  const ENDLESS=Object.freeze({
+    mode:MODES.ENDLESS,
+    finite:false,
+    randomWorldEvents:true,
+    allEnemyFamilies:true,
+    apexIntervalSeconds:600
+  });
+  const validMode=mode=>mode===MODES.ENDLESS||mode===MODES.STAGE;
+  const stageById=id=>typeof window.stackfallStageById==='function'?window.stackfallStageById(id):null;
+  const normalize=(mode,stageId=null)=>{
+    if(mode===MODES.STAGE){
+      const stage=stageById(stageId);
+      if(stage)return{mode:MODES.STAGE,stageId:stage.id};
+    }
+    return{mode:MODES.ENDLESS,stageId:null};
+  };
+  state.runSelection=normalize(state.runSelection?.mode,state.runSelection?.stageId);
+  window.STACKFALL_RUN_MODES=MODES;
+  window.STACKFALL_ENDLESS_CONFIG=ENDLESS;
+  window.stackfallSetRunSelection=(mode,stageId=null)=>{
+    if(!validMode(mode)||!['menu','gameover'].includes(state.mode))return false;
+    const next=normalize(mode,stageId);
+    if(mode===MODES.STAGE&&next.mode!==MODES.STAGE)return false;
+    state.runSelection=next;
+    return true;
+  };
+  window.stackfallCurrentRunConfig=()=>{
+    const selection=normalize(state.runSelection?.mode,state.runSelection?.stageId);
+    state.runSelection=selection;
+    if(selection.mode===MODES.ENDLESS)return ENDLESS;
+    const stage=stageById(selection.stageId);
+    return stage?Object.freeze({mode:MODES.STAGE,finite:true,randomWorldEvents:false,allEnemyFamilies:false,apexIntervalSeconds:null,stage}):ENDLESS;
+  };
+  window.stackfallIsEndlessRun=()=>window.stackfallCurrentRunConfig().mode===MODES.ENDLESS;
+  window.stackfallIsStageRun=()=>window.stackfallCurrentRunConfig().mode===MODES.STAGE;
+})();
