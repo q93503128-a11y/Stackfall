@@ -18,12 +18,13 @@
         unlockedWeapons:unlocked,
         clearedStages:sanitizeList(saved.clearedStages),
         bestStageTimes:sanitizeMap(saved.bestStageTimes),
+        stageClearCounts:sanitizeMap(saved.stageClearCounts),
         currencies,
         upgrades,
         lifetime:{runs:sanitizeNumber(saved.lifetime?.runs),kills:sanitizeNumber(saved.lifetime?.kills),bosses:sanitizeNumber(saved.lifetime?.bosses)}
       };
     }catch{
-      return{version:2,unlockedWeapons:[...INITIAL_WEAPONS],clearedStages:[],bestStageTimes:{},currencies:{stardust:0,coreShard:0},upgrades:{},lifetime:{runs:0,kills:0,bosses:0}};
+      return{version:2,unlockedWeapons:[...INITIAL_WEAPONS],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},lifetime:{runs:0,kills:0,bosses:0}};
     }
   }
   const meta=load();
@@ -59,6 +60,8 @@
     const stage=window.stackfallStageById?.(stageId);if(!stage)return{newWeapons:[],firstClear:false,best:false,currency:{}};
     const firstClear=!meta.clearedStages.includes(stageId);
     if(firstClear)meta.clearedStages.push(stageId);
+    meta.stageClearCounts=meta.stageClearCounts||{};
+    const clearCount=sanitizeNumber(meta.stageClearCounts[stageId])+1;meta.stageClearCounts[stageId]=clearCount;
     const previous=Number(meta.bestStageTimes[stageId]),time=Math.max(0,Number(timeSeconds)||0),best=!Number.isFinite(previous)||time<previous;
     if(best)meta.bestStageTimes[stageId]=time;
     const newWeapons=[],currencyReward={stardust:0,coreShard:0};
@@ -70,9 +73,14 @@
         if(amount){meta.currencies[reward.key]=currency(reward.key)+amount;currencyReward[reward.key]=(currencyReward[reward.key]||0)+amount;}
       }
     }
+    const repeatClearCount=Math.max(0,clearCount-1);
+    if(repeatClearCount>0&&repeatClearCount%3===0){
+      meta.currencies.coreShard=currency('coreShard')+1;
+      currencyReward.coreShard=(currencyReward.coreShard||0)+1;
+    }
     meta.lifetime.bosses=sanitizeNumber(meta.lifetime.bosses)+1;
     save();
-    return{newWeapons,firstClear,best,bestTime:meta.bestStageTimes[stageId],currency:currencyReward};
+    return{newWeapons,firstClear,best,bestTime:meta.bestStageTimes[stageId],clearCount,currency:currencyReward};
   }
   function recordRun(kills=0){meta.lifetime.runs=sanitizeNumber(meta.lifetime.runs)+1;meta.lifetime.kills=sanitizeNumber(meta.lifetime.kills)+sanitizeNumber(kills);save();}
   window.STACKFALL_INITIAL_WEAPONS=INITIAL_WEAPONS;
