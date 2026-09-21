@@ -193,6 +193,8 @@
 - `stage-01` — **Collapse Frontier / 붕괴 전초구역**: Shard Feeder starts immediately, Rift Dart enters at 90 seconds, Debris Bombardier at 210 seconds, and Collapse Bulwark at 330 seconds. Fixed incidents occur at 90/210/300/420/500 seconds, with the Collapse Frontier Warden spawning at exactly 600 seconds. The timer never clears or terminates the run; completion requires killing the boss, while player death is the failure condition.
 - Killing the Stage 1 boss first plays a dedicated destruction/operation-complete cinematic, then records the clear/best time and permanently unlocks the Comet Lance.
 - Fresh saves begin with four unlocked starter weapons: Pulse Blade, Starlight Caster, Radiant Bulwark, and Gravity Well. Locked weapons do not appear in starter selection or level-up acquisition.
+- The basic Core weapon is separate from equipment capacity. A fresh profile has four non-basic equipment slots; Slot V and Slot VI permanent upgrades expand that limit to five and six.
+- Persistent progression uses Stardust for repeat upgrades and rarer Core Shards for high-value expansion. Permanent upgrade categories currently cover health, damage, attack cycle, pickup radius, mitigation, currency yield, and equipment capacity.
 
 ### Galaxy map
 
