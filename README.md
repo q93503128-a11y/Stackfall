@@ -317,7 +317,7 @@ node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-r
 
 부하 검사의 p95 `50.5ms`, 50ms 이상 프레임 비율 `8%`, 최대 `100ms` 기준은 급격한 회귀를 막는 상한이며 60FPS 보장 기준이 아닙니다. 결과에는 평균 프레임 시간과 그 값으로 계산한 추정 FPS를 함께 기록합니다.
 
-### Run modes and Stage 1
+### Run modes and finite stages
 
 `ENDLESS` remains the default infinite mode with random world events, the full enemy family pool, and the 600-second Apex cadence. Finite stages use `src/stage-catalog.js`, `src/run-modes.js`, and `src/stage-runtime.js` instead of reusing the Endless encounter director.
 
