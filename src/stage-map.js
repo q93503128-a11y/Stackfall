@@ -3,12 +3,18 @@
   if(!screen||!entry||!closeButton||!canvas||!starfield||!nodeLayer||!connections||!launch)return;
   const detail={
     number:document.querySelector('#galaxyStageNumber'),status:document.querySelector('#galaxyStageStatus'),name:document.querySelector('#galaxyStageName'),desc:document.querySelector('#galaxyStageDesc'),
-    time:document.querySelector('#galaxyStageTime'),threat:document.querySelector('#galaxyStageThreat'),gimmicks:document.querySelector('#galaxyStageGimmicks'),weapons:document.querySelector('#galaxyStageWeapons'),events:document.querySelector('#galaxyStageEvents'),boss:document.querySelector('#galaxyStageBoss')
+    time:document.querySelector('#galaxyStageTime'),threat:document.querySelector('#galaxyStageThreat'),unlocks:document.querySelector('#galaxyStageUnlocks'),boss:document.querySelector('#galaxyStageBoss')
   };
   let selectedId=window.STACKFALL_STAGE_CATALOG?.[0]?.id||null,lastFocus=null;
   const localized=value=>value?.[GAME_SETTINGS.language]||value?.en||value?.ko||'';
   const statusText=status=>status==='available'?tr('stageMap.available'):status==='cleared'?tr('stageMap.cleared'):status==='locked'?tr('stageMap.locked'):tr('stageMap.planned');
-  const countText=(stage,key)=>stage.status==='planned'?'—':String(stage.discoveries?.[key]?.length??0);
+  const minuteText=minutes=>String(tr('stageMap.minutes')).replace('{n}',String(minutes));
+  function unlockText(stage){
+    const weaponRewards=(stage.rewards||[]).filter(reward=>reward.type==='weapon');
+    if(!weaponRewards.length)return tr('stageMap.none');
+    const unlocked=weaponRewards.filter(reward=>window.stackfallIsWeaponUnlocked?.(reward.key)).length;
+    return tr('stageMap.weaponProgress')+' '+unlocked+'/'+weaponRewards.length;
+  }
   function renderStarfield(){
     if(starfield.childElementCount)return;
     const fragment=document.createDocumentFragment();
@@ -35,8 +41,8 @@
     detail.status.textContent=statusText(resolvedStatus);detail.status.dataset.status=resolvedStatus;
     detail.name.textContent=localized(stage.title)||('STAGE '+stage.order);
     detail.desc.textContent=localized(stage.description);
-    detail.time.textContent='~'+stage.estimatedMinutes+'m';detail.threat.textContent=String(stage.threat);
-    detail.gimmicks.textContent=countText(stage,'gimmicks');detail.weapons.textContent=countText(stage,'weapons');detail.events.textContent=countText(stage,'events');
+    const gameMinutes=Math.max(1,Math.round(Number(stage.boss?.spawnAt||stage.durationSeconds||stage.estimatedMinutes*60)/60));
+    detail.time.textContent=minuteText(gameMinutes);detail.threat.textContent=String(stage.threat);detail.unlocks.textContent=unlockText(stage);
     detail.boss.textContent=resolvedStatus==='planned'||!stage.boss?'???':localized(stage.boss.name)||String(stage.boss.form||stage.boss.id||'???');
     const playable=resolvedStatus==='available'||resolvedStatus==='cleared';
     launch.disabled=!playable;launch.querySelector('span').textContent=playable?tr('stageMap.launch'):tr('stageMap.building');
@@ -45,7 +51,7 @@
     nodeLayer.innerHTML='';const fragment=document.createDocumentFragment();
     for(const stage of window.STACKFALL_STAGE_CATALOG||[]){
       const button=document.createElement('button');button.type='button';const resolvedStatus=window.stackfallStageStatus?.(stage)||stage.status||'planned';button.className='galaxy-stage-node '+resolvedStatus;button.dataset.stageId=stage.id;button.style.left=(stage.node.x*100)+'%';button.style.top=(stage.node.y*100)+'%';button.setAttribute('aria-label',(localized(stage.title)||('Stage '+stage.order))+' · '+statusText(resolvedStatus));
-      button.innerHTML='<span>'+String(stage.order).padStart(2,'0')+'</span><i></i>';button.addEventListener('click',()=>selectStage(stage.id));fragment.appendChild(button);
+      button.innerHTML='<span class="galaxy-node-star"><i></i></span><small>'+String(stage.order).padStart(2,'0')+'</small>';button.addEventListener('click',()=>selectStage(stage.id));fragment.appendChild(button);
     }
     nodeLayer.appendChild(fragment);selectStage(selectedId||window.STACKFALL_STAGE_CATALOG?.[0]?.id);
   }
@@ -61,6 +67,7 @@
   window.addEventListener('keydown',event=>{if(event.code==='Escape'&&!screen.classList.contains('hidden')){event.preventDefault();event.stopImmediatePropagation();closeMap();}},true);
   launch.addEventListener('click',()=>{
     const stage=window.stackfallStageById?.(selectedId);if(!stage||launch.disabled)return;
+    if(window.openStackfallSortiePrep?.('stage',stage.id,{returnTo:'map'}))return;
     if(window.stackfallSetRunSelection?.('stage',stage.id)!==true)return;
     closeMap();audio.init();resetGame();
   });
