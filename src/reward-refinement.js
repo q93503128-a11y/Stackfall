@@ -25,17 +25,17 @@
   for(const [key,row] of Object.entries(koDescriptions))if(WEAPON_TEXT[key])WEAPON_TEXT[key].ko=row;
   Object.assign(WEAPONS.bulwark,{name:'성광 장벽',icon:'◈',role:'방어 / 보호막',desc:koDescriptions.bulwark[2]});
   STACK_EFFECTS.bulwark=[
-    ['성광 피막','받는 피해를 줄이는 기본 성광 장벽.'],
-    ['겹빛 장벽','최대 체력과 피해 감소가 증가하는 이중 장벽.'],
-    ['재충전 장벽','일정 시간마다 보호막을 회복하는 재충전 장벽.'],
+    ['성광 피막','받는 피해를 줄이고 보호막을 천천히 충전한다.'],
+    ['겹빛 장벽','최대 체력과 피해 감소, 보호막 충전이 강화된다.'],
+    ['재충전 장벽','보호막 용량과 충전량이 증가한다.'],
     ['보복 파동','피격 시 주변 적을 밀어내는 반격 파동.'],
-    ['요새 장막','보호막 용량과 재충전량이 증가하는 요새 장막.'],
-    ['천체 성벽','주기적으로 강력한 보호막을 충전하는 천체 성벽.']
+    ['요새 장막','보호막 용량과 충전이 크게 강화된다.'],
+    ['천체 성벽','보호막 충전이 빨라지고 강한 추가 충전이 생긴다.']
   ];
   STACK_EFFECTS_EN.bulwark=['Radiant Film','Layered Barrier','Recharge Barrier','Retaliation Wave','Fortress Veil','Celestial Wall'];
-  STACK_DESC_EN.bulwark=['A radiant barrier that reduces incoming damage.','A layered barrier with increased maximum health and damage reduction.','A recharging barrier that restores shield over time.','Taking damage releases a repelling counter wave.','A fortress veil with greater shield capacity and recharge.','A celestial wall that periodically charges a powerful shield.'];
+  STACK_DESC_EN.bulwark=['Reduces incoming damage and slowly restores shield.','Improves max health, damage reduction, and shield recharge.','Increases shield capacity and recharge amount.','Taking damage releases a repelling counter wave.','Greatly improves shield capacity and recharge.','Recharges faster and gains a strong extra shield charge.'];
   STACK_EFFECTS_JA.bulwark=['星光皮膜','重光障壁','再充填障壁','報復波動','要塞帳幕','天体城壁'];
-  STACK_DESC_JA.bulwark=['被ダメージを軽減する基本星光障壁。','最大HPと軽減率が増える二重障壁。','一定時間ごとにシールドを回復する障壁。','被弾時に周囲を押し返す反撃波。','シールド容量と充填量が増える要塞帳幕。','定期的に強力なシールドを充填する天体城壁。'];
+  STACK_DESC_JA.bulwark=['被ダメージを軽減し、シールドをゆっくり回復する。','最大HP・軽減率・シールド回復が強化される。','シールド容量と回復量が増える。','被弾時に周囲を押し返す反撃波。','シールド容量と回復が大きく強化される。','回復が速くなり、強力な追加充填が発生する。'];
   if(WEAPON_TEXT.bulwark){
     WEAPON_TEXT.bulwark.en=['Astral Barrier','Defense / Shield','A radiant barrier specialized in damage absorption and shield recovery.'];
     WEAPON_TEXT.bulwark.ja=['星光障壁','防御 / シールド','被害吸収とシールド充填に特化した星光障壁。'];
@@ -93,10 +93,10 @@
     core:{icon:'✷',color:'#eafcff',name:{ko:'항성 연사',en:'Stellar Volley'},desc:{ko:'4번째 발사마다 전방위 광자탄을 방출하고, 코어 적중 누적 시 다른 적에게 굴절 펄스가 도약한다.',en:'Every fourth volley fires photons in all directions, while repeated core hits ricochet a refracted pulse to another enemy.'}},
     blade:{icon:'◒',color:'#7ce8ff',name:{ko:'공간 절개',en:'Space Rend'},desc:{ko:'칼날 적중 지점에 짧은 재사용 대기시간의 절개 폭발이 생기며, 적중 누적 시 관통 절단파를 발사한다.',en:'Blade hits create cooldown-limited rending bursts, and repeated hits release a piercing shear wave.'}},
     ember:{icon:'✦',color:'#ff7b9e',name:{ko:'연쇄 성화',en:'Chain Starfire'},desc:{ko:'별빛 탄환이 주변 적 둘에게 불꽃을 전이하고, 같은 적을 반복 타격하면 잔광 연소가 세 차례 이어진다.',en:'Starlight jumps fire to two nearby enemies, while repeated hits ignite three delayed afterburn ticks.'}},
-    bulwark:{icon:'◈',color:'#74f2a7',name:{ko:'반사 장벽',en:'Reflective Barrier'},desc:{ko:'피격 시 반격 창은 항상 발사하지만 보호막 충전에는 3초의 내부 재사용 대기시간이 있다. 전투 중 장벽 자체 재충전은 별도로 작동한다.',en:'Taking damage always launches counter lances, but the on-hit shield recharge has a 3-second internal cooldown. Passive barrier recharge remains separate.'}},
+    bulwark:{icon:'◈',color:'#74f2a7',name:{ko:'반사 장벽',en:'Reflective Barrier'},desc:{ko:'피격 시 반격 창을 발사하고 보호막을 추가 충전한다.',en:'Taking damage fires counter lances and restores additional shield.'}},
     gravity:{icon:'◉',color:'#9e79ff',name:{ko:'종말 붕괴',en:'Terminal Collapse'},desc:{ko:'모든 중력 우물이 사라질 때 넓은 붕괴 폭발을 일으켜 끌어모은 적을 한꺼번에 타격한다.',en:'Every gravity well detonates in a wide terminal collapse when it expires.'}},
     comet:{icon:'⟐',color:'#b5f5ff',name:{ko:'혜성 편대',en:'Comet Squadron'},desc:{ko:'혜성 창 발사 뒤 서로 다른 각도에서 추적하는 잔상 창 두 개가 시간차로 합류한다.',en:'Two delayed homing afterimage lances converge from different angles after every comet cast.'}},
-    prism:{icon:'✧',color:'#c2a7ff',name:{ko:'과열 성선',en:'Overheat Starline'},desc:{ko:'집속 광선이 주변 적 둘에게 굴절 도약하고, 최대 출력에서는 실제 판정 굵기와 일치하는 교차 성선을 발사한다.',en:'Focused beams ricochet to two nearby enemies, and maximum focus draws crossing starlines whose visible thickness matches their hit area.'}},
+    prism:{icon:'✧',color:'#c2a7ff',name:{ko:'과열 성선',en:'Overheat Starline'},desc:{ko:'집속 광선이 주변 적에게 굴절 도약한다.',en:'Focused beams ricochet to nearby enemies.'}},
     chrono:{icon:'◎',color:'#8fffe0',name:{ko:'시간 파쇄',en:'Time Fracture'},desc:{ko:'시간 봉쇄 중인 적은 추가 피해를 받고, 그 상태에서 처치되면 주변을 휩쓰는 파쇄 폭발을 일으킨다.',en:'Time-locked enemies take extra damage and shatter in an area explosion when killed.'}},
     arc:{icon:'☾',color:'#69ffe0',name:{ko:'포식 궤도',en:'Predatory Orbit'},desc:{ko:'귀환 타격이 관통 파편을 흩뿌리고, 부메랑으로 처치하면 살아 있는 다른 적에게 새 부메랑이 도약한다.',en:'Return hits scatter piercing shards, and boomerang kills launch a new boomerang toward another living enemy.'}},
     ion:{icon:'⌁',color:'#72f2ff',name:{ko:'초전도 성좌망',en:'Superconductive Constellation'},desc:{ko:'첫 이온 사슬이 끝난 직후 약한 두 번째 사슬망이 전개되어 별도의 적 무리를 다시 연결한다.',en:'A weaker second ion network unfolds immediately after the first chain to reconnect another group.'}},
@@ -155,7 +155,7 @@
     let title='정예 전리품',desc='';
     if(useWeapon){const key=weapons[Math.floor(Math.random()*weapons.length)],next=weaponCount(key)+1;state.weaponStacks[key]=next;if(key!=='core'&&!state.weaponSlots.includes(key))state.weaponSlots.push(key);title=weaponText(key).name;desc=stackEffectText(key,next)?.desc||'장비 중첩 증가.';}
     else if(passives.length){const key=passives[Math.floor(Math.random()*passives.length)];applyMiniRewardPassive(key);title=passiveText(key).name;desc=passiveText(key).desc;}
-    else{player.shield=Math.max(player.shield,18);desc='보호막 충전.';}
+    else{rechargeShield(18,18);desc='보호막 충전.';}
     const kicker=document.querySelector('#resonanceKicker');if(kicker)kicker.textContent='중간보스 자동 보상';ui.resonanceTitle.textContent=title;ui.resonanceDesc.textContent=desc;showTimedResonance(5200);audio.pickup();renderLoadout();updateHUD();
   }
 
@@ -172,7 +172,7 @@
     rrUpdateWeapons(dt);if(state.mode!=='playing')return;
     state.rewardTimers=state.rewardTimers||{stellar:6,aegis:8,chrono:7};
     if(state.bossTraits.stellar){state.rewardTimers.stellar-=dt;if(state.rewardTimers.stellar<=0){state.rewardTimers.stellar=7.5;const targets=nearestEnemies(player.x,player.y,6);for(const e of targets){dealDamage(e,32+state.level*1.5,{color:'#ffe49a',source:'stellar-crown'});state.entities.beams.push({x1:player.x,y1:player.y,x2:e.x,y2:e.y,life:.22,max:.22,color:'#ffe49a',width:2.6});}}}
-    if(state.bossTraits.aegis){state.rewardTimers.aegis-=dt;if(state.rewardTimers.aegis<=0){state.rewardTimers.aegis=10;player.shield=Math.min(60,player.shield+18);shockwave(player.x,player.y,'#83ffd1',120,.42,4);}}
+    if(state.bossTraits.aegis){state.rewardTimers.aegis-=dt;if(state.rewardTimers.aegis<=0){state.rewardTimers.aegis=10;if(rechargeShield(18,60)>0)shockwave(player.x,player.y,'#83ffd1',120,.42,4);}}
     if(state.bossTraits.chrono){state.rewardTimers.chrono-=dt;if(state.rewardTimers.chrono<=0){state.rewardTimers.chrono=9;shockwave(player.x,player.y,'#8fffe0',220,.55,4);for(const e of state.entities.enemies)if(!e.dead&&e.kind!=='apex'&&Math.hypot(e.x-player.x,e.y-player.y)<220)e.timeLock=Math.max(e.timeLock||0,e.type==='boss'?.55:1.35);}}
   };
 
@@ -190,7 +190,7 @@
   const rrHurt=hurtPlayer;hurtPlayer=function(amount,source){
     rrHurt(amount,source);if(!state.weaponAugments?.bulwark||state.mode==='gameover')return;
     const n=Math.max(1,weaponCount('bulwark')),now=state.time||0;
-    if(now>=(player.reflectBarrierRechargeReadyAt||0)){player.reflectBarrierRechargeReadyAt=now+3;player.shield=Math.min(58+n*8,player.shield+5+n*1.5);shockwave(player.x,player.y,'#b5ffe5',64+n*2,.22,1.5);}
+    if(now>=(player.reflectBarrierRechargeReadyAt||0)){player.reflectBarrierRechargeReadyAt=now+3;if(rechargeShield(5+n*1.5,58+n*8)>0)shockwave(player.x,player.y,'#b5ffe5',64+n*2,.22,1.5);}
     for(let i=0;i<4;i++){const a=i*TAU/4+Math.PI/4;spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*455,vy:Math.sin(a)*455,r:5.2,life:1.0,damage:18+n*4,color:'#b5ffe5',pierce:2,source:'barrier-lance'});}
   };
   const rrSpawnCore=spawnCoreShot;spawnCoreShot=function(target,echoed=false){

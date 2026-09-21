@@ -9,8 +9,8 @@
   const lateSeconds=()=>Math.max(0,(state.time||0)-240);
   const threatLevel=()=>1+Math.floor((state.time||0)/60);
 
-  PASSIVES.multiplicity={name:'다중 투영 코어',icon:'✣',color:'#9fe8ff',max:2,eventOnly:true,desc:'지원되는 공격체 +1.'};
-  PASSIVE_TEXT.multiplicity={ko:['다중 투영 코어','지원되는 공격체 +1.'],en:['Projection Core','Supported attack bodies +1.'],ja:['投影コア','対応する攻撃体 +1。'],'zh-CN':['投影核心','支持的攻击体 +1。'],es:['Núcleo de Proyección','Cuerpos de ataque compatibles +1.'],fr:['Noyau de Projection','Corps d’attaque pris en charge +1.']};
+  PASSIVES.multiplicity={name:'다중 투영 코어',icon:'✣',color:'#9fe8ff',max:2,eventOnly:true,desc:'일부 장비의 동시 공격 수 +1.'};
+  PASSIVE_TEXT.multiplicity={ko:['다중 투영 코어','일부 장비의 동시 공격 수 +1.'],en:['Projection Core','Some equipment gains +1 simultaneous attack.'],ja:['投影コア','一部装備の同時攻撃数 +1。'],'zh-CN':['投影核心','部分装备的同时攻击数 +1。'],es:['Núcleo de Proyección','Algunos equipos obtienen +1 ataque simultáneo.'],fr:['Noyau de Projection','Certains équipements gagnent +1 attaque simultanée.']};
   if(WEAPONS.drone)WEAPONS.drone.desc='플레이어를 공전하며 한 표적에 화력을 집중하는 드론 편대.';
   if(PASSIVE_TEXT.overdrive){PASSIVE_TEXT.overdrive.ko=['임계 과출력','플레이어 체력이 45% 미만일 때 모든 피해 +14%.'];PASSIVE_TEXT.overdrive.en=['Critical Overdrive','All damage +14% while the player is below 45% health.'];}
 
@@ -18,7 +18,7 @@
   rollChoices=function balancedRollChoices(n){const rolled=baseRollChoices(Math.max(n,12)).filter(choice=>!(choice.kind==='passive'&&PASSIVES[choice.key]?.eventOnly));return rolled.slice(0,n);};
 
   const baseUpdatePlayer=updatePlayer;
-  updatePlayer=function endgameBarrierPlayer(dt){baseUpdatePlayer(dt);if(state.weaponAugments?.bulwark){const n=Math.max(1,weaponCount('bulwark'));player.augmentBarrierTimer=(player.augmentBarrierTimer??7.5)-dt;if(player.augmentBarrierTimer<=0){player.augmentBarrierTimer=Math.max(4.6,7.8-n*.42);player.shield=Math.min(62+n*7,player.shield+4+n*1.35);shockwave(player.x,player.y,'#9dffe2',72+n*3,.24,1.7);}}};
+  updatePlayer=function endgameBarrierPlayer(dt){baseUpdatePlayer(dt);if(state.weaponAugments?.bulwark){const n=Math.max(1,weaponCount('bulwark'));player.augmentBarrierTimer=(player.augmentBarrierTimer??7.5)-dt;if(player.augmentBarrierTimer<=0){player.augmentBarrierTimer=Math.max(4.6,7.8-n*.42);if(rechargeShield(4+n*1.35,62+n*7)>0)shockwave(player.x,player.y,'#9dffe2',72+n*3,.24,1.7);}}};
 
   const weaponSources=new Set(['core','core-echo','core-multiplicity','core-nova','core-ricochet','blade','blade-multiplicity','wave','blade-burst','blade-shear','ember','echo-star','ember-multiplicity','ember-burn','ember-strong-chain','star-spark','gravity-collapse','well','comet','echo-comet','comet-multiplicity','comet-afterimage','comet-fragment','comet-burst','comet-trail','arc','arc-return','arc-ricochet','arc-ricochet-return','arc-trail','arc-strong-shard','chrono-pulse','chrono-burst','ion-chain','ion-burst','echo-ion','nova-pulse','echo-nova','nova-collapse','drone','meteor-drone','drone-multiplicity','echo-drone','drone-burst','drone-meteor','rail','rail-multiplicity','rail-afterimage','rail-fracture','spiral-bolt','spiral-multiplicity','spiral-counter','echo-spiral','spiral-knot','mirror-return','mirror-counter','mirror-twin-reflect','mirror-burst','barrier-lance','apex-starforge-legacy','apex-forge-star','apex-constellation-lattice','apex-constellation-node']);
   const baseDealDamage=dealDamage;let secondaryDamageGuard=false;
@@ -30,12 +30,12 @@
       if(state.weaponAugments?.blade&&source==='blade'&&!enemy.dead){player.bladeShearCycle=(player.bladeShearCycle||0)+1;if(player.bladeShearCycle%7===0){const a=Math.atan2(enemy.y-player.y,enemy.x-player.x);spawnPlayerProjectile({x,y,vx:Math.cos(a)*520,vy:Math.sin(a)*520,r:5.2,life:.72,maxRange:300,damage:amount*.55,color:'#d8fbff',pierce:3,source:'blade-shear'});}}
       if(state.weaponAugments?.ember&&['ember','echo-star'].includes(source)&&!enemy.dead){enemy.emberMark=(enemy.emberMark||0)+1;if(enemy.emberMark%3===0){for(let i=1;i<=3;i++)scheduleWeaponAction(i*220,()=>{if(!enemy.dead){baseDealDamage(enemy,amount*.16,{color:'#ff9b78',source:'ember-burn',canCrit:false});spawnParticle(enemy.x,enemy.y,'#ff9b78',2,42,2.2);}});}}
       if(state.weaponAugments?.spiral&&source.includes('spiral')&&!enemy.dead){player.spiralBurstCycle=(player.spiralBurstCycle||0)+1;if(player.spiralBurstCycle%8===0)areaDamage(x,y,52+weaponCount('spiral')*4,amount*.38,'#e8c0ff','spiral-knot',{shake:false});}
-      if(state.weaponAugments?.mirror&&source.includes('mirror'))player.shield=Math.min(52+weaponCount('mirror')*8,player.shield+1.8+weaponCount('mirror')*.35);
+      if(state.weaponAugments?.mirror&&source.includes('mirror'))rechargeShield(1.8+weaponCount('mirror')*.35,52+weaponCount('mirror')*8);
     }finally{secondaryDamageGuard=false;}
   };
 
   const prismBodyCount=prismN=>Math.min(5,(prismN>=6?3:prismN>=2?2:1)+multishotStacks());
-  const PRISM_ACQUISITION_SECONDS=.5,PRISM_RELEASE_GRACE_SECONDS=2.25;
+  const PRISM_ACQUISITION_SECONDS=1.0,PRISM_RELEASE_GRACE_SECONDS=2.25;
   const prismReleaseDistance=()=>Math.max(1500,weaponRange('prism')*3+orbitRadiusFor('prism'));
   function prismSharedLock(){
     const now=state.time||0,lock=player.prismSharedLock||(player.prismSharedLock={targetId:null,windup:0,readyAt:now,lostTime:0,heat:0,tick:0,visual:0,augmentCd:0,pulseCd:0});
@@ -56,7 +56,7 @@
     const count=prismBodyCount(prismN),positions=prismPositions(count),lock=prismSharedLock(),size=weaponSizeMultiplier(),stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed(),target=sharedPrismTarget(dt);
     if(!target)return;
     lock.windup=Math.max(0,lock.readyAt-(state.time||0));lock.tick-=dt;lock.visual-=dt;lock.augmentCd-=dt;lock.pulseCd-=dt;
-    if(lock.windup>0){if(lock.visual<=0){lock.visual=stressed?.18:.11;const alpha=1-lock.windup/.5;positions.forEach((pos,index)=>pushPrismBeam(pos,index,count,target,{life:.07,max:.07,color:'#c8b3ff',width:Math.max(.8,(1.0+alpha*1.2)*size)}));}trimOldest(state.entities.beams,entityCap('beams'));return;}
+    if(lock.windup>0){if(lock.visual<=0){lock.visual=stressed?.18:.11;const alpha=1-lock.windup/PRISM_ACQUISITION_SECONDS;positions.forEach((pos,index)=>pushPrismBeam(pos,index,count,target,{life:.07,max:.07,color:'#c8b3ff',width:Math.max(.8,(1.0+alpha*1.2)*size)}));}trimOldest(state.entities.beams,entityCap('beams'));return;}
     lock.heat=Math.min(3.2,lock.heat+dt);const stage=prismStage(lock.heat,prismN),mult=stage===2?(prismN>=6?4.45:prismN>=5?4.10:3.70):stage===1?1.85:1,color=stage===2?'#fff1a8':stage===1?'#ffae7f':'#c8b3ff',width=(2.6+stage*1.85+prismN*.14)*size,tickInterval=Math.max(.065,.25*hasteMult());
     if(lock.tick<=0){lock.tick+=tickInterval;const damage=(2.65+prismN*.86)*mult;for(const pos of positions)dealDamage(target,damage,{color,source:'prism-focus'});if(state.weaponAugments?.prism&&stage>=1&&lock.pulseCd<=0){lock.pulseCd=Math.max(.28,.62*hasteMult());baseDealDamage(target,(7+prismN*2.2)*(stage===2?1.8:1),{color:'#f7dcff',source:'prism-focus-pulse',canCrit:false});}}
     if(lock.visual<=0){lock.visual=stressed?.18:.11;positions.forEach((pos,index)=>pushPrismBeam(pos,index,count,target,{life:.075,max:.075,color,width:Math.max(1,width*.42)}));}
@@ -109,5 +109,5 @@
   const baseBeginApexEncounterForArena=beginApexEncounter;beginApexEncounter=function expandedApexEncounter(){const started=baseBeginApexEncounterForArena();if(started&&state.apexArena)state.apexArena.r=compactDevice()?350:540;return started;};
   const baseStartRealmTransitionForApex=startRealmTransition;startRealmTransition=function spacedApexRealmTransition(theme,options={}){if(options?.owner!=='apex-entry')return baseStartRealmTransitionForApex(theme,options);const midpoint=options.onMidpoint;return baseStartRealmTransitionForApex(theme,{...options,onMidpoint:()=>{midpoint?.();const arena=state.apexArena,boss=enemyById(state.apexActiveId);if(!arena||!boss)return;const dx=boss.x-arena.x,dy=boss.y-arena.y,d=Math.hypot(dx,dy)||1,minDistance=arena.r*.54;if(d<minDistance){boss.x=arena.x+dx/d*minDistance;boss.y=arena.y+dy/d*minDistance;}}});};
 
-  window.stackfallBalanceAudit=()=>({prism:{baseTick:.25,hasteTick:Math.max(.085,.25*hasteMult()),stacks:weaponCount('prism'),targeting:'death-or-extreme-distance',windup:.5,finalAmplification:weaponCount('prism')>=6?4.45:weaponCount('prism')>=5?4.10:3.70},threat:{level:threatLevel(),lateSeconds:lateSeconds(),difficulty:state.selectedDifficulty},apexIntervalSeconds:typeof APEX_INTERVAL_SECONDS==='number'?APEX_INTERVAL_SECONDS:600,eventChoiceTimed:false,recovery:{vitality:passiveStacks('vitality'),regen:passiveStacks('regen'),stellarLife:passiveStacks('stellarLife')},multiplicity:multishotStacks(),echoGuaranteedAtMax:passiveStacks('echo')>=8,manualAim:GAME_SETTINGS.manualAim===true});
+  window.stackfallBalanceAudit=()=>({prism:{baseTick:.25,hasteTick:Math.max(.085,.25*hasteMult()),stacks:weaponCount('prism'),targeting:'death-or-extreme-distance',windup:PRISM_ACQUISITION_SECONDS,finalAmplification:weaponCount('prism')>=6?4.45:weaponCount('prism')>=5?4.10:3.70},threat:{level:threatLevel(),lateSeconds:lateSeconds(),difficulty:state.selectedDifficulty},apexIntervalSeconds:typeof APEX_INTERVAL_SECONDS==='number'?APEX_INTERVAL_SECONDS:600,eventChoiceTimed:false,recovery:{vitality:passiveStacks('vitality'),regen:passiveStacks('regen'),stellarLife:passiveStacks('stellarLife')},multiplicity:multishotStacks(),echoGuaranteedAtMax:passiveStacks('echo')>=8,manualAim:GAME_SETTINGS.manualAim===true});
 })();

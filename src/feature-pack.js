@@ -135,7 +135,7 @@ function sf2CooldownInfo(key){
   else if(key==='ember'){remaining=player.emberCd||0;max=(.74-Math.min(.32,n*.04))*hasteMult();}
   else if(key==='gravity'){remaining=player.wellCd||0;max=(5.8-Math.min(2.45,n*.34))*hasteMult();}
   else if(key==='bulwark'){
-    if(n>=3){remaining=player.bulwarkCd||0;max=n>=5?6.2:9;}else return{ratio:0,remaining:0};
+    const profile=bulwarkRechargeProfile(n);if(profile){remaining=player.bulwarkCd||0;max=profile.interval;}else return{ratio:0,remaining:0};
   }
   else if(key==='comet'){remaining=player.cometCd||0;max=(1.72-Math.min(.5,n*.065))*hasteMult();}
   else if(key==='prism'){remaining=player.prismCd||0;max=(1.34-Math.min(.52,n*.062))*hasteMult();}

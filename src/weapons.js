@@ -1,5 +1,15 @@
 const CORE_PULSE_COOLDOWN=.76,CORE_PULSE_SPEED=520,CORE_PULSE_RADIUS=4.8;
 function corePulseDamage(stacks){return 11+Math.max(1,stacks)*2.5;}
+function bulwarkRechargeProfile(stacks){
+  const n=Math.max(0,Math.min(6,Math.floor(Number(stacks)||0)));if(!n)return null;
+  if(n===1)return{interval:7.4,cap:20,gain:5};
+  if(n===2)return{interval:6.8,cap:28,gain:7};
+  if(n===3)return{interval:6.6,cap:36,gain:8};
+  if(n===4)return{interval:6.4,cap:42,gain:9};
+  if(n===5)return{interval:6.2,cap:50,gain:11};
+  return{interval:5.8,cap:60,gain:12};
+}
+function mirrorShieldProfile(stacks){const n=Math.max(0,Math.min(6,Math.floor(Number(stacks)||0)));return n>=5?{cap:36+n*6,gain:4+n*1.5}:null;}
 function spawnCoreShot(target,echoed=false){
   if(!target)return;const a=Math.atan2(target.y-player.y,target.x-player.x),range=weaponRange('core');
   spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*CORE_PULSE_SPEED,vy:Math.sin(a)*CORE_PULSE_SPEED,r:CORE_PULSE_RADIUS,life:1.3,maxRange:range,damage:corePulseDamage(weaponCount('core'))*(echoed?.72:1),color:echoed?COLORS.pink:'#d7f8ff',pierce:weaponCount('core')>=4?1:0,source:echoed?'core-echo':'core'});
@@ -63,7 +73,7 @@ function fireReflector(mirrorN,echoed=false){
   }
   for(const shot of chosen){shot.life=0;const target=nearestEnemy(shot.x,shot.y,weaponRange('mirror')),a=target?Math.atan2(target.y-shot.y,target.x-shot.x):Math.atan2(shot.y-player.y,shot.x-player.x);spawnPlayerProjectile({x:shot.x,y:shot.y,vx:Math.cos(a)*(470+mirrorN*16),vy:Math.sin(a)*(470+mirrorN*16),r:Math.max(4,shot.r*.82),life:1.15,maxRange:weaponRange('mirror'),damage:(10+mirrorN*2.8)*(echoed?.60:1),color,pierce:mirrorN>=3?1:0,source:echoed?'echo-reflect':'mirror-return'});}
   if(!chosen.length||mirrorN>=4){const targets=nearestEnemies(player.x,player.y,mirrorN>=6?6:3,null,weaponRange('mirror'));for(const target of targets){const a=Math.atan2(target.y-player.y,target.x-player.x);spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*510,vy:Math.sin(a)*510,r:4.7,life:1.0,maxRange:weaponRange('mirror'),damage:(8+mirrorN*2.3)*(echoed?.60:1),color,pierce:mirrorN>=3?1:0,source:'mirror-counter'});}}
-  if(mirrorN>=5)player.shield=Math.min(36+mirrorN*6,player.shield+4+mirrorN*1.5);if(mirrorN>=6&&!echoed){areaDamage(player.x,player.y,radius*.46,13+mirrorN*3.2,color,'mirror-burst');shockwave(player.x,player.y,color,radius,.42,3.2);}else shockwave(player.x,player.y,color,radius,.28,2);
+  const mirrorShield=mirrorShieldProfile(mirrorN);if(mirrorShield)rechargeShield(mirrorShield.gain,mirrorShield.cap);if(mirrorN>=6&&!echoed){areaDamage(player.x,player.y,radius*.46,13+mirrorN*3.2,color,'mirror-burst');shockwave(player.x,player.y,color,radius,.42,3.2);}else shockwave(player.x,player.y,color,radius,.28,2);
 }
 function updateWeapons(dt){
   const bladeN=weaponCount('blade'),prismN=weaponCount('prism');player.angle+=dt*(2.05+bladeN*.12+prismN*.05+(bladeN>=3?.42:0))/hasteMult()*(1+stat('projectileSpeed')*.08);
@@ -71,7 +81,7 @@ function updateWeapons(dt){
   if(bladeN){player.bladeTick-=dt;if(player.bladeTick<=0){player.bladeTick=.13*hasteMult();const count=bladeN>=5?3:bladeN>=2?2:1,orbit=orbitRadiusFor('blade'),bladeR=(bladeN>=6?31:bladeN>=3?25:22)*weaponSizeMultiplier();for(const e of state.entities.enemies){if(e.dead)continue;for(let i=0;i<count;i++){const a=player.angle+i*TAU/count,bx=player.x+Math.cos(a)*orbit,by=player.y+Math.sin(a)*orbit;if((e.x-bx)**2+(e.y-by)**2<(e.r+bladeR)**2){dealDamage(e,5+bladeN*1.7,{color:COLORS.cyan,source:'blade'});if(bladeN>=4){const dx=e.x-player.x,dy=e.y-player.y,d=Math.hypot(dx,dy)||1;spawnPlayerProjectile({x:e.x,y:e.y,vx:dx/d*455,vy:dy/d*455,r:7,life:.28,maxRange:155,damage:7+bladeN*1.4,color:COLORS.cyan,pierce:2+(bladeN>=5?1:0),source:'wave'});}break;}}}}}
   const emberN=weaponCount('ember');if(emberN){player.emberCd-=dt;if(player.emberCd<=0){player.emberCd=(.82-Math.min(.28,emberN*.04))*hasteMult();const target=nearestWeaponTarget('ember');if(target){fireEmber(target,emberN);echoTrigger(()=>fireEmber(target,emberN,true));}}}
   const gravN=weaponCount('gravity');if(gravN){player.wellCd-=dt;if(player.wellCd<=0){player.wellCd=(6.1-Math.min(2.2,gravN*.32))*hasteMult();createGravityWells(gravN);echoTrigger(()=>createGravityWells(gravN,true));}}
-  const bulwarkN=weaponCount('bulwark');if(bulwarkN>=3){player.bulwarkCd-=dt;if(player.bulwarkCd<=0){player.bulwarkCd=bulwarkN>=5?6.2:9;const cap=bulwarkN>=6?46:bulwarkN>=5?30:16,gain=bulwarkN>=5?10:6;player.shield=Math.min(cap,player.shield+gain);shockwave(player.x,player.y,COLORS.green,90,.32,2);}}if(bulwarkN>=6){player.fortressCd-=dt;if(player.fortressCd<=0){player.fortressCd=8;player.shield=Math.min(46,player.shield+24);shockwave(player.x,player.y,COLORS.green,155,.5,5);}}
+  const bulwarkN=weaponCount('bulwark'),bulwarkProfile=bulwarkRechargeProfile(bulwarkN);if(bulwarkProfile){player.bulwarkCd-=dt;if(player.bulwarkCd<=0){player.bulwarkCd=bulwarkProfile.interval;if(rechargeShield(bulwarkProfile.gain,bulwarkProfile.cap)>0)shockwave(player.x,player.y,COLORS.green,90,.32,2);}}if(bulwarkN>=6){player.fortressCd-=dt;if(player.fortressCd<=0){player.fortressCd=8;if(rechargeShield(24,bulwarkProfile.cap)>0)shockwave(player.x,player.y,COLORS.green,155,.5,5);}}
   const cometN=weaponCount('comet');if(cometN){player.cometCd-=dt;if(player.cometCd<=0){player.cometCd=(1.92-Math.min(.46,cometN*.06))*hasteMult();const target=nearestWeaponTarget('comet');if(target){fireComet(target,cometN);echoTrigger(()=>fireComet(target,cometN,true));}}}
   const arcN=weaponCount('arc');if(arcN){player.arcCd-=dt;if(player.arcCd<=0){player.arcCd=(1.92-Math.min(.58,arcN*.075))*hasteMult();const target=nearestWeaponTarget('arc');if(target){fireBoomerang(target,arcN);echoTrigger(()=>fireBoomerang(target,arcN,true));}}}
   if(prismN){updateFocusedPrisms(dt,prismN);player.prismCd-=dt;if(player.prismCd<=0){player.prismCd=1.55*hasteMult();echoTrigger(()=>firePrism(prismN,true));}}else player.prismLocks=[];

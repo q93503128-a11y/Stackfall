@@ -2,14 +2,10 @@
   'use strict';
 
   const weaponStacks=key=>Math.max(0,weaponCount(key));
-  if(STACK_EFFECTS.prism?.[0])STACK_EFFECTS.prism[0][1]='새 표적을 1초 조준한 뒤 집속한다.';
   const multishotStacks=()=>Math.min(2,Math.max(0,Number(stat('multiplicity'))||0));
   const clampScale=(n,table)=>table[Math.max(0,Math.min(table.length-1,n))]??1;
-  const PRISM_AUGMENT_COPY_KO='집속 광선이 주변 적에게 굴절 도약한다.',PRISM_AUGMENT_COPY_EN='Focused beams ricochet to nearby enemies.';
-  const prismAugmentDef=window.stackfallWeaponAugmentDefs?.prism;if(prismAugmentDef?.desc){prismAugmentDef.desc.ko=PRISM_AUGMENT_COPY_KO;prismAugmentDef.desc.en=PRISM_AUGMENT_COPY_EN;}
-  const prismLedger=document.querySelector('#abilityLedgerScreen');prismLedger?.addEventListener('click',event=>{if(!event.target.closest('.ledger-card[data-augment-key="prism"]'))return;queueMicrotask(()=>{for(const layer of prismLedger.querySelectorAll('.ledger-detail-layer:not(.hidden)')){const copy=layer.querySelector('.ledger-detail-card p');if(copy)copy.textContent=GAME_SETTINGS.language==='ko'?PRISM_AUGMENT_COPY_KO:PRISM_AUGMENT_COPY_EN;}});});
   let forcedCriticalResolution=false,criticalResolutionPreviousScale=1;
-  function resetCommunityRunState(){player.communityCoreRicochetCycle=0;player.communityBulwarkCd=0;forcedCriticalResolution=false;criticalResolutionPreviousScale=1;if((Number(window.stackfallResolutionScale)||1)!==1){window.stackfallResolutionScale=1;resize();}}
+  function resetCommunityRunState(){player.communityCoreRicochetCycle=0;forcedCriticalResolution=false;criticalResolutionPreviousScale=1;if((Number(window.stackfallResolutionScale)||1)!==1){window.stackfallResolutionScale=1;resize();}}
   const previousResetGame=resetGame;resetGame=function communityResetGame(){const result=previousResetGame();resetCommunityRunState();return result;};
   const previousShowMainMenu=showMainMenu;showMainMenu=function communityShowMainMenu(){const result=previousShowMainMenu();resetCommunityRunState();return result;};
   const previousEndGame=endGame;endGame=function communityEndGame(){const result=previousEndGame();resetCommunityRunState();return result;};
@@ -145,7 +141,6 @@
   const previousUpdatePlayer=updatePlayer;
   updatePlayer=function communityFeedbackPlayer(dt){
     previousUpdatePlayer(dt);
-    const n=weaponStacks('bulwark');if(n>0&&n<3){player.communityBulwarkCd=(player.communityBulwarkCd??0)-dt;if(player.communityBulwarkCd<=0){player.communityBulwarkCd=n===1?7.4:6.8;const cap=n===1?20:28,gain=n===1?5:7;player.shield=Math.min(cap,player.shield+gain);shockwave(player.x,player.y,COLORS.green,70+n*8,.25,1.8);}}
     const emergency=typeof rawEmergencyRendering==='function'&&rawEmergencyRendering(),critical=criticalVisualCombat();if(critical&&emergency&&!forcedCriticalResolution){criticalResolutionPreviousScale=Number(window.stackfallResolutionScale)||1;forcedCriticalResolution=true;window.stackfallResolutionScale=.55;resize();}else if(forcedCriticalResolution&&(!critical||!emergency)){const restoreScale=emergency?criticalResolutionPreviousScale:1;forcedCriticalResolution=false;criticalResolutionPreviousScale=1;window.stackfallResolutionScale=restoreScale;resize();}
   };
 
