@@ -43,3 +43,23 @@ Object.assign(TEXT.es,{
 Object.assign(TEXT.fr,{
   'gameover.damage.title':'ANALYSE DES DÉGÂTS','gameover.damage.total':'DÉGÂTS TOTAUX','gameover.damage.average':'DPS MOYEN','gameover.damage.peak':'PIC DE DPS','gameover.damage.breakdown':'DÉGÂTS PAR ÉQUIPEMENT','gameover.damage.trend':'ÉVOLUTION DES DÉGÂTS','gameover.damage.other':'AUTRES EFFETS','gameover.damage.mvp':'MVP','gameover.damage.empty':'AUCUN DÉGÂT ENREGISTRÉ'
 });
+
+Object.assign(TEXT.ko,{
+  'menu.endless':'ENDLESS','menu.stageMap':'은하 지도','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'은하 작전 지도','stageMap.planned':'계획 중','stageMap.available':'출격 가능','stageMap.cleared':'클리어','stageMap.locked':'잠김','stageMap.time':'예상 작전 시간','stageMap.threat':'위협도','stageMap.gimmicks':'기믹','stageMap.weapons':'무기','stageMap.events':'이벤트','stageMap.boss':'보스','stageMap.launch':'출격','stageMap.building':'STAGE BUILDING','stageMap.hint':'노드를 선택하면 해당 작전의 정보가 표시됩니다.'
+});
+Object.assign(TEXT.en,{
+  'menu.endless':'ENDLESS','menu.stageMap':'GALAXY MAP','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'GALACTIC OPERATIONS','stageMap.planned':'PLANNED','stageMap.available':'AVAILABLE','stageMap.cleared':'CLEARED','stageMap.locked':'LOCKED','stageMap.time':'EST. OPERATION','stageMap.threat':'THREAT','stageMap.gimmicks':'GIMMICKS','stageMap.weapons':'WEAPONS','stageMap.events':'EVENTS','stageMap.boss':'BOSS','stageMap.launch':'DEPLOY','stageMap.building':'STAGE BUILDING','stageMap.hint':'Select a node to inspect the operation.'
+});
+Object.assign(TEXT.ja,{
+  'menu.endless':'ENDLESS','menu.stageMap':'銀河マップ','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'銀河作戦マップ','stageMap.planned':'計画中','stageMap.available':'出撃可能','stageMap.cleared':'クリア','stageMap.locked':'ロック','stageMap.time':'予想作戦時間','stageMap.threat':'脅威度','stageMap.gimmicks':'ギミック','stageMap.weapons':'武器','stageMap.events':'イベント','stageMap.boss':'ボス','stageMap.launch':'出撃','stageMap.building':'STAGE BUILDING','stageMap.hint':'ノードを選ぶと作戦情報を確認できます。'
+});
+Object.assign(TEXT['zh-CN'],{
+  'menu.endless':'ENDLESS','menu.stageMap':'银河地图','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'银河作战地图','stageMap.planned':'规划中','stageMap.available':'可出击','stageMap.cleared':'已通关','stageMap.locked':'已锁定','stageMap.time':'预计作战时间','stageMap.threat':'威胁度','stageMap.gimmicks':'机制','stageMap.weapons':'武器','stageMap.events':'事件','stageMap.boss':'首领','stageMap.launch':'出击','stageMap.building':'STAGE BUILDING','stageMap.hint':'选择节点以查看作战信息。'
+});
+Object.assign(TEXT.es,{
+  'menu.endless':'ENDLESS','menu.stageMap':'MAPA GALÁCTICO','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'OPERACIONES GALÁCTICAS','stageMap.planned':'PLANEADO','stageMap.available':'DISPONIBLE','stageMap.cleared':'SUPERADO','stageMap.locked':'BLOQUEADO','stageMap.time':'DURACIÓN EST.','stageMap.threat':'AMENAZA','stageMap.gimmicks':'MECÁNICAS','stageMap.weapons':'ARMAS','stageMap.events':'EVENTOS','stageMap.boss':'JEFE','stageMap.launch':'DESPLEGAR','stageMap.building':'STAGE BUILDING','stageMap.hint':'Selecciona un nodo para ver la operación.'
+});
+Object.assign(TEXT.fr,{
+  'menu.endless':'ENDLESS','menu.stageMap':'CARTE GALACTIQUE','stageMap.kicker':'GALACTIC OPERATIONS','stageMap.title':'OPÉRATIONS GALACTIQUES','stageMap.planned':'PLANIFIÉ','stageMap.available':'DISPONIBLE','stageMap.cleared':'TERMINÉ','stageMap.locked':'VERROUILLÉ','stageMap.time':'DURÉE EST.','stageMap.threat':'MENACE','stageMap.gimmicks':'MÉCANIQUES','stageMap.weapons':'ARMES','stageMap.events':'ÉVÉNEMENTS','stageMap.boss':'BOSS','stageMap.launch':'DÉPLOYER','stageMap.building':'STAGE BUILDING','stageMap.hint':'Sélectionnez un nœud pour afficher l’opération.'
+});
+
