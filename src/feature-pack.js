@@ -79,7 +79,7 @@ spawnCoreShot=function spawnStackedCoreShot(target,echoed=false){
 renderStarterOptions=function renderStarterOptionsWithoutCore(){
   ui.starterOptions.innerHTML='';
   for(const [key,w] of Object.entries(WEAPONS)){
-    if(w.starter===false)continue;
+    if(w.starter===false||(window.stackfallIsWeaponUnlocked&&!window.stackfallIsWeaponUnlocked(key)))continue;
     const text=weaponText(key),el=document.createElement('button');
     el.type='button';el.className='starter-option'+(key===state.selectedStarter?' selected':'');
     el.style.setProperty('--starter-color',w.color);el.style.setProperty('--starter-glow',hexToRgba(w.color,.16));
