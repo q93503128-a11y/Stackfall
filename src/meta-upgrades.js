@@ -67,8 +67,9 @@
   };
 
   const screen=document.querySelector('#upgradeScreen'),entry=document.querySelector('#upgradeHubBtn'),closeBtn=document.querySelector('#upgradeCloseBtn'),nodeRoot=document.querySelector('#upgradeNodes'),links=document.querySelector('#upgradeLinks'),buyBtn=document.querySelector('#upgradeBuyBtn'),coreCanvas=document.querySelector('#upgradeCoreCanvas');
+  const profileEntry=document.querySelector('#hubProfile'),profileScreen=document.querySelector('#profileScreen'),profileCloseBtn=document.querySelector('#profileCloseBtn');
   const detail={category:document.querySelector('#upgradeCategory'),name:document.querySelector('#upgradeName'),desc:document.querySelector('#upgradeDesc'),level:document.querySelector('#upgradeLevel'),effect:document.querySelector('#upgradeEffect'),cost:document.querySelector('#upgradeCost'),lock:document.querySelector('#upgradeLockReason')};
-  let selected='vitality',animationFrame=0,lastFocus=null;
+  let selected='vitality',animationFrame=0,lastFocus=null,profileLastFocus=null;
 
   function effectText(row,nextLevel=level(row.id)){
     if(row.id==='vitality')return fmt(row.effect,nextLevel*4);
@@ -117,8 +118,12 @@
     buyBtn.disabled=maxed(row)||!prereqMet(row)||stateName==='poor';buyBtn.querySelector('span').textContent=maxed(row)?tr('upgrade.maxed'):tr('upgrade.buy');
   }
   function renderProfile(){
-    const clears=document.querySelector('#profileClearCount'),dust=document.querySelector('#profileStardust'),shard=document.querySelector('#profileCoreShard'),ud=document.querySelector('#upgradeStardust'),us=document.querySelector('#upgradeCoreShard');
-    if(clears)clears.textContent=String(window.stackfallMeta?.clearedStages?.length||0);if(dust)dust.textContent=String(currency('stardust'));if(shard)shard.textContent=String(currency('coreShard'));if(ud)ud.textContent=String(currency('stardust'));if(us)us.textContent=String(currency('coreShard'));
+    const m=window.stackfallMeta||{},clears=m.clearedStages?.length||0,dust=currency('stardust'),shards=currency('coreShard');
+    const set=(id,value)=>{const el=document.querySelector(id);if(el)el.textContent=String(value);};
+    set('#profileClearCount',clears);set('#profileStardust',dust);set('#profileCoreShard',shards);set('#upgradeStardust',dust);set('#upgradeCoreShard',shards);
+    set('#profileDetailClears',clears);set('#profileDetailRuns',m.lifetime?.runs||0);set('#profileDetailKills',m.lifetime?.kills||0);
+    set('#profileDetailSlots',window.stackfallEquipmentSlotLimit?.()||4);set('#profileDetailWeapons',m.unlockedWeapons?.length||0);set('#profileDetailStardust',dust);set('#profileDetailCoreShard',shards);
+    const best=Number(m.bestStageTimes?.['stage-01']),bestEl=document.querySelector('#profileDetailBest');if(bestEl)bestEl.textContent=Number.isFinite(best)&&best>0?formatTime(best):'—';
   }
   function renderResultReward(){
     const root=document.querySelector('#resultCurrencyReward');if(!root)return;const reward=state.lastMetaReward||{stardust:0,coreShard:0};
@@ -140,26 +145,39 @@
   function close(){
     if(!screen)return;screen.classList.add('hidden');stopCoreAnimation();if(lastFocus?.isConnected)lastFocus.focus();lastFocus=null;
   }
+  function openProfile(){
+    if(!profileScreen)return;profileLastFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;renderProfile();profileScreen.classList.remove('hidden');profileCloseBtn?.focus();try{audio.pickup();}catch{}
+  }
+  function closeProfile(restoreFocus=true){
+    if(!profileScreen)return;profileScreen.classList.add('hidden');if(restoreFocus&&profileLastFocus?.isConnected)profileLastFocus.focus();profileLastFocus=null;
+  }
   entry?.addEventListener('click',open);closeBtn?.addEventListener('click',close);buyBtn?.addEventListener('click',buySelected);
-  window.addEventListener('keydown',event=>{if(event.code==='Escape'&&screen&&!screen.classList.contains('hidden')){event.preventDefault();event.stopImmediatePropagation();close();}},true);
+  profileEntry?.addEventListener('click',openProfile);profileCloseBtn?.addEventListener('click',()=>closeProfile());
+  profileScreen?.addEventListener('click',event=>{if(event.target===profileScreen)closeProfile();});
+  window.addEventListener('keydown',event=>{
+    if(event.code!=='Escape')return;
+    if(profileScreen&&!profileScreen.classList.contains('hidden')){event.preventDefault();event.stopImmediatePropagation();closeProfile();return;}
+    if(screen&&!screen.classList.contains('hidden')){event.preventDefault();event.stopImmediatePropagation();close();}
+  },true);
 
   function drawCore(now=0){
     if(!coreCanvas)return;const g=coreCanvas.getContext('2d'),w=coreCanvas.width,h=coreCanvas.height,cx=w/2,cy=h/2,t=now/1000;
     g.clearRect(0,0,w,h);
-    const aura=g.createRadialGradient(cx,cy,4,cx,cy,118);aura.addColorStop(0,'rgba(225,252,255,.50)');aura.addColorStop(.28,'rgba(105,196,255,.18)');aura.addColorStop(.62,'rgba(114,100,255,.08)');aura.addColorStop(1,'rgba(56,50,150,0)');g.fillStyle=aura;g.fillRect(30,30,w-60,h-60);
-    g.save();g.translate(cx,cy);g.strokeStyle='rgba(158,229,255,.44)';g.lineWidth=1.4;
-    for(let ring=0;ring<3;ring++){g.save();g.rotate(t*(ring%2?.17:-.12)+ring);g.beginPath();g.ellipse(0,0,78+ring*17,23+ring*7,ring*.55,0,Math.PI*2);g.stroke();g.restore();}
-    const shell=g.createLinearGradient(-54,-54,54,54);shell.addColorStop(0,'#f8ffff');shell.addColorStop(.28,'#aef2ff');shell.addColorStop(.64,'#7587ff');shell.addColorStop(1,'#2c256f');g.fillStyle=shell;g.shadowBlur=34;g.shadowColor='#7ce8ff';
-    g.beginPath();for(let i=0;i<8;i++){const a=-Math.PI/2+i*Math.PI/4,r=i%2?42:58,x=Math.cos(a)*r,y=Math.sin(a)*r;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();g.fill();
-    g.shadowBlur=20;g.fillStyle='#fff';g.beginPath();for(let i=0;i<8;i++){const a=-Math.PI/2+i*Math.PI/4,r=i%2?12:30,x=Math.cos(a)*r,y=Math.sin(a)*r;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();g.fill();
-    g.fillStyle='#101737';g.beginPath();g.arc(0,0,10,0,Math.PI*2);g.fill();g.fillStyle='#fff';g.beginPath();g.arc(-3,-3,3,0,Math.PI*2);g.fill();g.restore();
+    const aura=g.createRadialGradient(cx,cy,2,cx,cy,104);aura.addColorStop(0,'rgba(242,255,255,.62)');aura.addColorStop(.20,'rgba(125,224,255,.24)');aura.addColorStop(.52,'rgba(107,123,255,.09)');aura.addColorStop(1,'rgba(60,54,166,0)');g.fillStyle=aura;g.fillRect(42,42,w-84,h-84);
+    g.save();g.translate(cx,cy);
+    for(let ring=0;ring<3;ring++){g.save();g.rotate((ring%2?1:-1)*t*(.12+ring*.025)+ring*.83);g.strokeStyle=ring===0?'rgba(202,246,255,.50)':'rgba(156,178,255,.26)';g.lineWidth=ring===0?1.6:1.1;g.beginPath();g.ellipse(0,0,64+ring*13,18+ring*6,ring*.46,0,Math.PI*2);g.stroke();g.restore();}
+    g.shadowBlur=30;g.shadowColor='#78ddff';const outer=g.createRadialGradient(-12,-14,4,0,0,49);outer.addColorStop(0,'#ffffff');outer.addColorStop(.18,'#d8fbff');outer.addColorStop(.52,'#87b8ff');outer.addColorStop(.78,'#6671df');outer.addColorStop(1,'#25265f');g.fillStyle=outer;g.beginPath();g.arc(0,0,47,0,Math.PI*2);g.fill();
+    g.shadowBlur=0;g.strokeStyle='rgba(237,254,255,.92)';g.lineWidth=2.1;g.beginPath();g.arc(0,0,47,0,Math.PI*2);g.stroke();g.strokeStyle='rgba(13,25,66,.85)';g.lineWidth=5.2;g.beginPath();g.arc(0,0,38,0,Math.PI*2);g.stroke();g.strokeStyle='rgba(176,236,255,.58)';g.lineWidth=1.3;g.beginPath();g.arc(0,0,31,0,Math.PI*2);g.stroke();
+    g.save();g.rotate(t*.13);g.fillStyle='#f8ffff';g.shadowBlur=18;g.shadowColor='#d7f8ff';g.beginPath();for(let i=0;i<16;i++){const a=-Math.PI/2+i*Math.PI/8,r=i%2?8:25,x=Math.cos(a)*r,y=Math.sin(a)*r;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();g.fill();g.restore();
+    g.shadowBlur=0;g.fillStyle='#11193d';g.beginPath();g.arc(0,0,8.5,0,Math.PI*2);g.fill();g.fillStyle='#ffffff';g.beginPath();g.arc(-2.4,-2.8,2.4,0,Math.PI*2);g.fill();
+    g.restore();
   }
   function animateCore(now){if(!screen||screen.classList.contains('hidden')){animationFrame=0;return;}drawCore(now);animationFrame=requestAnimationFrame(animateCore);}
   function startCoreAnimation(){if(animationFrame)return;animationFrame=requestAnimationFrame(animateCore);}
   function stopCoreAnimation(){if(animationFrame)cancelAnimationFrame(animationFrame);animationFrame=0;}
 
   const baseShowMainMenu=showMainMenu;
-  showMainMenu=function metaAwareMainMenu(){baseShowMainMenu();close();renderProfile();};
+  showMainMenu=function metaAwareMainMenu(){baseShowMainMenu();close();closeProfile(false);renderProfile();};
   const baseApplyLanguage=applyLanguage;
   applyLanguage=function metaAwareLanguage(){baseApplyLanguage();renderUpgradeUi();};
 
