@@ -16,7 +16,7 @@
       const upgrades=sanitizeMap(saved.upgrades);
       for(const key of Object.keys(upgrades))upgrades[key]=sanitizeNumber(upgrades[key]);
       return{
-        version:3,
+        version:4,
         unlockedWeapons:unlocked,
         clearedStages,
         bestStageTimes:sanitizeMap(saved.bestStageTimes),
@@ -26,7 +26,7 @@
         lifetime:{runs:sanitizeNumber(saved.lifetime?.runs),kills:sanitizeNumber(saved.lifetime?.kills),bosses:sanitizeNumber(saved.lifetime?.bosses)}
       };
     }catch{
-      return{version:3,unlockedWeapons:[...INITIAL_WEAPONS],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},lifetime:{runs:0,kills:0,bosses:0}};
+      return{version:4,unlockedWeapons:[...INITIAL_WEAPONS],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},lifetime:{runs:0,kills:0,bosses:0}};
     }
   }
   const meta=load();

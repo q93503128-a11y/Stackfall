@@ -400,6 +400,11 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - Stage 4 permanently unlocks Chrono Ring.
 - `stage-05`, **Magnetar Stormbelt / 자기극 폭풍대**, unlocks after Stage 4, introduces Conduit Leech, rotates between magnetic-arc/polarity-reversal pressure, and fields the Dipole Crown at 600 seconds.
 - Stage 5 permanently unlocks Ion Chain.
+- `stage-06`, **Shardway Nexus / 파편 성좌핵**, is the first constellation finale. It deliberately reuses the established enemy families while layering convergence, timefold, and route-collapse incidents, then fields the Shardway Nexus at 600 seconds.
+- Stage 6 permanently unlocks Supernova Coil. Clearing it unlocks access to constellation two through Stage 7's predecessor requirement.
+- Constellation 2 is **Abyssal Bloom / 심연의 개화**.
+- `stage-07`, **Blackbloom Expanse / 검은 꽃밭**, opens constellation two, introduces Abyss Spore, living-root/spore hazards, and the Nightbloom Matriarch at 600 seconds.
+- Stage 7 permanently unlocks Meteor Drones.
 - Galaxy stages are grouped into constellation pages. A finished constellation hands progression to the first stage of the next constellation; the map never stretches every constellation into one endless canvas.
 
 ### Galaxy map

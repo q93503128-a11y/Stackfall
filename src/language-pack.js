@@ -242,6 +242,44 @@ Object.assign(TEXT.fr,{
 });
 
 Object.assign(TEXT.ko,{
+  'stage06.boss':'파편 항로의 중추','stage06.boss.warning':'첫 별자리의 모든 이상 현상이 수렴합니다','stage06.event.frontierEcho':'전초 잔향','stage06.event.magnetarEcho':'자기폭풍 잔향','stage06.event.cross':'수렴 교차선','stage06.event.timefold':'시간 접힘 격자','stage06.event.collapse':'항로 붕괴','stage06.event.warning':'성좌핵이 여러 항로를 한 점으로 접습니다','stage06.event.fixed':'고정 사건','stage06.objective.boss':'파편 항로의 중추를 파괴하라'
+});
+Object.assign(TEXT.en,{
+  'stage06.boss':'Shardway Nexus','stage06.boss.warning':'EVERY ANOMALY OF THE FIRST CONSTELLATION CONVERGES','stage06.event.frontierEcho':'FRONTIER ECHO','stage06.event.magnetarEcho':'MAGNETAR ECHO','stage06.event.cross':'CONVERGENCE CROSS','stage06.event.timefold':'TIMEFOLD GRID','stage06.event.collapse':'ROUTE COLLAPSE','stage06.event.warning':'THE NEXUS FOLDS MULTIPLE ROUTES INTO ONE POINT','stage06.event.fixed':'FIXED EVENT','stage06.objective.boss':'DESTROY THE SHARDWAY NEXUS'
+});
+Object.assign(TEXT.ja,{
+  'stage06.boss':'破片航路の中枢','stage06.boss.warning':'第一星座の異常現象がすべて収束します','stage06.event.frontierEcho':'前線残響','stage06.event.magnetarEcho':'磁気嵐残響','stage06.event.cross':'収束交差線','stage06.event.timefold':'時間折畳格子','stage06.event.collapse':'航路崩壊','stage06.event.warning':'星座核が複数の航路を一点へ折り畳みます','stage06.event.fixed':'固定イベント','stage06.objective.boss':'破片航路の中枢を破壊せよ'
+});
+Object.assign(TEXT['zh-CN'],{
+  'stage06.boss':'碎片航路中枢','stage06.boss.warning':'第一星座的所有异常正在汇聚','stage06.event.frontierEcho':'前线回响','stage06.event.magnetarEcho':'磁暴回响','stage06.event.cross':'汇聚交叉线','stage06.event.timefold':'时间折叠晶格','stage06.event.collapse':'航路崩塌','stage06.event.warning':'星座核心正在把多条航路折叠到一点','stage06.event.fixed':'固定事件','stage06.objective.boss':'摧毁碎片航路中枢'
+});
+Object.assign(TEXT.es,{
+  'stage06.boss':'Nexo de Shardway','stage06.boss.warning':'TODAS LAS ANOMALÍAS DE LA PRIMERA CONSTELACIÓN CONVERGEN','stage06.event.frontierEcho':'ECO DE FRONTERA','stage06.event.magnetarEcho':'ECO MAGNETAR','stage06.event.cross':'CRUCE DE CONVERGENCIA','stage06.event.timefold':'RETÍCULA TEMPORAL','stage06.event.collapse':'COLAPSO DE RUTA','stage06.event.warning':'EL NEXO PLIEGA VARIAS RUTAS EN UN SOLO PUNTO','stage06.event.fixed':'EVENTO FIJO','stage06.objective.boss':'DESTRUYE EL NEXO DE SHARDWAY'
+});
+Object.assign(TEXT.fr,{
+  'stage06.boss':'Nexus de Shardway','stage06.boss.warning':'TOUTES LES ANOMALIES DE LA PREMIÈRE CONSTELLATION CONVERGENT','stage06.event.frontierEcho':'ÉCHO DE FRONTIÈRE','stage06.event.magnetarEcho':'ÉCHO MAGNÉTAR','stage06.event.cross':'CROIX DE CONVERGENCE','stage06.event.timefold':'RÉSEAU TEMPOREL','stage06.event.collapse':'EFFONDREMENT DE ROUTE','stage06.event.warning':'LE NEXUS REPLIE PLUSIEURS ROUTES EN UN POINT','stage06.event.fixed':'ÉVÉNEMENT FIXE','stage06.objective.boss':'DÉTRUISEZ LE NEXUS DE SHARDWAY'
+});
+Object.assign(TEXT.ko,{
+  'stage07.enemy.abyssSpore':'심연 포자체','stage07.boss':'밤꽃 모체','stage07.boss.warning':'살아 있는 성운의 중심 꽃이 개방됩니다','stage07.event.sporeTide':'포자 범람','stage07.event.rootProcession':'뿌리 행렬','stage07.event.rootCage':'뿌리 감옥','stage07.event.sporeRain':'포자 낙하','stage07.event.blackBloom':'검은 개화','stage07.event.warning':'살아 있는 뿌리가 안전 지대를 조입니다','stage07.event.fixed':'고정 사건','stage07.objective.boss':'밤꽃 모체를 제거하라'
+});
+Object.assign(TEXT.en,{
+  'stage07.enemy.abyssSpore':'Abyss Spore','stage07.boss':'Nightbloom Matriarch','stage07.boss.warning':'THE HEART-FLOWER OF THE LIVING NEBULA OPENS','stage07.event.sporeTide':'SPORE TIDE','stage07.event.rootProcession':'ROOT PROCESSION','stage07.event.rootCage':'ROOT CAGE','stage07.event.sporeRain':'SPORE RAIN','stage07.event.blackBloom':'BLACK BLOOM','stage07.event.warning':'LIVING ROOTS ARE CLOSING THE SAFE LANES','stage07.event.fixed':'FIXED EVENT','stage07.objective.boss':'ELIMINATE THE NIGHTBLOOM MATRIARCH'
+});
+Object.assign(TEXT.ja,{
+  'stage07.enemy.abyssSpore':'深淵胞子体','stage07.boss':'夜花母体','stage07.boss.warning':'生きた星雲の中枢花が開きます','stage07.event.sporeTide':'胞子潮','stage07.event.rootProcession':'根の行列','stage07.event.rootCage':'根の檻','stage07.event.sporeRain':'胞子降下','stage07.event.blackBloom':'黒の開花','stage07.event.warning':'生きた根が安全地帯を締め付けます','stage07.event.fixed':'固定イベント','stage07.objective.boss':'夜花母体を排除せよ'
+});
+Object.assign(TEXT['zh-CN'],{
+  'stage07.enemy.abyssSpore':'深渊孢子体','stage07.boss':'夜花母体','stage07.boss.warning':'活体星云的核心花正在开放','stage07.event.sporeTide':'孢子潮','stage07.event.rootProcession':'根须行列','stage07.event.rootCage':'根须牢笼','stage07.event.sporeRain':'孢子降落','stage07.event.blackBloom':'黑色绽放','stage07.event.warning':'活体根须正在压缩安全区域','stage07.event.fixed':'固定事件','stage07.objective.boss':'消灭夜花母体'
+});
+Object.assign(TEXT.es,{
+  'stage07.enemy.abyssSpore':'Espora Abisal','stage07.boss':'Matriarca Noctiflora','stage07.boss.warning':'SE ABRE LA FLOR CENTRAL DE LA NÉBULA VIVA','stage07.event.sporeTide':'MAREA DE ESPORAS','stage07.event.rootProcession':'PROCESIÓN DE RAÍCES','stage07.event.rootCage':'JAULA DE RAÍCES','stage07.event.sporeRain':'LLUVIA DE ESPORAS','stage07.event.blackBloom':'FLORACIÓN NEGRA','stage07.event.warning':'LAS RAÍCES VIVAS CIERRAN LAS ZONAS SEGURAS','stage07.event.fixed':'EVENTO FIJO','stage07.objective.boss':'ELIMINA A LA MATRIARCA NOCTIFLORA'
+});
+Object.assign(TEXT.fr,{
+  'stage07.enemy.abyssSpore':'Spore Abyssale','stage07.boss':'Matriarche Noctiflore','stage07.boss.warning':'LA FLEUR-CŒUR DE LA NÉBULEUSE VIVANTE S’OUVRE','stage07.event.sporeTide':'MARÉE DE SPORES','stage07.event.rootProcession':'PROCESSION DE RACINES','stage07.event.rootCage':'CAGE DE RACINES','stage07.event.sporeRain':'PLUIE DE SPORES','stage07.event.blackBloom':'FLORAISON NOIRE','stage07.event.warning':'LES RACINES VIVANTES REFERMENT LES ZONES SÛRES','stage07.event.fixed':'ÉVÉNEMENT FIXE','stage07.objective.boss':'ÉLIMINEZ LA MATRIARCHE NOCTIFLORE'
+});
+
+
+Object.assign(TEXT.ko,{
   'stage05.enemy.conduitLeech':'도체 기생체','stage05.boss':'쌍극 왕관','stage05.boss.warning':'자기폭풍 중심핵이 극성을 고정합니다','stage05.event.breach':'도체 균열','stage05.event.chargedFlight':'대전 비행단','stage05.event.arc':'자기선 방전','stage05.event.reversal':'극성 반전','stage05.event.collapse':'자기폭풍 붕괴','stage05.event.warning':'고에너지 자기장이 전장을 가릅니다','stage05.event.fixed':'고정 사건','stage05.objective.boss':'쌍극 왕관을 파괴하라'
 });
 Object.assign(TEXT.en,{

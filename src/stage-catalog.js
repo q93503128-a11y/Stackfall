@@ -9,7 +9,8 @@
     enemySet:freezeRows(definition.enemySet),fixedEvents:freezeRows(definition.fixedEvents),boss:definition.boss?freeze({...definition.boss}):null,rewards:freezeRows(definition.rewards),challenges:freezeRows(definition.challenges)
   });
   const constellations=freeze([
-    createConstellation({id:'constellation-01',order:1,title:{ko:'파편의 항로',en:'Shardway'},description:{ko:'붕괴한 외곽 항로를 따라 점점 깊은 이상 지대로 진입하는 첫 작전 별자리.',en:'The first operation constellation, pushing from the collapsed outer route into increasingly unstable deep space.'}})
+    createConstellation({id:'constellation-01',order:1,title:{ko:'파편의 항로',en:'Shardway'},description:{ko:'붕괴한 외곽 항로를 따라 점점 깊은 이상 지대로 진입하는 첫 작전 별자리.',en:'The first operation constellation, pushing from the collapsed outer route into increasingly unstable deep space.'}}),
+    createConstellation({id:'constellation-02',order:2,title:{ko:'심연의 개화',en:'Abyssal Bloom'},description:{ko:'검은 성운과 살아 있는 우주 식생이 항로를 잠식한 두 번째 작전 별자리.',en:'The second operation constellation, where black nebulae and living stellar growth consume the route.'}})
   ]);
   const catalog=freeze([
     createStage({
@@ -46,7 +47,21 @@
       enemySet:[{id:'dart',type:'fast',unlockAt:0},{id:'nebula-wisp',type:'ranged',unlockAt:0},{id:'phase-drifter',type:'ranged',unlockAt:0},{id:'conduit-leech',type:'tank',unlockAt:130},{id:'bombardier',type:'ranged',unlockAt:330},{id:'glass-wing',type:'fast',unlockAt:450}],
       fixedEvents:[{id:'conduit-breach',at:130,kind:'wave',variant:'conduit-leech',count:5},{id:'magnetic-arc',at:245,kind:'hazard',variant:'magnetic-arc'},{id:'pole-reversal',at:360,kind:'hazard',variant:'pole-reversal'},{id:'charged-flight',at:470,kind:'wave',variant:'glass-wing',count:10},{id:'magnetar-collapse',at:550,kind:'hazard',variant:'magnetar-collapse'},{id:'final-boss',at:600,kind:'boss',variant:'dipole-crown'}],
       boss:{id:'dipole-crown',spawnAt:600,name:{ko:'쌍극 왕관',en:'Dipole Crown'}},rewards:[{type:'weapon',key:'ion'},{type:'currency',key:'stardust',amount:300},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
+    }),
+    createStage({
+      id:'stage-06',order:6,constellationId:'constellation-01',status:'available',title:{ko:'파편 성좌핵',en:'Shardway Nexus'},description:{ko:'첫 항로에서 발생한 붕괴·굴절·시간 왜곡·자기폭풍이 하나의 성좌핵으로 수렴한 종착 구역. 앞선 이상 현상이 겹치는 전장을 돌파하고 파편 항로의 중추를 파괴해야 한다.',en:'The terminus where collapse, refraction, temporal distortion, and magnetic storms converge into one stellar nexus. Survive overlapping route anomalies and destroy the core of the Shardway.'},durationSeconds:600,estimatedMinutes:10,threat:6,node:{x:.93,y:.36},requirements:{previous:'stage-05'},
+      discoveries:{gimmicks:['convergence-cross','timefold-grid','route-collapse'],weapons:['nova'],events:['frontier-echo','magnetar-echo','route-collapse']},
+      enemySet:[{id:'shardling',type:'grunt',unlockAt:0},{id:'glass-wing',type:'fast',unlockAt:0},{id:'phase-drifter',type:'ranged',unlockAt:0},{id:'conduit-leech',type:'tank',unlockAt:0},{id:'bombardier',type:'ranged',unlockAt:260},{id:'bulwark',type:'tank',unlockAt:420}],
+      fixedEvents:[{id:'frontier-echo',at:110,kind:'wave',variant:'bulwark',count:5},{id:'convergence-cross',at:220,kind:'hazard',variant:'convergence-cross'},{id:'timefold-grid',at:335,kind:'hazard',variant:'timefold-grid'},{id:'magnetar-echo',at:450,kind:'wave',variant:'conduit-leech',count:7},{id:'route-collapse',at:545,kind:'hazard',variant:'route-collapse'},{id:'final-boss',at:600,kind:'boss',variant:'shardway-nexus'}],
+      boss:{id:'shardway-nexus',spawnAt:600,name:{ko:'파편 항로의 중추',en:'Shardway Nexus'}},rewards:[{type:'weapon',key:'nova'},{type:'currency',key:'stardust',amount:360},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
+    }),
+    createStage({
+      id:'stage-07',order:7,constellationId:'constellation-02',status:'available',title:{ko:'검은 꽃밭',en:'Blackbloom Expanse'},description:{ko:'두 번째 별자리의 입구. 살아 있는 암흑 성운이 거대한 뿌리와 포자 구름을 펼치며 항로를 잠식한다. 심연 포자체의 증식을 막고 밤꽃 모체를 제거해야 한다.',en:'The entrance to the second constellation. A living dark nebula spreads colossal roots and spore clouds across the route. Contain the Abyss Spores and eliminate the Nightbloom Matriarch.'},durationSeconds:600,estimatedMinutes:10,threat:7,node:{x:.18,y:.50},requirements:{previous:'stage-06'},
+      discoveries:{gimmicks:['root-cage','spore-rain','black-bloom'],weapons:['drone'],events:['spore-tide','root-cage','overgrowth']},
+      enemySet:[{id:'glass-wing',type:'fast',unlockAt:0},{id:'phase-drifter',type:'ranged',unlockAt:0},{id:'abyss-spore',type:'ranged',unlockAt:120},{id:'conduit-leech',type:'tank',unlockAt:300},{id:'bombardier',type:'ranged',unlockAt:430}],
+      fixedEvents:[{id:'spore-tide',at:120,kind:'wave',variant:'abyss-spore',count:8},{id:'root-cage',at:240,kind:'hazard',variant:'root-cage'},{id:'spore-rain',at:355,kind:'hazard',variant:'spore-rain'},{id:'root-procession',at:470,kind:'wave',variant:'abyss-spore',count:10},{id:'black-bloom',at:550,kind:'hazard',variant:'black-bloom'},{id:'final-boss',at:600,kind:'boss',variant:'nightbloom-matriarch'}],
+      boss:{id:'nightbloom-matriarch',spawnAt:600,name:{ko:'밤꽃 모체',en:'Nightbloom Matriarch'}},rewards:[{type:'weapon',key:'drone'},{type:'currency',key:'stardust',amount:410},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
     })
   ]);
-  window.STACKFALL_STAGE_SCHEMA_VERSION=5;window.STACKFALL_CONSTELLATIONS=constellations;window.STACKFALL_STAGE_CATALOG=catalog;window.stackfallStageById=id=>catalog.find(stage=>stage.id===id)||null;window.stackfallConstellationById=id=>constellations.find(page=>page.id===id)||null;
+  window.STACKFALL_STAGE_SCHEMA_VERSION=7;window.STACKFALL_CONSTELLATIONS=constellations;window.STACKFALL_STAGE_CATALOG=catalog;window.stackfallStageById=id=>catalog.find(stage=>stage.id===id)||null;window.stackfallConstellationById=id=>constellations.find(page=>page.id===id)||null;
 })();

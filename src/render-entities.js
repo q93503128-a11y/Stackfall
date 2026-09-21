@@ -28,6 +28,12 @@ function drawStageEnemyBody(g,e){
     for(let seg=0;seg<6;seg++){g.save();g.rotate(seg*TAU/6+(seg%2?.12:-.12));const rr=r*(.36+seg*.10);g.fillStyle=seg%2?'rgba(110,244,255,.24)':'rgba(159,174,255,.20)';g.beginPath();g.moveTo(r*.16,-r*.18);g.lineTo(rr+r*.48,-r*.30);g.lineTo(rr+r*.72,0);g.lineTo(rr+r*.48,r*.30);g.lineTo(r*.16,r*.18);g.closePath();g.fill();g.stroke();g.restore();}
     g.fillStyle='#0b2830';g.beginPath();g.arc(0,0,r*.60,0,TAU);g.fill();g.stroke();g.strokeStyle='#dfffff';g.lineWidth=1.4;for(let i=0;i<3;i++){const a=i/3*TAU+(e.phase||0)*.08;g.beginPath();g.moveTo(Math.cos(a)*r*.20,Math.sin(a)*r*.20);g.quadraticCurveTo(Math.cos(a+.45)*r*.56,Math.sin(a+.45)*r*.56,Math.cos(a)*r*.92,Math.sin(a)*r*.92);g.stroke();}g.fillStyle='#f3ffff';g.beginPath();g.arc(0,0,r*.17*pulse,0,TAU);g.fill();
   }
+  else if(v==='abyss-spore'){
+    const face=Math.atan2(player.y-e.y,player.x-e.x);g.rotate(face);const pulse=.88+.12*Math.sin((e.phase||0)*1.4);g.strokeStyle=e.hit?'#fff':'#b878ff';g.fillStyle=e.hit?'#fff':'#10091f';g.lineWidth=1.9;
+    for(let petal=0;petal<5;petal++){g.save();g.rotate(petal*TAU/5+(e.phase||0)*.025);g.fillStyle=petal%2?'rgba(112,224,201,.32)':'rgba(184,120,255,.38)';g.beginPath();g.moveTo(r*.18,0);g.quadraticCurveTo(r*.82,-r*.34,r*1.22,0);g.quadraticCurveTo(r*.78,r*.36,r*.18,0);g.fill();g.stroke();g.restore();}
+    g.fillStyle='#06060f';g.beginPath();g.arc(0,0,r*.48,0,TAU);g.fill();g.stroke();g.fillStyle='#e9d8ff';g.beginPath();g.arc(r*.04,0,r*.13*pulse,0,TAU);g.fill();
+    for(const side of[-1,1]){g.strokeStyle=side>0?'rgba(112,224,201,.62)':'rgba(184,120,255,.62)';g.beginPath();g.moveTo(-r*.22,side*r*.18);g.quadraticCurveTo(-r*.88,side*r*.56,-r*1.38,side*r*.22);g.stroke();}
+  }
   else return false;return true;
 }
 function drawEnemies(){for(const e of state.entities.enemies){const p=worldToScreen(e.x,e.y);if(p.x<-180||p.x>vw+180||p.y<-180||p.y>vh+180)continue;ctx.save();ctx.translate(p.x,p.y);const pulse=1+Math.sin(e.phase)*.05;ctx.scale(pulse,pulse);ctx.shadowBlur=e.kind==='apex'?58:e.type==='boss'?44:e.type==='mini'?30:13;ctx.shadowColor=e.color;ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;

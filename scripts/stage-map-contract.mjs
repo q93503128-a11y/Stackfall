@@ -7,7 +7,7 @@ const checks=[
  ['constellation page controls exist',index.includes('id="galaxyConstellationPrev"')&&index.includes('id="galaxyConstellationNext"')&&index.includes('id="galaxyConstellationName"')&&index.includes('id="galaxyConstellationPage"')],
  ['catalog owns constellation membership',catalog.includes('constellationId:String(definition.constellationId)')&&catalog.includes('window.STACKFALL_CONSTELLATIONS=constellations')],
  ['map renders only stages from the active constellation',map.includes('const stagesFor=id=>')&&map.includes('function visibleStages()')&&map.includes('stage.constellationId===id')],
- ['new constellation pages remain inaccessible until their first stage unlocks',map.includes('function constellationAccessible(page)')&&map.includes("status==='available'||status==='cleared'")],
+ ['new constellation pages remain inaccessible until their first stage unlocks',map.includes('function constellationAccessible(page)')&&map.includes("status==='available'||status==='cleared'")&&catalog.includes("id:'constellation-02'")&&catalog.includes("requirements:{previous:'stage-06'}")],
  ['connections use explicit predecessor links inside the current page',map.includes('stage.requirements?.previous')&&map.includes('ids.has(previous.id)')],
  ['stage nodes use luminous stellar points with separate number badges',map.includes('class="galaxy-node-star"')&&styles.includes('galaxyStellarPulse')&&styles.includes('.galaxy-stage-node>small')],
  ['node status comes from persistent progression',map.includes('window.stackfallStageStatus?.(stage)')&&meta.includes('function stageStatus(stage)')],
