@@ -24,6 +24,8 @@ const render=read('src/render.js');
 const runtimeConfig=read('src/runtime-config.js');
 const browserSmoke=read('scripts/browser-smoke.mjs');
 const combatGuidance=read('src/combat-guidance-refinement.js');
+const interfaceJs=read('src/interface.js');
+const settingsJs=read('src/settings.js');
 expect('expansion loaded',index.includes('src/endgame-balance-expansion.js'));
 expect('prism cycle remains haste driven',expansion.includes("tickInterval=Math.max(.065,.25*hasteMult())"));
 expect('prism holds one shared target until extreme separation',expansion.includes('player.prismSharedLock')&&expansion.includes('lock.targetId?enemyById(lock.targetId):null')&&expansion.includes('PRISM_RELEASE_GRACE_SECONDS=2.25')&&expansion.includes("Math.max(1500,weaponRange('prism')*3+orbitRadiusFor('prism'))")&&expansion.includes('inside||lock.lostTime<PRISM_RELEASE_GRACE_SECONDS'));
@@ -47,6 +49,9 @@ expect('uncapped late enemy speed curve',expansion.includes('Math.pow(minutes,1.
 expect('hard difficulty increased',difficulty.includes('enemyHp:1.32')&&difficulty.includes('enemyDamage:1.30')&&difficulty.includes('enemySpeed:1.12')&&difficulty.includes('rangedChance:1.28'));
 expect('difficulty has one canonical owner',!expansion.includes('window.stackfallDifficultyConfig=function refinedDifficultyConfig'));
 expect('event choices have no clock',!mapEvents.includes('armChoiceClock(LIMITS.choice'));
+expect('endless events arrive faster and announce their signal',mapEvents.includes("INTERVALS={vault:[54,74],crash:[82,112],void:[132,178]}")&&mapEvents.includes("FIRST={vault:38,crash:68,void:104}")&&mapEvents.includes("showBossNotice(m.name,tx('eventDetected'))"));
+expect('auto level choice skips the choice overlay and picks first option',index.includes('id="autoLevelChoice"')&&settingsJs.includes("GAME_SETTINGS.autoLevelChoice=saved.autoLevelChoice===true")&&interfaceJs.includes("if(GAME_SETTINGS.autoLevelChoice===true&&choices[0]){selectChoice(choices[0]);return;}"));
+expect('miniboss reward notice has readable lifetime',rewards.includes('showTimedResonance(5200)')&&interfaceJs.includes('function showTimedResonance(duration=2400)'));
 expect('event grants multiplicity through max two',mapEvents.includes('PASSIVES.multiplicity.max')&&expansion.includes("Math.min(2,passiveStacks('multiplicity'))"));
 expect('extra attack bodies focus original target without copy TMI',expansion.includes('homingTargetId:target.id')&&!expansion.includes('const multiplicityTargets=')&&!expansion.includes('원본과 같은 적을 노린다'));
 expect('ion chain remains separate',weapons.includes('function fireIonChain')&&!expansion.includes('multiplicityIon'));
