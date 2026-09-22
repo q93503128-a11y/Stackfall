@@ -32,6 +32,10 @@ function damageSourceWeaponKey(source){
     ||owned('rail',value.includes('rail'))
     ||owned('spiral',value.includes('spiral'))
     ||owned('mirror',value.includes('mirror')||value.includes('reflect'))
+    ||owned('vacuum',value.includes('vacuum')||value.includes('bloom'))
+    ||owned('mine',value.includes('phase-mine')||value.includes('phase-wire')||value.includes('phantom-mine'))
+    ||owned('missile',value.includes('missile')||value.includes('mirv'))
+    ||owned('gate',value.startsWith('gate-')||value.includes('orbital-gate'))
     ||owned('core',value==='core'||value.startsWith('core-'))
     ||DAMAGE_OTHER_KEY;
 }

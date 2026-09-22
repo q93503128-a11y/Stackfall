@@ -104,7 +104,11 @@
     drone:{icon:'⌁',color:'#8fffd0',name:{ko:'낙성 표식',en:'Falling-Star Mark'},desc:{ko:'편대가 사격할 때 가장 체력이 높은 적에게 표식을 남기고 잠시 뒤 유성 폭격을 호출한다.',en:'Each squad attack marks the strongest enemy and calls a delayed meteor strike.'}},
     rail:{icon:'━',color:'#b7e7ff',name:{ko:'궤도 파쇄',en:'Orbital Fracture'},desc:{ko:'주포가 지나간 경로의 세 지점이 순서대로 폭발해 광선 뒤에 연쇄 파쇄 지대를 만든다.',en:'Three points along the rail path detonate in sequence, leaving a chain of fractures behind the beam.'}},
     spiral:{icon:'◎',color:'#e3a7ff',name:{ko:'역나선 은하',en:'Counter-Spiral Galaxy'},desc:{ko:'본 나선 뒤 반대 회전의 추적 나선이 한 차례 더 생성되고, 나선 적중 누적 시 중력 매듭이 폭발한다.',en:'A counter-rotating homing spiral follows the main galaxy, while repeated spiral hits detonate gravity knots.'}},
-    mirror:{icon:'◇',color:'#9fffe7',name:{ko:'쌍면 반사',en:'Twin-Face Reflection'},desc:{ko:'반사한 적 탄환마다 두 갈래 반사광을 추가 발사하고, 반사 공격이 적중할 때마다 보호막을 충전한다.',en:'Every reflected shot emits two extra counter rays, and reflection hits recharge shield.'}}
+    mirror:{icon:'◇',color:'#9fffe7',name:{ko:'쌍면 반사',en:'Twin-Face Reflection'},desc:{ko:'반사한 적 탄환마다 두 갈래 반사광을 추가 발사하고, 반사 공격이 적중할 때마다 보호막을 충전한다.',en:'Every reflected shot emits two extra counter rays, and reflection hits recharge shield.'}},
+    vacuum:{icon:'✺',color:'#d58cff',name:{ko:'포식 꽃가루',en:'Devouring Pollen'},desc:{ko:'개화 직전 일반 적 탄환을 최대 8발 흡수한다. 탄환마다 최종 폭발 피해 +6%, 반경 +2.5%.',en:'Before blooming, absorbs up to 8 ordinary enemy shots. Each absorbed shot adds 6% final damage and 2.5% radius.'}},
+    mine:{icon:'◆',color:'#74e8ff',name:{ko:'잔상 기뢰',en:'Afterimage Mine'},desc:{ko:'일반 기뢰 폭발 시 근처 강적의 예상 위치에 58% 위력의 짧은 유령 기뢰를 투영한다.',en:'Normal mine explosions project a short-lived phantom mine at a nearby priority target for 58% power.'}},
+    missile:{icon:'➤',color:'#ffb66e',name:{ko:'다탄두 성좌',en:'MIRV Constellation'},desc:{ko:'각 본체가 충돌 직전 주탄두 100% 피해를 유지한 채 34% 보조 탄두 2개를 추가 분리한다.',en:'Each missile keeps its 100% main-warhead damage and adds two 34% side warheads shortly before impact.'}},
+    gate:{icon:'⬡',color:'#a9b7ff',name:{ko:'광자 교차전송',en:'Photon Crossfeed'},desc:{ko:'관문 근처를 지난 아군 투사체를 다음 관문에서 55% 위력으로 1회 복제한다. 복제품은 재복제되지 않는다.',en:'An allied projectile passing a gate can be copied once from the next gate at 55% damage; copies cannot recurse.'}}
   };
   window.stackfallWeaponAugmentDefs=Object.freeze(augmentDefs);
 
@@ -165,7 +169,7 @@
 
   const rrKill=killEnemy;killEnemy=function(enemy,opts={}){
     const wasAlive=enemy&&!enemy.dead,elite=enemy&&(enemy.type==='boss'||enemy.type==='mini'),x=enemy?.x||0,y=enemy?.y||0,locked=enemy?.timeLock>0,before=state.rewardQueue?.length||0;
-    rrKill(enemy,opts);
+    rrKill(enemy,opts);window.stackfallPostRosterOnKill?.(enemy,opts);
     if(state.bossTraits.harvest){const heal=elite?Math.ceil(player.maxHp*.25):1;player.hp=Math.min(player.maxHp,player.hp+heal);}
     if(state.bossTraits.singularity){state.rewardKills=(state.rewardKills||0)+1;if(state.rewardKills%15===0)state.entities.wells.push({x,y,r:138,life:3.4,max:3.4,strength:760,damage:22,tick:0,color:'#e65cff',kind:'trait-singularity',traitCollapse:true,distortionCd:0});}
     if(state.weaponAugments.chrono&&locked)areaDamage(x,y,72,16+weaponCount('chrono')*3,COLORS.chrono,'chrono-burst');

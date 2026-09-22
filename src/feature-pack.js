@@ -143,6 +143,10 @@ function sf2CooldownInfo(key){
     if(n>=4){remaining=player.chronoCd||0;max=(4.8-Math.min(1.55,n*.22))*hasteMult();}else return{ratio:0,remaining:0};
   }
   else if(key==='arc'){remaining=player.arcCd||0;max=(1.92-Math.min(.58,n*.075))*hasteMult();}
+  else if(key==='vacuum')return{ratio:0,remaining:0};
+  else if(key==='mine'){remaining=player.minePlaceTimer||0;max=1.65*hasteMult();}
+  else if(key==='missile'){remaining=player.missileCd||0;max=2.35*hasteMult();}
+  else if(key==='gate'){remaining=player.gateCd||0;max=6.4*hasteMult();}
   return{ratio:clamp(remaining/Math.max(.001,max),0,1),remaining:Math.max(0,remaining)};
 }
 function sf2UpdateCooldownHud(){

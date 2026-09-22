@@ -350,7 +350,11 @@ Constellation 1 ramps from a 10-minute opener to a 15-minute finale. Constellati
 
 Stage identities remain the existing Shardway, Abyssal Bloom, and Silent Array themes. Their fixed incidents now act as milestone set pieces inside the recurring environmental loop rather than being the only time the stage gimmick appears. Enemy pressure also continues to rise across longer stages instead of plateauing at the old ten-minute tuning.
 
-`src/meta-progression.js` persists clears, per-stage clear counts, best times, weapon unlocks, Stardust, Core Shards, lifetime stats, and permanent upgrade levels. Fresh saves begin with four starter weapons. The basic Core weapon is separate from equipment capacity. The existing 14 normal weapons are currently all unlockable by Stage 10; later stages use currency rewards until genuinely new weapons are authored rather than filler unlocks.
+`src/meta-progression.js` persists clears, per-stage clear counts, best times, weapon unlocks, Stardust, Core Shards, lifetime stats, and permanent upgrade levels. Fresh saves begin with four starter weapons. The basic Core weapon is separate from equipment capacity. The normal equipment roster now expands from 14 to 18 through post-Stage-10 rewards: Stage 11 unlocks Vacuum Bloom, Stage 13 Phase Minefield, Stage 15 Interstellar Missile Pods, and Stage 17 Orbital Gate. Stages 12/14/16/18 retain currency/Core-Shard emphasis.
+
+#### Post-roster weapon expansion
+
+Stage 11/13/15/17 now unlock four fully implemented equipment families. Vacuum Bloom is a kill-fed delayed collapse network; Phase Minefield turns the player's movement trail into armed territory; Interstellar Missile Pods use visible left/right side ejection, delayed ignition, curved homing, terminal burn, and a full-damage main MIRV warhead; Orbital Gate installs a stationary world-space gate network at enemy lines or the cast-time player position. The event-only Projection Core / 다중 투영 코어 adds primary attack bodies without recursively multiplying child payloads: extra seeds, mines, main missiles, or gate pulses. MIRV children, phantom mines, forced blooms, and gate-crossfeed copies never multiply themselves.
 
 #### Galaxy map
 

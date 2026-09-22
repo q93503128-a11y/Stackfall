@@ -1,5 +1,5 @@
 import fs from 'node:fs';import vm from 'node:vm';
-const source=fs.readFileSync('src/stage-catalog.js','utf8'),core=fs.readFileSync('src/core.js','utf8'),runtimeConfig=fs.readFileSync('src/runtime-config.js','utf8'),meta=fs.readFileSync('src/meta-progression.js','utf8'),sandbox={window:{}};vm.runInNewContext(source,sandbox);
+const source=fs.readFileSync('src/stage-catalog.js','utf8'),core=fs.readFileSync('src/core.js','utf8'),runtimeConfig=fs.readFileSync('src/runtime-config.js','utf8'),weaponsRuntime=fs.readFileSync('src/weapons.js','utf8'),rewardRuntime=fs.readFileSync('src/reward-refinement.js','utf8'),multiplicityRuntime=fs.readFileSync('src/endgame-balance-expansion.js','utf8'),renderRuntime=fs.readFileSync('src/render-entities.js','utf8'),meta=fs.readFileSync('src/meta-progression.js','utf8'),sandbox={window:{}};vm.runInNewContext(source,sandbox);
 const baseWeaponBlock=core.slice(core.indexOf('const WEAPONS={'),core.indexOf('const PASSIVES=')),knownWeapons=new Set();
 for(const match of baseWeaponBlock.matchAll(/^\s{2}([A-Za-z][A-Za-z0-9_-]*):\{name:/gm))knownWeapons.add(match[1]);
 for(const match of runtimeConfig.matchAll(/WEAPONS\.([A-Za-z][A-Za-z0-9_-]*)\s*=/g))knownWeapons.add(match[1]);
@@ -21,4 +21,17 @@ for(let i=0;i<stages.length;i++){
   for(const reward of stage.rewards||[]){if(reward.type==='weapon'){assert(knownWeapons.has(reward.key),'unknown weapon unlock '+reward.key+' at '+stage.id);assert(!initialWeapons.has(reward.key),'initial weapon must not be a stage reward '+reward.key+' at '+stage.id);assert(!rewardWeapons.has(reward.key),'duplicate weapon unlock '+reward.key);rewardWeapons.add(reward.key);}else if(reward.type==='currency'){assert(currencyKeys.has(reward.key),'unknown stage currency '+reward.key+' at '+stage.id);assert(Number.isFinite(reward.amount)&&reward.amount>0,'invalid currency amount '+reward.key+' at '+stage.id);}else assert(false,'unknown reward type '+reward.type+' at '+stage.id);}
 }
 for(const page of pages){const owned=stages.filter(stage=>stage.constellationId===page.id),coords=new Set();assert(owned.length>0,'constellation has no stages '+page.id);assert(owned.length===6,'authored constellation must contain six stages '+page.id);for(const stage of owned){const key=stage.node.x.toFixed(4)+','+stage.node.y.toFixed(4);assert(!coords.has(key),'duplicate node coordinate '+stage.id);coords.add(key);}if(page.order>1){const first=owned[0],previous=stages[first.order-2];assert(first.requirements?.previous===previous?.id,'constellation boundary must continue progression '+page.id);}}
-assert(new Set(stages.map(stage=>stage.durationSeconds)).size>=8,'campaign durations must not collapse back to one fixed boss time');for(const message of fail)console.error('FAIL',message);console.log(`Checked ${stages.length} stages across ${pages.length} constellations; failures=${fail.length}`);if(fail.length)process.exit(1);
+assert(new Set(stages.map(stage=>stage.durationSeconds)).size>=8,'campaign durations must not collapse back to one fixed boss time');
+const postRosterUnlocks=[['stage-11','vacuum'],['stage-13','mine'],['stage-15','missile'],['stage-17','gate']];
+for(const[stageId,key]of postRosterUnlocks){const stage=stages.find(row=>row.id===stageId);assert(stage?.rewards?.some(reward=>reward.type==='weapon'&&reward.key===key),'missing post-roster unlock '+key+' at '+stageId);}
+assert(postRosterUnlocks.every(([,key])=>runtimeConfig.includes('WEAPONS.'+key+'=')),'post-roster weapon definitions missing');
+assert(['updateVacuumSeeds','updatePhaseMinefield','updateGuidedMissiles','updateGateNetworks'].every(token=>weaponsRuntime.includes(token)),'post-roster combat runtime incomplete');
+assert(['vacuum:','mine:','missile:','gate:'].every(token=>rewardRuntime.includes(token)),'post-roster augment definitions incomplete');
+assert(multiplicityRuntime.includes('window.stackfallMultiplicityStacks=multishotStacks'),'multiplicity compatibility export missing');
+assert(renderRuntime.includes('drawPostRosterWeaponEntities'),'post-roster renderer missing');
+assert(weaponsRuntime.includes("damage:m.baseDamage*.34")&&weaponsRuntime.includes("source=m.micro?'missile-mirv':'missile';areaDamage(m.x,m.y,radius,m.damage*terminal"),'MIRV must preserve main missile damage and add 34% side warheads');
+assert(weaponsRuntime.includes("if(m.split||m.micro||!state.weaponAugments?.missile)return"),'MIRV children must not split recursively');
+assert(weaponsRuntime.includes("extra=net.echoed?0:postRosterMultiplicity(),count=base+extra"),'Multiplicity must add gate pulses rather than gates');
+assert(weaponsRuntime.includes("p.gateCopy||p.gateCrossfed||String(p.source||'').includes('multiplicity')"),'gate crossfeed recursion barrier missing');
+assert(weaponsRuntime.includes("if(state.weaponAugments?.mine&&!mine.phantom)"),'phantom mine recursion barrier missing');
+assert(weaponsRuntime.includes("const seed=eligible[0];seed.charge"),'one kill must feed only one vacuum seed');for(const message of fail)console.error('FAIL',message);console.log(`Checked ${stages.length} stages across ${pages.length} constellations; failures=${fail.length}`);if(fail.length)process.exit(1);

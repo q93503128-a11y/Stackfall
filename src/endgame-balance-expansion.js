@@ -4,7 +4,7 @@
   const locale=()=>GAME_SETTINGS?.language||'ko';
   const ko=()=>locale()==='ko';
   const passiveStacks=key=>Math.max(0,Number(stat(key))||0);
-  const multishotStacks=()=>Math.min(2,passiveStacks('multiplicity'));
+  const multishotStacks=()=>Math.min(2,passiveStacks('multiplicity'));window.stackfallMultiplicityStacks=multishotStacks;
   const repeatedTargets=(primary,count,key)=>{const target=primary||nearestWeaponTarget(key);return Array.from({length:count},()=>target).filter(Boolean);};
   const lateSeconds=()=>Math.max(0,(state.time||0)-240);
   const threatLevel=()=>1+Math.floor((state.time||0)/60);
@@ -20,7 +20,7 @@
   const baseUpdatePlayer=updatePlayer;
   updatePlayer=function endgameBarrierPlayer(dt){baseUpdatePlayer(dt);if(state.weaponAugments?.bulwark){const n=Math.max(1,weaponCount('bulwark')),profile=bulwarkAugmentShieldProfile(n);player.augmentBarrierTimer=(player.augmentBarrierTimer??7.5)-dt;if(player.augmentBarrierTimer<=0){player.augmentBarrierTimer=profile.interval;if(rechargeShield(profile.periodicGain,profile.cap)>0)shockwave(player.x,player.y,'#9dffe2',72+n*3,.24,1.7);}}};
 
-  const weaponSources=new Set(['core','core-echo','core-multiplicity','core-nova','core-ricochet','blade','blade-multiplicity','wave','blade-burst','blade-shear','ember','echo-star','ember-multiplicity','ember-burn','ember-strong-chain','star-spark','gravity-collapse','well','comet','echo-comet','comet-multiplicity','comet-afterimage','comet-fragment','comet-burst','comet-trail','arc','arc-return','arc-ricochet','arc-ricochet-return','arc-trail','arc-strong-shard','chrono-pulse','chrono-burst','ion-chain','ion-burst','echo-ion','nova-pulse','echo-nova','nova-collapse','drone','meteor-drone','drone-multiplicity','echo-drone','drone-burst','drone-meteor','rail','rail-multiplicity','rail-afterimage','rail-fracture','spiral-bolt','spiral-multiplicity','spiral-counter','echo-spiral','spiral-knot','mirror-return','mirror-counter','mirror-twin-reflect','mirror-burst','barrier-lance','apex-starforge-legacy','apex-forge-star','apex-constellation-lattice','apex-constellation-node']);
+  const weaponSources=new Set(['core','core-echo','core-multiplicity','core-nova','core-ricochet','blade','blade-multiplicity','wave','blade-burst','blade-shear','ember','echo-star','ember-multiplicity','ember-burn','ember-strong-chain','star-spark','gravity-collapse','well','comet','echo-comet','comet-multiplicity','comet-afterimage','comet-fragment','comet-burst','comet-trail','arc','arc-return','arc-ricochet','arc-ricochet-return','arc-trail','arc-strong-shard','chrono-pulse','chrono-burst','ion-chain','ion-burst','echo-ion','nova-pulse','echo-nova','nova-collapse','drone','meteor-drone','drone-multiplicity','echo-drone','drone-burst','drone-meteor','rail','rail-multiplicity','rail-afterimage','rail-fracture','spiral-bolt','spiral-multiplicity','spiral-counter','echo-spiral','spiral-knot','mirror-return','mirror-counter','mirror-twin-reflect','mirror-burst','vacuum-bloom','vacuum-overbloom','phase-mine','phase-wire','phantom-mine','missile','missile-mirv','gate-pulse','gate-cross','gate-circuit','gate-exit','gate-crossfeed','barrier-lance','apex-starforge-legacy','apex-forge-star','apex-constellation-lattice','apex-constellation-node']);
   const baseDealDamage=dealDamage;let secondaryDamageGuard=false;
   dealDamage=function endgameWeaponDamage(enemy,amount,opts={}){
     const source=String(opts.source||'');if(weaponSources.has(source))amount*=1.08;if(state.weaponAugments?.chrono&&enemy?.timeLock>0)amount*=1.13;

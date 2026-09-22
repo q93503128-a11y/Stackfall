@@ -415,14 +415,14 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - **Shardway / 파편의 항로 (Stage 1–6)**: collapsed route infrastructure, shard hosts, ion shear, refraction, time distortion, magnetar pressure, then route convergence.
 - **Abyssal Bloom / 심연의 개화 (Stage 7–12)**: living stellar growth, spores, roots, sap vessels, seed spirals, reflection petals, husk pressure, then full biological convergence.
 - **Silent Array / 침묵 중계망 (Stage 13–18)**: dead relay megastructures, broken carriers, static, packet storms, sensor blind zones, sealed protocols, then network-wide silence collapse.
-- The complete current 14-item normal weapon roster is permanently unlockable by Stage 10. Stage 11+ uses Stardust/Core Shards until a genuinely new weapon is authored.
+- The original 14-item normal weapon roster is permanently unlockable by Stage 10. The roster then expands to 18 through Vacuum Bloom (11), Phase Minefield (13), Interstellar Missile Pods (15), and Orbital Gate (17); the alternating stages retain currency/Core-Shard emphasis.
 
-### Planned post-Stage-10 weapons
+### Post-Stage-10 weapons
 
-These four weapons are approved design targets but are **not implemented yet**. They expand the normal equipment roster from 14 to 18 when implemented. They must use the existing six-stack equipment model and the existing one-time boss-reward weapon-augment model. An augment is a separate run reward: it does not consume a stack, does not stack with itself, and must add a new behavior rather than merely repeating the 2/4/6 resonance.
+These four weapons are implemented and connected to Stage 11/13/15/17 first-clear progression. The normal equipment roster is now 18. They use the existing six-stack equipment model and one-time boss-reward weapon augment model. An augment is a separate run reward: it does not consume a stack, does not stack with itself, and adds new behavior rather than repeating the 2/4/6 resonance.
 
 #### 15. Vacuum Bloom / 진공 개화
-- Planned unlock: **Stage 11 — Seedhusk Bastion**. Stage 12 remains a constellation-finale Core Shard reward.
+- Unlock: **Stage 11 — Seedhusk Bastion**. Stage 12 remains a constellation-finale Core Shard reward.
 - Role: kill-chain area control / delayed collapse.
 - Core rule: kills periodically plant a vacuum seed at the defeated enemy. Other deaths inside its feeding radius charge it. A full seed pulls enemies inward and then collapses.
 - Performance rule: seeds have a hard active cap; one death can feed each eligible seed only once; bloom cascades must use bounded propagation rather than recursive unbounded spawning.
@@ -436,7 +436,7 @@ These four weapons are approved design targets but are **not implemented yet**. 
 - Identity boundary: this is not another Gravity Well. Gravity Well is periodically cast crowd control; Vacuum Bloom is a kill-fed delayed chain reaction that gets stronger when the player shapes where enemies die.
 
 #### 16. Phase Minefield / 위상 기뢰군
-- Planned unlock: **Stage 13 — Dead Relay**.
+- Unlock: **Stage 13 — Dead Relay**.
 - Role: movement-path offense / territorial control.
 - Core rule: moving through the battlefield leaves phase mines along the player's recent route. Remaining mobile creates better coverage, but a stationary player still receives a slower fallback deployment so the weapon never becomes dead.
 - Placement rule: deploy after roughly 90 px of travel or 1.65 s, whichever happens first. Mines arm after 0.35 s, last 9 s, and are bounded by an active cap.
@@ -450,7 +450,7 @@ These four weapons are approved design targets but are **not implemented yet**. 
 - Identity boundary: this weapon rewards deliberate movement and route drawing. It must not become a passive circular aura around the player.
 
 #### 17. Interstellar Missile Pods / 성간 미사일 포드
-- Planned unlock: **Stage 15 — Packet Stormfront**.
+- Unlock: **Stage 15 — Packet Stormfront**.
 - Role: homing salvo / elite pressure / splash.
 - Targeting: prefer a boss or miniboss in range; otherwise prefer a high-health target among the nearest viable enemies. Multi-missile salvos avoid obvious overkill by distributing across up to the allowed target count.
 - **Mandatory launch-motion contract**: missiles do not originate from the player center and immediately home. A visible left and right launch pod is positioned beside the player. Each missile first ejects outward from its own side for about 0.12–0.18 s, then ignites, accelerates, and curves toward its target. Turning is smooth with retained momentum; no instant heading snap. Left and right missiles use visibly different approach arcs before converging.
@@ -465,7 +465,7 @@ These four weapons are approved design targets but are **not implemented yet**. 
 - Identity boundary: Meteor Drones are persistent orbiting shooters; these missiles are discrete, readable salvos with side-launch choreography and curved homing flight.
 
 #### 18. Orbital Gate / 궤도 문
-- Planned unlock: **Stage 17 — Cipher Graveyard**. Stage 18 remains a constellation-finale Core Shard reward.
+- Unlock: **Stage 17 — Cipher Graveyard**. Stage 18 remains a constellation-finale Core Shard reward.
 - Role: stationary spatial network / installed lane control.
 - **Installation rule**: gates never follow the player after deployment. A network is anchored to world coordinates for its full lifetime, so the player can fight inside it, leave it behind, or drag enemies back through it.
 - Placement alternates between two deployment modes so both offensive and defensive placement happen naturally:
@@ -484,7 +484,7 @@ These four weapons are approved design targets but are **not implemented yet**. 
 - Identity boundary: Orbital Gate is an **installed arena tool**, not another orbiting weapon. Its tactical cost is positional: a badly placed network can be left behind, while a well-placed network can dominate a boss or choke point for its full lifetime.
 
 #### Projectile-count compatibility — Multiplicity Core / 다중 투영 코어
-- The current runtime does not yet expose a projectile-count passive. When the previously planned **Multiplicity Core / 다중 투영 코어** is restored, it is an event-only passive with **maximum 2 stacks**.
+- The runtime already exposes **Multiplicity Core / 다중 투영 코어** as an event-only passive with **maximum 2 stacks**. The four post-roster weapons use the compatibility rules below.
 - Each stack grants **+1 real attack body** to compatible equipment. "Attack body" is interpreted by weapon identity instead of blindly cloning every sub-projectile.
 - Extra projected attack bodies follow the weapon's existing target/placement intent. They must not randomly scatter to unrelated targets merely because Multiplicity is present.
 - Submunitions, reflected shots, chained hits, recursive copies, augment-generated children, and other secondary payloads are **not** independently multiplied unless explicitly stated below. This prevents exponential projectile growth.
@@ -523,10 +523,10 @@ These four weapons are approved design targets but are **not implemented yet**. 
 **Compatibility principle**
 - Multiplicity increases the number of **primary meaningful attack bodies** without multiplying every child effect.
 - This keeps the passive strong on unusual weapons while avoiding exponential combinations such as missile × MIRV × gate-copy × Multiplicity or bloom × forced-bloom recursion.
-- Static contracts should explicitly test these recursion barriers when the four weapons and Multiplicity are implemented.
+- Static contracts test the post-roster definitions, unlock positions, combat runtime, renderer, augment definitions, and Multiplicity export; runtime recursion barriers remain part of the weapon implementation contract.
 
-#### Planned unlock cadence
-| Stage | Planned first-clear weapon reward | Why |
+#### Unlock cadence
+| Stage | First-clear weapon reward | Why |
 |---|---|---|
 | 11 | Vacuum Bloom / 진공 개화 | Fits the seed/husk death-chain ecology and immediately starts the post-Stage-10 roster expansion. |
 | 12 | — | Keep the constellation finale focused on Core Shards rather than stacking another weapon reward. |
@@ -537,7 +537,7 @@ These four weapons are approved design targets but are **not implemented yet**. 
 | 17 | Orbital Gate / 궤도 문 | Late Silent Array reward with the highest spatial/network complexity. |
 | 18 | — | Preserve the third constellation finale as a Core Shard payoff. |
 
-Implementation rule: do not add these reward keys to `src/stage-catalog.js` until the matching weapon definitions, stack text, combat runtime, render/audio treatment, augment definition, unlock migration, and regression contracts exist in the same atomic change. The current implemented reward catalog must remain internally valid until then.
+Implementation status: all four reward keys are connected only after their definitions, stack text, combat runtime, render/audio treatment, augment definitions, multiplicity barriers, progression reconstruction, and regression contracts were added together.
 
 ### Galaxy map
 

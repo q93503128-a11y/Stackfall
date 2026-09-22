@@ -216,7 +216,15 @@
 | 17 | 암호 묘역 | 22분 |
 | 18 | 침묵 배열핵 | 25분 |
 
-The three current constellations remain **Shardway**, **Abyssal Bloom**, and **Silent Array**. Their existing enemies, boss identities, backgrounds, weapon rewards, and progression chain are retained. The normal 14-weapon roster is fully unlockable by Stage 10; Stage 11+ currently uses Stardust/Core Shards until new weapons are deliberately added.
+The three current constellations remain **Shardway**, **Abyssal Bloom**, and **Silent Array**. Their existing enemies, boss identities, backgrounds, weapon rewards, and progression chain are retained. The original 14-weapon roster is fully unlockable by Stage 10, then expands to 18: Stage 11 unlocks Vacuum Bloom, Stage 13 Phase Minefield, Stage 15 Interstellar Missile Pods, and Stage 17 Orbital Gate. Stages 12/14/16/18 retain currency/Core-Shard rewards.
+
+### Post-roster weapons
+
+- **Vacuum Bloom / 진공 개화**: kill-fed seeds consume nearby deaths, pull enemies inward, and chain-collapse. Its Devouring Pollen augment absorbs ordinary enemy shots before the bloom and increases the final blast.
+- **Phase Minefield / 위상 기뢰군**: lays mines from movement distance or fallback time, supports chain fuses and tripwires, and gains a triangular constellation deployment at six stacks. Afterimage Mine projects a weaker phantom mine near a priority target.
+- **Interstellar Missile Pods / 성간 미사일 포드**: visible side pods eject missiles outward first, then ignite and curve toward priority targets. MIRV keeps the main warhead at 100% parent damage and adds two 34% side warheads.
+- **Orbital Gate / 궤도 문**: stationary installed gate networks alternate between enemy-side and cast-time-player-side placement. Pulses route through fixed gates; Photon Crossfeed can copy an allied projectile once from the next gate at 55% damage.
+- **Projection Core / 다중 투영 코어** compatibility is bounded: it adds primary seeds, mines, main missiles, or routed gate pulses. Secondary MIRV warheads, phantom mines, forced blooms, and gate copies do not recursively multiply.
 
 ### Galaxy map
 
