@@ -34,25 +34,30 @@ function draw(){
 }
 const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0;
 function loop(now){
-  let dt=Math.min(.033,Math.max(0,(now-last)/1000));last=now;let shouldDraw=state.mode==='menu';
+  const frameDt=Math.min(.033,Math.max(0,(now-last)/1000));last=now;let shouldDraw=state.mode==='menu';
   try{
-    if(typeof audio.updateMusic==='function')runRuntimeStage('updateMusic',()=>audio.updateMusic(dt));
-    const liveGameplay=state.mode==='playing';
-    if(liveGameplay){
-      if(state.hitStop>0){state.hitStop-=dt;dt=0;}
-      state.time+=dt;state.comboTimer-=dt;if(state.comboTimer<=0)state.combo=0;
-      runRuntimeStage('updatePendingActions',()=>updatePendingActions(dt));runRuntimeStage('updatePlayer',()=>updatePlayer(dt));runRuntimeStage('updateSpawning',()=>updateSpawning(dt));if(typeof rebuildEnemyIndex==='function')runRuntimeStage('rebuildEnemyIndex',rebuildEnemyIndex);runRuntimeStage('updateWeapons',()=>updateWeapons(dt));runRuntimeStage('updateEnemies',()=>updateEnemies(dt));runRuntimeStage('updateProjectiles',()=>updateProjectiles(dt));runRuntimeStage('updateBoomerangs',()=>updateBoomerangs(dt));runRuntimeStage('updateEnemyProjectiles',()=>updateEnemyProjectiles(dt));runRuntimeStage('updateTelegraphs',()=>updateTelegraphs(dt));runRuntimeStage('updateWells',()=>updateWells(dt));runRuntimeStage('updateGems',()=>updateGems(dt));
-      if(typeof updateMapEvents==='function'&&!state.apexActiveId&&!state.pendingApexForm&&!state.realmTransition)runRuntimeStage('updateMapEvents',()=>updateMapEvents(dt));
-      if(typeof updateRewardQueue==='function')runRuntimeStage('updateRewardQueue',updateRewardQueue);runRuntimeStage('updateEffects',()=>updateEffects(dt));hudRefresh-=dt;if(hudRefresh<=0){hudRefresh=.08;runRuntimeStage('updateHUD',updateHUD);}shouldDraw=true;
+    if(typeof audio.updateMusic==='function')runRuntimeStage('updateMusic',()=>audio.updateMusic(frameDt));
+    const gameplayFrame=state.mode==='playing';
+    if(gameplayFrame){
+      const simulationSteps=state.gameSpeed===2?2:1;
+      for(let simulationStep=0;simulationStep<simulationSteps&&state.mode==='playing';simulationStep++){
+        let dt=frameDt;
+        if(state.hitStop>0){state.hitStop-=dt;dt=0;}
+        state.time+=dt;state.comboTimer-=dt;if(state.comboTimer<=0)state.combo=0;
+        runRuntimeStage('updatePendingActions',()=>updatePendingActions(dt));runRuntimeStage('updatePlayer',()=>updatePlayer(dt));runRuntimeStage('updateSpawning',()=>updateSpawning(dt));if(typeof rebuildEnemyIndex==='function')runRuntimeStage('rebuildEnemyIndex',rebuildEnemyIndex);runRuntimeStage('updateWeapons',()=>updateWeapons(dt));runRuntimeStage('updateEnemies',()=>updateEnemies(dt));runRuntimeStage('updateProjectiles',()=>updateProjectiles(dt));runRuntimeStage('updateBoomerangs',()=>updateBoomerangs(dt));runRuntimeStage('updateEnemyProjectiles',()=>updateEnemyProjectiles(dt));runRuntimeStage('updateTelegraphs',()=>updateTelegraphs(dt));runRuntimeStage('updateWells',()=>updateWells(dt));runRuntimeStage('updateGems',()=>updateGems(dt));
+        if(typeof updateMapEvents==='function'&&!state.apexActiveId&&!state.pendingApexForm&&!state.realmTransition)runRuntimeStage('updateMapEvents',()=>updateMapEvents(dt));
+        if(typeof updateRewardQueue==='function')runRuntimeStage('updateRewardQueue',updateRewardQueue);runRuntimeStage('updateEffects',()=>updateEffects(dt));hudRefresh-=dt;if(hudRefresh<=0){hudRefresh=.08;runRuntimeStage('updateHUD',updateHUD);}
+      }
+      shouldDraw=true;
     }else if(state.mode==='cinematic'){
-      if(typeof updateRealmTransition==='function')runRuntimeStage('updateRealmTransition',()=>updateRealmTransition(dt));runRuntimeStage('updateEffectsCinematic',()=>updateEffects(dt*.35));shouldDraw=true;
+      if(typeof updateRealmTransition==='function')runRuntimeStage('updateRealmTransition',()=>updateRealmTransition(frameDt));runRuntimeStage('updateEffectsCinematic',()=>updateEffects(frameDt*.35));shouldDraw=true;
     }else if(state.mode==='stageVictory'){
-      if(typeof updateStageVictoryCinematic==='function')runRuntimeStage('updateStageVictoryCinematic',()=>updateStageVictoryCinematic(dt));
-      runRuntimeStage('updateEffectsStageVictory',()=>updateEffects(dt*.72));shouldDraw=true;
+      if(typeof updateStageVictoryCinematic==='function')runRuntimeStage('updateStageVictoryCinematic',()=>updateStageVictoryCinematic(frameDt));
+      runRuntimeStage('updateEffectsStageVictory',()=>updateEffects(frameDt*.72));shouldDraw=true;
     }
     if(state.mode==='choice'&&ui.choice.classList.contains('hidden')){state.choiceLocked=false;state.mode='playing';}
     if(typeof syncAbilityLedgerVisibility==='function')syncAbilityLedgerVisibility();
-    const simplifiedGpu=liveGameplay&&typeof stackfallCanUseSimplifiedGpuFrame==='function'&&stackfallCanUseSimplifiedGpuFrame();
+    const simplifiedGpu=state.mode==='playing'&&typeof stackfallCanUseSimplifiedGpuFrame==='function'&&stackfallCanUseSimplifiedGpuFrame();
     if(shouldDraw&&!simplifiedGpu)runRuntimeStage('drawFrame',draw);
   }finally{if(window.__stackfallLoopGeneration===stackfallLoopGeneration)requestAnimationFrame(loop);}
 }
