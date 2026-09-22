@@ -4,7 +4,7 @@ const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read
 const checks=[
  ['Stage 5 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&shared.includes('updateAmbientGimmick(run,def)')],
  ['Stage 5 exists after Stage 4 in constellation one',catalog.includes("id:'stage-05'")&&catalog.includes("constellationId:'constellation-01'")&&catalog.includes("requirements:{previous:'stage-04'}")],
- ['Stage 5 boss follows the authored 14-minute operation',catalog.includes("boss:{id:'dipole-crown',spawnAt:840")&&catalog.includes("at:840,kind:'boss',variant:'dipole-crown'")],
+ ['Stage 5 boss follows the authored 7-minute operation',catalog.includes("boss:{id:'dipole-crown',spawnAt:420")&&catalog.includes("at:420,kind:'boss',variant:'dipole-crown'")],
  ['Stage 5 introduces Conduit Leech at 130 seconds',catalog.includes("{id:'conduit-leech',type:'tank',unlockAt:130}")&&runtime.includes("'conduit-leech':{type:'tank'")],
  ['Stage 5 owns magnetic arc polarity and collapse incidents',['magnetic-arc','pole-reversal','magnetar-collapse'].every(token=>catalog.includes(token)&&runtime.includes(token))],
  ['Stage 5 remains a registered adapter without shared wrapper overrides',runtime.includes("stackfallRegisterStageRuntime('stage-05'")&&!runtime.includes('updateSpawning=function')&&!runtime.includes('resetGame=function')],
