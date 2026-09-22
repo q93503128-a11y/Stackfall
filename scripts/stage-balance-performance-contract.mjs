@@ -9,6 +9,7 @@ expect('twin stage minibosses share stage identity and scaling',runtime.includes
 expect('stage enemy pressure is bounded',runtime.includes('function stageSpawnBudget')&&runtime.includes('Math.min(2,Math.floor(Number(base.count)||1))')&&runtime.includes('tier===2?.80:tier===1?.92:1'));
 expect('stage boss hierarchy is explicit',runtime.includes("stageBossTier:Number(stage.order)%6===0?'constellation':'stage'")&&runtime.includes("if(e.stageBossTier==='constellation'){e.hp*=1.18"));
 expect('background movement uses world parallax',background.includes('TRAVEL_MARKERS')&&background.includes('player.x*parallax')&&background.includes('drawTraversalParallax(theme)'));
+expect('stage battlefields add constellation-specific world structure',background.includes('function drawStageConstellationField')&&background.includes("family=order<=6?'route':order<=12?'bloom':'array'")&&background.includes("drawStageConstellationField(theme)"));
 expect('performance measures once per rendered frame',perf.includes('lastObservedFrameSerial')&&perf.includes('observeSimulationFrame(dt)'));
 expect('large viewports reduce Canvas fill rate',core.includes('pixels>=1300000')&&core.includes('areaScale=!compact&&large?.90:1'));
 expect('large viewports reduce GPU fill rate',gpu.includes('pixels>=1300000')&&gpu.includes('areaScale=!compactDevice()&&large?.90:1'));
