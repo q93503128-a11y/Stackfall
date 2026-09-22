@@ -20,7 +20,7 @@
     const fifth=level('slot5')>0?1:0,sixth=fifth&&level('slot6')>0?1:0;
     return 4+fifth+sixth;
   };
-  window.stackfallCurrencyMultiplier=()=>1+level('salvage')*.08;
+  window.stackfallCurrencyMultiplier=()=>Math.max(.25,(1+level('salvage')*.08)*(window.stackfallDifficultyRewardMultiplier?.()||1));
   window.STACKFALL_META_UPGRADES=CATALOG;
 
   const baseDamageMult=damageMult;
