@@ -24,6 +24,7 @@
   let resolutionDropTime=0;
   let resolutionRecoverTime=0;
   let lastObservedAt=performance.now();
+  let lastObservedFrameSerial=-1;
 
   const gridKey=(x,y)=>(x*73856093)^(y*19349663);
   const roundPixel=value=>Math.round(value);
@@ -80,6 +81,11 @@
     syncResolution(seconds);
     const proactiveLimit=compactDevice()?140:180;
     if(!emergencyResolution&&pressureScore()>proactiveLimit)applyEmergencyResolution(true);
+  }
+  function observeSimulationFrame(dt){
+    const serial=Number(window.__stackfallRenderFrameSerial)||0;
+    if(serial===lastObservedFrameSerial)return;
+    lastObservedFrameSerial=serial;observeFrame(dt);
   }
   function stressed(){return tier()>0;}
   function rebuildEnemyGrid(){
@@ -252,7 +258,7 @@
   drawEffects=function optimizedEffects(includeParticles=true){if(GAME_SETTINGS.hideProjectiles===true||tier()===2)return minimalEffects();return fullDrawEffects(includeParticles);};
 
   updateProjectiles=function spatialProjectileUpdate(dt){
-    observeFrame(dt);rebuildEnemyGrid();heavyFrame=tier()>0;
+    observeSimulationFrame(dt);rebuildEnemyGrid();heavyFrame=tier()>0;
     const spawned=[],particleCap=entityCap('particles');
     for(let index=0;index<state.entities.projectiles.length;index++){
       const p=state.entities.projectiles[index];
