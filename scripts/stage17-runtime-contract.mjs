@@ -5,7 +5,7 @@ const start=catalog.indexOf("id:'stage-17'"),next=catalog.indexOf("id:'stage-18'
 const checks=[
  ['Stage 17 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&runtime.includes('hazard(event,api)')],
  ['Stage 17 follows Stage 16 in constellation three',catalog.includes("id:'stage-17'")&&catalog.includes("constellationId:'constellation-03'")&&catalog.includes("requirements:{previous:'stage-16'}")],
- ['Stage 17 boss follows the authored 22-minute operation',catalog.includes("boss:{id:'protocol-custodian',spawnAt:1320")&&catalog.includes("at:1320,kind:'boss',variant:'protocol-custodian'")],
+ ['Stage 17 boss follows the authored 14-minute operation',catalog.includes("boss:{id:'protocol-custodian',spawnAt:840")&&catalog.includes("at:840,kind:'boss',variant:'protocol-custodian'")],
  ['Stage 17 introduces Cipher Warden',catalog.includes("id:'cipher-warden'")&&runtime.includes("'cipher-warden':{")&&entities.includes("v==='cipher-warden'")],
  ['Stage 17 owns its fixed signal incidents',['parity-mortar','cipher-walls','protocol-seal'].every(x=>catalog.includes(x))&&runtime.includes("variant==='parity-mortar'")&&runtime.includes("variant==='protocol-seal'")&&runtime.includes("tr('stage17.event.cipherWalls')")],
  ['Stage 17 has a dedicated environment and boss',realm.includes('function drawStage17Background')&&elite.includes("f==='protocol-custodian'")],
