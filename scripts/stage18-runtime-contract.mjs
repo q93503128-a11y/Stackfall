@@ -5,7 +5,7 @@ const start=catalog.indexOf("id:'stage-18'"),next=catalog.indexOf("id:'stage-19'
 const checks=[
  ['Stage 18 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&runtime.includes('hazard(event,api)')],
  ['Stage 18 follows Stage 17 in constellation three',catalog.includes("id:'stage-18'")&&catalog.includes("constellationId:'constellation-03'")&&catalog.includes("requirements:{previous:'stage-17'}")],
- ['Stage 18 boss follows the authored 25-minute operation',catalog.includes("boss:{id:'silence-mainframe',spawnAt:1500")&&catalog.includes("at:1500,kind:'boss',variant:'silence-mainframe'")],
+ ['Stage 18 boss follows the authored 15-minute operation',catalog.includes("boss:{id:'silence-mainframe',spawnAt:900")&&catalog.includes("at:900,kind:'boss',variant:'silence-mainframe'")],
  ['Stage 18 deliberately reuses established Silent Array enemies',!catalog.includes("stage18.enemy.")&&['relay-mite','jammer-kite','packet-lancer'].every(x=>runtime.includes(x))],
  ['Stage 18 owns its fixed signal incidents',['multiplex-cross','blind-grid','silence-collapse'].every(x=>catalog.includes(x)&&runtime.includes(x))],
  ['Stage 18 has a dedicated environment and boss',realm.includes('function drawStage18Background')&&elite.includes("f==='silence-mainframe'")],
