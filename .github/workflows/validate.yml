@@ -108,3 +108,5 @@ jobs:
         run: node scripts/stage-balance-performance-contract.mjs
       - name: Check awakening A8-A13 contract
         run: node scripts/awakening-second-set-contract.mjs
+      - name: Check awakening A14-A19 contract
+        run: node scripts/awakening-final-set-contract.mjs
