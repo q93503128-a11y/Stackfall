@@ -126,7 +126,7 @@
     const hit=new Set(excluded||[]),range=175+n*22,color='#baf7ff',width=(1.7+n*.13)*weaponSizeMultiplier(),maxLinks=2+(n>=3?1:0)+(n>=5?1:0),baseDamage=(11+n*3.35)*.52;
     let from={x:player.x,y:player.y},target=first;
     for(let i=0;i<maxLinks&&target;i++){
-      hit.add(target.id);dealDamage(target,baseDamage*Math.pow(.80,i),{color,source:'ion-superconductive',canCrit:false});
+      hit.add(target.id);dealDamage(target,baseDamage*Math.pow(.80,i),{color,source:'ion-chain',canCrit:false});
       state.entities.beams.push({x1:from.x,y1:from.y,x2:target.x,y2:target.y,life:.16,max:.16,color,width});
       from={x:target.x,y:target.y};target=nearestEnemy(from.x,from.y,range,e=>!hit.has(e.id));
     }
