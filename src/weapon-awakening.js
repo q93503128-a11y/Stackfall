@@ -136,8 +136,22 @@
     closeScreen();transform.classList.add('hidden');state.awakeningCores=0;state.awakenedWeapons={};
     return baseMenu();
   };
+  const AWAKENING_CORE_CASHOUT_STARDUST=40;
+  function cashOutAwakeningCores(){
+    const cores=Math.max(0,Math.floor(Number(state.awakeningCores)||0));
+    if(!cores)return{cores:0,stardust:0};
+    const multiplier=Math.max(.25,Number(window.stackfallCurrencyMultiplier?.())||1),requested=Math.max(1,Math.floor(cores*AWAKENING_CORE_CASHOUT_STARDUST*multiplier));
+    state.awakeningCores=0;
+    const granted=Math.max(0,Number(window.stackfallGrantCurrency?.('stardust',requested))||0);
+    state.runCurrencyEarned=state.runCurrencyEarned||{stardust:0,coreShard:0};
+    state.runCurrencyEarned.stardust=(state.runCurrencyEarned.stardust||0)+granted;
+    state.lastAwakeningCoreCashout={cores,stardust:granted,rate:AWAKENING_CORE_CASHOUT_STARDUST};
+    return state.lastAwakeningCoreCashout;
+  }
+  window.stackfallCashOutAwakeningCores=cashOutAwakeningCores;
+  window.stackfallAwakeningCoreCashoutRate=AWAKENING_CORE_CASHOUT_STARDUST;
   const baseEnd=endGame;
-  endGame=function awakeningEnd(){closeScreen();transform.classList.add('hidden');return baseEnd();};
+  endGame=function awakeningEnd(){closeScreen();transform.classList.add('hidden');cashOutAwakeningCores();return baseEnd();};
 
   window.stackfallGrantAwakeningCore=function grantAwakeningCore(amount=1){
     const add=Math.max(0,Math.floor(Number(amount)||0));if(!add)return state.awakeningCores||0;
