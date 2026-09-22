@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
-const stage=read('src/stage-catalog.js'),runtime=read('src/stage-runtime.js'),difficulty=read('src/difficulty-augment-expansion.js'),meta=read('src/meta-upgrades.js'),damage=read('src/run-damage-stats.js'),background=read('src/realm-backgrounds.js'),perf=read('src/performance-guard.js'),core=read('src/core.js'),gpu=read('src/gpu-renderer.js'),awakening=read('src/weapon-awakening.js');
+const stage=read('src/stage-catalog.js'),runtime=read('src/stage-runtime.js'),difficulty=read('src/difficulty-augment-expansion.js'),meta=read('src/meta-upgrades.js'),damage=read('src/run-damage-stats.js'),background=read('src/realm-backgrounds.js'),perf=read('src/performance-guard.js'),core=read('src/core.js'),gpu=read('src/gpu-renderer.js'),awakening=read('src/weapon-awakening.js'),environment=read('src/stage-environment-visuals.js'),stageMap=read('src/stage-map.js'),systemsBase=read('src/systems-base.js'),bossCatalog=read('src/boss-catalog.js'),bossPatterns=read('src/boss-patterns.js'),index=read('index.html'),styles=read('styles.css');
 const fail=[],expect=(name,ok)=>{if(!ok)fail.push(name);};
 expect('campaign duration endpoints',stage.includes("durationSeconds:300")&&stage.includes("id:'stage-18'")&&stage.includes("durationSeconds:900"));
 expect('difficulty Stardust multipliers',difficulty.includes('rewardMultiplier:.85')&&difficulty.includes('rewardMultiplier:1.30')&&meta.includes('stackfallDifficultyRewardMultiplier?.()'));
@@ -14,6 +14,13 @@ expect('large viewports reduce Canvas fill rate',core.includes('pixels>=1300000'
 expect('large viewports reduce GPU fill rate',gpu.includes('pixels>=1300000')&&gpu.includes('areaScale=!compactDevice()&&large?.90:1'));
 expect('damage trend keeps per-weapon series and toggles',damage.includes('timelineByWeapon:Object.create(null)')&&damage.includes('damageTrendHidden=new Set()')&&damage.includes("class:'damage-trend-series'"));
 expect('awakening cores come from usable boss encounters',awakening.includes("enemy.kind==='stage-boss'")&&awakening.includes("enemy.kind==='apex'")&&awakening.includes("enemy.kind==='stage-mini'")&&awakening.includes("enemy.eventVariant==='dreadnought'")&&awakening.includes("enemy.noEliteReward===true&&!flagship?0:1"));
+expect('unused awakening cores cash out to Stardust on run end',awakening.includes('AWAKENING_CORE_CASHOUT_STARDUST=40')&&awakening.includes('stackfallCashOutAwakeningCores')&&awakening.includes('cashOutAwakeningCores();return baseEnd()')&&meta.includes('lastAwakeningCoreCashout'));
+expect('stage clear also cashes out awakening cores',runtime.includes('stackfallCashOutAwakeningCores?.()')&&runtime.includes("CORE ×'+coreCashout.cores"));
+expect('stage gimmicks carry environment context through delayed actions',runtime.includes('withStageEnvironment')&&systemsBase.includes('environmentContext=state.stageEnvironmentTelegraphContext')&&systemsBase.includes('state.stageEnvironmentTelegraphContext=entry.environmentContext'));
+expect('stage gimmicks use dedicated environment telegraphs',bossCatalog.includes("impactStyle:environment?'stage-env-zone':'boss-circle'")&&bossPatterns.includes("impactStyle:environment?'stage-env-line':impactStyle")&&environment.includes("t?.impactStyle==='stage-env-zone'")&&environment.includes("t?.impactStyle==='stage-env-line'"));
+expect('environment notices are distinct from boss notices',environment.includes('stageAwareNotice')&&environment.includes('BIOLOGICAL HAZARD')&&environment.includes('NETWORK HAZARD')&&styles.includes('.stage-environment-notice'));
+expect('constellation pages use different map topology and themes',stageMap.includes("mapTheme=id=>id==='constellation-02'?'bloom':id==='constellation-03'?'array':'route'")&&stageMap.includes("shape=document.createElementNS('http://www.w3.org/2000/svg','path')")&&stageMap.includes("shape=document.createElementNS('http://www.w3.org/2000/svg','polyline')")&&styles.includes('data-constellation-theme="route"')&&styles.includes('data-constellation-theme="bloom"')&&styles.includes('data-constellation-theme="array"'));
+expect('stage environment renderer is loaded',index.includes('src/stage-environment-visuals.js'));
 for(const name of fail)console.error('FAIL',name);
 console.log('Stage/balance/performance contract failures='+fail.length);
 if(fail.length)process.exit(1);
