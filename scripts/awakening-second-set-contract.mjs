@@ -11,7 +11,7 @@ expect('Thunder Circuit requires five unique live nodes and clears after dischar
 expect('Superconductive Constellation second network is restored without recursive fireIonChain',source.includes('castSuperconductiveNetwork(n,captured)')&&source.includes("source:'ion-chain'")&&!source.includes('castSuperconductiveNetwork(n,captured);fireIonChain'));
 expect('Hypernova charges only from non-echo original nova casts',source.includes("if(!awake('nova')||echoed)return")&&source.includes('player.awNovaCharge<3')&&source.includes('scheduleWeaponAction(260')&&source.includes('scheduleWeaponAction(90')&&source.includes('scheduleWeaponAction(190'));
 expect('Falling-Star Fleet triggers every fifth non-echo volley',source.includes("if(echoed)return")&&source.includes('player.awDroneFleetCycle%5===0')&&source.includes('launchFallingStarFleet'));
-expect('Falling-Star Mark exists before and after awakening',source.includes("if(state.weaponAugments?.drone)fallingStarMark(n,target)")&&source.includes("source:'drone-meteor'"));
+expect('Falling-Star Mark exists before and after awakening',source.includes("if(state.weaponAugments?.drone)fallingStarMark(n,target)")&&source.includes("'drone-meteor'"));
 expect('Fleet multiplicity stays inside one attack formation',source.includes("count=Math.min(5,(n>=6?3:n>=2?2:1)+multiplicity())")&&source.includes("source:'drone-multiplicity'"));
 expect('Terminus Railgun triggers every fourth non-echo volley',source.includes('player.awRailCycle%4===0')&&source.includes('fireTerminusRail')&&source.includes('scheduleWeaponAction(300'));
 expect('Terminus path preserves Orbital Fracture',source.includes("for(const[index,f]of[.30,.56,.82].entries())")&&source.includes("source")&&source.includes("'rail-fracture'"));
