@@ -135,7 +135,7 @@ python -m http.server 8000
 
 세 번째 확정 6종: 창세 은하 / 천경 성역 / 흑성 연화 / 위상 성궤 / 성멸 포대 / 초공간 대관문
 
-공통 각성 런타임은 6중첩/각성 코어 조건 검사, 붉은 월식 선택창, 거부 후 일반 레벨업 복귀, 코어 소비와 각성 상태 표시까지 연결되어 있습니다. 자동 레벨업을 사용해도 각성은 자동 확정되지 않습니다. 각성 코어의 실제 획득처는 아직 임의 연결하지 않았으며, A1~A7(항성핵~월상 회귀)은 실제 전투 메커닉과 전용 렌더링까지 1차 구현되었습니다. A8~A19가 다음 구현 묶음입니다.
+공통 각성 런타임은 6중첩/각성 코어 조건 검사, 붉은 월식 선택창, 거부 후 일반 레벨업 복귀, 코어 소비와 각성 상태 표시까지 연결되어 있습니다. 자동 레벨업을 사용해도 각성은 자동 확정되지 않습니다. **각성 코어는 보스 전투에서 얻습니다.** 무한모드 일반 보스·공허 보스·기함급 보스와 스테이지 중간보스는 1개, 초월체는 2개를 지급합니다. 스테이지 최종보스는 처치와 동시에 런이 종료되므로 런 중 자원인 각성 코어를 지급하지 않습니다. A1~A7(항성핵~월상 회귀)은 실제 전투 메커닉과 전용 렌더링까지 1차 구현되었고 A8~A19가 다음 구현 묶음입니다.
 
 전투 HUD에는 **×1 / ×2 게임 속도 전환**이 있으며, 2배속은 프레임당 전투 업데이트를 두 번 수행합니다. 레벨업 자동 선택이 켜져 있으면 자동으로 선택된 장비/패시브와 중첩 변화도 순차 알림으로 표시됩니다.
 
@@ -292,7 +292,10 @@ python -m http.server 8000
 - 프리즘 시각 광선 역시 피해 틱과 분리
 - 투사체·중력 우물·범위 피해의 충돌 후보를 공간 격자에서만 조회
 - 공간 격자 버킷과 충돌 후보 배열을 재사용하고 다중 표적 정렬의 후보별 객체 생성을 없애 전투 중 임시 할당을 줄임
-- 잘린 게임 진행 시간이 아닌 실제 브라우저 프레임 간격으로 렉을 감지하고, 높은 개체 밀도에서는 합성 정체가 커지기 전에 긴급 렌더 경로를 선제 적용
+- 잘린 게임 진행 시간이 아닌 실제 브라우저 프레임 간격으로 렉을 감지하고, **2배속에서도 렌더 프레임당 한 번만 측정**해 시뮬레이션 다중 업데이트 때문에 부하가 낮게 측정되지 않도록 함
+- 고해상도 노트북의 fill-rate 폭증을 막기 위해 Canvas/WebGL의 기본 DPR 상한을 화면 규모에 따라 약 1.20~1.50 범위로 제한
+- 스테이지의 동시 일반 적은 Stage 번호·진행도·현재 성능 단계에 따른 spawn budget으로 제한하고, 후반 난이도를 무제한 개체 수 증가에 의존하지 않음
+- 별 레이어와 이동 표식의 월드 좌표 패럴랙스를 강화해 배경이 화면에 고정된 한 장처럼 보이지 않게 함
 - 성능 보호 단계는 적·투사체·적탄·위험 예고 같은 논리 엔티티의 상한을 바꾸지 않으며, 투사체 분열·파편·부메랑·혜성 경로 피해·중력 우물을 삭제하거나 피해 주기를 늦추지 않는다.
 - 심각한 지연 중에는 Pixi 시각 갱신을 최대 24FPS로 제한하고 화면에 동시에 그리는 아군 투사체·장식 입자 수를 줄인다. Canvas 폴백은 내부 해상도도 낮추고, WebGL에서는 마지막 배경을 유지한 채 적·적탄·플레이어·위험 예고를 간소화한 실루엣으로 전환한다. 이 긴급 경로에서도 화면 밖 보스와 보관소·우주선·공허 이벤트의 가장자리 안내는 고정 스프라이트 풀로 유지한다. 게임 로직·충돌·피해 틱은 계속 매 게임 프레임 처리한다.
 
@@ -340,34 +343,38 @@ node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-r
 
 `ENDLESS` remains the default infinite mode with random world events, the full enemy family pool, and the 600-second Apex cadence. Finite stages use their own catalog timelines and do not inherit the Endless encounter director.
 
-Finite stages are **not** all ten-minute boss rushes. Each stage has an authored duration, fixed milestone incidents, and a persistent stage gimmick loop. The gimmick loop begins early, repeatedly cycles that stage's environmental hazard family, periodically injects a themed enemy surge, and accelerates toward the final boss. Reaching the listed time only spawns the boss; the operation ends only when that boss is defeated.
+Stage 1 now starts at **5 minutes**, and the campaign rises to **15 minutes at Stage 18**. Fixed incidents and the recurring stage gimmick are compressed with the new operation length rather than being cut off. Reaching the listed time only spawns the final boss; the operation ends only when that boss is defeated.
 
 | Stage | 작전 | 최종보스 등장 |
 |---|---|---:|
-| 01 | 붕괴 전초구역 | 10분 |
-| 02 | 이온 성운 해구 | 11분 |
-| 03 | 유리별 묘역 | 12분 |
-| 04 | 정지궤도 회랑 | 13분 |
-| 05 | 자기극 폭풍대 | 14분 |
-| 06 | 파편 성좌핵 | 15분 |
-| 07 | 검은 꽃밭 | 12분 |
-| 08 | 흑수액 협곡 | 13분 |
-| 09 | 나선 종자층 | 14분 |
-| 10 | 반사 화관 성소 | 15분 |
-| 11 | 종자 갑각층 | 17분 |
-| 12 | 심연 개화핵 | 20분 |
-| 13 | 무응답 중계소 | 15분 |
-| 14 | 잡음 협로 | 16분 |
-| 15 | 패킷 폭풍대 | 18분 |
-| 16 | 블라인드 섹터 | 20분 |
-| 17 | 암호 묘역 | 22분 |
-| 18 | 침묵 배열핵 | 25분 |
+| 01 | 붕괴 전초구역 | 5:00 |
+| 02 | 이온 성운 해구 | 5:30 |
+| 03 | 유리별 묘역 | 6:00 |
+| 04 | 정지궤도 회랑 | 6:30 |
+| 05 | 자기극 폭풍대 | 7:00 |
+| 06 | 파편 성좌핵 | 7:30 |
+| 07 | 검은 꽃밭 | 8:00 |
+| 08 | 흑수액 협곡 | 8:30 |
+| 09 | 나선 종자층 | 9:00 |
+| 10 | 반사 화관 성소 | 9:30 |
+| 11 | 종자 갑각층 | 10:00 |
+| 12 | 심연 개화핵 | 10:30 |
+| 13 | 무응답 중계소 | 11:00 |
+| 14 | 잡음 협로 | 11:30 |
+| 15 | 패킷 폭풍대 | 12:00 |
+| 16 | 블라인드 섹터 | 13:00 |
+| 17 | 암호 묘역 | 14:00 |
+| 18 | 침묵 배열핵 | 15:00 |
 
-Constellation 1 ramps from a 10-minute opener to a 15-minute finale. Constellation 2 resets its opening tempo and grows to 20 minutes. Constellation 3 starts at 15 minutes and reaches a 25-minute finale. This keeps early operations replayable while allowing later stages to develop a Vampire-Survivors-style long-form pressure curve instead of repeating one fixed 600-second template.
+일반 스테이지는 진행도 약 46%에 중간보스가 한 번 등장합니다. 성좌 최종 스테이지인 **6/12/18**은 약 32%와 62%에 두 번 등장합니다. 일반 스테이지 최종보스는 무한모드 일반 보스급을 기준으로 하는 **스테이지 보스**, 6/12/18의 최종보스는 한 단계 강화된 **성좌 보스**입니다. 둘 다 **초월체(Apex)와는 별도 등급**이며 초월체가 최상위 위협으로 유지됩니다.
 
-Stage identities remain the existing Shardway, Abyssal Bloom, and Silent Array themes. Their fixed incidents now act as milestone set pieces inside the recurring environmental loop rather than being the only time the stage gimmick appears. Enemy pressure also continues to rise across longer stages instead of plateauing at the old ten-minute tuning.
+스테이지 일반 적은 진행도와 Stage 번호에 따라 증가하지만 동시 개체 수에 성능 인식형 상한을 둡니다. 후반 난이도는 적 조합·기믹·중간보스·보스 패턴으로도 상승하며, 예전처럼 단순히 80대 이상의 일반 적을 계속 쌓는 구조를 피합니다.
 
-`src/meta-progression.js` persists clears, per-stage clear counts, best times, weapon unlocks, Stardust, Core Shards, lifetime stats, and permanent upgrade levels. Fresh saves begin with four starter weapons. The basic Core weapon is separate from equipment capacity. The normal equipment roster now expands from 14 to 18 through post-Stage-10 rewards: Stage 11 unlocks Vacuum Bloom, Stage 13 Phase Minefield, Stage 15 Interstellar Missile Pods, and Stage 17 Orbital Gate. Stages 12/14/16/18 retain currency/Core-Shard emphasis.
+난이도는 Stardust 보상에도 연결됩니다. **쉬움 ×0.85 / 보통 ×1.00 / 어려움 ×1.30**이며, 무기 해금과 Core Shard는 이 배율의 영향을 받지 않습니다.
+
+결과 화면의 딜 추이는 전체 DPS 외에 **무기별 15초 구간 DPS**도 표시합니다. 전체 및 각 무기의 그래프는 각각 켜고 끌 수 있습니다.
+
+Stage identities remain the existing Shardway, Abyssal Bloom, and Silent Array themes. Their fixed incidents remain milestone set pieces inside the recurring environmental loop. `src/meta-progression.js` persists clears, per-stage clear counts, best times, weapon unlocks, Stardust, Core Shards, lifetime stats, and permanent upgrade levels.
 
 #### Post-roster weapon expansion
 
