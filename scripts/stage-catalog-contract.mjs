@@ -4,7 +4,7 @@ const baseWeaponBlock=core.slice(core.indexOf('const WEAPONS={'),core.indexOf('c
 for(const match of baseWeaponBlock.matchAll(/^\s{2}([A-Za-z][A-Za-z0-9_-]*):\{name:/gm))knownWeapons.add(match[1]);
 for(const match of runtimeConfig.matchAll(/WEAPONS\.([A-Za-z][A-Za-z0-9_-]*)\s*=/g))knownWeapons.add(match[1]);
 const initialSource=(meta.match(/INITIAL_WEAPONS=Object\.freeze\(\[([^\]]*)\]\)/)||[])[1]||'',initialWeapons=new Set([...initialSource.matchAll(/'([^']+)'/g)].map(match=>match[1])),currencyKeys=new Set(['stardust','coreShard']);
-const stages=[...(sandbox.window.STACKFALL_STAGE_CATALOG||[])],pages=[...(sandbox.window.STACKFALL_CONSTELLATIONS||[])],expectedDurations=[600,660,720,780,840,900,720,780,840,900,1020,1200,900,960,1080,1200,1320,1500],fail=[];
+const stages=[...(sandbox.window.STACKFALL_STAGE_CATALOG||[])],pages=[...(sandbox.window.STACKFALL_CONSTELLATIONS||[])],expectedDurations=[300,330,360,390,420,450,480,510,540,570,600,630,660,690,720,780,840,900],fail=[];
 const assert=(condition,message)=>{if(!condition)fail.push(message);};
 assert(stages.length>0,'stage catalog is empty');assert(pages.length>0,'constellation catalog is empty');
 const stageIds=new Set(),orders=new Set(),pageIds=new Set(),pageOrders=new Set(),rewardWeapons=new Set();
