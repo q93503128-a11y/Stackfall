@@ -397,6 +397,22 @@ min(30%, 2.5% + 중첩 곡선 × 1.8% + 연쇄 보너스)
 8. 사용자가 각성을 거부했다고 해당 런에서 다시 제안하지 않는 것은 아니다. 다음 레벨업에도 조건이 유지되어 있으면 다시 각성 화면을 보여준다.
 9. “이번 런에서 각성 제안 숨기기”는 현재 정본에는 넣지 않는다.
 
+### 각성 런타임 구현 상태
+
+- 공통 런타임은 `src/weapon-awakening.js`가 소유한다.
+- 런타임은 19종 각성 정의, 6중첩/각성 여부 검사, 각성 코어 보유량 검사, 붉은 월식 선택창, “각성하지 않는다” 복귀, 코어 1개 소비, 각성 상태 기록, 짧은 변환 연출과 각성명/아이콘 표시를 담당한다.
+- 레벨업 자동 선택이 켜져 있어도 각성 화면은 건너뛰지 않으며 **각성은 자동 확정하지 않는다**.
+- “각성하지 않는다”를 고르면 같은 레벨업의 일반 선택 처리로 즉시 이어진다.
+- 공통 런타임은 각성 코어 지급 함수를 제공하지만, **각성 코어의 실제 획득처는 아직 정본에서 확정되지 않았으므로 보스/스테이지/이벤트 보상에 임의 연결하지 않는다.**
+- 현재 공통 상태/UX 계층만 구현되어 있으며 A1~A19의 실제 전투 메커닉과 전용 렌더링은 이후 무기별 구현 단계에서 붙인다.
+
+### 전투 편의 기능
+
+- HUD 우측에서 `×1 / ×2` 게임 속도를 즉시 전환할 수 있다.
+- 2배속은 큰 `dt` 한 번으로 처리하지 않고 같은 렌더 프레임에서 전투 시뮬레이션을 2회 진행해 빠른 투사체·기뢰·충돌 판정 누락을 줄인다.
+- 음악/UI 시간과 선택·일시정지 화면은 2배속 대상이 아니며 실제 전투 시뮬레이션과 게임 시간만 가속한다.
+- 레벨업 자동 선택 사용 시 선택된 장비/패시브 이름과 중첩 변화를 작은 순차 알림으로 표시한다. 여러 레벨업이 연속 발생하면 알림을 덮어쓰지 않고 큐로 순서대로 보여준다.
+
 ## 6. 맵 이벤트
 
 - 성운 보관소
@@ -743,4 +759,6 @@ Implementation status: all four reward keys are connected only after their defin
 - Normal enemies may be reused between stages. A new stage does **not** require an entirely new trash roster; new common enemies should be introduced periodically and then may join later pools where appropriate.
 - Every named miniboss, boss, Void Rift boss, and stage final boss must have both a dedicated silhouette branch and a dedicated combat-pattern branch.
 - Apex encounters require a stronger identity layer: unique signature attacks, set-piece behavior, silhouette, arena behavior, and legacy/reward impact rather than stat or projectile-color swaps.
+- **후속 비주얼 리워크 예약**: 현재 일부 스테이지 기믹의 텔레그래프/형태가 보스 공격 스킬과 지나치게 비슷하게 읽힌다. 스테이지 기믹은 이후 전용 환경 구조물·지형 반응·고정 맵 장치 중심으로 재설계해 보스 투사체/장판과 한눈에 구분되게 한다.
+- **은하 지도 후속 리워크 예약**: 현재 지도도 기능은 유지하되, 각 성좌/스테이지의 장소성·진행감이 더 강하게 보이도록 노드와 배경 구조를 별도 시각 패스로 다시 손본다. 이 작업은 각성 구현과 분리해 진행한다.
 
