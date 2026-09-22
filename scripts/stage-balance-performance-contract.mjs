@@ -13,7 +13,7 @@ expect('performance measures once per rendered frame',perf.includes('lastObserve
 expect('large viewports reduce Canvas fill rate',core.includes('pixels>=1300000')&&core.includes('areaScale=!compact&&large?.90:1'));
 expect('large viewports reduce GPU fill rate',gpu.includes('pixels>=1300000')&&gpu.includes('areaScale=!compactDevice()&&large?.90:1'));
 expect('damage trend keeps per-weapon series and toggles',damage.includes('timelineByWeapon:Object.create(null)')&&damage.includes('damageTrendHidden=new Set()')&&damage.includes("class:'damage-trend-series'"));
-expect('awakening cores come from usable boss encounters',awakening.includes("enemy.kind==='stage-boss'")&&awakening.includes("enemy.kind==='apex'")&&awakening.includes("enemy.kind==='stage-mini'")&&awakening.includes("enemy.eventVariant==='dreadnought'"));
+expect('awakening cores come from usable boss encounters',awakening.includes("enemy.kind==='stage-boss'")&&awakening.includes("enemy.kind==='apex'")&&awakening.includes("enemy.kind==='stage-mini'")&&awakening.includes("enemy.eventVariant==='dreadnought'")&&awakening.includes("enemy.noEliteReward===true&&!flagship?0:1"));
 for(const name of fail)console.error('FAIL',name);
 console.log('Stage/balance/performance contract failures='+fail.length);
 if(fail.length)process.exit(1);
