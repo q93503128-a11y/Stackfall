@@ -381,6 +381,8 @@ Stage identities remain the existing Shardway, Abyssal Bloom, and Silent Array t
 
 Stage gimmicks now use a separate environmental visual language instead of boss-style circle/beam telegraphs: **Shardway** uses broken route rails and braces, **Abyssal Bloom** uses roots/petals/living bulkheads, and **Silent Array** uses relay circuits/scan sectors/data shutters. Their warnings also use a compact environment notice instead of the boss warning banner.
 
+The **in-combat stage fields** also carry those identities independently of Endless: Shardway adds broken route lanes/hub rings, Abyssal Bloom adds world-anchored roots and growth structures, and Silent Array adds relay grids/nodes/scanning lines. Individual stages vary angle, density, and layout while preserving their constellation family.
+
 The galaxy map follows the same identity split. Shardway uses straight route links and angular nodes, Abyssal Bloom uses curved organic branches and petal-like nodes, while Silent Array uses right-angle circuit paths and relay nodes. Background patterns change with the page rather than only recoloring one template.
 
 #### Post-roster weapon expansion
