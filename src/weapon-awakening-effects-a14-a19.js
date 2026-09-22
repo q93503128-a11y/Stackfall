@@ -171,7 +171,9 @@
       const a=points[i-1],b=points[i],damage=10+n*2.1;
       applyRailBeam(a.x,a.y,b.x,b.y,5.2*size,damage,'#dffcff','phase-wire',1);
       const node=points[i],nearEnemy=nearestEnemy(node.x,node.y,105+18*n);if(!nearEnemy)return;
-      for(const id of node.mineIds){const mine=state.entities.phaseMines.find(m=>m?.id===id);if(mine&&mine.life>0&&!mine.phantom&&mine.arm<=0)detonatePhaseMine(mine,.82);}
+      const candidates=node.mineIds.map(id=>state.entities.phaseMines.find(m=>m?.id===id)).filter(m=>m&&m.life>0&&!m.phantom&&m.arm<=0);
+      const mine=candidates.sort((a,b)=>Math.hypot(a.x-nearEnemy.x,a.y-nearEnemy.y)-Math.hypot(b.x-nearEnemy.x,b.y-nearEnemy.y))[0];
+      if(mine)detonatePhaseMine(mine,.82);
     });
     audio.weapon?.('mine',false,1.45);
   }
@@ -188,15 +190,15 @@
   function tagSurroundMissile(target,n,side,damage,opts){
     const before=state.entities.guidedMissiles.length;spawnGuidedMissile(target,n,side,damage,opts);
     const m=state.entities.guidedMissiles.length>before?state.entities.guidedMissiles.at(-1):null;if(!m)return null;
-    m.awSurround=true;m.awStage='gather';m.awStageAge=0;m.awSlot=opts.awSlot||0;m.awSlotCount=opts.awSlotCount||3;m.awTargetLocked=false;m.awOriginalTargetId=target.id;m.awGatherRadius=112+Math.min(50,n*6);m.awGatherDuration=.54;m.awDiveTime=0;
+    m.awSurround=true;m.awStage='gather';m.awStageAge=0;m.awSlot=opts.awSlot||0;m.awSlotCount=opts.awSlotCount||3;m.awGroup=opts.awGroup||0;m.awReady=false;m.awSignalTimer=null;m.awTargetLocked=false;m.awOriginalTargetId=target.id;m.awGatherRadius=112+Math.min(50,n*6);m.awGatherDuration=.54;m.awDiveTime=0;
     return m;
   }
   function fireStarbreakerSurround(n){
-    const native=n>=6?6:n>=2?4:2,extra=mult(),total=native+extra,maxTargets=n>=6?3:n>=4?2:1,targets=awakenedMissileTargetList(weaponRange('missile'),maxTargets);if(!targets.length)return;
-    const per=(19+(n-1)*2.6)*(native>=6?.64:native>=4?.78:1);player.missilePodFlash=.34;pushFx({kind:'arsenal-open',x:player.x,y:player.y,life:.42,max:.42});audio.weapon?.('missile',false,1.32);
+    const native=n>=6?6:n>=2?4:2,extra=mult(),total=native+extra,target=strongestPostRosterEnemy(player.x,player.y,weaponRange('missile'));if(!target)return;
+    const group=(player.awMissileGroupSerial=(player.awMissileGroupSerial||0)+1),per=(19+(n-1)*2.6)*(native>=6?.64:native>=4?.78:1);player.missilePodFlash=.34;pushFx({kind:'arsenal-open',x:player.x,y:player.y,life:.42,max:.42});audio.weapon?.('missile',false,1.32);
     for(let i=0;i<total;i++){
-      const pair=Math.floor(i/2),side=i%2===0?-1:1,target=targets[i%targets.length],delay=pair*76+(i>=native?24+i*24:0);
-      scheduleWeaponAction(delay,()=>{const live=enemyById(target.id)||targets.find(t=>!t.dead)||strongestPostRosterEnemy(player.x,player.y,weaponRange('missile'));if(live)tagSurroundMissile(live,n,side,per,{multiplicity:i>=native,awSlot:i,awSlotCount:total});});
+      const pair=Math.floor(i/2),side=i%2===0?-1:1,delay=pair*76+(i>=native?24+i*24:0);
+      scheduleWeaponAction(delay,()=>{const live=enemyById(target.id)||strongestPostRosterEnemy(player.x,player.y,weaponRange('missile'));if(live)tagSurroundMissile(live,n,side,per,{multiplicity:i>=native,awSlot:i,awSlotCount:total,awGroup:group});});
     }
   }
   const baseFireInterstellarMissiles=fireInterstellarMissiles;
@@ -215,10 +217,10 @@
       const slotAngle=m.awSlot/Math.max(1,m.awSlotCount)*TAU-Math.PI/2,goalX=target.x+Math.cos(slotAngle)*m.awGatherRadius,goalY=target.y+Math.sin(slotAngle)*m.awGatherRadius,
         dx=goalX-m.x,dy=goalY-m.y,d=Math.hypot(dx,dy)||1,desired=Math.atan2(dy,dx),current=Math.atan2(m.vy,m.vx),angle=missileTurn(current,desired,5.1*dt),speed=lerp(Math.hypot(m.vx,m.vy),330*postRosterMissileSpeed(),clamp(dt*5,0,1));
       m.vx=Math.cos(angle)*speed;m.vy=Math.sin(angle)*speed;m.x+=m.vx*dt;m.y+=m.vy*dt;
-      if(m.awStageAge>=m.awGatherDuration||d<22){m.awStage='hold';m.awStageAge=0;m.awTargetLocked=true;m.vx*=.14;m.vy*=.14;}
+      if(m.awStageAge>=m.awGatherDuration||d<22){m.awStage='hold';m.awStageAge=0;m.awReady=true;m.awTargetLocked=true;m.vx*=.14;m.vy*=.14;}
     }else if(m.awStage==='hold'){
       m.vx*=Math.pow(.12,dt*8);m.vy*=Math.pow(.12,dt*8);m.x+=m.vx*dt;m.y+=m.vy*dt;
-      if(m.awStageAge>=.15){m.awStage='dive';m.awStageAge=0;m.awDiveTime=0;pushFx({kind:'missile-dive',x:m.x,y:m.y,targetId:m.targetId,life:.28,max:.28});}
+      if(Number.isFinite(m.awSignalTimer)){m.awSignalTimer-=dt;if(m.awSignalTimer<=0){m.awStage='dive';m.awStageAge=0;m.awDiveTime=0;pushFx({kind:'missile-dive',x:m.x,y:m.y,targetId:m.targetId,life:.28,max:.28});}}
     }else{
       m.awDiveTime+=dt;target=enemyById(m.targetId)||target;if(!target){m.life=0;return;}
       const dx=target.x-m.x,dy=target.y-m.y,d=Math.hypot(dx,dy)||1,desired=Math.atan2(dy,dx),current=Math.atan2(m.vy,m.vx),angle=missileTurn(current,desired,7.2*dt),speed=lerp(Math.hypot(m.vx,m.vy),560*postRosterMissileSpeed(),clamp(dt*7.2,0,1));
@@ -232,8 +234,13 @@
     const all=state.entities.guidedMissiles,special=all.filter(m=>m?.awSurround&&m.life>0),ordinary=all.filter(m=>!m?.awSurround&&m?.life>0);
     if(!special.length)return baseUpdateGuidedMissiles(dt);
     state.entities.guidedMissiles=ordinary;try{baseUpdateGuidedMissiles(dt);}finally{const updated=state.entities.guidedMissiles;state.entities.guidedMissiles=all;all.length=0;all.push(...updated,...special);}
-    player.missilePodFlash=Math.max(0,(player.missilePodFlash||0)-dt);
     for(const m of special)updateSurroundMissile(m,dt);
+    const groups=new Map();for(const m of special){if(!m||m.life<=0||m.awStage==='dive')continue;const group=groups.get(m.awGroup)||[];group.push(m);groups.set(m.awGroup,group);}
+    for(const group of groups.values()){
+      if(group.some(m=>Number.isFinite(m.awSignalTimer)))continue;
+      const ready=group.filter(m=>m.awReady).length,required=Math.min(3,group.length),oldest=Math.max(...group.map(m=>m.awStageAge||0));
+      if(ready>=required||oldest>=.78){for(const m of group){m.awStage='hold';m.awReady=true;m.awTargetLocked=true;m.awSignalTimer=.15;m.vx*=.20;m.vy*=.20;}}
+    }
     compactInPlace(all,m=>m&&m.life>0);trimOldest(all,42);
   };
 
