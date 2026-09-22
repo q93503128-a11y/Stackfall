@@ -170,7 +170,7 @@
     return /webgl|gpu/i.test(name)||!!renderer.gl||!!renderer.context?.gl||!!renderer.runners;
   }
   function activeGpuProjectiles(){return rendererState==='active'&&app&&!contextLost&&canvasReady();}
-  function syncGpuFrameBudget(){if(!app?.ticker)return;const tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,emergency=typeof stackfallEmergencyRendering==='function'&&stackfallEmergencyRendering(),cap=emergency||tier===2?24:tier===1?40:0;if(cap===gpuFrameRateCap)return;gpuFrameRateCap=cap;app.ticker.maxFPS=cap;}
+  function syncGpuFrameBudget(){if(!app?.ticker)return;const tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,emergency=typeof stackfallEmergencyRendering==='function'&&stackfallEmergencyRendering(),cap=emergency||tier===2?24:tier===1?40:60;if(cap===gpuFrameRateCap)return;gpuFrameRateCap=cap;app.ticker.maxFPS=cap;}
   function countRenderableProjectiles(){
     const list=state.entities.projectiles||[];
     let count=0;

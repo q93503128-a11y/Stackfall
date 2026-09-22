@@ -13,6 +13,7 @@ expect('stage battlefields add constellation-specific world structure',backgroun
 expect('performance measures once per rendered frame',perf.includes('lastObservedFrameSerial')&&perf.includes('observeSimulationFrame(dt)'));
 expect('large viewports reduce Canvas fill rate',core.includes('pixels>=1300000')&&core.includes('areaScale=!compact&&large?.90:1'));
 expect('large viewports reduce GPU fill rate',gpu.includes('pixels>=1300000')&&gpu.includes('areaScale=!compactDevice()&&large?.90:1'));
+expect('auxiliary Pixi ticker is capped at normal load',gpu.includes("cap=emergency||tier===2?24:tier===1?40:60")&&gpu.includes('app.ticker.maxFPS=cap'));
 expect('damage trend keeps per-weapon series and toggles',damage.includes('timelineByWeapon:Object.create(null)')&&damage.includes('damageTrendHidden=new Set()')&&damage.includes("class:'damage-trend-series'"));
 expect('awakening cores come from usable boss encounters',awakening.includes("enemy.kind==='stage-boss'")&&awakening.includes("enemy.kind==='apex'")&&awakening.includes("enemy.kind==='stage-mini'")&&awakening.includes("enemy.eventVariant==='dreadnought'")&&awakening.includes("enemy.noEliteReward===true&&!flagship?0:1"));
 expect('unused awakening cores cash out to Stardust on run end',awakening.includes('AWAKENING_CORE_CASHOUT_STARDUST=40')&&awakening.includes('stackfallCashOutAwakeningCores')&&awakening.includes('cashOutAwakeningCores();return baseEnd()')&&meta.includes('lastAwakeningCoreCashout'));
