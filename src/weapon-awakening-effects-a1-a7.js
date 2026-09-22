@@ -95,7 +95,7 @@
     if(Number(amount)>=Math.max(12,player.maxHp*.11))player.awBulwarkStrong=.34;
     if(beforeShield>0&&player.shield<=0){
       const n=Math.max(1,weaponCount('bulwark')),radius=178*weaponSizeMultiplier();
-      areaDamage(player.x,player.y,radius,24+n*3.6,'#dfffee','aw-bastion-break',{shake:false});
+      areaDamage(player.x,player.y,radius,24+n*3.6,'#dfffee','barrier-lance',{shake:false});
       shockwave(player.x,player.y,'#efffff',radius,.55,6);
       for(let i=0;i<8;i++){const a=i*TAU/8;spawnParticle(player.x+Math.cos(a)*42,player.y+Math.sin(a)*42,'#baffdf',2,155,4.2);}
       pushFx({kind:'bastion-break',x:player.x,y:player.y,r:radius,life:.58,max:.58});
@@ -119,7 +119,7 @@
     pair.forEach(w=>w.awBinaryMerged=true);
     pushFx({kind:'binary-merge',x:cx,y:cy,ax:a.x,ay:a.y,bx:b.x,by:b.y,echoed,life:.42,max:.42});
     scheduleWeaponAction(210,()=>{
-      areaDamage(cx,cy,215*size,(40+n*6.2)*power,echoed?'#ff8bb1':'#f1e8ff','aw-binary-collapse',{shake:false});
+      areaDamage(cx,cy,215*size,(40+n*6.2)*power,echoed?'#ff8bb1':'#f1e8ff','gravity-collapse',{shake:false});
       shockwave(cx,cy,echoed?'#ff8bb1':'#ffffff',260*size,.58,7);
       pushFx({kind:'binary-core',x:cx,y:cy,echoed,life:.48,max:.48});
     });
@@ -146,7 +146,7 @@
     scheduleWeaponAction(220,()=>{
       const live=enemyById(targetId)||nearestWeaponTarget('comet');if(!live)return;
       const angle=Math.atan2(live.y-player.y,live.x-player.x),startX=player.x+Math.cos(angle)*55,startY=player.y+Math.sin(angle)*55,range=weaponRange('comet'),speed=1080,nx=Math.cos(angle),ny=Math.sin(angle);
-      spawnPlayerProjectile({x:startX,y:startY,vx:nx*speed,vy:ny*speed,r:18,life:1.15,maxRange:range,damage:48+n*8.2,color:'#dffbff',pierce:9,source:'aw-final-comet',explode:true,awakeningChild:true});
+      spawnPlayerProjectile({x:startX,y:startY,vx:nx*speed,vy:ny*speed,r:18,life:1.15,maxRange:range,damage:48+n*8.2,color:'#dffbff',pierce:9,source:'comet',explode:true,awakeningChild:true});
       pushFx({kind:'comet-fracture',x:startX,y:startY,x2:startX+nx*range,y2:startY+ny*range,life:.30,max:.30});
       shockwave(startX,startY,'#ffffff',92,.25,4);audio.weapon?.('comet',false,1.6);
     });
@@ -163,7 +163,7 @@
         if(state.weaponAugments?.arc&&source==='arc')p.damage*=1.035;
         if(source==='arc-return'&&!p.awMoonRippleDone){
           p.awMoonRippleDone=true;const rr=82*weaponSizeMultiplier();
-          areaDamage(e.x,e.y,rr,p.damage*.55,'#f4f7ff','aw-lunar-ripple',{shake:false});
+          areaDamage(e.x,e.y,rr,p.damage*.55,'#f4f7ff','arc-trail',{shake:false});
           shockwave(e.x,e.y,'#f7fbff',rr,.34,3.4);
           pushFx({kind:'moon-ripple',x:e.x,y:e.y,r:rr,life:.38,max:.38});
         }
