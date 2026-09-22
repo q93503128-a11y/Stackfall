@@ -9,6 +9,7 @@ const targeting=read('src/targeting-motion-refinement.js');
 const settings=read('src/settings.js');
 const endgame=read('src/endgame-balance-expansion.js');
 const community=read('src/community-feedback-refinement.js');
+const combat=read('src/combat-guidance-refinement.js');
 const difficulty=read('src/difficulty-augment-expansion.js');
 const ledger=read('src/ability-ledger-audit.js');
 const core=read('src/core.js');
@@ -45,7 +46,7 @@ expect('health','no late health reconciliation patch',!endgame.includes('reconci
 expect('regen-runtime','regen has one continuous execution owner',progression.includes("player.hp=Math.min(player.maxHp,player.hp+n*dt)")&&ledger.includes("const regen=stat('regen'),")&&!endgame.includes('endgameRecoveryPlayer')&&!endgame.includes('regenBonusTimer')&&!community.includes('regenBonusTimer'));
 expect('regen-docs','regen documentation matches runtime',readme.includes('자가 복원: 초당 체력 1 회복')&&design.includes('| regen | 자가 복원 | 초당 체력 1 회복 |')&&wiki.includes('자가 복원은 중첩당 초당 체력 1'));
 
-expect('hard','hard profile has one canonical owner',difficulty.includes("hard:Object.freeze({key:'hard',enemyHp:1.32,enemyDamage:1.30,enemySpeed:1.12,rangedChance:1.28})")&&!endgame.includes('window.stackfallDifficultyConfig=function refinedDifficultyConfig')&&!community.includes('stackfallDifficultyConfig='));
+expect('hard','hard profile has one canonical owner',difficulty.includes("hard:Object.freeze({key:'hard',enemyHp:1.32,enemyDamage:1.30,enemySpeed:1.12,rangedChance:1.28,rewardMultiplier:1.30})")&&!endgame.includes('window.stackfallDifficultyConfig=function refinedDifficultyConfig')&&!community.includes('stackfallDifficultyConfig='));
 expect('hard','hard profile documentation matches runtime',wiki.includes('적 체력 1.32배, 피해 1.30배, 속도 1.12배, 원거리 적 등장 비중 1.28배'));
 
 expect('prism','prism final tuning owner is the last-loaded refinement',community.includes("n>=6?4.45:n>=5?4.10:3.70")&&community.includes('stage===1?1.85:1')&&community.includes('damage=16+n*4.2')&&index.indexOf('src/community-feedback-refinement.js')>index.indexOf('src/endgame-balance-expansion.js'));
