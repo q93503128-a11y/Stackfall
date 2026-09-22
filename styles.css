@@ -42,10 +42,10 @@
 .damage-row-share{min-width:42px;text-align:right;color:var(--muted);font-size:8px;font-variant-numeric:tabular-nums}
 .damage-bar-track{height:7px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.055);box-shadow:inset 0 0 0 1px rgba(255,255,255,.035)}
 .damage-bar-fill{height:100%;min-width:2px;border-radius:inherit;background:var(--damage-color);box-shadow:0 0 11px color-mix(in srgb,var(--damage-color) 56%,transparent)}
-.damage-trend-chart{display:block;width:100%;height:138px;overflow:visible}
+.damage-trend-toggles{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 8px}.damage-trend-toggle{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border:1px solid color-mix(in srgb,var(--trend-color) 34%,rgba(255,255,255,.08));border-radius:999px;background:color-mix(in srgb,var(--trend-color) 7%,rgba(5,8,20,.82));color:#dce5f7;font-size:8px;font-weight:800;cursor:pointer}.damage-trend-toggle i{width:7px;height:7px;border-radius:50%;background:var(--trend-color);box-shadow:0 0 7px var(--trend-color)}.damage-trend-toggle.off{opacity:.36;filter:saturate(.35)}.damage-trend-toggle.off i{box-shadow:none}.damage-trend-chart{display:block;width:100%;height:138px;overflow:visible}
 .damage-trend-grid{stroke:rgba(255,255,255,.07);stroke-width:1;vector-effect:non-scaling-stroke}
 .damage-trend-area{fill:rgba(124,232,255,.075)}
-.damage-trend-line{fill:none;stroke:var(--cyan);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 5px rgba(124,232,255,.28))}
+.damage-trend-line{fill:none;stroke:var(--cyan);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 5px rgba(124,232,255,.28))}.damage-trend-series{fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;opacity:.86}
 .damage-trend-point{fill:#e9fbff;stroke:var(--cyan);stroke-width:1.5;vector-effect:non-scaling-stroke}
 .damage-trend-axis{display:flex;justify-content:space-between;margin-top:-2px;color:#7885a8;font-size:8px;font-variant-numeric:tabular-nums}
 .result-actions{margin-top:14px}
