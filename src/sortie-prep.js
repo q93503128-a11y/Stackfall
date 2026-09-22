@@ -9,9 +9,9 @@
     const key=state.selectedDifficulty||'normal';
     return tr('sortie.difficulty.'+key);
   }
-  function stageMinutes(stage){
-    const seconds=Number(stage?.boss?.spawnAt??stage?.durationSeconds??0);
-    return Math.max(1,Math.round(seconds/60));
+  function stageDurationText(stage){
+    const seconds=Math.max(60,Math.round(Number(stage?.boss?.spawnAt??stage?.durationSeconds??0))),m=Math.floor(seconds/60),s=seconds%60;
+    return s?`${m}:${String(s).padStart(2,'0')}`:replaceNumber('sortie.minutes',m);
   }
   function renderContext(){
     const config=window.stackfallCurrentRunConfig?.();
@@ -20,7 +20,7 @@
       kicker.textContent=tr('sortie.kicker.stage');title.textContent=tr('sortie.title');
       modeLabel.textContent=tr('sortie.stageMode');targetName.textContent=localized(stage.title)||('STAGE '+stage.order);
       targetDesc.textContent=localized(stage.description);
-      targetTime.textContent=replaceNumber('sortie.minutes',stageMinutes(stage));
+      targetTime.textContent=stageDurationText(stage);
     }else{
       kicker.textContent=tr('sortie.kicker.endless');title.textContent=tr('sortie.title');
       modeLabel.textContent=tr('sortie.endlessMode');targetName.textContent=tr('sortie.endlessTitle');
