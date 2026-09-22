@@ -110,7 +110,7 @@
 
 모든 각성은 기존 1~6중첩과 보스 특수능력을 그대로 유지한다.
 
-현재 공통 각성 런타임에는 19종 정의, 6중첩/코어 검사, 붉은 월식 선택창, 거부 후 같은 레벨업의 일반 선택 복귀, 코어 소비와 각성 상태/표시가 연결되어 있다. 자동 레벨업을 켜도 각성은 자동 확정되지 않는다. 각성 코어의 실제 획득처는 아직 정본에서 확정되지 않아 임의 보상으로 지급하지 않는다. A1~A7은 실제 전투 효과와 전용 외형까지 1차 구현되었고 A8~A19가 다음 구현 묶음이다. 항성핵은 4회마다 보조핵 3연사, 월식 검륜은 주기적인 정렬 절단, 성운 성창기는 12회 적중 성광선, 천궁 성채는 방향 방어판과 보호막 파괴 반격, 쌍성 붕괴는 종료 직전 합체, 종언 혜성창은 4회마다 0.22초 압축 후 초고속 관통, 월상 회귀는 외향 뒤 큰 순환과 보름달 귀환 파문을 사용한다.
+현재 공통 각성 런타임에는 19종 정의, 6중첩/코어 검사, 붉은 월식 선택창, 거부 후 같은 레벨업의 일반 선택 복귀, 코어 소비와 각성 상태/표시가 연결되어 있다. 자동 레벨업을 켜도 각성은 자동 확정되지 않는다. **각성 코어는 보스 전투 보상**이며 무한모드 일반 보스·공허 보스·기함급 보스와 스테이지 중간보스는 1개, 초월체는 2개를 지급한다. 스테이지 최종보스는 처치 즉시 런이 끝나므로 지급하지 않는다. A1~A7은 실제 전투 효과와 전용 외형까지 1차 구현되었고 A8~A19가 다음 구현 묶음이다. 항성핵은 4회마다 보조핵 3연사, 월식 검륜은 주기적인 정렬 절단, 성운 성창기는 12회 적중 성광선, 천궁 성채는 방향 방어판과 보호막 파괴 반격, 쌍성 붕괴는 종료 직전 합체, 종언 혜성창은 4회마다 0.22초 압축 후 초고속 관통, 월상 회귀는 외향 뒤 큰 순환과 보름달 귀환 파문을 사용한다.
 
 전투 중 HUD 우측의 **×1 / ×2** 버튼으로 게임 속도를 바꿀 수 있다. 2배속은 전투 업데이트를 프레임당 2회 진행하며, 자동 레벨업을 사용하면 자동으로 고른 장비/패시브와 중첩 변화가 화면에 순서대로 표시된다.
 
@@ -214,9 +214,10 @@
 
 ## 10. 난이도
 
-- **쉬움**: 적 체력·피해·속도와 원거리 적 비중 감소
-- **보통**: 기준 밸런스
-- **어려움**: 적 체력 1.32배, 피해 1.30배, 속도 1.12배, 원거리 적 등장 비중 1.28배. 4분 이후 피해와 속도 압박 추가
+- **쉬움**: 적 체력·피해·속도와 원거리 적 비중 감소, Stardust 보상 ×0.85
+- **보통**: 기준 밸런스, Stardust 보상 ×1.00
+- **어려움**: 적 체력 1.32배, 피해 1.30배, 속도 1.12배, 원거리 적 등장 비중 1.28배, Stardust 보상 ×1.30. 4분 이후 피해와 속도 압박 추가
+- 무기 해금과 Core Shard는 난이도 보상 배율의 영향을 받지 않는다.
 
 ## 11. 전투가 잘 보이게 바뀐 부분
 
@@ -227,37 +228,44 @@
 - 플레이어 앞 흰색 표시가 이동 방향 안내
 - 마지막 성좌 순간이동은 도착 지점을 먼저 예고하고 도착 후 0.48초 동안 접촉 피해 없음
 - 초월체 지속 광선은 공격 판정은 유지하면서 화면 갱신 빈도를 제한해 장시간 전투 렉을 줄임
-- 실제 프레임 지연이 지속될 때 배경 장식과 렌더 해상도를 줄이고, 심각 단계에서는 적·적탄·플레이어·위험 예고를 간소화한 WebGL 실루엣으로 전환하지만 화면 밖 보스·맵 이벤트 화살표와 실제 투사체·분열·파편·부메랑·중력 우물·피해 주기는 줄이지 않음
+- 실제 프레임 지연은 렌더 프레임당 한 번만 측정해 2배속의 다중 시뮬레이션 업데이트가 부하 감지를 왜곡하지 않음
+- 고해상도 화면에서는 Canvas/WebGL DPR 상한을 낮추고, 스테이지 동시 적 수도 현재 성능 단계에 맞춘 spawn budget으로 제한
+- 부하가 지속될 때 배경 장식과 렌더 해상도를 추가로 줄이고, 심각 단계에서는 적·적탄·플레이어·위험 예고를 간소화한 WebGL 실루엣으로 전환하지만 화면 밖 보스·맵 이벤트 화살표와 실제 투사체·분열·파편·부메랑·중력 우물·피해 주기는 줄이지 않음
 
 반짝임 효과를 꺼도 적 탄환과 위험 예고는 남는다. 성능이 불안정한 기기에서는 반짝임과 아군 투사체 표시를 줄여도 보스 위험 표시는 유지된다.
 
 ## Run modes
 
 - `endless`: infinite mode with random world events, all enemy families, and recurring Apex encounters.
-- `stage`: finite operations with authored enemy pools, milestone incidents, recurring environmental gimmicks, and a stage final boss.
-- Stage time is no longer universally ten minutes. The final boss appears at the authored time below, and killing it is still required for the clear.
-- Each stage's existing hazard family now repeats throughout the run on its own cadence. The cadence speeds up toward the finale and periodically adds a themed enemy surge, so the map identity remains active between fixed incidents instead of appearing only a few times.
+- `stage`: finite operations with authored enemy pools, milestone incidents, recurring environmental gimmicks, stage minibosses, and a stage final boss.
+- 최종보스 등장 시간은 Stage 1의 **5:00**에서 Stage 18의 **15:00**까지 증가한다. 시간에 도달하면 보스가 등장할 뿐이며, 실제 클리어는 보스를 처치해야 한다.
+- 일반 스테이지는 약 46% 진행 시 중간보스 1회, Stage 6/12/18은 약 32%와 62%에 중간보스 2회가 등장한다.
+- 일반 스테이지 최종보스는 무한모드 일반 보스급을 기준으로 하는 **스테이지 보스**다. Stage 6/12/18의 최종보스는 강화된 **성좌 보스**이며, 둘 다 초월체(Apex)보다 아래의 별도 등급이다.
+- 일반 적 동시 수는 Stage 번호와 진행도에 따라 증가하지만 성능 인식형 spawn budget으로 제한한다. 단순 물량 폭증 대신 기믹과 정예/보스 패턴도 난이도를 담당한다.
+- 배경의 별과 이동 표식은 플레이어 월드 좌표에 따라 서로 다른 속도로 움직여 항로 이동을 체감할 수 있다.
 
 | Stage | 작전 | 최종보스 등장 |
 |---|---|---:|
-| 01 | 붕괴 전초구역 | 10분 |
-| 02 | 이온 성운 해구 | 11분 |
-| 03 | 유리별 묘역 | 12분 |
-| 04 | 정지궤도 회랑 | 13분 |
-| 05 | 자기극 폭풍대 | 14분 |
-| 06 | 파편 성좌핵 | 15분 |
-| 07 | 검은 꽃밭 | 12분 |
-| 08 | 흑수액 협곡 | 13분 |
-| 09 | 나선 종자층 | 14분 |
-| 10 | 반사 화관 성소 | 15분 |
-| 11 | 종자 갑각층 | 17분 |
-| 12 | 심연 개화핵 | 20분 |
-| 13 | 무응답 중계소 | 15분 |
-| 14 | 잡음 협로 | 16분 |
-| 15 | 패킷 폭풍대 | 18분 |
-| 16 | 블라인드 섹터 | 20분 |
-| 17 | 암호 묘역 | 22분 |
-| 18 | 침묵 배열핵 | 25분 |
+| 01 | 붕괴 전초구역 | 5:00 |
+| 02 | 이온 성운 해구 | 5:30 |
+| 03 | 유리별 묘역 | 6:00 |
+| 04 | 정지궤도 회랑 | 6:30 |
+| 05 | 자기극 폭풍대 | 7:00 |
+| 06 | 파편 성좌핵 | 7:30 |
+| 07 | 검은 꽃밭 | 8:00 |
+| 08 | 흑수액 협곡 | 8:30 |
+| 09 | 나선 종자층 | 9:00 |
+| 10 | 반사 화관 성소 | 9:30 |
+| 11 | 종자 갑각층 | 10:00 |
+| 12 | 심연 개화핵 | 10:30 |
+| 13 | 무응답 중계소 | 11:00 |
+| 14 | 잡음 협로 | 11:30 |
+| 15 | 패킷 폭풍대 | 12:00 |
+| 16 | 블라인드 섹터 | 13:00 |
+| 17 | 암호 묘역 | 14:00 |
+| 18 | 침묵 배열핵 | 15:00 |
+
+결과 화면의 피해 분석은 전체 DPS와 무기별 15초 구간 DPS 추이를 함께 제공한다. 전체 및 개별 무기 선은 각각 토글할 수 있다.
 
 The three current constellations remain **Shardway**, **Abyssal Bloom**, and **Silent Array**. Their existing enemies, boss identities, backgrounds, weapon rewards, and progression chain are retained. The original 14-weapon roster is fully unlockable by Stage 10, then expands to 18: Stage 11 unlocks Vacuum Bloom, Stage 13 Phase Minefield, Stage 15 Interstellar Missile Pods, and Stage 17 Orbital Gate. Stages 12/14/16/18 retain currency/Core-Shard rewards.
 
