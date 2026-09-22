@@ -10,7 +10,8 @@
   });
   const constellations=freeze([
     createConstellation({id:'constellation-01',order:1,title:{ko:'파편의 항로',en:'Shardway'},description:{ko:'붕괴한 외곽 항로를 따라 점점 깊은 이상 지대로 진입하는 첫 작전 별자리.',en:'The first operation constellation, pushing from the collapsed outer route into increasingly unstable deep space.'}}),
-    createConstellation({id:'constellation-02',order:2,title:{ko:'심연의 개화',en:'Abyssal Bloom'},description:{ko:'검은 성운과 살아 있는 우주 식생이 항로를 잠식한 두 번째 작전 별자리.',en:'The second operation constellation, where black nebulae and living stellar growth consume the route.'}})
+    createConstellation({id:'constellation-02',order:2,title:{ko:'심연의 개화',en:'Abyssal Bloom'},description:{ko:'검은 성운과 살아 있는 우주 식생이 항로를 잠식한 두 번째 작전 별자리.',en:'The second operation constellation, where black nebulae and living stellar growth consume the route.'}}),
+    createConstellation({id:'constellation-03',order:3,title:{ko:'침묵 중계망',en:'Silent Array'},description:{ko:'죽은 중계 구조물과 끊어진 신호가 항로를 뒤덮은 세 번째 작전 별자리.',en:'The third operation constellation, a dead relay network filled with broken carriers, static, and silent machinery.'}})
   ]);
   const catalog=freeze([
     createStage({
@@ -96,7 +97,49 @@
       enemySet:[{id:'abyss-spore',type:'ranged',unlockAt:0},{id:'rootlance',type:'fast',unlockAt:0},{id:'spiral-pod',type:'ranged',unlockAt:0},{id:'husk-warden',type:'tank',unlockAt:0},{id:'conduit-leech',type:'tank',unlockAt:300}],
       fixedEvents:[{id:'spore-convergence',at:105,kind:'wave',variant:'abyss-spore',count:10},{id:'bloomheart-cross',at:220,kind:'hazard',variant:'bloomheart-cross'},{id:'vascular-spiral',at:335,kind:'hazard',variant:'vascular-spiral'},{id:'husk-convergence',at:455,kind:'wave',variant:'husk-warden',count:7},{id:'abyssal-overgrowth',at:545,kind:'hazard',variant:'abyssal-overgrowth'},{id:'final-boss',at:600,kind:'boss',variant:'abyssal-bloomheart'}],
       boss:{id:'abyssal-bloomheart',spawnAt:600,name:{ko:'심연 개화핵',en:'Abyssal Bloomheart'}},rewards:[{type:'currency',key:'stardust',amount:660},{type:'currency',key:'coreShard',amount:2,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
+    }),
+    createStage({
+      id:'stage-13',order:13,constellationId:'constellation-03',status:'available',title:{ko:'무응답 중계소',en:'Dead Relay'},description:{ko:'송신을 멈춘 거대 중계소. 끊어진 반송파 사이로 소형 중계 기생체가 몰려들고, 주기적인 스캔선과 정적 낙하가 안전 지대를 잘라낸다.',en:'A colossal relay station that no longer answers. Relay mites swarm between dead carriers while scan lines and static falls repeatedly cut the safe space.'},durationSeconds:600,estimatedMinutes:10,threat:13,node:{x:.18,y:.46},requirements:{previous:'stage-12'},
+      discoveries:{gimmicks:['carrier-scan','static-fall','deadband-lock'],weapons:[],events:['relay-swarm','phase-procession','deadband-lock']},
+      enemySet:[{id:'relay-mite',type:'fast',unlockAt:0},{id:'phase-drifter',type:'ranged',unlockAt:0},{id:'nebula-wisp',type:'ranged',unlockAt:180},{id:'conduit-leech',type:'tank',unlockAt:360}],
+      fixedEvents:[{id:'relay-swarm',at:115,kind:'wave',variant:'relay-mite',count:10},{id:'carrier-scan',at:230,kind:'hazard',variant:'carrier-scan'},{id:'static-fall',at:345,kind:'hazard',variant:'static-fall'},{id:'phase-procession',at:465,kind:'wave',variant:'phase-drifter',count:9},{id:'deadband-lock',at:550,kind:'hazard',variant:'deadband-lock'},{id:'final-boss',at:600,kind:'boss',variant:'deadband-overseer'}],
+      boss:{id:'deadband-overseer',spawnAt:600,name:{ko:'무응답 감시자',en:'Deadband Overseer'}},rewards:[{type:'currency',key:'stardust',amount:720},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
+    }),
+    createStage({
+      id:'stage-14',order:14,constellationId:'constellation-03',status:'available',title:{ko:'잡음 협로',en:'Static Narrows'},description:{ko:'중계망의 신호가 서로 충돌하는 협로. 재머 비행체가 전장을 가로막고 잡음 격자와 반송파 붕괴가 이동 경로를 연속해서 끊는다.',en:'A narrow corridor where relay signals collide. Jammer kites block lanes while noise grids and carrier breaks repeatedly sever movement routes.'},durationSeconds:600,estimatedMinutes:10,threat:14,node:{x:.34,y:.64},requirements:{previous:'stage-13'},
+      discoveries:{gimmicks:['noise-grid','carrier-break','whiteout-lanes'],weapons:[],events:['jammer-flight','relay-swarm','whiteout-lanes']},
+      enemySet:[{id:'relay-mite',type:'fast',unlockAt:0},{id:'jammer-kite',type:'ranged',unlockAt:125},{id:'phase-drifter',type:'ranged',unlockAt:260},{id:'conduit-leech',type:'tank',unlockAt:410}],
+      fixedEvents:[{id:'jammer-flight',at:125,kind:'wave',variant:'jammer-kite',count:8},{id:'noise-grid',at:240,kind:'hazard',variant:'noise-grid'},{id:'carrier-break',at:355,kind:'hazard',variant:'carrier-break'},{id:'relay-swarm',at:470,kind:'wave',variant:'relay-mite',count:12},{id:'whiteout-lanes',at:550,kind:'hazard',variant:'whiteout-lanes'},{id:'final-boss',at:600,kind:'boss',variant:'noise-harvester'}],
+      boss:{id:'noise-harvester',spawnAt:600,name:{ko:'잡음 수확기',en:'Noise Harvester'}},rewards:[{type:'currency',key:'stardust',amount:790},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
+    }),
+    createStage({
+      id:'stage-15',order:15,constellationId:'constellation-03',status:'available',title:{ko:'패킷 폭풍대',en:'Packet Stormfront'},description:{ko:'붕괴한 송신 묶음이 탄막처럼 쏟아지는 폭풍층. 패킷 창기병이 직선으로 돌진하고 다중 채널이 교차하며 전장을 빠르게 재배선한다.',en:'A storm layer where collapsed transmissions fall like barrages. Packet lancers charge through straight lanes as multiplex channels rapidly rewire the field.'},durationSeconds:600,estimatedMinutes:10,threat:15,node:{x:.50,y:.36},requirements:{previous:'stage-14'},
+      discoveries:{gimmicks:['multiplex-lanes','burst-switch','checksum-storm'],weapons:[],events:['packet-charge','jammer-procession','checksum-storm']},
+      enemySet:[{id:'relay-mite',type:'fast',unlockAt:0},{id:'jammer-kite',type:'ranged',unlockAt:0},{id:'packet-lancer',type:'fast',unlockAt:120},{id:'phase-drifter',type:'ranged',unlockAt:300},{id:'conduit-leech',type:'tank',unlockAt:440}],
+      fixedEvents:[{id:'packet-charge',at:120,kind:'wave',variant:'packet-lancer',count:9},{id:'multiplex-lanes',at:235,kind:'hazard',variant:'multiplex-lanes'},{id:'burst-switch',at:350,kind:'hazard',variant:'burst-switch'},{id:'jammer-procession',at:470,kind:'wave',variant:'jammer-kite',count:9},{id:'checksum-storm',at:550,kind:'hazard',variant:'checksum-storm'},{id:'final-boss',at:600,kind:'boss',variant:'multiplex-engine'}],
+      boss:{id:'multiplex-engine',spawnAt:600,name:{ko:'다중송신 기관',en:'Multiplex Engine'}},rewards:[{type:'currency',key:'stardust',amount:860},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
+    }),
+    createStage({
+      id:'stage-16',order:16,constellationId:'constellation-03',status:'available',title:{ko:'블라인드 섹터',en:'Blind Sector'},description:{ko:'센서가 의미 있는 신호를 잃는 무시야 구역. 이미 확인된 중계망 개체들이 검은 탐지 공백과 교차 스캔을 이용해 빈 공간 자체를 위험 지대로 바꾼다.',en:'A sensor blind zone where meaningful signal disappears. Established relay enemies weaponize detection gaps and crossing scans, turning empty space into the threat.'},durationSeconds:600,estimatedMinutes:10,threat:16,node:{x:.66,y:.58},requirements:{previous:'stage-15'},
+      discoveries:{gimmicks:['dead-zone','blind-cross','null-sweep'],weapons:[],events:['packet-procession','jammer-column','null-sweep']},
+      enemySet:[{id:'packet-lancer',type:'fast',unlockAt:0},{id:'jammer-kite',type:'ranged',unlockAt:0},{id:'relay-mite',type:'fast',unlockAt:0},{id:'phase-drifter',type:'ranged',unlockAt:260},{id:'conduit-leech',type:'tank',unlockAt:420}],
+      fixedEvents:[{id:'packet-procession',at:110,kind:'wave',variant:'packet-lancer',count:11},{id:'dead-zone',at:225,kind:'hazard',variant:'dead-zone'},{id:'blind-cross',at:340,kind:'hazard',variant:'blind-cross'},{id:'jammer-column',at:460,kind:'wave',variant:'jammer-kite',count:10},{id:'null-sweep',at:545,kind:'hazard',variant:'null-sweep'},{id:'final-boss',at:600,kind:'boss',variant:'null-beacon'}],
+      boss:{id:'null-beacon',spawnAt:600,name:{ko:'널 비콘',en:'Null Beacon'}},rewards:[{type:'currency',key:'stardust',amount:940},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
+    }),
+    createStage({
+      id:'stage-17',order:17,constellationId:'constellation-03',status:'available',title:{ko:'암호 묘역',en:'Cipher Graveyard'},description:{ko:'폐기된 인증 구조물과 봉인된 프로토콜이 떠도는 묘역. 암호 수호체가 전진을 막고 패리티 포격과 봉쇄벽이 전장을 단계적으로 잠근다.',en:'A graveyard of discarded authentication structures and sealed protocols. Cipher wardens hold the line while parity barrages and locking walls close the arena in stages.'},durationSeconds:600,estimatedMinutes:10,threat:17,node:{x:.82,y:.32},requirements:{previous:'stage-16'},
+      discoveries:{gimmicks:['parity-mortar','cipher-walls','protocol-seal'],weapons:[],events:['warden-lock','packet-column','protocol-seal']},
+      enemySet:[{id:'packet-lancer',type:'fast',unlockAt:0},{id:'jammer-kite',type:'ranged',unlockAt:0},{id:'cipher-warden',type:'tank',unlockAt:125},{id:'relay-mite',type:'fast',unlockAt:300},{id:'conduit-leech',type:'tank',unlockAt:440}],
+      fixedEvents:[{id:'warden-lock',at:125,kind:'wave',variant:'cipher-warden',count:6},{id:'parity-mortar',at:240,kind:'hazard',variant:'parity-mortar'},{id:'cipher-walls',at:355,kind:'hazard',variant:'cipher-walls'},{id:'packet-column',at:470,kind:'wave',variant:'packet-lancer',count:12},{id:'protocol-seal',at:550,kind:'hazard',variant:'protocol-seal'},{id:'final-boss',at:600,kind:'boss',variant:'protocol-custodian'}],
+      boss:{id:'protocol-custodian',spawnAt:600,name:{ko:'프로토콜 수문장',en:'Protocol Custodian'}},rewards:[{type:'currency',key:'stardust',amount:1020},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
+    }),
+    createStage({
+      id:'stage-18',order:18,constellationId:'constellation-03',status:'available',title:{ko:'침묵 배열핵',en:'Silent Array Core'},description:{ko:'세 번째 별자리의 모든 죽은 중계기가 연결되는 중심 배열. 잡음·패킷·무시야·암호 봉쇄가 한 전장에 수렴하며 침묵의 메인프레임이 직접 항로를 차단한다.',en:'The central array linking every dead relay in the third constellation. Static, packet storms, blind zones, and protocol locks converge as the Silence Mainframe blocks the route itself.'},durationSeconds:600,estimatedMinutes:10,threat:18,node:{x:.95,y:.52},requirements:{previous:'stage-17'},
+      discoveries:{gimmicks:['multiplex-cross','blind-grid','silence-collapse'],weapons:[],events:['relay-convergence','cipher-convergence','silence-collapse']},
+      enemySet:[{id:'relay-mite',type:'fast',unlockAt:0},{id:'jammer-kite',type:'ranged',unlockAt:0},{id:'packet-lancer',type:'fast',unlockAt:0},{id:'cipher-warden',type:'tank',unlockAt:0},{id:'phase-drifter',type:'ranged',unlockAt:300}],
+      fixedEvents:[{id:'relay-convergence',at:105,kind:'wave',variant:'relay-mite',count:12},{id:'multiplex-cross',at:220,kind:'hazard',variant:'multiplex-cross'},{id:'blind-grid',at:335,kind:'hazard',variant:'blind-grid'},{id:'cipher-convergence',at:455,kind:'wave',variant:'cipher-warden',count:8},{id:'silence-collapse',at:545,kind:'hazard',variant:'silence-collapse'},{id:'final-boss',at:600,kind:'boss',variant:'silence-mainframe'}],
+      boss:{id:'silence-mainframe',spawnAt:600,name:{ko:'침묵 메인프레임',en:'Silence Mainframe'}},rewards:[{type:'currency',key:'stardust',amount:1150},{type:'currency',key:'coreShard',amount:2,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
     })
   ]);
-  window.STACKFALL_STAGE_SCHEMA_VERSION=12;window.STACKFALL_CONSTELLATIONS=constellations;window.STACKFALL_STAGE_CATALOG=catalog;window.stackfallStageById=id=>catalog.find(stage=>stage.id===id)||null;window.stackfallConstellationById=id=>constellations.find(page=>page.id===id)||null;
+  window.STACKFALL_STAGE_SCHEMA_VERSION=18;window.STACKFALL_CONSTELLATIONS=constellations;window.STACKFALL_STAGE_CATALOG=catalog;window.stackfallStageById=id=>catalog.find(stage=>stage.id===id)||null;window.stackfallConstellationById=id=>constellations.find(page=>page.id===id)||null;
 })();

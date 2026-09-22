@@ -205,6 +205,14 @@
 - `stage-10` — **Mirrorpetal Sanctum / 반사 화관 성소**: reflection petals, echo blooms, and mirrored attack lanes culminate in the Mirrorpetal Halo. Clearing it unlocks Reflective Constellation.
 - `stage-11` — **Seedhusk Bastion / 종자 갑각층**: Husk Wardens and living bulkheads protect the inner seedvault. The Seedvault Custodian arrives at 600 seconds; the stage pays Stardust and a first-clear Core Shard rather than creating another weapon.
 - `stage-12` — **Abyssal Bloomheart / 심연 개화핵**: the finale of **Abyssal Bloom / 심연의 개화**. It recombines the constellation's established enemies and hazards before the Abyssal Bloomheart arrives at 600 seconds. The first clear grants two Core Shards.
+- **Silent Array / 침묵 중계망** is the third constellation and becomes reachable only after Stage 12 is cleared.
+- `stage-13` — **Dead Relay / 무응답 중계소**: introduces Relay Mite, carrier scans, static falls, and the Deadband Overseer.
+- `stage-14` — **Static Narrows / 잡음 협로**: introduces Jammer Kite, noise grids, carrier breaks, signal whiteouts, and the Noise Harvester.
+- `stage-15` — **Packet Stormfront / 패킷 폭풍대**: introduces Packet Lancer, multiplex lanes, burst switching, checksum storms, and the Multiplex Engine.
+- `stage-16` — **Blind Sector / 블라인드 섹터**: reuses the Silent Array roster around dead zones, blind crosses, and null sweeps before the Null Beacon.
+- `stage-17` — **Cipher Graveyard / 암호 묘역**: introduces Cipher Warden, parity mortar, cipher walls, protocol seals, and the Protocol Custodian.
+- `stage-18` — **Silent Array Core / 침묵 배열핵**: recombines all major Silent Array enemy families and signal hazards before the Silence Mainframe. Its first clear grants two Core Shards.
+- The normal weapon roster is fully unlockable by Stage 10. Stage 11 and later stages currently award progression currency rather than filler weapons.
 - Fresh saves begin with four unlocked starter weapons: Pulse Blade, Starlight Caster, Radiant Bulwark, and Gravity Well. Locked weapons do not appear in starter selection or level-up acquisition.
 - The basic Core weapon is separate from equipment capacity. A fresh profile has four non-basic equipment slots; Slot V and Slot VI permanent upgrades expand that limit to five and six.
 - Persistent progression uses Stardust for repeat upgrades and rarer Core Shards for high-value expansion. Stage 1 guarantees one Core Shard on first clear and then one after every three repeat clears; Apex kills also grant Core Shards. Permanent upgrade categories currently cover health, damage, attack cycle, pickup radius, mitigation, currency yield, and equipment capacity.

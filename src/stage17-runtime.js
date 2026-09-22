@@ -1,0 +1,25 @@
+(()=>{
+  if(typeof window.stackfallRegisterStageRuntime!=='function')return;
+  window.stackfallRegisterStageRuntime('stage-17',{
+    theme:'stage-17',objectiveKey:'stage17.objective.boss',fixedEventKey:'stage17.event.fixed',initialSpawnTimer:.32,spawnRadius:790,spawnRadiusMin:88,spawnRadiusMax:192,burstRadiusMin:710,burstRadiusMax:920,startingVariants:['packet-lancer','jammer-kite','cipher-warden'],
+    variants:{
+      'packet-lancer':{type:'fast',color:'#879dff',hp:1.37,speed:1.61,damage:1.42,r:1.00,xp:1.56,name:'stage15.enemy.packetLancer'},
+      'jammer-kite':{type:'ranged',color:'#d184cf',hp:1.42,speed:1.19,damage:1.40,r:1.05,xp:1.54,name:'stage14.enemy.jammerKite',rangedMin:.39,rangedMax:.72},
+      'cipher-warden':{type:'tank',color:'#e4bd72',hp:2.08,speed:.93,damage:1.45,r:1.15,xp:1.68,name:'stage17.enemy.cipherWarden'},
+      'relay-mite':{type:'fast',color:'#64dbe6',hp:1.39,speed:1.53,damage:1.39,r:.98,xp:1.50,name:'stage13.enemy.relayMite'},
+      'conduit-leech':{type:'tank',color:'#68b6ad',hp:2.00,speed:1.04,damage:1.42,r:1.07,xp:1.62,name:'stage05.enemy.conduitLeech'}
+    },
+    poolAt(time){if(time<160)return[['packet-lancer',.34],['jammer-kite',.29],['cipher-warden',.37]];if(time<340)return[['packet-lancer',.30],['jammer-kite',.27],['cipher-warden',.30],['relay-mite',.13]];return[['packet-lancer',.27],['jammer-kite',.24],['cipher-warden',.30],['relay-mite',.11],['conduit-leech',.08]];},
+    spawnProfile(time){return{cap:time>=430?84:time>=290?76:66,rate:Math.max(.27,.70-time*.00074),count:time>=340?2:time>=160&&Math.random()<.76?2:1};},
+    waveLabel(event){return event.variant==='cipher-warden'?tr('stage17.event.wardenLock'):tr('stage17.event.packetColumn');},
+    hazard(event,api){const damage=24+Math.min(26,state.level*.47),variant=event.variant;
+      if(variant==='parity-mortar'){showBossNotice(tr('stage17.event.parityMortar'),tr('stage17.event.warning'));for(let wave=0;wave<6;wave++)scheduleWeaponAction(wave*305,()=>{if(!api.isActive())return;const p=typeof predictedPlayer==='function'?predictedPlayer(125+wave*26):{x:player.x,y:player.y};for(let i=0;i<8;i++){const a=i/8*TAU+wave*.37,r=55+(i%4)*42;addCircle(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r,34+wave*3,damage*(.56+wave*.072),i%2?'#e4bd72':'#74ddd0',.76+wave*.038);}});return;}
+      const seal=variant==='protocol-seal',waves=seal?7:4;showBossNotice(seal?tr('stage17.event.protocolSeal'):tr('stage17.event.cipherWalls'),tr('stage17.event.warning'));for(let wave=0;wave<waves;wave++)scheduleWeaponAction(wave*(seal?255:385),()=>{if(!api.isActive())return;const p=typeof predictedPlayer==='function'?predictedPlayer(170+wave*32):{x:player.x,y:player.y},half=seal?480:415,gap=Math.max(28,56-wave*3),offset=(wave-(waves-1)/2)*(seal?31:43);rawLine(p.x-half,p.y+offset,p.x-gap,p.y+offset,seal?27:22,damage*(seal?1.10:.91),'#e4bd72',.77+wave*.032,'boss-line');rawLine(p.x+gap,p.y+offset,p.x+half,p.y+offset,seal?27:22,damage*(seal?1.10:.91),'#74ddd0',.77+wave*.032,'boss-line');if(seal){rawLine(p.x+offset,p.y-half,p.x+offset,p.y-gap,24,damage*.96,'#b996ff',.82,'boss-line');rawLine(p.x+offset,p.y+gap,p.x+offset,p.y+half,24,damage*.96,'#b996ff',.82,'boss-line');}});},
+    bossProfile:{form:'protocol-custodian',eventVariant:'stage17-custodian',nameKey:'stage17.boss',warningKey:'stage17.boss.warning',r:99,hp:5.34,speed:.56,damage:1.66,color:'#e4bd72',xp:4.5,skillCd:.74,burstCd:2.30,pulseCd:3.56,spawnRadius:755,spawnShockwave:348},
+    bossSkill(e,dt,api){if(!e||e.dead)return;const hp=e.hp/Math.max(1,e.maxHp),phase=hp<.15?3:hp<.40?2:1,k=[1,.61,.41][phase-1],damage=Math.max(11,e.damage*.57);e.stagePhase=phase;e.skillCd-=dt/k;e.burstCd-=dt/k;e.pulseCd-=dt/k;
+      if(e.skillCd<=0){e.skillCd=1.24;const aim=Math.atan2(player.y-e.y,player.x-e.x),shots=18+phase*6;for(let i=0;i<shots;i++){const fan=(i-(shots-1)/2)*(.042-phase*.0011);spawnEnemyProjectile(e.x,e.y,aim+fan,258+phase*29,damage*.69,i%3===0?'#b996ff':i%2?'#e4bd72':'#74ddd0',5.6,5,'cipher');}}
+      if(e.burstCd<=0){e.burstCd=2.70;const p=typeof predictedPlayer==='function'?predictedPlayer(215+phase*52):{x:player.x,y:player.y},walls=phase===3?7:phase===2?6:5,half=445+phase*38,gap=Math.max(23,49-phase*7);for(let i=0;i<walls;i++){const offset=(i-(walls-1)/2)*58,color=i%2?'#e4bd72':'#74ddd0';rawLine(p.x-half,p.y+offset,p.x-gap,p.y+offset,24+phase*2,damage*1.06,color,.75+i*.022,'boss-line');rawLine(p.x+gap,p.y+offset,p.x+half,p.y+offset,24+phase*2,damage*1.06,color,.75+i*.022,'boss-line');}}
+      if(e.pulseCd<=0){e.pulseCd=4.05-phase*.30;if(typeof fireRingWithGaps==='function'){const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,39+phase*8,192+phase*22,damage*.83,'#fff0c9',e.phase*.048,aim,.14-phase*.009,4.7);}else fireRing(e,36+phase*7,192+phase*22,damage*.79,'#fff0c9',e.phase*.048,4.7);api.spawnBurst('cipher-warden',phase===3?5:3);}
+    }
+  });
+})();

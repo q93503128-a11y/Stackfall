@@ -1,0 +1,25 @@
+(()=>{
+  if(typeof window.stackfallRegisterStageRuntime!=='function')return;
+  window.stackfallRegisterStageRuntime('stage-15',{
+    theme:'stage-15',objectiveKey:'stage15.objective.boss',fixedEventKey:'stage15.event.fixed',initialSpawnTimer:.34,spawnRadius:780,spawnRadiusMin:84,spawnRadiusMax:184,burstRadiusMin:700,burstRadiusMax:910,startingVariants:['relay-mite','jammer-kite','packet-lancer'],
+    variants:{
+      'relay-mite':{type:'fast',color:'#6de6ef',hp:1.34,speed:1.51,damage:1.35,r:.98,xp:1.46,name:'stage13.enemy.relayMite'},
+      'jammer-kite':{type:'ranged',color:'#e88cdf',hp:1.36,speed:1.17,damage:1.36,r:1.05,xp:1.50,name:'stage14.enemy.jammerKite',rangedMin:.41,rangedMax:.74},
+      'packet-lancer':{type:'fast',color:'#8ca9ff',hp:1.31,speed:1.58,damage:1.38,r:1.00,xp:1.52,name:'stage15.enemy.packetLancer'},
+      'phase-drifter':{type:'ranged',color:'#86dccc',hp:1.29,speed:1.21,damage:1.33,r:1.03,xp:1.44,name:'stage04.enemy.phaseDrifter',rangedMin:.42,rangedMax:.76},
+      'conduit-leech':{type:'tank',color:'#70c2b6',hp:1.90,speed:1.03,damage:1.37,r:1.07,xp:1.58,name:'stage05.enemy.conduitLeech'}
+    },
+    poolAt(time){if(time<170)return[['relay-mite',.34],['jammer-kite',.30],['packet-lancer',.36]];if(time<330)return[['relay-mite',.27],['jammer-kite',.28],['packet-lancer',.34],['phase-drifter',.11]];return[['relay-mite',.23],['jammer-kite',.26],['packet-lancer',.31],['phase-drifter',.12],['conduit-leech',.08]];},
+    spawnProfile(time){return{cap:time>=430?80:time>=290?72:62,rate:Math.max(.28,.74-time*.00078),count:time>=360?2:time>=170&&Math.random()<.74?2:1};},
+    waveLabel(event){return event.variant==='packet-lancer'?tr('stage15.event.packetCharge'):tr('stage15.event.jammerProcession');},
+    hazard(event,api){const damage=22+Math.min(24,state.level*.45),variant=event.variant;
+      if(variant==='burst-switch'){showBossNotice(tr('stage15.event.burstSwitch'),tr('stage15.event.warning'));for(let wave=0;wave<6;wave++)scheduleWeaponAction(wave*300,()=>{if(!api.isActive())return;const p=typeof predictedPlayer==='function'?predictedPlayer(135+wave*27):{x:player.x,y:player.y},a=wave%2?0:Math.PI/2,dx=Math.cos(a),dy=Math.sin(a),half=430,gap=46;rawLine(p.x-dx*half,p.y-dy*half,p.x-dx*gap,p.y-dy*gap,23,damage*.94,wave%2?'#8da9ff':'#70e8ef',.80+wave*.035,'boss-line');rawLine(p.x+dx*gap,p.y+dy*gap,p.x+dx*half,p.y+dy*half,23,damage*.94,wave%2?'#8da9ff':'#70e8ef',.80+wave*.035,'boss-line');});return;}
+      const storm=variant==='checksum-storm',waves=storm?7:4;showBossNotice(storm?tr('stage15.event.checksum'):tr('stage15.event.multiplex'),tr('stage15.event.warning'));for(let wave=0;wave<waves;wave++)scheduleWeaponAction(wave*(storm?265:395),()=>{if(!api.isActive())return;const p=typeof predictedPlayer==='function'?predictedPlayer(160+wave*31):{x:player.x,y:player.y},axes=storm?6:4,half=storm?470:405,gap=storm?30:56,rot=wave*(storm?.24:.16);for(let i=0;i<axes;i++){const a=rot+i/axes*Math.PI,dx=Math.cos(a),dy=Math.sin(a),color=i%3===0?'#8da9ff':i%3===1?'#70e8ef':'#c39cff';rawLine(p.x-dx*half,p.y-dy*half,p.x-dx*gap,p.y-dy*gap,storm?26:21,damage*(storm?1.08:.89),color,.79+wave*.033,'boss-line');rawLine(p.x+dx*gap,p.y+dy*gap,p.x+dx*half,p.y+dy*half,storm?26:21,damage*(storm?1.08:.89),color,.79+wave*.033,'boss-line');}});},
+    bossProfile:{form:'multiplex-engine',eventVariant:'stage15-engine',nameKey:'stage15.boss',warningKey:'stage15.boss.warning',r:95,hp:4.78,speed:.58,damage:1.59,color:'#8da9ff',xp:4.15,skillCd:.80,burstCd:2.43,pulseCd:3.80,spawnRadius:745,spawnShockwave:333},
+    bossSkill(e,dt,api){if(!e||e.dead)return;const hp=e.hp/Math.max(1,e.maxHp),phase=hp<.16?3:hp<.44?2:1,k=[1,.63,.43][phase-1],damage=Math.max(11,e.damage*.55);e.stagePhase=phase;e.skillCd-=dt/k;e.burstCd-=dt/k;e.pulseCd-=dt/k;
+      if(e.skillCd<=0){e.skillCd=1.32;const aim=Math.atan2(player.y-e.y,player.x-e.x),shots=16+phase*6;for(let i=0;i<shots;i++){const fan=(i-(shots-1)/2)*(.044-phase*.0013);spawnEnemyProjectile(e.x,e.y,aim+fan,250+phase*27,damage*.67,i%3===0?'#c39cff':i%2?'#8da9ff':'#70e8ef',5.4,5,'packet');}}
+      if(e.burstCd<=0){e.burstCd=2.86;const p=typeof predictedPlayer==='function'?predictedPlayer(205+phase*49):{x:player.x,y:player.y},axes=phase===3?7:phase===2?6:4,half=432+phase*36,gap=Math.max(25,51-phase*7),rot=e.phase*.032;for(let i=0;i<axes;i++){const a=rot+i/axes*Math.PI,dx=Math.cos(a),dy=Math.sin(a),color=i%3===0?'#c39cff':i%2?'#8da9ff':'#70e8ef';rawLine(p.x-dx*half,p.y-dy*half,p.x-dx*gap,p.y-dy*gap,23+phase*2,damage*1.04,color,.77+i*.024,'boss-line');rawLine(p.x+dx*gap,p.y+dy*gap,p.x+dx*half,p.y+dy*half,23+phase*2,damage*1.04,color,.77+i*.024,'boss-line');}}
+      if(e.pulseCd<=0){e.pulseCd=4.30-phase*.32;if(typeof fireRingWithGaps==='function'){const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,37+phase*7,186+phase*21,damage*.81,'#e9e2ff',e.phase*.052,aim,.15-phase*.010,4.7);}else fireRing(e,34+phase*6,186+phase*21,damage*.77,'#e9e2ff',e.phase*.052,4.7);api.spawnBurst('packet-lancer',phase===3?6:4);}
+    }
+  });
+})();

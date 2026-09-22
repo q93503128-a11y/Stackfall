@@ -56,6 +56,18 @@ jobs:
         run: node scripts/stage11-runtime-contract.mjs
       - name: Check Stage 12 runtime contract
         run: node scripts/stage12-runtime-contract.mjs
+      - name: Check Stage 13 runtime contract
+        run: node scripts/stage13-runtime-contract.mjs
+      - name: Check Stage 14 runtime contract
+        run: node scripts/stage14-runtime-contract.mjs
+      - name: Check Stage 15 runtime contract
+        run: node scripts/stage15-runtime-contract.mjs
+      - name: Check Stage 16 runtime contract
+        run: node scripts/stage16-runtime-contract.mjs
+      - name: Check Stage 17 runtime contract
+        run: node scripts/stage17-runtime-contract.mjs
+      - name: Check Stage 18 runtime contract
+        run: node scripts/stage18-runtime-contract.mjs
       - name: Check sortie preparation contract
         run: node scripts/sortie-prep-contract.mjs
       - name: Check boss identity contract

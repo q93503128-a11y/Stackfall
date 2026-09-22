@@ -1,6 +1,6 @@
 # STACKFALL 게임 정보 및 개발 규칙
 
-마지막 동기화: 2026-07-20
+마지막 동기화: 2026-09-22
 
 이 문서는 STACKFALL의 실제 게임 규칙, 밸런스 기준, 소유권과 회귀 방지 조건을 정리한 공식 기준 문서다. `README.md`, 이 문서, `WIKI.md`를 함께 관리한다. 현재 코드와 충돌하는 과거 문서·채팅 요약·주석은 기준으로 사용하지 않는다.
 
@@ -411,7 +411,14 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - `stage-10`, **Mirrorpetal Sanctum / 반사 화관 성소**, uses reflection/echo hazards without forcing a new common enemy; clearing it unlocks Reflective Constellation.
 - `stage-11`, **Seedhusk Bastion / 종자 갑각층**, introduces Husk Warden and the Seedvault Custodian. With the current weapon roster fully unlocked by Stage 10, later stage rewards may use currency/core rewards instead of inventing weapons solely to fill a slot.
 - `stage-12`, **Abyssal Bloomheart / 심연 개화핵**, is the second constellation finale. It recombines the major Abyssal Bloom enemy families and ends against the Abyssal Bloomheart at 600 seconds. Its first clear grants two Core Shards.
-- Constellations 1 and 2 each contain six stages in the current authored campaign.
+- Constellation 3 is **Silent Array / 침묵 중계망**. It leaves the fragment-route and living-nebula identities behind for dead relay megastructures, broken carriers, static fields, packet storms, sensor blind zones, and sealed protocols.
+- `stage-13`, **Dead Relay / 무응답 중계소**, opens the third constellation, introduces Relay Mite, and uses carrier-scan/static-fall/deadband-lock incidents before the Deadband Overseer arrives at 600 seconds.
+- `stage-14`, **Static Narrows / 잡음 협로**, introduces Jammer Kite and escalates noise-grid, carrier-break, and signal-whiteout lane pressure before the Noise Harvester.
+- `stage-15`, **Packet Stormfront / 패킷 폭풍대**, introduces Packet Lancer and rapidly rewires safe lanes with multiplex, burst-switch, and checksum-storm incidents before the Multiplex Engine.
+- `stage-16`, **Blind Sector / 블라인드 섹터**, deliberately adds no new common enemy. It recombines the established Silent Array roster around dead zones, blind crosses, and null sweeps before the Null Beacon.
+- `stage-17`, **Cipher Graveyard / 암호 묘역**, introduces Cipher Warden and closes safe space with parity mortar, cipher walls, and protocol seals before the Protocol Custodian.
+- `stage-18`, **Silent Array Core / 침묵 배열핵**, is the third constellation finale. It recombines Relay Mite, Jammer Kite, Packet Lancer, and Cipher Warden with multiplex/blind/silence-collapse incidents before the Silence Mainframe. Its first clear grants two Core Shards.
+- The current authored campaign contains three constellations of six stages each. The complete 14-item normal weapon roster is already permanently unlockable by Stage 10, so Stage 11+ uses Stardust/Core Shards unless a genuinely new weapon is added to the game.
 - Galaxy stages are grouped into constellation pages. A finished constellation hands progression to the first stage of the next constellation; the map never stretches every constellation into one endless canvas.
 
 ### Galaxy map
