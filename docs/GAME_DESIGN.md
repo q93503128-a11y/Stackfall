@@ -417,6 +417,80 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - **Silent Array / 침묵 중계망 (Stage 13–18)**: dead relay megastructures, broken carriers, static, packet storms, sensor blind zones, sealed protocols, then network-wide silence collapse.
 - The complete current 14-item normal weapon roster is permanently unlockable by Stage 10. Stage 11+ uses Stardust/Core Shards until a genuinely new weapon is authored.
 
+### Planned post-Stage-10 weapons
+
+These four weapons are approved design targets but are **not implemented yet**. They expand the normal equipment roster from 14 to 18 when implemented. They must use the existing six-stack equipment model and the existing one-time boss-reward weapon-augment model. An augment is a separate run reward: it does not consume a stack, does not stack with itself, and must add a new behavior rather than merely repeating the 2/4/6 resonance.
+
+#### 15. Vacuum Bloom / 진공 개화
+- Planned unlock: **Stage 11 — Seedhusk Bastion**. Stage 12 remains a constellation-finale Core Shard reward.
+- Role: kill-chain area control / delayed collapse.
+- Core rule: kills periodically plant a vacuum seed at the defeated enemy. Other deaths inside its feeding radius charge it. A full seed pulls enemies inward and then collapses.
+- Performance rule: seeds have a hard active cap; one death can feed each eligible seed only once; bloom cascades must use bounded propagation rather than recursive unbounded spawning.
+- Stack 1 — **Vacuum Seed**: every 6 qualifying kills plants a seed. Radius 165, lifetime 7 s, active cap 3. Three nearby deaths fully charge it. Full collapse deals 38 base area damage after a short pull; expiration produces a 65% weak collapse.
+- Stack 2 — **Deep Roots**: planting threshold 5 kills, radius 180, pull strength +22%, active cap 4.
+- Stack 3 — **Predatory Bloom**: elite/miniboss deaths count as 2 charges; collapse damage +22% and begins with a brief stronger inward snap.
+- Stack 4 — **Cross-Pollination**: a full bloom gives +2 charge to other seeds within 270 and increases their remaining lifetime by 1.2 s. This can accelerate a chain but cannot immediately retrigger the source bloom.
+- Stack 5 — **Overgrowth**: planting threshold 4 kills, active cap 5. A seed reaching 5 total charges becomes overcharged and emits a second 45% implosion 0.32 s after the first.
+- Stack 6 — **Vacuum Garden**: an overcharged collapse forces up to two nearby incomplete seeds to bloom in sequence at 70% power. The forced blooms cannot themselves force more blooms.
+- Weapon augment — **Devouring Pollen / 포식 꽃가루**: the pull phase absorbs up to 8 ordinary enemy projectiles. Each absorbed projectile increases that bloom's final damage by 6% and radius by 2.5%, up to the cap. Apex/unerasable projectiles are never deleted by this effect.
+- Identity boundary: this is not another Gravity Well. Gravity Well is periodically cast crowd control; Vacuum Bloom is a kill-fed delayed chain reaction that gets stronger when the player shapes where enemies die.
+
+#### 16. Phase Minefield / 위상 기뢰군
+- Planned unlock: **Stage 13 — Dead Relay**.
+- Role: movement-path offense / territorial control.
+- Core rule: moving through the battlefield leaves phase mines along the player's recent route. Remaining mobile creates better coverage, but a stationary player still receives a slower fallback deployment so the weapon never becomes dead.
+- Placement rule: deploy after roughly 90 px of travel or 1.65 s, whichever happens first. Mines arm after 0.35 s, last 9 s, and are bounded by an active cap.
+- Stack 1 — **Phase Mine**: 26 base damage, 74 blast radius, 48 trigger radius, active cap 6.
+- Stack 2 — **Split Wake**: successive mines alternate 30 px to the left and right of the movement path, widening the trail. Active cap 8 and blast radius +8.
+- Stack 3 — **Chain Fuse**: a mine explosion primes the nearest armed mine within 190 px to detonate after 0.12 s at 65% damage. Each mine may be chain-triggered once.
+- Stack 4 — **Phase Tripwire**: consecutive armed mines within 210 px form a faint link. An enemy crossing that link takes a small cutting hit with an individual-link cooldown; mine explosions remain the main damage source.
+- Stack 5 — **Dense Lattice**: travel requirement falls to 72 px, lifetime becomes 10.5 s, active cap 11, and chain-fuse search range rises to 230 px.
+- Stack 6 — **Constellation Minefield**: every third deployment creates a compact three-mine triangular lattice instead of one mine. Its links are stronger, and if one triangle mine detonates the other two sequence-fire at 72% power. Triangle sequence detonations cannot recursively create another triangle chain.
+- Weapon augment — **Afterimage Mine / 잔상 기뢰**: when a normal mine detonates, one weaker phantom mine is projected near the predicted position of the strongest nearby living enemy. The phantom arms almost immediately, lasts 2.4 s, deals 58% damage, and cannot create another phantom.
+- Identity boundary: this weapon rewards deliberate movement and route drawing. It must not become a passive circular aura around the player.
+
+#### 17. Interstellar Missile Pods / 성간 미사일 포드
+- Planned unlock: **Stage 15 — Packet Stormfront**.
+- Role: homing salvo / elite pressure / splash.
+- Targeting: prefer a boss or miniboss in range; otherwise prefer a high-health target among the nearest viable enemies. Multi-missile salvos avoid obvious overkill by distributing across up to the allowed target count.
+- **Mandatory launch-motion contract**: missiles do not originate from the player center and immediately home. A visible left and right launch pod is positioned beside the player. Each missile first ejects outward from its own side for about 0.12–0.18 s, then ignites, accelerates, and curves toward its target. Turning is smooth with retained momentum; no instant heading snap. Left and right missiles use visibly different approach arcs before converging.
+- Stack 1 — **Twin Launch**: one missile from each side, 2 total. 2.35 s base cycle, 19 damage per missile, 60 explosion radius, 760 acquisition range.
+- Stack 2 — **Dual Rack**: two missiles per side, 4 total, fired with an 0.08 s stagger. Individual missile damage is reduced slightly so the resonance is strong without exactly doubling total output.
+- Stack 3 — **Reacquisition**: if a locked target dies before impact, the missile may acquire one new target in range. Explosion radius +10 and missile turn authority increases after ignition.
+- Stack 4 — **Vector Lock**: salvos may split across two targets and use mild target-leading rather than pure pursuit. Elite targets still receive priority.
+- Stack 5 — **Terminal Burn**: after 0.45 s of powered flight, surviving missiles enter a faster terminal phase, gain 18% impact damage, and leave a shorter brighter engine trail.
+- Stack 6 — **Full Salvo**: three missiles per side, 6 total, launched as three left-right pairs over roughly 0.28 s. The salvo may distribute over three targets; against one boss all six can converge from alternating arcs.
+- Weapon augment — **MIRV Constellation / 다탄두 성좌**: shortly before impact, each main missile separates into three micro-warheads. The center warhead stays on the original target; the side warheads may peel toward nearby enemies before reconverging. Total augment damage is capped so it is a spread/coverage upgrade rather than a raw ×3 multiplier.
+- Audio/visual rule: ignition must have a distinct delayed thrust cue after the side-ejection beat. Exhaust is a short luminous trail, not screen-filling smoke.
+- Identity boundary: Meteor Drones are persistent orbiting shooters; these missiles are discrete, readable salvos with side-launch choreography and curved homing flight.
+
+#### 18. Orbital Gate / 궤도 문
+- Planned unlock: **Stage 17 — Cipher Graveyard**. Stage 18 remains a constellation-finale Core Shard reward.
+- Role: persistent spatial network / moving lane control.
+- Core rule: gates follow the player with smoothing rather than snapping to exact coordinates. Energy pulses travel between gates, disappear into an entrance, reappear from the next exit, and continue through the network. The network rotates slowly, causing its damage lanes to sweep the battlefield.
+- Stack 1 — **Gate Pair**: two opposite gates at roughly 155 px orbit radius. One pulse makes 3 transfers before dissipating. The connecting route deals damage to enemies it crosses.
+- Stack 2 — **Triangulation**: three gates form a triangle. The pulse circulates A→B→C and gains +1 transfer.
+- Stack 3 — **Counter Pulse**: a second pulse enters the network halfway through the cycle, creating staggered lane coverage without occupying exactly the same segment.
+- Stack 4 — **Cross Gate**: four gates form a rotating quadrilateral. Completing a full circuit briefly opens one diagonal cross-link for a stronger cutting pass.
+- Stack 5 — **Relay Acceleration**: gate rotation +22%, transfer delay -18%, and each exit emits a short low-damage ray toward the nearest enemy inside 240 px.
+- Stack 6 — **Closed Orbit**: two full-strength pulses circulate in opposite directions. Every completed circuit produces a restrained central compression burst; circuit bursts have a cooldown so the two pulses cannot double-trigger them simultaneously.
+- Weapon augment — **Photon Crossfeed / 광자 교차전송**: a non-gate allied projectile passing close to a gate may be copied once from the next gate toward a living enemy at 55% damage. Copied projectiles are marked so they cannot re-enter the gate-copy system. Each gate has a short copy cooldown to prevent projectile-count explosions.
+- Identity boundary: Orbital Gate is not another orbiting weapon. The gates themselves are infrastructure; the damaging object is the routed pulse/network and its changing lanes.
+
+#### Planned unlock cadence
+| Stage | Planned first-clear weapon reward | Why |
+|---|---|---|
+| 11 | Vacuum Bloom / 진공 개화 | Fits the seed/husk death-chain ecology and immediately starts the post-Stage-10 roster expansion. |
+| 12 | — | Keep the constellation finale focused on Core Shards rather than stacking another weapon reward. |
+| 13 | Phase Minefield / 위상 기뢰군 | Dead Relay introduces route control and makes movement through the relay field mechanically meaningful. |
+| 14 | — | Currency/Core progression break. |
+| 15 | Interstellar Missile Pods / 성간 미사일 포드 | Packet Stormfront is the best technological fit for visible side-mounted guided salvos. |
+| 16 | — | Currency/Core progression break. |
+| 17 | Orbital Gate / 궤도 문 | Late Silent Array reward with the highest spatial/network complexity. |
+| 18 | — | Preserve the third constellation finale as a Core Shard payoff. |
+
+Implementation rule: do not add these reward keys to `src/stage-catalog.js` until the matching weapon definitions, stack text, combat runtime, render/audio treatment, augment definition, unlock migration, and regression contracts exist in the same atomic change. The current implemented reward catalog must remain internally valid until then.
+
 ### Galaxy map
 
 - The main menu is a mode-selection hub. `GALACTIC OPERATIONS` opens the galaxy map, `ENDLESS` opens sortie preparation, and `CORE DEVELOPMENT` opens persistent upgrades; none starts combat accidentally. The upper-left local-pilot card is clickable and exposes detailed local-save stats without implying online-account sync.
