@@ -7,7 +7,17 @@
   function isStage(id=null){const current=currentStageId();return !!current&&(!id||current===id);}
   function stageRuntime(){return isStage()?state.stageRun:null;}
   function stageDefinition(id=currentStageId()){return id?registry.get(id)||null:null;}
-  function clearStageUi(){objective?.classList.add('hidden');completeScreen?.classList.add('hidden');state.stageVictory=null;}
+  function environmentFamily(stage){
+    if(stage?.constellationId==='constellation-02')return'bloom';
+    if(stage?.constellationId==='constellation-03')return'array';
+    return'route';
+  }
+  function withStageEnvironment(event,api,action){
+    const previous=state.stageEnvironmentTelegraphContext||null;
+    state.stageEnvironmentTelegraphContext={family:environmentFamily(api?.stage),stageId:api?.stage?.id||null,variant:event?.variant||'environment',ambient:!!event?.ambient};
+    try{return action?.();}finally{state.stageEnvironmentTelegraphContext=previous;}
+  }
+  function clearStageUi(){objective?.classList.add('hidden');completeScreen?.classList.add('hidden');state.stageVictory=null;state.stageEnvironmentTelegraphContext=null;}
   function spawnStageEnemy(stageId,variant,origin=null){
     const def=stageDefinition(stageId),data=def?.variants?.[variant];if(!def||!data||!makeEnemyRoom('normal'))return null;
     const cfg=enemyConfig(data.type),angle=Math.random()*TAU,radius=Math.min(Math.max(vw,vh)*.52,Number(def.spawnRadius)||700)+rand(Number(def.spawnRadiusMin)||50,Number(def.spawnRadiusMax)||130),enemy={
@@ -66,7 +76,7 @@
     const run=stageRuntime(),def=stageDefinition();if(!run||!def||run.eventsTriggered[event.id])return;run.eventsTriggered[event.id]=true;const api=apiFor(run);
     if(event.kind==='boss'){spawnStageBoss();return;}
     if(event.kind==='wave'){const label=def.waveLabel?.(event,api);if(label)showBossNotice(label,tr(def.fixedEventKey));spawnStageBurst(run.stage.id,event.variant,event.count||4);return;}
-    if(event.kind==='hazard'){def.hazard?.(event,api);return;}
+    if(event.kind==='hazard'){withStageEnvironment(event,api,()=>def.hazard?.(event,api));return;}
     def.event?.(event,api);
   }
   function updateObjective(run){
@@ -81,7 +91,7 @@
     run.gimmickCycle=cycle;
     const interval=Math.max(16,Number(gimmick.interval)||40),accelerate=clamp(Number(gimmick.accelerate)||0,0,.5);
     run.gimmickNextAt=state.time+Math.max(14,interval*(1-progress*accelerate));
-    if(hazards.length){const source=hazards[(cycle-1)%hazards.length];def.hazard?.({...source,id:'gimmick-'+cycle,ambient:true},api);}
+    if(hazards.length){const source=hazards[(cycle-1)%hazards.length],event={...source,id:'gimmick-'+cycle,ambient:true};withStageEnvironment(event,api,()=>def.hazard?.(event,api));}
     const waveEvery=Math.max(0,Math.floor(Number(gimmick.waveEvery)||0));
     if(waveEvery&&waves.length&&cycle%waveEvery===0){const source=waves[(Math.floor(cycle/waveEvery)-1)%waves.length],count=Math.max(2,Math.round((source.count||4)*(.66+progress*.34)));spawnStageBurst(run.stage.id,source.variant,count);}
   }
