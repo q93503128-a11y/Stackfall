@@ -106,6 +106,8 @@ jobs:
         run: node scripts/damage-results-contract.mjs
       - name: Check stage balance and performance contract
         run: node scripts/stage-balance-performance-contract.mjs
+      - name: Check awakening A1-A7 contract
+        run: node scripts/awakening-first-set-contract.mjs
       - name: Check awakening A8-A13 contract
         run: node scripts/awakening-second-set-contract.mjs
       - name: Check awakening A14-A19 contract

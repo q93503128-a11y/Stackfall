@@ -129,12 +129,12 @@
   // A16 — Black-Star Lotus.
   function addLotusField(seed,n,radius,damage){
     const absorbed=Math.max(0,Math.min(8,seed.absorbed||0)),power=Math.max(.45,Number(seed.power)||1),forced=!!seed.forced;
-    lotusFields.push({id:state.nextId++,x:seed.x,y:seed.y,n,r:radius*(forced?.78:1),damage:damage*(forced?.70:1),life:.85,max:.85,tick:0,absorbed,power,forced,closed:false});
+    lotusFields.push({id:state.nextId++,x:seed.x,y:seed.y,n,r:radius*(forced?.78:1),damage,life:.85,max:.85,tick:0,absorbed,power,forced,closed:false});
     while(lotusFields.length>3){const oldest=lotusFields.shift();if(oldest&&!oldest.closed)closeLotus(oldest,.72);}
   }
   function closeLotus(field,scale=1){
-    if(!field||field.closed)return;field.closed=true;const pollen=1+field.absorbed*.06;
-    areaDamage(field.x,field.y,field.r*.58,field.damage*.68*pollen*scale,'#fff6ff','vacuum-bloom',{shake:false});
+    if(!field||field.closed)return;field.closed=true;
+    areaDamage(field.x,field.y,field.r*.58,field.damage*.68*scale,'#fff6ff','vacuum-bloom',{shake:false});
     shockwave(field.x,field.y,'#f7edff',field.r*.72,.36,2.8);pushFx({kind:'lotus-close',x:field.x,y:field.y,r:field.r,life:.42,max:.42});
   }
   const baseDetonateVacuumSeed=detonateVacuumSeed;

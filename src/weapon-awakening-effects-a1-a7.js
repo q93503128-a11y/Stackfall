@@ -9,7 +9,7 @@
   function resetAwakeningCombatState(){
     fx.length=0;
     Object.assign(player,{
-      awCoreCycle:0,awBladeCd:4.6,awBladeWindup:0,awEmberHits:0,awEmberChargeFlash:0,
+      awCoreCycle:0,awBladeCd:4.6,awBladeWindup:0,awEmberHits:0,awEmberTargetId:null,awEmberChargeFlash:0,
       awBulwarkHitAngle:0,awBulwarkHitFlash:0,awBulwarkStrong:0,awCometCycle:0
     });
   }
@@ -74,7 +74,9 @@
   dealDamage=function awakeningFirstSetDamage(enemy,amount,opts={}){
     const wasAlive=enemy&&!enemy.dead,source=String(opts.source||'');
     baseDealDamage(enemy,amount,opts);
-    if(!emberSignatureGuard&&awake('ember')&&wasAlive&&['ember','echo-star','ember-multiplicity'].includes(source)){
+    if(!emberSignatureGuard&&awake('ember')&&wasAlive&&source==='ember'){
+      const targetId=enemy?.id??null;
+      if(targetId!==player.awEmberTargetId){player.awEmberTargetId=targetId;player.awEmberHits=0;}
       player.awEmberHits=(player.awEmberHits||0)+1;
       if(player.awEmberHits>=12){
         player.awEmberHits=0;
@@ -323,6 +325,6 @@
 
   window.stackfallAwakeningFirstSetDebug=()=>({
     coreCycle:player.awCoreCycle||0,bladeCooldown:player.awBladeCd||0,bladeWindup:player.awBladeWindup||0,
-    emberHits:player.awEmberHits||0,cometCycle:player.awCometCycle||0,fx:fx.length
+    emberHits:player.awEmberHits||0,emberTargetId:player.awEmberTargetId??null,cometCycle:player.awCometCycle||0,fx:fx.length
   });
 })();

@@ -15,8 +15,10 @@ expect('Twin-Face Reflection is restored before and after awakening',source.incl
 expect('Perfect Reflection caps augment shield gain',source.includes('beforeShield=Number(player.shield)||0')&&source.includes('beforeShield+Math.min(22,profile.gain*5)'));
 
 expect('Black-Star Lotus creates a bounded 0.85 second residual field',source.includes('life:.85,max:.85')&&source.includes('while(lotusFields.length>3)')&&source.includes('closeLotus'));
-expect('Black-Star Lotus preserves Devouring Pollen scaling once',source.includes('absorbed=Math.max(0,Math.min(8,seed.absorbed||0))')&&source.includes('1+field.absorbed*.06')&&source.includes('1+absorbed*.025'));
-expect('Lotus fields do not directly plant or force-bloom seeds',!source.includes('lotusFields.push({')||(!source.includes('lotusFields.push({id:state.nextId++,x:seed.x,y:seed.y,n,r:radius')?false:true));
+const lotusBlock=source.slice(source.indexOf('// A16 — Black-Star Lotus.'),source.indexOf('// A17 — Phase Starrail.'));
+expect('Black-Star Lotus preserves Devouring Pollen scaling exactly once',lotusBlock.includes('1+absorbed*.06')&&lotusBlock.includes('1+absorbed*.025')&&!lotusBlock.includes('1+field.absorbed*.06'));
+expect('Black-Star Lotus preserves the base forced-bloom power exactly once',lotusBlock.includes('r:radius*(forced?.78:1),damage,life:.85')&&!lotusBlock.includes('damage:damage*(forced?.70:1)'));
+expect('Lotus fields do not directly plant or force-bloom seeds',lotusBlock.includes('lotusFields.push({id:state.nextId++,x:seed.x,y:seed.y,n,r:radius')&&!lotusBlock.includes('plantVacuumSeed(')&&!lotusBlock.includes('beginVacuumBloom('));
 expect('Black-Star Lotus uses existing vacuum damage family',source.includes("source:'vacuum-bloom'")||source.includes("'vacuum-bloom'"));
 
 expect('Phase Starrail records one node per deployment and excludes phantom nodes',source.includes('function recordStarrailNode')&&source.includes('newMines.filter(m=>m&&!m.phantom)')&&source.includes('player.awMineDeployCycle%5===0'));
