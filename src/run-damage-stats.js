@@ -2,7 +2,7 @@ const DAMAGE_BUCKET_SECONDS=15;
 const DAMAGE_OTHER_KEY='other';
 
 function freshRunDamageStats(){
-  return{total:0,byWeapon:Object.create(null),timeline:[],bucketSeconds:DAMAGE_BUCKET_SECONDS};
+  return{total:0,byWeapon:Object.create(null),timeline:[],timelineByWeapon:Object.create(null),bucketSeconds:DAMAGE_BUCKET_SECONDS};
 }
 
 function resetRunDamageStats(){
@@ -48,6 +48,8 @@ function registerRunDamage(amount,source){
   stats.total+=damage;
   stats.byWeapon[key]=(stats.byWeapon[key]||0)+damage;
   stats.timeline[bucket]=(stats.timeline[bucket]||0)+damage;
+  const weaponTimeline=stats.timelineByWeapon[key]||(stats.timelineByWeapon[key]=[]);
+  weaponTimeline[bucket]=(weaponTimeline[bucket]||0)+damage;
 }
 
 function runDamageSnapshot(){
@@ -56,7 +58,12 @@ function runDamageSnapshot(){
     const start=index*bucketSeconds,available=Math.max(0,totalSeconds-start),duration=Math.max(1,Math.min(bucketSeconds,available||1)),damage=Number(stats.timeline[index])||0;
     return{start,end:Math.min(totalSeconds,(index+1)*bucketSeconds),damage,dps:damage/duration};
   });
-  return{total:Number(stats.total)||0,averageDps:(Number(stats.total)||0)/Math.max(1,totalSeconds),peakDps:timeline.reduce((peak,entry)=>Math.max(peak,entry.dps),0),byWeapon:{...stats.byWeapon},timeline,bucketSeconds,totalSeconds};
+  const byWeaponTimeline={};
+  for(const key of Object.keys(stats.timelineByWeapon||{})){
+    const source=stats.timelineByWeapon[key]||[];
+    byWeaponTimeline[key]=timeline.map((entry,index)=>({start:entry.start,end:entry.end,damage:Number(source[index])||0,dps:(Number(source[index])||0)/Math.max(1,entry.end-entry.start||1)}));
+  }
+  return{total:Number(stats.total)||0,averageDps:(Number(stats.total)||0)/Math.max(1,totalSeconds),peakDps:timeline.reduce((peak,entry)=>Math.max(peak,entry.dps),0),byWeapon:{...stats.byWeapon},timeline,byWeaponTimeline,bucketSeconds,totalSeconds};
 }
 
 function damageLocale(){
@@ -101,30 +108,60 @@ function damageSvgNode(name,attrs={}){
   return node;
 }
 
-function renderDamageTrend(snapshot){
+const damageTrendHidden=new Set();
+let lastDamageTrendSnapshot=null;
+
+function damageTrendColor(key){
+  if(key==='total')return'#7ce8ff';
+  if(key===DAMAGE_OTHER_KEY)return'#8b96b8';
+  return WEAPONS[key]?.color||'#b9c4df';
+}
+function ensureDamageTrendControls(snapshot){
+  const svg=document.querySelector('#damageTrendChart');if(!svg)return;
+  let root=document.querySelector('#damageTrendToggles');
+  if(!root){root=document.createElement('div');root.id='damageTrendToggles';root.className='damage-trend-toggles';svg.before(root);}
+  root.replaceChildren();
+  const rows=[['total',tr('gameover.damage.total')],...Object.entries(snapshot.byWeapon).filter(([,damage])=>Number(damage)>0).sort((a,b)=>b[1]-a[1]).map(([key])=>[key,damageWeaponName(key)])];
+  for(const[key,label]of rows){
+    const button=document.createElement('button'),dot=document.createElement('i'),text=document.createElement('span'),visible=!damageTrendHidden.has(key);
+    button.type='button';button.className='damage-trend-toggle'+(visible?'':' off');button.style.setProperty('--trend-color',damageTrendColor(key));button.dataset.trendKey=key;button.setAttribute('aria-pressed',visible?'true':'false');button.title=visible?'그래프 숨기기':'그래프 표시';
+    text.textContent=label;button.append(dot,text);button.addEventListener('click',()=>{if(damageTrendHidden.has(key))damageTrendHidden.delete(key);else damageTrendHidden.add(key);button.classList.toggle('off',damageTrendHidden.has(key));button.setAttribute('aria-pressed',damageTrendHidden.has(key)?'false':'true');renderDamageTrend(lastDamageTrendSnapshot||snapshot,false);});
+    root.appendChild(button);
+  }
+}
+function damageTrendSamples(timeline,maxDps,left,plotWidth,top,plotHeight){
+  return timeline.map((entry,index)=>({x:timeline.length===1?left+plotWidth/2:left+plotWidth*index/(timeline.length-1),y:top+plotHeight*(1-entry.dps/maxDps),dps:entry.dps}));
+}
+function damageTrendPath(samples,left,right){
+  let points=samples;if(samples.length===1)points=[{...samples[0],x:left},{...samples[0],x:right}];
+  return{points,line:points.map((point,index)=>(index?'L':'M')+point.x.toFixed(2)+' '+point.y.toFixed(2)).join(' ')};
+}
+function renderDamageTrend(snapshot,rebuildControls=true){
+  if(!snapshot)return;lastDamageTrendSnapshot=snapshot;
   const svg=document.querySelector('#damageTrendChart'),startLabel=document.querySelector('#damageTrendStart'),endLabel=document.querySelector('#damageTrendEnd');
-  if(!svg)return;
+  if(!svg)return;if(rebuildControls)ensureDamageTrendControls(snapshot);
   svg.replaceChildren();svg.setAttribute('aria-label',tr('gameover.damage.trend'));
   if(startLabel)startLabel.textContent='00:00';if(endLabel)endLabel.textContent=formatTime(snapshot.totalSeconds);
-  const width=600,height=160,left=8,right=8,top=8,bottom=8,plotWidth=width-left-right,plotHeight=height-top-bottom,baseline=height-bottom,maxDps=Math.max(1,...snapshot.timeline.map(entry=>entry.dps));
+  const width=600,height=160,left=8,right=8,top=8,bottom=8,plotWidth=width-left-right,plotHeight=height-top-bottom,baseline=height-bottom;
+  const series=[{key:'total',timeline:snapshot.timeline},...Object.keys(snapshot.byWeaponTimeline||{}).map(key=>({key,timeline:snapshot.byWeaponTimeline[key]}))].filter(row=>!damageTrendHidden.has(row.key));
+  const maxDps=Math.max(1,...series.flatMap(row=>row.timeline.map(entry=>entry.dps)));
   for(let i=0;i<4;i++){const y=top+plotHeight*i/3;svg.appendChild(damageSvgNode('line',{x1:left,y1:y,x2:width-right,y2:y,class:'damage-trend-grid'}));}
-  const samples=snapshot.timeline.map((entry,index)=>{
-    const x=snapshot.timeline.length===1?left+plotWidth/2:left+plotWidth*index/(snapshot.timeline.length-1),y=top+plotHeight*(1-entry.dps/maxDps);
-    return{x,y,dps:entry.dps};
-  });
-  let linePoints=samples;
-  if(samples.length===1)linePoints=[{...samples[0],x:left},{...samples[0],x:width-right}];
-  const linePath=linePoints.map((point,index)=>(index?'L':'M')+point.x.toFixed(2)+' '+point.y.toFixed(2)).join(' ');
-  const areaPath='M '+left+' '+baseline+' '+linePoints.map(point=>'L '+point.x.toFixed(2)+' '+point.y.toFixed(2)).join(' ')+' L '+(width-right)+' '+baseline+' Z';
-  svg.appendChild(damageSvgNode('path',{d:areaPath,class:'damage-trend-area'}));
-  svg.appendChild(damageSvgNode('path',{d:linePath,class:'damage-trend-line'}));
-  if(samples.length<=24)for(const point of samples)svg.appendChild(damageSvgNode('circle',{cx:point.x,cy:point.y,r:2.8,class:'damage-trend-point'}));
+  for(const row of series){
+    const samples=damageTrendSamples(row.timeline,maxDps,left,plotWidth,top,plotHeight),path=damageTrendPath(samples,left,width-right);
+    if(row.key==='total'){
+      const areaPath='M '+left+' '+baseline+' '+path.points.map(point=>'L '+point.x.toFixed(2)+' '+point.y.toFixed(2)).join(' ')+' L '+(width-right)+' '+baseline+' Z';
+      svg.appendChild(damageSvgNode('path',{d:areaPath,class:'damage-trend-area'}));
+      svg.appendChild(damageSvgNode('path',{d:path.line,class:'damage-trend-line'}));
+      if(samples.length<=24)for(const point of samples)svg.appendChild(damageSvgNode('circle',{cx:point.x,cy:point.y,r:2.6,class:'damage-trend-point'}));
+    }else{
+      svg.appendChild(damageSvgNode('path',{d:path.line,class:'damage-trend-series',stroke:damageTrendColor(row.key),'data-trend-key':row.key}));
+    }
+  }
 }
-
 function renderRunDamageResults(){
   const snapshot=runDamageSnapshot(),total=document.querySelector('#resultDamageTotal'),average=document.querySelector('#resultDamageDps'),peak=document.querySelector('#resultPeakDps');
   if(total)total.textContent=formatDamageValue(snapshot.total);if(average)average.textContent=formatDamageValue(snapshot.averageDps);if(peak)peak.textContent=formatDamageValue(snapshot.peakDps);
-  renderDamageBars(snapshot);renderDamageTrend(snapshot);
+  damageTrendHidden.clear();renderDamageBars(snapshot);renderDamageTrend(snapshot,true);
 }
 
 resetRunDamageStats();
