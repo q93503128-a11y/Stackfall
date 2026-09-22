@@ -4,7 +4,7 @@ const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read
 const checks=[
  ['Stage 8 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&runtime.includes('hazard(event,api)')],
  ['Stage 8 follows Stage 7 inside constellation two',catalog.includes("id:'stage-08'")&&catalog.includes("constellationId:'constellation-02'")&&catalog.includes("requirements:{previous:'stage-07'}")],
- ['Stage 8 boss follows the authored 13-minute operation',catalog.includes("boss:{id:'abyssal-rootcrown',spawnAt:780")&&catalog.includes("at:780,kind:'boss',variant:'abyssal-rootcrown'")],
+ ['Stage 8 boss follows the authored 8.5-minute operation',catalog.includes("boss:{id:'abyssal-rootcrown',spawnAt:510")&&catalog.includes("at:510,kind:'boss',variant:'abyssal-rootcrown'")],
  ['Stage 8 introduces Rootlance at 135 seconds',catalog.includes("{id:'rootlance',type:'fast',unlockAt:135}")&&runtime.includes("rootlance:{type:'fast'")],
  ['Stage 8 owns sap geyser vascular rail and arterial rupture incidents',['sap-geyser','vascular-rail','arterial-rupture'].every(token=>catalog.includes(token)&&runtime.includes(token))],
  ['Stage 8 remains a registered adapter without shared wrapper overrides',runtime.includes("stackfallRegisterStageRuntime('stage-08'")&&!runtime.includes('updateSpawning=function')&&!runtime.includes('resetGame=function')],
