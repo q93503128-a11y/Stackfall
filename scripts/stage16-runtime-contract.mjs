@@ -5,7 +5,7 @@ const start=catalog.indexOf("id:'stage-16'"),next=catalog.indexOf("id:'stage-17'
 const checks=[
  ['Stage 16 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&runtime.includes('hazard(event,api)')],
  ['Stage 16 follows Stage 15 in constellation three',catalog.includes("id:'stage-16'")&&catalog.includes("constellationId:'constellation-03'")&&catalog.includes("requirements:{previous:'stage-15'}")],
- ['Stage 16 boss follows the authored 20-minute operation',catalog.includes("boss:{id:'null-beacon',spawnAt:1200")&&catalog.includes("at:1200,kind:'boss',variant:'null-beacon'")],
+ ['Stage 16 boss follows the authored 13-minute operation',catalog.includes("boss:{id:'null-beacon',spawnAt:780")&&catalog.includes("at:780,kind:'boss',variant:'null-beacon'")],
  ['Stage 16 deliberately reuses established Silent Array enemies',!catalog.includes("stage16.enemy.")&&['relay-mite','jammer-kite','packet-lancer'].every(x=>runtime.includes(x))],
  ['Stage 16 owns its fixed signal incidents',['dead-zone','blind-cross','null-sweep'].every(x=>catalog.includes(x)&&runtime.includes(x))],
  ['Stage 16 has a dedicated environment and boss',realm.includes('function drawStage16Background')&&elite.includes("f==='null-beacon'")],
