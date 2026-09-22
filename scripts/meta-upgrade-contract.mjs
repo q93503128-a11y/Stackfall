@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
-const index=read('index.html'),meta=read('src/meta-progression.js'),upgrade=read('src/meta-upgrades.js'),entities=read('src/render-entities.js'),feature=read('src/feature-pack.js'),iface=read('src/interface.js'),progression=read('src/progression-expansion.js'),stage=read('src/stage-catalog.js'),runtime=read('src/stage-runtime.js'),styles=read('styles.css'),lang=read('src/language-pack.js');
+const index=read('index.html'),meta=read('src/meta-progression.js'),upgrade=read('src/meta-upgrades.js'),difficulty=read('src/difficulty-augment-expansion.js'),entities=read('src/render-entities.js'),feature=read('src/feature-pack.js'),iface=read('src/interface.js'),progression=read('src/progression-expansion.js'),stage=read('src/stage-catalog.js'),runtime=read('src/stage-runtime.js'),styles=read('styles.css'),lang=read('src/language-pack.js');
 const checks=[
  ['meta save stores two currencies upgrade levels and stage clear counts',meta.includes("currencies:{stardust:0,coreShard:0}")&&meta.includes('upgrades:{}')&&meta.includes('stageClearCounts')&&meta.includes('stackfallSetUpgradeLevel')],
  ['main hub exposes clickable local profile and core development',index.includes('<button id="hubProfile"')&&index.includes('id="profileScreen"')&&index.includes('id="upgradeHubBtn"')&&index.includes('id="upgradeScreen"')],
@@ -14,6 +14,7 @@ const checks=[
  ['basic core remains visually separate from non-basic capacity',feature.includes("sf2SlotMarkup('core',true)")&&feature.includes('<div class="slot-divider"')],
  ['permanent upgrades affect damage haste health magnet and armor',upgrade.includes('metaUpgradeDamageMult')&&upgrade.includes('metaUpgradeHasteMult')&&upgrade.includes('metaUpgradeResetGame')&&upgrade.includes('metaUpgradeMagnetRange')&&upgrade.includes('metaUpgradeDamageReduction')],
  ['Stardust gain upgrade affects resource income',upgrade.includes('stackfallCurrencyMultiplier')&&upgrade.includes("level('salvage')*.08")],
+ ['difficulty scales Stardust but not Core Shards',difficulty.includes('rewardMultiplier:.85')&&difficulty.includes('rewardMultiplier:1.30')&&difficulty.includes('stackfallDifficultyRewardMultiplier')&&upgrade.includes('stackfallDifficultyRewardMultiplier?.()')&&meta.includes("reward.key==='stardust'?(window.stackfallCurrencyMultiplier?.()||1):1")],
  ['Stage 1 grants repeat Stardust and first-clear Core Shard',stage.includes("{type:'currency',key:'stardust',amount:140}")&&stage.includes("{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}")],
  ['Stage 1 Core Shards remain repeatably earnable every third repeat clear',meta.includes('const repeatClearCount=Math.max(0,clearCount-1)')&&meta.includes("stageId==='stage-01'&&repeatClearCount>0&&repeatClearCount%3===0")&&meta.includes("meta.currencies.coreShard=currency('coreShard')+1")],
  ['stage result displays recovered currencies',runtime.includes('result.currency?.stardust')&&runtime.includes('result.currency?.coreShard')],
