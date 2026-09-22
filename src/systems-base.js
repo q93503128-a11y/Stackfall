@@ -6,7 +6,7 @@ const runUiTimers=new Set();
 function clearRunUiActions(){for(const timer of runUiTimers)clearTimeout(timer);runUiTimers.clear();}
 function scheduleUiAction(delay,action){const run=state.runSerial,timer=setTimeout(()=>{runUiTimers.delete(timer);if(state.runSerial===run)action();},Math.max(0,delay));runUiTimers.add(timer);return timer;}
 function clearPendingCombatActions(){if(state.pendingActions)state.pendingActions.length=0;}
-function scheduleWeaponAction(delay,action){if(typeof action!=='function')return null;const pending=state.pendingActions||(state.pendingActions=[]),entry={remaining:Math.max(0,Number(delay)||0)/1000,runSerial:state.runSerial,action};if(pending.length>=320)pending.splice(0,pending.length-319);pending.push(entry);return entry;}
+function scheduleWeaponAction(delay,action){if(typeof action!=='function')return null;const pending=state.pendingActions||(state.pendingActions=[]),environmentContext=state.stageEnvironmentTelegraphContext?{...state.stageEnvironmentTelegraphContext}:null,entry={remaining:Math.max(0,Number(delay)||0)/1000,runSerial:state.runSerial,action,environmentContext};if(pending.length>=320)pending.splice(0,pending.length-319);pending.push(entry);return entry;}
 function updatePendingActions(dt){
   const pending=state.pendingActions;if(!pending?.length||state.mode!=='playing')return;
   const currentRun=state.runSerial,due=[],initial=pending.length;let write=0;
@@ -14,7 +14,9 @@ function updatePendingActions(dt){
   pending.length=write;
   for(const entry of due){
     if(entry.runSerial!==state.runSerial||state.mode!=='playing')break;
-    if(typeof runRuntimeStage==='function')runRuntimeStage('scheduledWeaponAction',entry.action);else try{entry.action();}catch(error){console.error('[Stackfall] scheduledWeaponAction failed',error);}
+    const previousEnvironmentContext=state.stageEnvironmentTelegraphContext||null;
+    state.stageEnvironmentTelegraphContext=entry.environmentContext?{...entry.environmentContext}:null;
+    try{if(typeof runRuntimeStage==='function')runRuntimeStage('scheduledWeaponAction',entry.action);else entry.action();}catch(error){console.error('[Stackfall] scheduledWeaponAction failed',error);}finally{state.stageEnvironmentTelegraphContext=previousEnvironmentContext;}
   }
 }
 function forEachNearbyEnemyCandidate(x,y,range,visit){if(typeof performanceForEachNearbyEnemy==='function')return performanceForEachNearbyEnemy(x,y,range,visit);const nearby=typeof performanceNearbyEnemies==='function'?performanceNearbyEnemies(x,y,range):state.entities.enemies;for(const enemy of nearby)visit(enemy);}
