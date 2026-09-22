@@ -126,8 +126,8 @@
     const best=Number(m.bestStageTimes?.['stage-01']),bestEl=document.querySelector('#profileDetailBest');if(bestEl)bestEl.textContent=Number.isFinite(best)&&best>0?formatTime(best):'—';
   }
   function renderResultReward(){
-    const root=document.querySelector('#resultCurrencyReward');if(!root)return;const reward=state.lastMetaReward||{stardust:0,coreShard:0};
-    root.innerHTML=reward.stardust||reward.coreShard?'<span>'+tr('currency.earned')+'</span>'+(reward.stardust?'<b>✦ '+reward.stardust+'</b>':'')+(reward.coreShard?'<b>◆ '+reward.coreShard+'</b>':''):'';
+    const root=document.querySelector('#resultCurrencyReward');if(!root)return;const reward=state.lastMetaReward||{stardust:0,coreShard:0},cashout=state.lastAwakeningCoreCashout||{cores:0,stardust:0};
+    root.innerHTML=reward.stardust||reward.coreShard?'<span>'+tr('currency.earned')+'</span>'+(reward.stardust?'<b>✦ '+reward.stardust+'</b>':'')+(reward.coreShard?'<b>◆ '+reward.coreShard+'</b>':'')+(cashout.cores?'<em>CORE ×'+cashout.cores+' → ✦ '+cashout.stardust+'</em>':''):'';
   }
   function renderUpgradeUi(){renderProfile();renderLinks();renderNodes();renderDetail();}
   window.renderStackfallMetaUi=renderUpgradeUi;
