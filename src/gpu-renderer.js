@@ -71,7 +71,7 @@
     foregroundCanvas=document.querySelector('#combatForeground')||document.createElement('canvas');foregroundCanvas.id='combatForeground';foregroundCanvas.setAttribute('aria-hidden','true');Object.assign(foregroundCanvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',display:'block',pointerEvents:'none',touchAction:'none',zIndex:'2',background:'transparent'});if(!foregroundCanvas.isConnected)canvas.insertAdjacentElement('afterend',foregroundCanvas);foregroundCtx=foregroundCanvas.getContext('2d',{alpha:true});resizeForegroundCanvas();
   }
   function resizeForegroundCanvas(){if(!foregroundCanvas||!foregroundCtx)return;const width=Math.max(1,Math.floor(vw*dpr)),height=Math.max(1,Math.floor(vh*dpr));if(foregroundCanvas.width!==width)foregroundCanvas.width=width;if(foregroundCanvas.height!==height)foregroundCanvas.height=height;foregroundCtx.setTransform(dpr,0,0,dpr,0,0);}
-  function resizeGpuCombatLayer(){if(!app?.renderer)return;const scale=clamp(Number(window.stackfallResolutionScale)||1,.30,1),resolution=Math.max(.30,Math.min(window.devicePixelRatio||1,1.5)*scale);app.renderer.resize(window.innerWidth,window.innerHeight,resolution);const surface=safeGpuCanvas();if(surface){surface.style.width=`${window.innerWidth}px`;surface.style.height=`${window.innerHeight}px`;}}
+  function resizeGpuCombatLayer(){if(!app?.renderer)return;const scale=clamp(Number(window.stackfallResolutionScale)||1,.30,1),pixels=Math.max(1,window.innerWidth*window.innerHeight),cap=compactDevice()?1.20:pixels>=1600000?1.25:1.50,resolution=Math.max(.30,Math.min(window.devicePixelRatio||1,cap)*scale);app.renderer.resize(window.innerWidth,window.innerHeight,resolution);const surface=safeGpuCanvas();if(surface){surface.style.width=`${window.innerWidth}px`;surface.style.height=`${window.innerHeight}px`;}}
   window.resizeForegroundCanvas=resizeForegroundCanvas;
   window.resizeGpuCombatLayer=resizeGpuCombatLayer;
   window.drawForegroundCombat=function drawForegroundCombat(){
@@ -294,7 +294,7 @@
         backgroundAlpha:0,
         antialias:false,
         autoDensity:true,
-        resolution:Math.max(.30,Math.min(window.devicePixelRatio||1,1.5)*clamp(Number(window.stackfallResolutionScale)||1,.30,1)),
+        resolution:Math.max(.30,Math.min(window.devicePixelRatio||1,compactDevice()?1.20:(window.innerWidth*window.innerHeight>=1600000?1.25:1.50))*clamp(Number(window.stackfallResolutionScale)||1,.30,1)),
         preference:'webgl',
         powerPreference:'high-performance',
         failIfMajorPerformanceCaveat:false,
