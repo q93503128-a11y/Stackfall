@@ -1,22 +1,23 @@
 (function(){
   'use strict';
   const profiles=Object.freeze({
-    easy:Object.freeze({key:'easy',enemyHp:.82,enemyDamage:.78,enemySpeed:.94,rangedChance:.72}),
-    normal:Object.freeze({key:'normal',enemyHp:1,enemyDamage:1,enemySpeed:1,rangedChance:1}),
-    hard:Object.freeze({key:'hard',enemyHp:1.32,enemyDamage:1.30,enemySpeed:1.12,rangedChance:1.28})
+    easy:Object.freeze({key:'easy',enemyHp:.82,enemyDamage:.78,enemySpeed:.94,rangedChance:.72,rewardMultiplier:.85}),
+    normal:Object.freeze({key:'normal',enemyHp:1,enemyDamage:1,enemySpeed:1,rangedChance:1,rewardMultiplier:1}),
+    hard:Object.freeze({key:'hard',enemyHp:1.32,enemyDamage:1.30,enemySpeed:1.12,rangedChance:1.28,rewardMultiplier:1.30})
   });
   let saved='normal';try{saved=localStorage.getItem('stackfall:difficulty')||'normal';}catch{}
   state.selectedDifficulty=profiles[state.selectedDifficulty]?state.selectedDifficulty:profiles[saved]?saved:'normal';
   window.stackfallDifficultyProfiles=profiles;
   window.stackfallDifficultyConfig=()=>profiles[state.selectedDifficulty]||profiles.normal;
+  window.stackfallDifficultyRewardMultiplier=()=>Math.max(.5,Number(window.stackfallDifficultyConfig().rewardMultiplier)||1);
 
   const copy={
-    ko:{title:'난이도',easy:['쉬움','적 체력·피해 감소'],normal:['보통','기준 난이도'],hard:['어려움','더 강하고 빠른 적']},
-    en:{title:'DIFFICULTY',easy:['EASY','Lower enemy health and damage'],normal:['NORMAL','Baseline difficulty'],hard:['HARD','Stronger and faster enemies']},
-    ja:{title:'難易度',easy:['簡単','敵の体力・攻撃力が低下'],normal:['普通','基準難易度'],hard:['難しい','より強く速い敵']},
-    'zh-CN':{title:'难度',easy:['简单','降低敌人生命与伤害'],normal:['普通','标准难度'],hard:['困难','敌人更强更快']},
-    es:{title:'DIFICULTAD',easy:['FÁCIL','Menos vida y daño enemigo'],normal:['NORMAL','Dificultad de referencia'],hard:['DIFÍCIL','Enemigos más fuertes y rápidos']},
-    fr:{title:'DIFFICULTÉ',easy:['FACILE','Vie et dégâts ennemis réduits'],normal:['NORMAL','Difficulté de référence'],hard:['DIFFICILE','Ennemis plus forts et rapides']}
+    ko:{title:'난이도',easy:['쉬움','적 체력·피해 감소 · 성진 -15%'],normal:['보통','기준 난이도 · 성진 100%'],hard:['어려움','더 강하고 빠른 적 · 성진 +30%']},
+    en:{title:'DIFFICULTY',easy:['EASY','Lower enemy health and damage · Stardust -15%'],normal:['NORMAL','Baseline difficulty · Stardust 100%'],hard:['HARD','Stronger and faster enemies · Stardust +30%']},
+    ja:{title:'難易度',easy:['簡単','敵が弱化 · スターダスト -15%'],normal:['普通','基準難易度 · スターダスト 100%'],hard:['難しい','敵が強化 · スターダスト +30%']},
+    'zh-CN':{title:'难度',easy:['简单','敌人较弱 · 星尘 -15%'],normal:['普通','标准难度 · 星尘 100%'],hard:['困难','敌人更强更快 · 星尘 +30%']},
+    es:{title:'DIFICULTAD',easy:['FÁCIL','Enemigos más débiles · Polvo estelar -15%'],normal:['NORMAL','Dificultad base · Polvo estelar 100%'],hard:['DIFÍCIL','Enemigos más fuertes · Polvo estelar +30%']},
+    fr:{title:'DIFFICULTÉ',easy:['FACILE','Ennemis affaiblis · Poussière -15 %'],normal:['NORMAL','Difficulté de base · Poussière 100 %'],hard:['DIFFICILE','Ennemis renforcés · Poussière +30 %']}
   };
   const picker=document.createElement('div');picker.className='difficulty-picker';picker.innerHTML='<div class="difficulty-copy"><span id="difficultyLabel"></span><small id="difficultyDesc"></small></div><div id="difficultyOptions" class="difficulty-options" role="radiogroup" aria-labelledby="difficultyLabel"></div>';
   const difficultyMount=document.querySelector('#sortieDifficultyMount');if(difficultyMount)difficultyMount.appendChild(picker);else ui.start.insertAdjacentElement('beforebegin',picker);
