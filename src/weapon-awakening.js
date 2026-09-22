@@ -149,5 +149,22 @@
   window.stackfallIsWeaponAwakened=key=>!!state.awakenedWeapons?.[key];
   window.stackfallAwakeningState=()=>({cores:state.awakeningCores||0,awakened:{...(state.awakenedWeapons||{})},available:available()});
 
+  function awakeningCoreDropAmount(enemy){
+    if(!enemy||enemy.dead!==true||enemy.noEliteReward===true||enemy.kind==='stage-boss')return 0;
+    if(enemy.kind==='apex')return 2;
+    if(enemy.type==='boss'||enemy.kind==='stage-mini')return 1;
+    return 0;
+  }
+  const awakeningKillBase=killEnemy;
+  killEnemy=function awakeningCoreBossDrop(enemy,opts={}){
+    const wasAlive=enemy&&!enemy.dead;
+    const result=awakeningKillBase(enemy,opts);
+    if(!wasAlive||!enemy?.dead)return result;
+    const amount=awakeningCoreDropAmount(enemy);
+    if(amount>0)window.stackfallGrantAwakeningCore?.(amount);
+    return result;
+  };
+  window.stackfallAwakeningCoreDropAmount=awakeningCoreDropAmount;
+
   renderLoadout();
 })();
