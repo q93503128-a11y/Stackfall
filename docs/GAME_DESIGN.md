@@ -460,22 +460,70 @@ These four weapons are approved design targets but are **not implemented yet**. 
 - Stack 4 — **Vector Lock**: salvos may split across two targets and use mild target-leading rather than pure pursuit. Elite targets still receive priority.
 - Stack 5 — **Terminal Burn**: after 0.45 s of powered flight, surviving missiles enter a faster terminal phase, gain 18% impact damage, and leave a shorter brighter engine trail.
 - Stack 6 — **Full Salvo**: three missiles per side, 6 total, launched as three left-right pairs over roughly 0.28 s. The salvo may distribute over three targets; against one boss all six can converge from alternating arcs.
-- Weapon augment — **MIRV Constellation / 다탄두 성좌**: shortly before impact, each main missile separates into three micro-warheads. The center warhead stays on the original target; the side warheads may peel toward nearby enemies before reconverging. Total augment damage is capped so it is a spread/coverage upgrade rather than a raw ×3 multiplier.
+- Weapon augment — **MIRV Constellation / 다탄두 성좌**: shortly before impact, each missile separates into one **main warhead plus two side warheads**. The main warhead keeps **100% of the original missile's impact and explosion damage**; taking the augment never reduces single-target damage. Each side warhead deals 34% of the parent missile's base impact/explosion damage. If secondary enemies exist they may peel toward those enemies; otherwise both may reconverge on the original target. Against one target the full split therefore reaches up to 168% of the unaugmented missile's damage, before ordinary global modifiers. Side warheads cannot split again.
 - Audio/visual rule: ignition must have a distinct delayed thrust cue after the side-ejection beat. Exhaust is a short luminous trail, not screen-filling smoke.
 - Identity boundary: Meteor Drones are persistent orbiting shooters; these missiles are discrete, readable salvos with side-launch choreography and curved homing flight.
 
 #### 18. Orbital Gate / 궤도 문
 - Planned unlock: **Stage 17 — Cipher Graveyard**. Stage 18 remains a constellation-finale Core Shard reward.
-- Role: persistent spatial network / moving lane control.
-- Core rule: gates follow the player with smoothing rather than snapping to exact coordinates. Energy pulses travel between gates, disappear into an entrance, reappear from the next exit, and continue through the network. The network rotates slowly, causing its damage lanes to sweep the battlefield.
-- Stack 1 — **Gate Pair**: two opposite gates at roughly 155 px orbit radius. One pulse makes 3 transfers before dissipating. The connecting route deals damage to enemies it crosses.
+- Role: stationary spatial network / installed lane control.
+- **Installation rule**: gates never follow the player after deployment. A network is anchored to world coordinates for its full lifetime, so the player can fight inside it, leave it behind, or drag enemies back through it.
+- Placement alternates between two deployment modes so both offensive and defensive placement happen naturally:
+  - **Assault placement**: center the next network on the strongest viable enemy or the densest nearby enemy cluster.
+  - **Bastion placement**: center the next network on the player's position at cast time.
+  - If the preferred assault target disappears before placement resolves, fall back to the cast-time player position. No gate snaps to a moving target after being installed.
+- Base deployment cadence: 6.4 s; base network lifetime: 9.0 s; one ordinary network active at a time. Re-deploying replaces the oldest ordinary network only after the new network finishes its short opening animation.
+- Core rule: energy pulses travel between stationary gates, disappear into one entrance, reappear from the next exit, and continue through the network. The gates do not orbit or translate after installation.
+- Stack 1 — **Gate Pair**: two opposite gates around the installation center, roughly 155 px apart from center. One pulse makes 3 transfers before dissipating. Each traversed route damages enemies it crosses.
 - Stack 2 — **Triangulation**: three gates form a triangle. The pulse circulates A→B→C and gains +1 transfer.
-- Stack 3 — **Counter Pulse**: a second pulse enters the network halfway through the cycle, creating staggered lane coverage without occupying exactly the same segment.
-- Stack 4 — **Cross Gate**: four gates form a rotating quadrilateral. Completing a full circuit briefly opens one diagonal cross-link for a stronger cutting pass.
-- Stack 5 — **Relay Acceleration**: gate rotation +22%, transfer delay -18%, and each exit emits a short low-damage ray toward the nearest enemy inside 240 px.
-- Stack 6 — **Closed Orbit**: two full-strength pulses circulate in opposite directions. Every completed circuit produces a restrained central compression burst; circuit bursts have a cooldown so the two pulses cannot double-trigger them simultaneously.
+- Stack 3 — **Counter Pulse**: a second pulse enters the same fixed network halfway through the cycle, creating staggered lane coverage without occupying exactly the same segment.
+- Stack 4 — **Cross Gate**: four gates form a fixed quadrilateral. Completing a full circuit briefly opens one diagonal cross-link for a stronger cutting pass. The network orientation is chosen at deployment and does not rotate afterward.
+- Stack 5 — **Relay Acceleration**: transfer delay -18%, network lifetime +1.5 s, and each exit emits a short low-damage ray toward the nearest enemy inside 240 px.
+- Stack 6 — **Closed Circuit**: two full-strength pulses circulate in opposite directions. Every completed circuit produces a restrained compression burst at the installed network center; circuit bursts share one cooldown so simultaneous pulses cannot double-trigger it.
 - Weapon augment — **Photon Crossfeed / 광자 교차전송**: a non-gate allied projectile passing close to a gate may be copied once from the next gate toward a living enemy at 55% damage. Copied projectiles are marked so they cannot re-enter the gate-copy system. Each gate has a short copy cooldown to prevent projectile-count explosions.
-- Identity boundary: Orbital Gate is not another orbiting weapon. The gates themselves are infrastructure; the damaging object is the routed pulse/network and its changing lanes.
+- Identity boundary: Orbital Gate is an **installed arena tool**, not another orbiting weapon. Its tactical cost is positional: a badly placed network can be left behind, while a well-placed network can dominate a boss or choke point for its full lifetime.
+
+#### Projectile-count compatibility — Multiplicity Core / 다중 투영 코어
+- The current runtime does not yet expose a projectile-count passive. When the previously planned **Multiplicity Core / 다중 투영 코어** is restored, it is an event-only passive with **maximum 2 stacks**.
+- Each stack grants **+1 real attack body** to compatible equipment. "Attack body" is interpreted by weapon identity instead of blindly cloning every sub-projectile.
+- Extra projected attack bodies follow the weapon's existing target/placement intent. They must not randomly scatter to unrelated targets merely because Multiplicity is present.
+- Submunitions, reflected shots, chained hits, recursive copies, augment-generated children, and other secondary payloads are **not** independently multiplied unless explicitly stated below. This prevents exponential projectile growth.
+- Global projectile-size, range, projectile-speed, pierce, damage, and haste modifiers continue to affect whichever physical component normally supports them.
+
+**Vacuum Bloom**
+- Attack body = **vacuum seed**.
+- Each Multiplicity stack creates one additional full-function seed when a planting trigger occurs, offset around the same death location so the seeds do not perfectly overlap.
+- All seeds have normal damage, pull, lifetime, and overcharge rules.
+- Balance brake: one qualifying enemy death may feed **only one** eligible seed, chosen by nearest valid seed. One death therefore cannot charge three projected seeds at once.
+- Stack-6 forced-bloom propagation and Devouring Pollen projectile absorption are evaluated per seed, but a forced bloom still cannot recursively force another forced bloom.
+
+**Phase Minefield**
+- Attack body = **mine placement**.
+- Each Multiplicity stack adds one additional mine to a normal deployment, placed on a parallel offset to the same movement trail. Projected mines use full normal mine damage.
+- At Stack 6, the native three-mine constellation remains the weapon's resonance structure; Multiplicity does **not** clone the entire triangle into 6 or 9 mines. Instead each Multiplicity stack adds one satellite mine outside the triangle.
+- Chain Fuse may include projected/satellite mines, but every mine still has the one-chain-trigger limit.
+- Afterimage Mine is an augment-generated child and is never multiplied by Multiplicity.
+
+**Interstellar Missile Pods**
+- Attack body = **main missile**.
+- Each Multiplicity stack adds one additional full-damage main missile to the salvo: base salvo counts become 2→3→4 at Stack 1 with Multiplicity 0→1→2, and 6→7→8 at Stack 6.
+- Extra missiles alternate launch sides so the side-pod choreography remains balanced. They use the same outward-ejection → ignition → curved-homing motion as native missiles.
+- Extra missiles inherit the salvo's existing target assignment. Multiplicity must not create unrelated random targeting; if the base salvo is converging on one boss, projected missiles converge on that boss as well.
+- MIRV applies to every **main missile**, including a Multiplicity-created main missile. Its main warhead still preserves 100% parent damage and its two side warheads each add 34%.
+- MIRV side warheads are secondary payloads and are never themselves multiplied.
+
+**Orbital Gate**
+- Attack body = **routed network pulse**, not a gate and not an entire extra gate network.
+- Multiplicity never creates more gates and never creates another installation.
+- Each Multiplicity stack adds one additional full-strength pulse into the currently installed network, phase-offset from the other pulses. Thus gate geometry and installation count stay readable while throughput rises.
+- At Stack 6, the native Closed Circuit provides 2 pulses; Multiplicity raises this to 3 or 4 pulses, not 4/6/8 gates.
+- All pulses share the same central circuit-burst cooldown.
+- Photon Crossfeed copies are secondary payloads and are never multiplied by Multiplicity. A projectile already tagged as a gate copy or Multiplicity projection cannot recursively create more projected/crossfed copies.
+
+**Compatibility principle**
+- Multiplicity increases the number of **primary meaningful attack bodies** without multiplying every child effect.
+- This keeps the passive strong on unusual weapons while avoiding exponential combinations such as missile × MIRV × gate-copy × Multiplicity or bloom × forced-bloom recursion.
+- Static contracts should explicitly test these recursion barriers when the four weapons and Multiplicity are implemented.
 
 #### Planned unlock cadence
 | Stage | Planned first-clear weapon reward | Why |
