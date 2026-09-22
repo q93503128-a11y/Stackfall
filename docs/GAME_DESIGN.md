@@ -404,6 +404,7 @@ min(30%, 2.5% + 중첩 곡선 × 1.8% + 연쇄 보너스)
 - 레벨업 자동 선택이 켜져 있어도 각성 화면은 건너뛰지 않으며 **각성은 자동 확정하지 않는다**.
 - “각성하지 않는다”를 고르면 같은 레벨업의 일반 선택 처리로 즉시 이어진다.
 - **각성 코어 획득처는 보스 전투로 확정한다.** 무한모드 일반 보스·공허 보스·기함급 보스와 스테이지 중간보스는 1개, 초월체는 2개를 지급한다. 스테이지 최종보스는 처치와 동시에 런이 종료되므로 런 중 자원인 각성 코어를 지급하지 않는다. 쌍둥이형 보스는 보상 중복을 막아 한 조우당 한 번만 지급한다.
+- 런 종료 시 남은 각성 코어는 버리지 않고 **코어 1개당 기본 Stardust 40**으로 환전한다. 실제 지급량에는 해당 런의 Stardust 획득 배율(난이도 및 Salvage)이 적용된다. 사망, 스테이지 클리어, 중도 종료 모두 동일하며 환전 직후 코어는 0이 된다. 결과 화면에는 `CORE ×N → ✦ 지급량`을 별도로 표시한다.
 - 공통 상태/UX 계층에 이어 **A1~A7의 실제 전투 메커닉과 전용 렌더링 1차 구현까지 완료**했다. A8~A19는 후속 구현 묶음이다.
 - A1 항성핵: 비에코 원본 코어 발동 **4회마다** 보조핵 3개가 같은 표적에 동시 사격한다. 항성핵은 2중 궤도 고리와 3개의 공전 보조핵을 상시 표시한다.
 - A2 월식 검륜: 기존 공전 접촉 공격은 유지한다. 약 **5.15초 기본 주기(가속 적용)**마다 0.24초 정렬 준비 후 대형 원형 월식 절단을 추가한다. 다중 투영 칼날도 각성 초승달 실루엣으로 표시하되 시그니처 주기는 늘리지 않는다.
@@ -596,6 +597,8 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - `stage` is a separate finite operation mode. Random world events and Apex scheduling are suppressed during stage runs.
 - Stage clear is **boss-death gated**, never timer gated. Reaching the authored duration spawns the final boss; the run continues until the player dies or that boss is defeated.
 - Every authored stage has fixed milestone incidents plus a persistent environmental gimmick loop that accelerates toward the final boss.
+- 스테이지 환경 기믹은 보스 공격과 같은 텔레그래프 문법을 사용하지 않는다. Stage 1–6은 **파손된 항로 레일·브레이스·셔터**, Stage 7–12는 **뿌리·꽃잎·생체 격벽**, Stage 13–18은 **중계 회로·스캔 섹터·데이터 셔터**를 공통 시각 언어로 사용한다. 같은 별자리 안에서는 계열감을 유지하되 `environmentVariant`에 따라 회전·노드·배치가 달라진다.
+- 환경 기믹 예고는 별도의 작은 환경 경고 UI를 사용하고, 보스/중간보스의 대형 경고창을 재사용하지 않는다. 환경 기믹 충격도 보스용 백색 섬광·강한 화면 흔들림 대신 구조물 폐쇄/개화/스캔 종료에 가까운 약한 환경 반응으로 처리한다.
 - **중간보스**: 일반 스테이지는 진행도 약 46%에 1회, 성좌 최종 스테이지 6/12/18은 약 32%와 62%에 2회 등장한다. 스테이지 중간보스도 무한모드 중간보스의 전용 형태/패턴 체계를 사용하며 각성 코어 1개를 지급한다.
 - **보스 위계**: 일반 스테이지 최종보스는 무한모드의 일반 보스급을 기준으로 한 전용 스테이지 보스다. Stage 6/12/18의 성좌 최종보스는 그보다 강화된 **성좌 보스**지만, 초월체(Apex)는 아니다. 초월체는 계속 별도의 최상위 위협 등급이다.
 - 스테이지 일반 적 압박은 진행도와 Stage 번호에 따라 상승하지만, 성능 단계와 화면 규모를 반영한 동시 적 spawn budget으로 상한을 둔다. 후반 난이도는 단순 적 개체 수 폭증보다 적 조합·기믹·중간보스·보스 패턴으로 올린다.
@@ -763,6 +766,8 @@ Implementation status: all four reward keys are connected only after their defin
 - `src/stage-map.js` renders nodes from `STACKFALL_STAGE_CATALOG` and resolves availability/clear state through persistent meta progression.
 - Stage 1 is launchable while its status is `available` or `cleared`. Future `planned` or progression-locked stages remain inspectable but cannot launch.
 - The map and operation details are separated: luminous stellar points with separate number badges and constellation links stay on the map, while the detail panel carries game time, threat, unlock progress, boss, and launch state. Internal gimmick/event counts are not exposed as stage-detail stats.
+- 성좌 페이지는 같은 템플릿의 색상 교체가 아니다. **파편의 항로**는 직선·점선의 파손 항로망과 각진 항로 노드, **심연의 개화**는 곡선으로 휘어진 유기적 가지와 꽃잎형 노드, **침묵 중계망**은 직각으로 꺾이는 회로형 연결과 릴레이 노드를 사용한다. 페이지 배경 패턴·연결선 topology·노드 실루엣을 함께 바꾼다.
+- 같은 성좌의 6개 스테이지는 하나의 시각 계열로 묶되 로컬 인덱스에 따라 노드 형태/방향을 조금씩 달리해 완전히 동일한 복제처럼 보이지 않게 한다.
 - Starter weapon and difficulty selection are shared by Stage and Endless in the sortie-preparation screen immediately before launch. Desktop keeps map and details side by side; compact/mobile layouts stack the detail sheet below the map.
 
 ### Stage enemy and boss identity rules
@@ -771,6 +776,6 @@ Implementation status: all four reward keys are connected only after their defin
 - Normal enemies may be reused between stages. A new stage does **not** require an entirely new trash roster; new common enemies should be introduced periodically and then may join later pools where appropriate.
 - Every named miniboss, boss, Void Rift boss, and stage final boss must have both a dedicated silhouette branch and a dedicated combat-pattern branch.
 - Apex encounters require a stronger identity layer: unique signature attacks, set-piece behavior, silhouette, arena behavior, and legacy/reward impact rather than stat or projectile-color swaps.
-- **후속 비주얼 리워크 예약**: 현재 일부 스테이지 기믹의 텔레그래프/형태가 보스 공격 스킬과 지나치게 비슷하게 읽힌다. 스테이지 기믹은 이후 전용 환경 구조물·지형 반응·고정 맵 장치 중심으로 재설계해 보스 투사체/장판과 한눈에 구분되게 한다.
-- **은하 지도 후속 리워크 예약**: 현재 지도도 기능은 유지하되, 각 성좌/스테이지의 장소성·진행감이 더 강하게 보이도록 노드와 배경 구조를 별도 시각 패스로 다시 손본다. 이 작업은 각성 구현과 분리해 진행한다.
+- **환경 기믹 비주얼 리워크 완료**: 보스 원/선 텔레그래프와 분리된 3개 성좌별 환경 구조물 렌더러와 전용 경고 UI를 사용한다.
+- **은하 지도 1차 리워크 완료**: 3개 성좌 페이지가 배경 패턴·연결선 구조·노드 실루엣에서 서로 다른 문법을 사용한다. 이후 실플레이 스크린샷 기준으로 가독성·밀도만 조정한다.
 
