@@ -33,10 +33,12 @@
   function spawnStageMiniboss(index){
     const run=stageRuntime();if(!run||run.bossSpawned||activeStageMiniboss())return null;
     const enemy=spawnEnemy('mini');if(!enemy)return null;
-    enemy.kind='stage-mini';enemy.eventKind=run.stage.id;enemy.stageMinibossIndex=index;enemy.controlImmune=false;
-    const order=Math.max(1,Number(run.stage.order)||1),finale=order%6===0;
-    enemy.hp*=1+Math.min(.24,(order-1)*.010)+(finale?.08:0);enemy.maxHp=enemy.hp;
-    enemy.damage*=1+Math.min(.14,(order-1)*.006);enemy.xp*=1.10;
+    const order=Math.max(1,Number(run.stage.order)||1),finale=order%6===0,hpScale=1+Math.min(.24,(order-1)*.010)+(finale?.08:0),damageScale=1+Math.min(.14,(order-1)*.006);
+    const members=enemy.twinGroup?state.entities.enemies.filter(member=>member&&!member.dead&&member.twinGroup===enemy.twinGroup):[enemy];
+    for(const member of members){
+      member.kind='stage-mini';member.eventKind=run.stage.id;member.stageMinibossIndex=index;member.controlImmune=false;
+      member.hp*=hpScale;member.maxHp=member.hp;member.damage*=damageScale;member.xp*=1.10;
+    }
     showBossNotice(enemy.name,finale?'CONSTELLATION GUARD':'STAGE MID-BOSS');
     return enemy;
   }
