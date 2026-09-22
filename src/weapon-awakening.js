@@ -128,7 +128,7 @@
 
   const baseReset=resetGame;
   resetGame=function awakeningReset(){
-    closeScreen();transform.classList.add('hidden');state.awakeningCores=0;state.awakenedWeapons={};
+    closeScreen();transform.classList.add('hidden');state.awakeningCores=0;state.awakenedWeapons={};state.lastAwakeningCoreCashout=null;
     const result=baseReset();renderLoadout();return result;
   };
   const baseMenu=showMainMenu;
