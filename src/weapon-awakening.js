@@ -133,7 +133,7 @@
   };
   const baseMenu=showMainMenu;
   showMainMenu=function awakeningMenu(){
-    closeScreen();transform.classList.add('hidden');state.awakeningCores=0;state.awakenedWeapons={};
+    closeScreen();transform.classList.add('hidden');cashOutAwakeningCores();state.awakeningCores=0;state.awakenedWeapons={};
     return baseMenu();
   };
   const AWAKENING_CORE_CASHOUT_STARDUST=40;
