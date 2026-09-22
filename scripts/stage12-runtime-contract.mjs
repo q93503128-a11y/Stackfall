@@ -4,7 +4,7 @@ const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read
 const checks=[
  ['Stage 12 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&runtime.includes('hazard(event,api)')],
  ['Stage 12 closes constellation two after Stage 11',catalog.includes("id:'stage-12'")&&catalog.includes("constellationId:'constellation-02'")&&catalog.includes("requirements:{previous:'stage-11'}")],
- ['Stage 12 boss follows the authored 20-minute operation',catalog.includes("boss:{id:'abyssal-bloomheart',spawnAt:1200")&&catalog.includes("at:1200,kind:'boss',variant:'abyssal-bloomheart'")],
+ ['Stage 12 boss follows the authored 10.5-minute operation',catalog.includes("boss:{id:'abyssal-bloomheart',spawnAt:630")&&catalog.includes("at:630,kind:'boss',variant:'abyssal-bloomheart'")],
  ['Stage 12 reuses all major constellation-two enemy identities',['abyss-spore','rootlance','spiral-pod','husk-warden'].every(x=>runtime.includes(x))],
  ['Stage 12 owns convergence spiral and overgrowth incidents',['bloomheart-cross','vascular-spiral','abyssal-overgrowth'].every(x=>catalog.includes(x)&&runtime.includes(x))],
  ['Stage 12 has dedicated finale environment and boss',realm.includes('function drawStage12Background')&&elite.includes("f==='abyssal-bloomheart'")],
