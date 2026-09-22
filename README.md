@@ -373,9 +373,15 @@ Stage 1 now starts at **5 minutes**, and the campaign rises to **15 minutes at S
 
 난이도는 Stardust 보상에도 연결됩니다. **쉬움 ×0.85 / 보통 ×1.00 / 어려움 ×1.30**이며, 무기 해금과 Core Shard는 이 배율의 영향을 받지 않습니다.
 
+런 종료 시 남은 각성 코어는 **1개당 기본 Stardust 40**으로 환전되며 해당 런의 Stardust 획득 배율이 적용됩니다. 사망, 스테이지 클리어, 중도 종료에서 모두 처리되고 결과 화면에 `CORE ×N → ✦ 지급량`이 표시됩니다.
+
 결과 화면의 딜 추이는 전체 DPS 외에 **무기별 15초 구간 DPS**도 표시합니다. 전체 및 각 무기의 그래프는 각각 켜고 끌 수 있습니다.
 
 Stage identities remain the existing Shardway, Abyssal Bloom, and Silent Array themes. Their fixed incidents remain milestone set pieces inside the recurring environmental loop. `src/meta-progression.js` persists clears, per-stage clear counts, best times, weapon unlocks, Stardust, Core Shards, lifetime stats, and permanent upgrade levels.
+
+Stage gimmicks now use a separate environmental visual language instead of boss-style circle/beam telegraphs: **Shardway** uses broken route rails and braces, **Abyssal Bloom** uses roots/petals/living bulkheads, and **Silent Array** uses relay circuits/scan sectors/data shutters. Their warnings also use a compact environment notice instead of the boss warning banner.
+
+The galaxy map follows the same identity split. Shardway uses straight route links and angular nodes, Abyssal Bloom uses curved organic branches and petal-like nodes, while Silent Array uses right-angle circuit paths and relay nodes. Background patterns change with the page rather than only recoloring one template.
 
 #### Post-roster weapon expansion
 
