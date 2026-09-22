@@ -34,6 +34,7 @@ function draw(){
 }
 const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0;
 function loop(now){
+  window.__stackfallRenderFrameSerial=(window.__stackfallRenderFrameSerial||0)+1;
   const frameDt=Math.min(.033,Math.max(0,(now-last)/1000));last=now;let shouldDraw=state.mode==='menu';
   try{
     if(typeof audio.updateMusic==='function')runRuntimeStage('updateMusic',()=>audio.updateMusic(frameDt));
