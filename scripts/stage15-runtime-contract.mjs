@@ -5,7 +5,7 @@ const start=catalog.indexOf("id:'stage-15'"),next=catalog.indexOf("id:'stage-16'
 const checks=[
  ['Stage 15 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&runtime.includes('hazard(event,api)')],
  ['Stage 15 follows Stage 14 in constellation three',catalog.includes("id:'stage-15'")&&catalog.includes("constellationId:'constellation-03'")&&catalog.includes("requirements:{previous:'stage-14'}")],
- ['Stage 15 boss follows the authored 18-minute operation',catalog.includes("boss:{id:'multiplex-engine',spawnAt:1080")&&catalog.includes("at:1080,kind:'boss',variant:'multiplex-engine'")],
+ ['Stage 15 boss follows the authored 12-minute operation',catalog.includes("boss:{id:'multiplex-engine',spawnAt:720")&&catalog.includes("at:720,kind:'boss',variant:'multiplex-engine'")],
  ['Stage 15 introduces Packet Lancer',catalog.includes("id:'packet-lancer'")&&runtime.includes("'packet-lancer':{")&&entities.includes("v==='packet-lancer'")],
  ['Stage 15 owns its fixed signal incidents',['multiplex-lanes','burst-switch','checksum-storm'].every(x=>catalog.includes(x))&&runtime.includes("variant==='burst-switch'")&&runtime.includes("variant==='checksum-storm'")&&runtime.includes("tr('stage15.event.multiplex')")],
  ['Stage 15 has a dedicated environment and boss',realm.includes('function drawStage15Background')&&elite.includes("f==='multiplex-engine'")],
