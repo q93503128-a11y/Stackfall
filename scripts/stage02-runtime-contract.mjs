@@ -2,10 +2,11 @@ import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read('src/stage02-runtime.js'),shared=read('src/stage-runtime.js'),bosses=read('src/bosses.js'),entities=read('src/render-entities.js'),elite=read('src/elite-renderers.js'),realm=read('src/realm-backgrounds.js'),space=read('src/render-space.js'),lang=read('src/language-pack.js');
 const checks=[
+ ['Stage 2 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&shared.includes('updateAmbientGimmick(run,def)')],
  ['Stage 2 exists and unlocks after Stage 1',catalog.includes("id:'stage-02'")&&catalog.includes("requirements:{previous:'stage-01'}")],
- ['Stage 2 boss arrives at exactly ten minutes',catalog.includes("boss:{id:'nebula-heart',spawnAt:600")&&catalog.includes("at:600,kind:'boss',variant:'nebula-heart'")],
+ ['Stage 2 boss follows the authored 11-minute operation',catalog.includes("boss:{id:'nebula-heart',spawnAt:660")&&catalog.includes("at:660,kind:'boss',variant:'nebula-heart'")],
  ['Stage 2 introduces Nebula Wisp while reusing the established roster',catalog.includes("{id:'nebula-wisp',type:'ranged'")&&['shardling','dart','bombardier','bulwark'].every(id=>catalog.includes("id:'"+id+"'"))],
- ['Stage 2 owns its fixed incident timeline',[120,220,330,450,530,600].every(n=>catalog.includes('at:'+n))],
+ ['Stage 2 owns its fixed incident timeline',[130,240,365,495,585,660].every(n=>catalog.includes('at:'+n))],
  ['Stage 2 is a registered adapter with no wrapper chain',runtime.includes("stackfallRegisterStageRuntime('stage-02'")&&!runtime.includes('updateSpawning=function')&&!runtime.includes('resetGame=function')&&!runtime.includes('window.updateMapEvents=function')],
  ['Stage 2 has its own nebula-space environment',runtime.includes("theme:'stage-02'")&&realm.includes('function drawStage02Background')&&space.includes('/^stage-\\d{2}$/')],
  ['Nebula Wisp has a dedicated common-enemy silhouette',entities.includes("v==='nebula-wisp'")],

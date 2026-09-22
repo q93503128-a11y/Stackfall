@@ -2,8 +2,9 @@ import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read('src/stage08-runtime.js'),shared=read('src/stage-runtime.js'),bosses=read('src/bosses.js'),entities=read('src/render-entities.js'),elite=read('src/elite-renderers.js'),realm=read('src/realm-backgrounds.js'),space=read('src/render-space.js'),lang=read('src/language-pack.js'),weapons=read('src/weapons.js');
 const checks=[
+ ['Stage 8 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&runtime.includes('hazard(event,api)')],
  ['Stage 8 follows Stage 7 inside constellation two',catalog.includes("id:'stage-08'")&&catalog.includes("constellationId:'constellation-02'")&&catalog.includes("requirements:{previous:'stage-07'}")],
- ['Stage 8 boss arrives at exactly ten minutes',catalog.includes("boss:{id:'abyssal-rootcrown',spawnAt:600")&&catalog.includes("at:600,kind:'boss',variant:'abyssal-rootcrown'")],
+ ['Stage 8 boss follows the authored 13-minute operation',catalog.includes("boss:{id:'abyssal-rootcrown',spawnAt:780")&&catalog.includes("at:780,kind:'boss',variant:'abyssal-rootcrown'")],
  ['Stage 8 introduces Rootlance at 135 seconds',catalog.includes("{id:'rootlance',type:'fast',unlockAt:135}")&&runtime.includes("rootlance:{type:'fast'")],
  ['Stage 8 owns sap geyser vascular rail and arterial rupture incidents',['sap-geyser','vascular-rail','arterial-rupture'].every(token=>catalog.includes(token)&&runtime.includes(token))],
  ['Stage 8 remains a registered adapter without shared wrapper overrides',runtime.includes("stackfallRegisterStageRuntime('stage-08'")&&!runtime.includes('updateSpawning=function')&&!runtime.includes('resetGame=function')],

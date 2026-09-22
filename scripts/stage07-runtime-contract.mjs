@@ -2,8 +2,9 @@ import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read('src/stage07-runtime.js'),shared=read('src/stage-runtime.js'),bosses=read('src/bosses.js'),entities=read('src/render-entities.js'),elite=read('src/elite-renderers.js'),realm=read('src/realm-backgrounds.js'),space=read('src/render-space.js'),lang=read('src/language-pack.js'),weapons=read('src/weapons.js'),meta=read('src/meta-progression.js');
 const checks=[
+ ['Stage 7 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&runtime.includes('hazard(event,api)')],
  ['Stage 7 starts constellation two only after Stage 6',catalog.includes("id:'constellation-02'")&&catalog.includes("id:'stage-07'")&&catalog.includes("constellationId:'constellation-02'")&&catalog.includes("requirements:{previous:'stage-06'}")],
- ['Stage 7 boss arrives at exactly ten minutes',catalog.includes("boss:{id:'nightbloom-matriarch',spawnAt:600")&&catalog.includes("at:600,kind:'boss',variant:'nightbloom-matriarch'")],
+ ['Stage 7 boss follows the authored 12-minute operation',catalog.includes("boss:{id:'nightbloom-matriarch',spawnAt:720")&&catalog.includes("at:720,kind:'boss',variant:'nightbloom-matriarch'")],
  ['Stage 7 introduces Abyss Spore at 120 seconds',catalog.includes("{id:'abyss-spore',type:'ranged',unlockAt:120}")&&runtime.includes("'abyss-spore':{type:'ranged'")],
  ['Stage 7 owns root cage spore rain and black bloom incidents',['root-cage','spore-rain','black-bloom'].every(token=>catalog.includes(token)&&runtime.includes(token))],
  ['Stage 7 remains a registered adapter without shared wrapper overrides',runtime.includes("stackfallRegisterStageRuntime('stage-07'")&&!runtime.includes('updateSpawning=function')&&!runtime.includes('resetGame=function')],

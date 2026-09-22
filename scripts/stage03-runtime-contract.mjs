@@ -2,8 +2,9 @@ import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read('src/stage03-runtime.js'),shared=read('src/stage-runtime.js'),bosses=read('src/bosses.js'),entities=read('src/render-entities.js'),elite=read('src/elite-renderers.js'),realm=read('src/realm-backgrounds.js'),lang=read('src/language-pack.js');
 const checks=[
+ ['Stage 3 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&shared.includes('updateAmbientGimmick(run,def)')],
  ['Stage 3 exists after Stage 2 in the first constellation',catalog.includes("id:'stage-03'")&&catalog.includes("constellationId:'constellation-01'")&&catalog.includes("requirements:{previous:'stage-02'}")],
- ['Stage 3 boss arrives at exactly ten minutes',catalog.includes("boss:{id:'prism-reliquary',spawnAt:600")&&catalog.includes("at:600,kind:'boss',variant:'prism-reliquary'")],
+ ['Stage 3 boss follows the authored 12-minute operation',catalog.includes("boss:{id:'prism-reliquary',spawnAt:720")&&catalog.includes("at:720,kind:'boss',variant:'prism-reliquary'")],
  ['Stage 3 introduces one new Glasswing common enemy',catalog.includes("{id:'glass-wing',type:'fast',unlockAt:140}")&&runtime.includes("'glass-wing':{type:'fast'")],
  ['Stage 3 owns refraction and prism-rain incidents',['refraction-lattice','prism-rain','deep-refraction'].every(token=>catalog.includes(token)&&runtime.includes(token))],
  ['Stage 3 is a registered adapter with no shared wrapper overrides',runtime.includes("stackfallRegisterStageRuntime('stage-03'")&&!runtime.includes('updateSpawning=function')&&!runtime.includes('resetGame=function')],

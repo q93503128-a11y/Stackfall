@@ -190,32 +190,33 @@
 
 ## Run modes
 
-- `endless`: the default infinite mode. Random world events remain enabled, all enemy families are available, and Apex encounters recur every 600 seconds.
-- `stage`: finite operations driven by stage-owned enemy pools and fixed event timelines. Random repeating world events and Apex scheduling are suppressed while a stage run is active.
-- `stage-01` — **Collapse Frontier / 붕괴 전초구역**: Shard Feeder starts immediately, Rift Dart enters at 90 seconds, Debris Bombardier at 210 seconds, and Collapse Bulwark at 330 seconds. Fixed incidents occur at 90/210/300/420/500 seconds, with the Collapse Frontier Warden spawning at exactly 600 seconds. The timer never clears or terminates the run; completion requires killing the boss, while player death is the failure condition.
-- Killing the Stage 1 boss first plays a dedicated destruction/operation-complete cinematic, then records the clear/best time and permanently unlocks the Comet Lance.
-- `stage-02` — **Ion Nebula Trench / 이온 성운 해구**: unlocks after Stage 1. It reuses the established fragment enemies, introduces the ranged Nebula Wisp at 120 seconds, triggers fixed ion-shear incidents, and spawns the unique Nebula Heart at exactly 600 seconds. Clearing it unlocks Nebula Boomerang.
-- `stage-03` — **Glassstar Necropolis / 유리별 묘역**: unlocks after Stage 2. Glasswing enters the common pool, fixed refraction lattices and prism rain reshape safe lanes, and the Refracted Reliquary arrives at exactly 600 seconds. Clearing it unlocks Constellation Prism.
-- `stage-04` — **Stasis Orbit Corridor / 정지궤도 회랑**: unlocks after Stage 3. Phase Drifters join the pool, fixed clock-hand cuts and stasis events repeatedly rotate safe lanes, and the Zero-Hour Regulator arrives at exactly 600 seconds. Clearing it unlocks Chrono Ring.
-- `stage-05` — **Magnetar Stormbelt / 자기극 폭풍대**: unlocks after Stage 4. Conduit Leeches join the pool while magnetic arcs and polarity reversals repeatedly reshape lanes; the Dipole Crown arrives at exactly 600 seconds. Clearing it unlocks Ion Chain.
-- `stage-06` — **Shardway Nexus / 파편 성좌핵**: the finale of the first constellation. It reuses enemies from the preceding route while convergence, timefold, and route-collapse incidents overlap; the Shardway Nexus arrives at exactly 600 seconds. Clearing it unlocks Supernova Coil and opens the route to constellation two.
-- `stage-07` — **Blackbloom Expanse / 검은 꽃밭**: the first operation in **Abyssal Bloom / 심연의 개화**. Abyss Spores join the pool while living roots and spore rain constrict safe space; the Nightbloom Matriarch arrives at exactly 600 seconds. Clearing it unlocks Meteor Drones.
-- `stage-08` — **Black Sap Ravine / 흑수액 협곡**: unlocks after Stage 7. Rootlances enter the pool while sap geysers and vascular cutting lanes force repeated lateral repositioning; the Abyssal Rootcrown arrives at exactly 600 seconds. Clearing it unlocks Interstellar Rail.
-- `stage-09` — **Spiral Seedbed / 나선 종자층**: introduces Spiral Pods, rotating seed-orbit hazards, and the Helix Nursery at 600 seconds. Clearing it unlocks Galactic Spiral.
-- `stage-10` — **Mirrorpetal Sanctum / 반사 화관 성소**: reflection petals, echo blooms, and mirrored attack lanes culminate in the Mirrorpetal Halo. Clearing it unlocks Reflective Constellation.
-- `stage-11` — **Seedhusk Bastion / 종자 갑각층**: Husk Wardens and living bulkheads protect the inner seedvault. The Seedvault Custodian arrives at 600 seconds; the stage pays Stardust and a first-clear Core Shard rather than creating another weapon.
-- `stage-12` — **Abyssal Bloomheart / 심연 개화핵**: the finale of **Abyssal Bloom / 심연의 개화**. It recombines the constellation's established enemies and hazards before the Abyssal Bloomheart arrives at 600 seconds. The first clear grants two Core Shards.
-- **Silent Array / 침묵 중계망** is the third constellation and becomes reachable only after Stage 12 is cleared.
-- `stage-13` — **Dead Relay / 무응답 중계소**: introduces Relay Mite, carrier scans, static falls, and the Deadband Overseer.
-- `stage-14` — **Static Narrows / 잡음 협로**: introduces Jammer Kite, noise grids, carrier breaks, signal whiteouts, and the Noise Harvester.
-- `stage-15` — **Packet Stormfront / 패킷 폭풍대**: introduces Packet Lancer, multiplex lanes, burst switching, checksum storms, and the Multiplex Engine.
-- `stage-16` — **Blind Sector / 블라인드 섹터**: reuses the Silent Array roster around dead zones, blind crosses, and null sweeps before the Null Beacon.
-- `stage-17` — **Cipher Graveyard / 암호 묘역**: introduces Cipher Warden, parity mortar, cipher walls, protocol seals, and the Protocol Custodian.
-- `stage-18` — **Silent Array Core / 침묵 배열핵**: recombines all major Silent Array enemy families and signal hazards before the Silence Mainframe. Its first clear grants two Core Shards.
-- The normal weapon roster is fully unlockable by Stage 10. Stage 11 and later stages currently award progression currency rather than filler weapons.
-- Fresh saves begin with four unlocked starter weapons: Pulse Blade, Starlight Caster, Radiant Bulwark, and Gravity Well. Locked weapons do not appear in starter selection or level-up acquisition.
-- The basic Core weapon is separate from equipment capacity. A fresh profile has four non-basic equipment slots; Slot V and Slot VI permanent upgrades expand that limit to five and six.
-- Persistent progression uses Stardust for repeat upgrades and rarer Core Shards for high-value expansion. Stage 1 guarantees one Core Shard on first clear and then one after every three repeat clears; Apex kills also grant Core Shards. Permanent upgrade categories currently cover health, damage, attack cycle, pickup radius, mitigation, currency yield, and equipment capacity.
+- `endless`: infinite mode with random world events, all enemy families, and recurring Apex encounters.
+- `stage`: finite operations with authored enemy pools, milestone incidents, recurring environmental gimmicks, and a stage final boss.
+- Stage time is no longer universally ten minutes. The final boss appears at the authored time below, and killing it is still required for the clear.
+- Each stage's existing hazard family now repeats throughout the run on its own cadence. The cadence speeds up toward the finale and periodically adds a themed enemy surge, so the map identity remains active between fixed incidents instead of appearing only a few times.
+
+| Stage | 작전 | 최종보스 등장 |
+|---|---|---:|
+| 01 | 붕괴 전초구역 | 10분 |
+| 02 | 이온 성운 해구 | 11분 |
+| 03 | 유리별 묘역 | 12분 |
+| 04 | 정지궤도 회랑 | 13분 |
+| 05 | 자기극 폭풍대 | 14분 |
+| 06 | 파편 성좌핵 | 15분 |
+| 07 | 검은 꽃밭 | 12분 |
+| 08 | 흑수액 협곡 | 13분 |
+| 09 | 나선 종자층 | 14분 |
+| 10 | 반사 화관 성소 | 15분 |
+| 11 | 종자 갑각층 | 17분 |
+| 12 | 심연 개화핵 | 20분 |
+| 13 | 무응답 중계소 | 15분 |
+| 14 | 잡음 협로 | 16분 |
+| 15 | 패킷 폭풍대 | 18분 |
+| 16 | 블라인드 섹터 | 20분 |
+| 17 | 암호 묘역 | 22분 |
+| 18 | 침묵 배열핵 | 25분 |
+
+The three current constellations remain **Shardway**, **Abyssal Bloom**, and **Silent Array**. Their existing enemies, boss identities, backgrounds, weapon rewards, and progression chain are retained. The normal 14-weapon roster is fully unlockable by Stage 10; Stage 11+ currently uses Stardust/Core Shards until new weapons are deliberately added.
 
 ### Galaxy map
 

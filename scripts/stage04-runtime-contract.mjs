@@ -2,8 +2,9 @@ import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read('src/stage04-runtime.js'),shared=read('src/stage-runtime.js'),bosses=read('src/bosses.js'),entities=read('src/render-entities.js'),elite=read('src/elite-renderers.js'),realm=read('src/realm-backgrounds.js'),space=read('src/render-space.js'),lang=read('src/language-pack.js');
 const checks=[
+ ['Stage 4 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&shared.includes('updateAmbientGimmick(run,def)')],
  ['Stage 4 exists after Stage 3 in constellation one',catalog.includes("id:'stage-04'")&&catalog.includes("constellationId:'constellation-01'")&&catalog.includes("requirements:{previous:'stage-03'}")],
- ['Stage 4 boss arrives at exactly ten minutes',catalog.includes("boss:{id:'zero-hour-regulator',spawnAt:600")&&catalog.includes("at:600,kind:'boss',variant:'zero-hour-regulator'")],
+ ['Stage 4 boss follows the authored 13-minute operation',catalog.includes("boss:{id:'zero-hour-regulator',spawnAt:780")&&catalog.includes("at:780,kind:'boss',variant:'zero-hour-regulator'")],
  ['Stage 4 introduces Phase Drifter at 115 seconds',catalog.includes("{id:'phase-drifter',type:'ranged',unlockAt:115}")&&runtime.includes("'phase-drifter':{type:'ranged'")],
  ['Stage 4 owns second-hand stasis and zero-hour incidents',['second-hand-cut','stasis-burst','zero-hour-lattice'].every(token=>catalog.includes(token)&&runtime.includes(token))],
  ['Stage 4 remains a registered adapter without shared wrapper overrides',runtime.includes("stackfallRegisterStageRuntime('stage-04'")&&!runtime.includes('updateSpawning=function')&&!runtime.includes('resetGame=function')],

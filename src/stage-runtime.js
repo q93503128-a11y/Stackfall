@@ -24,7 +24,7 @@
     for(let i=0;i<count;i++){const a=i/Math.max(1,count)*TAU+Math.random()*.18,r=rand(radiusMin,radiusMax);spawnStageEnemy(stageId,variant,{x:player.x+Math.cos(a)*r,y:player.y+Math.sin(a)*r});}
   }
   function chooseVariant(pool){let roll=Math.random(),sum=0;for(const[variant,weight]of pool){sum+=weight;if(roll<=sum)return variant;}return pool.at(-1)?.[0]||null;}
-  function apiFor(run=stageRuntime()){const stageId=run?.stage?.id;return{run,stage:run?.stage,definition:stageDefinition(stageId),isActive:()=>isStage(stageId)&&state.mode==='playing',spawnEnemy:(variant,origin)=>spawnStageEnemy(stageId,variant,origin),spawnBurst:(variant,count)=>spawnStageBurst(stageId,variant,count),localized};}
+  function apiFor(run=stageRuntime()){const stageId=run?.stage?.id,stage=run?.stage,progress=stage?clamp((state.time||0)/Math.max(1,stage.boss?.spawnAt||stage.durationSeconds||600),0,1):0;return{run,stage,progress,definition:stageDefinition(stageId),isActive:()=>isStage(stageId)&&state.mode==='playing',spawnEnemy:(variant,origin)=>spawnStageEnemy(stageId,variant,origin),spawnBurst:(variant,count)=>spawnStageBurst(stageId,variant,count),localized};}
   function spawnStageBoss(){
     const run=stageRuntime(),def=stageDefinition();if(!run||!def||run.bossSpawned||!makeEnemyRoom('boss'))return null;
     const profile=typeof def.bossProfile==='function'?def.bossProfile(run):def.bossProfile;if(!profile)return null;
@@ -46,14 +46,30 @@
     if(!objective)return;const boss=run.bossId?state.entities.enemies.find(e=>!e.dead&&e.id===run.bossId):null;
     if(!boss){objective.classList.add('hidden');return;}const def=stageDefinition(run.stage.id);objective.textContent=tr(def?.objectiveKey||'stage01.objective.boss');objective.classList.remove('hidden');
   }
+  function updateAmbientGimmick(run,def){
+    const gimmick=run.stage.gimmick;if(!gimmick||run.bossSpawned)return;
+    if(!Number.isFinite(run.gimmickNextAt))run.gimmickNextAt=Math.max(1,Number(gimmick.startAt)||45);
+    if(state.time<run.gimmickNextAt)return;
+    const api=apiFor(run),progress=api.progress,cycle=(run.gimmickCycle||0)+1,hazards=run.stage.fixedEvents.filter(event=>event.kind==='hazard'),waves=run.stage.fixedEvents.filter(event=>event.kind==='wave');
+    run.gimmickCycle=cycle;
+    const interval=Math.max(16,Number(gimmick.interval)||40),accelerate=clamp(Number(gimmick.accelerate)||0,0,.5);
+    run.gimmickNextAt=state.time+Math.max(14,interval*(1-progress*accelerate));
+    if(hazards.length){const source=hazards[(cycle-1)%hazards.length];def.hazard?.({...source,id:'gimmick-'+cycle,ambient:true},api);}
+    const waveEvery=Math.max(0,Math.floor(Number(gimmick.waveEvery)||0));
+    if(waveEvery&&waves.length&&cycle%waveEvery===0){const source=waves[(Math.floor(cycle/waveEvery)-1)%waves.length],count=Math.max(2,Math.round((source.count||4)*(.66+progress*.34)));spawnStageBurst(run.stage.id,source.variant,count);}
+  }
   function updateStage(dt){
     const run=stageRuntime(),def=stageDefinition();if(!run||!def||run.completed)return;updateObjective(run);
     for(const event of run.stage.fixedEvents)if(state.time>=event.at&&!run.eventsTriggered[event.id])triggerStageEvent(event);
     if(!run.bossSpawned&&state.time>=run.stage.boss.spawnAt)spawnStageBoss();
     if(run.bossSpawned)return;
-    const active=state.entities.enemies.filter(e=>!e.dead&&e.kind!=='stage-boss').length,spawn=def.spawnProfile?.(state.time,apiFor(run))||{cap:38,rate:1,count:1};
-    state.spawnTimer-=dt;if(state.spawnTimer>0||active>=spawn.cap)return;state.spawnTimer=Math.max(.34,Number(spawn.rate)||1);
-    const pool=def.poolAt?.(state.time,apiFor(run))||[];for(let i=0;i<(spawn.count||1);i++){const variant=chooseVariant(pool);if(variant)spawnStageEnemy(run.stage.id,variant);}
+    updateAmbientGimmick(run,def);
+    const active=state.entities.enemies.filter(e=>!e.dead&&e.kind!=='stage-boss').length,progress=clamp(state.time/Math.max(1,run.stage.boss.spawnAt),0,1),authoredTime=progress*600,base=def.spawnProfile?.(authoredTime,apiFor(run))||{cap:38,rate:1,count:1},spawn={...base};
+    spawn.cap=Math.round((Number(base.cap)||38)*(1+progress*.12));
+    spawn.rate=Math.max(.25,(Number(base.rate)||1)*(1-progress*.16));
+    spawn.count=Math.max(1,Math.floor(Number(base.count)||1)+(progress>=.78?1:0));
+    state.spawnTimer-=dt;if(state.spawnTimer>0||active>=spawn.cap)return;state.spawnTimer=Math.max(.25,spawn.rate);
+    const pool=def.poolAt?.(authoredTime,apiFor(run))||[];for(let i=0;i<spawn.count;i++){const variant=chooseVariant(pool);if(variant)spawnStageEnemy(run.stage.id,variant);}
   }
   function finalizeStageComplete(){
     const run=stageRuntime();if(!run||run.resultShown)return;run.resultShown=true;const clearTime=run.completedAt||state.time;state.stageVictory=null;state.mode='stageComplete';state.runSerial++;state.pendingActions.length=0;clearRunUiActions?.();ui.touch.classList.add('hidden');ui.hud.classList.add('hidden');objective?.classList.add('hidden');

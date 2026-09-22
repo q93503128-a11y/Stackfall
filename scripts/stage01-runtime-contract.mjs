@@ -6,6 +6,7 @@ const checks=[
  ['Stage 1 boss enters at exactly ten minutes',catalog.includes('durationSeconds:600')&&catalog.includes("spawnAt:600")&&catalog.includes("at:600,kind:'boss'")],
  ['Stage 1 introduces four dedicated enemy variants',['shardling','dart','bombardier','bulwark'].every(id=>catalog.includes("id:'"+id+"'"))&&['shardling','dart','bombardier','bulwark'].every(id=>runtime.includes(id))],
  ['Stage 1 fixed timeline reaches the boss at 600 seconds',[90,210,300,420,500,600].every(n=>catalog.includes('at:'+n))],
+ ['Stage 1 owns a persistent recurring map gimmick',catalog.includes("gimmick:{startAt:45,interval:38,waveEvery:4,accelerate:0.16}")&&runtime.includes('updateAmbientGimmick(run,def)')],
  ['shared stage runtime never clears because a timer expired',!runtime.includes('state.time>=run.stage.durationSeconds')],
  ['one shared runtime owns spawn reset map-event and boss-death routing',runtime.includes('updateSpawning=function stageAwareSpawning')&&runtime.includes('resetGame=function stageAwareReset')&&runtime.includes('window.updateMapEvents=function stageAwareMapEvents')&&runtime.includes('window.handleStageBossDefeated=function')&&adapters.every(row=>forbiddenAdapterOwners.every(token=>!row.source.includes(token)))],
  ['stage adapters match every authored Stage 2+ entry',adapters.length===Math.max(0,authoredStageIds.length-1)&&authoredStageIds.slice(1).every(id=>adapterById.has(id))],

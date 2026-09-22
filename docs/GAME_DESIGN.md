@@ -377,49 +377,45 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - 개발 TMI를 선택 카드 설명에 다시 넣지 않는다.
 - 배포 지문 생성 전에 JavaScript 문법·영구 계약·소유권 검사를 실행한다.
 
-## Run modes and finite stages (2026-09-21)
+## Run modes and finite stages (2026-09-22)
 
-- `src/run-modes.js` separates `endless` and `stage`. The default and fallback mode remains Endless.
-- Endless stays non-finite, keeps random world events, exposes all enemy families, and keeps the 600-second Apex cadence.
-- `src/meta-progression.js` owns persistent stage clears, best times, weapon unlocks, Stardust, Core Shards, lifetime stats, and permanent upgrade levels. A fresh save exposes four starter weapons: Pulse Blade, Starlight Caster, Radiant Bulwark, and Gravity Well.
-- Locked weapons are filtered from both starter selection and level-up acquisition pools.
-- The basic Core weapon is not counted against equipment capacity. Non-basic equipment starts at four slots; permanent Slot V and Slot VI upgrades expand it to five and six.
-- `src/meta-upgrades.js` provides bounded permanent health, output, cycle, pickup-radius, mitigation, and Stardust-yield upgrades. The growth preview must call the same shared player-core renderer used in combat, so future skins stay synchronized automatically. The desktop growth field must fit within one viewport; only compact/mobile layouts may require page scrolling. Permanent growth supports progression but must not replace run-build decisions or player execution.
-- Stardust is the repeatable upgrade currency. Core Shards are rarer and gate higher-value expansion nodes such as equipment-slot unlocks. Stage 1 grants repeat Stardust, one Core Shard on first clear, and one additional Core Shard after every three repeat clears. Apex kills are another repeatable Core Shard source, leaving room for future cosmetic sinks without making the rare currency finite.
-- `src/stage-catalog.js` defines playable `stage-01`, **Collapse Frontier / 붕괴 전초구역**, with its final boss scheduled at 600 seconds; the actual run continues until the boss is defeated or the player dies.
-- Stage 1 gradually introduces four dedicated enemy families: Shard Feeder, Rift Dart, Debris Bombardier, and Collapse Bulwark.
-- Its fixed timeline triggers events at 90, 210, 300, 420, and 500 seconds, followed by the Collapse Frontier Warden at exactly 600 seconds.
-- Stage runs bypass the Endless spawn director, random world-event scheduler, and Apex scheduling. Their progression comes from their own catalog timeline instead.
-- Reaching 600 seconds never ends a stage by itself. A stage ends only on player defeat or after the final boss is killed. Boss death enters the shared short victory state with destruction pulses and an `OPERATION COMPLETE` beat before the result modal.
-- `stage-02`, **Ion Nebula Trench / 이온 성운 해구**, unlocks after Stage 1. It intentionally reuses Shardling, Dart, Bombardier, and Bulwark while introducing only one new common enemy, Nebula Wisp.
-- Stage 2 uses fixed ion-shear/deep-shear incidents, owns a separate ion-nebula background, and fields the Nebula Heart with its own silhouette and multi-phase shear/wisp pattern. Its boss also arrives at 600 seconds.
-- Stage 1 permanently unlocks Comet Lance; Stage 2 permanently unlocks Nebula Boomerang.
-- `stage-03`, **Glassstar Necropolis / 유리별 묘역**, unlocks after Stage 2, introduces Glasswing, uses refraction-lattice and prism-rain fixed incidents, and fields the dedicated Refracted Reliquary at 600 seconds.
-- Stage 3 permanently unlocks Constellation Prism.
-- `stage-04`, **Stasis Orbit Corridor / 정지궤도 회랑**, unlocks after Stage 3, introduces Phase Drifter, uses second-hand cuts/stasis pulses/zero-hour lattices, and fields the Zero-Hour Regulator at 600 seconds.
-- Stage 4 permanently unlocks Chrono Ring.
-- `stage-05`, **Magnetar Stormbelt / 자기극 폭풍대**, unlocks after Stage 4, introduces Conduit Leech, rotates between magnetic-arc/polarity-reversal pressure, and fields the Dipole Crown at 600 seconds.
-- Stage 5 permanently unlocks Ion Chain.
-- `stage-06`, **Shardway Nexus / 파편 성좌핵**, is the first constellation finale. It deliberately reuses the established enemy families while layering convergence, timefold, and route-collapse incidents, then fields the Shardway Nexus at 600 seconds.
-- Stage 6 permanently unlocks Supernova Coil. Clearing it unlocks access to constellation two through Stage 7's predecessor requirement.
-- Constellation 2 is **Abyssal Bloom / 심연의 개화**.
-- `stage-07`, **Blackbloom Expanse / 검은 꽃밭**, opens constellation two, introduces Abyss Spore, living-root/spore hazards, and the Nightbloom Matriarch at 600 seconds.
-- Stage 7 permanently unlocks Meteor Drones.
-- `stage-08`, **Black Sap Ravine / 흑수액 협곡**, unlocks after Stage 7, introduces Rootlance, uses sap-geyser/vascular-rail/arterial-rupture incidents, and fields the Abyssal Rootcrown at 600 seconds.
-- Stage 8 permanently unlocks Interstellar Rail.
-- `stage-09`, **Spiral Seedbed / 나선 종자층**, introduces Spiral Pod and the Helix Nursery; clearing it unlocks Galactic Spiral.
-- `stage-10`, **Mirrorpetal Sanctum / 반사 화관 성소**, uses reflection/echo hazards without forcing a new common enemy; clearing it unlocks Reflective Constellation.
-- `stage-11`, **Seedhusk Bastion / 종자 갑각층**, introduces Husk Warden and the Seedvault Custodian. With the current weapon roster fully unlocked by Stage 10, later stage rewards may use currency/core rewards instead of inventing weapons solely to fill a slot.
-- `stage-12`, **Abyssal Bloomheart / 심연 개화핵**, is the second constellation finale. It recombines the major Abyssal Bloom enemy families and ends against the Abyssal Bloomheart at 600 seconds. Its first clear grants two Core Shards.
-- Constellation 3 is **Silent Array / 침묵 중계망**. It leaves the fragment-route and living-nebula identities behind for dead relay megastructures, broken carriers, static fields, packet storms, sensor blind zones, and sealed protocols.
-- `stage-13`, **Dead Relay / 무응답 중계소**, opens the third constellation, introduces Relay Mite, and uses carrier-scan/static-fall/deadband-lock incidents before the Deadband Overseer arrives at 600 seconds.
-- `stage-14`, **Static Narrows / 잡음 협로**, introduces Jammer Kite and escalates noise-grid, carrier-break, and signal-whiteout lane pressure before the Noise Harvester.
-- `stage-15`, **Packet Stormfront / 패킷 폭풍대**, introduces Packet Lancer and rapidly rewires safe lanes with multiplex, burst-switch, and checksum-storm incidents before the Multiplex Engine.
-- `stage-16`, **Blind Sector / 블라인드 섹터**, deliberately adds no new common enemy. It recombines the established Silent Array roster around dead zones, blind crosses, and null sweeps before the Null Beacon.
-- `stage-17`, **Cipher Graveyard / 암호 묘역**, introduces Cipher Warden and closes safe space with parity mortar, cipher walls, and protocol seals before the Protocol Custodian.
-- `stage-18`, **Silent Array Core / 침묵 배열핵**, is the third constellation finale. It recombines Relay Mite, Jammer Kite, Packet Lancer, and Cipher Warden with multiplex/blind/silence-collapse incidents before the Silence Mainframe. Its first clear grants two Core Shards.
-- The current authored campaign contains three constellations of six stages each. The complete 14-item normal weapon roster is already permanently unlockable by Stage 10, so Stage 11+ uses Stardust/Core Shards unless a genuinely new weapon is added to the game.
-- Galaxy stages are grouped into constellation pages. A finished constellation hands progression to the first stage of the next constellation; the map never stretches every constellation into one endless canvas.
+- `endless` remains non-finite, keeps random world events, exposes the full enemy family pool, and keeps the 600-second Apex cadence.
+- `stage` is a separate finite operation mode. Random world events and Apex scheduling are suppressed during stage runs.
+- Stage clear is **boss-death gated**, never timer gated. Reaching the authored duration spawns the final boss; the run continues until the player dies or that boss is defeated.
+- Every authored stage has two layers of stage pressure:
+  - **fixed incidents**: milestone waves/hazards placed at authored times;
+  - **persistent gimmick loop**: begins early, repeatedly cycles the stage's own hazard family, periodically injects one of that stage's themed fixed-wave enemy families, and accelerates as boss time approaches.
+- Long stages also continue increasing spawn cap, spawn rate, and late-run simultaneous spawn pressure. They must not plateau at the old 600-second balance point.
+- A new stage does not require a new common enemy. Environmental rules, enemy combinations, and timing can carry identity when that is stronger than adding filler enemies.
+- Constellation finales are longer than their openers and deliberately recombine the constellation's established enemy/hazard language.
+
+| Stage | 작전 | 최종보스 등장 |
+|---|---|---:|
+| 01 | 붕괴 전초구역 | 10분 |
+| 02 | 이온 성운 해구 | 11분 |
+| 03 | 유리별 묘역 | 12분 |
+| 04 | 정지궤도 회랑 | 13분 |
+| 05 | 자기극 폭풍대 | 14분 |
+| 06 | 파편 성좌핵 | 15분 |
+| 07 | 검은 꽃밭 | 12분 |
+| 08 | 흑수액 협곡 | 13분 |
+| 09 | 나선 종자층 | 14분 |
+| 10 | 반사 화관 성소 | 15분 |
+| 11 | 종자 갑각층 | 17분 |
+| 12 | 심연 개화핵 | 20분 |
+| 13 | 무응답 중계소 | 15분 |
+| 14 | 잡음 협로 | 16분 |
+| 15 | 패킷 폭풍대 | 18분 |
+| 16 | 블라인드 섹터 | 20분 |
+| 17 | 암호 묘역 | 22분 |
+| 18 | 침묵 배열핵 | 25분 |
+
+### Constellation identities
+
+- **Shardway / 파편의 항로 (Stage 1–6)**: collapsed route infrastructure, shard hosts, ion shear, refraction, time distortion, magnetar pressure, then route convergence.
+- **Abyssal Bloom / 심연의 개화 (Stage 7–12)**: living stellar growth, spores, roots, sap vessels, seed spirals, reflection petals, husk pressure, then full biological convergence.
+- **Silent Array / 침묵 중계망 (Stage 13–18)**: dead relay megastructures, broken carriers, static, packet storms, sensor blind zones, sealed protocols, then network-wide silence collapse.
+- The complete current 14-item normal weapon roster is permanently unlockable by Stage 10. Stage 11+ uses Stardust/Core Shards until a genuinely new weapon is authored.
 
 ### Galaxy map
 
