@@ -5,7 +5,7 @@ const start=catalog.indexOf("id:'stage-13'"),next=catalog.indexOf("id:'stage-14'
 const checks=[
  ['Stage 13 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&runtime.includes('hazard(event,api)')],
  ['Stage 13 follows Stage 12 in constellation three',catalog.includes("id:'stage-13'")&&catalog.includes("constellationId:'constellation-03'")&&catalog.includes("requirements:{previous:'stage-12'}")],
- ['Stage 13 boss follows the authored 15-minute operation',catalog.includes("boss:{id:'deadband-overseer',spawnAt:900")&&catalog.includes("at:900,kind:'boss',variant:'deadband-overseer'")],
+ ['Stage 13 boss follows the authored 11-minute operation',catalog.includes("boss:{id:'deadband-overseer',spawnAt:660")&&catalog.includes("at:660,kind:'boss',variant:'deadband-overseer'")],
  ['Stage 13 introduces Relay Mite',catalog.includes("id:'relay-mite'")&&runtime.includes("'relay-mite':{")&&entities.includes("v==='relay-mite'")],
  ['Stage 13 owns its fixed signal incidents',['carrier-scan','static-fall','deadband-lock'].every(x=>catalog.includes(x))&&runtime.includes("variant==='static-fall'")&&runtime.includes("variant==='deadband-lock'")&&runtime.includes("tr('stage13.event.carrierScan')")],
  ['Stage 13 has a dedicated environment and boss',realm.includes('function drawStage13Background')&&elite.includes("f==='deadband-overseer'")],
