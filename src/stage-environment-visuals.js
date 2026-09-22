@@ -4,6 +4,31 @@
   const familyColor=(family,alt=false)=>family==='bloom'?(alt?'#77d8bd':'#d58cff'):family==='array'?(alt?'#e2ba68':'#70dce9'):(alt?'#9aa8ff':'#77dfff');
   const variantSeed=value=>{let h=2166136261;for(const ch of String(value||'')){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return(h>>>0)/4294967295;};
 
+  const hud=document.querySelector('#hud');
+  const environmentNotice=document.createElement('div');
+  environmentNotice.className='stage-environment-notice hidden';
+  environmentNotice.innerHTML='<i></i><div><span></span><strong></strong><small></small></div>';
+  hud?.appendChild(environmentNotice);
+  let environmentNoticeSerial=0;
+  function environmentLabel(family){
+    const ko=GAME_SETTINGS.language==='ko';
+    if(family==='bloom')return ko?'생체 환경 이상':'BIOLOGICAL HAZARD';
+    if(family==='array')return ko?'중계망 환경 이상':'NETWORK HAZARD';
+    return ko?'항로 환경 이상':'ROUTE HAZARD';
+  }
+  function showEnvironmentNotice(title,subtitle,context){
+    if(!environmentNotice)return;const serial=++environmentNoticeSerial,family=context?.family||'route';
+    environmentNotice.dataset.family=family;environmentNotice.querySelector('span').textContent=environmentLabel(family);environmentNotice.querySelector('strong').textContent=title||environmentLabel(family);environmentNotice.querySelector('small').textContent=subtitle||'';
+    environmentNotice.classList.remove('hidden');requestAnimationFrame(()=>{if(serial===environmentNoticeSerial)environmentNotice.classList.add('show');});
+    scheduleUiAction(1550,()=>{if(serial!==environmentNoticeSerial)return;environmentNotice.classList.remove('show');scheduleUiAction(180,()=>{if(serial===environmentNoticeSerial)environmentNotice.classList.add('hidden');});});
+  }
+  const baseShowBossNotice=showBossNotice;
+  showBossNotice=function stageAwareNotice(title,subtitle){
+    const context=state.stageEnvironmentTelegraphContext;
+    if(context){showEnvironmentNotice(title,subtitle,context);return;}
+    return baseShowBossNotice(title,subtitle);
+  };
+
   function drawRouteZone(t,p,progress,pulse){
     const r=t.r,seed=variantSeed(t.environmentVariant),rotation=seed*TAU+progress*.18;
     ctx.rotate(rotation);ctx.fillStyle='rgba(64,102,162,.055)';ctx.strokeStyle=familyColor('route');ctx.lineWidth=2.2;ctx.setLineDash([18,10]);
