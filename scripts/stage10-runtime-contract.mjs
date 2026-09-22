@@ -4,7 +4,7 @@ const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read
 const checks=[
  ['Stage 10 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&runtime.includes('hazard(event,api)')],
  ['Stage 10 follows Stage 9',catalog.includes("id:'stage-10'")&&catalog.includes("requirements:{previous:'stage-09'}")],
- ['Stage 10 boss follows the authored 15-minute operation',catalog.includes("boss:{id:'mirrorpetal-halo',spawnAt:900")&&catalog.includes("at:900,kind:'boss',variant:'mirrorpetal-halo'")],
+ ['Stage 10 boss follows the authored 9.5-minute operation',catalog.includes("boss:{id:'mirrorpetal-halo',spawnAt:570")&&catalog.includes("at:570,kind:'boss',variant:'mirrorpetal-halo'")],
  ['Stage 10 deliberately reuses the living-nebula roster',!catalog.includes("stage10.enemy.")&&['rootlance','spiral-pod','abyss-spore'].every(x=>runtime.includes(x))],
  ['Stage 10 owns mirror petal echo bloom and reflection cage',['mirror-petal','echo-bloom','reflection-cage'].every(x=>catalog.includes(x)&&runtime.includes(x))],
  ['Stage 10 has dedicated environment and boss',realm.includes('function drawStage10Background')&&elite.includes("f==='mirrorpetal-halo'")],
