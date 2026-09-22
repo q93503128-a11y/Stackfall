@@ -604,6 +604,7 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - 스테이지 일반 적 압박은 진행도와 Stage 번호에 따라 상승하지만, 성능 단계와 화면 규모를 반영한 동시 적 spawn budget으로 상한을 둔다. 후반 난이도는 단순 적 개체 수 폭증보다 적 조합·기믹·중간보스·보스 패턴으로 올린다.
 - 정상 데스크톱 기준 spawn budget의 이론 상단은 Stage 1 약 **42체**, Stage 18 약 **67체**이며 실제 값은 각 스테이지 authored cap과의 최솟값이다. 콤팩트 화면에서는 약 **34체 → 53체**, 성능 Tier 1/2에서는 해당 상단을 다시 약 92%/80%로 낮춘다. 한 번의 생성 주기에서 추가되는 일반 적은 최대 2체로 제한한다.
 - 배경은 화면에 고정된 한 장처럼 보이지 않도록 별 레이어와 이동 표식에 월드 좌표 기반 다중 패럴랙스를 적용한다. 플레이어 이동량이 커질수록 가까운 레이어의 이동이 더 크게 보여 실제 항로를 전진하는 감각을 유지한다.
+- 실제 스테이지 전장에도 성좌별 월드 구조를 추가한다. Stage 1–6은 파손된 직선 항로/브레이스/허브 링, Stage 7–12는 월드 좌표에 고정된 뿌리·포낭·개화 구조, Stage 13–18은 릴레이 격자·노드·스캔 라인을 사용한다. 스테이지 번호에 따라 각도·밀도·구조 배치가 조금씩 달라지되 같은 성좌는 한 계열로 읽힌다. Endless는 이 구조물을 사용하지 않는다.
 - A new stage does not require a new common enemy. Environmental rules, enemy combinations, and timing can carry identity when that is stronger than adding filler enemies.
 
 | Stage | 작전 | 최종보스 등장 |
