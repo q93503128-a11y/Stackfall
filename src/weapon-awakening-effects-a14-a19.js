@@ -14,7 +14,7 @@
     fx.length=0;lotusFields.length=0;starrailNodes.length=0;surroundMissiles.length=0;
     Object.assign(player,{
       awSpiralCycle:0,awMirrorFaces:[null,null,null,null,null,null],awMirrorSignaturePending:false,
-      awMineDeployCycle:0,awMissileCycle:0,awMissileSignaturePending:false
+      awMineDeployCycle:0,awMissileCycle:0,awMissileGroupSerial:0,awMissileSignaturePending:false
     });
   }
   resetThirdAwakeningState();
@@ -271,10 +271,15 @@
       net.awGrandPending=false;pushFx({kind:'hypergate-rewire',netId:net.id,x:net.x,y:net.y,life:.46,max:.46});audio.weapon?.('gate',false,1.64);
     });
   }
+  const baseSpawnGatePulseSet=spawnGatePulseSet;
+  spawnGatePulseSet=function hypergatePulseSet(net){
+    const before=net?.pulses?.length||0;baseSpawnGatePulseSet(net);if(!net||!Array.isArray(net.pulses))return;
+    const native=net.n>=3?2:1,created=net.pulses.slice(before);created.forEach((pulse,index)=>pulse.awGrandEligible=index<native);
+  };
   const baseGateSegmentHit=gateSegmentHit;
   gateSegmentHit=function hypergateSegmentHit(net,pulse){
     const before=Number(pulse?.done)||0;baseGateSegmentHit(net,pulse);const after=Number(pulse?.done)||0;
-    if(after>before&&net&&pulse&&after%Math.max(1,net.gates?.length||1)===0)hypergateCircuitComplete(net);
+    if(after>before&&pulse?.awGrandEligible!==false&&net&&pulse&&after%Math.max(1,net.gates?.length||1)===0)hypergateCircuitComplete(net);
   };
 
   // Shared updates.
