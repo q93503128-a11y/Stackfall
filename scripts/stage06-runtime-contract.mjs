@@ -4,7 +4,7 @@ const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read
 const checks=[
  ['Stage 6 owns recurring stage gimmick cadence',catalog.includes("gimmick:{")&&shared.includes('updateAmbientGimmick(run,def)')],
  ['Stage 6 completes constellation one after Stage 5',catalog.includes("id:'stage-06'")&&catalog.includes("constellationId:'constellation-01'")&&catalog.includes("requirements:{previous:'stage-05'}")],
- ['Stage 6 boss follows the authored 15-minute operation',catalog.includes("boss:{id:'shardway-nexus',spawnAt:900")&&catalog.includes("at:900,kind:'boss',variant:'shardway-nexus'")],
+ ['Stage 6 boss follows the authored 7.5-minute operation',catalog.includes("boss:{id:'shardway-nexus',spawnAt:450")&&catalog.includes("at:450,kind:'boss',variant:'shardway-nexus'")],
  ['Stage 6 deliberately reuses established common enemies rather than forcing a new trash family',!catalog.includes("stage06.enemy.")&&['glass-wing','phase-drifter','conduit-leech'].every(token=>runtime.includes(token))],
  ['Stage 6 remixes convergence timefold and route-collapse incidents',['convergence-cross','timefold-grid','route-collapse'].every(token=>catalog.includes(token)&&runtime.includes(token))],
  ['Stage 6 remains a registered adapter without shared wrapper overrides',runtime.includes("stackfallRegisterStageRuntime('stage-06'")&&!runtime.includes('updateSpawning=function')&&!runtime.includes('resetGame=function')],
