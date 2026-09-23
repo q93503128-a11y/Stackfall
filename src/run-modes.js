@@ -5,7 +5,7 @@
     finite:false,
     randomWorldEvents:true,
     allEnemyFamilies:true,
-    apexIntervalSeconds:600
+    apexIntervalSeconds:480
   });
   const validMode=mode=>mode===MODES.ENDLESS||mode===MODES.STAGE;
   const stageById=id=>typeof window.stackfallStageById==='function'?window.stackfallStageById(id):null;
