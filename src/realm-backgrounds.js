@@ -8,17 +8,27 @@ const SPACE_LANDMARK_TILE={w:2100,h:1500};
 const SPACE_LANDMARKS=Array.from({length:18},(_,i)=>({x:cosmicRand()*SPACE_LANDMARK_TILE.w,y:cosmicRand()*SPACE_LANDMARK_TILE.h,type:i%3,rot:cosmicRand()*TAU,scale:.72+cosmicRand()*.72}));
 const TRAVEL_MARKERS=Array.from({length:24},(_,i)=>({x:cosmicRand()*1900,y:cosmicRand()*1350,len:12+cosmicRand()*28,a:.10+cosmicRand()*.16,layer:i%2}));
 function wrap(v,size){return((v%size)+size)%size;}
+const STAR_TILE_CACHE={key:'',tiles:[]};
+function makeStarTile(layer,palette,stride,layerIndex){
+  const surface=typeof OffscreenCanvas==='function'?new OffscreenCanvas(layer.size,layer.size):document.createElement('canvas');
+  surface.width=surface.height=layer.size;
+  const g=surface.getContext('2d',{alpha:true});
+  for(let i=0;i<layer.stars.length;i+=stride){
+    const star=layer.stars[i],large=star.r>1.15;
+    g.globalAlpha=star.a*.88;g.fillStyle=star.hue>.84?palette[2]:star.hue>.56?palette[1]:palette[0];
+    if(large){g.beginPath();g.arc(star.x,star.y,star.r+(layerIndex===2?.18:0),0,TAU);g.fill();if(star.r>1.45){g.globalAlpha*=.38;g.fillRect(star.x-4,star.y-.35,8,.7);g.fillRect(star.x-.35,star.y-4,.7,8);}}
+    else g.fillRect(star.x,star.y,Math.max(.8,star.r),Math.max(.8,star.r));
+  }
+  g.globalAlpha=1;return surface;
+}
 function drawStars(palette=['#f6f8ff','#8fe9ff','#cdbfff'],density=1){
-  const now=performance.now(),tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,tierStride=tier===2?3:tier===1?2:1,densityStride=Math.max(1,Math.round(1/Math.max(.08,density))),stride=Math.max(tierStride,densityStride);
+  const now=performance.now(),tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,tierStride=tier===2?3:tier===1?2:1,densityStride=Math.max(1,Math.round(1/Math.max(.08,density))),stride=Math.max(tierStride,densityStride),colors=Array.isArray(palette)?palette:['#f6f8ff','#8fe9ff','#cdbfff'],key=`${colors.slice(0,3).join('|')}|${stride}`;
+  if(STAR_TILE_CACHE.key!==key){STAR_TILE_CACHE.key=key;STAR_TILE_CACHE.tiles=STAR_LAYERS.map((layer,index)=>makeStarTile(layer,colors,stride,index));}
   for(let li=0;li<STAR_LAYERS.length;li++){
-    const layer=STAR_LAYERS[li],tile=layer.size,ox=player.x*layer.parallax,oy=player.y*layer.parallax;
-    for(let i=0;i<layer.stars.length;i+=stride){
-      const star=layer.stars[i],x=wrap(star.x-ox,tile)-100,y=wrap(star.y-oy,tile)-100;if(x<-10||x>vw+100||y<-10||y>vh+100)continue;
-      const large=star.r>1.15,twinkle=large?.76+.24*Math.sin(now*.0015+star.phase):.88;
-      ctx.globalAlpha=star.a*twinkle;ctx.fillStyle=star.hue>.84?palette[2]:star.hue>.56?palette[1]:palette[0];
-      if(large){ctx.beginPath();ctx.arc(x,y,star.r+(li===2?.18:0),0,TAU);ctx.fill();if(star.r>1.45){ctx.globalAlpha*=.38;ctx.fillRect(x-4,y-.35,8,.7);ctx.fillRect(x-.35,y-4,.7,8);}}
-      else ctx.fillRect(x,y,Math.max(.8,star.r),Math.max(.8,star.r));
-    }
+    const layer=STAR_LAYERS[li],tile=layer.size,ox=wrap(player.x*layer.parallax,tile),oy=wrap(player.y*layer.parallax,tile),surface=STAR_TILE_CACHE.tiles[li];
+    let startX=-ox-100,startY=-oy-100;while(startX<=-tile)startX+=tile;while(startY<=-tile)startY+=tile;
+    ctx.globalAlpha=.96+.04*Math.sin(now*.0008+li*1.7);
+    for(let y=startY;y<vh+100;y+=tile)for(let x=startX;x<vw+100;x+=tile)ctx.drawImage(surface,Math.round(x),Math.round(y));
   }
   ctx.globalAlpha=1;
 }
