@@ -34,9 +34,8 @@
     syncUi();
   }
   function equipAll(level=1,awaken=false){
-    const keys=allWeapons();state.weaponStacks={};state.weaponSlots=[];
+    const keys=allWeapons();state.weaponStacks={};state.weaponSlots=[];state.awakenedWeapons={};
     for(const key of keys){state.weaponStacks[key]=Math.max(1,Math.min(6,Math.floor(level)||1));if(key!=='core')state.weaponSlots.push(key);if(awaken)state.awakenedWeapons[key]=true;}
-    if(!awaken)state.awakenedWeapons={};
     syncUi();
   }
   function toggleSelectedAwakening(key){
@@ -137,6 +136,6 @@
   window.stackfallDeveloperTest={
     enabled:true,
     equipOnly,equipAll,startStage,startEndless,jumpStageBoss,giveCores,clearAwakenings,
-    snapshot:()=>({run:window.stackfallCurrentRunConfig?.(),weaponStacks:{...(state.weaponStacks||{})},awakened:{...(state.awakenedWeapons||{})},cores:state.awakeningCores||0})
+    snapshot:()=>({run:window.stackfallCurrentRunConfig?.(),weaponStacks:{...(state.weaponStacks||{})},awakened:{...(state.awakenedWeapons||{})},cores:state.awakeningCores||0,canonicalVisuals:window.stackfallCanonicalWeaponVisualDiagnostics?.()||null,renderer:window.stackfallRendererInfo?.()||null})
   };
 })();
