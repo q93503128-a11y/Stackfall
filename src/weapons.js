@@ -32,7 +32,15 @@ function fireBoomerang(target,stacks,echoed=false,origin=null,ricochet=false){
   for(let i=0;i<shots;i++){const spread=i-(shots-1)/2,side=shots===1?player.arcSide:(spread===0?player.arcSide:Math.sign(spread)),lateral=spread*(28+stacks*3),targetPoint={x:target.x+normal.x*lateral,y:target.y+normal.y*lateral},mid={x:(start.x+targetPoint.x)/2,y:(start.y+targetPoint.y)/2},curve=(38+Math.min(70,distance*.09)+(stacks>=3?24:0))*side,control={x:mid.x+normal.x*curve,y:mid.y+normal.y*curve},history=Array.from({length:14},()=>({x:start.x,y:start.y}));state.entities.curves.push({stage:'outbound',stageTime:0,stageDuration:clamp(distance/(650+stacks*24),.30,.78),start:{...start},control,targetPoint,targetId:target.id,lateral,side,x:start.x,y:start.y,lastX:start.x,lastY:start.y,hitIds:new Set(),r:(9.5+stacks*.95+(stacks>=3?1.5:0))*size,damage:(14+stacks*4.1)*(echoed?.66:1)*(ricochet?.72:1),returnDamageMult:stacks>=4?1.38:1,color:echoed?COLORS.pink:'#69ffe0',trailDamage:stacks>=5,trailCd:0,history,historyStart:0,historyCount:0,stacks,dead:false,returnLife:0,ricochet:!!ricochet});}
   trimOldest(state.entities.curves,28);
 }
-function prismPositions(count){const points=[],orbit=orbitRadiusFor('prism');for(let i=0;i<count;i++){const a=player.angle*.52+i*TAU/count;points.push({x:player.x+Math.cos(a)*orbit,y:player.y+Math.sin(a)*orbit,a});}return points;}
+const PRISM_POSITION_BUFFER=[{x:0,y:0,a:0},{x:0,y:0,a:0},{x:0,y:0,a:0}],PRISM_USED_TARGETS=new Set(),VACUUM_NEARBY_BUFFER=[],MINE_NEARBY_BUFFER=[],WIRE_NEARBY_BUFFER=[];
+function prismPositions(count){const orbit=orbitRadiusFor('prism');for(let i=0;i<count;i++){const point=PRISM_POSITION_BUFFER[i],a=player.angle*.52+i*TAU/count;point.x=player.x+Math.cos(a)*orbit;point.y=player.y+Math.sin(a)*orbit;point.a=a;}PRISM_POSITION_BUFFER.length=count;return PRISM_POSITION_BUFFER;}
+function weaponNearbyCandidates(x,y,range,out){return typeof performanceNearbyEnemies==='function'?performanceNearbyEnemies(x,y,range,out):state.entities.enemies;}
+function nearestPrismUnusedTarget(x,y,range,used){if(typeof performanceNearestEnemyExcluding==='function')return performanceNearestEnemyExcluding(x,y,range,used);let best=null,bestDistance=range*range;for(const e of state.entities.enemies){if(!e||e.dead||used.has(e.id))continue;const d=(e.x-x)**2+(e.y-y)**2;if(d<bestDistance){bestDistance=d;best=e;}}return best;}
+function keepVacuumSeed(seed){return!!(seed&&seed.life>0);}
+function keepPhaseMine(mine){return!!(mine&&mine.life>0);}
+function keepGuidedMissile(missile){return!!(missile&&missile.life>0);}
+function keepGatePulse(pulse){return!!(pulse&&pulse.remaining>0);}
+function keepGateNetwork(net){return!!(net&&net.life>0);}
 function meteorDronePositions(stacks){const count=stacks>=6?3:stacks>=2?2:1,orbit=orbitRadiusFor('drone'),points=[];for(let i=0;i<count;i++){const a=player.angle*.68+i*TAU/count;points.push({x:player.x+Math.cos(a)*orbit,y:player.y+Math.sin(a)*orbit,a});}return points;}
 function nearestEnemies(x,y,count,excluded=null,maxRange=Infinity){if(typeof performanceNearestEnemies==='function')return performanceNearestEnemies(x,y,count,excluded,maxRange);const limit=Number.isFinite(maxRange)?maxRange*maxRange:Infinity,out=[];for(const enemy of state.entities.enemies){if(!enemy||enemy.dead||excluded?.has(enemy.id))continue;const distance=(enemy.x-x)**2+(enemy.y-y)**2;if(distance>limit)continue;let index=out.length;while(index>0&&out[index-1].distance>distance)index--;out.splice(index,0,{enemy,distance});if(out.length>count)out.pop();}return out.map(entry=>entry.enemy);}
 function segmentDistance(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1,len=dx*dx+dy*dy||1,t=clamp(((px-x1)*dx+(py-y1)*dy)/len,0,1);return Math.hypot(px-(x1+dx*t),py-(y1+dy*t));}
@@ -40,10 +48,10 @@ function enemyById(id){if(typeof getEnemyById==='function')return getEnemyById(i
 function prismStage(heat,prismN){const first=prismN>=4?.68:.88,second=prismN>=6?1.55:prismN>=4?1.78:2.18;return heat>=second?2:heat>=first?1:0;}
 function prismMultiplier(stage,prismN){return stage===2?(prismN>=6?3.65:prismN>=5?3.45:3.25):stage===1?1.65:1;}
 function updateFocusedPrisms(dt,prismN){
-  const count=prismN>=6?3:prismN>=2?2:1,positions=prismPositions(count),range=weaponRange('prism'),locks=player.prismLocks||(player.prismLocks=[]),used=new Set(),size=weaponSizeMultiplier(),stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed();locks.length=count;
+  const count=prismN>=6?3:prismN>=2?2:1,positions=prismPositions(count),range=weaponRange('prism'),locks=player.prismLocks||(player.prismLocks=[]),used=PRISM_USED_TARGETS,size=weaponSizeMultiplier(),stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed();used.clear();locks.length=count;
   for(let i=0;i<count;i++){
     const pos=positions[i],lock=locks[i]||(locks[i]={targetId:null,heat:0,tick:0,visual:0,augmentCd:0}),current=enemyById(lock.targetId),valid=current&&Math.hypot(current.x-pos.x,current.y-pos.y)<=range;
-    let target=valid?current:nearestEnemy(pos.x,pos.y,range,e=>!used.has(e.id));if(!target)target=nearestEnemy(pos.x,pos.y,range);
+    let target=valid?current:nearestPrismUnusedTarget(pos.x,pos.y,range,used);if(!target)target=nearestEnemy(pos.x,pos.y,range);
     if(!target){lock.targetId=null;lock.heat=Math.max(0,lock.heat-dt*2.5);continue;}
     if(lock.targetId===target.id)lock.heat=Math.min(3.2,lock.heat+dt);else{lock.targetId=target.id;lock.heat=0;lock.tick=0;}
     used.add(target.id);lock.tick-=dt;lock.visual-=dt;lock.augmentCd-=dt;const stage=prismStage(lock.heat,prismN),mult=prismMultiplier(stage,prismN),color=stage===2?'#fff1a8':stage===1?'#ff9c72':'#c8b3ff',width=(2.7+stage*2.1+prismN*.16)*size;
@@ -124,11 +132,11 @@ function updateVacuumSeeds(dt,n){
     if(!seed||seed.life<=0)continue;seed.life-=dt;
     if(seed.blooming){
       seed.bloomTimer-=dt;const radius=(seed.n>=2?180:165)*weaponSizeMultiplier(),pull=(seed.n>=3?340:270)*(seed.n>=2?1.22:1);
-      forEachNearbyEnemyCandidate(seed.x,seed.y,radius+90,enemy=>{if(enemy.dead)return;const dx=seed.x-enemy.x,dy=seed.y-enemy.y,d=Math.hypot(dx,dy)||1;if(d>radius)return;const k=pull*(1-d/radius)*enemyControlFactor(enemy)*dt;enemy.x+=dx/d*k;enemy.y+=dy/d*k;});
+      const candidates=weaponNearbyCandidates(seed.x,seed.y,radius+90,VACUUM_NEARBY_BUFFER);for(let candidateIndex=0;candidateIndex<candidates.length;candidateIndex++){const enemy=candidates[candidateIndex];if(!enemy||enemy.dead)continue;const dx=seed.x-enemy.x,dy=seed.y-enemy.y,d=Math.hypot(dx,dy)||1;if(d>radius)continue;const k=pull*(1-d/radius)*enemyControlFactor(enemy)*dt;enemy.x+=dx/d*k;enemy.y+=dy/d*k;}
       if(seed.bloomTimer<=0)detonateVacuumSeed(seed);
     }else if(seed.life<=0)beginVacuumBloom(seed,.65,true);
   }
-  compactInPlace(seeds,seed=>seed&&seed.life>0);
+  compactInPlace(seeds,keepVacuumSeed);
 }
 window.stackfallPostRosterOnKill=function postRosterKill(enemy){
   const n=weaponCount('vacuum');if(!n||!enemy)return;
@@ -172,12 +180,12 @@ function updatePhaseMinefield(dt,n){
   const x=player.x,y=player.y,dx=x-(player.mineLastX??x),dy=y-(player.mineLastY??y),distance=Math.hypot(dx,dy);player.mineTravel=(player.mineTravel||0)+distance;player.mineLastX=x;player.mineLastY=y;player.minePlaceTimer=(player.minePlaceTimer??1.65)-dt;
   const travelNeed=n>=5?72:90;if(player.mineTravel>=travelNeed||player.minePlaceTimer<=0){player.mineTravel=0;player.minePlaceTimer=1.65*hasteMult();deployPhaseMinefield(n);}
   const mines=state.entities.phaseMines;
-  for(const mine of mines){if(!mine||mine.life<=0)continue;mine.life-=dt;mine.arm=Math.max(0,mine.arm-dt);if(mine.detonateIn!==null){mine.detonateIn-=dt;if(mine.detonateIn<=0){detonatePhaseMine(mine,mine.pendingScale||1);continue;}}if(mine.life<=0){if(mine.arm<=0)detonatePhaseMine(mine,.55);continue;}if(mine.arm>0)continue;forEachNearbyEnemyCandidate(mine.x,mine.y,mine.trigger+70,enemy=>{if(mine.life<=0||enemy.dead)return;if((enemy.x-mine.x)**2+(enemy.y-mine.y)**2<(enemy.r+mine.trigger)**2)detonatePhaseMine(mine,1);});}
+  for(const mine of mines){if(!mine||mine.life<=0)continue;mine.life-=dt;mine.arm=Math.max(0,mine.arm-dt);if(mine.detonateIn!==null){mine.detonateIn-=dt;if(mine.detonateIn<=0){detonatePhaseMine(mine,mine.pendingScale||1);continue;}}if(mine.life<=0){if(mine.arm<=0)detonatePhaseMine(mine,.55);continue;}if(mine.arm>0)continue;{const candidates=weaponNearbyCandidates(mine.x,mine.y,mine.trigger+70,MINE_NEARBY_BUFFER);for(let candidateIndex=0;candidateIndex<candidates.length&&mine.life>0;candidateIndex++){const enemy=candidates[candidateIndex];if(!enemy||enemy.dead)continue;if((enemy.x-mine.x)**2+(enemy.y-mine.y)**2<(enemy.r+mine.trigger)**2)detonatePhaseMine(mine,1);}}}
   if(n>=4){
     const armed=PHASE_ARMED_BUFFER;armed.length=0;for(const mine of mines)if(mine&&mine.life>0&&mine.arm<=0&&!mine.phantom)armed.push(mine);
-    for(let i=1;i<armed.length;i++){const a=armed[i-1],b=armed[i];if(Math.hypot(a.x-b.x,a.y-b.y)>210)continue;forEachNearbyEnemyCandidate((a.x+b.x)/2,(a.y+b.y)/2,160,enemy=>{if(enemy.dead||segmentDistance(enemy.x,enemy.y,a.x,a.y,b.x,b.y)>enemy.r+6)return;const now=state.time||0,last=a.linkHits.get(enemy.id)||-99;if(now-last<.35)return;a.linkHits.set(enemy.id,now);dealDamage(enemy,5+n*1.1,{color:'#b9f7ff',source:'phase-wire'});});}
+    for(let i=1;i<armed.length;i++){const a=armed[i-1],b=armed[i];if(Math.hypot(a.x-b.x,a.y-b.y)>210)continue;{const candidates=weaponNearbyCandidates((a.x+b.x)/2,(a.y+b.y)/2,160,WIRE_NEARBY_BUFFER);for(let candidateIndex=0;candidateIndex<candidates.length;candidateIndex++){const enemy=candidates[candidateIndex];if(!enemy||enemy.dead||segmentDistance(enemy.x,enemy.y,a.x,a.y,b.x,b.y)>enemy.r+6)continue;const now=state.time||0,last=a.linkHits.get(enemy.id)||-99;if(now-last<.35)continue;a.linkHits.set(enemy.id,now);dealDamage(enemy,5+n*1.1,{color:'#b9f7ff',source:'phase-wire'});}}}
   }
-  compactInPlace(mines,m=>m&&m.life>0);
+  compactInPlace(mines,keepPhaseMine);
 }
 function postRosterTargetScore(e,distance){return(e.type==='boss'?2:e.type==='mini'?1:0)*1e9+(e.hp||0)-distance*.08;}
 function postRosterTargetList(range,count){
@@ -210,7 +218,7 @@ function updateGuidedMissiles(dt){
     if(m.age>=m.ignition&&target){const dx=target.x-m.x,dy=target.y-m.y,d=Math.hypot(dx,dy)||1,powered=Math.max(0,m.age-m.ignition);if(!m.micro&&powered>=.45)m.terminal=true;if(!m.micro&&state.weaponAugments?.missile&&d<118)splitMirvMissile(m,target);const desired=Math.atan2(dy,dx),current=Math.atan2(m.vy,m.vx),turn=(m.micro?7.2:(m.n>=3?4.7:3.6))*dt,angle=missileTurn(current,desired,turn),baseSpeed=(m.micro?440:390+m.n*18)*postRosterMissileSpeed()*(m.terminal?1.28:1),speed=Math.hypot(m.vx,m.vy),nextSpeed=lerp(speed,baseSpeed,clamp(dt*(m.micro?8:4.8),0,1));m.vx=Math.cos(angle)*nextSpeed;m.vy=Math.sin(angle)*nextSpeed;if(d<target.r+m.r+6){explodeGuidedMissile(m,target);continue;}}
     m.x+=m.vx*dt;m.y+=m.vy*dt;if(m.age>=m.ignition&&Math.random()<dt*(m.micro?14:24))spawnParticle(m.x-m.vx*.018,m.y-m.vy*.018,m.micro?'#ffe2bd':'#ff9f57',1,42,m.micro?1.5:2.2);
   }
-  compactInPlace(state.entities.guidedMissiles,m=>m&&m.life>0);
+  compactInPlace(state.entities.guidedMissiles,keepGuidedMissile);
 }
 function gateInstallTarget(){
   let best=null,bestScore=-Infinity;const range=weaponRange('gate');for(const e of state.entities.enemies){if(!e||e.dead)continue;const d=Math.hypot(e.x-player.x,e.y-player.y);if(d>range)continue;let nearby=0;for(const other of state.entities.enemies)if(other&&!other.dead&&Math.hypot(other.x-e.x,other.y-e.y)<150)nearby++;const score=(e.type==='boss'?2:e.type==='mini'?1:0)*1e8+nearby*250+(e.hp||0)*.18-d*.10;if(score>bestScore){bestScore=score;best=e;}}return best;
@@ -239,8 +247,8 @@ function updateGateCrossfeed(net,dt){
   if(!state.weaponAugments?.gate)return;for(let i=0;i<net.gates.length;i++){const gate=net.gates[i];gate.copyCd=Math.max(0,(gate.copyCd||0)-dt);if(gate.copyCd>0)continue;for(const p of state.entities.projectiles){if(!p||p.life<=0||p.gateCopy||p.gateCrossfed||String(p.source||'').includes('multiplicity'))continue;if(Math.hypot(p.x-gate.x,p.y-gate.y)>28*weaponSizeMultiplier())continue;const next=net.gates[(i+1)%net.gates.length],target=nearestEnemy(next.x,next.y,weaponRange('gate'));if(!target)break;p.gateCrossfed=true;gate.copyCd=.55;const a=Math.atan2(target.y-next.y,target.x-next.x),speed=Math.max(360,Math.hypot(p.vx||0,p.vy||0));spawnPlayerProjectile({x:next.x,y:next.y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:Math.max(3,Number(p.r)||4),life:1.0,maxRange:weaponRange('gate'),damage:(Number(p.damage)||0)*.55,color:'#dce2ff',pierce:Math.max(0,Math.min(2,Number(p.pierce)||0)),source:'gate-crossfeed',gateCopy:true,homingTargetId:target.id,homingReacquire:false,homingTurn:2.2});break;}}
 }
 function updateGateNetworks(dt){
-  for(const net of state.entities.gateNetworks){if(!net||net.life<=0)continue;net.life-=dt;net.pulseCd-=dt;net.circuitCd=Math.max(0,net.circuitCd-dt);net.crossCd=Math.max(0,net.crossCd-dt);if(net.pulseCd<=0){net.pulseCd=1.65*hasteMult();spawnGatePulseSet(net);}for(const pulse of net.pulses){pulse.timer-=dt;if(pulse.timer<=0&&pulse.remaining>0){pulse.timer+=pulse.delay;gateSegmentHit(net,pulse);}}compactInPlace(net.pulses,p=>p&&p.remaining>0);updateGateCrossfeed(net,dt);}
-  compactInPlace(state.entities.gateNetworks,net=>net&&net.life>0);
+  for(const net of state.entities.gateNetworks){if(!net||net.life<=0)continue;net.life-=dt;net.pulseCd-=dt;net.circuitCd=Math.max(0,net.circuitCd-dt);net.crossCd=Math.max(0,net.crossCd-dt);if(net.pulseCd<=0){net.pulseCd=1.65*hasteMult();spawnGatePulseSet(net);}for(const pulse of net.pulses){pulse.timer-=dt;if(pulse.timer<=0&&pulse.remaining>0){pulse.timer+=pulse.delay;gateSegmentHit(net,pulse);}}compactInPlace(net.pulses,keepGatePulse);updateGateCrossfeed(net,dt);}
+  compactInPlace(state.entities.gateNetworks,keepGateNetwork);
 }
 function updatePostRosterWeapons(dt){
   const vacuumN=weaponCount('vacuum');if(vacuumN)updateVacuumSeeds(dt,vacuumN);else{state.entities.vacuumSeeds.length=0;player.vacuumKillCounter=0;}
