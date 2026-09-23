@@ -104,8 +104,9 @@
     shockwave(target.x,target.y,'#eadcff',30+count*4,.16,1.5);
     for(const pos of positions)shockwave(pos.x,pos.y,'#d7c6ff',18*size,.12,1.1);
   }
+  const COMMUNITY_PRISM_EXCLUDED=new Set(),COMMUNITY_PRISM_NEARBY=[];
   function prismRicochet(target,n,totalDamage){
-    const excluded=new Set([target.id]),targets=nearestEnemies(target.x,target.y,2,excluded,260+n*12);if(!targets.length)return;
+    const excluded=COMMUNITY_PRISM_EXCLUDED;excluded.clear();excluded.add(target.id);const targets=nearestEnemies(target.x,target.y,2,excluded,260+n*12);if(!targets.length)return;
     let from=target;targets.forEach((other,index)=>{const damage=totalDamage*(index?.24:.30);dealDamage(other,damage,{color:'#f4ddff',source:'prism-ricochet',canCrit:false});state.entities.beams.push({x1:from.x,y1:from.y,x2:other.x,y2:other.y,life:.18,max:.18,color:index?'#d8c5ff':'#f2e7ff',width:(index?2.1:2.7)*weaponSizeMultiplier()});from=other;});
   }
   updateFocusedPrisms=function communityFocusedPrisms(dt,n){
@@ -117,7 +118,7 @@
     if(lock.tick<=0){lock.tick+=tickInterval;const damage=(2.65+n*.86)*mult;for(const pos of positions)dealDamage(target,damage,{color,source:'prism-focus'});if(state.weaponAugments?.prism)prismRicochet(target,n,damage*positions.length);}
     if(lock.attackFlash>0&&lock.flashVisual<=0){lock.flashVisual=.065;positions.forEach((pos,index)=>pushPrismBeam(pos,index,count,target,{life:.045,max:.045,color:'#fff8ff',width:Math.max(2.8,width*.82)}));}
     if(lock.visual<=0){lock.visual=stressed?.18:.11;positions.forEach((pos,index)=>pushPrismBeam(pos,index,count,target,{life:.075,max:.075,color,width:Math.max(1,width*.42)}));}
-    if(state.weaponAugments?.prism&&stage===2&&lock.augmentCd<=0){lock.augmentCd=1.20;const len=(150+n*9)*Math.sqrt(size),hitHalfWidth=7.5*size,damage=16+n*4.2,base=Math.atan2(target.y-player.y,target.x-player.x);for(const offset of[-Math.PI/4,Math.PI/4]){const a=base+offset,x1=target.x-Math.cos(a)*len,y1=target.y-Math.sin(a)*len,x2=target.x+Math.cos(a)*len,y2=target.y+Math.sin(a)*len;state.entities.beams.push({x1,y1,x2,y2,life:.20,max:.20,color:'#fff6d7',width:hitHalfWidth*2});forEachNearbyEnemyCandidate(target.x,target.y,len+80,e=>{if(!e.dead&&segmentDistance(e.x,e.y,x1,y1,x2,y2)<e.r+hitHalfWidth)dealDamage(e,damage,{color:'#fff4dc',source:'prism-overheat-line',canCrit:false});});}dealDamage(target,damage*.85,{color:'#ffba72',source:'prism-overheat',canCrit:false});}
+    if(state.weaponAugments?.prism&&stage===2&&lock.augmentCd<=0){lock.augmentCd=1.20;const len=(150+n*9)*Math.sqrt(size),hitHalfWidth=7.5*size,damage=16+n*4.2,base=Math.atan2(target.y-player.y,target.x-player.x);for(const offset of[-Math.PI/4,Math.PI/4]){const a=base+offset,x1=target.x-Math.cos(a)*len,y1=target.y-Math.sin(a)*len,x2=target.x+Math.cos(a)*len,y2=target.y+Math.sin(a)*len;state.entities.beams.push({x1,y1,x2,y2,life:.20,max:.20,color:'#fff6d7',width:hitHalfWidth*2});const candidates=typeof performanceNearbyEnemies==='function'?performanceNearbyEnemies(target.x,target.y,len+80,COMMUNITY_PRISM_NEARBY):state.entities.enemies;for(let candidateIndex=0;candidateIndex<candidates.length;candidateIndex++){const e=candidates[candidateIndex];if(e&&!e.dead&&segmentDistance(e.x,e.y,x1,y1,x2,y2)<e.r+hitHalfWidth)dealDamage(e,damage,{color:'#fff4dc',source:'prism-overheat-line',canCrit:false});}}dealDamage(target,damage*.85,{color:'#ffba72',source:'prism-overheat',canCrit:false});}
     trimOldest(state.entities.beams,entityCap('beams'));
   };
   firePrism=function communitySharedPrismEcho(n,echoed=false){const target=sharedPrismTarget(0),lock=player.prismSharedLock;if(!target||(lock?.readyAt||0)>(state.time||0))return;const count=prismBodyCount(n),positions=prismPositions(count),size=weaponSizeMultiplier();positions.forEach((pos,index)=>{dealDamage(target,(8+n*2.65)*(echoed?.62:1),{color:echoed?COLORS.pink:'#f2d5ff',source:'prism-echo'});pushPrismBeam(pos,index,count,target,{life:.14,max:.14,color:echoed?COLORS.pink:'#f2d5ff',width:(3.4+n*.20)*size});});trimOldest(state.entities.beams,entityCap('beams'));};
@@ -135,18 +136,14 @@
   damageReduction=function communityBulwarkReduction(){const base=previousDamageReduction(),n=weaponStacks('bulwark');return clamp(base+n*.008+(n>=5?.015:0),0,.78);};
 
   const rawEmergencyRendering=window.stackfallEmergencyRendering,rawGpuEmergencyAvailable=window.stackfallGpuEmergencyAvailable;
-  function criticalVisualCombat(){return state.mode==='playing'&&(state.mapEventActive||state.apexActiveId||state.entities.enemies.some(e=>e&&!e.dead&&e.type==='boss'));}
+  function criticalVisualCombat(){if(state.mode!=='playing')return false;if(state.mapEventActive||state.apexActiveId)return true;for(const e of state.entities.enemies)if(e&&!e.dead&&e.type==='boss')return true;return false;}
   if(typeof rawEmergencyRendering==='function')window.stackfallEmergencyRendering=()=>criticalVisualCombat()?false:rawEmergencyRendering();
   if(typeof rawGpuEmergencyAvailable==='function')window.stackfallGpuEmergencyAvailable=()=>criticalVisualCombat()?false:rawGpuEmergencyAvailable();
-  const previousUpdatePlayer=updatePlayer;
-  updatePlayer=function communityFeedbackPlayer(dt){
-    previousUpdatePlayer(dt);
-    const emergency=typeof rawEmergencyRendering==='function'&&rawEmergencyRendering(),critical=criticalVisualCombat();if(critical&&emergency&&!forcedCriticalResolution){criticalResolutionPreviousScale=Number(window.stackfallResolutionScale)||1;forcedCriticalResolution=true;window.stackfallResolutionScale=.55;resize();}else if(forcedCriticalResolution&&(!critical||!emergency)){const restoreScale=emergency?criticalResolutionPreviousScale:1;forcedCriticalResolution=false;criticalResolutionPreviousScale=1;window.stackfallResolutionScale=restoreScale;resize();}
-  };
 
   const previousEnemyProjectileRenderer=drawEnemyProjectiles;
   drawEnemyProjectiles=function distinctHostileProjectiles(){
-    const tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0;if(tier===2&&!criticalVisualCombat())return previousEnemyProjectileRenderer();const list=state.entities.enemyProjectiles||[],crowded=list.length>100;for(const p of list){if(!p||p.life<=0)continue;const s=worldToScreen(p.x,p.y);if(s.x<-52||s.x>vw+52||s.y<-52||s.y>vh+52)continue;ctx.save();ctx.translate(Math.round(s.x),Math.round(s.y));ctx.rotate(Math.atan2(p.vy||0,p.vx||0));ctx.shadowBlur=tier===0&&!crowded?7:0;ctx.shadowColor=p.color||'#ff6ccf';drawEnemyProjectileShape(p,p.visual||'orb',tier);ctx.restore();}
+    if(document.documentElement.dataset.stackfallRenderer==='pixi-webgl')return previousEnemyProjectileRenderer();
+    const tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0;if(tier===2&&!criticalVisualCombat())return previousEnemyProjectileRenderer();const list=state.entities.enemyProjectiles||[],crowded=list.length>100;for(const p of list){if(!p||p.life<=0)continue;const sx=p.x-player.x+vw/2,sy=p.y-player.y+vh/2;if(sx<-52||sx>vw+52||sy<-52||sy>vh+52)continue;ctx.save();ctx.translate(Math.round(sx),Math.round(sy));ctx.rotate(Math.atan2(p.vy||0,p.vx||0));ctx.shadowBlur=tier===0&&!crowded?7:0;ctx.shadowColor=p.color||'#ff6ccf';drawEnemyProjectileShape(p,p.visual||'orb',tier);ctx.restore();}
   };
 
   const starlightForeground=document.querySelector('#combatForeground');
@@ -161,7 +158,7 @@
     previousDrawEquippedOrbits(x,y,t);
     const lock=player.prismSharedLock,flash=Math.max(0,Number(lock?.attackFlash)||0),n=weaponCount('prism');if(!n||flash<=0)return;
     const visible=Math.floor(flash/.045)%2===0;if(!visible)return;const size=weaponSizeMultiplier();
-    for(const point of prismPositions(prismBodyCount(n))){const s=worldToScreen(point.x,point.y);ctx.save();ctx.translate(s.x,s.y);ctx.rotate(-point.a+t*.00057);ctx.scale(size*1.18,size*1.18);ctx.globalAlpha=clamp(flash/.22,.2,1);ctx.fillStyle='#fffaff';ctx.shadowBlur=28;ctx.shadowColor='#f2e5ff';ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(8,0);ctx.lineTo(0,10);ctx.lineTo(-8,0);ctx.closePath();ctx.fill();ctx.restore();}
+    for(const point of prismPositions(prismBodyCount(n))){const sx=point.x-player.x+vw/2,sy=point.y-player.y+vh/2;ctx.save();ctx.translate(sx,sy);ctx.rotate(-point.a+t*.00057);ctx.scale(size*1.18,size*1.18);ctx.globalAlpha=clamp(flash/.22,.2,1);ctx.fillStyle='#fffaff';ctx.shadowBlur=28;ctx.shadowColor='#f2e5ff';ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(8,0);ctx.lineTo(0,10);ctx.lineTo(-8,0);ctx.closePath();ctx.fill();ctx.restore();}
   };
 
   const oldAudit=window.stackfallBalanceAudit;
