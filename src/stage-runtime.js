@@ -124,6 +124,27 @@
   window.stackfallRegisterStageRuntime=registerStageRuntime;window.stackfallStageRuntimeRegistry=registry;window.stackfallSpawnStageEnemy=spawnStageEnemy;window.stackfallSpawnStageBurst=spawnStageBurst;window.stackfallBeginStageVictory=beginStageVictory;window.stackfallStageBalanceDiagnostics=()=>{const run=stageRuntime();return run?{stageId:run.stage?.id,thresholds:stageMinibossThresholds(run.stage),minibossTriggered:{...(run.minibossTriggered||{})},spawnBudget:{...(run.lastSpawnBudget||{})},bossTier:Number(run.stage?.order)%6===0?'constellation':'stage'}:null;};
   window.updateStageBossSkill=function(enemy,dt){const def=stageDefinition(enemy?.eventKind);if(!def?.bossSkill)return;return def.bossSkill(enemy,dt,apiFor(stageRuntime()));};
   window.handleStageBossDefeated=function(enemy){if(enemy?.kind==='stage-boss')beginStageVictory(enemy);};
+  const ENDLESS_FAMILY_CACHE={registrySize:-1,route:[],bloom:[],array:[]};
+  function rebuildEndlessFamilyCache(){
+    if(ENDLESS_FAMILY_CACHE.registrySize===registry.size)return ENDLESS_FAMILY_CACHE;
+    ENDLESS_FAMILY_CACHE.registrySize=registry.size;ENDLESS_FAMILY_CACHE.route.length=0;ENDLESS_FAMILY_CACHE.bloom.length=0;ENDLESS_FAMILY_CACHE.array.length=0;
+    const seen={route:new Set(),bloom:new Set(),array:new Set()};
+    for(const[stageId,def]of registry){const order=Math.max(1,Number(window.stackfallStageById?.(stageId)?.order)||Number(String(stageId).slice(-2))||1),family=order<=6?'route':order<=12?'bloom':'array';for(const variant of Object.keys(def?.variants||{})){if(seen[family].has(variant))continue;seen[family].add(variant);ENDLESS_FAMILY_CACHE[family].push({stageId,variant,family});}}
+    return ENDLESS_FAMILY_CACHE;
+  }
+  function endlessFamilySpawnRef(elapsed=state.time||0){
+    const pools=rebuildEndlessFamilyCache(),families=elapsed>=420?['route','bloom','array']:elapsed>=240?['route','bloom']:elapsed>=75?['route']:[];
+    if(!families.length)return null;const family=families[Math.floor(Math.random()*families.length)],pool=pools[family];return pool?.length?pool[Math.floor(Math.random()*pool.length)]:null;
+  }
+  function endlessFamilySpawnChance(elapsed=state.time||0){return elapsed<75?0:elapsed<240?.22:elapsed<420?.32:.42;}
+  const baseSpawnEnemyForEndlessFamilies=spawnEnemy;
+  spawnEnemy=function endlessFamilySpawn(kind='normal'){
+    if(kind==='normal'&&window.stackfallIsEndlessRun?.()===true&&state.mode==='playing'&&!state.mapEventActive&&!state.bossActiveId&&!state.pendingApexForm&&!state.apexActiveId&&Math.random()<endlessFamilySpawnChance()){
+      const ref=endlessFamilySpawnRef();if(ref){const enemy=spawnStageEnemy(ref.stageId,ref.variant);if(enemy){enemy.kind='normal';enemy.eventKind=null;enemy.endlessFamily=ref.family;return enemy;}}
+    }
+    return baseSpawnEnemyForEndlessFamilies(kind);
+  };
+  window.stackfallEndlessFamilyDiagnostics=()=>{const pools=rebuildEndlessFamilyCache();return{thresholds:{route:75,bloom:240,array:420},counts:{route:pools.route.length,bloom:pools.bloom.length,array:pools.array.length},unlockGated:false};};
   const baseSpawning=updateSpawning;updateSpawning=function stageAwareSpawning(dt){if(isStage()){updateStage(dt);return;}baseSpawning(dt);};
   const baseMapEvents=window.updateMapEvents;if(typeof baseMapEvents==='function')window.updateMapEvents=function stageAwareMapEvents(dt){if(isStage())return;baseMapEvents(dt);};
   const baseReset=resetGame;resetGame=function stageAwareReset(){const config=window.stackfallCurrentRunConfig?.();baseReset();clearStageUi();if(config?.mode!=='stage'){state.stageRun=null;return;}const stage=config.stage,def=stageDefinition(stage?.id);if(!stage||!def){state.stageRun=null;return;}state.stageRun={stage,eventsTriggered:{},minibossTriggered:{},bossSpawned:false,bossId:null,completed:false,completedAt:null,resultShown:false,lastSpawnBudget:null};state.nextApexAt=Infinity;state.mapEventActive=null;state.entities.mapEvents.length=0;state.entities.enemies.length=0;state.entities.enemyProjectiles.length=0;state.realmTheme=def.theme||('stage-'+String(stage.order).padStart(2,'0'));state.spawnTimer=def.initialSpawnTimer??.7;for(const variant of def.startingVariants||[])spawnStageEnemy(stage.id,variant);showBossNotice(localized(stage.title),'STAGE '+String(stage.order).padStart(2,'0'));updateObjective(state.stageRun);def.onStart?.(apiFor(state.stageRun));};

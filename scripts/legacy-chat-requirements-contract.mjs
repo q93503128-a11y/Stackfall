@@ -21,6 +21,10 @@ const entities=read('src/render-entities.js');
 const awakening=read('src/weapon-awakening-effects-a1-a7.js');
 const gpu=read('src/gpu-renderer.js');
 const damage=read('src/run-damage-stats.js');
+const runtimeControls=read('src/runtime-controls.js');
+const difficulty=read('src/difficulty-augment-expansion.js');
+const stageRuntime=read('src/stage-runtime.js');
+const rewards=read('src/reward-refinement.js');
 const design=read('docs/GAME_DESIGN.md');
 
 expect('player hit invulnerability remains 0.5 seconds',bosses.includes('player.invuln=.5')&&!bosses.includes('player.invuln=.9'));
@@ -35,6 +39,8 @@ expect('stage events remain fixed authored milestones',catalog.includes('fixedEv
 expect('crashed ship marker is consumed before encounter and cleared on entry',mapEvents.includes('marker.consumed=true;state.entities.mapEvents.length=0')&&mapEvents.includes('function startCrash(){hideOverlay();state.entities.mapEvents.length=0'));
 expect('world-event choices do not auto-timeout',mapEvents.includes('function armChoiceClock(')&&(mapEvents.match(/armChoiceClock\(/g)||[]).length===1);
 expect('Endless event cadence stays shortened and varied',mapEvents.includes("INTERVALS={vault:[54,74],crash:[82,112],void:[132,178]}")&&mapEvents.includes("FIRST={vault:38,crash:68,void:104}"));
+expect('Endless mixes authored stage enemy families by elapsed time without stage unlock gates',stageRuntime.includes("thresholds:{route:75,bloom:240,array:420}")&&stageRuntime.includes("unlockGated:false")&&stageRuntime.includes("enemy.endlessFamily=ref.family")&&!stageRuntime.includes("stackfallStageStatus?.(ref"));
+expect('event detection is announced and upgrade notices remain readable',mapEvents.includes("showBossNotice(m.name,tx('eventDetected'))")&&mapEvents.includes('showTimedResonance(4900)'));
 expect('crashed ship pressure scales with elapsed time',mapEvents.includes('strength:1+Math.min(2.25,elapsed/430)')&&mapEvents.includes('isDreadnoughtCrashEvent'));
 expect('map events announce detection and keep offscreen guidance',mapEvents.includes("showBossNotice(m.name,tx('eventDetected'))")&&mapEvents.includes('edgePoint(dx,dy)'));
 expect('Void Rift exposes five boss forms',bosses.includes("BOSS_POOLS={")&&bosses.includes("void:['maw','oracle','weaver','grave','paradox']"));
@@ -50,6 +56,12 @@ expect('normal Boomerang changes lunar phase outbound and return',entities.inclu
 expect('awakened Lunar Return also changes phase on return',awakening.includes("p.stage==='return'")&&awakening.includes('p.awMoonPhase=1-.86*clamp(p.returnLife/1.15,0,1)'));
 
 expect('damage results include timeline series and per-series toggles',damage.includes('damageTrend')&&damage.includes('damageTrendHidden'));
+expect('runtime keeps explicit x1 and x2 combat speed control',runtimeControls.includes("speed.textContent=state.gameSpeed===2?'×2':'×1'")&&runtimeControls.includes('stackfallGameSpeed'));
+expect('difficulty continues to scale Stardust rewards but not unlock currency',difficulty.includes("rewardMultiplier:.85")&&difficulty.includes("rewardMultiplier:1.30")&&design.includes('무기 해금과 Core Shard는 난이도 배율로 줄이거나 늘리지 않는다'));
+expect('unused awakening cores cash out at run end',design.includes('남은 코어는 런 종료 시 **1개당 기본 Stardust 40**')||design.includes('1개당 기본 Stardust 40'));
+expect('shield capacity remains additive across independent sources',rewards.includes("registerShieldCapacitySource('trait-aegis'")&&rewards.includes("registerShieldCapacitySource('augment-bulwark'")&&design.includes('보호막 최대치 기여량을 **합산**'));
+expect('expanded Apex arena remains 540 desktop and 350 compact',endgame.includes("state.apexArena.r=compactDevice()?350:540"));
+expect('canonical design says eight-minute Apex cadence and not ten-minute cadence',design.includes('실제 게임 시간 8분(480초) 간격')&&!design.includes('초월체: 실제 게임 시간 10분 간격'));
 expect('recovered requirements are canonicalized in design',design.includes('기본 무기 시각·발동 계약')&&design.includes('공통 피격 무적시간은 **0.5초**'));
 
 if(fail.length){
