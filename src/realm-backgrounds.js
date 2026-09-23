@@ -8,13 +8,14 @@ const SPACE_LANDMARK_TILE={w:2100,h:1500};
 const SPACE_LANDMARKS=Array.from({length:18},(_,i)=>({x:cosmicRand()*SPACE_LANDMARK_TILE.w,y:cosmicRand()*SPACE_LANDMARK_TILE.h,type:i%3,rot:cosmicRand()*TAU,scale:.72+cosmicRand()*.72}));
 const TRAVEL_MARKERS=Array.from({length:24},(_,i)=>({x:cosmicRand()*1900,y:cosmicRand()*1350,len:12+cosmicRand()*28,a:.10+cosmicRand()*.16,layer:i%2}));
 function wrap(v,size){return((v%size)+size)%size;}
-const STATIC_BACKDROP_CACHE={key:'',surface:null};
+const STATIC_BACKDROP_CACHE=new Map();
 function drawCachedBackdrop(key,painter){
-  const width=Math.max(1,Math.ceil(vw)),height=Math.max(1,Math.ceil(vh)),cacheKey=`${key}:${width}x${height}`;
-  if(STATIC_BACKDROP_CACHE.key!==cacheKey||!STATIC_BACKDROP_CACHE.surface){
-    const surface=typeof OffscreenCanvas==='function'?new OffscreenCanvas(width,height):document.createElement('canvas');surface.width=width;surface.height=height;const surfaceCtx=surface.getContext('2d',{alpha:false});painter(surfaceCtx);STATIC_BACKDROP_CACHE.key=cacheKey;STATIC_BACKDROP_CACHE.surface=surface;
+  const width=Math.max(1,Math.ceil(vw)),height=Math.max(1,Math.ceil(vh)),cacheKey=`${key}:${width}x${height}`;let surface=STATIC_BACKDROP_CACHE.get(cacheKey);
+  if(!surface){
+    surface=typeof OffscreenCanvas==='function'?new OffscreenCanvas(width,height):document.createElement('canvas');surface.width=width;surface.height=height;const surfaceCtx=surface.getContext('2d',{alpha:false});painter(surfaceCtx);
+    if(STATIC_BACKDROP_CACHE.size>=2)STATIC_BACKDROP_CACHE.delete(STATIC_BACKDROP_CACHE.keys().next().value);STATIC_BACKDROP_CACHE.set(cacheKey,surface);
   }
-  ctx.drawImage(STATIC_BACKDROP_CACHE.surface,0,0,width,height,0,0,vw,vh);
+  ctx.drawImage(surface,0,0,width,height,0,0,vw,vh);
 }
 const STAR_TILE_CACHE={key:'',tiles:[]};
 function makeStarTile(layer,palette,stride,layerIndex){
