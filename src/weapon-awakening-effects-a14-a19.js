@@ -230,17 +230,18 @@
     }
   }
   const baseUpdateGuidedMissiles=updateGuidedMissiles;
+  const STARBREAKER_SPECIAL_BUFFER=[],STARBREAKER_ORDINARY_BUFFER=[],STARBREAKER_GROUP_STATS=new Map();
+  let starbreakerGroupSerial=0;
   updateGuidedMissiles=function starbreakerMissileUpdate(dt){
-    const all=state.entities.guidedMissiles,special=all.filter(m=>m?.awSurround&&m.life>0),ordinary=all.filter(m=>!m?.awSurround&&m?.life>0);
+    const all=state.entities.guidedMissiles,special=STARBREAKER_SPECIAL_BUFFER,ordinary=STARBREAKER_ORDINARY_BUFFER;special.length=0;ordinary.length=0;
+    for(const m of all){if(!m||m.life<=0)continue;(m.awSurround?special:ordinary).push(m);}
     if(!special.length)return baseUpdateGuidedMissiles(dt);
-    state.entities.guidedMissiles=ordinary;try{baseUpdateGuidedMissiles(dt);}finally{const updated=state.entities.guidedMissiles;state.entities.guidedMissiles=all;all.length=0;all.push(...updated,...special);}
+    state.entities.guidedMissiles=ordinary;try{baseUpdateGuidedMissiles(dt);}finally{const updated=state.entities.guidedMissiles;state.entities.guidedMissiles=all;all.length=0;for(const m of updated)all.push(m);for(const m of special)all.push(m);}
     for(const m of special)updateSurroundMissile(m,dt);
-    const groups=new Map();for(const m of special){if(!m||m.life<=0||m.awStage==='dive')continue;const group=groups.get(m.awGroup)||[];group.push(m);groups.set(m.awGroup,group);}
-    for(const group of groups.values()){
-      if(group.some(m=>Number.isFinite(m.awSignalTimer)))continue;
-      const ready=group.filter(m=>m.awReady).length,required=Math.min(3,group.length),oldest=Math.max(...group.map(m=>m.awStageAge||0));
-      if(ready>=required||oldest>=.78){for(const m of group){m.awStage='hold';m.awReady=true;m.awTargetLocked=true;m.awSignalTimer=.15;m.vx*=.20;m.vy*=.20;}}
-    }
+    const serial=++starbreakerGroupSerial;
+    for(const m of special){if(!m||m.life<=0||m.awStage==='dive')continue;let stat=STARBREAKER_GROUP_STATS.get(m.awGroup);if(!stat){stat={serial:0,count:0,ready:0,oldest:0,signal:false};STARBREAKER_GROUP_STATS.set(m.awGroup,stat);}if(stat.serial!==serial){stat.serial=serial;stat.count=0;stat.ready=0;stat.oldest=0;stat.signal=false;}stat.count++;if(m.awReady)stat.ready++;stat.oldest=Math.max(stat.oldest,m.awStageAge||0);if(Number.isFinite(m.awSignalTimer))stat.signal=true;}
+    for(const m of special){if(!m||m.life<=0||m.awStage==='dive')continue;const stat=STARBREAKER_GROUP_STATS.get(m.awGroup);if(!stat||stat.serial!==serial||stat.signal||stat.triggered===serial)continue;const required=Math.min(3,stat.count);if(stat.ready>=required||stat.oldest>=.78){stat.triggered=serial;for(const other of special){if(other?.awGroup!==m.awGroup||other.life<=0||other.awStage==='dive')continue;other.awStage='hold';other.awReady=true;other.awTargetLocked=true;other.awSignalTimer=.15;other.vx*=.20;other.vy*=.20;}}}
+    if(STARBREAKER_GROUP_STATS.size>64)for(const[key,stat]of STARBREAKER_GROUP_STATS){if(serial-stat.serial>12)STARBREAKER_GROUP_STATS.delete(key);}
     compactInPlace(all,m=>m&&m.life>0);trimOldest(all,42);
   };
 
