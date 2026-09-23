@@ -342,7 +342,7 @@ node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-r
 
 ### Run modes and finite stages
 
-`ENDLESS` remains the default infinite mode with random world events, the full enemy family pool, and the 600-second Apex cadence. Finite stages use their own catalog timelines and do not inherit the Endless encounter director.
+`ENDLESS` remains the default infinite mode with random world events, the full enemy family pool, and the 480-second (8-minute) Apex cadence. Finite stages use their own catalog timelines and do not inherit the Endless encounter director.
 
 Stage 1 now starts at **5 minutes**, and the campaign rises to **15 minutes at Stage 18**. Fixed incidents and the recurring stage gimmick are compressed with the new operation length rather than being cut off. Reaching the listed time only spawns the final boss; the operation ends only when that boss is defeated.
 
