@@ -207,15 +207,17 @@
     pushHistory();p.trailCd-=dt;
     if(p.trailDamage&&p.trailCd<=0){p.trailCd=.20;const rr=21+p.stacks*2;forEachNearbyEnemyCandidate(p.x,p.y,rr+72,e=>{if(!e.dead&&(e.x-p.x)**2+(e.y-p.y)**2<(e.r+rr)**2)dealDamage(e,2.8+p.stacks,{color:p.color,source:'arc-trail',canCrit:false});});}
   }
+  const LUNAR_UPDATE_BUFFER=[],NORMAL_CURVE_UPDATE_BUFFER=[],LUNAR_RENDER_BUFFER=[],NORMAL_CURVE_RENDER_BUFFER=[];
   updateBoomerangs=function lunarReturnUpdate(dt){
     markLunarCurves();
     const curves=state.entities.curves;
     if(!awake('arc')||!curves.some(p=>p?.awLunar))return baseUpdateBoomerangs(dt);
-    const lunar=curves.filter(p=>p?.awLunar&&!p.dead),normal=curves.filter(p=>!p?.awLunar&&!p?.dead),original=state.entities.curves;
+    const lunar=LUNAR_UPDATE_BUFFER,normal=NORMAL_CURVE_UPDATE_BUFFER,original=state.entities.curves;lunar.length=0;normal.length=0;
+    for(const p of curves){if(!p||p.dead)continue;(p.awLunar?lunar:normal).push(p);}
     state.entities.curves=normal;
     try{baseUpdateBoomerangs(dt);}finally{
-      const updatedNormal=state.entities.curves;
-      state.entities.curves=original;original.length=0;original.push(...updatedNormal,...lunar);
+      const updatedNormal=state.entities.curves;state.entities.curves=original;original.length=0;
+      for(const p of updatedNormal)original.push(p);for(const p of lunar)original.push(p);
     }
     const stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed();
     for(const p of lunar)updateLunarCurve(p,dt,stressed);
@@ -288,7 +290,8 @@
   }
   drawBoomerangs=function lunarReturnVisuals(){
     if(!awake('arc'))return baseDrawBoomerangs();
-    const curves=state.entities.curves,normal=curves.filter(p=>!p?.awLunar),lunar=curves.filter(p=>p?.awLunar&&!p.dead),original=state.entities.curves;
+    const curves=state.entities.curves,normal=NORMAL_CURVE_RENDER_BUFFER,lunar=LUNAR_RENDER_BUFFER,original=state.entities.curves;normal.length=0;lunar.length=0;
+    for(const p of curves){if(!p||p.dead)continue;(p.awLunar?lunar:normal).push(p);}
     state.entities.curves=normal;try{baseDrawBoomerangs();}finally{state.entities.curves=original;}
     for(const p of lunar)drawMoonBoomerang(p);
   };
