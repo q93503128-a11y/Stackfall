@@ -84,6 +84,7 @@
 
   const sparklesEnabled=()=>GAME_SETTINGS.sparkles!==false;
   const shouldShowAlliedVisuals=()=>GAME_SETTINGS.hideProjectiles!==true&&state.mode!=='menu';
+  const USE_GPU_PLAYER_PROJECTILES=false;
 
   function resizeForegroundCanvas(){}
   function resizeGpuCombatLayer(){if(!app?.renderer)return;const scale=clamp(Number(window.stackfallResolutionScale)||1,.30,1),pixels=Math.max(1,window.innerWidth*window.innerHeight),large=pixels>=1300000,cap=compactDevice()?1.15:large?1.15:1.40,areaScale=!compactDevice()&&large?.90:1,resolution=Math.max(.30,Math.min(window.devicePixelRatio||1,cap)*scale*areaScale);app.renderer.resize(window.innerWidth,window.innerHeight,resolution);const surface=safeGpuCanvas();if(surface){surface.style.width=`${window.innerWidth}px`;surface.style.height=`${window.innerHeight}px`;}}
@@ -238,7 +239,7 @@
   const PROJECTILE_VISUALS={comet:{kind:'comet',texture:null,width:8.6,height:3.15,alpha:.98},ember:{kind:'ember',texture:null,width:4.7,height:4.1,alpha:.96},core:{kind:'core',texture:null,width:4.35,height:2.65,alpha:.93},shard:{kind:'shard',texture:null,width:4.4,height:2.45,alpha:.92},generic:{kind:'generic',texture:null,width:3.8,height:2.5,alpha:.90}};
   function projectileVisual(source){const s=String(source||''),visual=s.includes('comet')&&!s.includes('fragment')?PROJECTILE_VISUALS.comet:s==='ember'||s==='echo-star'?PROJECTILE_VISUALS.ember:s==='core'||s==='core-echo'||s==='core-nova'?PROJECTILE_VISUALS.core:s.includes('fragment')||s.includes('shard')||s.includes('lance')||s.includes('mirror')?PROJECTILE_VISUALS.shard:PROJECTILE_VISUALS.generic;visual.texture=visual.kind==='comet'?projectileTextures.comet:visual.kind==='ember'?projectileTextures.ember:visual.kind==='core'?projectileTextures.core:visual.kind==='shard'?projectileTextures.shard:(projectileTextures.generic||solidTexture);return visual;}
   function syncProjectileSprites(){
-    visibleProjectileSprites=0;if(!app||contextLost)return;const visible=shouldShowAlliedVisuals();if(!visible){hideUnused(projectileSprites,0);return;}const list=state.entities.projectiles||[],tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,visualLimit=tier===2?48:tier===1?96:Infinity;let used=0;
+    visibleProjectileSprites=0;if(!app||contextLost)return;if(!USE_GPU_PLAYER_PROJECTILES){hideUnused(projectileSprites,0);return;}const visible=shouldShowAlliedVisuals();if(!visible){hideUnused(projectileSprites,0);return;}const list=state.entities.projectiles||[],tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,visualLimit=tier===2?48:tier===1?96:Infinity;let used=0;
     for(let i=0;i<list.length&&used<visualLimit;i++){const p=list[i];if(!p||p.life<=0||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;const x=p.x-player.x+vw/2,y=p.y-player.y+vh/2;if(x<-150||x>vw+150||y<-150||y>vh+150)continue;const speed=Math.hypot(p.vx||0,p.vy||0),radius=Math.max(1.5,Math.min(24,Number(p.r)||4)),visual=projectileVisual(p.source),sprite=ensureSprite(projectileSprites,used++,projectileLayer,visual.texture||solidTexture);sprite.visible=true;sprite.x=Math.round(x);sprite.y=Math.round(y);sprite.rotation=Math.atan2(p.vy||0,p.vx||0);sprite.tint=parseColor(p.color,0xffffff);sprite.alpha=sparklesEnabled()?visual.alpha:Math.min(.9,visual.alpha);sprite.width=Math.max(4,radius*visual.width+(visual.kind==='generic'?Math.min(18,speed*.012):0));sprite.height=Math.max(3.5,radius*visual.height);}
     visibleProjectileSprites=used;if(used>0)firstProjectileSpriteSeen=true;hideUnused(projectileSprites,used);
   }
@@ -443,7 +444,7 @@
     return result;
   };
   drawProjectiles=function hybridProjectileDraw(){
-    if(activeGpuProjectiles())return;
+    if(GAME_SETTINGS.hideProjectiles===true)return;
     if(sparklesEnabled())return canvasDrawProjectiles();
     drawMinimalAlliedProjectiles();
   };
