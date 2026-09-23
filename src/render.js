@@ -21,6 +21,8 @@ updateSpawning=function updateSpawningAccelerated(dt){
   if(state.spawnTimer<=0){state.spawnTimer=rate;const count=1+Math.min(compact?2:3,Math.floor(elapsed/120));for(let i=0;i<count;i++)spawnEnemy('normal');}
   if(typeof updateEncounterDirector==='function')updateEncounterDirector(dt);
 };
+let renderVignetteCache=null,renderVignetteKey='';
+function cachedRenderVignette(){const key=`${vw}x${vh}@${dpr}`;if(renderVignetteCache&&renderVignetteKey===key)return renderVignetteCache;const gradient=ctx.createRadialGradient(vw/2,vh/2,Math.min(vw,vh)*.18,vw/2,vh/2,Math.max(vw,vh)*.74);gradient.addColorStop(0,'rgba(0,0,0,0)');gradient.addColorStop(1,'rgba(0,1,8,.58)');renderVignetteCache=gradient;renderVignetteKey=key;return gradient;}
 function draw(){
   state.renderFrame++;const rawShake=GAME_SETTINGS.screenShake===false?0:Math.max(0,state.camera.shake||0),shake=rawShake>=SCREEN_SHAKE_VISIBLE_THRESHOLD?Math.min(15,rawShake*.72):0;state.camera.shakeX=shake?rand(-shake,shake):0;state.camera.shakeY=shake?rand(-shake,shake):0;
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.setLineDash([]);
@@ -32,7 +34,7 @@ function draw(){
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.setLineDash([]);if(typeof drawStageVictoryCinematic==='function'&&state.mode==='stageVictory')runDrawStage('drawStageVictoryCinematic',drawStageVictoryCinematic);
 
   const performanceTier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0;
-  if(performanceTier===0){const vignette=ctx.createRadialGradient(vw/2,vh/2,Math.min(vw,vh)*.18,vw/2,vh/2,Math.max(vw,vh)*.74);vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(0,1,8,.58)');ctx.fillStyle=vignette;ctx.fillRect(0,0,vw,vh);}else if(performanceTier===1){ctx.fillStyle='rgba(0,1,8,.08)';ctx.fillRect(0,0,vw,vh);}
+  if(performanceTier===0){ctx.fillStyle=cachedRenderVignette();ctx.fillRect(0,0,vw,vh);}else if(performanceTier===1){ctx.fillStyle='rgba(0,1,8,.08)';ctx.fillRect(0,0,vw,vh);}
   if(GAME_SETTINGS.sparkles!==false&&state.flash>=SCREEN_FLASH_VISIBLE_THRESHOLD){ctx.fillStyle=`rgba(225,242,255,${Math.min(.42,state.flash*.72)})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlay',drawRealmCinematicOverlay);
 }
 const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0,lastRenderAt=0;const TARGET_RENDER_INTERVAL=1000/60;
