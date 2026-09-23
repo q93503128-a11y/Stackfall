@@ -446,7 +446,10 @@
     if(sparklesEnabled())return canvasDrawProjectiles();
     drawMinimalAlliedProjectiles();
   };
-  drawAlliedEffects=function hybridAlliedEffectDraw(){if(activeGpuProjectiles()||!sparklesEnabled())return;return canvasDrawAlliedEffects();};
+  drawAlliedEffects=function hybridAlliedEffectDraw(){
+    if(activeGpuProjectiles()||!sparklesEnabled()){if(typeof drawPostRosterWeaponEntities==='function')drawPostRosterWeaponEntities();return;}
+    return canvasDrawAlliedEffects();
+  };
   drawEnemyProjectiles=function hybridEnemyProjectileDraw(){if(activeGpuProjectiles())return;return canvasDrawEnemyProjectiles();};
   if(canvasDrawBeamEffects)drawBeamEffects=function hybridBeamDraw(){if(activeGpuProjectiles())return;return canvasDrawBeamEffects();};
   if(canvasDrawStars){
