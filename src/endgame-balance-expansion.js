@@ -24,7 +24,7 @@
   const baseDealDamage=dealDamage;let secondaryDamageGuard=false;
   dealDamage=function endgameWeaponDamage(enemy,amount,opts={}){
     const source=String(opts.source||'');if(weaponSources.has(source))amount*=1.08;if(state.weaponAugments?.chrono&&enemy?.timeLock>0)amount*=1.13;
-    const alive=enemy&&!enemy.dead,x=enemy?.x||0,y=enemy?.y||0,hpBefore=Math.max(0,Number(enemy?.hp)||0);baseDealDamage(enemy,amount,opts);if(alive&&enemy&&typeof registerStackfallBossChainDamage==='function'&&['mini','boss'].includes(enemy.type))registerStackfallBossChainDamage(enemy,Math.min(hpBefore,Math.max(0,amount)));if(!alive||secondaryDamageGuard||!enemy)return;
+    const alive=enemy&&!enemy.dead,x=enemy?.x||0,y=enemy?.y||0;baseDealDamage(enemy,amount,opts);if(!alive||secondaryDamageGuard||!enemy)return;
     secondaryDamageGuard=true;try{
       if(state.weaponAugments?.core&&['core','core-echo'].includes(source)&&!enemy.dead){player.coreRicochetCycle=(player.coreRicochetCycle||0)+1;if(player.coreRicochetCycle%4===0){baseDealDamage(enemy,amount*.42,{color:'#dffbff',source:'core-ricochet',canCrit:false});state.entities.beams.push({x1:x-20,y1:y-20,x2:x+20,y2:y+20,life:.10,max:.10,color:'#dffbff',width:1.8});}}
       if(state.weaponAugments?.blade&&source==='blade'&&!enemy.dead){player.bladeShearCycle=(player.bladeShearCycle||0)+1;if(player.bladeShearCycle%7===0){const a=Math.atan2(enemy.y-player.y,enemy.x-player.x);spawnPlayerProjectile({x,y,vx:Math.cos(a)*520,vy:Math.sin(a)*520,r:5.2,life:.72,maxRange:300,damage:amount*.55,color:'#d8fbff',pierce:3,source:'blade-shear'});}}
