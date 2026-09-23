@@ -210,7 +210,7 @@
     g.shadowBlur=0;entry={surface,anchorX:cx,anchorY:cy};projectileSpriteCache.set(key,entry);trimCache(projectileSpriteCache);return entry;
   }
   function drawSpriteRotated(entry,x,y,angle){
-    ctx.translate(x,y);ctx.rotate(angle);ctx.drawImage(entry.surface,-entry.anchorX,-entry.anchorY);ctx.rotate(-angle);ctx.translate(-x,-y);
+    const scale=Number.isFinite(entry.scale)?entry.scale:1;ctx.translate(x,y);ctx.rotate(angle);if(scale!==1)ctx.scale(scale,scale);ctx.drawImage(entry.surface,-entry.anchorX,-entry.anchorY);if(scale!==1)ctx.scale(1/scale,1/scale);ctx.rotate(-angle);ctx.translate(-x,-y);
   }
   function drawCachedProjectiles(list,enemy=false){
     for(let i=0;i<list.length;i++){
@@ -224,6 +224,7 @@
   drawGems=function cachedGemRenderer(){const list=state.entities.gems||[];for(let i=0;i<list.length;i++){const gem=list[i];if(!gem||gem.life<=0)continue;const sx=gem.x-player.x+vw/2,sy=gem.y-player.y+vh/2;if(sx<-32||sx>vw+32||sy<-32||sy>vh+32)continue;const entry=gemSprite(gem.r||4);ctx.drawImage(entry.surface,roundPixel(sx-entry.anchorX),roundPixel(sy-entry.anchorY));}};
 
   function enemySprite(e){
+    if(e.stageVariant&&typeof stageEnemyRaster==='function'){const surface=stageEnemyRaster(e),radius=Math.max(7,Math.min(40,Number(e.r)||13));return{surface,anchorX:80,anchorY:80,scale:Math.max(.35,radius/28)};}
     const phaseBucket=e.type==='grunt'?Math.floor(((e.phase||0)%TAU+TAU)%TAU/TAU*12):0,radius=Math.max(7,Math.min(28,Math.round(e.r||13))),color=safeColor(e.hit?'#ffffff':e.color,'#7769ff'),key=`${e.type}|${e.eventKind||e.variant||'base'}|${radius}|${color}|${phaseBucket}`;
     let entry=enemySpriteCache.get(key);if(entry)return entry;
     const pad=34,size=(radius+pad)*2,surface=makeSurface(size,size),g=surface.getContext('2d'),cx=size/2,cy=size/2;
@@ -245,7 +246,7 @@
       if(sx<-180||sx>vw+180||sy<-180||sy>vh+180)continue;
       if(elite){ctx.save();ctx.translate(sx,sy);const pulse=1+Math.sin(e.phase)*.05;ctx.scale(pulse,pulse);ctx.shadowBlur=e.kind==='apex'?58:e.type==='boss'?44:30;ctx.shadowColor=e.color;ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;drawEliteShape(e);ctx.restore();}
       else{
-        const entry=enemySprite(e),angle=e.type==='fast'||e.type==='ranged'||e.type==='tank'&&e.eventKind==='crash'?Math.atan2(player.y-e.y,player.x-e.x):e.type==='tank'?(e.phase||0)*.035:0;drawSpriteRotated(entry,roundPixel(sx),roundPixel(sy),angle);
+        const entry=enemySprite(e),directionalStage=!!(e.stageVariant&&typeof DIRECTIONAL_STAGE_VARIANTS!=='undefined'&&DIRECTIONAL_STAGE_VARIANTS.has(e.stageVariant)),angle=directionalStage||e.type==='fast'||e.type==='ranged'||e.type==='tank'&&e.eventKind==='crash'?Math.atan2(player.y-e.y,player.x-e.x):e.type==='tank'?(e.phase||0)*.035:0;drawSpriteRotated(entry,roundPixel(sx),roundPixel(sy),angle);
       }
       if(!elite&&e.hp<e.maxHp){const width=clamp(e.r*2.15,28,e.kind==='apex'?170:e.type==='boss'?132:92),barY=sy-e.r*1.28-17;ctx.fillStyle='rgba(0,0,0,.62)';ctx.fillRect(roundPixel(sx-width/2),roundPixel(barY),Math.ceil(width),5);ctx.fillStyle=e.color;ctx.fillRect(roundPixel(sx-width/2),roundPixel(barY),Math.ceil(width*clamp(e.hp/e.maxHp,0,1)),5);}
     }
