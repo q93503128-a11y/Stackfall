@@ -37,6 +37,7 @@
   let emergencyRingTexture=null;
   let emergencyArrowTexture=null;
   let hostileTexture=null;
+  let vignetteTexture=null;
   let textureGeneration=0;
   let texturesCreated=0;
   let texturesDestroyed=0;
@@ -45,6 +46,8 @@
   const hostileSprites=[];
   const beamGlowSprites=[];
   const beamCoreSprites=[];
+  let postVignetteSprite=null;
+  let postFlashSprite=null;
   const emergencyEnemySprites=[];
   const emergencyHostileSprites=[];
   const emergencyCueSprites=[];
@@ -55,6 +58,7 @@
   let beamGlowLayer=null;
   let beamCoreLayer=null;
   let hostileLayer=null;
+  let postLayer=null;
   let emergencyEnemyLayer=null;
   let emergencyHostileLayer=null;
   let emergencyCueLayer=null;
@@ -78,22 +82,16 @@
   const sparklesEnabled=()=>GAME_SETTINGS.sparkles!==false;
   const shouldShowAlliedVisuals=()=>GAME_SETTINGS.hideProjectiles!==true&&state.mode!=='menu';
 
-  function ensureForegroundCanvas(){
-    foregroundCanvas=document.querySelector('#combatForeground')||document.createElement('canvas');foregroundCanvas.id='combatForeground';foregroundCanvas.setAttribute('aria-hidden','true');Object.assign(foregroundCanvas.style,{position:'absolute',inset:'0',width:'100%',height:'100%',display:'block',pointerEvents:'none',touchAction:'none',zIndex:'2',background:'transparent'});if(!foregroundCanvas.isConnected)canvas.insertAdjacentElement('afterend',foregroundCanvas);foregroundCtx=foregroundCanvas.getContext('2d',{alpha:true,desynchronized:true});resizeForegroundCanvas();
-  }
-  function resizeForegroundCanvas(){if(!foregroundCanvas||!foregroundCtx)return;const width=Math.max(1,Math.floor(vw*dpr)),height=Math.max(1,Math.floor(vh*dpr)),changed=foregroundCanvas.width!==width||foregroundCanvas.height!==height;if(foregroundCanvas.width!==width)foregroundCanvas.width=width;if(foregroundCanvas.height!==height)foregroundCanvas.height=height;if(changed){foregroundVignette=null;foregroundVignetteKey='';}foregroundCtx.setTransform(dpr,0,0,dpr,0,0);}
-  function cachedForegroundVignette(){
-    if(!foregroundCtx)return null;const key=`${vw}x${vh}@${dpr}`;if(foregroundVignette&&foregroundVignetteKey===key)return foregroundVignette;
-    const gradient=foregroundCtx.createRadialGradient(vw/2,vh/2,Math.min(vw,vh)*.18,vw/2,vh/2,Math.max(vw,vh)*.74);gradient.addColorStop(0,'rgba(0,0,0,0)');gradient.addColorStop(1,'rgba(0,1,8,.58)');foregroundVignette=gradient;foregroundVignetteKey=key;return gradient;
-  }
+  function resizeForegroundCanvas(){}
   function resizeGpuCombatLayer(){if(!app?.renderer)return;const scale=clamp(Number(window.stackfallResolutionScale)||1,.30,1),pixels=Math.max(1,window.innerWidth*window.innerHeight),large=pixels>=1300000,cap=compactDevice()?1.15:large?1.15:1.40,areaScale=!compactDevice()&&large?.90:1,resolution=Math.max(.30,Math.min(window.devicePixelRatio||1,cap)*scale*areaScale);app.renderer.resize(window.innerWidth,window.innerHeight,resolution);const surface=safeGpuCanvas();if(surface){surface.style.width=`${window.innerWidth}px`;surface.style.height=`${window.innerHeight}px`;}}
   window.resizeForegroundCanvas=resizeForegroundCanvas;
   window.resizeGpuCombatLayer=resizeGpuCombatLayer;
   window.drawForegroundCombat=function drawForegroundCombat(){
-    if(!foregroundCanvas||!foregroundCtx)return;resizeForegroundCanvas();foregroundCanvas.style.display=state.mode==='menu'?'none':'block';foregroundCanvas.style.visibility='visible';foregroundCtx.setTransform(1,0,0,1,0,0);foregroundCtx.clearRect(0,0,foregroundCanvas.width,foregroundCanvas.height);if(state.mode==='menu')return;
-    const previousCtx=ctx;ctx=foregroundCtx;try{ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.setLineDash([]);ctx.save();ctx.translate(state.camera.shakeX||0,state.camera.shakeY||0);runDrawStage('drawTelegraphsForeground',drawTelegraphs);if(typeof drawMapEvents==='function')runDrawStage('drawMapEventsForeground',drawMapEvents);runDrawStage('drawEnemiesForeground',drawEnemies);if(typeof drawBeamEffects==='function')runDrawStage('drawBeamEffectsForeground',drawBeamEffects);runDrawStage('drawEnemyProjectilesForeground',drawEnemyProjectiles);runDrawStage('drawMagnetFieldForeground',drawMagnetField);runDrawStage('drawChronoFieldForeground',drawChronoField);runDrawStage('drawPlayerForeground',drawPlayer);runDrawStage('drawEffectsForeground',canvasDrawForegroundEffects);ctx.restore();ctx.setTransform(dpr,0,0,dpr,0,0);const performanceTier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0;if(performanceTier===0){ctx.fillStyle=cachedForegroundVignette();ctx.fillRect(0,0,vw,vh);}else if(performanceTier===1){ctx.fillStyle='rgba(0,1,8,.08)';ctx.fillRect(0,0,vw,vh);}if(sparklesEnabled()&&state.flash>0){ctx.fillStyle=`rgba(225,242,255,${Math.min(.42,state.flash*.72)})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlayForeground',drawRealmCinematicOverlay);}finally{ctx=previousCtx;}
+    if(state.mode==='menu')return;
+    ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.setLineDash([]);ctx.save();ctx.translate(state.camera.shakeX||0,state.camera.shakeY||0);
+    runDrawStage('drawTelegraphsForeground',drawTelegraphs);if(typeof drawMapEvents==='function')runDrawStage('drawMapEventsForeground',drawMapEvents);runDrawStage('drawEnemiesForeground',drawEnemies);if(typeof drawBeamEffects==='function')runDrawStage('drawBeamEffectsForeground',drawBeamEffects);runDrawStage('drawEnemyProjectilesForeground',drawEnemyProjectiles);runDrawStage('drawMagnetFieldForeground',drawMagnetField);runDrawStage('drawChronoFieldForeground',drawChronoField);runDrawStage('drawPlayerForeground',drawPlayer);runDrawStage('drawEffectsForeground',canvasDrawForegroundEffects);ctx.restore();ctx.setTransform(dpr,0,0,dpr,0,0);
+    if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlayForeground',drawRealmCinematicOverlay);
   };
-  ensureForegroundCanvas();
 
   function setRendererState(next){
     rendererState=next;
@@ -134,6 +132,10 @@
   function makeArrowTexture(width=72,height=48){
     const surface=document.createElement('canvas');surface.width=width;surface.height=height;const g=surface.getContext('2d'),cy=height/2;g.fillStyle='#fff';g.shadowColor='#fff';g.shadowBlur=8;g.beginPath();g.moveTo(width-5,cy);g.lineTo(width*.40,5);g.lineTo(width*.48,cy-7);g.lineTo(6,cy-7);g.lineTo(6,cy+7);g.lineTo(width*.48,cy+7);g.lineTo(width*.40,height-5);g.closePath();g.fill();return PIXI.Texture.from(surface);
   }
+  function makeVignetteTexture(size=384){
+    const surface=document.createElement('canvas');surface.width=surface.height=size;const g=surface.getContext('2d'),c=size/2,gradient=g.createRadialGradient(c,c,size*.13,c,c,size*.52);
+    gradient.addColorStop(0,'rgba(0,0,0,0)');gradient.addColorStop(.58,'rgba(0,0,0,.04)');gradient.addColorStop(1,'rgba(0,1,8,.58)');g.fillStyle=gradient;g.fillRect(0,0,size,size);return PIXI.Texture.from(surface);
+  }
   function makeHostileTexture(){
     const surface=document.createElement('canvas');surface.width=112;surface.height=64;const g=surface.getContext('2d'),cx=60,cy=32;
     g.translate(cx,cy);g.fillStyle='#fff';g.strokeStyle='rgba(255,255,255,.82)';g.lineWidth=2;g.shadowColor='#fff';g.shadowBlur=10;
@@ -156,9 +158,14 @@
   }
   function rebuildTextures(){
     const safeTexture=PIXI.Texture.WHITE;for(const pool of[projectileSprites,particleSprites,hostileSprites,beamGlowSprites,beamCoreSprites,emergencyEnemySprites,emergencyHostileSprites,emergencyCueSprites,emergencyPlayerSprites,emergencyGuidanceSprites])for(const sprite of pool)if(sprite)sprite.texture=safeTexture;
-    for(const texture of Object.values(projectileTextures))destroyTexture(texture);destroyTexture(solidTexture);destroyTexture(particleTexture);destroyTexture(emergencyRingTexture);destroyTexture(emergencyArrowTexture);destroyTexture(hostileTexture);
-    projectileTextures={generic:makeProjectileTexture('generic'),core:makeProjectileTexture('core'),ember:makeProjectileTexture('ember'),comet:makeProjectileTexture('comet'),shard:makeProjectileTexture('shard')};solidTexture=makeTexture(48,false);particleTexture=makeTexture(40,true);emergencyRingTexture=makeRingTexture();emergencyArrowTexture=makeArrowTexture();hostileTexture=makeHostileTexture();texturesCreated+=Object.keys(projectileTextures).length+5;textureGeneration++;
-    for(const sprite of projectileSprites)if(sprite)sprite.texture=projectileTextures.generic;for(const sprite of particleSprites)if(sprite)sprite.texture=particleTexture;
+    for(const texture of Object.values(projectileTextures))destroyTexture(texture);destroyTexture(solidTexture);destroyTexture(particleTexture);destroyTexture(emergencyRingTexture);destroyTexture(emergencyArrowTexture);destroyTexture(hostileTexture);destroyTexture(vignetteTexture);
+    projectileTextures={generic:makeProjectileTexture('generic'),core:makeProjectileTexture('core'),ember:makeProjectileTexture('ember'),comet:makeProjectileTexture('comet'),shard:makeProjectileTexture('shard')};solidTexture=makeTexture(48,false);particleTexture=makeTexture(40,true);emergencyRingTexture=makeRingTexture();emergencyArrowTexture=makeArrowTexture();hostileTexture=makeHostileTexture();vignetteTexture=makeVignetteTexture();texturesCreated+=Object.keys(projectileTextures).length+6;textureGeneration++;
+    for(const sprite of projectileSprites)if(sprite)sprite.texture=projectileTextures.generic;for(const sprite of particleSprites)if(sprite)sprite.texture=particleTexture;if(postVignetteSprite)postVignetteSprite.texture=vignetteTexture;
+  }
+  function syncPostEffects(){
+    if(!app||contextLost||!postVignetteSprite||!postFlashSprite)return;const tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0;
+    postVignetteSprite.visible=state.mode!=='menu'&&tier===0;postVignetteSprite.x=vw/2;postVignetteSprite.y=vh/2;postVignetteSprite.width=vw;postVignetteSprite.height=vh;postVignetteSprite.alpha=1;
+    const flash=sparklesEnabled()?Math.max(0,Number(state.flash)||0):0;postFlashSprite.visible=state.mode!=='menu'&&flash>=.18;postFlashSprite.x=vw/2;postFlashSprite.y=vh/2;postFlashSprite.width=vw;postFlashSprite.height=vh;postFlashSprite.alpha=Math.min(.42,flash*.72);
   }
   function syncHostileProjectileSprites(){
     if(!app||contextLost||rendererState!=='active'){hideUnused(hostileSprites,0);return;}
@@ -259,7 +266,6 @@
   window.stackfallGpuEmergencyAvailable=()=>!!(app&&!contextLost&&rendererState==='active');
   function syncEmergencySprites(){
     const active=emergencyRenderingActive();
-    if(foregroundCanvas){foregroundCanvas.style.display=state.mode==='menu'?'none':'block';foregroundCanvas.style.visibility=active?'hidden':'visible';}
     emergencyEliteGuidance=0;emergencyEventGuidance=0;emergencyGuidanceBoundsValid=true;
     if(!active){hideUnused(emergencyEnemySprites,0);hideUnused(emergencyHostileSprites,0);hideUnused(emergencyCueSprites,0);hideUnused(emergencyPlayerSprites,0);hideUnused(emergencyGuidanceSprites,0);return;}
     const bottomGap=compactDevice()?180:154,left=76,right=vw-76,top=82,bottom=vh-bottomGap,cx=vw/2,cy=vh/2;
@@ -315,6 +321,7 @@
       syncProjectileSprites();
       syncBeamSprites();
       syncHostileProjectileSprites();
+      syncPostEffects();
       syncEmergencySprites();
       evaluateReadiness();
     }catch(error){
@@ -325,7 +332,7 @@
     lastFailure=reason;
     const canvas=safeGpuCanvas();
     if(canvas)canvas.style.display='none';
-    if(foregroundCanvas)foregroundCanvas.style.visibility='visible';
+    
     hideUnused(projectileSprites,0);hideUnused(particleSprites,0);
     setRendererState(contextLost?'context-lost':initStarted&&!app?'failed':'canvas-fallback');
     warnOnce(reason,`[Stackfall] PixiJS renderer disabled: ${reason}`,error);
@@ -363,6 +370,7 @@
       beamGlowLayer=new PIXI.Container();
       beamCoreLayer=new PIXI.Container();
       hostileLayer=new PIXI.Container();
+      postLayer=new PIXI.Container();
       emergencyHostileLayer=new PIXI.Container();
       emergencyPlayerLayer=new PIXI.Container();
       emergencyGuidanceLayer=new PIXI.Container();
@@ -376,12 +384,15 @@
       app.stage.addChild(emergencyHostileLayer);
       app.stage.addChild(emergencyPlayerLayer);
       app.stage.addChild(emergencyGuidanceLayer);
+      app.stage.addChild(postLayer);
       rebuildTextures();
+      postVignetteSprite=new PIXI.Sprite(vignetteTexture);postVignetteSprite.anchor.set(.5);postLayer.addChild(postVignetteSprite);
+      postFlashSprite=new PIXI.Sprite(PIXI.Texture.WHITE);postFlashSprite.anchor.set(.5);postFlashSprite.tint=0xe1f2ff;postLayer.addChild(postFlashSprite);
       for(let i=0;i<240;i++){ensureSprite(projectileSprites,i,projectileLayer,projectileTextures.generic);ensureSprite(particleSprites,i,particleLayer,particleTexture);}
       for(let i=0;i<16;i++)ensureSprite(emergencyGuidanceSprites,i,emergencyGuidanceLayer,emergencyArrowTexture);
       hideUnused(projectileSprites,0);hideUnused(particleSprites,0);hideUnused(emergencyGuidanceSprites,0);
 
-      canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;gpuCanvasReady=false;contextLossCount++;lastFailure='WebGL context lost';hideUnused(projectileSprites,0);hideUnused(particleSprites,0);canvas.style.display='none';if(foregroundCanvas)foregroundCanvas.style.visibility='visible';setRendererState('context-lost');});
+      canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();contextLost=true;gpuCanvasReady=false;contextLossCount++;lastFailure='WebGL context lost';hideUnused(projectileSprites,0);hideUnused(particleSprites,0);canvas.style.display='none';setRendererState('context-lost');});
       canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;gpuCanvasReady=false;contextRestoreCount++;lastFailure='';firstGpuFrame=false;firstProjectileSpriteSeen=false;projectileWarmupDeadline=0;rebuildTextures();app.start();setRendererState('warming-up');resizeGpuCombatLayer();if(canvasReady(true))canvas.style.display='block';});
       contextListenerRegistrationCount++;
       if(!tickerRegistered){app.ticker.add(syncGpuLayer,undefined,PIXI.UPDATE_PRIORITY.HIGH);tickerRegistered=true;tickerRegistrationCount++;}
@@ -452,7 +463,7 @@
 
   window.stackfallRendererInfo=()=>({
     status:rendererState,
-    backend:rendererState==='active'?'PixiJS WebGL':'Canvas 2D',
+    backend:rendererState==='active'?'PixiJS WebGL + single Canvas':'Canvas 2D',
     version:PIXI_VERSION,
     fallback:rendererState!=='active',
     pixiLoaded,
@@ -471,6 +482,7 @@
     particleSprites:{pool:particleSprites.length,visible:visibleParticleSprites},
     hostileSprites:{pool:hostileSprites.length,visible:hostileSprites.filter(sprite=>sprite?.visible).length},
     beamSprites:{glowPool:beamGlowSprites.length,corePool:beamCoreSprites.length,visible:beamCoreSprites.filter(sprite=>sprite?.visible).length},
+    canvasLayers:{auxiliaryForeground:false},
     textures:{generation:textureGeneration,created:texturesCreated,destroyed:texturesDestroyed,live:Object.values(projectileTextures).filter(Boolean).length+[solidTexture,particleTexture,emergencyRingTexture,emergencyArrowTexture].filter(Boolean).length},
     emergencySimplified:emergencyRenderingActive(),
     emergencySprites:{enemies:emergencyEnemySprites.filter(sprite=>sprite.visible).length,hostile:emergencyHostileSprites.filter(sprite=>sprite.visible).length,cues:emergencyCueSprites.filter(sprite=>sprite.visible).length,player:emergencyPlayerSprites.filter(sprite=>sprite.visible).length,guidance:emergencyGuidanceSprites.filter(sprite=>sprite.visible).length},
