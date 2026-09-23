@@ -26,15 +26,14 @@ function makeEnemyRoom(kind){
   let liveCount=0;for(const e of state.entities.enemies)if(e&&!e.dead)liveCount++;
   if(!elite&&liveCount>=normalCap)return false;
   if(elite&&liveCount>=cap){
-    const removeCount=liveCount-cap+1,removable=[];
-    for(const e of state.entities.enemies)if(e&&!e.dead&&e.type!=='mini'&&e.type!=='boss')removable.push(e);
-    removable.sort((a,b)=>((b.x-player.x)**2+(b.y-player.y)**2)-((a.x-player.x)**2+(a.y-player.y)**2));
-    for(let i=0;i<Math.min(removeCount,removable.length);i++)removable[i].dead=true;
-    compactInPlace(state.entities.enemies,e=>e&&!e.dead);
+    const removeCount=liveCount-cap+1;let removed=0;
+    while(removed<removeCount){let farthest=null,farthestD2=-1;for(const e of state.entities.enemies){if(!e||e.dead||e.type==='mini'||e.type==='boss')continue;const dx=e.x-player.x,dy=e.y-player.y,d2=dx*dx+dy*dy;if(d2>farthestD2){farthestD2=d2;farthest=e;}}if(!farthest)break;farthest.dead=true;removed++;}
+    if(removed)compactInPlace(state.entities.enemies,e=>e&&!e.dead);
   }
   return true;
 }
-function compressExperience(){const gems=state.entities.gems,cap=entityCap('gems');if(!gems||gems.length<=cap)return;const keep=gems.slice(0,cap),overflow=gems.slice(cap),total=overflow.reduce((s,g)=>s+(Number(g.value)||0),0);if(!keep.length){gems.length=0;return;}const anchors=[...keep].sort((a,b)=>((a.x-player.x)**2+(a.y-player.y)**2)-((b.x-player.x)**2+(b.y-player.y)**2)).slice(0,Math.min(12,keep.length)),share=total/anchors.length;for(const g of anchors){g.value=(Number(g.value)||0)+share;g.compressedValue=(g.compressedValue||0)+share;g.r=Math.min(10.5,(g.r||4)+Math.log2(1+share)*.26);g.pulse=(g.pulse||0)+1.2;}gems.length=0;gems.push(...keep);}
+const EXPERIENCE_ANCHORS=[],EXPERIENCE_ANCHOR_D2=[];
+function compressExperience(){const gems=state.entities.gems,cap=entityCap('gems');if(!gems||gems.length<=cap)return;if(cap<=0){gems.length=0;return;}let total=0;for(let i=cap;i<gems.length;i++)total+=Number(gems[i]?.value)||0;const anchorLimit=Math.min(12,cap);EXPERIENCE_ANCHORS.length=0;EXPERIENCE_ANCHOR_D2.length=0;for(let i=0;i<cap;i++){const g=gems[i];if(!g)continue;const dx=g.x-player.x,dy=g.y-player.y,d2=dx*dx+dy*dy;let pos=EXPERIENCE_ANCHOR_D2.length;while(pos>0&&EXPERIENCE_ANCHOR_D2[pos-1]>d2)pos--;if(pos<anchorLimit){EXPERIENCE_ANCHORS.splice(pos,0,g);EXPERIENCE_ANCHOR_D2.splice(pos,0,d2);if(EXPERIENCE_ANCHORS.length>anchorLimit){EXPERIENCE_ANCHORS.pop();EXPERIENCE_ANCHOR_D2.pop();}}}gems.length=cap;if(!EXPERIENCE_ANCHORS.length)return;const share=total/EXPERIENCE_ANCHORS.length;for(const g of EXPERIENCE_ANCHORS){g.value=(Number(g.value)||0)+share;g.compressedValue=(g.compressedValue||0)+share;g.r=Math.min(10.5,(g.r||4)+Math.log2(1+share)*.26);g.pulse=(g.pulse||0)+1.2;}}
 function createEliteTwin(enemy){
   if(!enemy||!['mirror','paradox'].includes(enemy.eliteForm))return null;
   const group=`twins-${enemy.id}`,ratio=enemy.eliteForm==='paradox'?.72:.68,baseHp=enemy.hp*ratio,baseXp=enemy.xp*.62,angle=Math.atan2(enemy.y-player.y,enemy.x-player.x),normal={x:-Math.sin(angle),y:Math.cos(angle)},gap=enemy.r*1.7;
@@ -54,14 +53,14 @@ function addText(x,y,text,color='#fff',size=13){if(state.entities.texts.length>=
 function shockwave(x,y,color,maxR=100,life=.35,width=3){if(state.entities.shockwaves.length>=entityCap('shockwaves'))state.entities.shockwaves.shift();state.entities.shockwaves.push({x,y,r:6,maxR,life,max:life,color,width});}
 function dealDamage(enemy,amount,opts={}){if(!enemy||enemy.dead)return;const critChance=clamp(.05+stat('crit')*.06,.05,1),crit=opts.canCrit!==false&&Math.random()<critChance,elite=enemy.type==='mini'||enemy.type==='boss';amount*=damageMult()*(elite?1+stat('eliteHunter')*.15:1)*(crit?1.8:1);const hpBefore=enemy.hp;enemy.hp-=amount;const inflicted=Math.max(0,Math.min(hpBefore,amount));if(typeof registerRunDamage==='function')registerRunDamage(inflicted,opts.source);if(elite&&typeof registerStackfallBossChainDamage==='function')registerStackfallBossChainDamage(enemy,inflicted,opts);enemy.hit=.09;const color=crit?COLORS.amber:(opts.color||COLORS.white),stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed(),showNumbers=GAME_SETTINGS.damageNumbers!==false&&(!stressed||crit||elite);if(showNumbers)addText(enemy.x,enemy.y-enemy.r,Math.round(amount),color,crit?18:12);if(crit||elite||(!stressed&&Math.random()<.20))spawnParticle(enemy.x,enemy.y,color,crit?6:elite?2:1,crit?150:85,crit?4:2.2);audio.hit(crit||elite,opts.source||'');if(enemy.hp<=0)killEnemy(enemy,opts);}
 function killEnemy(enemy,opts={}){
-  if(!enemy||enemy.dead)return;enemy.dead=true;const twinAlive=enemy.twinGroup?state.entities.enemies.filter(e=>e!==enemy&&!e.dead&&e.twinGroup===enemy.twinGroup):[],lastTwin=!enemy.twinGroup||twinAlive.length===0;if(enemy.twinGroup&&lastTwin)enemy.noEliteReward=false;
+  if(!enemy||enemy.dead)return;enemy.dead=true;let survivingTwin=null;if(enemy.twinGroup){for(const e of state.entities.enemies){if(e!==enemy&&!e.dead&&e.twinGroup===enemy.twinGroup){survivingTwin=e;break;}}}const lastTwin=!enemy.twinGroup||!survivingTwin;if(enemy.twinGroup&&lastTwin)enemy.noEliteReward=false;
   state.kills++;state.combo++;
   const durationMult=typeof chainDurationMultiplier==='function'?chainDurationMultiplier():(1+stat('chain')*.07)*(1+(state.nebulaExtras?.chain||0)*.20);
   state.comboTimer=2.15*durationMult;state.maxCombo=Math.max(state.maxCombo,state.combo);
   const isBoss=enemy.type==='boss',isMini=enemy.type==='mini',isApex=enemy.kind==='apex',stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed(),burst=isApex?64:isBoss?34:isMini?18:stressed?1:enemy.type==='tank'?7:4;spawnParticle(enemy.x,enemy.y,enemy.color,burst,isApex?380:isBoss?290:isMini?220:130,isApex?9:isBoss?7:isMini?5:3.5);if(isBoss||isMini||!stressed)shockwave(enemy.x,enemy.y,enemy.color,isApex?400:isBoss?260:isMini?160:enemy.type==='tank'?76:44,isApex?1.05:isBoss?.72:isMini?.50:.24,isApex?10:isBoss?6:isMini?4:2);
   if((isBoss||isMini)&&lastTwin){state.camera.shake+=isApex?25:isBoss?15:10;state.hitStop=isApex?.20:isBoss?.11:.07;state.flash=isApex?.32:isBoss?.20:.11;audio.resonance();}else if(!isBoss&&!isMini&&state.combo%40===0){state.hitStop=.018;}
   const gemCount=isApex?(stressed?10:18):isBoss?(stressed?7:12):isMini?(stressed?4:6):enemy.type==='tank'?2:1;for(let i=0;i<gemCount;i++)state.entities.gems.push({x:enemy.x+rand(-18,18),y:enemy.y+rand(-18,18),vx:rand(-75,75),vy:rand(-75,75),r:isApex?8:isBoss?7:isMini?6:4,value:enemy.xp/gemCount,life:35,pulse:Math.random()*TAU});compressExperience();
-  if(isBoss){if(twinAlive.length)state.bossActiveId=twinAlive[0].id;else{state.bossActiveId=null;ui.bossBar.classList.add('hidden');if(isApex)state.apexActiveId=null;}}
+  if(isBoss){if(survivingTwin)state.bossActiveId=survivingTwin.id;else{state.bossActiveId=null;ui.bossBar.classList.add('hidden');if(isApex)state.apexActiveId=null;}}
   if(weaponCount('blade')>=6&&opts.source==='blade'&&state.combo%6===0)areaDamage(enemy.x,enemy.y,130,42,COLORS.cyan,'blade-burst');if(typeof handleAnyEnemyKill==='function')handleAnyEnemyKill(enemy,opts);if((isBoss||isMini)&&lastTwin&&typeof handleEliteDeath==='function')handleEliteDeath(enemy,opts);
 }
 function areaDamage(x,y,r,damage,color,source='area',options={}){shockwave(x,y,color,r,.34,4);if(options.shake===true)state.camera.shake+=3;forEachNearbyEnemyCandidate(x,y,r+130,e=>{if(!e.dead&&(e.x-x)**2+(e.y-y)**2<(r+e.r)**2)dealDamage(e,damage,{color,source});});}
