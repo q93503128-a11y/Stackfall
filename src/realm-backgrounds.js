@@ -207,12 +207,13 @@ function stageFieldTile(order,tier){const key=`${order}:${tier}`;let tile=STAGE_
 function drawStageConstellationField(theme){
   const match=String(theme||'').match(/^stage-(\d{2})$/);if(!match)return;
   const order=Math.max(1,Math.min(18,Number(match[1])||1)),family=order<=6?'route':order<=12?'bloom':'array',tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,t=performance.now()/1000,tile=stageFieldTile(order,tier),tw=tile.width||960,th=tile.height||720;
-  const speedX=family==='route'?.18:family==='bloom'?.16:.16,speedY=family==='route'?.15:family==='bloom'?.14:.13,drift=family==='route'?t*2.2:family==='bloom'?t*.7:0,ox=wrap(-(player.x||0)*speedX+drift,tw),oy=wrap(-(player.y||0)*speedY,th);
+  // Stage terrain is world-anchored: player movement must visibly move the battlefield, not just nudge a backdrop.
+  const drift=family==='route'?t*2.2:family==='bloom'?t*.7:0,ox=wrap(-(player.x||0)+drift,tw),oy=wrap(-(player.y||0),th);
   ctx.save();ctx.globalAlpha=1;for(let y=oy-th;y<vh+th;y+=th)for(let x=ox-tw;x<vw+tw;x+=tw)ctx.drawImage(tile,Math.round(x),Math.round(y));
-  if(family==='array'){const local=(order-1)%6,scan=wrap(t*(18+local*2)-(player.y||0)*.025,vh+180)-90;ctx.globalAlpha=tier===2?.05:.08;ctx.fillStyle=local%2?'rgba(226,186,104,.42)':'rgba(112,220,233,.42)';ctx.fillRect(0,scan,vw,2);}
+  if(family==='array'){const local=(order-1)%6,scan=wrap(t*(18+local*2)-(player.y||0),vh+180)-90;ctx.globalAlpha=tier===2?.05:.08;ctx.fillStyle=local%2?'rgba(226,186,104,.42)':'rgba(112,220,233,.42)';ctx.fillRect(0,scan,vw,2);}
   ctx.restore();
 }
-function drawThemeRaw(theme){if(theme==='stage-01')drawStage01Background();else if(theme==='stage-02')drawStage02Background();else if(theme==='stage-03')drawStage03Background();else if(theme==='stage-04')drawStage04Background();else if(theme==='stage-05')drawStage05Background();else if(theme==='stage-06')drawStage06Background();else if(theme==='stage-07')drawStage07Background();else if(theme==='stage-08')drawStage08Background();else if(theme==='stage-09')drawStage09Background();else if(theme==='stage-10')drawStage10Background();else if(theme==='stage-11')drawStage11Background();else if(theme==='stage-12')drawStage12Background();else if(theme==='stage-13')drawStage13Background();else if(theme==='stage-14')drawStage14Background();else if(theme==='stage-15')drawStage15Background();else if(theme==='stage-16')drawStage16Background();else if(theme==='stage-17')drawStage17Background();else if(theme==='stage-18')drawStage18Background();else if(theme==='void')drawVoidBackground();else if(theme==='apex-chrono')drawChronoApex();else if(theme==='apex-forge')drawForgeApex();else if(theme==='apex-constellation')drawConstellationApex();else drawSpaceBackground();if(/^stage-\d{2}$/.test(String(theme||'')))drawStageConstellationField(theme);drawTraversalParallax(theme);drawMotionStreaks(theme);}
+function drawThemeRaw(theme){if(theme==='stage-01')drawStage01Background();else if(theme==='stage-02')drawStage02Background();else if(theme==='stage-03')drawStage03Background();else if(theme==='stage-04')drawStage04Background();else if(theme==='stage-05')drawStage05Background();else if(theme==='stage-06')drawStage06Background();else if(theme==='stage-07')drawStage07Background();else if(theme==='stage-08')drawStage08Background();else if(theme==='stage-09')drawStage09Background();else if(theme==='stage-10')drawStage10Background();else if(theme==='stage-11')drawStage11Background();else if(theme==='stage-12')drawStage12Background();else if(theme==='stage-13')drawStage13Background();else if(theme==='stage-14')drawStage14Background();else if(theme==='stage-15')drawStage15Background();else if(theme==='stage-16')drawStage16Background();else if(theme==='stage-17')drawStage17Background();else if(theme==='stage-18')drawStage18Background();else if(theme==='void')drawVoidBackground();else if(theme==='apex-chrono')drawChronoApex();else if(theme==='apex-forge')drawForgeApex();else if(theme==='apex-constellation')drawConstellationApex();else drawSpaceBackground();}
 const THEME_FRAME_CACHE=new Map(),THEME_FRAME_INTERVAL=1000/30;
 function themeFrameEntry(theme){
   const key=`${theme}:${Math.round(vw)}x${Math.round(vh)}@${dpr.toFixed(3)}`;let entry=THEME_FRAME_CACHE.get(key);if(entry)return entry;
@@ -225,6 +226,9 @@ function drawTheme(theme){
   const now=performance.now(),entry=themeFrameEntry(theme),moved=Math.hypot((player.x||0)-entry.playerX,(player.y||0)-entry.playerY),urgent=!Number.isFinite(entry.playerX)||moved>Math.max(18,(player.speed||248)*.08);
   if(urgent||now-entry.lastAt>=THEME_FRAME_INTERVAL)refreshThemeFrame(entry,theme,now);
   ctx.drawImage(entry.surface,0,0,entry.surface.width,entry.surface.height,0,0,vw,vh);
+  // Cheap world-space layers stay live at the render cadence so movement remains obvious even while the expensive backdrop is cached.
+  if(/^stage-\d{2}$/.test(String(theme||'')))drawStageConstellationField(theme);
+  drawTraversalParallax(theme);drawMotionStreaks(theme);
 }
 window.stackfallBackgroundCacheInfo=()=>({entries:THEME_FRAME_CACHE.size,intervalMs:THEME_FRAME_INTERVAL,keys:[...THEME_FRAME_CACHE.keys()]});
 
