@@ -109,7 +109,7 @@
     if(typeof value!=='string')return fallback;
     const text=value.trim();
     if(/^#[0-9a-f]{6}$/i.test(text))return Number.parseInt(text.slice(1),16);
-    if(/^#[0-9a-f]{3}$/i.test(text)){const [r,g,b]=text.slice(1).split('').map(v=>v+v);return Number.parseInt(`${r}${g}${b}`,16);}
+    if(/^#[0-9a-f]{3}$/i.test(text)){const r=Number.parseInt(text[1],16),g=Number.parseInt(text[2],16),b=Number.parseInt(text[3],16);return(r*17<<16)|(g*17<<8)|(b*17);}
     const rgb=text.match(/^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
     if(rgb)return(clamp(Number(rgb[1]),0,255)<<16)|(clamp(Number(rgb[2]),0,255)<<8)|clamp(Number(rgb[3]),0,255);
     return fallback;
@@ -235,7 +235,8 @@
     }
     return count;
   }
-  function projectileVisual(source){const s=String(source||'');if(s.includes('comet')&&!s.includes('fragment'))return{kind:'comet',texture:projectileTextures.comet,width:8.6,height:3.15,alpha:.98};if(s==='ember'||s==='echo-star')return{kind:'ember',texture:projectileTextures.ember,width:4.7,height:4.1,alpha:.96};if(s==='core'||s==='core-echo'||s==='core-nova')return{kind:'core',texture:projectileTextures.core,width:4.35,height:2.65,alpha:.93};if(s.includes('fragment')||s.includes('shard')||s.includes('lance')||s.includes('mirror'))return{kind:'shard',texture:projectileTextures.shard,width:4.4,height:2.45,alpha:.92};return{kind:'generic',texture:projectileTextures.generic||solidTexture,width:3.8,height:2.5,alpha:.90};}
+  const PROJECTILE_VISUALS={comet:{kind:'comet',texture:null,width:8.6,height:3.15,alpha:.98},ember:{kind:'ember',texture:null,width:4.7,height:4.1,alpha:.96},core:{kind:'core',texture:null,width:4.35,height:2.65,alpha:.93},shard:{kind:'shard',texture:null,width:4.4,height:2.45,alpha:.92},generic:{kind:'generic',texture:null,width:3.8,height:2.5,alpha:.90}};
+  function projectileVisual(source){const s=String(source||''),visual=s.includes('comet')&&!s.includes('fragment')?PROJECTILE_VISUALS.comet:s==='ember'||s==='echo-star'?PROJECTILE_VISUALS.ember:s==='core'||s==='core-echo'||s==='core-nova'?PROJECTILE_VISUALS.core:s.includes('fragment')||s.includes('shard')||s.includes('lance')||s.includes('mirror')?PROJECTILE_VISUALS.shard:PROJECTILE_VISUALS.generic;visual.texture=visual.kind==='comet'?projectileTextures.comet:visual.kind==='ember'?projectileTextures.ember:visual.kind==='core'?projectileTextures.core:visual.kind==='shard'?projectileTextures.shard:(projectileTextures.generic||solidTexture);return visual;}
   function syncProjectileSprites(){
     visibleProjectileSprites=0;if(!app||contextLost)return;const visible=shouldShowAlliedVisuals();if(!visible){hideUnused(projectileSprites,0);return;}const list=state.entities.projectiles||[],tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,visualLimit=tier===2?48:tier===1?96:Infinity;let used=0;
     for(let i=0;i<list.length&&used<visualLimit;i++){const p=list[i];if(!p||p.life<=0||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;const x=p.x-player.x+vw/2,y=p.y-player.y+vh/2;if(x<-150||x>vw+150||y<-150||y>vh+150)continue;const speed=Math.hypot(p.vx||0,p.vy||0),radius=Math.max(1.5,Math.min(24,Number(p.r)||4)),visual=projectileVisual(p.source),sprite=ensureSprite(projectileSprites,used++,projectileLayer,visual.texture||solidTexture);sprite.visible=true;sprite.x=Math.round(x);sprite.y=Math.round(y);sprite.rotation=Math.atan2(p.vy||0,p.vx||0);sprite.tint=parseColor(p.color,0xffffff);sprite.alpha=sparklesEnabled()?visual.alpha:Math.min(.9,visual.alpha);sprite.width=Math.max(4,radius*visual.width+(visual.kind==='generic'?Math.min(18,speed*.012):0));sprite.height=Math.max(3.5,radius*visual.height);}
