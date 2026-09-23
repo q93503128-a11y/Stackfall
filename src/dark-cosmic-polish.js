@@ -1,5 +1,5 @@
 (function(){
-  const isCompact=()=>matchMedia('(pointer:coarse)').matches||innerWidth<760;
+  const isCompact=()=>typeof compactDevice==='function'?compactDevice():innerWidth<760;
 
   function drawVaultGate(p,t){
     ctx.save();ctx.translate(p.x,p.y);const pulse=.88+.12*Math.sin(t*1.7);ctx.shadowBlur=18;ctx.shadowColor='#75eaff';
