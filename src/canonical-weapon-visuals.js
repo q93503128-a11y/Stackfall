@@ -114,12 +114,12 @@
     const size=weaponSizeMultiplier(),count=bladeN>=5?3:bladeN>=2?2:1,orbit=Math.max(48,orbitRadiusFor('blade')),image=pulseBladeRaster(bladeN>=6);
     for(let i=0;i<count;i++){
       const a=player.angle+i*TAU/count,bx=x+Math.cos(a)*orbit,by=y+Math.sin(a)*orbit;
-      ctx.save();ctx.translate(bx,by);ctx.rotate(a+Math.PI/2);ctx.scale(size,size);ctx.drawImage(image,-64,-64,128,128);ctx.restore();
+      ctx.save();ctx.translate(bx,by);ctx.rotate(a+Math.PI/2);ctx.scale(size*.72,size*.72);ctx.drawImage(image,-64,-64,128,128);ctx.restore();
     }
     const extra=Math.min(2,Math.max(0,Number(window.stackfallMultiplicityStacks?.())||0));
     for(let i=0;i<extra;i++){
       const a=player.angle+(i+.5)*TAU/Math.max(1,extra),rr=orbit+18,bx=x+Math.cos(a)*rr,by=y+Math.sin(a)*rr;
-      ctx.save();ctx.translate(bx,by);ctx.rotate(a+Math.PI/2);ctx.globalAlpha=.78;ctx.scale(size*.86,size*.86);ctx.drawImage(image,-64,-64,128,128);ctx.restore();
+      ctx.save();ctx.translate(bx,by);ctx.rotate(a+Math.PI/2);ctx.globalAlpha=.78;ctx.scale(size*.62,size*.62);ctx.drawImage(image,-64,-64,128,128);ctx.restore();
     }
   };
 
