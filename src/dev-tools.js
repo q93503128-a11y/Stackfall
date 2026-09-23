@@ -131,7 +131,7 @@
   $('#devClearEnemies').onclick=()=>{clearCombatEntities();updateStatus();};
   $('#devHeal').onclick=()=>{fullHeal();updateStatus();};
   $('#devCores').onclick=()=>{giveCores();updateStatus();};
-  $('#devDisable').onclick=()=>{try{localStorage.removeItem('stackfall.devMode');}catch{}panel.remove();toggle.remove();};
+  $('#devDisable').onclick=()=>{try{localStorage.removeItem('stackfall.devMode');}catch{}const url=new URL(location.href);url.searchParams.delete('dev');location.replace(url.toString());};
   weapon.onchange=updateStatus;stage.onchange=updateStatus;
   window.addEventListener('keydown',event=>{if(event.code==='F10'){event.preventDefault();panel.classList.toggle('hidden');updateStatus();}});
   window.stackfallDeveloperTest={
