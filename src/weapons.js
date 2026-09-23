@@ -129,8 +129,9 @@ function updateVacuumSeeds(dt,n){
 }
 window.stackfallPostRosterOnKill=function postRosterKill(enemy){
   const n=weaponCount('vacuum');if(!n||!enemy)return;
-  const seeds=state.entities.vacuumSeeds,feed=n>=3&&(enemy.type==='boss'||enemy.type==='mini')?2:1,eligible=seeds.filter(seed=>seed&&seed.life>0&&!seed.blooming&&Math.hypot(seed.x-enemy.x,seed.y-enemy.y)<=((n>=2?180:165)*weaponSizeMultiplier())).sort((a,b)=>Math.hypot(a.x-enemy.x,a.y-enemy.y)-Math.hypot(b.x-enemy.x,b.y-enemy.y));
-  if(eligible.length){const seed=eligible[0];seed.charge=Math.min(5,seed.charge+feed);if(seed.charge>=3)beginVacuumBloom(seed,1,false);}
+  const seeds=state.entities.vacuumSeeds,feed=n>=3&&(enemy.type==='boss'||enemy.type==='mini')?2:1,range=(n>=2?180:165)*weaponSizeMultiplier(),range2=range*range;let nearest=null,best=Infinity;
+  for(const seed of seeds){if(!seed||seed.life<=0||seed.blooming)continue;const dx=seed.x-enemy.x,dy=seed.y-enemy.y,d2=dx*dx+dy*dy;if(d2<=range2&&d2<best){best=d2;nearest=seed;}}
+  if(nearest){nearest.charge=Math.min(5,nearest.charge+feed);if(nearest.charge>=3)beginVacuumBloom(nearest,1,false);}
   player.vacuumKillCounter=(player.vacuumKillCounter||0)+1;const threshold=n>=5?4:n>=2?5:6;
   if(player.vacuumKillCounter>=threshold){player.vacuumKillCounter-=threshold;const count=1+postRosterMultiplicity();for(let i=0;i<count;i++)plantVacuumSeed(enemy.x,enemy.y,n,i>0,i);}
 };
