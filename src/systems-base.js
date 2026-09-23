@@ -4,7 +4,8 @@ function refreshCompactDevice(){stackfallCompactDevice=STACKFALL_COMPACT_POINTER
 STACKFALL_COMPACT_POINTER_QUERY.addEventListener?.('change',refreshCompactDevice);
 window.addEventListener('resize',refreshCompactDevice,{passive:true});
 function compactDevice(){return stackfallCompactDevice;}
-function entityCap(kind){const compact=compactDevice();return{enemies:compact?72:104,gems:compact?90:140,playerProjectiles:compact?220:340,enemyProjectiles:compact?260:420,particles:compact?260:520,texts:compact?56:120,shockwaves:compact?70:130,telegraphs:compact?48:90,beams:compact?70:140}[kind]||160;}
+const ENTITY_CAPS={desktop:{enemies:104,gems:140,playerProjectiles:340,enemyProjectiles:420,particles:520,texts:120,shockwaves:130,telegraphs:90,beams:140},compact:{enemies:72,gems:90,playerProjectiles:220,enemyProjectiles:260,particles:260,texts:56,shockwaves:70,telegraphs:48,beams:70}};
+function entityCap(kind){return(compactDevice()?ENTITY_CAPS.compact:ENTITY_CAPS.desktop)[kind]||160;}
 function trimOldest(list,max){if(list.length>max)list.splice(0,list.length-max);}
 function compactInPlace(list,keep,onDiscard=null){let write=0;for(let read=0;read<list.length;read++){const item=list[read];if(keep(item))list[write++]=item;else onDiscard?.(item);}const removed=list.length-write;list.length=write;return removed;}
 const runUiTimers=new Set();
