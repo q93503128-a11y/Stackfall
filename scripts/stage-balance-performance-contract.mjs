@@ -23,7 +23,7 @@ expect('static stage backdrops are cached instead of rebuilt each frame',backgro
 expect('starfields use cached tiles with moving parallax',background.includes('STAR_TILE_CACHE')&&background.includes('makeStarTile')&&background.includes('ctx.drawImage(surface'));
 expect('WebGL renderer does not force high-performance GPU',gpu.includes("powerPreference:'default'")&&!gpu.includes("powerPreference:'high-performance'"));
 expect('enemy projectiles and beams are synchronized as WebGL sprites',gpu.includes('syncHostileProjectileSprites()')&&gpu.includes('syncBeamSprites()')&&gpu.includes('hybridEnemyProjectileDraw')&&gpu.includes('hybridBeamDraw'));
-expect('auxiliary combat foreground canvas is removed',gpu.includes('canvasLayers:{auxiliaryForeground:false}')&&!gpu.includes("id='combatForeground'")&&!gpu.includes("id="combatForeground""));
+expect('auxiliary combat foreground canvas is removed',gpu.includes('canvasLayers:{auxiliaryForeground:false}')&&!gpu.includes("id='combatForeground'")&&!gpu.includes('id="combatForeground"'));
 expect('WebGL mode preserves non-particle weapon world visuals',gpu.includes("drawPostRosterWeaponEntities==='function'")&&gpu.includes('drawPostRosterWeaponEntities();return;'));
 expect('main renderer is paced independently from high-refresh simulation',render.includes('TARGET_RENDER_INTERVAL=1000/60')&&render.includes('renderDue=now-lastRenderAt>=TARGET_RENDER_INTERVAL-1'));
 expect('sampled stage profiler exposes render and simulation costs',render.includes('runtimePerfDiagnostics=new Map()')&&render.includes('stackfallPerformanceBreakdown')&&render.includes('performance:stackfallPerformanceBreakdown().slice(0,20)'));
