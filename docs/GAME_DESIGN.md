@@ -607,7 +607,7 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 
 ## Run modes and finite stages (2026-09-22)
 
-- `endless` remains non-finite, keeps random world events, exposes the full enemy family pool, and keeps the 600-second Apex cadence.
+- `endless` remains non-finite, keeps random world events, exposes the full enemy family pool, and keeps the 480-second (8-minute) Apex cadence.
 - `stage` is a separate finite operation mode. Random world events and Apex scheduling are suppressed during stage runs.
 - Stage clear is **boss-death gated**, never timer gated. Reaching the authored duration spawns the final boss; the run continues until the player dies or that boss is defeated.
 - Every authored stage has fixed milestone incidents plus a persistent environmental gimmick loop that accelerates toward the final boss.
