@@ -489,7 +489,7 @@ min(30%, 2.5% + 중첩 곡선 × 1.8% + 연쇄 보너스)
 
 ### 등장·성장
 
-- 실제 게임 시간 10분·20분·30분마다 등장
+- 실제 게임 시간 **8분(480초) 간격**으로 등장하며, 이후 16분·24분·32분처럼 같은 주기를 유지
 - 선택·보상·맵 이벤트보다 우선
 - 전용 봉쇄장 사용
 - 넉백·중력 흡입·시간 정지·이동 봉쇄 면역
@@ -621,6 +621,7 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 ## Run modes and finite stages (2026-09-22)
 
 - `endless` remains non-finite, keeps random world events, exposes the full enemy family pool, and keeps the 480-second (8-minute) Apex cadence.
+- Endless의 일반 적 스폰은 기본 4종만 반복하지 않는다. **75초부터 파손 항로(route), 240초부터 심연 개화(bloom), 420초부터 침묵 중계망(array)**의 Stage 일반 적 변형이 시간 경과에 따라 기존 풀에 섞인다. 이 혼합은 Stage 클리어/해금 상태와 무관하며, 스테이지 전용 보스·환경 기믹·전장 구조물까지 가져오는 규칙은 아니다.
 - `stage` is a separate finite operation mode. Random world events and Apex scheduling are suppressed during stage runs.
 - Stage clear is **boss-death gated**, never timer gated. Reaching the authored duration spawns the final boss; the run continues until the player dies or that boss is defeated.
 - Every authored stage has fixed milestone incidents plus a persistent environmental gimmick loop that accelerates toward the final boss.

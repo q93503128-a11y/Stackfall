@@ -237,7 +237,7 @@
 
 ## Run modes
 
-- `endless`: infinite mode with random world events, all enemy families, and recurring Apex encounters.
+- `endless`: infinite mode with random world events, all enemy families, and recurring Apex encounters. 기본 적에 더해 75초부터 route, 240초부터 bloom, 420초부터 array 계열의 Stage 일반 적 변형이 순차적으로 섞이며, Stage 해금 여부와는 무관하다.
 - `stage`: finite operations with authored enemy pools, milestone incidents, recurring environmental gimmicks, stage minibosses, and a stage final boss.
 - 최종보스 등장 시간은 Stage 1의 **5:00**에서 Stage 18의 **15:00**까지 증가한다. 시간에 도달하면 보스가 등장할 뿐이며, 실제 클리어는 보스를 처치해야 한다.
 - 일반 스테이지는 약 46% 진행 시 중간보스 1회, Stage 6/12/18은 약 32%와 62%에 중간보스 2회가 등장한다.
