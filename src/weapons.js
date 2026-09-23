@@ -175,8 +175,11 @@ function updatePhaseMinefield(dt,n){
   }
   compactInPlace(mines,m=>m&&m.life>0);
 }
+function postRosterTargetScore(e,distance){return(e.type==='boss'?2:e.type==='mini'?1:0)*1e9+(e.hp||0)-distance*.08;}
 function postRosterTargetList(range,count){
-  return state.entities.enemies.filter(e=>e&&!e.dead&&Math.hypot(e.x-player.x,e.y-player.y)<=range).map(e=>({e,score:(e.type==='boss'?2:e.type==='mini'?1:0)*1e9+(e.hp||0)-Math.hypot(e.x-player.x,e.y-player.y)*.08})).sort((a,b)=>b.score-a.score).slice(0,count).map(row=>row.e);
+  const out=[],limit=Math.max(1,Math.floor(count)||1),range2=range*range;
+  for(const e of state.entities.enemies){if(!e||e.dead)continue;const dx=e.x-player.x,dy=e.y-player.y,d2=dx*dx+dy*dy;if(d2>range2)continue;const score=postRosterTargetScore(e,Math.sqrt(d2));let index=out.length;while(index>0){const prev=out[index-1],pdx=prev.x-player.x,pdy=prev.y-player.y,prevScore=postRosterTargetScore(prev,Math.hypot(pdx,pdy));if(prevScore>=score)break;index--;}out.splice(index,0,e);if(out.length>limit)out.pop();}
+  return out;
 }
 function postRosterMissileSpeed(){return(1+stat('projectileSpeed')*.10)*(1+(state.nebulaExtras?.photon||0)*.12);}
 function spawnGuidedMissile(target,n,side,damage,opts={}){
