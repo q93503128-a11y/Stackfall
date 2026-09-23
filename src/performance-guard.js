@@ -134,6 +134,10 @@
     }else for(const e of enemyIndex.values()){if(!e||e.dead||(predicate&&!predicate(e)))continue;const distance=(e.x-x)**2+(e.y-y)**2;if(distance<bestDistance){bestDistance=distance;best=e;}}
     return best;
   }
+  function nearestIndexedEnemyExcluding(x,y,maxRange=Infinity,excluded=null){
+    if(!grid.size)rebuildEnemyGrid();let best=null,bestDistance=Number.isFinite(maxRange)?maxRange*maxRange:Infinity;
+    if(Number.isFinite(maxRange)){const cx=Math.floor(x/CELL),cy=Math.floor(y/CELL),reach=Math.max(1,Math.ceil(maxRange/CELL));for(let yy=cy-reach;yy<=cy+reach;yy++)for(let xx=cx-reach;xx<=cx+reach;xx++){const bucket=grid.get(gridKey(xx,yy));if(!bucket)continue;for(let i=0;i<bucket.length;i++){const e=bucket[i];if(!e||e.dead||excluded?.has(e.id))continue;const distance=(e.x-x)**2+(e.y-y)**2;if(distance<bestDistance){bestDistance=distance;best=e;}}}}else for(const e of enemyIndex.values()){if(!e||e.dead||excluded?.has(e.id))continue;const distance=(e.x-x)**2+(e.y-y)**2;if(distance<bestDistance){bestDistance=distance;best=e;}}return best;
+  }
 
   window.stackfallPerformanceStressed=stressed;
   window.stackfallPerformanceTier=()=>tier();
@@ -144,6 +148,7 @@
   window.rebuildEnemyIndex=rebuildEnemyGrid;
   window.getEnemyById=getEnemyById;
   window.performanceNearestEnemy=nearestIndexedEnemy;
+  window.performanceNearestEnemyExcluding=nearestIndexedEnemyExcluding;
   window.performanceNearestEnemies=nearestIndexedEnemies;
   window.performanceForEachNearbyEnemy=(x,y,range,visit)=>{if(!grid.size)rebuildEnemyGrid();forEachNearbyEnemy(x,y,range,visit);};
   window.performanceNearbyEnemies=(x,y,range=96,out=[])=>{if(!grid.size)rebuildEnemyGrid();return collectNearbyInto(x,y,range,out);};
