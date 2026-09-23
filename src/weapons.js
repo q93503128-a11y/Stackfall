@@ -163,13 +163,14 @@ function deployPhaseMinefield(n){
   }
   audio.weapon?.('mine');
 }
+const PHASE_ARMED_BUFFER=[];
 function updatePhaseMinefield(dt,n){
   const x=player.x,y=player.y,dx=x-(player.mineLastX??x),dy=y-(player.mineLastY??y),distance=Math.hypot(dx,dy);player.mineTravel=(player.mineTravel||0)+distance;player.mineLastX=x;player.mineLastY=y;player.minePlaceTimer=(player.minePlaceTimer??1.65)-dt;
   const travelNeed=n>=5?72:90;if(player.mineTravel>=travelNeed||player.minePlaceTimer<=0){player.mineTravel=0;player.minePlaceTimer=1.65*hasteMult();deployPhaseMinefield(n);}
   const mines=state.entities.phaseMines;
   for(const mine of mines){if(!mine||mine.life<=0)continue;mine.life-=dt;mine.arm=Math.max(0,mine.arm-dt);if(mine.detonateIn!==null){mine.detonateIn-=dt;if(mine.detonateIn<=0){detonatePhaseMine(mine,mine.pendingScale||1);continue;}}if(mine.life<=0){if(mine.arm<=0)detonatePhaseMine(mine,.55);continue;}if(mine.arm>0)continue;forEachNearbyEnemyCandidate(mine.x,mine.y,mine.trigger+70,enemy=>{if(mine.life<=0||enemy.dead)return;if((enemy.x-mine.x)**2+(enemy.y-mine.y)**2<(enemy.r+mine.trigger)**2)detonatePhaseMine(mine,1);});}
   if(n>=4){
-    const armed=mines.filter(m=>m&&m.life>0&&m.arm<=0&&!m.phantom);
+    const armed=PHASE_ARMED_BUFFER;armed.length=0;for(const mine of mines)if(mine&&mine.life>0&&mine.arm<=0&&!mine.phantom)armed.push(mine);
     for(let i=1;i<armed.length;i++){const a=armed[i-1],b=armed[i];if(Math.hypot(a.x-b.x,a.y-b.y)>210)continue;forEachNearbyEnemyCandidate((a.x+b.x)/2,(a.y+b.y)/2,160,enemy=>{if(enemy.dead||segmentDistance(enemy.x,enemy.y,a.x,a.y,b.x,b.y)>enemy.r+6)return;const now=state.time||0,last=a.linkHits.get(enemy.id)||-99;if(now-last<.35)return;a.linkHits.set(enemy.id,now);dealDamage(enemy,5+n*1.1,{color:'#b9f7ff',source:'phase-wire'});});}
   }
   compactInPlace(mines,m=>m&&m.life>0);
