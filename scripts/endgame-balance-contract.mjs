@@ -19,6 +19,7 @@ const styles=read('styles.css');
 const weapons=read('src/weapons.js');
 const performance=read('src/performance-guard.js');
 const systems=read('src/systems.js');
+const systemsBase=read('src/systems-base.js');
 const gpu=read('src/gpu-renderer.js');
 const render=read('src/render.js');
 const runtimeConfig=read('src/runtime-config.js');
