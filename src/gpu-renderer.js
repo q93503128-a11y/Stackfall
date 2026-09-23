@@ -85,6 +85,7 @@
   const sparklesEnabled=()=>GAME_SETTINGS.sparkles!==false;
   const shouldShowAlliedVisuals=()=>GAME_SETTINGS.hideProjectiles!==true&&state.mode!=='menu';
   const USE_GPU_PLAYER_PROJECTILES=false;
+  const USE_GPU_PLAYER_BEAMS=false;
 
   function resizeForegroundCanvas(){}
   function resizeGpuCombatLayer(){if(!app?.renderer)return;const scale=clamp(Number(window.stackfallResolutionScale)||1,.30,1),pixels=Math.max(1,window.innerWidth*window.innerHeight),large=pixels>=1300000,cap=compactDevice()?1.15:large?1.15:1.40,areaScale=!compactDevice()&&large?.90:1,resolution=Math.max(.30,Math.min(window.devicePixelRatio||1,cap)*scale*areaScale);app.renderer.resize(window.innerWidth,window.innerHeight,resolution);const surface=safeGpuCanvas();if(surface){surface.style.width=`${window.innerWidth}px`;surface.style.height=`${window.innerHeight}px`;}}
@@ -183,7 +184,7 @@
     hideUnused(hostileSprites,used);
   }
   function syncBeamSprites(){
-    if(!app||contextLost||rendererState!=='active'){hideUnused(beamGlowSprites,0);hideUnused(beamCoreSprites,0);return;}
+    if(!app||contextLost||rendererState!=='active'||!USE_GPU_PLAYER_BEAMS){hideUnused(beamGlowSprites,0);hideUnused(beamCoreSprites,0);return;}
     let used=0;for(const beam of state.entities.beams||[]){
       if(!beam||beam.life<=0)continue;const x1=beam.x1-player.x+vw/2,y1=beam.y1-player.y+vh/2,x2=beam.x2-player.x+vw/2,y2=beam.y2-player.y+vh/2,dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);if(!Number.isFinite(len)||len<.5)continue;
       const alpha=clamp(beam.life/Math.max(.001,beam.max||beam.life),0,1),angle=Math.atan2(dy,dx),cx=(x1+x2)/2,cy=(y1+y2)/2,color=parseColor(beam.color,0xffffff),width=Math.max(.7,Number(beam.width)||1);
@@ -453,7 +454,7 @@
     return canvasDrawAlliedEffects();
   };
   drawEnemyProjectiles=function hybridEnemyProjectileDraw(){if(activeGpuProjectiles())return;return canvasDrawEnemyProjectiles();};
-  if(canvasDrawBeamEffects)drawBeamEffects=function hybridBeamDraw(){if(activeGpuProjectiles())return;return canvasDrawBeamEffects();};
+  if(canvasDrawBeamEffects)drawBeamEffects=function hybridBeamDraw(){return canvasDrawBeamEffects();};
   if(canvasDrawStars){
     drawStars=function sparkleAwareStars(palette=['#f6f8ff','#8fe9ff','#cdbfff'],density=1){
       if(sparklesEnabled())return canvasDrawStars(palette,density);
