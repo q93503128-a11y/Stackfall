@@ -333,10 +333,9 @@
   function drawPrismTargetCrown(){if(!awake('prism'))return;const lock=player.prismSharedLock,target=lock?.targetId?enemyById(lock.targetId):null;if(!target)return;const p=worldToScreen(target.x,target.y),heat=clamp((lock.heat||0)/Math.max(.01,weaponCount('prism')>=6?1.55:1.78),0,1),image=prismCrownRaster(heat),t=performance.now()*.0014;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(t);ctx.drawImage(image,-80,-80,160,160);ctx.restore();}
 
   function drawIonCircuit(){
-    if(!awake('ion')||!ionNodes.length)return;
-    const live=ionNodes.map(node=>({node,p:worldToScreen(node.x,node.y)}));ctx.save();ctx.lineWidth=1.5;ctx.strokeStyle='rgba(114,242,255,.52)';ctx.shadowBlur=12;ctx.shadowColor='#72f2ff';
-    if(live.length>1){ctx.beginPath();live.forEach((row,i)=>i?ctx.lineTo(row.p.x,row.p.y):ctx.moveTo(row.p.x,row.p.y));ctx.stroke();}
-    for(const row of live){const q=clamp(row.node.life/row.node.max,0,1);ctx.globalAlpha=.35+.6*q;ctx.fillStyle='#eaffff';ctx.beginPath();ctx.arc(row.p.x,row.p.y,4.2,0,TAU);ctx.fill();ctx.strokeStyle='#72f2ff';ctx.beginPath();ctx.arc(row.p.x,row.p.y,9,0,TAU);ctx.stroke();}ctx.restore();
+    if(!awake('ion')||!ionNodes.length)return;ctx.save();ctx.lineWidth=1.5;ctx.strokeStyle='rgba(114,242,255,.52)';ctx.shadowBlur=12;ctx.shadowColor='#72f2ff';
+    if(ionNodes.length>1){ctx.beginPath();for(let i=0;i<ionNodes.length;i++){const node=ionNodes[i],p=worldToScreen(node.x,node.y);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);}ctx.stroke();}
+    for(const node of ionNodes){const p=worldToScreen(node.x,node.y),q=clamp(node.life/node.max,0,1);ctx.globalAlpha=.35+.6*q;ctx.fillStyle='#eaffff';ctx.beginPath();ctx.arc(p.x,p.y,4.2,0,TAU);ctx.fill();ctx.strokeStyle='#72f2ff';ctx.beginPath();ctx.arc(p.x,p.y,9,0,TAU);ctx.stroke();}ctx.restore();
   }
   function drawNovaCorona(){if(!awake('nova'))return;const image=novaCoronaRaster(player.awNovaCharge||0),t=performance.now()*.001;ctx.save();ctx.translate(vw/2,vh/2);ctx.rotate(t*.24);ctx.drawImage(image,-90,-90,180,180);ctx.restore();}
 
