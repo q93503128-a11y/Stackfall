@@ -89,7 +89,8 @@ function strongestPostRosterEnemy(x=player.x,y=player.y,range=Infinity){
 }
 function plantVacuumSeed(x,y,n,projected=false,index=0){
   const mult=postRosterMultiplicity(),baseCap=n>=5?5:n>=2?4:3,cap=baseCap+mult*2,seeds=state.entities.vacuumSeeds;
-  while(seeds.filter(seed=>seed&&seed.life>0).length>=cap){const oldest=seeds.find(seed=>seed&&seed.life>0&&!seed.blooming);if(!oldest)break;oldest.life=0;}
+  let liveSeeds=0;for(const seed of seeds)if(seed&&seed.life>0)liveSeeds++;
+  while(liveSeeds>=cap){let oldest=null;for(const seed of seeds){if(seed&&seed.life>0&&!seed.blooming){oldest=seed;break;}}if(!oldest)break;oldest.life=0;liveSeeds--;}
   const angle=index*TAU/Math.max(1,1+mult),offset=projected?24+index*8:0;
   seeds.push({id:state.nextId++,x:x+Math.cos(angle)*offset,y:y+Math.sin(angle)*offset,life:7,max:7,charge:0,n,projected,blooming:false,bloomTimer:0,power:1,forced:false,absorbed:0,overburst:false});
   trimOldest(seeds,10);
@@ -110,8 +111,10 @@ function detonateVacuumSeed(seed){
   }
   if(n>=5&&overcharged&&!seed.overburst){seed.overburst=true;scheduleWeaponAction(320,()=>{areaDamage(seed.x,seed.y,radius*.78,damage*.45,'#f5ddff','vacuum-overbloom',{shake:false});shockwave(seed.x,seed.y,'#d58cff',radius*.84,.32,2.5);});}
   if(n>=6&&overcharged&&!seed.forced){
-    const candidates=state.entities.vacuumSeeds.filter(other=>other&&other!==seed&&other.life>0&&!other.blooming&&Math.hypot(other.x-seed.x,other.y-seed.y)<=330).sort((a,b)=>Math.hypot(a.x-seed.x,a.y-seed.y)-Math.hypot(b.x-seed.x,b.y-seed.y)).slice(0,2);
-    candidates.forEach((other,index)=>scheduleWeaponAction(100+index*140,()=>beginVacuumBloom(other,.70,true)));
+    let nearestA=null,nearestB=null,bestA=Infinity,bestB=Infinity;const limit2=330*330;
+    for(const other of state.entities.vacuumSeeds){if(!other||other===seed||other.life<=0||other.blooming)continue;const dx=other.x-seed.x,dy=other.y-seed.y,d2=dx*dx+dy*dy;if(d2>limit2)continue;if(d2<bestA){nearestB=nearestA;bestB=bestA;nearestA=other;bestA=d2;}else if(d2<bestB){nearestB=other;bestB=d2;}}
+    if(nearestA)scheduleWeaponAction(100,()=>beginVacuumBloom(nearestA,.70,true));
+    if(nearestB)scheduleWeaponAction(240,()=>beginVacuumBloom(nearestB,.70,true));
   }
   seed.life=0;
 }
@@ -137,7 +140,7 @@ window.stackfallPostRosterOnKill=function postRosterKill(enemy){
 };
 function placePhaseMine(x,y,n,opts={}){
   const mines=state.entities.phaseMines,phantom=!!opts.phantom,size=weaponSizeMultiplier(),mine={id:state.nextId++,x,y,n,arm:phantom?.08:.35,life:phantom?2.4:(n>=5?10.5:9),max:phantom?2.4:(n>=5?10.5:9),damage:(26+(n-1)*3.2)*(phantom?.58:1)*(opts.damageScale||1),radius:(74+(n>=2?8:0))*size,trigger:48*size,phantom,group:opts.group||null,satellite:!!opts.satellite,fromChain:!!opts.fromChain,triangleSequence:!!opts.triangleSequence,detonateIn:null,chainUsed:false,linkHits:new Map()};
-  mines.push(mine);const cap=(n>=5?11:n>=2?8:6)+postRosterMultiplicity()*2+4;while(mines.filter(m=>m&&m.life>0).length>cap){const old=mines.find(m=>m&&m.life>0&&!m.phantom);if(!old)break;old.life=0;}trimOldest(mines,20);return mine;
+  mines.push(mine);const cap=(n>=5?11:n>=2?8:6)+postRosterMultiplicity()*2+4;let liveMines=0;for(const candidate of mines)if(candidate&&candidate.life>0)liveMines++;while(liveMines>cap){let old=null;for(const candidate of mines){if(candidate&&candidate.life>0&&!candidate.phantom){old=candidate;break;}}if(!old)break;old.life=0;liveMines--;}trimOldest(mines,20);return mine;
 }
 function detonatePhaseMine(mine,scale=1){
   if(!mine||mine.life<=0)return;const n=mine.n,damage=mine.damage*scale;
@@ -146,7 +149,7 @@ function detonatePhaseMine(mine,scale=1){
     mine.chainUsed=true;const range=n>=5?230:190;let best=null,bd=Infinity;for(const other of state.entities.phaseMines){if(!other||other===mine||other.life<=0||other.arm>0||other.detonateIn!==null)continue;const d=Math.hypot(other.x-mine.x,other.y-mine.y);if(d<=range&&d<bd){bd=d;best=other;}}if(best){best.detonateIn=.12;best.pendingScale=.65;best.fromChain=true;}
   }
   if(mine.group&&!mine.triangleSequence){
-    const siblings=state.entities.phaseMines.filter(other=>other&&other!==mine&&other.life>0&&other.group===mine.group);siblings.forEach((other,index)=>{if(other.detonateIn===null){other.detonateIn=.08+index*.08;other.pendingScale=.72;other.triangleSequence=true;}});
+    let siblingIndex=0;for(const other of state.entities.phaseMines){if(!other||other===mine||other.life<=0||other.group!==mine.group)continue;if(other.detonateIn===null){other.detonateIn=.08+siblingIndex*.08;other.pendingScale=.72;other.triangleSequence=true;}siblingIndex++;}
   }
   if(state.weaponAugments?.mine&&!mine.phantom){
     const target=strongestPostRosterEnemy(mine.x,mine.y,weaponRange('mine'));if(target){const lead=.26,px=target.x+(target.vx||0)*lead,py=target.y+(target.vy||0)*lead;placePhaseMine(px,py,n,{phantom:true});}

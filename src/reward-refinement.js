@@ -209,12 +209,12 @@
     }
   };
 
-  const rrUpdateWells=updateWells;updateWells=function(dt){
-    const gravityExpiring=state.entities.wells.filter(w=>w.rewardBurst&&!w.strongRewardBurstDone&&w.life<=dt+.035),singularityExpiring=state.entities.wells.filter(w=>w.traitCollapse&&!w.traitCollapseDone&&w.life<=dt+.035),singularities=state.entities.wells.filter(w=>w.kind==='trait-singularity'&&w.life>0);
-    for(const w of singularities){w.distortionCd=(w.distortionCd??0)-dt;const radius=w.r*1.08;for(const p of state.entities.enemyProjectiles){if(!p||p.life<=0)continue;if((p.x-w.x)**2+(p.y-w.y)**2<radius*radius){const slow=Math.pow(.18,dt);p.vx*=slow;p.vy*=slow;}}for(const e of state.entities.enemies)if(!e.dead&&e.kind!=='apex'&&(e.x-w.x)**2+(e.y-w.y)**2<(w.r*.86+e.r)**2)e.timeLock=Math.max(e.timeLock||0,.18);if(w.distortionCd<=0){w.distortionCd=.62;shockwave(w.x,w.y,'#ef9cff',w.r*.74,.26,1.4);}}
+  const rrUpdateWells=updateWells,rrGravityExpiring=[],rrSingularityExpiring=[];updateWells=function(dt){
+    rrGravityExpiring.length=0;rrSingularityExpiring.length=0;
+    for(const w of state.entities.wells){if(!w)continue;if(w.rewardBurst&&!w.strongRewardBurstDone&&w.life<=dt+.035)rrGravityExpiring.push(w);if(w.traitCollapse&&!w.traitCollapseDone&&w.life<=dt+.035)rrSingularityExpiring.push(w);if(w.kind!=='trait-singularity'||w.life<=0)continue;w.distortionCd=(w.distortionCd??0)-dt;const radius=w.r*1.08,radius2=radius*radius;for(const p of state.entities.enemyProjectiles){if(!p||p.life<=0)continue;const dx=p.x-w.x,dy=p.y-w.y;if(dx*dx+dy*dy<radius2){const slow=Math.pow(.18,dt);p.vx*=slow;p.vy*=slow;}}for(const e of state.entities.enemies)if(!e.dead&&e.kind!=='apex'&&(e.x-w.x)**2+(e.y-w.y)**2<(w.r*.86+e.r)**2)e.timeLock=Math.max(e.timeLock||0,.18);if(w.distortionCd<=0){w.distortionCd=.62;shockwave(w.x,w.y,'#ef9cff',w.r*.74,.26,1.4);}}
     rrUpdateWells(dt);
-    for(const w of gravityExpiring){w.strongRewardBurstDone=true;areaDamage(w.x,w.y,195*weaponSizeMultiplier(),34+weaponCount('gravity')*7,COLORS.violet,'gravity-collapse');shockwave(w.x,w.y,'#e8d9ff',245*weaponSizeMultiplier(),.58,5);}
-    for(const w of singularityExpiring){w.traitCollapseDone=true;for(const p of state.entities.enemyProjectiles)if((p.x-w.x)**2+(p.y-w.y)**2<(w.r*1.25)**2)p.life=0;areaDamage(w.x,w.y,w.r*1.08,34+state.level*.9,'#e65cff','trait-singularity-collapse');for(let i=0;i<8;i++){const a=i*TAU/8;spawnPlayerProjectile({x:w.x,y:w.y,vx:Math.cos(a)*390,vy:Math.sin(a)*390,r:4.8,life:.9,maxRange:330,damage:13+state.level*.45,color:'#f2b1ff',pierce:1,source:'singularity-shard'});}}
+    for(const w of rrGravityExpiring){w.strongRewardBurstDone=true;areaDamage(w.x,w.y,195*weaponSizeMultiplier(),34+weaponCount('gravity')*7,COLORS.violet,'gravity-collapse');shockwave(w.x,w.y,'#e8d9ff',245*weaponSizeMultiplier(),.58,5);}
+    for(const w of rrSingularityExpiring){w.traitCollapseDone=true;for(const p of state.entities.enemyProjectiles)if((p.x-w.x)**2+(p.y-w.y)**2<(w.r*1.25)**2)p.life=0;areaDamage(w.x,w.y,w.r*1.08,34+state.level*.9,'#e65cff','trait-singularity-collapse');for(let i=0;i<8;i++){const a=i*TAU/8;spawnPlayerProjectile({x:w.x,y:w.y,vx:Math.cos(a)*390,vy:Math.sin(a)*390,r:4.8,life:.9,maxRange:330,damage:13+state.level*.45,color:'#f2b1ff',pierce:1,source:'singularity-shard'});}}
   };
 
   applyLanguage();renderStarterOptions();renderLoadout();

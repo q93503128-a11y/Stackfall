@@ -156,10 +156,10 @@
   // A17 — Phase Starrail. One deployment = one route node regardless of triangle/satellites.
   function recordStarrailNode(newMines,n){
     if(!awake('mine'))return;
-    const originals=newMines.filter(m=>m&&!m.phantom);if(!originals.length)return;
-    const x=originals.reduce((sum,m)=>sum+m.x,0)/originals.length,y=originals.reduce((sum,m)=>sum+m.y,0)/originals.length,
+    let count=0,sumX=0,sumY=0;const mineIds=[];for(const m of newMines){if(!m||m.phantom)continue;count++;sumX+=m.x;sumY+=m.y;mineIds.push(m.id);}if(!count)return;
+    const x=sumX/count,y=sumY/count,
       dx=x-(starrailNodes.at(-1)?.x??player.mineLastX??x),dy=y-(starrailNodes.at(-1)?.y??player.mineLastY??y),a=Math.hypot(dx,dy)>2?Math.atan2(dy,dx):(Number.isFinite(player.facingAngle)?player.facingAngle:0);
-    starrailNodes.push({id:state.nextId++,x,y,a,mineIds:originals.map(m=>m.id),life:12,max:12});
+    starrailNodes.push({id:state.nextId++,x,y,a,mineIds,life:12,max:12});
     while(starrailNodes.length>6)starrailNodes.shift();
     player.awMineDeployCycle=(player.awMineDeployCycle||0)+1;
     if(player.awMineDeployCycle%5===0&&starrailNodes.length>=2)triggerStarrailRun(n,starrailNodes.slice());
@@ -171,17 +171,16 @@
       const a=points[i-1],b=points[i],damage=10+n*2.1;
       applyRailBeam(a.x,a.y,b.x,b.y,5.2*size,damage,'#dffcff','phase-wire',1);
       const node=points[i],nearEnemy=nearestEnemy(node.x,node.y,105+18*n);if(!nearEnemy)return;
-      const candidates=node.mineIds.map(id=>state.entities.phaseMines.find(m=>m?.id===id)).filter(m=>m&&m.life>0&&!m.phantom&&m.arm<=0);
-      const mine=candidates.sort((a,b)=>Math.hypot(a.x-nearEnemy.x,a.y-nearEnemy.y)-Math.hypot(b.x-nearEnemy.x,b.y-nearEnemy.y))[0];
+      let mine=null,best=Infinity;for(const id of node.mineIds){const candidate=state.entities.phaseMines.find(m=>m?.id===id);if(!candidate||candidate.life<=0||candidate.phantom||candidate.arm>0)continue;const dx=candidate.x-nearEnemy.x,dy=candidate.y-nearEnemy.y,d2=dx*dx+dy*dy;if(d2<best){best=d2;mine=candidate;}}
       if(mine)detonatePhaseMine(mine,.82);
     });
     audio.weapon?.('mine',false,1.45);
   }
   const baseDeployPhaseMinefield=deployPhaseMinefield;
   deployPhaseMinefield=function phaseStarrailDeployment(n){
-    const beforeIds=new Set(state.entities.phaseMines.filter(m=>m&&m.life>0).map(m=>m.id));
+    const beforeIds=new Set();for(const m of state.entities.phaseMines)if(m&&m.life>0)beforeIds.add(m.id);
     baseDeployPhaseMinefield(n);
-    const created=state.entities.phaseMines.filter(m=>m&&m.life>0&&!beforeIds.has(m.id));
+    const created=[];for(const m of state.entities.phaseMines)if(m&&m.life>0&&!beforeIds.has(m.id))created.push(m);
     recordStarrailNode(created,n);
   };
 

@@ -142,12 +142,12 @@
   function triggerCelestialThunder(n){
     if(player.awIonDischargePending||ionNodes.length<5)return;
     player.awIonDischargePending=true;player.awIonCircuitCd=1.0;
-    const snapshot=ionNodes.slice(0,7).map(node=>({enemyId:node.enemyId,x:node.x,y:node.y}));
-    const live=snapshot.map(node=>enemyById(node.enemyId)).filter(Boolean),core=live.sort((a,b)=>(b.hp||0)-(a.hp||0))[0];
+    const snapshot=[];for(let i=0;i<ionNodes.length&&i<7;i++){const node=ionNodes[i];snapshot.push({enemyId:node.enemyId,x:node.x,y:node.y});}
+    let core=null,coreHp=-Infinity;for(const node of snapshot){const enemy=enemyById(node.enemyId);if(enemy&&(enemy.hp||0)>coreHp){core=enemy;coreHp=enemy.hp||0;}}
     const cx=core?.x??snapshot[0]?.x??player.x,cy=core?.y??snapshot[0]?.y??player.y;
     pushFx({kind:'ion-circuit-freeze',points:snapshot,cx,cy,life:.32,max:.32});
     scheduleWeaponAction(190,()=>{
-      const current=snapshot.map(node=>enemyById(node.enemyId)).filter(Boolean),anchor=current.sort((a,b)=>(b.hp||0)-(a.hp||0))[0],ax=anchor?.x??cx,ay=anchor?.y??cy,size=weaponSizeMultiplier();
+      const current=[];let anchor=null,anchorHp=-Infinity;for(const node of snapshot){const enemy=enemyById(node.enemyId);if(!enemy)continue;current.push(enemy);if((enemy.hp||0)>anchorHp){anchor=enemy;anchorHp=enemy.hp||0;}}const ax=anchor?.x??cx,ay=anchor?.y??cy,size=weaponSizeMultiplier();
       state.entities.beams.push({x1:ax,y1:ay-650,x2:ax,y2:ay,life:.24,max:.24,color:'#ffffff',width:12*size});
       for(const enemy of current)dealDamage(enemy,22+n*3.5,{color:'#eaffff',source:'ion-burst',canCrit:false});
       if(anchor)dealDamage(anchor,28+n*4.4,{color:'#ffffff',source:'ion-burst',canCrit:false});
