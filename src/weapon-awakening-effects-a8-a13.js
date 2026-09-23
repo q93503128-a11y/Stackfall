@@ -316,11 +316,11 @@
     const size=weaponSizeMultiplier();
     if(hidePrism){
       const points=prismPositions(prismAwakenedBodyCount(prismN));for(const point of points)drawCrownPrism(point,t,size);
-      if(points.length>=2){const pts=points.map(p=>worldToScreen(p.x,p.y));ctx.save();ctx.strokeStyle='rgba(225,211,255,.34)';ctx.lineWidth=1.4;ctx.setLineDash([5,7]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));if(pts.length>2)ctx.closePath();ctx.stroke();ctx.setLineDash([]);ctx.restore();}
+      if(points.length>=2){ctx.save();ctx.strokeStyle='rgba(225,211,255,.34)';ctx.lineWidth=1.4;ctx.setLineDash([5,7]);ctx.beginPath();for(let i=0;i<points.length;i++){const p=worldToScreen(points[i].x,points[i].y);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);}if(points.length>2)ctx.closePath();ctx.stroke();ctx.setLineDash([]);ctx.restore();}
     }
     if(hideDrone){
-      const points=[...meteorDronePositions(droneN)],extra=multiplicity();for(let i=0;i<extra;i++){const a=(i+.5)*TAU/Math.max(1,extra)+player.angle*.31;points.push({x:player.x+Math.cos(a)*(orbitRadiusFor('drone')+18),y:player.y+Math.sin(a)*(orbitRadiusFor('drone')+18),a});}
-      for(const point of points)drawFleetDrone(point,point.a+Math.PI/2,size*.92,0);
+      const points=meteorDronePositions(droneN);for(const point of points)drawFleetDrone(point,point.a+Math.PI/2,size*.92,0);
+      const extra=multiplicity(),rr=orbitRadiusFor('drone')+18;for(let i=0;i<extra;i++){const a=(i+.5)*TAU/Math.max(1,extra)+player.angle*.31;drawFleetDrone({x:player.x+Math.cos(a)*rr,y:player.y+Math.sin(a)*rr,a},a+Math.PI/2,size*.92,0);}
     }
   };
 
