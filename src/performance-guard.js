@@ -14,6 +14,9 @@
   const enemySpriteCache=new Map();
   const gemSpriteCache=new Map();
   const projectilePool=window.stackfallProjectilePool=window.stackfallProjectilePool||[];
+  const PARTICLE_CAP_PROFILES={normal:{desktop:{particles:240,texts:52,shockwaves:54,beams:78},compact:{particles:150,texts:30,shockwaves:34,beams:48}},reduced:{desktop:{particles:168,texts:36,shockwaves:42,beams:58},compact:{particles:105,texts:22,shockwaves:26,beams:36}},critical:{desktop:{particles:112,texts:24,shockwaves:30,beams:40},compact:{particles:70,texts:14,shockwaves:18,beams:24}}};
+  let nearbyCollectBuffer=null;
+  function collectNearbyEnemy(e){nearbyCollectBuffer.push(e);}
   let heavyFrame=false;
   let frameMs=16.7;
   let slowDebt=0;
@@ -121,8 +124,11 @@
   }
   function nearestIndexedEnemy(x,y,maxRange=Infinity,predicate=null){
     if(!grid.size)rebuildEnemyGrid();let best=null,bestDistance=Number.isFinite(maxRange)?maxRange*maxRange:Infinity;
-    const visit=e=>{if(!e||e.dead||(predicate&&!predicate(e)))return;const distance=(e.x-x)**2+(e.y-y)**2;if(distance<bestDistance){bestDistance=distance;best=e;}};
-    if(Number.isFinite(maxRange))forEachNearbyEnemy(x,y,maxRange,visit);else for(const enemy of enemyIndex.values())visit(enemy);return best;
+    if(Number.isFinite(maxRange)){
+      const cx=Math.floor(x/CELL),cy=Math.floor(y/CELL),reach=Math.max(1,Math.ceil(maxRange/CELL));
+      for(let yy=cy-reach;yy<=cy+reach;yy++)for(let xx=cx-reach;xx<=cx+reach;xx++){const bucket=grid.get(gridKey(xx,yy));if(!bucket)continue;for(let i=0;i<bucket.length;i++){const e=bucket[i];if(!e||e.dead||(predicate&&!predicate(e)))continue;const distance=(e.x-x)**2+(e.y-y)**2;if(distance<bestDistance){bestDistance=distance;best=e;}}}
+    }else for(const e of enemyIndex.values()){if(!e||e.dead||(predicate&&!predicate(e)))continue;const distance=(e.x-x)**2+(e.y-y)**2;if(distance<bestDistance){bestDistance=distance;best=e;}}
+    return best;
   }
 
   window.stackfallPerformanceStressed=stressed;
@@ -138,18 +144,15 @@
   window.performanceForEachNearbyEnemy=(x,y,range,visit)=>{if(!grid.size)rebuildEnemyGrid();forEachNearbyEnemy(x,y,range,visit);};
   window.performanceNearbyEnemies=(x,y,range=96,out=[])=>{
     if(!grid.size)rebuildEnemyGrid();
-    out.length=0;forEachNearbyEnemy(x,y,range,e=>out.push(e));return out;
+    out.length=0;nearbyCollectBuffer=out;try{forEachNearbyEnemy(x,y,range,collectNearbyEnemy);}finally{nearbyCollectBuffer=null;}return out;
   };
 
   const baseEntityCap=entityCap;
   const gameplayEntityKinds=new Set(['enemies','gems','playerProjectiles','enemyProjectiles','telegraphs']);
   entityCap=function adaptiveEntityCap(kind){
     if(gameplayEntityKinds.has(kind))return baseEntityCap(kind);
-    const compact=compactDevice(),level=tier();
-    const normal=compact?{particles:150,texts:30,shockwaves:34,beams:48}:{particles:240,texts:52,shockwaves:54,beams:78};
-    const reduced=compact?{particles:105,texts:22,shockwaves:26,beams:36}:{particles:168,texts:36,shockwaves:42,beams:58};
-    const critical=compact?{particles:70,texts:14,shockwaves:18,beams:24}:{particles:112,texts:24,shockwaves:30,beams:40};
-    return(level===2?critical:level===1?reduced:normal)[kind]||100;
+    const compact=compactDevice(),level=tier(),profile=level===2?PARTICLE_CAP_PROFILES.critical:level===1?PARTICLE_CAP_PROFILES.reduced:PARTICLE_CAP_PROFILES.normal;
+    return(compact?profile.compact:profile.desktop)[kind]||100;
   };
 
   const baseSpawnParticle=spawnParticle;
