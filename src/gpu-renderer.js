@@ -447,7 +447,7 @@
     drawMinimalAlliedProjectiles();
   };
   drawAlliedEffects=function hybridAlliedEffectDraw(){
-    if(activeGpuProjectiles()||!sparklesEnabled()){if(typeof drawPostRosterWeaponEntities==='function')drawPostRosterWeaponEntities();return;}
+    if(activeGpuProjectiles()||!sparklesEnabled()){if(typeof drawPostRosterWeaponEntities==='function')drawPostRosterWeaponEntities();if(typeof window.stackfallDrawCometWindups==='function')window.stackfallDrawCometWindups();return;}
     return canvasDrawAlliedEffects();
   };
   drawEnemyProjectiles=function hybridEnemyProjectileDraw(){if(activeGpuProjectiles())return;return canvasDrawEnemyProjectiles();};
