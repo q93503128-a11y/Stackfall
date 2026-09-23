@@ -53,11 +53,12 @@
   button.onclick=toggleLedger;pauseButton.onclick=openLedger;$('#ledgerCloseX').onclick=()=>closeLedger();$('#ledgerCloseBtn').onclick=()=>closeLedger();
 
   const baseRenderLoadout=renderLoadout;let lastLoadoutSignature='';
-  function loadoutSignature(){const slots=(state.weaponSlots||[]).map(key=>[key,weaponCount(key)]);const passives=Object.entries(state.passives||{}).sort(([a],[b])=>a.localeCompare(b));return JSON.stringify([weaponCount('core'),slots,passives,state.weaponAugments||{},state.bossTraits||{}]);}
+  const loadoutPassiveKeys=Object.keys(PASSIVES).sort(),loadoutAugmentKeys=Object.keys(WEAPONS),loadoutTraitKeys=['stellar','aegis','singularity','eclipse','chrono','harvest'];
+  function loadoutSignature(){let signature=`c:${weaponCount('core')}|s:`;const slots=state.weaponSlots||[];for(let i=0;i<slots.length;i++){const key=slots[i]||'';signature+=key+':'+(key?weaponCount(key):0)+',';}signature+='|p:';for(const key of loadoutPassiveKeys){const value=state.passives?.[key]||0;if(value)signature+=key+':'+value+',';}signature+='|a:';for(const key of loadoutAugmentKeys)if(state.weaponAugments?.[key])signature+=key+',';signature+='|t:';for(const key of loadoutTraitKeys)if(state.bossTraits?.[key])signature+=key+',';return signature;}
   function renderSyncedLoadout(force=false){reconcileWeaponSlots();const signature=loadoutSignature();if(force||signature!==lastLoadoutSignature){baseRenderLoadout();lastLoadoutSignature=signature;}}
   renderLoadout=function(){renderSyncedLoadout(true);updateButton();};
-  const baseUpdateHUD=updateHUD;
-  updateHUD=function(){renderSyncedLoadout(false);baseUpdateHUD();sf2UpdateCooldownHud();const duration=2.15*(typeof chainDurationMultiplier==='function'?chainDurationMultiplier():(1+stat('chain')*.25));ui.comboBar.style.transform=`scaleX(${clamp(state.comboTimer/Math.max(.001,duration),0,1)})`;const comboBonusEl=document.querySelector('#comboBonusText'),bonus=typeof chainDamageBonus==='function'?chainDamageBonus():0;if(comboBonusEl)comboBonusEl.textContent=bonus>0?`+${Math.round(bonus*100)}% ${locale()==='ko'?'피해':'DMG'}`:'';syncVisibility();};
+  const baseUpdateHUD=updateHUD,ledgerComboBonusEl=document.querySelector('#comboBonusText');
+  updateHUD=function(){renderSyncedLoadout(false);baseUpdateHUD();sf2UpdateCooldownHud();const duration=2.15*(typeof chainDurationMultiplier==='function'?chainDurationMultiplier():(1+stat('chain')*.25));ui.comboBar.style.transform=`scaleX(${clamp(state.comboTimer/Math.max(.001,duration),0,1)})`;const bonus=typeof chainDamageBonus==='function'?chainDamageBonus():0;if(ledgerComboBonusEl)ledgerComboBonusEl.textContent=bonus>0?`+${Math.round(bonus*100)}% ${locale()==='ko'?'피해':'DMG'}`:'';syncVisibility();};
   const baseApplyLanguage=applyLanguage;applyLanguage=function(){baseApplyLanguage();lastLoadoutSignature='';renderSyncedLoadout(true);updateButton();if(ledgerOpen)renderLedger();};
   renderSyncedLoadout(true);updateButton();
 })();
