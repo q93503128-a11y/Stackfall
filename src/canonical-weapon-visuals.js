@@ -74,7 +74,7 @@
   function dimensions(kind,p){
     const r=Math.max(2,Number(p.r)||4);
     if(kind==='core')return[r*8.2,r*3.8];
-    if(kind==='ember')return[r*(awake?.('ember')?9.2:7.7),r*(awake?.('ember')?4.3:3.7)];
+    if(kind==='ember'){const awakened=typeof awake==='function'&&awake('ember');return[r*(awakened?9.2:7.7),r*(awakened?4.3:3.7)];}
     if(kind==='comet')return[r*(p.awakeningChild?15.2:12.2),r*(p.awakeningChild?5.6:4.8)];
     if(kind==='shard')return[r*6.4,r*3.0];
     if(kind==='drone')return[r*5.7,r*2.8];
