@@ -24,6 +24,9 @@
   let rendererState='loading';
   let lastFailure='';
   let tickerFrames=0;
+  let gpuSyncAvgMs=0;
+  let gpuSyncMaxMs=0;
+  let gpuSyncSamples=0;
   let firstGpuFrame=false;
   let firstProjectileSpriteSeen=false;
   let projectileWarmupDeadline=0;
@@ -310,6 +313,7 @@
     if(renderable>0&&!firstProjectileSpriteSeen&&projectileWarmupDeadline&&performance.now()>projectileWarmupDeadline)disableGpuRenderer('projectile sprite warm-up timed out');
   }
   function syncGpuLayer(){
+    const sample=(tickerFrames%30)===0,start=sample?performance.now():0;
     try{
       tickerFrames++;
       firstGpuFrame=true;
@@ -326,6 +330,8 @@
       evaluateReadiness();
     }catch(error){
       disableGpuRenderer('frame update failed',error);
+    }finally{
+      if(sample){const elapsed=performance.now()-start;gpuSyncSamples++;gpuSyncAvgMs+=((elapsed-gpuSyncAvgMs)/Math.min(gpuSyncSamples,90));gpuSyncMaxMs=Math.max(gpuSyncMaxMs*.995,elapsed);}
     }
   }
   function disableGpuRenderer(reason,error){
@@ -476,6 +482,7 @@
     tickerRegistrationCount,
     contextListenerRegistrationCount,
     tickerFrames,
+    gpuSync:{avgMs:gpuSyncAvgMs,maxMs:gpuSyncMaxMs,samples:gpuSyncSamples},
     firstGpuFrame,
     firstProjectileSpriteSeen,
     projectileSprites:{pool:projectileSprites.length,visible:visibleProjectileSprites},
