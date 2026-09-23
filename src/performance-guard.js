@@ -254,8 +254,8 @@
 
 
   const fullDrawEffects=drawEffects,fullDrawEnemyProjectiles=drawEnemyProjectiles;
-  // Realm backgrounds remain on the canonical renderer so performance-tier oscillation cannot swap maps mid-run.
-  drawProjectiles=function cachedPlayerProjectiles(){if(GAME_SETTINGS.hideProjectiles===true)return;drawCachedProjectiles(state.entities.projectiles,false);};
+  // Preserve the canonical player-weapon renderer. Performance code must never replace authored weapon silhouettes.
+  // Hostile shots and regular enemies can still use cached/GPU paths because they do not encode player weapon identity.
   drawEnemyProjectiles=function cachedEnemyProjectiles(){drawCachedProjectiles(state.entities.enemyProjectiles,true);};
   drawEnemies=function cachedEnemyRenderer(){drawCachedEnemies();};
 
