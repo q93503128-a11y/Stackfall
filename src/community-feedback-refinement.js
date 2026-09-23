@@ -4,8 +4,7 @@
   const weaponStacks=key=>Math.max(0,weaponCount(key));
   const multishotStacks=()=>Math.min(2,Math.max(0,Number(stat('multiplicity'))||0));
   const clampScale=(n,table)=>table[Math.max(0,Math.min(table.length-1,n))]??1;
-  let forcedCriticalResolution=false,criticalResolutionPreviousScale=1;
-  function resetCommunityRunState(){player.communityCoreRicochetCycle=0;forcedCriticalResolution=false;criticalResolutionPreviousScale=1;if((Number(window.stackfallResolutionScale)||1)!==1){window.stackfallResolutionScale=1;resize();}}
+  function resetCommunityRunState(){player.communityCoreRicochetCycle=0;}
   const previousResetGame=resetGame;resetGame=function communityResetGame(){const result=previousResetGame();resetCommunityRunState();return result;};
   const previousShowMainMenu=showMainMenu;showMainMenu=function communityShowMainMenu(){const result=previousShowMainMenu();resetCommunityRunState();return result;};
   const previousEndGame=endGame;endGame=function communityEndGame(){const result=previousEndGame();resetCommunityRunState();return result;};
