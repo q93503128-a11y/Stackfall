@@ -58,7 +58,7 @@
     if(traits.eclipse){const image=traitIconRaster('eclipse');ctx.save();ctx.rotate(t*.00013);ctx.drawImage(image,-80,-80,160,160);ctx.restore();}
     if(traits.chrono){const image=traitIconRaster('chrono');ctx.save();ctx.rotate(t*.00036);ctx.drawImage(image,-80,-80,160,160);ctx.restore();}
     if(traits.harvest){const image=traitIconRaster('harvest');ctx.save();ctx.rotate(-t*.00029);ctx.drawImage(image,-80,-80,160,160);ctx.restore();}
-    const keys=Object.keys(augments).filter(k=>augments[k]);if(keys.length){ctx.save();ctx.rotate(t*.00018);for(const[i,key]of keys.entries()){const a=i/keys.length*TAU,rr=66+(i%2)*7,color=WEAPONS[key]?.color||'#fff',image=traitIconRaster('augment',color);ctx.save();ctx.translate(Math.cos(a)*rr,Math.sin(a)*rr);ctx.drawImage(image,-80,-80,160,160);ctx.restore();}ctx.restore();}ctx.restore();
+    let augmentCount=0;for(const key in augments)if(augments[key])augmentCount++;if(augmentCount){ctx.save();ctx.rotate(t*.00018);let index=0;for(const key in augments){if(!augments[key])continue;const a=index/augmentCount*TAU,rr=66+(index%2)*7,color=WEAPONS[key]?.color||'#fff',image=traitIconRaster('augment',color);ctx.save();ctx.translate(Math.cos(a)*rr,Math.sin(a)*rr);ctx.drawImage(image,-80,-80,160,160);ctx.restore();index++;}ctx.restore();}ctx.restore();
   };
 
   const baseStartRealmTransition=startRealmTransition;
