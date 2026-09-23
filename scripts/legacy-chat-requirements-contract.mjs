@@ -14,6 +14,9 @@ const prism=read('src/community-feedback-refinement.js');
 const targeting=read('src/targeting-motion-refinement.js');
 const guidance=read('src/combat-guidance-refinement.js');
 const endgame=read('src/endgame-balance-expansion.js');
+const systemsBase=read('src/systems-base.js');
+const bossCatalog=read('src/boss-catalog.js');
+const core=read('src/core.js');
 const entities=read('src/render-entities.js');
 const awakening=read('src/weapon-awakening-effects-a1-a7.js');
 const gpu=read('src/gpu-renderer.js');
@@ -21,6 +24,8 @@ const damage=read('src/run-damage-stats.js');
 const design=read('docs/GAME_DESIGN.md');
 
 expect('player hit invulnerability remains 0.5 seconds',bosses.includes('player.invuln=.5')&&!bosses.includes('player.invuln=.9'));
+expect('Apex cadence remains eight minutes of game time',bossCatalog.includes('APEX_INTERVAL_SECONDS=480')&&core.includes('nextApexAt:480')&&core.includes('state.nextApexAt=480'));
+expect('boss chain damage is registered once at the common damage sink',systemsBase.includes('registerStackfallBossChainDamage(enemy,inflicted,opts)')&&!endgame.includes('registerStackfallBossChainDamage(enemy,Math.min(hpBefore'));
 expect('initial weapon pool remains four weapons',meta.includes("INITIAL_WEAPONS=Object.freeze(['blade','ember','bulwark','gravity'])"));
 expect('auto level choice is saved in settings',settings.includes('GAME_SETTINGS.autoLevelChoice=saved.autoLevelChoice===true')&&settings.includes("updateDisplaySetting('autoLevelChoice'"));
 expect('auto level choice immediately accepts first generated choice',progression.includes('GAME_SETTINGS.autoLevelChoice===true')&&progression.includes('selectChoice(choices[0])'));
