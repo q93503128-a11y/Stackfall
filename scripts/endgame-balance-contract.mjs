@@ -27,6 +27,7 @@ const combatGuidance=read('src/combat-guidance-refinement.js');
 const interfaceJs=read('src/interface.js');
 const settingsJs=read('src/settings.js');
 expect('expansion loaded',index.includes('src/endgame-balance-expansion.js'));
+expect('boss chain damage is registered only by base damage path',systemsBase.includes('registerStackfallBossChainDamage(enemy,inflicted,opts)')&&!expansion.includes("registerStackfallBossChainDamage(enemy,Math.min(hpBefore"));
 expect('prism cycle remains haste driven',expansion.includes("tickInterval=Math.max(.065,.25*hasteMult())"));
 expect('prism holds one shared target until extreme separation',expansion.includes('player.prismSharedLock')&&expansion.includes('lock.targetId?enemyById(lock.targetId):null')&&expansion.includes('PRISM_RELEASE_GRACE_SECONDS=2.25')&&expansion.includes("Math.max(1500,weaponRange('prism')*3+orbitRadiusFor('prism'))")&&expansion.includes('inside||lock.lostTime<PRISM_RELEASE_GRACE_SECONDS'));
 expect('prism new-target windup',expansion.includes('PRISM_ACQUISITION_SECONDS=1.0')&&expansion.includes('lock.readyAt=now+PRISM_ACQUISITION_SECONDS')&&expansion.includes('lock.readyAt-(state.time||0)')&&/lock\.targetId=null;\r?\n\s+target=nearestWeaponTarget\('prism'\)/.test(expansion));
