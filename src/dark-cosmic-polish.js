@@ -37,15 +37,28 @@
     const ev=state.mapEventActive;if(ev?.type==='crash'&&ev.arena)drawCrashArena(ev,t);
   };
 
+  const TRAIT_RASTER_CACHE=new Map();
+  function traitRaster(key,size,painter){return cachedRasterSurface(TRAIT_RASTER_CACHE,key,size,painter,48);}
+  function traitIconRaster(kind,color='#fff'){
+    return traitRaster(`trait:${kind}:${color}`,160,(g,sz)=>{const c=sz/2;g.save();g.translate(c,c);
+      if(kind==='stellar'){g.translate(0,-43);g.shadowBlur=22;g.shadowColor='#ffe184';g.strokeStyle='rgba(255,230,145,.75)';g.lineWidth=1.4;g.beginPath();g.ellipse(0,8,21,6,0,0,TAU);g.stroke();const grad=g.createLinearGradient(0,-22,0,10);grad.addColorStop(0,'#ffffff');grad.addColorStop(.35,'#ffe79a');grad.addColorStop(1,'#ff9e45');g.fillStyle=grad;for(let i=-2;i<=2;i++){const h=i===0?22:Math.abs(i)===1?16:11,px=i*8;g.beginPath();g.moveTo(px-4,8);g.lineTo(px,-h);g.lineTo(px+4,8);g.closePath();g.fill();}g.fillStyle='#fff7ce';g.rotate(Math.PI/4);g.fillRect(-3.5,-3.5,7,7);}
+      else if(kind==='aegis'){g.strokeStyle='rgba(131,255,209,.58)';g.lineWidth=2;g.setLineDash([9,8]);g.beginPath();g.arc(0,0,47,0,TAU);g.stroke();g.setLineDash([]);}
+      else if(kind==='singularity'){g.fillStyle='#f0a2ff';g.shadowBlur=16;g.shadowColor='#e65cff';drawStarPath(6,2.5,7,0,g);g.fill();}
+      else if(kind==='eclipse'){g.strokeStyle='#ff76bd';g.lineWidth=4;g.shadowBlur=15;g.shadowColor='#ff76bd';g.beginPath();g.arc(0,0,55,-1.0,1.0);g.stroke();}
+      else if(kind==='chrono'){g.strokeStyle='#8fffe0';g.lineWidth=1.4;for(let i=0;i<12;i++){const a=i/12*TAU;g.beginPath();g.moveTo(Math.cos(a)*48,Math.sin(a)*48);g.lineTo(Math.cos(a)*55,Math.sin(a)*55);g.stroke();}}
+      else if(kind==='harvest'){for(let i=0;i<5;i++){const a=i/5*TAU;g.fillStyle=i%2?'#ff9a9a':'#ffd1c9';g.beginPath();g.ellipse(Math.cos(a)*59,Math.sin(a)*31,3,7,a,0,TAU);g.fill();}}
+      else if(kind==='augment'){g.fillStyle=color;g.shadowBlur=8;g.shadowColor=color;g.beginPath();g.arc(0,0,2.2,0,TAU);g.fill();}
+      g.restore();});
+  }
   drawTraitSignatures=function drawRefinedTraitSignatures(x,y,t){
     const traits=state.bossTraits||{},augments=state.weaponAugments||{};ctx.save();ctx.translate(x,y);
-    if(traits.stellar){ctx.save();ctx.translate(0,-43);const bob=Math.sin(t*.0031)*1.8;ctx.translate(0,bob);ctx.shadowBlur=22;ctx.shadowColor='#ffe184';ctx.strokeStyle='rgba(255,230,145,.75)';ctx.lineWidth=1.4;ctx.beginPath();ctx.ellipse(0,8,21,6,0,0,TAU);ctx.stroke();const grad=ctx.createLinearGradient(0,-22,0,10);grad.addColorStop(0,'#ffffff');grad.addColorStop(.35,'#ffe79a');grad.addColorStop(1,'#ff9e45');ctx.fillStyle=grad;for(let i=-2;i<=2;i++){const h=i===0?22:Math.abs(i)===1?16:11,px=i*8;ctx.beginPath();ctx.moveTo(px-4,8);ctx.lineTo(px,-h);ctx.lineTo(px+4,8);ctx.closePath();ctx.fill();}ctx.fillStyle='#fff7ce';ctx.rotate(Math.PI/4);ctx.fillRect(-3.5,-3.5,7,7);ctx.rotate(-Math.PI/4);for(let i=0;i<3;i++){const a=t*.0012+i*TAU/3;ctx.fillStyle='#fff2a6';ctx.beginPath();ctx.arc(Math.cos(a)*27,5+Math.sin(a)*8,1.6,0,TAU);ctx.fill();}ctx.restore();}
-    if(traits.aegis){ctx.save();ctx.rotate(-t*.00022);ctx.strokeStyle='rgba(131,255,209,.58)';ctx.lineWidth=2;ctx.setLineDash([9,8]);ctx.beginPath();ctx.arc(0,0,47,0,TAU);ctx.stroke();ctx.restore();}
-    if(traits.singularity){const a=t*.00047+1.2,px=Math.cos(a)*51,py=Math.sin(a)*23;ctx.save();ctx.translate(px,py);ctx.fillStyle='#f0a2ff';ctx.shadowBlur=16;ctx.shadowColor='#e65cff';drawStarPath(6,2.5,7,a);ctx.fill();ctx.restore();}
-    if(traits.eclipse){ctx.save();ctx.rotate(t*.00013);ctx.strokeStyle='#ff76bd';ctx.lineWidth=4;ctx.shadowBlur=15;ctx.shadowColor='#ff76bd';ctx.beginPath();ctx.arc(0,0,55,-1.0,1.0);ctx.stroke();ctx.restore();}
-    if(traits.chrono){ctx.save();ctx.rotate(t*.00036);ctx.strokeStyle='#8fffe0';ctx.lineWidth=1.4;for(let i=0;i<12;i++){const a=i/12*TAU;ctx.beginPath();ctx.moveTo(Math.cos(a)*48,Math.sin(a)*48);ctx.lineTo(Math.cos(a)*55,Math.sin(a)*55);ctx.stroke();}ctx.restore();}
-    if(traits.harvest){ctx.save();ctx.rotate(-t*.00029);for(let i=0;i<5;i++){const a=i/5*TAU;ctx.fillStyle=i%2?'#ff9a9a':'#ffd1c9';ctx.beginPath();ctx.ellipse(Math.cos(a)*59,Math.sin(a)*31,3,7,a,0,TAU);ctx.fill();}ctx.restore();}
-    const keys=Object.keys(augments).filter(k=>augments[k]);if(keys.length){ctx.save();ctx.rotate(t*.00018);for(const [i,key]of keys.entries()){const a=i/keys.length*TAU,rr=66+(i%2)*7,color=WEAPONS[key]?.color||'#fff';ctx.fillStyle=color;ctx.shadowBlur=8;ctx.shadowColor=color;ctx.beginPath();ctx.arc(Math.cos(a)*rr,Math.sin(a)*rr,2.2,0,TAU);ctx.fill();}ctx.restore();}ctx.restore();
+    if(traits.stellar){const image=traitIconRaster('stellar');ctx.save();ctx.translate(0,Math.sin(t*.0031)*1.8);ctx.drawImage(image,-80,-80,160,160);for(let i=0;i<3;i++){const a=t*.0012+i*TAU/3;ctx.fillStyle='#fff2a6';ctx.beginPath();ctx.arc(Math.cos(a)*27,5+Math.sin(a)*8,1.6,0,TAU);ctx.fill();}ctx.restore();}
+    if(traits.aegis){const image=traitIconRaster('aegis');ctx.save();ctx.rotate(-t*.00022);ctx.drawImage(image,-80,-80,160,160);ctx.restore();}
+    if(traits.singularity){const a=t*.00047+1.2,image=traitIconRaster('singularity');ctx.save();ctx.translate(Math.cos(a)*51,Math.sin(a)*23);ctx.rotate(a);ctx.drawImage(image,-80,-80,160,160);ctx.restore();}
+    if(traits.eclipse){const image=traitIconRaster('eclipse');ctx.save();ctx.rotate(t*.00013);ctx.drawImage(image,-80,-80,160,160);ctx.restore();}
+    if(traits.chrono){const image=traitIconRaster('chrono');ctx.save();ctx.rotate(t*.00036);ctx.drawImage(image,-80,-80,160,160);ctx.restore();}
+    if(traits.harvest){const image=traitIconRaster('harvest');ctx.save();ctx.rotate(-t*.00029);ctx.drawImage(image,-80,-80,160,160);ctx.restore();}
+    const keys=Object.keys(augments).filter(k=>augments[k]);if(keys.length){ctx.save();ctx.rotate(t*.00018);for(const[i,key]of keys.entries()){const a=i/keys.length*TAU,rr=66+(i%2)*7,color=WEAPONS[key]?.color||'#fff',image=traitIconRaster('augment',color);ctx.save();ctx.translate(Math.cos(a)*rr,Math.sin(a)*rr);ctx.drawImage(image,-80,-80,160,160);ctx.restore();}ctx.restore();}ctx.restore();
   };
 
   const baseStartRealmTransition=startRealmTransition;
