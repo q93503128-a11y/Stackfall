@@ -305,9 +305,9 @@
   function eternalClockRaster(n,r){const rb=Math.round(r/8)*8,size=Math.ceil((rb+26)*2);return aw2Raster(`clock:${n}:${rb}`,size,(g,sz)=>{const c=sz/2;g.save();g.translate(c,c);g.globalAlpha=.34;g.shadowBlur=10;g.shadowColor='#bffdf2';for(const[index,rr]of[rb,rb-22].entries()){g.strokeStyle=index?'#9caeff':'#8fffe0';g.lineWidth=index?1.2:1.8;g.setLineDash(index?[8,9]:[18,6]);g.beginPath();g.arc(0,0,rr,0,TAU);g.stroke();}g.setLineDash([]);for(let i=0;i<12;i++){const a=i/12*TAU-Math.PI/2,major=i%3===0,inner=rb-(major?17:10);g.strokeStyle=major?'rgba(239,255,252,.82)':'rgba(143,255,224,.55)';g.lineWidth=major?2.1:1;g.beginPath();g.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);g.lineTo(Math.cos(a)*(rb+3),Math.sin(a)*(rb+3));g.stroke();}g.fillStyle='#ffffff';g.beginPath();g.arc(0,0,5,0,TAU);g.fill();g.restore();});}
   function prismCrownRaster(heat){const hb=Math.round(clamp(heat,0,1)*6),r=42+(hb/6)*18,size=160;return aw2Raster(`prism-target-crown:${hb}`,size,(g,sz)=>{const c=sz/2;g.save();g.translate(c,c);g.shadowBlur=18;g.shadowColor='#e8ddff';g.strokeStyle='rgba(229,215,255,.78)';g.lineWidth=1.5;g.beginPath();for(let i=0;i<6;i++){const a=i/6*TAU,x=Math.cos(a)*r,y=Math.sin(a)*r*.58;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();g.stroke();for(let i=0;i<6;i++){const a=i/6*TAU,x=Math.cos(a)*r,y=Math.sin(a)*r*.58;g.fillStyle=i<hb?'#ffffff':'rgba(196,174,255,.32)';g.beginPath();g.arc(x,y,i<hb?3.8:2.4,0,TAU);g.fill();}g.restore();});}
   function novaCoronaRaster(charge){const c=Math.max(0,Math.min(2,Math.floor(charge)));return aw2Raster(`nova-corona:${c}`,180,(g,sz)=>{g.save();g.translate(sz/2,sz/2);for(let i=0;i<3;i++){g.globalAlpha=i<c?.72:.18;g.strokeStyle=i<c?'#fff0b5':'#ffbd69';g.lineWidth=i<c?3:1.2;g.shadowBlur=i<c?18:5;g.shadowColor='#ffbd69';g.setLineDash([10+i*4,7]);g.beginPath();g.arc(0,0,48+i*13,0,TAU);g.stroke();}g.setLineDash([]);g.restore();});}
-  function drawCrownPrism(point,t,size){const p=worldToScreen(point.x,point.y),image=crownPrismRaster();ctx.save();ctx.translate(p.x,p.y);ctx.rotate(-point.a+t*.00052);ctx.scale(size,size);ctx.drawImage(image,-40,-40,80,80);ctx.restore();}
+  function drawCrownPrism(point,t,size){const sx=point.x-player.x+vw/2,sy=point.y-player.y+vh/2,image=crownPrismRaster();ctx.save();ctx.translate(sx,sy);ctx.rotate(-point.a+t*.00052);ctx.scale(size,size);ctx.drawImage(image,-40,-40,80,80);ctx.restore();}
 
-  function drawFleetDrone(point,a,size,boost=0){const p=worldToScreen(point.x,point.y),image=fleetDroneRaster(boost);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(a);ctx.scale(size,size);ctx.drawImage(image,-40,-40,80,80);ctx.restore();}
+  function drawFleetDrone(point,a,size,boost=0){const sx=point.x-player.x+vw/2,sy=point.y-player.y+vh/2,image=fleetDroneRaster(boost);ctx.save();ctx.translate(sx,sy);ctx.rotate(a);ctx.scale(size,size);ctx.drawImage(image,-40,-40,80,80);ctx.restore();}
 
   drawEquippedOrbits=function awakenedCrownFleetOrbits(x,y,t){
     const prismN=weaponCount('prism'),droneN=weaponCount('drone'),hidePrism=prismN&&awake('prism'),hideDrone=droneN&&awake('drone'),savedPrism=state.weaponStacks.prism,savedDrone=state.weaponStacks.drone;
@@ -316,7 +316,7 @@
     const size=weaponSizeMultiplier();
     if(hidePrism){
       const points=prismPositions(prismAwakenedBodyCount(prismN));for(const point of points)drawCrownPrism(point,t,size);
-      if(points.length>=2){ctx.save();ctx.strokeStyle='rgba(225,211,255,.34)';ctx.lineWidth=1.4;ctx.setLineDash([5,7]);ctx.beginPath();for(let i=0;i<points.length;i++){const p=worldToScreen(points[i].x,points[i].y);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);}if(points.length>2)ctx.closePath();ctx.stroke();ctx.setLineDash([]);ctx.restore();}
+      if(points.length>=2){ctx.save();ctx.strokeStyle='rgba(225,211,255,.34)';ctx.lineWidth=1.4;ctx.setLineDash([5,7]);ctx.beginPath();for(let i=0;i<points.length;i++){const point=points[i],sx=point.x-player.x+vw/2,sy=point.y-player.y+vh/2;i?ctx.lineTo(sx,sy):ctx.moveTo(sx,sy);}if(points.length>2)ctx.closePath();ctx.stroke();ctx.setLineDash([]);ctx.restore();}
     }
     if(hideDrone){
       const points=meteorDronePositions(droneN);for(const point of points)drawFleetDrone(point,point.a+Math.PI/2,size*.92,0);
@@ -330,12 +330,12 @@
     if(!awake('chrono'))return baseDrawChronoField();const n=Math.max(1,weaponCount('chrono')),x=vw/2,y=vh/2,r=(150+n*18)*weaponSizeMultiplier(),phase=clamp(player.awChronoPhase||0,0,1),t=performance.now(),image=eternalClockRaster(n,r),size=image.width||Math.ceil((r+26)*2);ctx.save();ctx.translate(x,y);ctx.rotate(t*.00014);ctx.drawImage(image,-size/2,-size/2,size,size);const hand=phase*TAU-Math.PI/2;ctx.rotate(hand-t*.00014);ctx.strokeStyle='#ffffff';ctx.lineWidth=2.6;ctx.beginPath();ctx.moveTo(-r*.12,0);ctx.lineTo(r*.83,0);ctx.stroke();ctx.restore();if((player.awChronoSeverFlash||0)>0){const q=clamp(player.awChronoSeverFlash/.48,0,1);ctx.save();ctx.globalAlpha=.09*q;ctx.fillStyle='#eef4f2';ctx.fillRect(0,0,vw,vh);ctx.restore();}
   };
 
-  function drawPrismTargetCrown(){if(!awake('prism'))return;const lock=player.prismSharedLock,target=lock?.targetId?enemyById(lock.targetId):null;if(!target)return;const p=worldToScreen(target.x,target.y),heat=clamp((lock.heat||0)/Math.max(.01,weaponCount('prism')>=6?1.55:1.78),0,1),image=prismCrownRaster(heat),t=performance.now()*.0014;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(t);ctx.drawImage(image,-80,-80,160,160);ctx.restore();}
+  function drawPrismTargetCrown(){if(!awake('prism'))return;const lock=player.prismSharedLock,target=lock?.targetId?enemyById(lock.targetId):null;if(!target)return;const sx=target.x-player.x+vw/2,sy=target.y-player.y+vh/2,heat=clamp((lock.heat||0)/Math.max(.01,weaponCount('prism')>=6?1.55:1.78),0,1),image=prismCrownRaster(heat),t=performance.now()*.0014;ctx.save();ctx.translate(sx,sy);ctx.rotate(t);ctx.drawImage(image,-80,-80,160,160);ctx.restore();}
 
   function drawIonCircuit(){
     if(!awake('ion')||!ionNodes.length)return;ctx.save();ctx.lineWidth=1.5;ctx.strokeStyle='rgba(114,242,255,.52)';ctx.shadowBlur=12;ctx.shadowColor='#72f2ff';
-    if(ionNodes.length>1){ctx.beginPath();for(let i=0;i<ionNodes.length;i++){const node=ionNodes[i],p=worldToScreen(node.x,node.y);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);}ctx.stroke();}
-    for(const node of ionNodes){const p=worldToScreen(node.x,node.y),q=clamp(node.life/node.max,0,1);ctx.globalAlpha=.35+.6*q;ctx.fillStyle='#eaffff';ctx.beginPath();ctx.arc(p.x,p.y,4.2,0,TAU);ctx.fill();ctx.strokeStyle='#72f2ff';ctx.beginPath();ctx.arc(p.x,p.y,9,0,TAU);ctx.stroke();}ctx.restore();
+    if(ionNodes.length>1){ctx.beginPath();for(let i=0;i<ionNodes.length;i++){const node=ionNodes[i],sx=node.x-player.x+vw/2,sy=node.y-player.y+vh/2;i?ctx.lineTo(sx,sy):ctx.moveTo(sx,sy);}ctx.stroke();}
+    for(const node of ionNodes){const sx=node.x-player.x+vw/2,sy=node.y-player.y+vh/2,q=clamp(node.life/node.max,0,1);ctx.globalAlpha=.35+.6*q;ctx.fillStyle='#eaffff';ctx.beginPath();ctx.arc(sx,sy,4.2,0,TAU);ctx.fill();ctx.strokeStyle='#72f2ff';ctx.beginPath();ctx.arc(sx,sy,9,0,TAU);ctx.stroke();}ctx.restore();
   }
   function drawNovaCorona(){if(!awake('nova'))return;const image=novaCoronaRaster(player.awNovaCharge||0),t=performance.now()*.001;ctx.save();ctx.translate(vw/2,vh/2);ctx.rotate(t*.24);ctx.drawImage(image,-90,-90,180,180);ctx.restore();}
 
@@ -362,8 +362,9 @@
   const baseDrawAlliedEffects=drawAlliedEffects;
   drawAlliedEffects=function awakeningSecondSetEffects(){baseDrawAlliedEffects();drawPrismTargetCrown();drawIonCircuit();drawNovaCorona();drawSecondFx();};
 
+  function keepSecondFx(e){return!!(e&&e.life>0);}
   const baseUpdateEffects=updateEffects;
-  updateEffects=function awakeningSecondFxUpdate(dt){baseUpdateEffects(dt);for(const e of fx)e.life-=dt;compactInPlace(fx,e=>e&&e.life>0);};
+  updateEffects=function awakeningSecondFxUpdate(dt){baseUpdateEffects(dt);for(const e of fx)e.life-=dt;compactInPlace(fx,keepSecondFx);};
 
   const baseReset=resetGame;
   resetGame=function awakeningSecondSetReset(){resetSecondAwakeningState();const result=baseReset();resetSecondAwakeningState();return result;};
