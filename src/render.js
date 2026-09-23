@@ -35,7 +35,7 @@ function draw(){
   if(performanceTier===0){const vignette=ctx.createRadialGradient(vw/2,vh/2,Math.min(vw,vh)*.18,vw/2,vh/2,Math.max(vw,vh)*.74);vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(0,1,8,.58)');ctx.fillStyle=vignette;ctx.fillRect(0,0,vw,vh);}else if(performanceTier===1){ctx.fillStyle='rgba(0,1,8,.08)';ctx.fillRect(0,0,vw,vh);}
   if(GAME_SETTINGS.sparkles!==false&&state.flash>=SCREEN_FLASH_VISIBLE_THRESHOLD){ctx.fillStyle=`rgba(225,242,255,${Math.min(.42,state.flash*.72)})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlay',drawRealmCinematicOverlay);
 }
-const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0;
+const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0,lastRenderAt=0;const TARGET_RENDER_INTERVAL=1000/60;
 function loop(now){
   window.__stackfallRenderFrameSerial=(window.__stackfallRenderFrameSerial||0)+1;
   const frameDt=Math.min(.033,Math.max(0,(now-last)/1000));last=now;let shouldDraw=state.mode==='menu';
@@ -61,8 +61,8 @@ function loop(now){
     }
     if(state.mode==='choice'&&ui.choice.classList.contains('hidden')){state.choiceLocked=false;state.mode='playing';}
     if(typeof syncAbilityLedgerVisibility==='function')syncAbilityLedgerVisibility();
-    const simplifiedGpu=state.mode==='playing'&&typeof stackfallCanUseSimplifiedGpuFrame==='function'&&stackfallCanUseSimplifiedGpuFrame();
-    if(shouldDraw&&!simplifiedGpu)runRuntimeStage('drawFrame',draw);
+    const simplifiedGpu=state.mode==='playing'&&typeof stackfallCanUseSimplifiedGpuFrame==='function'&&stackfallCanUseSimplifiedGpuFrame(),renderDue=now-lastRenderAt>=TARGET_RENDER_INTERVAL-1;
+    if(shouldDraw&&!simplifiedGpu&&renderDue){lastRenderAt=now;runRuntimeStage('drawFrame',draw);}
   }finally{if(window.__stackfallLoopGeneration===stackfallLoopGeneration)requestAnimationFrame(loop);}
 }
 requestAnimationFrame(loop);
