@@ -10,7 +10,7 @@ function sanitizeRuntimeState(){
   sanitize('projectiles',p=>finiteXY(p)&&Number.isFinite(p.life));for(const p of state.entities.projectiles){p.source=String(p.source||'');p.vx=Number.isFinite(p.vx)?p.vx:0;p.vy=Number.isFinite(p.vy)?p.vy:0;p.r=Number.isFinite(p.r)?Math.max(.5,p.r):3;}
   sanitize('enemyProjectiles',p=>finiteXY(p)&&Number.isFinite(p.life));sanitize('gems',g=>finiteXY(g)&&Number.isFinite(g.life));sanitize('wells',w=>typeof normalizeWell==='function'?normalizeWell(w):finiteXY(w)&&Number.isFinite(w.r)&&Number.isFinite(w.life));sanitize('particles',p=>finiteXY(p)&&Number.isFinite(p.life));sanitize('texts',t=>finiteXY(t)&&Number.isFinite(t.life));sanitize('shockwaves',s=>finiteXY(s)&&Number.isFinite(s.life)&&Number.isFinite(s.r));sanitize('telegraphs',t=>t&&Number.isFinite(t.life));sanitize('curves',c=>finiteXY(c)&&(Number.isFinite(c.elapsed)||Number.isFinite(c.stageTime)));sanitize('beams',b=>b&&Number.isFinite(b.x1)&&Number.isFinite(b.y1)&&Number.isFinite(b.x2)&&Number.isFinite(b.y2)&&Number.isFinite(b.life));
 }
-function runRuntimeStage(name,fn){const sample=((window.__stackfallRenderFrameSerial||0)%30)===0,start=sample?performance.now():0;try{return fn();}catch(error){const now=performance.now(),message=String(error?.message||error),stack=String(error?.stack||'');let entry=runtimeStageDiagnostics.get(name);if(!entry){entry={name,count:0,firstAt:now,firstMessage:message,firstStack:stack,lastAt:now,lastMessage:message,lastStack:stack};runtimeStageDiagnostics.set(name,entry);}entry.count++;entry.lastAt=now;entry.lastMessage=message;entry.lastStack=stack;runtimeErrorLog.add(name);if(entry.count===1||(entry.count&(entry.count-1))===0)console.error(`[Stackfall] ${name} failed (${entry.count})`,error);sanitizeRuntimeState();return undefined;}finally{if(sample)profileRuntimeStage(name,performance.now()-start);}}
+function runRuntimeStage(name,fn,arg){const sample=((window.__stackfallRenderFrameSerial||0)%30)===0,start=sample?performance.now():0,hasArg=arguments.length>=3;try{return hasArg?fn(arg):fn();}catch(error){const now=performance.now(),message=String(error?.message||error),stack=String(error?.stack||'');let entry=runtimeStageDiagnostics.get(name);if(!entry){entry={name,count:0,firstAt:now,firstMessage:message,firstStack:stack,lastAt:now,lastMessage:message,lastStack:stack};runtimeStageDiagnostics.set(name,entry);}entry.count++;entry.lastAt=now;entry.lastMessage=message;entry.lastStack=stack;runtimeErrorLog.add(name);if(entry.count===1||(entry.count&(entry.count-1))===0)console.error(`[Stackfall] ${name} failed (${entry.count})`,error);sanitizeRuntimeState();return undefined;}finally{if(sample)profileRuntimeStage(name,performance.now()-start);}}
 function runDrawStage(name,fn){ctx.save();try{return runRuntimeStage(name,fn);}finally{ctx.restore();}}
 window.stackfallRuntimeDiagnostics=()=>({mode:state.mode,runSerial:state.runSerial,renderFrame:state.renderFrame,pendingActions:state.pendingActions.length,errors:[...runtimeStageDiagnostics.values()].map(entry=>({...entry})),errorCount:[...runtimeStageDiagnostics.values()].reduce((sum,entry)=>sum+entry.count,0),sanitizer:{passes:runtimeSanitizeDiagnostics.passes,totalRemoved:runtimeSanitizeDiagnostics.totalRemoved,removed:{...runtimeSanitizeDiagnostics.removed}},entities:Object.fromEntries(Object.entries(state.entities).filter(([,value])=>Array.isArray(value)).map(([key,value])=>[key,value.length])),renderer:typeof stackfallRendererInfo==='function'?stackfallRendererInfo():null,performance:stackfallPerformanceBreakdown().slice(0,20),dom:{canvasCount:document.querySelectorAll('canvas').length,scriptCount:document.scripts.length}});
 updateSpawning=function updateSpawningAccelerated(dt){
@@ -37,12 +37,12 @@ function draw(){
   if(performanceTier===0){ctx.fillStyle=cachedRenderVignette();ctx.fillRect(0,0,vw,vh);}else if(performanceTier===1){ctx.fillStyle='rgba(0,1,8,.08)';ctx.fillRect(0,0,vw,vh);}
   if(GAME_SETTINGS.sparkles!==false&&state.flash>=SCREEN_FLASH_VISIBLE_THRESHOLD){ctx.fillStyle=`rgba(225,242,255,${Math.min(.42,state.flash*.72)})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlay',drawRealmCinematicOverlay);
 }
-const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0,lastRenderAt=0;const TARGET_RENDER_INTERVAL=1000/60;
+const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0,lastRenderAt=0;const TARGET_RENDER_INTERVAL=1000/60,runtimeUpdateMusic=typeof audio.updateMusic==='function'?audio.updateMusic.bind(audio):null;
 function loop(now){
   window.__stackfallRenderFrameSerial=(window.__stackfallRenderFrameSerial||0)+1;
   const frameDt=Math.min(.033,Math.max(0,(now-last)/1000));last=now;let shouldDraw=state.mode==='menu';
   try{
-    if(typeof audio.updateMusic==='function')runRuntimeStage('updateMusic',()=>audio.updateMusic(frameDt));
+    if(runtimeUpdateMusic)runRuntimeStage('updateMusic',runtimeUpdateMusic,frameDt);
     const gameplayFrame=state.mode==='playing';
     if(gameplayFrame){
       const simulationSteps=state.gameSpeed===2?2:1;
@@ -50,16 +50,16 @@ function loop(now){
         let dt=frameDt;
         if(state.hitStop>0){state.hitStop-=dt;dt=0;}
         state.time+=dt;state.comboTimer-=dt;if(state.comboTimer<=0)state.combo=0;
-        runRuntimeStage('updatePendingActions',()=>updatePendingActions(dt));runRuntimeStage('updatePlayer',()=>updatePlayer(dt));runRuntimeStage('updateSpawning',()=>updateSpawning(dt));if(typeof rebuildEnemyIndex==='function')runRuntimeStage('rebuildEnemyIndex',rebuildEnemyIndex);runRuntimeStage('updateWeapons',()=>updateWeapons(dt));runRuntimeStage('updateEnemies',()=>updateEnemies(dt));runRuntimeStage('updateProjectiles',()=>updateProjectiles(dt));runRuntimeStage('updateBoomerangs',()=>updateBoomerangs(dt));runRuntimeStage('updateEnemyProjectiles',()=>updateEnemyProjectiles(dt));runRuntimeStage('updateTelegraphs',()=>updateTelegraphs(dt));runRuntimeStage('updateWells',()=>updateWells(dt));runRuntimeStage('updateGems',()=>updateGems(dt));
-        if(typeof updateMapEvents==='function'&&!state.apexActiveId&&!state.pendingApexForm&&!state.realmTransition)runRuntimeStage('updateMapEvents',()=>updateMapEvents(dt));
-        if(typeof updateRewardQueue==='function')runRuntimeStage('updateRewardQueue',updateRewardQueue);runRuntimeStage('updateEffects',()=>updateEffects(dt));hudRefresh-=dt;if(hudRefresh<=0){hudRefresh=.08;runRuntimeStage('updateHUD',updateHUD);}
+        runRuntimeStage('updatePendingActions',updatePendingActions,dt);runRuntimeStage('updatePlayer',updatePlayer,dt);runRuntimeStage('updateSpawning',updateSpawning,dt);if(typeof rebuildEnemyIndex==='function')runRuntimeStage('rebuildEnemyIndex',rebuildEnemyIndex);runRuntimeStage('updateWeapons',updateWeapons,dt);runRuntimeStage('updateEnemies',updateEnemies,dt);runRuntimeStage('updateProjectiles',updateProjectiles,dt);runRuntimeStage('updateBoomerangs',updateBoomerangs,dt);runRuntimeStage('updateEnemyProjectiles',updateEnemyProjectiles,dt);runRuntimeStage('updateTelegraphs',updateTelegraphs,dt);runRuntimeStage('updateWells',updateWells,dt);runRuntimeStage('updateGems',updateGems,dt);
+        if(typeof updateMapEvents==='function'&&!state.apexActiveId&&!state.pendingApexForm&&!state.realmTransition)runRuntimeStage('updateMapEvents',updateMapEvents,dt);
+        if(typeof updateRewardQueue==='function')runRuntimeStage('updateRewardQueue',updateRewardQueue);runRuntimeStage('updateEffects',updateEffects,dt);hudRefresh-=dt;if(hudRefresh<=0){hudRefresh=.08;runRuntimeStage('updateHUD',updateHUD);}
       }
       shouldDraw=true;
     }else if(state.mode==='cinematic'){
-      if(typeof updateRealmTransition==='function')runRuntimeStage('updateRealmTransition',()=>updateRealmTransition(frameDt));runRuntimeStage('updateEffectsCinematic',()=>updateEffects(frameDt*.35));shouldDraw=true;
+      if(typeof updateRealmTransition==='function')runRuntimeStage('updateRealmTransition',updateRealmTransition,frameDt);runRuntimeStage('updateEffectsCinematic',updateEffects,frameDt*.35);shouldDraw=true;
     }else if(state.mode==='stageVictory'){
-      if(typeof updateStageVictoryCinematic==='function')runRuntimeStage('updateStageVictoryCinematic',()=>updateStageVictoryCinematic(frameDt));
-      runRuntimeStage('updateEffectsStageVictory',()=>updateEffects(frameDt*.72));shouldDraw=true;
+      if(typeof updateStageVictoryCinematic==='function')runRuntimeStage('updateStageVictoryCinematic',updateStageVictoryCinematic,frameDt);
+      runRuntimeStage('updateEffectsStageVictory',updateEffects,frameDt*.72);shouldDraw=true;
     }
     if(state.mode==='choice'&&ui.choice.classList.contains('hidden')){state.choiceLocked=false;state.mode='playing';}
     if(typeof syncAbilityLedgerVisibility==='function')syncAbilityLedgerVisibility();
