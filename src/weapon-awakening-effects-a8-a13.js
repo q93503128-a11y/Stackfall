@@ -14,6 +14,8 @@
   }
   function resetSecondAwakeningState(){
     fx.length=0;ionNodes.length=0;ionCapture=null;
+    for(const p of state.entities.enemyProjectiles||[])if(p)delete p.awChronoStop;
+    if(player.prismSharedLock&&typeof player.prismSharedLock==='object')delete player.prismSharedLock.awCrownFiredTargetId;
     Object.assign(player,{
       awPrismTargetId:null,awPrismTargetX:0,awPrismTargetY:0,
       awChronoPhase:0,awChronoSeverFlash:0,
@@ -21,6 +23,7 @@
       awNovaCharge:0,awDroneFleetCycle:0,awRailCycle:0
     });
   }
+  window.stackfallResetAwakeningSecondSetCombat=resetSecondAwakeningState;
   resetSecondAwakeningState();
 
   // A8 — Constellation Crown.
