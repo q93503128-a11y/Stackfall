@@ -6,12 +6,10 @@
   const fx=state.entities.awakeningFxThird=Array.isArray(state.entities.awakeningFxThird)?state.entities.awakeningFxThird:[];
   const lotusFields=state.entities.awLotusFields=Array.isArray(state.entities.awLotusFields)?state.entities.awLotusFields:[];
   const starrailNodes=state.entities.awStarrailNodes=Array.isArray(state.entities.awStarrailNodes)?state.entities.awStarrailNodes:[];
-  const surroundMissiles=state.entities.awSurroundMissiles=Array.isArray(state.entities.awSurroundMissiles)?state.entities.awSurroundMissiles:[];
 
   const pushFx=data=>{fx.push({id:state.nextId++,...data});if(fx.length>84)fx.splice(0,fx.length-84);return fx[fx.length-1];};
-  const worldPoint=(x,y)=>({x:Number(x)||0,y:Number(y)||0});
   function resetThirdAwakeningState(){
-    fx.length=0;lotusFields.length=0;starrailNodes.length=0;surroundMissiles.length=0;
+    fx.length=0;lotusFields.length=0;starrailNodes.length=0;
     for(const p of state.entities.projectiles||[])if(p?.awGenesis)p.life=0;
     for(const m of state.entities.guidedMissiles||[])if(m?.awSurround)m.life=0;
     for(const net of state.entities.gateNetworks||[])if(net){delete net.awGrandCharge;delete net.awGrandPending;delete net.awLastCircuitAt;if(Array.isArray(net.pulses))for(const pulse of net.pulses)if(pulse)delete pulse.awGrandEligible;}
@@ -189,7 +187,6 @@
   };
 
   // A18 — Starbreaker Arsenal. Every third original salvo replaces its main missiles with staged surround missiles.
-  function awakenedMissileTargetList(range,count){return postRosterTargetList(range,count);}
   function tagSurroundMissile(target,n,side,damage,opts){
     const before=state.entities.guidedMissiles.length;spawnGuidedMissile(target,n,side,damage,opts);
     const m=state.entities.guidedMissiles.length>before?state.entities.guidedMissiles.at(-1):null;if(!m)return null;
