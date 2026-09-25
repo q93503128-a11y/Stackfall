@@ -12,11 +12,15 @@
   const worldPoint=(x,y)=>({x:Number(x)||0,y:Number(y)||0});
   function resetThirdAwakeningState(){
     fx.length=0;lotusFields.length=0;starrailNodes.length=0;surroundMissiles.length=0;
+    for(const p of state.entities.projectiles||[])if(p?.awGenesis)p.life=0;
+    for(const m of state.entities.guidedMissiles||[])if(m?.awSurround)m.life=0;
+    for(const net of state.entities.gateNetworks||[])if(net){delete net.awGrandCharge;delete net.awGrandPending;delete net.awLastCircuitAt;if(Array.isArray(net.pulses))for(const pulse of net.pulses)if(pulse)delete pulse.awGrandEligible;}
     Object.assign(player,{
       awSpiralCycle:0,awMirrorFaces:[null,null,null,null,null,null],awMirrorSignaturePending:false,
       awMineDeployCycle:0,awMissileCycle:0,awMissileGroupSerial:0,awMissileSignaturePending:false
     });
   }
+  window.stackfallResetAwakeningThirdSetCombat=resetThirdAwakeningState;
   resetThirdAwakeningState();
 
   // A14 — Genesis Galaxy. Counter-Spiral Galaxy is restored for both normal and awakened forms.
@@ -273,7 +277,7 @@
   }
   const baseSpawnGatePulseSet=spawnGatePulseSet;
   spawnGatePulseSet=function hypergatePulseSet(net){
-    const before=net?.pulses?.length||0;baseSpawnGatePulseSet(net);if(!net||!Array.isArray(net.pulses))return;
+    const before=net?.pulses?.length||0;baseSpawnGatePulseSet(net);if(!awake('gate')||!net||!Array.isArray(net.pulses))return;
     const native=net.n>=3?2:1,created=net.pulses.slice(before);created.forEach((pulse,index)=>pulse.awGrandEligible=index<native);
   };
   const baseGateSegmentHit=gateSegmentHit;
