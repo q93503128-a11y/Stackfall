@@ -124,7 +124,7 @@
       g.fillStyle=blade;g.strokeStyle='rgba(239,254,255,.92)';g.lineWidth=1.5;
       g.beginPath();g.moveTo(-8,-42);g.bezierCurveTo(29,-25,31,13,-3,43);g.bezierCurveTo(8,19,3,-12,-8,-42);g.closePath();g.fill();g.stroke();
       g.globalAlpha=.58;g.strokeStyle='#8ff7ff';g.lineWidth=2;g.beginPath();g.moveTo(-5,-34);g.bezierCurveTo(19,-17,20,12,0,34);g.stroke();
-      g.globalAlpha=.32;g.fillStyle='#7ce8ff';g.beginPath();g.ellipse(-8,15,8,30,-.18,0,TAU);g.fill();g.restore();
+      g.restore();
     });
   }
   const previousCanonicalOrbits=drawEquippedOrbits;
