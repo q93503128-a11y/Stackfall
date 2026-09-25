@@ -8,11 +8,15 @@
 
   function resetAwakeningCombatState(){
     fx.length=0;
+    for(const p of state.entities.projectiles||[])if(p?.awakeningChild)p.life=0;
+    for(const w of state.entities.wells||[])if(w){delete w.awBinaryGroup;delete w.awBinarySide;delete w.awBinaryEcho;delete w.awBinaryMerged;}
+    for(const p of state.entities.curves||[])if(p?.awLunar){p.awLunar=false;p.awMoonRippleDone=false;delete p.awMoonPhase;delete p.awOrbitX;delete p.awOrbitY;delete p.awOrbitR;delete p.awOrbitAngle;delete p.awOrbitDuration;if(p.stage==='lunarOrbit'){p.stage='return';p.stageTime=0;p.returnLife=0;}}
     Object.assign(player,{
       awCoreCycle:0,awBladeCd:4.6,awBladeWindup:0,awEmberHits:0,awEmberTargetId:null,awEmberChargeFlash:0,
       awBulwarkHitAngle:0,awBulwarkHitFlash:0,awBulwarkStrong:0,awCometCycle:0
     });
   }
+  window.stackfallResetAwakeningFirstSetCombat=resetAwakeningCombatState;
   resetAwakeningCombatState();
 
   // A1 — Stellar Core: ordinary Core Pulse remains intact; every fourth original cast adds one simultaneous three-satellite volley.
@@ -239,8 +243,6 @@
   function stellarNodeRaster(){return aw1Raster('stellar-node',48,(g,sz)=>{g.save();g.translate(sz/2,sz/2);g.fillStyle='#e9fdff';g.strokeStyle='#6feaff';g.lineWidth=1.2;g.shadowBlur=15;g.shadowColor='#7ce8ff';g.beginPath();g.moveTo(7,0);g.lineTo(0,-5);g.lineTo(-6,0);g.lineTo(0,5);g.closePath();g.fill();g.stroke();g.restore();});}
   function crescentBladeRaster(){return aw1Raster('crescent-blade',112,(g,sz)=>{g.save();g.translate(sz/2,sz/2);g.shadowBlur=22;g.shadowColor='#9bdcff';g.fillStyle='#07101c';g.strokeStyle='#c9f4ff';g.lineWidth=2.2;g.beginPath();g.moveTo(-9,-35);g.quadraticCurveTo(31,-7,2,37);g.quadraticCurveTo(12,7,-9,-35);g.closePath();g.fill();g.stroke();g.strokeStyle='rgba(255,255,255,.88)';g.lineWidth=1;g.beginPath();g.moveTo(-7,-31);g.quadraticCurveTo(25,-5,4,30);g.stroke();g.restore();});}
   function emberCasterRaster(side,charge,flash){const cb=Math.round(clamp(charge,0,1)*4),fb=Math.round(clamp(flash,0,1)*3),color=side<0?'#ff9ec0':'#9eefff';return aw1Raster(`ember-caster:${side}:${cb}:${fb}`,80,(g,sz)=>{g.save();g.translate(sz/2,sz/2);g.shadowBlur=12+(cb/4)*18+(fb/3)*16;g.shadowColor=color;g.fillStyle='#f7ffff';g.strokeStyle=color;g.lineWidth=1.5;g.beginPath();g.moveTo(13,0);g.lineTo(0,-6);g.lineTo(-10,0);g.lineTo(0,6);g.closePath();g.fill();g.stroke();g.globalAlpha=.28+.55*(cb/4);g.beginPath();g.arc(0,0,11+(cb/4)*4,0,TAU);g.stroke();g.restore();});}
-  function bastionPlateRaster(focus,ratio){const fb=Math.round(clamp(focus,0,1)*3),rb=Math.round(clamp(ratio,0,1)*4);return aw1Raster(`bastion-plate:${fb}:${rb}`,80,(g,sz)=>{const f=fb/3,r=rb/4;g.save();g.translate(sz/2,sz/2);g.shadowBlur=10+f*22;g.shadowColor='#9dffe2';g.fillStyle=`rgba(24,58,76,${.64+.18*r})`;g.strokeStyle=`rgba(205,255,239,${.48+.46*r})`;g.lineWidth=1.5+f;g.beginPath();g.moveTo(-15,-6);g.lineTo(13,-9);g.lineTo(20,0);g.lineTo(13,9);g.lineTo(-15,6);g.lineTo(-21,0);g.closePath();g.fill();g.stroke();g.beginPath();g.moveTo(-7,-3);g.lineTo(10,0);g.lineTo(-7,3);g.stroke();g.restore();});}
-  function binaryRingRaster(color){return aw1Raster(`binary-ring:${color}`,96,(g,sz)=>{g.save();g.translate(sz/2,sz/2);g.strokeStyle=color;g.lineWidth=3;g.shadowBlur=26;g.shadowColor=color;g.beginPath();g.arc(0,0,33,0,TAU);g.stroke();g.restore();});}
   const baseDrawPlayerCrystalCore=drawPlayerCrystalCore;
   drawPlayerCrystalCore=function stellarCoreVisual(x,y,t,growth){
     baseDrawPlayerCrystalCore(x,y,t,growth);if(!awake('core'))return;const phase=t*.0014,pulse=1+Math.sin(t*.008)*.05,overlay=stellarCoreOverlayRaster(),node=stellarNodeRaster();ctx.save();ctx.translate(x,y);ctx.rotate(phase*.18);ctx.scale(pulse,pulse);ctx.drawImage(overlay,-64,-64,128,128);ctx.restore();for(let i=0;i<3;i++){const a=phase*2.1+i*TAU/3,rr=39,sx=x+Math.cos(a)*rr,sy=y+Math.sin(a)*rr;ctx.save();ctx.translate(sx,sy);ctx.rotate(a);ctx.drawImage(node,-24,-24,48,48);ctx.restore();}
@@ -265,21 +267,6 @@
     for(const side of[-1,1]){const px=x+nx*side*35+Math.cos(a)*5,py=y+ny*side*35+Math.sin(a)*5,image=emberCasterRaster(side,charge,flash);ctx.save();ctx.translate(px,py);ctx.rotate(a);ctx.drawImage(image,-40,-40,80,80);ctx.restore();}
   };
 
-  const baseDrawEmberProjectile=drawEmberProjectile;
-  drawEmberProjectile=function nebulaStarcasterProjectile(p){
-    if(!awake('ember'))return baseDrawEmberProjectile(p);
-    const r=Math.max(4,p.r),length=r*4.5;ctx.fillStyle=p.color;ctx.strokeStyle='#fff5f7';ctx.lineWidth=1.15;ctx.beginPath();ctx.moveTo(length*.95,0);ctx.lineTo(length*.18,-r*.56);ctx.lineTo(-length*.72,-r*.16);ctx.lineTo(-length*.96,0);ctx.lineTo(-length*.72,r*.16);ctx.lineTo(length*.18,r*.56);ctx.closePath();ctx.fill();ctx.stroke();ctx.globalAlpha=.66;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.ellipse(length*.32,0,r*.52,r*.28,0,0,TAU);ctx.fill();ctx.globalAlpha=1;
-  };
-
-  const baseDrawDefenseBarrier=drawDefenseBarrier;
-  drawDefenseBarrier=function celestialBastionVisual(){
-    if(!awake('bulwark'))return baseDrawDefenseBarrier();const x=vw/2,y=vh/2,t=performance.now(),cap=Math.max(1,shieldCapacity?.()||1),ratio=clamp((player.shield||0)/cap,0,1),parts=Math.max(4,Math.min(8,Math.round(4+ratio*4))),hitA=Number(player.awBulwarkHitAngle)||0,hitFlash=clamp((player.awBulwarkHitFlash||0)/.32,0,1),strong=clamp((player.awBulwarkStrong||0)/.34,0,1);ctx.save();ctx.translate(x,y);
-    for(let i=0;i<parts;i++){const a=i/parts*TAU+t*.00013,delta=Math.abs(Math.atan2(Math.sin(a-hitA),Math.cos(a-hitA))),focus=hitFlash*Math.max(0,1-delta/.9),rr=50+focus*13,image=bastionPlateRaster(focus,ratio);ctx.save();ctx.translate(Math.cos(a)*rr,Math.sin(a)*rr);ctx.rotate(a+Math.PI/2);ctx.drawImage(image,-40,-40,80,80);ctx.restore();}
-    if(strong>0){ctx.rotate(hitA);ctx.strokeStyle=`rgba(231,255,249,${.35+.6*strong})`;ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,73,-1.0,1.0);ctx.stroke();}ctx.restore();
-  };
-
-  const baseDrawGravityLens=drawGravityLens;
-  drawGravityLens=function binaryCollapseVisual(w,p,alpha,t){baseDrawGravityLens(w,p,alpha,t);if(!awake('gravity')||w?.awBinarySide===undefined)return;const color=w.awBinaryEcho?'#ff70a4':w.awBinarySide===0?'#65c9ff':'#ff934f',image=binaryRingRaster(color),scale=(30+Math.sin(t*5+w.awBinarySide)*3)/33;ctx.save();ctx.translate(p.x,p.y);ctx.globalAlpha=alpha*.92;ctx.scale(scale,scale);ctx.drawImage(image,-48,-48,96,96);ctx.restore();};
 
   const baseDrawBoomerangs=drawBoomerangs;
   function drawMoonBoomerang(p){
