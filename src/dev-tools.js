@@ -22,8 +22,14 @@
     for(const value of Object.values(entities))if(Array.isArray(value))value.length=0;
     state.bossActiveId=null;state.apexActiveId=null;state.pendingApexForm=null;
   };
+  const resetAwakeningTransients=()=>{
+    window.stackfallResetAwakeningFirstSetCombat?.();
+    window.stackfallResetAwakeningSecondSetCombat?.();
+    window.stackfallResetAwakeningThirdSetCombat?.();
+  };
   function equipOnly(key,level=1,awaken=false){
     if(!WEAPONS?.[key])return;
+    resetAwakeningTransients();
     state.weaponStacks={};state.weaponSlots=[];
     state.weaponStacks[key]=Math.max(1,Math.min(6,Math.floor(level)||1));
     if(key!=='core')state.weaponSlots=[key];
@@ -34,6 +40,7 @@
     syncUi();
   }
   function equipAll(level=1,awaken=false){
+    resetAwakeningTransients();
     const keys=allWeapons();state.weaponStacks={};state.weaponSlots=[];state.awakenedWeapons={};
     for(const key of keys){state.weaponStacks[key]=Math.max(1,Math.min(6,Math.floor(level)||1));if(key!=='core')state.weaponSlots.push(key);if(awaken)state.awakenedWeapons[key]=true;}
     syncUi();
@@ -41,7 +48,7 @@
   function toggleSelectedAwakening(key){
     if(!WEAPONS?.[key])return;
     state.awakenedWeapons=state.awakenedWeapons&&typeof state.awakenedWeapons==='object'?state.awakenedWeapons:{};
-    const next=!state.awakenedWeapons[key];if(next)state.weaponStacks[key]=6;
+    const next=!state.awakenedWeapons[key];if(!next)resetAwakeningTransients();if(next)state.weaponStacks[key]=6;
     state.awakenedWeapons[key]=next;
     if(!state.weaponStacks[key])state.weaponStacks[key]=next?6:1;
     if(key!=='core'&&!state.weaponSlots.includes(key))state.weaponSlots=[key];
@@ -60,7 +67,7 @@
   }
   function fullHeal(){player.hp=player.maxHp;player.shield=Math.max(player.shield||0,typeof shieldCapacity==='function'?shieldCapacity():0);player.invuln=Math.max(player.invuln||0,2);syncUi();}
   function giveCores(){state.awakeningCores=99;syncUi();}
-  function clearAwakenings(){state.awakenedWeapons={};syncUi();}
+  function clearAwakenings(){resetAwakeningTransients();state.awakenedWeapons={};syncUi();}
 
   const style=document.createElement('style');
   style.textContent=`
