@@ -104,8 +104,14 @@ function drawEnemies(){for(const e of state.entities.enemies){const p=worldToScr
     if(!['mini','boss'].includes(e.type)&&e.hp<e.maxHp){const width=clamp(e.r*2.15,28,92),y=p.y-e.r*1.28-17;ctx.save();ctx.fillStyle='rgba(0,0,0,.62)';ctx.fillRect(p.x-width/2,y,width,5);ctx.fillStyle=e.color;ctx.fillRect(p.x-width/2,y,width*clamp(e.hp/e.maxHp,0,1),5);ctx.restore();}}
 }
 function projectileColor(p,fallback=COLORS.white){if(typeof p.color!=='string'||!CSS.supports('color',p.color))p.color=fallback;return p.color;}
+function boomerangMoonPhase(p){
+  if(Number.isFinite(p?.awMoonPhase))return clamp(p.awMoonPhase,.10,1);
+  if(p?.stage==='return')return 1-.86*clamp((p.returnLife||0)/1.05,0,1);
+  const progress=clamp((p?.stageTime||0)/Math.max(.001,p?.stageDuration||.55),0,1),smooth=progress*progress*(3-2*progress);
+  return .14+.86*smooth;
+}
 function drawMoonDisc(p,s,angle){
-  const r=p.r*1.22,phase=.14,side=p.side||1;
+  const r=p.r*1.22,phase=boomerangMoonPhase(p),side=p.side||1;
   ctx.save();ctx.translate(s.x,s.y);ctx.rotate(angle);
   ctx.globalAlpha=.20;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(0,0,r*1.42,0,TAU);ctx.fill();
   ctx.globalAlpha=1;ctx.fillStyle='#f7fbff';ctx.strokeStyle=p.color;ctx.lineWidth=1.35;ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.fill();ctx.stroke();
