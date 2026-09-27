@@ -8,15 +8,25 @@
   if(!enabled)return;
 
   const allWeapons=()=>Object.keys(window.stackfallAwakeningDefs||{}).filter(key=>WEAPONS?.[key]);
+  const equipmentWeapons=()=>allWeapons().filter(key=>key!=='core');
   const allStages=()=>[...(window.STACKFALL_STAGE_CATALOG||[])].sort((a,b)=>(a.order||0)-(b.order||0));
   const weaponName=key=>WEAPONS?.[key]?.name||key;
+  const DEV_SLOT_COUNT=6;
+  const DEV_INFINITE_CURRENCY_VALUE=999999999;
+  const baseDevCurrency=window.stackfallCurrency;
+  const baseDevSpendCurrency=window.stackfallSpendCurrency;
+  let infiniteCurrency=false,refreshSlotEditor=()=>{};
+  try{infiniteCurrency=localStorage.getItem('stackfall.devInfiniteCurrency')==='1';}catch{}
+  window.stackfallDevInfiniteCurrency=infiniteCurrency;
+  if(typeof baseDevCurrency==='function')window.stackfallCurrency=key=>window.stackfallDevInfiniteCurrency===true?DEV_INFINITE_CURRENCY_VALUE:baseDevCurrency(key);
+  if(typeof baseDevSpendCurrency==='function')window.stackfallSpendCurrency=cost=>window.stackfallDevInfiniteCurrency===true?true:baseDevSpendCurrency(cost);
   const stageName=stage=>{
     const title=stage?.title;
     if(typeof title==='string')return title;
     if(title&&typeof title==='object')return title.ko||title.en||stage.id;
     return stage?.id||'stage';
   };
-  const syncUi=()=>{try{renderLoadout?.();}catch{}try{updateHUD?.();}catch{}try{window.renderStackfallGalaxyMap?.();}catch{}};
+  const syncUi=()=>{try{renderLoadout?.();}catch{}try{updateHUD?.();}catch{}try{window.renderStackfallGalaxyMap?.();}catch{}try{window.renderStackfallMetaUi?.();}catch{}try{refreshSlotEditor();}catch{}};
   const clearCombatEntities=()=>{
     resetAwakeningTransients();
     const entities=state.entities||{};
@@ -35,6 +45,66 @@
     window.stackfallResetAwakeningSecondSetCombat?.();
     window.stackfallResetAwakeningThirdSetCombat?.();
   };
+  function currentSlotConfig(){
+    const result=[],seen=new Set(),slots=Array.isArray(state.weaponSlots)?state.weaponSlots:[];
+    for(const key of slots){
+      if(result.length>=DEV_SLOT_COUNT)break;
+      if(!key||key==='core'||!WEAPONS?.[key]||seen.has(key))continue;
+      seen.add(key);const level=Math.max(1,Math.min(6,Math.floor(Number(state.weaponStacks?.[key])||1)));
+      result.push({key,level,awake:state.awakenedWeapons?.[key]===true});
+    }
+    while(result.length<DEV_SLOT_COUNT)result.push({key:'',level:1,awake:false});
+    return result;
+  }
+  function currentCoreConfig(){
+    const level=Math.max(0,Math.min(6,Math.floor(Number(state.weaponStacks?.core)||0)));
+    return{level,awake:level>0&&state.awakenedWeapons?.core===true};
+  }
+  function applyDevLoadout(config,currentCore=currentCoreConfig()){
+    resetAwakeningTransients();
+    const stacks={},slots=[],awakened={},seen=new Set();
+    for(const entry of config.slice(0,DEV_SLOT_COUNT)){
+      const key=entry?.key;if(!key||key==='core'||!WEAPONS?.[key]||seen.has(key))continue;
+      seen.add(key);const level=Math.max(1,Math.min(6,Math.floor(Number(entry.level)||1)));
+      slots.push(key);stacks[key]=level;if(entry.awake===true&&level===6)awakened[key]=true;
+    }
+    const coreLevel=Math.max(0,Math.min(6,Math.floor(Number(currentCore.level)||0)));
+    if(coreLevel>0){stacks.core=coreLevel;if(currentCore.awake===true&&coreLevel===6)awakened.core=true;}
+    state.weaponSlots=slots;state.weaponStacks=stacks;state.awakenedWeapons=awakened;
+    if(slots[0])state.selectedStarter=slots[0];
+    syncUi();
+  }
+  function assignDevSlot(index,key){
+    const config=currentSlotConfig(),i=Math.max(0,Math.min(DEV_SLOT_COUNT-1,Math.floor(Number(index)||0))),next=String(key||'');
+    const previous={...config[i]};
+    if(!next){config.splice(i,1);config.push({key:'',level:1,awake:false});applyDevLoadout(config);return;}
+    if(next==='core'||!WEAPONS?.[next])return;
+    const duplicate=config.findIndex((entry,slot)=>slot!==i&&entry.key===next);
+    const existingLevel=Math.max(1,Math.min(6,Math.floor(Number(state.weaponStacks?.[next])||1))),existingAwake=state.awakenedWeapons?.[next]===true;
+    config[i]={key:next,level:existingLevel,awake:existingAwake&&existingLevel===6};
+    if(duplicate>=0)config[duplicate]=previous.key?previous:{key:'',level:1,awake:false};
+    applyDevLoadout(config);
+  }
+  function setDevSlotLevel(index,level){
+    const config=currentSlotConfig(),i=Math.max(0,Math.min(DEV_SLOT_COUNT-1,Math.floor(Number(index)||0))),entry=config[i];if(!entry?.key)return;
+    entry.level=Math.max(1,Math.min(6,Math.floor(Number(level)||1)));if(entry.level<6)entry.awake=false;applyDevLoadout(config);
+  }
+  function setDevSlotAwakening(index,on){
+    const config=currentSlotConfig(),i=Math.max(0,Math.min(DEV_SLOT_COUNT-1,Math.floor(Number(index)||0))),entry=config[i];if(!entry?.key)return;
+    entry.awake=on===true;if(entry.awake)entry.level=6;applyDevLoadout(config);
+  }
+  function setDevCoreLevel(level){
+    const core=currentCoreConfig();core.level=Math.max(0,Math.min(6,Math.floor(Number(level)||0)));if(core.level<6)core.awake=false;applyDevLoadout(currentSlotConfig(),core);
+  }
+  function setDevCoreAwakening(on){
+    const core=currentCoreConfig();core.awake=on===true;if(core.awake)core.level=6;applyDevLoadout(currentSlotConfig(),core);
+  }
+  function setInfiniteCurrency(on){
+    window.stackfallDevInfiniteCurrency=on===true;
+    try{localStorage.setItem('stackfall.devInfiniteCurrency',window.stackfallDevInfiniteCurrency?'1':'0');}catch{}
+    syncUi();
+    return window.stackfallDevInfiniteCurrency;
+  }
   function equipOnly(key,level=1,awaken=false){
     if(!WEAPONS?.[key])return;
     resetAwakeningTransients();
@@ -88,6 +158,14 @@
     #stackfallDevPanel .dev-wide{grid-column:1/-1}
     #stackfallDevPanel label{display:block;margin:12px 0 5px;color:#a9badb;font-size:11px;font-weight:800;letter-spacing:.06em}
     #stackfallDevPanel select,#stackfallDevPanel button{width:100%;min-height:38px;border:1px solid rgba(140,174,230,.22);border-radius:10px;background:#10162a;color:#eef5ff;font:700 12px/1.2 "IBM Plex Sans KR",sans-serif}
+    #stackfallDevPanel .dev-slot-editor{display:grid;gap:6px;margin:7px 0 14px}
+    #stackfallDevPanel .dev-slot-row{display:grid;grid-template-columns:42px minmax(0,1fr) 64px 58px;gap:6px;align-items:center;padding:6px;border:1px solid rgba(140,174,230,.13);border-radius:10px;background:rgba(255,255,255,.025)}
+    #stackfallDevPanel .dev-slot-row>b{font-size:10px;color:#91a8ce;text-align:center}
+    #stackfallDevPanel .dev-slot-row select{min-height:32px;font-size:10px;padding:0 5px}
+    #stackfallDevPanel .dev-slot-awake{display:flex;align-items:center;justify-content:center;gap:4px;margin:0!important;min-height:32px;border:1px solid rgba(126,232,255,.18);border-radius:8px;color:#bdf7ff!important;font-size:9px!important;letter-spacing:0!important}
+    #stackfallDevPanel .dev-slot-awake input{margin:0;accent-color:#7ce8ff}
+    #stackfallDevPanel .dev-slot-core{border-color:rgba(255,208,112,.22);background:rgba(255,208,112,.035)}
+    #stackfallDevPanel .dev-slot-note{margin:-6px 0 10px;color:#7285aa;font-size:10px;line-height:1.45}
     #stackfallDevPanel button{cursor:pointer;padding:8px}
     #stackfallDevPanel button:hover{border-color:rgba(126,232,255,.60);background:#16223b}
     #stackfallDevPanel .danger{border-color:rgba(255,110,140,.35);color:#ffb8c8}
@@ -102,7 +180,10 @@
   panel.innerHTML=`
     <h3>DEVELOPER TEST</h3>
     <p>로컬 테스트 프로필 · 실제 로그인/서버 인증 없음</p>
-    <label>무기</label>
+    <label>슬롯별 무기 설정</label>
+    <div id="devWeaponSlots" class="dev-slot-editor"></div>
+    <div class="dev-slot-note">각 슬롯은 무기·중첩·각성을 독립 설정한다. 각성 ON은 해당 무기를 자동으로 6중첩으로 맞춘다.</div>
+    <label>빠른 단일/일괄 테스트</label>
     <select id="devWeapon">${weaponOptions}</select>
     <div class="dev-grid">
       <button id="devWeapon1">선택 무기 1중첩</button>
@@ -122,6 +203,7 @@
       <button id="devClearEnemies">적/투사체 정리</button>
       <button id="devHeal">체력·보호막 회복</button>
       <button id="devCores">각성 코어 ×99</button>
+      <button id="devInfiniteCurrency" class="accent dev-wide">재화 무한 OFF</button>
     </div>
     <button id="devDisable" class="danger">이 브라우저에서 개발 모드 해제</button>
     <div id="devStatus" class="dev-status"></div>
@@ -129,8 +211,23 @@
   document.body.appendChild(panel);
 
   const toggle=document.createElement('button');toggle.id='stackfallDevToggle';toggle.type='button';toggle.textContent='DEV';document.body.appendChild(toggle);
-  const $=sel=>panel.querySelector(sel),weapon=$('#devWeapon'),stage=$('#devStage'),status=$('#devStatus');
-  const updateStatus=()=>{const cfg=window.stackfallCurrentRunConfig?.();const key=weapon.value;status.textContent=`RUN ${cfg?.mode||state.mode} · ${cfg?.stage?.id||'-'} · ${weaponName(key)} ${weaponCount(key)||0}중첩 · 각성 ${state.awakenedWeapons?.[key]?'ON':'OFF'}`;};
+  const $=sel=>panel.querySelector(sel),weapon=$('#devWeapon'),stage=$('#devStage'),status=$('#devStatus'),slotEditor=$('#devWeaponSlots'),currencyButton=$('#devInfiniteCurrency');
+  function renderSlotEditor(){
+    if(!slotEditor)return;
+    const config=currentSlotConfig(),core=currentCoreConfig(),options=equipmentWeapons().map(key=>`<option value="${key}">${weaponName(key)}</option>`).join(''),levels=Array.from({length:6},(_,i)=>i+1);
+    slotEditor.innerHTML=`<div class="dev-slot-row dev-slot-core"><b>CORE</b><span>${weaponName('core')}</span><select data-core-level><option value="0">OFF</option>${levels.map(level=>`<option value="${level}"${core.level===level?' selected':''}>${level}중첩</option>`).join('')}</select><label class="dev-slot-awake"><input data-core-awake type="checkbox"${core.awake?' checked':''}${core.level===0?' disabled':''}>각성</label></div>`+
+      config.map((entry,index)=>`<div class="dev-slot-row" data-slot="${index}"><b>S${index+1}</b><select data-slot-weapon><option value="">— 비움 —</option>${options.replace(`value="${entry.key}"`,`value="${entry.key}" selected`)}</select><select data-slot-level${entry.key?'':' disabled'}>${levels.map(level=>`<option value="${level}"${entry.level===level?' selected':''}>${level}중첩</option>`).join('')}</select><label class="dev-slot-awake"><input data-slot-awake type="checkbox"${entry.awake?' checked':''}${entry.key?'':' disabled'}>각성</label></div>`).join('');
+    slotEditor.querySelector('[data-core-level]')?.addEventListener('change',event=>setDevCoreLevel(event.target.value));
+    slotEditor.querySelector('[data-core-awake]')?.addEventListener('change',event=>setDevCoreAwakening(event.target.checked));
+    for(const row of slotEditor.querySelectorAll('[data-slot]')){
+      const index=Number(row.dataset.slot);
+      row.querySelector('[data-slot-weapon]')?.addEventListener('change',event=>assignDevSlot(index,event.target.value));
+      row.querySelector('[data-slot-level]')?.addEventListener('change',event=>setDevSlotLevel(index,event.target.value));
+      row.querySelector('[data-slot-awake]')?.addEventListener('change',event=>setDevSlotAwakening(index,event.target.checked));
+    }
+  }
+  refreshSlotEditor=renderSlotEditor;
+  const updateStatus=()=>{const cfg=window.stackfallCurrentRunConfig?.(),key=weapon.value,currency=window.stackfallDevInfiniteCurrency===true?'∞':'일반';if(currencyButton)currencyButton.textContent=`재화 무한 ${window.stackfallDevInfiniteCurrency===true?'ON':'OFF'}`;status.textContent=`RUN ${cfg?.mode||state.mode} · ${cfg?.stage?.id||'-'} · 장비 ${Math.min(DEV_SLOT_COUNT,state.weaponSlots?.length||0)}/${DEV_SLOT_COUNT} · ${weaponName(key)} ${weaponCount(key)||0}중첩 · 각성 ${state.awakenedWeapons?.[key]?'ON':'OFF'} · 재화 ${currency}`;};
   toggle.onclick=()=>{panel.classList.toggle('hidden');updateStatus();};
   $('#devWeapon1').onclick=()=>{equipOnly(weapon.value,1,false);updateStatus();};
   $('#devWeapon6').onclick=()=>{equipOnly(weapon.value,6,false);updateStatus();};
@@ -145,12 +242,14 @@
   $('#devClearEnemies').onclick=()=>{clearCombatEntities();updateStatus();};
   $('#devHeal').onclick=()=>{fullHeal();updateStatus();};
   $('#devCores').onclick=()=>{giveCores();updateStatus();};
-  $('#devDisable').onclick=()=>{try{localStorage.removeItem('stackfall.devMode');}catch{}const url=new URL(location.href);url.searchParams.delete('dev');location.replace(url.toString());};
+  $('#devInfiniteCurrency').onclick=()=>{setInfiniteCurrency(window.stackfallDevInfiniteCurrency!==true);updateStatus();};
+  $('#devDisable').onclick=()=>{try{localStorage.removeItem('stackfall.devMode');localStorage.removeItem('stackfall.devInfiniteCurrency');}catch{}window.stackfallDevInfiniteCurrency=false;const url=new URL(location.href);url.searchParams.delete('dev');location.replace(url.toString());};
   weapon.onchange=updateStatus;stage.onchange=updateStatus;
   window.addEventListener('keydown',event=>{if(event.code==='F10'){event.preventDefault();panel.classList.toggle('hidden');updateStatus();}});
+  renderSlotEditor();updateStatus();window.renderStackfallMetaUi?.();
   window.stackfallDeveloperTest={
     enabled:true,
-    equipOnly,equipAll,startStage,startEndless,jumpStageBoss,giveCores,clearAwakenings,
-    snapshot:()=>({run:window.stackfallCurrentRunConfig?.(),weaponStacks:{...(state.weaponStacks||{})},awakened:{...(state.awakenedWeapons||{})},cores:state.awakeningCores||0,canonicalVisuals:window.stackfallCanonicalWeaponVisualDiagnostics?.()||null,renderer:window.stackfallRendererInfo?.()||null})
+    equipOnly,equipAll,assignSlot:assignDevSlot,setSlotLevel:setDevSlotLevel,setSlotAwakening:setDevSlotAwakening,setCoreLevel:setDevCoreLevel,setCoreAwakening:setDevCoreAwakening,setInfiniteCurrency,startStage,startEndless,jumpStageBoss,giveCores,clearAwakenings,
+    snapshot:()=>({run:window.stackfallCurrentRunConfig?.(),weaponSlots:[...(state.weaponSlots||[])],weaponStacks:{...(state.weaponStacks||{})},awakened:{...(state.awakenedWeapons||{})},cores:state.awakeningCores||0,infiniteCurrency:window.stackfallDevInfiniteCurrency===true,canonicalVisuals:window.stackfallCanonicalWeaponVisualDiagnostics?.()||null,renderer:window.stackfallRendererInfo?.()||null})
   };
 })();
