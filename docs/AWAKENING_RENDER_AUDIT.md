@@ -7,7 +7,7 @@
 
 - canonical 파일의 `awake`는 다른 IIFE의 지역 함수에 접근할 수 없었다. `typeof` 방어로 오류 없이 항상 기본 분기를 선택해 A2/A4/A5의 각성 외형이 가려졌다. 명시적 `state.awakenedWeapons`를 읽는 공용 판정에 연결했다.
 - 판정을 복구하면 일반 Ember 탄까지 소유자의 현재 각성 상태를 따라 변할 잠재 문제가 있었다. 래스터와 치수는 탄 자체의 `awakeningChild`로 결정한다. 기존 일반 탄의 각성 전후 이미지 객체·크기 동일성을 검사했다.
-- 기본 부메랑에도 외향/귀환 월상 변화가 있었다. 이번 요청의 정본에 따라 기존 초승달 시작 형태를 유지하며, A7의 월상 변화·순환·귀환 파문은 유지했다. 기본 경로의 시작/정점/귀환 Canvas 원호 명령을 비교한다.
+- 후속 정정에서 기본 부메랑의 외향/귀환 월상 변화가 기존 승인 디자인임을 재확인했다. 기본은 초승달→차오름→귀환 중 기울기를 유지하고, A7은 여기에 추가 대형 순환 궤도와 귀환 파문을 더한다. 기본 경로의 시작/정점/귀환 Canvas 원호 명령이 서로 달라지는지 검사한다.
 - 다중 투영 블레이드의 표시 반경(및 각성의 회전 속도)이 타격 좌표와 달랐다. 기본/각성 모두 기존 타격 궤도에 맞췄고 외형은 유지했다.
 - 프리즘 좌표 버퍼는 3개였지만 다중 투영으로 최대 5개를 요청해 예외가 났다. 5개 객체와 길이별 view를 사전 할당한다. 1→3→5→2→5 전환과 view 재사용을 검사했다.
 - `PLAYER_RASTER_CACHE` 선언이 빠져 플레이어 렌더에 ReferenceError가 발생했다. 캐시를 정의했다.
@@ -45,7 +45,7 @@ A6 기본 발사는 시작 main에서도 즉시 실행됐다. 이번 감사에�
 | drawEquippedOrbits | render-entities(드론) → endgame synchronizedOrbitVisuals → community prismAttackStartOrbitFlash → A1 eclipseBladeVisuals → A2 awakenedCrownFleetOrbits → canonicalEquippedOrbits | BASE blade는 canonical, A2 blade는 A1; BASE prism/drone는 기존 체인, 각성은 A2 |
 | drawDefenseBarrier | render-space 선언 → canonicalDefenseBarrier | 명시적 각성으로 같은 armor 계열 분기 |
 | drawGravityLens | render-entities 선언 → canonicalGravityBlackHole | 동일 black hole, 각성 binary cue 추가 |
-| drawBoomerangs | render-entities → A1 lunarReturnVisuals | BASE 초승달; 각성 entity만 월상/별도 painter |
+| drawBoomerangs | render-entities → A1 lunarReturnVisuals | BASE도 왕복 월상 변화; 각성 entity는 추가 순환·강조 월상·귀환 파문을 별도 painter로 처리 |
 | drawAlliedEffects | render-entities → GPU hybridAlliedEffectDraw → A1 → A2 → A3 awakeningThirdSetEffects | GPU는 장식 입자만 분리, 각성 outer wrapper는 유지 |
 | drawPostRosterWeaponEntities | render-entities → A3 awakenedThirdPostRosterVisuals | 일반 배열은 위임, 각성 entity는 A3 |
 | drawPlayer | render-entities → targeting drawPlayerWithManualAim → A1 firstSetPlayerVisuals | 기존 core + gated Ember caster; crystal core 내부도 A1 stellarCoreVisual 래퍼 |
