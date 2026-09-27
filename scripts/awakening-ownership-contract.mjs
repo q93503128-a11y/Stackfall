@@ -15,6 +15,8 @@ assert(!/stackfallCometWindupDelayMs|stackfallAddCometWindup/.test(read('src/end
 assert(effects[0].includes("player.awCometCycle%4!==0")&&effects[0].includes('scheduleWeaponAction(220'));
 const dev=read('src/dev-tools.js');
 assert(dev.includes('clearPendingCombatActions();'));
+assert(dev.includes('id="devWeaponSlots"')&&dev.includes('assignSlot:assignDevSlot')&&dev.includes('setSlotAwakening:setDevSlotAwakening'),'DEV must expose per-slot loadout and awakening controls');
+assert(dev.includes('stackfall.devInfiniteCurrency')&&dev.includes('stackfallSpendCurrency=cost=>window.stackfallDevInfiniteCurrency===true?true'),'DEV infinite currency must bypass spend only inside developer mode');
 for(const group of ['First','Second','Third'])assert(dev.includes(`stackfallResetAwakening${group}SetCombat`));
 assert(effects[2].includes("baseSpawnGatePulseSet(net);if(!awake('gate')||!net||!Array.isArray(net.pulses))return"));
 assert(!read('src/difficulty-augment-expansion.js').includes('__stackfallAugmentAware'),'no late DOM-ready duplicate augment wrapper');
@@ -27,6 +29,8 @@ for(const token of ['syncEmergencySprites','stackfallCanUseSimplifiedGpuFrame','
 assert(!/stackfallResolutionScale\s*=\s*\.(?:30|55)/.test(read('src/performance-guard.js')));
 assert(!read('src/render-entities.js').includes("orbitWeaponRaster('prism'"));
 assert(!read('src/endgame-balance-expansion.js').includes('if(bladeN&&extra){'));
+const renderEntities=read('src/render-entities.js');
+assert(renderEntities.includes('function boomerangMoonPhase(p)')&&renderEntities.includes('phase=boomerangMoonPhase(p)'),'BASE boomerang moon-phase progression must remain authored');
 
 // Execute the canonical closure with a recording Canvas, rather than trusting
 // descriptive diagnostics or looking only for a sourceFamily string.
