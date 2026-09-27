@@ -1,0 +1,393 @@
+{
+  "date": "2026-09-27",
+  "startingRemoteMain": "2ec3adc5ae422a0fd29b7d676ee05495f397549c",
+  "fingerprint": "sha256-33b31d335e91e52718c3cd538c30f97dbfe40aedc03686aa84c8ee2309e6a978",
+  "servedFingerprint": "sha256-33b31d335e91e52718c3cd538c30f97dbfe40aedc03686aa84c8ee2309e6a978",
+  "ok": true,
+  "failures": [],
+  "skips": [],
+  "chrome": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+  "sourceSyntaxFiles": 66,
+  "scriptSyntaxFiles": 44,
+  "contractEntries": 37,
+  "ownershipGroups": 8,
+  "scenarios": [
+    {
+      "name": "main-gpu",
+      "ok": true
+    },
+    {
+      "name": "pixi-fallback",
+      "ok": true
+    },
+    {
+      "name": "awakening-isolation",
+      "ok": true
+    }
+  ],
+  "awakening": {
+    "failures": [],
+    "rows": [
+      {
+        "key": "core",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "blade",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "ember",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "bulwark",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "gravity",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "comet",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "arc",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "prism",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "chrono",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "ion",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "nova",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "drone",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "rail",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "spiral",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "mirror",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "vacuum",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "mine",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "missile",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      },
+      {
+        "key": "gate",
+        "base": [
+          true,
+          true
+        ],
+        "awakenedSignature": true,
+        "transient": true,
+        "visual": true
+      }
+    ],
+    "stages": [
+      {
+        "order": 1,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 2,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 3,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 4,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 5,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 6,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 7,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 8,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 9,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 10,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 11,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 12,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 13,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 14,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 15,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 16,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 17,
+        "moved": true,
+        "boss": true
+      },
+      {
+        "order": 18,
+        "moved": true,
+        "boss": true
+      }
+    ],
+    "sources": [
+      "barrier-lance",
+      "blade-shear",
+      "comet",
+      "comet-afterimage",
+      "comet-multiplicity",
+      "core",
+      "core-nova",
+      "drone-burst",
+      "drone-multiplicity",
+      "ember",
+      "ember-multiplicity",
+      "meteor-drone",
+      "mirror-counter",
+      "mirror-return",
+      "spiral-bolt",
+      "spiral-counter",
+      "spiral-multiplicity",
+      "wave"
+    ],
+    "owners": {
+      "drawProjectiles": "canonicalPlayerProjectileVisuals",
+      "drawEquippedOrbits": "canonicalEquippedOrbits",
+      "drawDefenseBarrier": "canonicalDefenseBarrier",
+      "drawGravityLens": "canonicalGravityBlackHole",
+      "drawBoomerangs": "lunarReturnVisuals",
+      "drawAlliedEffects": "awakeningThirdSetEffects",
+      "drawPostRosterWeaponEntities": "awakenedThirdPostRosterVisuals",
+      "drawPlayer": "firstSetPlayerVisuals",
+      "drawWells": "drawWells",
+      "drawEffects": "optimizedEffects",
+      "updateWeapons": "awakeningThirdSetWeapons",
+      "updateProjectiles": "spatialProjectileUpdate",
+      "updateBoomerangs": "lunarReturnUpdate",
+      "updateWells": "binaryCollapseUpdate",
+      "dealDamage": "awakeningSecondSetDamage",
+      "hurtPlayer": "celestialBastionHurt"
+    }
+  },
+  "soak": {
+    "elapsed": 120006,
+    "samples": 7194,
+    "average": 16.6791214901305,
+    "estimatedFps": 59.955196116997406,
+    "p95": 16.80000000000291,
+    "p99": 16.80000000000291,
+    "max": 22.10000000000582,
+    "over50Ratio": 0,
+    "heapDelta": 2863166
+  },
+  "runtimeErrors": 0,
+  "sanitizerRemovals": 0,
+  "gpu": {
+    "contextLossCount": 3,
+    "contextRestoreCount": 3,
+    "tickerRegistrationCount": 1,
+    "contextListenerRegistrationCount": 1,
+    "textures": {
+      "generation": 4,
+      "created": 12,
+      "destroyed": 9,
+      "live": 3
+    },
+    "playerVisuals": {
+      "projectiles": "canonical-canvas",
+      "beams": "canvas",
+      "gpuProjectiles": false,
+      "gpuBeams": false
+    },
+    "renderScale": 1
+  },
+  "warnings": [
+    {
+      "scenario": "pixi-fallback",
+      "level": "warning",
+      "text": "[Stackfall] PixiJS download failed; Canvas 2D fallback remains active."
+    }
+  ],
+  "scope": "Local deterministic fixtures and screenshot samples; not exhaustive playthrough or golden-image equivalence."
+}

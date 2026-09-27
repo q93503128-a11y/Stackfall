@@ -6,7 +6,7 @@
 - 배포: `https://stackfall.pages.dev`
 - 실행 환경: 정적 HTML/CSS/JavaScript
 - 기본 화면: Canvas 2D
-- 대량 아군 투사체·전투 파티클: PixiJS WebGL
+- 적 탄환·장식 전투 파티클·후처리: PixiJS WebGL
 - WebGL 초기화나 CDN 로드에 실패하면 Canvas 2D로 자동 복귀
 
 ## 실행
@@ -31,14 +31,14 @@ python -m http.server 8000
 
 - 일반 장비 슬롯: 6칸
 - 기본 무기 `코어 펄스`: 일반 슬롯과 별도
-- 일반 장비: 14종
+- 일반 장비: 18종
 - 장비 중첩: 1~6
 - 패시브: 슬롯 제한 없음
 - 치명타 확률 상한: 100%
 - 레벨당 기본 피해 증가: 1.1%
 - 같은 이름의 스탯은 합연산
 - 이름이 다른 피해 계수는 곱연산
-- 초월체: 실제 게임 시간 10분 간격
+- 초월체: 실제 게임 시간 8분 간격
 - 일시정지·능력 장부·선택·보상 중에는 게임 시간과 초월체 예정 시간이 진행되지 않음
 
 ## 주요 패시브
@@ -203,7 +203,7 @@ python -m http.server 8000
 
 ## 초월체
 
-초월체는 실제 게임 시간 10분·20분·30분마다 등장하며 전용 봉쇄장을 사용합니다. 넉백·중력 흡입·시간 정지·이동 봉쇄에 면역입니다.
+초월체는 실제 게임 시간 8분·16분·24분마다 등장하며 전용 봉쇄장을 사용합니다. 넉백·중력 흡입·시간 정지·이동 봉쇄에 면역입니다.
 
 초월체 능력치는 플레이어 레벨·무기 중첩·패시브 중첩을 읽지 않습니다. 첫 등장부터 고정 초고스펙을 사용하고 이후 등장 횟수마다 체력·피해·패턴 압력을 누적 복리로 강화합니다.
 
@@ -243,27 +243,11 @@ python -m http.server 8000
 
 게임 규칙·충돌·AI·보상은 JavaScript 상태 배열을 사용하고 렌더링만 분리합니다.
 
-### PixiJS WebGL
+### Canvas와 WebGL의 소유권
 
-- 대량 아군 투사체
-- 장식용 전투 파티클
-- 무기 계열별 텍스처 배칭
+단일 게임 Canvas가 배경, 적·보스·플레이어, 모든 플레이어 투사체와 광선, 공전 장비, 각성 실루엣, 월드 구조와 안내를 그립니다. PixiJS는 적 탄환, 장식 파티클, 후처리를 맡습니다. WebGL 로드·초기화·컨텍스트 복구에 실패하면 게임 Canvas가 이 효과도 그립니다.
 
-### 배경 Canvas 2D
-
-- 배경과 성운
-- 중력 우물과 비위험 아군 특수효과
-
-### 전경 Canvas 2D
-
-- 적과 보스
-- 적 투사체
-- 위험 예고
-- 플레이어
-- 광선과 중요 전경 효과
-- UI와 안내
-
-화면 계층은 `배경 Canvas → PixiJS 아군 효과 → 전경 Canvas → HTML UI` 순서입니다. WebGL 로드·초기화·컨텍스트 복구에 실패하면 Canvas 2D 폴백으로 복귀합니다.
+화면 계층은 `단일 게임 Canvas → PixiJS 보조 효과 → HTML UI`입니다. 플레이어 무기 외형은 양쪽 경로에서 같은 Canvas 렌더러를 사용합니다.
 
 기존 최적화:
 
@@ -276,7 +260,7 @@ python -m http.server 8000
 - 캐시된 Canvas 스프라이트
 - 효과 배열 제자리 압축
 - 런 세대와 게임 시간 기반 예약 공격
-- 측정된 심각한 프레임 지연이 지속될 때만 해상도 축소
+- 측정된 프레임 지연에 따른 장식 파티클 예산과 Pixi 갱신 빈도 조절
 
 ### 2026-07 지속 광선 렉 수정
 
@@ -298,9 +282,9 @@ python -m http.server 8000
 - 정상 데스크톱의 이론상 동시 일반 적 상단은 Stage 1 약 42체 → Stage 18 약 67체이며, authored cap이 더 낮으면 그 값을 우선함. 콤팩트 화면은 약 34체 → 53체, 성능 Tier 1/2는 다시 약 92%/80%로 축소
 - 별 레이어와 이동 표식의 월드 좌표 패럴랙스를 강화해 배경이 화면에 고정된 한 장처럼 보이지 않게 함
 - 성능 보호 단계는 적·투사체·적탄·위험 예고 같은 논리 엔티티의 상한을 바꾸지 않으며, 투사체 분열·파편·부메랑·혜성 경로 피해·중력 우물을 삭제하거나 피해 주기를 늦추지 않는다.
-- 심각한 지연 중에는 Pixi 시각 갱신을 최대 24FPS로 제한하고 화면에 동시에 그리는 아군 투사체·장식 입자 수를 줄인다. Canvas 폴백은 내부 해상도도 낮추고, WebGL에서는 마지막 배경을 유지한 채 적·적탄·플레이어·위험 예고를 간소화한 실루엣으로 전환한다. 이 긴급 경로에서도 화면 밖 보스와 보관소·우주선·공허 이벤트의 가장자리 안내는 고정 스프라이트 풀로 유지한다. 게임 로직·충돌·피해 틱은 계속 매 게임 프레임 처리한다.
+- 심각한 지연 중에는 Pixi 시각 갱신을 최대 24FPS로 제한하고 장식 입자 예산을 줄입니다. 플레이어 무기·각성 실루엣과 화면 밖 안내는 원래 Canvas 렌더러로 계속 그립니다. 부하 때문에 추가로 해상도를 낮추거나 화면을 단순 실루엣으로 교체하지 않습니다.
 
-따라서 성능 보호는 표시 개수·시각 갱신 빈도·장식 효과와 렌더 해상도만 조절합니다. 결정적 브라우저 계약은 정상 단계와 심각 단계에서 생성된 공격체 수와 누적 피해량이 같은지 함께 비교합니다.
+성능 보호는 장식 효과 예산과 시각 갱신 빈도를 조절합니다. 결정적 브라우저 계약은 정상 단계와 심각 단계에서 생성된 공격체 수와 누적 피해량이 같은지 함께 비교합니다.
 
 ## 로딩 순서
 
@@ -395,3 +379,5 @@ Stages are grouped into constellation pages. Only the active constellation is dr
 
 The main menu is a mode hub: `GALACTIC OPERATIONS`, `ENDLESS`, and `CORE DEVELOPMENT`. The upper-left local pilot card is now interactive and opens detailed local-save stats: clears, runs, kills, equipment capacity, unlocked weapons, Stage 1 best time, and currencies. Core Development keeps the **same shared player-core renderer used in combat** centered inside an orbital upgrade field with floating nodes and is viewport-contained on normal desktop screens; compact/mobile layouts may scroll. Future skins therefore only need to change the shared player renderer to update both combat and the growth preview. Skins themselves are intentionally deferred. Starter weapon and difficulty selection still live in the shared sortie screen. Galaxy-map stage nodes use luminous stellar points with separate number badges.
 
+
+2026-09 정합성 감사의 함수 소유권, 수정 내역과 검증 범위는 [감사 보고서](docs/AWAKENING_RENDER_AUDIT.md)를 참고하세요.
