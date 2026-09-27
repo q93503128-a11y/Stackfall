@@ -12,6 +12,15 @@ export function awakeningRuntimeChecks(){
   window.stackfallAuditGallery=gallery;
   const arrays=['awakeningFx','awakeningFxSecond','awakeningFxThird','awIonNodes','awLotusFields','awStarrailNodes'];
   const playerAwState=()=>Object.fromEntries(Object.entries(player).filter(([key])=>/^aw[A-Z]/.test(key)));
+  dev.equipOnly('blade',1,false);dev.assignSlot(1,'comet');dev.setSlotLevel(1,4);
+  check(state.weaponSlots[0]==='blade'&&state.weaponSlots[1]==='comet'&&weaponCount('blade')===1&&weaponCount('comet')===4,'DEV per-slot weapon/stack edit failed');
+  dev.setSlotAwakening(1,true);
+  check(weaponCount('comet')===6&&state.awakenedWeapons?.comet===true&&state.awakenedWeapons?.blade!==true,'DEV per-slot awakening edit failed');
+  dev.setCoreLevel(6);dev.setCoreAwakening(true);
+  check(weaponCount('core')===6&&state.awakenedWeapons?.core===true,'DEV core stack/awakening edit failed');
+  const rawDust=Number(window.stackfallMeta?.currencies?.stardust)||0;dev.setInfiniteCurrency(true);
+  check(window.stackfallCurrency?.('stardust')>=999999999&&window.stackfallSpendCurrency?.({stardust:999999,coreShard:999999})===true&&Number(window.stackfallMeta?.currencies?.stardust||0)===rawDust,'DEV infinite currency override failed');
+  dev.setInfiniteCurrency(false);check(dev.snapshot().infiniteCurrency===false,'DEV infinite currency did not disable');
   dev.equipAll(1,false);const baselineAwState=JSON.stringify(playerAwState());
   function setup(key,n,aw,augment=false){
     resetGame();dev.equipOnly(key,n,aw);state.weaponAugments=augment?{[key]:true}:{};
