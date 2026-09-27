@@ -95,7 +95,7 @@
   hurtPlayer=function celestialBastionHurt(amount,source='contact'){
     const beforeShield=Math.max(0,Number(player.shield)||0),beforeHp=Math.max(0,Number(player.hp)||0);
     baseHurtPlayer(amount,source);
-    if(!awake('bulwark')||state.mode==='gameover'||(beforeShield<=0&&player.hp>=beforeHp))return;
+    if(!awake('bulwark')||state.mode==='gameover'||(player.shield>=beforeShield&&player.hp>=beforeHp))return;
     const threat=nearestEnemy(player.x,player.y,360),angle=threat?Math.atan2(threat.y-player.y,threat.x-player.x):(Number.isFinite(player.facingAngle)?player.facingAngle:0);
     player.awBulwarkHitAngle=angle;player.awBulwarkHitFlash=.32;
     if(Number(amount)>=Math.max(12,player.maxHp*.11))player.awBulwarkStrong=.34;
@@ -252,13 +252,13 @@
   function drawCrescentBlade(cx,cy,a,scale=1,alpha=1){const image=crescentBladeRaster();ctx.save();ctx.translate(cx,cy);ctx.rotate(a+Math.PI/2);ctx.scale(scale,scale);ctx.globalAlpha=alpha;ctx.drawImage(image,-56,-56,112,112);ctx.restore();}
   drawEquippedOrbits=function eclipseBladeVisuals(x,y,t){
     if(!awake('blade'))return baseDrawEquippedOrbits(x,y,t);
-    const saved=state.weaponStacks.blade;state.weaponStacks.blade=0;try{baseDrawEquippedOrbits(x,y,t);}finally{state.weaponStacks.blade=saved;}
+    baseDrawEquippedOrbits(x,y,t);
     const orbit=orbitRadiusFor('blade'),wind=(player.awBladeWindup||0)>0,progress=wind?1-clamp(player.awBladeWindup/.24,0,1):0;
     for(let i=0;i<3;i++){
       if(wind){const facing=Number.isFinite(player.facingAngle)?player.facingAngle:0,nx=-Math.sin(facing),ny=Math.cos(facing),spread=(i-1)*27*(1-progress*.25),forward=48+progress*16;drawCrescentBlade(x+Math.cos(facing)*forward+nx*spread,y+Math.sin(facing)*forward+ny*spread,facing,1.08,1);}
       else{const a=player.angle+i*TAU/3;drawCrescentBlade(x+Math.cos(a)*orbit,y+Math.sin(a)*orbit,a,1.04,1);}
     }
-    const extra=mult();for(let i=0;i<extra;i++){const a=(i+.5)*TAU/Math.max(1,extra)+player.angle*.31,rr=orbit+18;drawCrescentBlade(x+Math.cos(a)*rr,y+Math.sin(a)*rr,a,.86,.82);}
+    const extra=mult();for(let i=0;i<extra;i++){const a=player.angle+(i+.5)*TAU/Math.max(1,extra),rr=orbit;drawCrescentBlade(x+Math.cos(a)*rr,y+Math.sin(a)*rr,a,.86,.82);}
   };
 
   const baseDrawPlayer=drawPlayer;

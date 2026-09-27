@@ -53,9 +53,9 @@
   function applyEmergencyResolution(enabled){
     if(enabled===emergencyResolution)return;
     emergencyResolution=enabled;
-    const simplifiedGpu=enabled&&typeof stackfallGpuEmergencyAvailable==='function'&&stackfallGpuEmergencyAvailable();
-    const nextScale=enabled&&!simplifiedGpu?.30:1,scaleChanged=(Number(window.stackfallResolutionScale)||1)!==nextScale;
-    window.stackfallResolutionScale=nextScale;
+    // Pressure may reduce particle budgets and GPU tick rate, never world resolution.
+    const scaleChanged=(Number(window.stackfallResolutionScale)||1)!==1;
+    window.stackfallResolutionScale=1;
     if(scaleChanged)resize();
   }
   function syncResolution(dt){
@@ -265,7 +265,7 @@
     if(GAME_SETTINGS.damageNumbers!==false){for(const text of state.entities.texts){if(!text||text.life<=0)continue;const x=text.x-player.x+vw/2,y=text.y-player.y+vh/2;ctx.globalAlpha=clamp(text.life/Math.max(.001,text.max||text.life),0,1);ctx.fillStyle=text.color||'#fff';ctx.font=`800 ${Math.max(10,Math.min(18,text.size||12))}px IBM Plex Sans KR,sans-serif`;ctx.textAlign='center';ctx.fillText(String(text.text??''),roundPixel(x),roundPixel(y));}}
     ctx.globalAlpha=1;
   }
-  drawEffects=function optimizedEffects(includeParticles=true){if(GAME_SETTINGS.hideProjectiles===true||tier()===2)return minimalEffects();return fullDrawEffects(includeParticles);};
+  drawEffects=function optimizedEffects(includeParticles=true){if(GAME_SETTINGS.hideProjectiles===true||tier()===2){minimalEffects();if(includeParticles)drawAlliedEffects();return;}return fullDrawEffects(includeParticles);};
 
   function keepLiveProjectile(p){return!!(p&&p.life>0&&Number.isFinite(p.x)&&Number.isFinite(p.y));}
   function recycleProjectile(p){if(p&&projectilePool.length<320){p.hitIds?.clear?.();projectilePool.push(p);}}
@@ -299,7 +299,8 @@
     compactInPlace(state.entities.projectiles,keepLiveProjectile,recycleProjectile);
   };
 
-  updateWells=function spatialWellUpdate(dt){
+  // Optimize the body, preserving reward/awakening wrappers around updateWells.
+  updateWellBodies=function spatialWellUpdate(dt){
     if(!grid.size)rebuildEnemyGrid();const list=state.entities.wells;
     for(let i=0;i<list.length;i++){
       const w=list[i];if(!w||!normalizeWell(w)){if(w)w.life=0;continue;}w.life-=dt;w.tick-=dt;
@@ -313,11 +314,6 @@
     baseUpdateEffects(dt);trimOldest(state.entities.particles,entityCap('particles'));trimOldest(state.entities.shockwaves,entityCap('shockwaves'));trimOldest(state.entities.beams,entityCap('beams'));
   };
 
-  const baseGravityLens=drawGravityLens;
-  drawGravityLens=function drawBudgetedGravityLens(w,p,alpha,t){
-    if(tier()<2)return baseGravityLens(w,p,alpha,t);
-    const echoed=!!w.echoed||w.color===COLORS.pink,visual=Math.min(118,50+w.r*.25),horizon=Math.min(23,10+w.r*.052);ctx.save();ctx.translate(p.x,p.y);ctx.globalAlpha=alpha;ctx.rotate(-.17);ctx.strokeStyle=echoed?'#ff668f':'#ffb15d';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(0,0,visual*.68,visual*.14,0,0,TAU);ctx.stroke();ctx.fillStyle='#000';ctx.beginPath();ctx.arc(0,0,horizon,0,TAU);ctx.fill();ctx.restore();
-  };
 
   if(PASSIVES.power){PASSIVES.power.desc='모든 피해 +10%.';if(PASSIVE_TEXT.power){PASSIVE_TEXT.power.ko=['출력 증폭',PASSIVES.power.desc];PASSIVE_TEXT.power.en=['Power Amplifier','All damage +10%.'];}}
   if(PASSIVES.greed){PASSIVES.greed.desc='적 체력 +10%, 경험치 획득량 +30%.';if(PASSIVE_TEXT.greed){PASSIVE_TEXT.greed.ko=['개척 계약',PASSIVES.greed.desc];PASSIVE_TEXT.greed.en=['Frontier Contract','Enemy health +10%, experience gained +30%.'];}}

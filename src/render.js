@@ -24,6 +24,7 @@ updateSpawning=function updateSpawningAccelerated(dt){
 let renderVignetteCache=null,renderVignetteKey='';
 function cachedRenderVignette(){const key=`${vw}x${vh}@${dpr}`;if(renderVignetteCache&&renderVignetteKey===key)return renderVignetteCache;const gradient=ctx.createRadialGradient(vw/2,vh/2,Math.min(vw,vh)*.18,vw/2,vh/2,Math.max(vw,vh)*.74);gradient.addColorStop(0,'rgba(0,0,0,0)');gradient.addColorStop(1,'rgba(0,1,8,.58)');renderVignetteCache=gradient;renderVignetteKey=key;return gradient;}
 function draw(){
+  if(typeof drawProjectiles!=='function'||typeof drawDefenseBarrier!=='function'||typeof drawGravityLens!=='function')return;
   state.renderFrame++;const rawShake=GAME_SETTINGS.screenShake===false?0:Math.max(0,state.camera.shake||0),shake=rawShake>=SCREEN_SHAKE_VISIBLE_THRESHOLD?Math.min(15,rawShake*.72):0;state.camera.shakeX=shake?rand(-shake,shake):0;state.camera.shakeY=shake?rand(-shake,shake):0;
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.setLineDash([]);
   runDrawStage('drawBackground',drawBackground);
@@ -63,8 +64,8 @@ function loop(now){
     }
     if(state.mode==='choice'&&ui.choice.classList.contains('hidden')){state.choiceLocked=false;state.mode='playing';}
     if(typeof syncAbilityLedgerVisibility==='function')syncAbilityLedgerVisibility();
-    const simplifiedGpu=state.mode==='playing'&&typeof stackfallCanUseSimplifiedGpuFrame==='function'&&stackfallCanUseSimplifiedGpuFrame(),renderDue=now-lastRenderAt>=TARGET_RENDER_INTERVAL-1;
-    if(shouldDraw&&!simplifiedGpu&&renderDue){lastRenderAt=now;runRuntimeStage('drawFrame',draw);}
+    const renderDue=now-lastRenderAt>=TARGET_RENDER_INTERVAL-1;
+    if(shouldDraw&&renderDue){lastRenderAt=now;runRuntimeStage('drawFrame',draw);}
   }finally{if(window.__stackfallLoopGeneration===stackfallLoopGeneration)requestAnimationFrame(loop);}
 }
 requestAnimationFrame(loop);

@@ -1,6 +1,7 @@
 (function(){
   'use strict';
 
+  const awake=key=>window.stackfallIsWeaponAwakened?.(key)===true;
   const RASTER_CACHE=new Map();
   const MAX_RASTERS=32;
   function makeRaster(key,w,h,painter){
@@ -21,10 +22,10 @@
   function sourceFamily(p){
     const s=visualSource(p);
     if(s.startsWith('core')||s.includes('stellar-core'))return'core';
-    if(s==='ember'||s==='echo-star'||s==='star-spark'||s.includes('ember'))return'ember';
-    if(s==='wave'||s.includes('blade-wave'))return'blade-wave';
+    if(s==='ember'||s==='echo-star'||s==='star-spark'||s==='apex-forge-star'||s.includes('ember'))return'ember';
+    if(s==='wave'||s==='blade-shear'||s.includes('blade-wave'))return'blade-wave';
     if(s.includes('comet')&&!s.includes('fragment'))return'comet';
-    if(s.includes('fragment')||s.includes('shard')||s.includes('mirror'))return'shard';
+    if(s==='barrier-lance'||s==='echo-reflect'||s.includes('fragment')||s.includes('shard')||s.includes('mirror'))return'shard';
     if(s.includes('drone'))return'drone';
     if(s.includes('spiral'))return'spiral';
     if(s.includes('gate'))return'gate';
@@ -96,7 +97,7 @@
   function dimensions(kind,p){
     const r=Math.max(2,Number(p.r)||4);
     if(kind==='core')return[r*8.2,r*3.8];
-    if(kind==='ember'){const awakened=typeof awake==='function'&&awake('ember');return[r*(awakened?13.8:11.4),r*(awakened?5.0:4.4)];}
+    if(kind==='ember'){const awakened=p.awakeningChild===true;return[r*(awakened?13.8:11.4),r*(awakened?5.0:4.4)];}
     if(kind==='comet')return[r*(p.awakeningChild?15.2:12.2),r*(p.awakeningChild?5.6:4.8)];
     if(kind==='blade-wave')return[r*8.8,r*4.8];
     if(kind==='gate')return[r*7.4,r*3.8];
@@ -111,7 +112,7 @@
     for(let i=0;i<list.length;i++){
       const p=list[i];if(!p||p.life<=0||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;
       const sx=p.x-player.x+vw/2,sy=p.y-player.y+vh/2;if(sx<-190||sx>vw+190||sy<-120||sy>vh+120)continue;
-      const kind=sourceFamily(p),variant=kind==='ember'&&typeof awake==='function'&&awake('ember')?'awakened':variantFor(p),image=projectileRaster(kind,variant),[dw,dh]=dimensions(kind,p),angle=Math.atan2(p.vy||0,p.vx||0);
+      const kind=sourceFamily(p),variant=variantFor(p),image=projectileRaster(kind,variant),[dw,dh]=dimensions(kind,p),angle=Math.atan2(p.vy||0,p.vx||0);
       ctx.save();ctx.translate(sx,sy);ctx.rotate(angle);ctx.globalAlpha=clamp((Number(p.life)||1)/Math.max(.08,Number(p.maxLife)||Number(p.life)||1),.36,1);if(kind==='ember')ctx.globalCompositeOperation='lighter';ctx.drawImage(image,-dw*.57,-dh*.5,dw,dh);ctx.restore();
     }
   };
@@ -129,10 +130,9 @@
   }
   const previousCanonicalOrbits=drawEquippedOrbits;
   drawEquippedOrbits=function canonicalEquippedOrbits(x,y,t){
-    const bladeN=weaponCount('blade'),awakenedBlade=typeof awake==='function'&&awake('blade');
+    const bladeN=weaponCount('blade'),awakenedBlade=awake('blade');
     if(!bladeN||awakenedBlade)return previousCanonicalOrbits(x,y,t);
-    const saved=state.weaponStacks.blade;state.weaponStacks.blade=0;
-    try{previousCanonicalOrbits(x,y,t);}finally{state.weaponStacks.blade=saved;}
+    previousCanonicalOrbits(x,y,t);
     const size=weaponSizeMultiplier(),count=bladeN>=5?3:bladeN>=2?2:1,orbit=Math.max(48,orbitRadiusFor('blade')),image=pulseBladeRaster(bladeN>=6);
     for(let i=0;i<count;i++){
       const a=player.angle+i*TAU/count,bx=x+Math.cos(a)*orbit,by=y+Math.sin(a)*orbit;
@@ -140,7 +140,7 @@
     }
     const extra=Math.min(2,Math.max(0,Number(window.stackfallMultiplicityStacks?.())||0));
     for(let i=0;i<extra;i++){
-      const a=player.angle+(i+.5)*TAU/Math.max(1,extra),rr=orbit+18,bx=x+Math.cos(a)*rr,by=y+Math.sin(a)*rr;
+      const a=player.angle+(i+.5)*TAU/Math.max(1,extra),rr=orbit,bx=x+Math.cos(a)*rr,by=y+Math.sin(a)*rr;
       ctx.save();ctx.translate(bx,by);ctx.rotate(a+Math.PI/2);ctx.globalAlpha=.78;ctx.scale(size*.62,size*.62);ctx.drawImage(image,-64,-64,128,128);ctx.restore();
     }
   };
@@ -151,7 +151,7 @@
   }
   drawDefenseBarrier=function canonicalDefenseBarrier(){
     const bulwarkN=weaponCount('bulwark'),armor=stat('armor'),shield=Math.max(0,Number(player.shield)||0),defense=bulwarkN>0||armor>0||shield>0;if(!defense)return;
-    const awakened=bulwarkN>0&&typeof awake==='function'&&awake('bulwark'),cap=Math.max(1,typeof shieldCapacity==='function'?shieldCapacity():shield||1),ratio=clamp(shield/cap,0,1),t=performance.now(),x=vw/2,y=vh/2;
+    const awakened=bulwarkN>0&&awake('bulwark'),cap=Math.max(1,typeof shieldCapacity==='function'?shieldCapacity():shield||1),ratio=clamp(shield/cap,0,1),t=performance.now(),x=vw/2,y=vh/2;
     const parts=awakened?8:Math.max(5,Math.min(8,5+Math.floor(bulwarkN/2))),base=player.r+(awakened?35:27),pulse=Math.sin(t*.0031)*1.2,inner=base+pulse,outer=inner+(awakened?11:7),rotation=t*(awakened?.00016:.00012);
     const hitAngle=Number(player.awBulwarkHitAngle)||0,hitFlash=awakened?clamp((Number(player.awBulwarkHitFlash)||0)/.32,0,1):0,strong=awakened?clamp((Number(player.awBulwarkStrong)||0)/.34,0,1):0;
     ctx.save();ctx.translate(x,y);ctx.rotate(rotation);ctx.lineCap='round';ctx.lineJoin='round';
@@ -191,7 +191,7 @@
   drawGravityLens=function canonicalGravityBlackHole(w,p,alpha,t){
     const echoed=!!w?.echoed||w?.color===COLORS.pink,frame=Math.floor((t*8)%12),image=gravityBlackHoleRaster(echoed,frame),visual=Math.min(146,58+(Number(w?.r)||80)*.31),dw=visual*2.55,dh=visual*1.84;
     ctx.save();ctx.translate(p.x,p.y);ctx.globalAlpha=alpha;ctx.drawImage(image,-dw/2,-dh/2,dw,dh);
-    const binary=typeof awake==='function'&&awake('gravity')&&w?.awBinarySide!==undefined;
+    const binary=awake('gravity')&&w?.awBinarySide!==undefined;
     if(binary){
       const side=Number(w.awBinarySide)||0,color=w.awBinaryEcho?'#ff70a4':side===0?'#65c9ff':'#ff934f',pulse=.84+.16*Math.sin(t*5.2+side*Math.PI),rx=visual*.92,ry=visual*.23;
       ctx.save();ctx.rotate(-.12);ctx.globalCompositeOperation='lighter';ctx.shadowBlur=18;ctx.shadowColor=color;ctx.strokeStyle=color;ctx.globalAlpha=alpha*(.48+.30*pulse);ctx.lineWidth=1.6+1.2*pulse;

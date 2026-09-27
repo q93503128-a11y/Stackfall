@@ -134,10 +134,7 @@
   const previousDamageReduction=damageReduction;
   damageReduction=function communityBulwarkReduction(){const base=previousDamageReduction(),n=weaponStacks('bulwark');return clamp(base+n*.008+(n>=5?.015:0),0,.78);};
 
-  const rawEmergencyRendering=window.stackfallEmergencyRendering,rawGpuEmergencyAvailable=window.stackfallGpuEmergencyAvailable;
   function criticalVisualCombat(){if(state.mode!=='playing')return false;if(state.mapEventActive||state.apexActiveId)return true;for(const e of state.entities.enemies)if(e&&!e.dead&&e.type==='boss')return true;return false;}
-  if(typeof rawEmergencyRendering==='function')window.stackfallEmergencyRendering=()=>criticalVisualCombat()?false:rawEmergencyRendering();
-  if(typeof rawGpuEmergencyAvailable==='function')window.stackfallGpuEmergencyAvailable=()=>criticalVisualCombat()?false:rawGpuEmergencyAvailable();
 
   const previousEnemyProjectileRenderer=drawEnemyProjectiles;
   drawEnemyProjectiles=function distinctHostileProjectiles(){

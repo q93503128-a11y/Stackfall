@@ -18,11 +18,19 @@
   };
   const syncUi=()=>{try{renderLoadout?.();}catch{}try{updateHUD?.();}catch{}try{window.renderStackfallGalaxyMap?.();}catch{}};
   const clearCombatEntities=()=>{
+    resetAwakeningTransients();
     const entities=state.entities||{};
     for(const value of Object.values(entities))if(Array.isArray(value))value.length=0;
     state.bossActiveId=null;state.apexActiveId=null;state.pendingApexForm=null;
   };
   const resetAwakeningTransients=()=>{
+    // DEV loadout changes are a new combat sample, including delayed casts and
+    // untagged beams/particles emitted by the previous loadout. Keep world actors.
+    clearPendingCombatActions();
+    for(const key of ['projectiles','curves','wells','beams','particles','shockwaves','vacuumSeeds','phaseMines','guidedMissiles','gateNetworks']){
+      const list=state.entities[key];if(Array.isArray(list))list.length=0;
+    }
+    for(const enemy of state.entities.enemies||[])if(enemy)enemy.timeLock=0;
     window.stackfallResetAwakeningFirstSetCombat?.();
     window.stackfallResetAwakeningSecondSetCombat?.();
     window.stackfallResetAwakeningThirdSetCombat?.();

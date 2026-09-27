@@ -15,7 +15,7 @@
     for(const net of state.entities.gateNetworks||[])if(net){delete net.awGrandCharge;delete net.awGrandPending;delete net.awLastCircuitAt;if(Array.isArray(net.pulses))for(const pulse of net.pulses)if(pulse)delete pulse.awGrandEligible;}
     Object.assign(player,{
       awSpiralCycle:0,awMirrorFaces:[null,null,null,null,null,null],awMirrorSignaturePending:false,
-      awMineDeployCycle:0,awMissileCycle:0,awMissileGroupSerial:0,awMissileSignaturePending:false
+      awMineDeployCycle:0,awMissileCycle:0,awMissileGroupSerial:0
     });
   }
   window.stackfallResetAwakeningThirdSetCombat=resetThirdAwakeningState;
@@ -23,7 +23,7 @@
 
   // A14 — Genesis Galaxy. Counter-Spiral Galaxy is restored for both normal and awakened forms.
   function spiralTarget(){return nearestWeaponTarget('spiral');}
-  function spawnSpiralBody(target,n,echoed,phase,arm,arms,step,reverse=false){
+  function spawnSpiralBody(target,n,echoed,arm,arms,step,reverse=false){
     const size=weaponSizeMultiplier(),galaxyAngle=(state.time||0)*.75+(reverse?-1:1)*(arm*TAU/Math.max(1,arms)+step*.20),orbit=34+arm%2*5,
       ox=player.x+Math.cos(galaxyAngle)*orbit,oy=player.y+Math.sin(galaxyAngle)*orbit,
       live=target&&!target.dead?target:spiralTarget(),base=live?Math.atan2(live.y-oy,live.x-ox):player.angle,
@@ -40,19 +40,19 @@
   }
   function fireAwakenedSpiral(n,echoed=false,reverse=false){
     player.spiralPhase=(player.spiralPhase||0)+(reverse?-.61:.73);
-    const target=spiralTarget(),phase=player.spiralPhase,arms=4+(echoed?0:mult()),beads=n>=5?5:4;
+    const target=spiralTarget(),arms=4+(echoed?0:mult()),beads=n>=5?5:4;
     for(let step=0;step<beads;step++)scheduleWeaponAction(step*54+(reverse?185:0),()=>{
       const live=target&&!target.dead?target:spiralTarget();
-      for(let arm=0;arm<arms;arm++)spawnSpiralBody(live,n,echoed,phase,arm,arms,step,reverse);
+      for(let arm=0;arm<arms;arm++)spawnSpiralBody(live,n,echoed,arm,arms,step,reverse);
     });
   }
   function fireCounterSpiral(n,target){
     if(!state.weaponAugments?.spiral)return;
-    const phase=(player.spiralPhase||0)-.44,arms=n>=6?4:n>=4?3:n>=2?2:1,beads=n>=5?5:4;
+    const arms=n>=6?4:n>=4?3:n>=2?2:1,beads=n>=5?5:4;
     for(let step=0;step<beads;step++)scheduleWeaponAction(185+step*56,()=>{
       const live=target&&!target.dead?target:spiralTarget();if(!live)return;
       for(let arm=0;arm<arms;arm++){
-        if(awake('spiral'))spawnSpiralBody(live,n,false,phase,arm,arms,step,true);
+        if(awake('spiral'))spawnSpiralBody(live,n,false,arm,arms,step,true);
         else{
           const base=Math.atan2(live.y-player.y,live.x-player.x),spread=(arm-(arms-1)/2)*.11,a=base+spread-(arm%2?-1:1)*(.18+step*.02),speed=292+n*17+step*15;
           spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:4+n*.22,life:1.50,maxRange:weaponRange('spiral'),damage:(7+n*2.05)*.58,color:'#c8a9ff',pierce:n>=5?1:0,source:'spiral-counter',homingTargetId:live.id,homingReacquire:false,homingTurn:n>=3?1.45:1.0});
@@ -190,7 +190,7 @@
   function tagSurroundMissile(target,n,side,damage,opts){
     const before=state.entities.guidedMissiles.length;spawnGuidedMissile(target,n,side,damage,opts);
     const m=state.entities.guidedMissiles.length>before?state.entities.guidedMissiles.at(-1):null;if(!m)return null;
-    m.awSurround=true;m.awStage='gather';m.awStageAge=0;m.awSlot=opts.awSlot||0;m.awSlotCount=opts.awSlotCount||3;m.awGroup=opts.awGroup||0;m.awReady=false;m.awSignalTimer=null;m.awTargetLocked=false;m.awOriginalTargetId=target.id;m.awGatherRadius=112+Math.min(50,n*6);m.awGatherDuration=.54;m.awDiveTime=0;
+    m.awSurround=true;m.awStage='gather';m.awStageAge=0;m.awSlot=opts.awSlot||0;m.awSlotCount=opts.awSlotCount||3;m.awGroup=opts.awGroup||0;m.awReady=false;m.awSignalTimer=null;m.awTargetLocked=false;m.awGatherRadius=112+Math.min(50,n*6);m.awGatherDuration=.54;
     return m;
   }
   function fireStarbreakerSurround(n){
@@ -220,9 +220,9 @@
       if(m.awStageAge>=m.awGatherDuration||d<22){m.awStage='hold';m.awStageAge=0;m.awReady=true;m.awTargetLocked=true;m.vx*=.14;m.vy*=.14;}
     }else if(m.awStage==='hold'){
       m.vx*=Math.pow(.12,dt*8);m.vy*=Math.pow(.12,dt*8);m.x+=m.vx*dt;m.y+=m.vy*dt;
-      if(Number.isFinite(m.awSignalTimer)){m.awSignalTimer-=dt;if(m.awSignalTimer<=0){m.awStage='dive';m.awStageAge=0;m.awDiveTime=0;pushFx({kind:'missile-dive',x:m.x,y:m.y,targetId:m.targetId,life:.28,max:.28});}}
+      if(Number.isFinite(m.awSignalTimer)){m.awSignalTimer-=dt;if(m.awSignalTimer<=0){m.awStage='dive';m.awStageAge=0;pushFx({kind:'missile-dive',x:m.x,y:m.y,targetId:m.targetId,life:.28,max:.28});}}
     }else{
-      m.awDiveTime+=dt;target=enemyById(m.targetId)||target;if(!target){m.life=0;return;}
+      target=enemyById(m.targetId)||target;if(!target){m.life=0;return;}
       const dx=target.x-m.x,dy=target.y-m.y,d=Math.hypot(dx,dy)||1,desired=Math.atan2(dy,dx),current=Math.atan2(m.vy,m.vx),angle=missileTurn(current,desired,7.2*dt),speed=lerp(Math.hypot(m.vx,m.vy),560*postRosterMissileSpeed(),clamp(dt*7.2,0,1));
       m.vx=Math.cos(angle)*speed;m.vy=Math.sin(angle)*speed;m.x+=m.vx*dt;m.y+=m.vy*dt;m.terminal=true;
       if(state.weaponAugments?.missile&&d<118)splitMirvMissile(m,target);

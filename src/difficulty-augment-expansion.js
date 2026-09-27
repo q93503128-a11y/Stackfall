@@ -34,33 +34,10 @@
   const baseEnemyConfig=enemyConfig;
   enemyConfig=function difficultyEnemyConfig(type){const c=baseEnemyConfig(type),d=window.stackfallDifficultyConfig();c.hp*=.88*d.enemyHp;c.damage*=.94*d.enemyDamage;c.speed*=.98*d.enemySpeed;return c;};
 
-  const baseIon=fireIonChain;
-  fireIonChain=function augmentedIonChain(stacks,echoed=false){baseIon(stacks,echoed);if(state.weaponAugments?.ion&&!echoed)scheduleWeaponAction(115,()=>baseIon(stacks,true));};
-
   const baseNova=fireNovaPulse;
   fireNovaPulse=function augmentedNovaPulse(stacks,echoed=false){const x=player.x,y=player.y,size=weaponSizeMultiplier(),radius=(145+(stacks>=2?38:0)+(stacks>=5?18:0))*size;baseNova(stacks,echoed);if(state.weaponAugments?.nova&&!echoed)scheduleWeaponAction(420,()=>{for(const enemy of state.entities.enemies){if(enemy.dead)continue;const dx=x-enemy.x,dy=y-enemy.y,d=Math.hypot(dx,dy)||1;if(d<radius*1.05){const pull=(42+stacks*4)*enemyControlFactor(enemy);enemy.x+=dx/d*pull;enemy.y+=dy/d*pull;}}areaDamage(x,y,radius*.58,12+stacks*3.5,'#fff0c8','nova-implosion',{shake:false});shockwave(x,y,'#ffbd69',radius*.68,.38,2.6);});};
 
-  function strongestDroneTarget(){const range=weaponRange('drone'),rangeSq=range*range;let strongest=null;for(const enemy of state.entities.enemies){if(!enemy||enemy.dead||(enemy.x-player.x)**2+(enemy.y-player.y)**2>rangeSq)continue;if(!strongest||enemy.hp>strongest.hp)strongest=enemy;}return strongest;}
-  function triggerDroneAugment(stacks,echoed=false,targetId=null){if(!state.weaponAugments?.drone||echoed||!targetId)return;scheduleWeaponAction(360,()=>{const live=enemyById(targetId);if(!live)return;areaDamage(live.x,live.y,78+stacks*7,24+stacks*5.8,'#d8fff1','drone-meteor');shockwave(live.x,live.y,'#8fffd0',104+stacks*8,.42,3.2);});}
-  const baseDrone=fireMeteorDrones;
-  fireMeteorDrones=function augmentedMeteorDrones(stacks,echoed=false){const targetId=strongestDroneTarget()?.id;baseDrone(stacks,echoed);triggerDroneAugment(stacks,echoed,targetId);};
-  fireMeteorDrones.__stackfallAugmentAware=true;
-
-  const baseRail=fireRailgun;
-  fireRailgun=function augmentedRailgun(stacks,echoed=false){const target=nearestWeaponTarget('rail'),x=player.x,y=player.y,a=target?Math.atan2(target.y-y,target.x-x):player.angle,length=weaponRange('rail');baseRail(stacks,echoed);if(state.weaponAugments?.rail&&!echoed&&target)scheduleWeaponAction(190,()=>{for(const [index,f]of[.34,.58,.82].entries()){const px=x+Math.cos(a)*length*f,py=y+Math.sin(a)*length*f;scheduleWeaponAction(index*70,()=>{areaDamage(px,py,38+stacks*3,11+stacks*3.1,'#b7e7ff','rail-fracture');shockwave(px,py,'#eaf8ff',52+stacks*4,.24,1.8);});}});};
-
-  function triggerSpiralAugment(stacks,echoed=false){if(!state.weaponAugments?.spiral||echoed)return;const phase=(player.spiralPhase||0)+Math.PI,arms=stacks>=6?4:stacks>=4?3:stacks>=2?2:1;for(let step=0;step<3;step++)scheduleWeaponAction(270+step*68,()=>{for(let arm=0;arm<arms;arm++){const a=phase+arm*TAU/arms-step*.38*(arm%2?-1:1),target=nearestWeaponTarget('spiral');spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*(330+stacks*16),vy:Math.sin(a)*(330+stacks*16),r:3.9+stacks*.2,life:1.35,maxRange:weaponRange('spiral'),damage:6+stacks*1.75,color:'#f3d4ff',pierce:stacks>=5?1:0,source:'spiral-counter',homingTargetId:target?.id,homingReacquire:true,homingTurn:2.1});}});}
-  const baseSpiral=fireGalacticSpiral;
-  fireGalacticSpiral=function augmentedGalacticSpiral(stacks,echoed=false){baseSpiral(stacks,echoed);triggerSpiralAugment(stacks,echoed);};
-  fireGalacticSpiral.__stackfallAugmentAware=true;
-
-  window.addEventListener('DOMContentLoaded',()=>{
-    if(!fireMeteorDrones.__stackfallAugmentAware){const focusedDrone=fireMeteorDrones;fireMeteorDrones=function augmentAwareFocusedDrones(stacks,echoed=false){const targetId=strongestDroneTarget()?.id;focusedDrone(stacks,echoed);triggerDroneAugment(stacks,echoed,targetId);};fireMeteorDrones.__stackfallAugmentAware=true;}
-    if(!fireGalacticSpiral.__stackfallAugmentAware){const focusedSpiral=fireGalacticSpiral;fireGalacticSpiral=function augmentAwareFocusedSpiral(stacks,echoed=false){focusedSpiral(stacks,echoed);triggerSpiralAugment(stacks,echoed);};fireGalacticSpiral.__stackfallAugmentAware=true;}
-  },{once:true});
-
-  const baseMirror=fireReflector;
-  fireReflector=function augmentedReflector(stacks,echoed=false){const radius=Math.min(weaponRange('mirror'),(210+stacks*24)*weaponSizeMultiplier()),shots=[];if(state.weaponAugments?.mirror&&!echoed){const radius2=radius*radius;for(const p of state.entities.enemyProjectiles){if(!p||p.life<=0)continue;const dx=p.x-player.x,dy=p.y-player.y;if(dx*dx+dy*dy>=radius2)continue;shots.push({x:p.x,y:p.y,r:p.r});if(shots.length>=6)break;}}baseMirror(stacks,echoed);for(const shot of shots){const target=nearestEnemy(shot.x,shot.y,weaponRange('mirror'));if(!target)continue;const base=Math.atan2(target.y-shot.y,target.x-shot.x);for(const offset of[-.13,.13]){const a=base+offset;spawnPlayerProjectile({x:shot.x,y:shot.y,vx:Math.cos(a)*(470+stacks*16),vy:Math.sin(a)*(470+stacks*16),r:Math.max(3.8,(shot.r||4)*.72),life:1.05,maxRange:weaponRange('mirror'),damage:7+stacks*2.2,color:'#d7fff4',pierce:1,source:'mirror-twin-reflect'});}}};
+  // Ion, drone, spiral and mirror augments are owned by their final combat wrappers.
 
   const baseKill=killEnemy;let arcRicochetGuard=false;
   killEnemy=function augmentedArcKill(enemy,opts={}){const wasAlive=enemy&&!enemy.dead,x=enemy?.x||0,y=enemy?.y||0,source=String(opts.source||'');baseKill(enemy,opts);if(arcRicochetGuard||!wasAlive||!enemy?.dead||!state.weaponAugments?.arc||!['arc','arc-return'].includes(source))return;const range=weaponRange('arc'),killRange2=(range*1.25)**2,playerRange2=range*range;let eligible=0;for(const e of state.entities.enemies){if(!e||e.dead||e===enemy)continue;const dx=e.x-x,dy=e.y-y;if(dx*dx+dy*dy>killRange2)continue;const px=e.x-player.x,py=e.y-player.y;if(px*px+py*py<=playerRange2)eligible++;}if(!eligible)return;let pick=Math.floor(Math.random()*eligible),target=null;for(const e of state.entities.enemies){if(!e||e.dead||e===enemy)continue;const dx=e.x-x,dy=e.y-y;if(dx*dx+dy*dy>killRange2)continue;const px=e.x-player.x,py=e.y-player.y;if(px*px+py*py>playerRange2)continue;if(pick--===0){target=e;break;}}if(!target)return;arcRicochetGuard=true;try{fireBoomerang(target,Math.max(1,weaponCount('arc')),false,{x,y},true);}finally{arcRicochetGuard=false;}};
