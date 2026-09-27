@@ -44,17 +44,17 @@ expect('Endless mixes authored stage enemy families by elapsed time without stag
 expect('event detection is announced and upgrade notices remain readable',mapEvents.includes("showBossNotice(m.name,tx('eventDetected'))")&&mapEvents.includes('showTimedResonance(4900)'));
 expect('crashed ship pressure scales with elapsed time',mapEvents.includes('strength:1+Math.min(2.25,elapsed/430)')&&mapEvents.includes('isDreadnoughtCrashEvent'));
 expect('map events announce detection and keep offscreen guidance',mapEvents.includes("showBossNotice(m.name,tx('eventDetected'))")&&mapEvents.includes('edgePoint(dx,dy)'));
-expect('Void Rift exposes five boss forms',bosses.includes("BOSS_POOLS={")&&bosses.includes("void:['maw','oracle','weaver','grave','paradox']"));
+expect('Void Rift exposes five boss forms',bossCatalog.includes("BOSS_POOLS={")&&bossCatalog.includes("void:['maw','oracle','weaver','grave','paradox']"));
 
 expect('Prism keeps 1 second non-damaging acquisition line',prism.includes('PRISM_ACQUISITION_SECONDS=1.0')&&prism.includes('syncPrismAimBeams')&&prism.includes('if(lock.windup>0)')&&prism.includes('return;}'));
 expect('Prism flashes when attack begins rather than blinking during aim',prism.includes('beginPrismAttack')&&prism.includes('lock.attackFlash=.22')&&prism.includes('prismAttackStartOrbitFlash'));
 
-expect('normal Bulwark uses segmented armor instead of a single hex',targeting.includes('plateCount=bulwarkN>=5?8:bulwarkN>=3?7:6')&&targeting.includes('for(let i=0;i<plateCount;i++'));
-expect('normal Comet Lance visibly winds up before high-speed launch',guidance.includes('COMET_WINDUP_MS=190')&&guidance.includes('stackfallDrawCometWindups')&&guidance.includes('scheduleWeaponAction(COMET_WINDUP_MS'));
-expect('Comet Multiplicity shares the same windup instead of firing ahead',endgame.includes('stackfallCometWindupDelayMs')&&endgame.includes('stackfallAddCometWindup'));
-expect('WebGL mode preserves visible Comet windup',gpu.includes('stackfallDrawCometWindups'));
-expect('normal Boomerang changes lunar phase outbound and return',entities.includes('function boomerangMoonPhase')&&entities.includes("p?.stage==='return'")&&entities.includes('drawMoonDisc'));
-expect('awakened Lunar Return also changes phase on return',awakening.includes("p.stage==='return'")&&awakening.includes('p.awMoonPhase=1-.86*clamp(p.returnLife/1.15,0,1)'));
+expect('normal Bulwark uses segmented armor instead of a single hex',read('src/canonical-weapon-visuals.js').includes('barrierSegmentPath')&&read('src/canonical-weapon-visuals.js').includes('canonicalDefenseBarrier'));
+expect('normal Comet Lance fires immediately',guidance.includes('fireComet=function rangedCometVolley')&&!guidance.includes('COMET_WINDUP_MS')&&!guidance.includes('stackfallAddCometWindup'));
+expect('Comet Multiplicity has no awakening windup',!endgame.includes('stackfallCometWindupDelayMs')&&!endgame.includes('stackfallAddCometWindup')&&endgame.includes('multiplicityComet'));
+expect('Final Comet owns the sole charge path',!gpu.includes('stackfallDrawCometWindups')&&awakening.includes("kind:'comet-charge'")&&awakening.includes('scheduleWeaponAction(220'));
+expect('normal Boomerang retains its crescent throughout the route',!entities.includes('boomerangMoonPhase')&&entities.includes('phase=.14')&&entities.includes('drawMoonDisc'));
+expect('awakened Lunar Return changes phase on return',awakening.includes("p.stage='return'")&&awakening.includes('p.awMoonPhase=1-.86*clamp(p.returnLife/1.15,0,1)'));
 
 expect('damage results include timeline series and per-series toggles',damage.includes('damageTrend')&&damage.includes('damageTrendHidden'));
 expect('runtime keeps explicit x1 and x2 combat speed control',runtimeControls.includes("speed.textContent=state.gameSpeed===2?'×2':'×1'")&&runtimeControls.includes('stackfallGameSpeed'));

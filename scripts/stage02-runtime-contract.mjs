@@ -1,3 +1,4 @@
+import {stageDefinition,stageHazardsWork,stageWorldRenderer} from './stage-contract-fixture.mjs';
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read('src/stage02-runtime.js'),shared=read('src/stage-runtime.js'),bosses=read('src/bosses.js'),entities=read('src/render-entities.js'),elite=read('src/elite-renderers.js'),realm=read('src/realm-backgrounds.js'),space=read('src/render-space.js'),lang=read('src/language-pack.js');
@@ -8,7 +9,7 @@ const checks=[
  ['Stage 2 introduces Nebula Wisp while reusing the established roster',catalog.includes("{id:'nebula-wisp',type:'ranged'")&&['shardling','dart','bombardier','bulwark'].every(id=>catalog.includes("id:'"+id+"'"))],
  ['Stage 2 owns its fixed incident timeline',[65,120,185,250,295,330].every(n=>catalog.includes('at:'+n))],
  ['Stage 2 is a registered adapter with no wrapper chain',runtime.includes("stackfallRegisterStageRuntime('stage-02'")&&!runtime.includes('updateSpawning=function')&&!runtime.includes('resetGame=function')&&!runtime.includes('window.updateMapEvents=function')],
- ['Stage 2 has its own nebula-space environment',runtime.includes("theme:'stage-02'")&&realm.includes('function drawStage02Background')&&space.includes('/^stage-\\d{2}$/')],
+ ['Stage 2 has its own nebula-space environment',runtime.includes("theme:'stage-02'")&&stageWorldRenderer(2,realm)&&space.includes('/^stage-\\d{2}$/')],
  ['Nebula Wisp has a dedicated common-enemy silhouette',entities.includes("v==='nebula-wisp'")],
  ['Nebula Heart has a dedicated boss silhouette',elite.includes("f==='nebula-heart'")],
  ['Nebula Heart uses the shared stage-boss dispatcher',bosses.includes("enemy.kind==='stage-boss'&&typeof window.updateStageBossSkill==='function'")&&shared.includes('window.updateStageBossSkill=function')&&runtime.includes("eventVariant:'stage02-heart'")],

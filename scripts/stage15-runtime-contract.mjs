@@ -1,3 +1,4 @@
+import {stageDefinition,stageHazardsWork,stageWorldRenderer} from './stage-contract-fixture.mjs';
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read('src/stage15-runtime.js'),entities=read('src/render-entities.js'),elite=read('src/elite-renderers.js'),realm=read('src/realm-backgrounds.js'),lang=read('src/language-pack.js');
@@ -8,7 +9,7 @@ const checks=[
  ['Stage 15 boss follows the authored 12-minute operation',catalog.includes("boss:{id:'multiplex-engine',spawnAt:720")&&catalog.includes("at:720,kind:'boss',variant:'multiplex-engine'")],
  ['Stage 15 introduces Packet Lancer',catalog.includes("id:'packet-lancer'")&&runtime.includes("'packet-lancer':{")&&entities.includes("v==='packet-lancer'")],
  ['Stage 15 owns its fixed signal incidents',['multiplex-lanes','burst-switch','checksum-storm'].every(x=>catalog.includes(x))&&runtime.includes("variant==='burst-switch'")&&runtime.includes("variant==='checksum-storm'")&&runtime.includes("tr('stage15.event.multiplex')")],
- ['Stage 15 has a dedicated environment and boss',realm.includes('function drawStage15Background')&&elite.includes("f==='multiplex-engine'")],
+ ['Stage 15 has a dedicated environment and boss',stageWorldRenderer(15,realm)&&elite.includes("f==='multiplex-engine'")],
  ['Stage 15 unlocks missile while preserving currency progression',block.includes("{type:'weapon',key:'missile'}")&&block.includes("key:'stardust'")&&block.includes("key:'coreShard'")],
  ['Stage 15 adapter loads after Stage 14',index.indexOf('src/stage14-runtime.js')<index.indexOf('src/stage15-runtime.js')],
  ['Stage 15 combat copy exists',lang.includes("'stage15.boss'")&&lang.includes("'stage15.objective.boss'")]

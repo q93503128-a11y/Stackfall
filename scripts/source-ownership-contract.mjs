@@ -32,7 +32,7 @@ function javascriptSources(root='src'){
   const walk=dir=>{for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isDirectory())walk(file);else if(entry.isFile()&&entry.name.endsWith('.js'))out.push({file:file.replaceAll('\\','/'),text:read(file)});}};
   walk(root);return out;
 }
-const forbiddenBalanceAssignments=javascriptSources().filter(({file,text})=>file!=='src/progression-expansion.js'&&(/\b(?:damageMult|hasteMult)\s*=\s*function\b/.test(text)||/window\.(?:chainDamageBonus|chainDurationMultiplier|weaponCycleMultiplier)\s*=/.test(text)));
+const forbiddenBalanceAssignments=javascriptSources().filter(({file,text})=>!['src/progression-expansion.js','src/meta-upgrades.js'].includes(file)&&(/\b(?:damageMult|hasteMult)\s*=\s*function\b/.test(text)||/window\.(?:chainDamageBonus|chainDurationMultiplier|weaponCycleMultiplier)\s*=/.test(text)));
 
 const checks=[];
 const expect=(group,name,condition)=>{if(selected==='all'||selected===group)checks.push([group,name,Boolean(condition)]);};
@@ -64,14 +64,14 @@ expect('prism','prism player text is synchronized at runtime',core.includes('표
 expect('prism','obsolete prism switching and values removed',!bootstrap.includes('더 가까운 적이 들어오면')&&!design.includes('더 가까운 적이 들어오면 모든 프리즘')&&!bootstrap.includes('최대 출력 ×3.45')&&!bootstrap.includes('최대 출력 ×3.65')&&!auditUi.includes("n>=6?'3.65'"));
 expect('prism','old lower smoke values are not source truth',browserSmoke.includes('stressed.prism')||browserSmoke.includes('prism'));
 
-expect('targeting','manual aim and farthest boomerang owner',targeting.includes('id="manualAim"')&&targeting.includes("if(key==='arc')return farthestWeaponTarget")&&targeting.includes('cursorD2+row.d2*.002')&&targeting.includes('drawPlayerWithManualAim'));
+expect('targeting','manual aim and farthest boomerang owner',targeting.includes('id="manualAim"')&&targeting.includes("if(key==='arc')return farthestWeaponTarget")&&targeting.includes('cursorD2+d2*.002')&&targeting.includes('drawPlayerWithManualAim'));
 expect('targeting','manual aim survives settings bootstrap save',settings.includes('GAME_SETTINGS.manualAim=saved.manualAim===true')&&settings.includes('saveGameSettings();')&&targeting.includes('GAME_SETTINGS.manualAim'));
 expect('targeting','magnet attraction speed owner',targeting.includes('pullSpeed=1+magnetStacks*.22')&&core.includes('끌어오는 속도 증가')&&bootstrap.includes('끌어오는 속도 증가'));
 expect('targeting','vault elite exception owner',targeting.includes('vaultDuringEliteEncounters')&&targeting.includes("enemy.type='vault-elite'")&&wiki.includes('보스나 중간보스가 살아 있어도'));
 expect('targeting','multiplicity functionality stays focused without player-facing TMI',endgame.includes('homingTargetId:target.id')&&!endgame.includes('const multiplicityTargets=')&&endgame.includes("desc:'일부 장비의 동시 공격 수 +1.'")&&!endgame.includes('추가 공격체는 원본과 같은 적을 노린다')&&weapons.includes('function fireIonChain'));
 expect('targeting','multiplicity max is two and event gated',endgame.includes('max:2,eventOnly:true')&&endgame.includes("Math.min(2,passiveStacks('multiplicity'))")&&events.includes('PASSIVES.multiplicity.max'));
 expect('targeting','rail final owner keeps parallel direction and boss priority',community.includes('function railParallelOffsets')&&community.includes('baseCount=clamp(Math.floor(n),1,6)')&&community.includes('count=baseCount+extra')&&community.includes('nearestBossInRailRange')&&community.includes("manual?nearestWeaponTarget('rail')")&&!community.includes("source:'rail-cross'"));
-expect('targeting','late focused wrappers preserve augment owners',difficulty.includes('function triggerDroneAugment')&&difficulty.includes('function triggerSpiralAugment')&&difficulty.includes('__stackfallAugmentAware')&&difficulty.includes("window.addEventListener('DOMContentLoaded'")&&!difficulty.includes('queueMicrotask'));
+expect('targeting','final combat wrappers own drone and spiral augments without late rewrapping',read('src/weapon-awakening-effects-a8-a13.js').includes('function fallingStarFleetDrones')&&read('src/weapon-awakening-effects-a14-a19.js').includes('function genesisGalaxyFire')&&!difficulty.includes('__stackfallAugmentAware'));
 
 expect('docs','concise chain copy stays player facing',core.includes('연쇄 유지시간과 연쇄 피해 증가')&&bootstrap.includes('연쇄 유지시간과 연쇄 피해 증가')&&progression.includes("desc:'30연쇄마다 최대 체력 비례 회복.'")&&!core.includes('1중첩 효과는 낮지만')&&!bootstrap.includes('A modest first stack')&&!progression.includes('성장률')&&!progression.includes('낮지만'));
 expect('docs','player-facing detail UI excludes implementation commentary',!auditUi.includes('현재 복제 확률')&&!auditUi.includes('현재 주기 단축')&&!auditUi.includes('추가 흡인 속도')&&!auditUi.includes('sanitizeWorldEventCopy')&&!endgame.includes('현재 ${stat(card.dataset.passiveKey)}')&&!community.includes('현재 ${'));
@@ -82,7 +82,7 @@ expect('docs','ledger pause rule documented',design.includes('능력 장부를 �
 expect('docs','apex ignores build and uses appearance escalation',design.includes('플레이어 레벨·무기·패시브 성장량을 읽지 않음')&&wiki.includes('등장 횟수만으로 누적 복리 강화')&&!catalog.includes('apexPlayerGrowthScale'));
 expect('docs','apex legacies remain active and shield free',design.includes('보호막 충전형이 아님')&&wiki.includes('보호막 충전형 유산이 아니다')&&bosses.includes('function updateConstellationLegacy')&&!rewards.includes('보호막 36'));
 expect('docs','continuous beam performance fix documented',readme.includes('지속 광선 렉 수정')&&design.includes('지속 광선 객체 제한')&&bosses.includes('beam.visual=stressed?.070:.040'));
-expect('docs','combat multiplier assignments have one owner',forbiddenBalanceAssignments.length===0);
+expect('docs','combat multipliers delegate from meta upgrades to canonical progression',forbiddenBalanceAssignments.length===0&&read('src/meta-upgrades.js').includes("return baseDamageMult()*(1+level('output')*.03)")&&read('src/meta-upgrades.js').includes("baseHasteMult()*(1-level('cycle')*.02)"));
 expect('docs','audit UI does not redefine combat balance',!auditUi.includes('hasteMult=function')&&!auditUi.includes('damageMult=function')&&!auditUi.includes('window.chainDamageBonus=')&&!auditUi.includes('window.chainDurationMultiplier='));
 
 expect('ci','all contracts are wired into CI',['polish-contract-check.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','source-ownership-contract.mjs'].every(name=>validate.includes(name)));

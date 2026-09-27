@@ -1,3 +1,4 @@
+import {stageDefinition,stageHazardsWork,stageWorldRenderer} from './stage-contract-fixture.mjs';
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const catalog=read('src/stage-catalog.js'),meta=read('src/meta-progression.js'),runtime=read('src/stage-runtime.js'),bosses=read('src/bosses.js'),render=read('src/render.js'),entities=read('src/render-entities.js'),elite=read('src/elite-renderers.js'),realm=read('src/realm-backgrounds.js'),space=read('src/render-space.js'),index=read('index.html'),iface=read('src/interface.js'),feature=read('src/feature-pack.js'),progression=read('src/progression-expansion.js'),lang=read('src/language-pack.js');
@@ -13,7 +14,7 @@ const checks=[
  ['stage adapters register their own id and theme only',authoredStageIds.slice(1).every(id=>{const source=adapterById.get(id)||'',refs=[...new Set(source.match(/stage-\d{2}/g)||[])];return source.includes("stackfallRegisterStageRuntime('"+id+"'")&&source.includes("theme:'"+id+"'")&&refs.every(ref=>ref===id);})],
  ['stage adapters register instead of wrapping shared systems',runtime.includes("registerStageRuntime('stage-01'")&&authoredStageIds.slice(1).every(id=>(adapterById.get(id)||'').includes("stackfallRegisterStageRuntime('"+id+"'"))],
  ['stage runs bypass Endless spawning and Apex scheduling',runtime.includes('if(isStage()){updateStage(dt);return;}')&&runtime.includes('state.nextApexAt=Infinity')],
- ['stage runtime schedules minibosses at one threshold and two on constellation finales',runtime.includes("Number(stage?.order)%6===0?[.32,.62]:[.46]")&&runtime.includes("enemy.kind='stage-mini'")&&runtime.includes('spawnStageMiniboss(index)')],
+ ['stage runtime schedules minibosses at one threshold and two on constellation finales',runtime.includes("Number(stage?.order)%6===0?[.32,.62]:[.46]")&&runtime.includes("member.kind='stage-mini'")&&runtime.includes('spawnStageMiniboss(index)')],
  ['stage spawning uses a bounded performance-aware budget',runtime.includes('function stageSpawnBudget')&&runtime.includes("tier===2?.80:tier===1?.92:1")&&runtime.includes('Math.min(2,Math.floor(Number(base.count)||1))')&&runtime.includes('run.lastSpawnBudget')],
  ['stage final bosses explicitly separate stage constellation and Apex tiers',runtime.includes("stageBossTier:Number(stage.order)%6===0?'constellation':'stage'")&&runtime.includes("if(e.stageBossTier==='constellation'){e.hp*=1.18")],
  ['boss countdown is hidden before the boss actually exists',runtime.includes("if(!boss){objective.classList.add('hidden');return;}")],
@@ -25,7 +26,7 @@ const checks=[
  ['locked weapons remain filtered from acquisition pools',iface.includes('stackfallIsWeaponUnlocked')&&feature.includes('stackfallIsWeaponUnlocked')&&progression.includes('stackfallIsWeaponUnlocked')],
  ['Stage 1 enemy silhouettes remain dedicated',entities.includes('function drawStageEnemyBody')&&['shardling','dart','bombardier','bulwark'].every(id=>entities.includes("v==='"+id+"'"))],
  ['Collapse Warden has a dedicated boss silhouette',elite.includes("f==='collapse-warden'")],
- ['stage realm themes survive realm normalization',runtime.includes("theme:'stage-01'")&&realm.includes("theme==='stage-01'")&&space.includes('/^stage-\\d{2}$/')],
+ ['stage realm themes survive realm normalization',runtime.includes("theme:'stage-01'")&&stageWorldRenderer(1,realm)&&space.includes('/^stage-\\d{2}$/')],
  ['Stage clear UI and cinematic copy are localized',runtime.includes('stageClear.targetDown')&&(lang.match(/'stageClear\.targetDown'/g)||[]).length>=6],
  ['shared stage runtime loads after final render spawning override',index.indexOf('src/render.js')<index.indexOf('src/stage-runtime.js')]
 ];

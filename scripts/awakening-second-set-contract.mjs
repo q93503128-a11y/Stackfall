@@ -16,7 +16,7 @@ expect('Fleet multiplicity stays inside one attack formation',source.includes("c
 expect('Terminus Railgun triggers every fourth non-echo volley',source.includes('player.awRailCycle%4===0')&&source.includes('fireTerminusRail')&&source.includes('scheduleWeaponAction(300'));
 expect('Terminus path preserves Orbital Fracture',source.includes("for(const[index,f]of[.30,.56,.82].entries())")&&source.includes("source")&&source.includes("'rail-fracture'"));
 expect('Terminus multiplicity adds auxiliary rails without extra signature counters',source.includes('const extra=multiplicity()')&&source.includes("source")&&source.includes("'rail-multiplicity'"));
-expect('A8-A13 implementation state is canonicalized in design',design.includes('A1~A13')&&design.includes('A14~A19')&&design.includes('A8 성좌 왕관')&&design.includes('A13 종언 레일포'));
+expect('A8-A13 implementation state is canonicalized in design',design.includes('A1~A19')&&design.includes('A8 성좌 왕관')&&design.includes('A13 종언 레일포'));
 for(const name of fail)console.error('FAIL',name);
 console.log('Awakening A8-A13 contract failures='+fail.length);
 if(fail.length)process.exit(1);

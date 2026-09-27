@@ -1,3 +1,4 @@
+import {stageDefinition,stageHazardsWork,stageWorldRenderer} from './stage-contract-fixture.mjs';
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read('src/stage17-runtime.js'),entities=read('src/render-entities.js'),elite=read('src/elite-renderers.js'),realm=read('src/realm-backgrounds.js'),lang=read('src/language-pack.js');
@@ -8,7 +9,7 @@ const checks=[
  ['Stage 17 boss follows the authored 14-minute operation',catalog.includes("boss:{id:'protocol-custodian',spawnAt:840")&&catalog.includes("at:840,kind:'boss',variant:'protocol-custodian'")],
  ['Stage 17 introduces Cipher Warden',catalog.includes("id:'cipher-warden'")&&runtime.includes("'cipher-warden':{")&&entities.includes("v==='cipher-warden'")],
  ['Stage 17 owns its fixed signal incidents',['parity-mortar','cipher-walls','protocol-seal'].every(x=>catalog.includes(x))&&runtime.includes("variant==='parity-mortar'")&&runtime.includes("variant==='protocol-seal'")&&runtime.includes("tr('stage17.event.cipherWalls')")],
- ['Stage 17 has a dedicated environment and boss',realm.includes('function drawStage17Background')&&elite.includes("f==='protocol-custodian'")],
+ ['Stage 17 has a dedicated environment and boss',stageWorldRenderer(17,realm)&&elite.includes("f==='protocol-custodian'")],
  ['Stage 17 unlocks gate while preserving currency progression',block.includes("{type:'weapon',key:'gate'}")&&block.includes("key:'stardust'")&&block.includes("key:'coreShard'")],
  ['Stage 17 adapter loads after Stage 16',index.indexOf('src/stage16-runtime.js')<index.indexOf('src/stage17-runtime.js')],
  ['Stage 17 combat copy exists',lang.includes("'stage17.boss'")&&lang.includes("'stage17.objective.boss'")]

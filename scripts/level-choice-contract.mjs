@@ -3,7 +3,7 @@ const read=p=>fs.readFileSync(p,'utf8');
 const settings=read('src/settings.js'),feature=read('src/feature-pack.js'),progression=read('src/progression-expansion.js'),meta=read('src/meta-progression.js'),catalog=read('src/stage-catalog.js'),index=read('index.html');
 const checks=[
  ['auto level choice setting persists',settings.includes("GAME_SETTINGS.autoLevelChoice=saved.autoLevelChoice===true")&&settings.includes("updateDisplaySetting('autoLevelChoice',settingsUi.autoLevelChoice.checked)")],
- ['final stable choice owner honors auto selection before showing overlay',progression.includes("state.mode='choice';if(GAME_SETTINGS.autoLevelChoice===true){selectChoice(choices[0]);return;}")],
+ ['final stable choice owner honors auto selection before showing overlay',progression.includes("state.mode='choice';if(GAME_SETTINGS.autoLevelChoice===true){window.stackfallShowAutoChoice?.(choices[0]);selectChoice(choices[0]);return;}")],
  ['auto selection still uses normal safe choice application',progression.includes('selectChoice=function selectChoiceStable')&&progression.includes('applyChoiceSafely(c)')&&progression.includes('finishChoiceSafely()')],
  ['feature-pack random pool rejects locked weapons',feature.includes("w.starter===false||(window.stackfallIsWeaponUnlocked&&!window.stackfallIsWeaponUnlocked(key))")],
  ['stable normalizer rejects injected locked weapon choices',progression.includes("c.kind==='weapon'&&window.stackfallIsWeaponUnlocked&&!window.stackfallIsWeaponUnlocked(c.key)")],

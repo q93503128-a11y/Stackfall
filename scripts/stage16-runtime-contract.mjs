@@ -1,3 +1,4 @@
+import {stageDefinition,stageHazardsWork,stageWorldRenderer} from './stage-contract-fixture.mjs';
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const index=read('index.html'),catalog=read('src/stage-catalog.js'),runtime=read('src/stage16-runtime.js'),entities=read('src/render-entities.js'),elite=read('src/elite-renderers.js'),realm=read('src/realm-backgrounds.js'),lang=read('src/language-pack.js');
@@ -7,8 +8,8 @@ const checks=[
  ['Stage 16 follows Stage 15 in constellation three',catalog.includes("id:'stage-16'")&&catalog.includes("constellationId:'constellation-03'")&&catalog.includes("requirements:{previous:'stage-15'}")],
  ['Stage 16 boss follows the authored 13-minute operation',catalog.includes("boss:{id:'null-beacon',spawnAt:780")&&catalog.includes("at:780,kind:'boss',variant:'null-beacon'")],
  ['Stage 16 deliberately reuses established Silent Array enemies',!catalog.includes("stage16.enemy.")&&['relay-mite','jammer-kite','packet-lancer'].every(x=>runtime.includes(x))],
- ['Stage 16 owns its fixed signal incidents',['dead-zone','blind-cross','null-sweep'].every(x=>catalog.includes(x)&&runtime.includes(x))],
- ['Stage 16 has a dedicated environment and boss',realm.includes('function drawStage16Background')&&elite.includes("f==='null-beacon'")],
+ ['Stage 16 owns its fixed signal incidents',stageHazardsWork(16,['dead-zone','blind-cross','null-sweep'])],
+ ['Stage 16 has a dedicated environment and boss',stageWorldRenderer(16,realm)&&elite.includes("f==='null-beacon'")],
  ['Stage 16 uses currency progression without inventing a weapon',!block.includes("type:'weapon'")&&block.includes("key:'stardust'")&&block.includes("key:'coreShard'")],
  ['Stage 16 adapter loads after Stage 15',index.indexOf('src/stage15-runtime.js')<index.indexOf('src/stage16-runtime.js')],
  ['Stage 16 combat copy exists',lang.includes("'stage16.boss'")&&lang.includes("'stage16.objective.boss'")]

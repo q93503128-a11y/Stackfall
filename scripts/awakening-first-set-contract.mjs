@@ -12,7 +12,7 @@ expect('Nebula Starcaster tracks consecutive hits on one target',source.includes
 expect('Nebula Starcaster signature charge accepts only original caster hits',source.includes("awake('ember')&&wasAlive&&source==='ember'")&&!source.includes("['ember','echo-star','ember-multiplicity'].includes(source)"));
 expect('Nebula Starcaster signature damage is guarded against recursive charge',source.includes('emberSignatureGuard=true')&&source.includes('!emberSignatureGuard'));
 
-expect('Celestial Bastion counterwave is tied to a real shield break',source.includes('beforeShield>0&&player.shield<=0')&&source.includes("source:'barrier-lance'"));
+expect('Celestial Bastion counterwave is tied to a real shield break',source.includes('beforeShield>0&&player.shield<=0')&&source.includes("'barrier-lance',{shake:false}"));
 expect('Binary Collapse excludes Multiplicity wells from the paired signature',source.includes("filter(w=>w&&!w.multiplicity)")&&source.includes('w.awBinaryMerged=true'));
 expect('Final Comet Lance counts only non-echo original casts',source.includes("if(!awake('comet')||echoed||!target)return")&&source.includes('player.awCometCycle%4!==0')&&source.includes('awakeningChild:true'));
 expect('Lunar Return has a bounded lunar orbit and one return ripple',source.includes("p.stage='lunarOrbit'")&&source.includes('p.awOrbitDuration=.48')&&source.includes('!p.awMoonRippleDone'));
