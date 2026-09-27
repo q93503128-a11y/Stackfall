@@ -161,8 +161,8 @@ export function awakeningRuntimeChecks(){
   const lunar={r:12,side:1,color:'#69ffe0',stacks:6,stage:'outbound',stageDuration:1,stageTime:0};
   drawMoonDisc(lunar,{x:100,y:100},0);const initial=JSON.stringify(outlines.splice(0));
   lunar.stageTime=1;drawMoonDisc(lunar,{x:100,y:100},0);const outbound=JSON.stringify(outlines.splice(0));
-  lunar.stage='return';lunar.returnLife=.5;drawMoonDisc(lunar,{x:100,y:100},0);ctx.arc=arc;
-  check(initial===outbound&&initial===JSON.stringify(outlines),'base boomerang leaked lunar phase changes');
+  lunar.stage='return';lunar.returnLife=.5;drawMoonDisc(lunar,{x:100,y:100},0);const returning=JSON.stringify(outlines);ctx.arc=arc;
+  check(initial!==outbound&&outbound!==returning&&initial!==returning,'base boomerang moon phase progression was lost');
   for(const aw of [false,true]){
     const target=setup('comet',6,aw);fireComet(target,6);
     check(state.entities.projectiles.some(p=>p.source==='comet'&&!p.awakeningChild),'base comet did not launch immediately');
