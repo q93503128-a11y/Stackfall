@@ -140,7 +140,7 @@ Object.assign(TEXT.fr,{
 Object.assign(TEXT.ko,{
   'profile.local':'LOCAL PILOT','profile.name':'개척자','profile.clears':'클리어',
   'menu.upgradeKicker':'CORE DEVELOPMENT','menu.upgrade':'코어 성장','menu.upgradeDesc':'재화를 사용해 영구 능력과 장착 슬롯을 확장합니다.',
-  'currency.stardust':'성진','currency.coreShard':'코어 조각','currency.earned':'획득 재화',
+  'currency.stardust':'성진','currency.coreShard':'코어 조각','currency.awakeningCore':'각성 코어','currency.earned':'획득 재화',
   'upgrade.kicker':'CORE DEVELOPMENT','upgrade.title':'코어 성장','upgrade.subtitle':'중앙 코어를 중심으로 영구 성장을 확장합니다.','upgrade.level':'레벨','upgrade.buy':'업그레이드','upgrade.maxed':'최대 레벨','upgrade.insufficient':'재화가 부족합니다.','upgrade.requires':'선행 업그레이드 필요 · {n}',
   'upgrade.vitality.name':'생명 코어','upgrade.vitality.desc':'코어 외피를 강화해 모든 런의 최대 체력을 높인다.','upgrade.vitality.effect':'영구 최대 체력 +{n}%',
   'upgrade.output.name':'출력 증폭기','upgrade.output.desc':'기본 출력 회로를 증폭해 모든 공격 피해를 높인다.','upgrade.output.effect':'영구 피해 +{n}%',
@@ -168,7 +168,7 @@ Object.assign(TEXT.en,{
 Object.assign(TEXT.ja,{
   'profile.local':'LOCAL PILOT','profile.name':'開拓者','profile.clears':'クリア',
   'menu.upgradeKicker':'CORE DEVELOPMENT','menu.upgrade':'コア成長','menu.upgradeDesc':'資源を使って恒久能力と装備スロットを拡張します。',
-  'currency.stardust':'星塵','currency.coreShard':'コア欠片','currency.earned':'獲得資源',
+  'currency.stardust':'星塵','currency.coreShard':'コア欠片','currency.awakeningCore':'覚醒コア','currency.earned':'獲得資源',
   'upgrade.kicker':'CORE DEVELOPMENT','upgrade.title':'コア成長','upgrade.subtitle':'中央コアを中心に恒久成長を拡張します。','upgrade.level':'レベル','upgrade.buy':'強化','upgrade.maxed':'最大レベル','upgrade.insufficient':'資源が不足しています。','upgrade.requires':'前提強化 · {n}',
   'upgrade.vitality.name':'生命コア','upgrade.vitality.desc':'コア外殻を強化し、全ランの最大体力を増加。','upgrade.vitality.effect':'恒久最大体力 +{n}%',
   'upgrade.output.name':'出力増幅器','upgrade.output.desc':'基礎出力回路を増幅し、全攻撃のダメージを増加。','upgrade.output.effect':'恒久ダメージ +{n}%',
@@ -182,7 +182,7 @@ Object.assign(TEXT.ja,{
 Object.assign(TEXT['zh-CN'],{
   'profile.local':'LOCAL PILOT','profile.name':'开拓者','profile.clears':'通关',
   'menu.upgradeKicker':'CORE DEVELOPMENT','menu.upgrade':'核心成长','menu.upgradeDesc':'使用资源强化永久能力并扩展装备槽。',
-  'currency.stardust':'星尘','currency.coreShard':'核心碎片','currency.earned':'获得资源',
+  'currency.stardust':'星尘','currency.coreShard':'核心碎片','currency.awakeningCore':'觉醒核心','currency.earned':'获得资源',
   'upgrade.kicker':'CORE DEVELOPMENT','upgrade.title':'核心成长','upgrade.subtitle':'围绕中央核心扩展永久成长。','upgrade.level':'等级','upgrade.buy':'升级','upgrade.maxed':'已满级','upgrade.insufficient':'资源不足。','upgrade.requires':'需要前置升级 · {n}',
   'upgrade.vitality.name':'生命核心','upgrade.vitality.desc':'强化核心外壳，提高每次作战的最大生命。','upgrade.vitality.effect':'永久最大生命 +{n}%',
   'upgrade.output.name':'输出增幅器','upgrade.output.desc':'增强基础输出回路，提高所有攻击伤害。','upgrade.output.effect':'永久伤害 +{n}%',
