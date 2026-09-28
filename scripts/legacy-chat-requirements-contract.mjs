@@ -51,6 +51,7 @@ expect('Prism flashes when attack begins rather than blinking during aim',prism.
 
 expect('normal Bulwark uses segmented armor instead of a single hex',read('src/canonical-weapon-visuals.js').includes('barrierSegmentPath')&&read('src/canonical-weapon-visuals.js').includes('canonicalDefenseBarrier'));
 expect('developer slot editor can explicitly refresh live slot state',read('src/dev-tools.js').includes('id="devRefreshSlots"')&&read('src/dev-tools.js').includes('const refreshDevPanel=')&&read('src/dev-tools.js').includes('data-slot-refresh'));
+expect('developer panel has F8 F10 toggle aliases and a special reward launcher',read('src/dev-tools.js').includes("event.code==='F8'||event.code==='F10'")&&read('src/dev-tools.js').includes('id="devReward"')&&read('src/dev-tools.js').includes('function openSpecialReward()')&&read('src/dev-tools.js').includes('window.updateRewardQueue?.()'));
 expect('normal Comet Lance fires immediately',guidance.includes('fireComet=function rangedCometVolley')&&!guidance.includes('COMET_WINDUP_MS')&&!guidance.includes('stackfallAddCometWindup'));
 expect('Comet Multiplicity has no awakening windup',!endgame.includes('stackfallCometWindupDelayMs')&&!endgame.includes('stackfallAddCometWindup')&&endgame.includes('multiplicityComet'));
 expect('Final Comet owns the sole charge path',!gpu.includes('stackfallDrawCometWindups')&&awakening.includes("kind:'comet-charge'")&&awakening.includes('scheduleWeaponAction(340')&&awakening.includes('pierce:999'));
