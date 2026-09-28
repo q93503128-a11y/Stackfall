@@ -182,7 +182,7 @@
     if(!enemy||enemy.dead)return;
     enemy.stageSignatureCd=(Number.isFinite(enemy.stageSignatureCd)?enemy.stageSignatureCd:3.2)-dt;
     if(enemy.stageSignatureCd>0)return;
-    const order=Math.max(1,Number(api?.stage?.order)||Number(String(enemy.eventKind||'').slice(-2))||1),phase=Math.max(1,Math.min(3,Number(enemy.stagePhase)||1),finale=order%6===0;
+    const order=Math.max(1,Number(api?.stage?.order)||Number(String(enemy.eventKind||'').slice(-2))||1),phase=Math.max(1,Math.min(3,Number(enemy.stagePhase)||1)),finale=order%6===0;
     enemy.stageSignatureCd=Math.max(finale?4.6:5.8,(finale?6.0:7.4)-phase*.46);
     stageBossSignature(enemy,api);
   }
