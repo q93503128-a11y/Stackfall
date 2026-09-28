@@ -12,11 +12,11 @@ for(const key of keys)assert(effects.some(source=>source.includes(`awake('${key}
 assert(read('src/weapon-awakening.js').includes('stackfallIsWeaponAwakened=key=>!!state.awakenedWeapons?.[key]'));
 assert(!/stackfall(?:Add|Draw)CometWindup|COMET_WINDUP_MS/.test(read('src/combat-guidance-refinement.js')));
 assert(!/stackfallCometWindupDelayMs|stackfallAddCometWindup/.test(read('src/endgame-balance-expansion.js')));
-assert(effects[0].includes("player.awCometCycle%4!==0")&&effects[0].includes('scheduleWeaponAction(220'));
+assert(effects[0].includes("player.awCometCycle%4!==0")&&effects[0].includes('scheduleWeaponAction(340'));
 const dev=read('src/dev-tools.js');
 assert(dev.includes('clearPendingCombatActions();'));
 assert(dev.includes('id="devWeaponSlots"')&&dev.includes('assignSlot:assignDevSlot')&&dev.includes('setSlotAwakening:setDevSlotAwakening'),'DEV must expose per-slot loadout and awakening controls');
-assert(dev.includes('stackfall.devInfiniteCurrency')&&dev.includes('stackfallSpendCurrency=cost=>window.stackfallDevInfiniteCurrency===true?true'),'DEV infinite currency must bypass spend only inside developer mode');
+assert(dev.includes('stackfall.devInfiniteCurrency')&&dev.includes('stackfallSpendCurrency=cost=>window.stackfallDevInfiniteCurrency===true?true'),'DEV infinite currency must bypass spend only inside developer mode');\nassert(dev.includes("params.get('dev')==='1'")&&!dev.includes("localStorage.getItem('stackfall.devMode')"),'DEV UI must require the explicit current URL query');\nconst metaProgression=read('src/meta-progression.js');assert(metaProgression.includes("DEV_PROFILE=new URLSearchParams(location.search).get('dev')==='1")&&!metaProgression.includes("localStorage.getItem('stackfall.devMode')"),'developer save profile must not leak onto the normal URL');
 for(const group of ['First','Second','Third'])assert(dev.includes(`stackfallResetAwakening${group}SetCombat`));
 assert(effects[2].includes("baseSpawnGatePulseSet(net);if(!awake('gate')||!net||!Array.isArray(net.pulses))return"));
 assert(!read('src/difficulty-augment-expansion.js').includes('__stackfallAugmentAware'),'no late DOM-ready duplicate augment wrapper');
