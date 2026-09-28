@@ -1,6 +1,7 @@
 (()=>{
   let DEV_PROFILE=false;try{DEV_PROFILE=new URLSearchParams(location.search).get('dev')==='1';}catch{}
   const STORAGE_KEY=DEV_PROFILE?'stackfall.meta.dev.v1':'stackfall.meta.v1';
+  const PROFILE_NAME_KEY='stackfall.profileName.v1';
   window.stackfallMetaStorageProfile=DEV_PROFILE?'developer':'player';
   const INITIAL_WEAPONS=Object.freeze(['blade','ember','bulwark','gravity']);
   const CURRENCY_KEYS=Object.freeze(['stardust','coreShard']);
@@ -12,7 +13,7 @@
   function progressionUnlockedWeapons(clearedStages){const unlocked=new Set(INITIAL_WEAPONS);for(const stage of window.STACKFALL_STAGE_CATALOG||[]){if(!clearedStages.includes(stage.id))continue;for(const reward of stage.rewards||[])if(reward.type==='weapon'&&WEAPONS[reward.key])unlocked.add(reward.key);}return[...unlocked];}
   function load(){
     try{
-      const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+      const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'),sharedProfileName=sanitizeProfileName(localStorage.getItem(PROFILE_NAME_KEY)||saved.profileName);
       const clearedStages=canonicalClearedStages(saved.clearedStages),unlocked=progressionUnlockedWeapons(clearedStages);
       const currencies={stardust:0,coreShard:0,...sanitizeMap(saved.currencies)};
       for(const key of CURRENCY_KEYS)currencies[key]=sanitizeNumber(currencies[key]);
@@ -20,7 +21,7 @@
       for(const key of Object.keys(upgrades))upgrades[key]=sanitizeNumber(upgrades[key]);
       return{
         version:4,
-        profileName:sanitizeProfileName(saved.profileName),
+        profileName:sharedProfileName,
         unlockedWeapons:unlocked,
         clearedStages,
         bestStageTimes:sanitizeMap(saved.bestStageTimes),
@@ -34,8 +35,8 @@
     }
   }
   const meta=load();
-  function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(meta));}catch{}window.renderStackfallMetaUi?.();}
-  function setProfileName(value){meta.profileName=sanitizeProfileName(value);save();return meta.profileName;}
+  function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(meta));if(meta.profileName)localStorage.setItem(PROFILE_NAME_KEY,meta.profileName);}catch{}window.renderStackfallMetaUi?.();}
+  function setProfileName(value){meta.profileName=sanitizeProfileName(value);try{if(meta.profileName)localStorage.setItem(PROFILE_NAME_KEY,meta.profileName);else localStorage.removeItem(PROFILE_NAME_KEY);}catch{}save();return meta.profileName;}
   function isWeaponUnlocked(key){return key==='core'||meta.unlockedWeapons.includes(key);}
   function unlockWeapon(key){
     if(!WEAPONS[key]||isWeaponUnlocked(key))return false;
