@@ -137,7 +137,7 @@
 
   const baseReset=resetGame;
   resetGame=function awakeningReset(){
-    closeScreen();transform.classList.add('hidden');state.awakeningCores=0;state.awakenedWeapons={};state.lastAwakeningCoreCashout=null;syncAwakeningCoreHud();
+    closeScreen();transform.classList.add('hidden');if((state.awakeningCores||0)>0&&state.mode!=='menu'&&state.mode!=='gameover'&&state.mode!=='stageComplete')cashOutAwakeningCores();state.awakeningCores=0;state.awakenedWeapons={};state.lastAwakeningCoreCashout=null;syncAwakeningCoreHud();
     const result=baseReset();renderLoadout();return result;
   };
   const baseMenu=showMainMenu;
