@@ -16,6 +16,8 @@ expect('stage enemy pressure is bounded',runtime.includes('function stageSpawnBu
 expect('stage boss hierarchy is explicit',runtime.includes("stageBossTier:Number(stage.order)%6===0?'constellation':'stage'")&&runtime.includes("if(e.stageBossTier==='constellation'){e.hp*=1.18"));
 expect('background movement uses world parallax',background.includes('TRAVEL_MARKERS')&&background.includes('player.x*parallax')&&background.includes('drawTraversalParallax(theme)'));
 expect('stage battlefields add constellation-specific world structure',background.includes('function drawStageConstellationField')&&background.includes("family=order<=6?'route':order<=12?'bloom':'array'")&&background.includes("drawStageConstellationField(theme)"));
+expect('authored stage landmarks reset their own alpha instead of inheriting faint field opacity',background.includes("g.globalAlpha=tier===2?.56:.84"));
+expect('Silent Array stages use distinct late-game hazard geometries',stageRuntimeSources[12].includes('safe=(wave+2)%count')&&stageRuntimeSources[13].includes('safeRow=(wave+1)%rows')&&stageRuntimeSources[14].includes('lanes=storm?7:5')&&stageRuntimeSources[15].includes('arms=sweep?3:2')&&stageRuntimeSources[16].includes('top=p.y-half,bottom=p.y+half')&&stageRuntimeSources[17].includes('sides=wave>=5?8:6'));
 expect('performance measures once per rendered frame',perf.includes('lastObservedFrameSerial')&&perf.includes('observeSimulationFrame(dt)'));
 expect('large viewports reduce Canvas fill rate',core.includes('pixels>=1300000')&&core.includes('areaScale=!compact&&large?.90:1'));
 expect('large viewports reduce GPU fill rate',gpu.includes('pixels>=1300000')&&gpu.includes('areaScale=!compact&&large?.90:1'));
