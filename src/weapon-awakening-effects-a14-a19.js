@@ -24,13 +24,13 @@
   // A14 — Genesis Galaxy. Counter-Spiral Galaxy is restored for both normal and awakened forms.
   function spiralTarget(){return nearestWeaponTarget('spiral');}
   function spawnSpiralBody(target,n,echoed,arm,arms,step,reverse=false){
-    const size=weaponSizeMultiplier(),direction=reverse?-1:1,galaxyAngle=(state.time||0)*.72+direction*(arm*TAU/Math.max(1,arms)+step*.54),orbit=42+step*11+(arm%2)*6,
+    const size=weaponSizeMultiplier(),direction=reverse?-1:1,galaxyAngle=(state.time||0)*.78+direction*(arm*TAU/Math.max(1,arms)+step*.60),orbit=52+step*14+(arm%2)*7,
       ox=player.x+Math.cos(galaxyAngle)*orbit,oy=player.y+Math.sin(galaxyAngle)*orbit,
       live=target&&!target.dead?target:spiralTarget(),toward=live?Math.atan2(live.y-oy,live.x-ox):player.angle,tangent=galaxyAngle+direction*Math.PI/2,
-      blend=.42+step*.08,a=lerpAngle(tangent,toward,Math.min(.78,blend)),speed=(300+n*18+step*19)*(reverse?.94:1),extra=arm>=Math.max(0,arms-mult());
+      blend=.30+step*.065,a=lerpAngle(tangent,toward,Math.min(.64,blend)),speed=(320+n*19+step*20)*(reverse?.96:1),extra=arm>=Math.max(0,arms-mult());
     spawnPlayerProjectile({
       x:ox,y:oy,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:(4.4+n*.25)*size,
-      life:1.72,maxRange:weaponRange('spiral'),damage:(7+n*2.05)*(echoed?.62:1)*(reverse?.58:1),
+      life:1.82,maxRange:weaponRange('spiral')*1.06,damage:(7+n*2.05)*(echoed?.62:1)*(reverse?.62:1),
       color:echoed?COLORS.pink:reverse?'#c8a9ff':'#e8b8ff',pierce:n>=5?1:0,
       source:echoed?'echo-spiral':reverse?'spiral-counter':extra?'spiral-multiplicity':'spiral-bolt',
       homingTargetId:live?.id,homingReacquire:false,homingTurn:n>=3?1.28:.92,
@@ -61,7 +61,7 @@
   }
   function triggerGenesisGalaxy(n,target){
     if(!target||target.dead)return;
-    const id=target.id,x=target.x,y=target.y,size=weaponSizeMultiplier(),radius=(118+n*7)*size,augment=!!state.weaponAugments?.spiral;
+    const id=target.id,x=target.x,y=target.y,size=weaponSizeMultiplier(),radius=(138+n*8)*size,augment=!!state.weaponAugments?.spiral;
     pushFx({kind:'genesis-form',targetId:id,x,y,r:radius,augment,life:.48,max:.48});
     for(let tick=0;tick<4;tick++)scheduleWeaponAction(90+tick*82,()=>{
       const live=enemyById(id),cx=live?.x??x,cy=live?.y??y,base=(tick/4)*TAU;
@@ -77,18 +77,19 @@
     });
     scheduleWeaponAction(430,()=>{
       const live=enemyById(id),cx=live?.x??x,cy=live?.y??y;
-      areaDamage(cx,cy,82*size,34+n*5.2,'#ffffff','spiral-bolt',{shake:false});
+      areaDamage(cx,cy,94*size,40+n*6.1,'#ffffff','spiral-bolt',{shake:false});
       shockwave(cx,cy,'#f7efff',112*size,.40,3.2);pushFx({kind:'genesis-core',x:cx,y:cy,r:112*size,life:.42,max:.42});audio.weapon?.('spiral',false,1.6);
     });
   }
   const baseFireGalacticSpiral=fireGalacticSpiral;
   fireGalacticSpiral=function genesisGalaxyFire(n,echoed=false){
-    const target=spiralTarget();
-    if(awake('spiral'))fireAwakenedSpiral(n,echoed,false);else baseFireGalacticSpiral(n,echoed);
-    if(!echoed&&state.weaponAugments?.spiral)fireCounterSpiral(n,target);
-    if(!awake('spiral')||echoed)return;
+    const target=spiralTarget(),awakened=awake('spiral');
+    if(!awakened)return baseFireGalacticSpiral(n,echoed)+(state.weaponAugments?.spiral&&!echoed?(fireCounterSpiral(n,target),0):0);
+    fireAwakenedSpiral(n,echoed,false);
+    if(!echoed)scheduleWeaponAction(105,()=>fireAwakenedSpiral(n,false,true));
+    if(echoed)return;
     player.awSpiralCycle=(player.awSpiralCycle||0)+1;
-    if(player.awSpiralCycle%4===0)triggerGenesisGalaxy(n,target||spiralTarget());
+    if(player.awSpiralCycle%3===0)triggerGenesisGalaxy(n,target||spiralTarget());
   };
 
   // A15 — Celestial Mirror Sanctuary. Capture only real enemy shots; echo casts never charge the sanctuary.
@@ -134,12 +135,12 @@
   // A16 — Black-Star Lotus.
   function addLotusField(seed,n,radius,damage){
     const absorbed=Math.max(0,Math.min(8,seed.absorbed||0)),power=Math.max(.45,Number(seed.power)||1),forced=!!seed.forced;
-    lotusFields.push({id:state.nextId++,x:seed.x,y:seed.y,n,r:radius*(forced?.78:1),damage,life:.85,max:.85,tick:0,absorbed,power,forced,closed:false});
+    lotusFields.push({id:state.nextId++,x:seed.x,y:seed.y,n,r:radius*(forced?.78:1),damage,life:1.22,max:1.22,tick:0,absorbed,power,forced,closed:false});
     while(lotusFields.length>3){const oldest=lotusFields.shift();if(oldest&&!oldest.closed)closeLotus(oldest,.72);}
   }
   function closeLotus(field,scale=1){
     if(!field||field.closed)return;field.closed=true;
-    areaDamage(field.x,field.y,field.r*.58,field.damage*.68*scale,'#fff6ff','vacuum-bloom',{shake:false});
+    areaDamage(field.x,field.y,field.r*.62,field.damage*.82*scale,'#fff6ff','vacuum-bloom',{shake:false});
     shockwave(field.x,field.y,'#f7edff',field.r*.72,.36,2.8);pushFx({kind:'lotus-close',x:field.x,y:field.y,r:field.r,life:.42,max:.42});
   }
   const baseDetonateVacuumSeed=detonateVacuumSeed;
@@ -152,7 +153,7 @@
   function updateLotusFields(dt){
     for(const field of lotusFields){
       if(!field||field.closed)continue;field.life-=dt;field.tick-=dt;
-      if(field.tick<=0){field.tick=.18;forEachNearbyEnemyCandidate(field.x,field.y,field.r+80,enemy=>{if(enemy.dead)return;const dx=field.x-enemy.x,dy=field.y-enemy.y,d=Math.hypot(dx,dy)||1;if(d>field.r)return;const pull=(54*(1-d/field.r))*enemyControlFactor(enemy);enemy.x+=dx/d*pull*.18;enemy.y+=dy/d*pull*.18;dealDamage(enemy,field.damage*.075,{color:'#dca9ff',source:'vacuum-bloom',canCrit:false});});}
+      if(field.tick<=0){field.tick=.16;forEachNearbyEnemyCandidate(field.x,field.y,field.r+90,enemy=>{if(enemy.dead)return;const dx=field.x-enemy.x,dy=field.y-enemy.y,d=Math.hypot(dx,dy)||1;if(d>field.r)return;const pull=(68*(1-d/field.r))*enemyControlFactor(enemy);enemy.x+=dx/d*pull*.19;enemy.y+=dy/d*pull*.19;dealDamage(enemy,field.damage*.09,{color:'#dca9ff',source:'vacuum-bloom',canCrit:false});});}
       if(field.life<=0)closeLotus(field,1);
     }
     compactInPlace(lotusFields,field=>field&&!field.closed);
@@ -196,6 +197,17 @@
     m.awSurround=true;m.awStage='gather';m.awStageAge=0;m.awSlot=opts.awSlot||0;m.awSlotCount=opts.awSlotCount||3;m.awGroup=opts.awGroup||0;m.awReady=false;m.awSignalTimer=null;m.awTargetLocked=false;m.awGatherRadius=112+Math.min(50,n*6);m.awGatherDuration=.54;
     return m;
   }
+  function tagStarbreakerMissile(target,n,side,damage,opts={}){
+    const before=state.entities.guidedMissiles.length;spawnGuidedMissile(target,n,side,damage,opts);
+    const m=state.entities.guidedMissiles.length>before?state.entities.guidedMissiles.at(-1):null;if(!m)return null;
+    m.awStarbreaker=true;m.r=Math.max(7.6,Number(m.r)||0);m.color=opts.multiplicity?'#ffe7b8':'#ffc36f';m.ignition=.10;m.life=Math.max(m.life||0,4.35);m.max=m.life;
+    m.damage*=1.07;m.baseDamage=m.damage;return m;
+  }
+  function fireStarbreakerVolley(n){
+    const native=n>=6?6:n>=2?4:2,extra=mult(),total=native+extra,maxTargets=n>=6?3:n>=4?2:1,targets=postRosterTargetList(weaponRange('missile'),maxTargets);if(!targets.length)return;
+    const per=(19+(n-1)*2.6)*(native>=6?.64:native>=4?.78:1)*1.05;player.missilePodFlash=.34;audio.weapon?.('missile',false,1.18);
+    for(let i=0;i<total;i++){const pair=Math.floor(i/2),side=i%2===0?-1:1,target=targets[i%targets.length],delay=pair*68+(i>=native?20+i*22:0);scheduleWeaponAction(delay,()=>{const live=enemyById(target.id)||targets.find(t=>!t.dead)||strongestPostRosterEnemy(player.x,player.y,weaponRange('missile'));if(live)tagStarbreakerMissile(live,n,side,per,{multiplicity:i>=native});});}
+  }
   function fireStarbreakerSurround(n){
     const native=n>=6?6:n>=2?4:2,extra=mult(),total=native+extra,target=strongestPostRosterEnemy(player.x,player.y,weaponRange('missile'));if(!target)return;
     const group=(player.awMissileGroupSerial=(player.awMissileGroupSerial||0)+1),per=(19+(n-1)*2.6)*(native>=6?.64:native>=4?.78:1);player.missilePodFlash=.34;pushFx({kind:'arsenal-open',x:player.x,y:player.y,life:.42,max:.42});audio.weapon?.('missile',false,1.32);
@@ -209,7 +221,7 @@
     if(!awake('missile')||echoed)return baseFireInterstellarMissiles(n,echoed);
     player.awMissileCycle=(player.awMissileCycle||0)+1;
     if(player.awMissileCycle%3===0)return fireStarbreakerSurround(n);
-    return baseFireInterstellarMissiles(n,false);
+    return fireStarbreakerVolley(n);
   };
   function updateSurroundMissile(m,dt){
     if(!m||m.life<=0)return;m.life-=dt;m.age+=dt;m.awStageAge+=dt;
@@ -308,6 +320,16 @@
   function lotusFieldRaster(r,absorbed){const rb=Math.max(40,Math.round(r/8)*8),a=Math.min(12,absorbed||0),size=Math.ceil(rb*2+48);return aw3Raster(`lotus-field:${rb}:${a}`,size,(g,sz)=>{g.save();g.translate(sz/2,sz/2);g.shadowBlur=16;g.shadowColor='#d58cff';for(let i=0;i<6;i++){g.save();g.rotate(i*TAU/6);g.fillStyle=i%2?'rgba(124,63,170,.30)':'rgba(213,140,255,.25)';g.strokeStyle=i%2?'#8b5ab1':'#dba5ff';g.lineWidth=1.4;g.beginPath();g.moveTo(rb*.08,-rb*.06);g.bezierCurveTo(rb*.32,-rb*.20,rb*.80,-rb*.13,rb*.94,0);g.bezierCurveTo(rb*.76,rb*.15,rb*.31,rb*.20,rb*.08,rb*.06);g.closePath();g.fill();g.stroke();g.restore();}g.fillStyle='#020106';g.beginPath();g.arc(0,0,12+a*.8,0,TAU);g.fill();g.strokeStyle='#f6edff';g.lineWidth=1.4;g.beginPath();g.arc(0,0,14+a*.8,0,TAU);g.stroke();g.restore();});}
   function starrailMineRaster(phantom){const r=phantom?5:10;return aw3Raster(`starrail-mine:${phantom?1:0}`,80,(g,sz)=>{g.save();g.translate(sz/2,sz/2);g.shadowBlur=phantom?9:16;g.shadowColor='#74e8ff';g.strokeStyle=phantom?'#dffcff':'#b9f7ff';g.fillStyle=phantom?'rgba(210,250,255,.20)':'rgba(17,68,92,.78)';g.lineWidth=1.5;g.beginPath();g.moveTo(r*1.65,0);g.lineTo(r*.32,-r*.52);g.lineTo(-r*.92,-r*.38);g.lineTo(-r*.92,r*.38);g.lineTo(r*.32,r*.52);g.closePath();g.fill();g.stroke();if(!phantom){for(const side of[-1,1]){g.strokeStyle='#74e8ff';g.beginPath();g.moveTo(-r*.2,side*r*.45);g.lineTo(-r*1.25,side*r*.75);g.stroke();}}g.restore();});}
   function starbreakerPodRaster(flash){const fb=Math.round(clamp(flash,0,1)*3);return aw3Raster(`starbreaker-pod:${fb}`,96,(g,sz)=>{g.save();g.translate(sz/2,sz/2);g.shadowBlur=12+(fb/3)*18;g.shadowColor='#ffb66e';g.fillStyle='#111d2e';g.strokeStyle='#ffd3a0';g.lineWidth=1.5;g.beginPath();g.moveTo(18,0);g.lineTo(8,-12);g.lineTo(-13,-15);g.lineTo(-19,-6);g.lineTo(-15,0);g.lineTo(-19,6);g.lineTo(-13,15);g.lineTo(8,12);g.closePath();g.fill();g.stroke();for(let row=0;row<3;row++)for(let col=0;col<2;col++){g.fillStyle=fb>0&&row===fb%3?'#fff4d6':'#6d4127';g.beginPath();g.arc(-7+col*9,-7+row*7,2.3,0,TAU);g.fill();}g.restore();});}
+  function starbreakerMissileRaster(micro,surround,stage,terminal){
+    const stateKey=surround?String(stage||'gather'):'normal',size=112;
+    return aw3Raster(`starbreaker-missile:${micro?1:0}:${surround?1:0}:${stateKey}:${terminal?1:0}`,size,(g,sz)=>{
+      const r=micro?4.2:surround?8.8:7.2,hot=surround?'#ff8b66':'#ffc36f';g.save();g.translate(sz/2,sz/2);g.shadowBlur=surround?24:18;g.shadowColor=hot;
+      g.fillStyle=surround?'#2a1117':'#18202b';g.strokeStyle=terminal?'#ffffff':'#ffe0a5';g.lineWidth=1.7;g.beginPath();g.moveTo(r*3.2,0);g.lineTo(r*.65,-r*.82);g.lineTo(-r*.55,-r*.72);g.lineTo(-r*1.45,-r*1.12);g.lineTo(-r*1.18,0);g.lineTo(-r*1.45,r*1.12);g.lineTo(-r*.55,r*.72);g.lineTo(r*.65,r*.82);g.closePath();g.fill();g.stroke();
+      g.fillStyle='#fff4d7';g.beginPath();g.moveTo(r*2.55,0);g.lineTo(r*.25,-r*.23);g.lineTo(-r*.75,0);g.lineTo(r*.25,r*.23);g.closePath();g.fill();
+      g.globalAlpha=.88;g.fillStyle=surround&&stage==='hold'?'#ffffff':hot;g.beginPath();g.moveTo(-r*1.05,-r*.42);g.lineTo(-r*(terminal?3.6:2.7),0);g.lineTo(-r*1.05,r*.42);g.closePath();g.fill();
+      if(surround){g.globalAlpha=.72;g.strokeStyle=stage==='dive'?'#ffffff':'#ffb08a';g.lineWidth=1.4;g.beginPath();g.arc(0,0,r*1.55,-.75,.75);g.stroke();g.beginPath();g.arc(0,0,r*1.55,Math.PI-.75,Math.PI+.75);g.stroke();}g.restore();
+    });
+  }
   function hypergateRaster(echoed,charge){const c=Math.max(0,Math.min(2,charge||0));return aw3Raster(`hypergate:${echoed?1:0}:${c}`,128,(g,sz)=>{g.save();g.translate(sz/2,sz/2);g.shadowBlur=22;g.shadowColor=echoed?COLORS.pink:'#a9b7ff';g.strokeStyle=echoed?COLORS.pink:'#e0e5ff';g.lineWidth=2.4;g.beginPath();g.ellipse(0,0,22,43,0,0,TAU);g.stroke();g.strokeStyle='#899cff';g.lineWidth=1.3;g.setLineDash([8,6]);g.beginPath();g.ellipse(0,0,15,35,0,0,TAU);g.stroke();g.setLineDash([]);const veil=g.createLinearGradient(0,-28,0,28);veil.addColorStop(0,'rgba(35,42,95,.06)');veil.addColorStop(.5,'rgba(118,139,255,.22)');veil.addColorStop(1,'rgba(10,12,36,.08)');g.fillStyle=veil;g.beginPath();g.ellipse(0,0,11,29,0,0,TAU);g.fill();for(let k=0;k<3;k++){g.strokeStyle=k<c?'#ffffff':'rgba(169,183,255,.20)';g.lineWidth=k<c?2.1:1;g.beginPath();g.arc(0,0,27+k*4,-.50,.50);g.stroke();}g.restore();});}
   function drawGenesisGalaxy(){if(!awake('spiral'))return;const x=vw/2-26,y=vh/2+18,t=performance.now()*.001,size=weaponSizeMultiplier(),image=genesisGalaxyRaster(size,t);ctx.save();ctx.translate(x,y);ctx.rotate(-.38);ctx.globalAlpha=.88;ctx.drawImage(image,-90,-90,180,180);ctx.restore();}
   function drawMirrorSanctuary(){
@@ -316,19 +338,23 @@
     const threat=nearest?Math.atan2(nearest.y-player.y,nearest.x-player.x):null;
     for(let i=0;i<6;i++){const orbitA=i*TAU/6+t*.05,rr=58,x=vw/2+Math.cos(orbitA)*rr,y=vh/2+Math.sin(orbitA)*rr,face=Number.isFinite(threat)?lerpAngle(orbitA+Math.PI/2,threat,.72):orbitA+Math.PI/2,image=mirrorPlateRaster(faces[i]!==null);ctx.save();ctx.translate(x,y);ctx.rotate(face);ctx.drawImage(image,-40,-40,80,80);ctx.restore();}
   }
-  function drawLotusField(field,t){const sx=field.x-player.x+vw/2,sy=field.y-player.y+vh/2,q=clamp(field.life/field.max,0,1),pulse=.94+.06*Math.sin(t*4+field.id),image=lotusFieldRaster(field.r,field.absorbed||0),size=image.width||Math.ceil(field.r*2+48);ctx.save();ctx.translate(sx,sy);ctx.rotate(-t*.10+field.id*.19);ctx.globalAlpha=.22+.30*q;ctx.scale(pulse,pulse);ctx.drawImage(image,-size/2,-size/2,size,size);ctx.restore();}
+  function drawLotusField(field,t){const sx=field.x-player.x+vw/2,sy=field.y-player.y+vh/2,q=clamp(field.life/field.max,0,1),pulse=.94+.07*Math.sin(t*4+field.id),image=lotusFieldRaster(field.r,field.absorbed||0),size=image.width||Math.ceil(field.r*2+48);ctx.save();ctx.translate(sx,sy);ctx.rotate(-t*.13+field.id*.19);ctx.globalAlpha=.34+.42*q;ctx.scale(pulse,pulse);ctx.drawImage(image,-size/2,-size/2,size,size);ctx.globalAlpha=.52+.28*q;ctx.strokeStyle='#f3dfff';ctx.shadowBlur=18;ctx.shadowColor='#c785ff';ctx.lineWidth=2;for(let i=0;i<6;i++){const a=i*TAU/6+t*.10,r1=field.r*.16,r2=field.r*.80;ctx.beginPath();ctx.moveTo(Math.cos(a)*r1,Math.sin(a)*r1);ctx.quadraticCurveTo(Math.cos(a+.25)*field.r*.48,Math.sin(a+.25)*field.r*.48,Math.cos(a+.48)*r2,Math.sin(a+.48)*r2);ctx.stroke();}ctx.restore();}
   function drawAwakenedVacuumSeeds(){if(!awake('vacuum'))return;const t=performance.now()*.001;for(const seed of state.entities.vacuumSeeds){if(!seed||seed.life<=0)continue;const sx=seed.x-player.x+vw/2,sy=seed.y-player.y+vh/2,image=blackLotusSeedRaster(seed.charge||0,!!seed.blooming,seed.absorbed||0);ctx.save();ctx.translate(sx,sy);ctx.rotate(t*.20+seed.id*.11);ctx.drawImage(image,-48,-48,96,96);ctx.restore();}}
   function starrailMineAngle(mineId,fallback){for(let i=0;i<starrailNodes.length;i++){const node=starrailNodes[i],ids=node.mineIds;for(let j=0;j<ids.length;j++)if(ids[j]===mineId)return node.a;}return fallback;}
   function drawAwakenedMines(){if(!awake('mine'))return;const t=performance.now()*.001;if(starrailNodes.length>1){ctx.save();ctx.strokeStyle='rgba(181,247,255,.34)';ctx.lineWidth=2;ctx.setLineDash([10,7]);ctx.lineDashOffset=-t*12;ctx.beginPath();for(let i=0;i<starrailNodes.length;i++){const node=starrailNodes[i],sx=node.x-player.x+vw/2,sy=node.y-player.y+vh/2;i?ctx.lineTo(sx,sy):ctx.moveTo(sx,sy);}ctx.stroke();ctx.setLineDash([]);ctx.restore();}for(const mine of state.entities.phaseMines){if(!mine||mine.life<=0)continue;const sx=mine.x-player.x+vw/2,sy=mine.y-player.y+vh/2,a=mine.phantom?t*1.3:starrailMineAngle(mine.id,t*.18),image=starrailMineRaster(!!mine.phantom);ctx.save();ctx.translate(sx,sy);ctx.rotate(a);ctx.globalAlpha=mine.arm>0?.38:1;ctx.drawImage(image,-40,-40,80,80);ctx.restore();}}
+  function drawAwakenedMissiles(){
+    if(!awake('missile'))return;
+    for(const m of state.entities.guidedMissiles||[]){if(!m||m.life<=0)continue;const sx=m.x-player.x+vw/2,sy=m.y-player.y+vh/2,a=Math.atan2(m.vy||0,m.vx||0),image=starbreakerMissileRaster(!!m.micro,!!m.awSurround,m.awStage,!!m.terminal),scale=m.awSurround?1.15:m.awStarbreaker?1.02:.82;ctx.save();ctx.translate(sx,sy);ctx.rotate(a);ctx.scale(scale,scale);ctx.drawImage(image,-56,-56,112,112);ctx.restore();}
+  }
   function drawStarbreakerPods(){if(!awake('missile'))return;const a=Number.isFinite(player.facingAngle)?player.facingAngle:-Math.PI/2,flash=clamp((player.missilePodFlash||0)/.34,0,1),size=weaponSizeMultiplier(),image=starbreakerPodRaster(flash);for(const side of[-1,1]){const pa=a+side*Math.PI/2,sx=Math.cos(pa)*39+vw/2,sy=Math.sin(pa)*39+vh/2;ctx.save();ctx.translate(sx,sy);ctx.rotate(a);ctx.scale(size,size);ctx.drawImage(image,-48,-48,96,96);ctx.restore();}}
   function drawHypergates(){if(!awake('gate'))return;const t=performance.now()*.001;for(const net of state.entities.gateNetworks){if(!net||net.life<=0)continue;const alpha=clamp(Math.min(net.life,.45)/.45,.15,1),charge=Math.max(0,Math.min(2,net.awGrandCharge||0)),image=hypergateRaster(!!net.echoed,charge);for(let i=0;i<net.gates.length;i++){const gate=net.gates[i],sx=gate.x-player.x+vw/2,sy=gate.y-player.y+vh/2;ctx.save();ctx.translate(sx,sy);ctx.rotate((i%2?1:-1)*t*.16);ctx.globalAlpha=alpha;ctx.drawImage(image,-64,-64,128,128);ctx.restore();}}}
   const baseDrawPostRosterWeaponEntities=drawPostRosterWeaponEntities;
   drawPostRosterWeaponEntities=function awakenedThirdPostRosterVisuals(){
     const hideVacuum=awake('vacuum'),hideMine=awake('mine'),hideMissile=awake('missile'),hideGate=awake('gate'),
-      seeds=state.entities.vacuumSeeds,mines=state.entities.phaseMines,nets=state.entities.gateNetworks,savedMissile=state.weaponStacks.missile;
-    if(hideVacuum)state.entities.vacuumSeeds=[];if(hideMine)state.entities.phaseMines=[];if(hideGate)state.entities.gateNetworks=[];if(hideMissile)state.weaponStacks.missile=0;
-    try{baseDrawPostRosterWeaponEntities();}finally{if(hideVacuum)state.entities.vacuumSeeds=seeds;if(hideMine)state.entities.phaseMines=mines;if(hideGate)state.entities.gateNetworks=nets;if(hideMissile)state.weaponStacks.missile=savedMissile;}
-    drawAwakenedVacuumSeeds();for(const field of lotusFields)drawLotusField(field,performance.now()*.001);drawAwakenedMines();drawStarbreakerPods();drawHypergates();
+      seeds=state.entities.vacuumSeeds,mines=state.entities.phaseMines,missiles=state.entities.guidedMissiles,nets=state.entities.gateNetworks,savedMissile=state.weaponStacks.missile;
+    if(hideVacuum)state.entities.vacuumSeeds=[];if(hideMine)state.entities.phaseMines=[];if(hideMissile)state.entities.guidedMissiles=[];if(hideGate)state.entities.gateNetworks=[];if(hideMissile)state.weaponStacks.missile=0;
+    try{baseDrawPostRosterWeaponEntities();}finally{if(hideVacuum)state.entities.vacuumSeeds=seeds;if(hideMine)state.entities.phaseMines=mines;if(hideMissile)state.entities.guidedMissiles=missiles;if(hideGate)state.entities.gateNetworks=nets;if(hideMissile)state.weaponStacks.missile=savedMissile;}
+    drawAwakenedVacuumSeeds();for(const field of lotusFields)drawLotusField(field,performance.now()*.001);drawAwakenedMines();drawAwakenedMissiles();drawStarbreakerPods();drawHypergates();
   };
 
   function drawThirdFx(){
