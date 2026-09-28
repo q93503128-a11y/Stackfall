@@ -1,16 +1,17 @@
 (()=>{
   const CATALOG=Object.freeze([
-    {id:'vitality',category:'SURVIVAL',icon:'♥',x:24,y:28,max:5,cost:[80,130,190,270,360],shards:[0,0,0,1,1],name:'upgrade.vitality.name',desc:'upgrade.vitality.desc',effect:'upgrade.vitality.effect'},
-    {id:'output',category:'OFFENSE',icon:'▲',x:76,y:27,max:5,cost:[90,145,215,300,400],shards:[0,0,1,1,1],name:'upgrade.output.name',desc:'upgrade.output.desc',effect:'upgrade.output.effect'},
-    {id:'cycle',category:'OFFENSE',icon:'»',x:87,y:51,max:4,cost:[120,190,285,410],shards:[0,0,1,1],name:'upgrade.cycle.name',desc:'upgrade.cycle.desc',effect:'upgrade.cycle.effect'},
-    {id:'magnet',category:'UTILITY',icon:'⊕',x:74,y:76,max:4,cost:[75,125,190,280],shards:[0,0,0,1],name:'upgrade.magnet.name',desc:'upgrade.magnet.desc',effect:'upgrade.magnet.effect'},
-    {id:'salvage',category:'UTILITY',icon:'✦',x:27,y:77,max:5,cost:[70,120,185,270,380],shards:[0,0,0,1,1],name:'upgrade.salvage.name',desc:'upgrade.salvage.desc',effect:'upgrade.salvage.effect'},
-    {id:'armor',category:'SURVIVAL',icon:'▣',x:13,y:52,max:4,cost:[110,180,270,390],shards:[0,0,1,1],name:'upgrade.armor.name',desc:'upgrade.armor.desc',effect:'upgrade.armor.effect'},
-    {id:'slot5',category:'EXPANSION',icon:'Ⅴ',x:39,y:12,max:1,cost:[350],shards:[1],name:'upgrade.slot5.name',desc:'upgrade.slot5.desc',effect:'upgrade.slot5.effect'},
-    {id:'slot6',category:'EXPANSION',icon:'Ⅵ',x:61,y:12,max:1,cost:[900],shards:[3],requires:'slot5',name:'upgrade.slot6.name',desc:'upgrade.slot6.desc',effect:'upgrade.slot6.effect'}
+    {id:'vitality',category:'SURVIVAL',icon:'♥',x:24,y:28,max:8,cost:[80,130,190,280,400,550,740,980],shards:[0,0,0,1,0,0,0,2],values:[0,4,8,12,20,24,28,32,44],name:'upgrade.vitality.name',desc:'upgrade.vitality.desc',effect:'upgrade.vitality.effect'},
+    {id:'output',category:'OFFENSE',icon:'▲',x:76,y:27,max:8,cost:[90,145,215,315,440,600,800,1050],shards:[0,0,0,1,0,0,0,2],values:[0,3,6,9,15,18,21,24,33],name:'upgrade.output.name',desc:'upgrade.output.desc',effect:'upgrade.output.effect'},
+    {id:'cycle',category:'OFFENSE',icon:'»',x:87,y:51,max:6,cost:[120,190,300,450,650,900],shards:[0,0,1,0,0,2],values:[0,2,4,8,10,12,18],name:'upgrade.cycle.name',desc:'upgrade.cycle.desc',effect:'upgrade.cycle.effect'},
+    {id:'magnet',category:'UTILITY',icon:'⊕',x:74,y:76,max:6,cost:[75,125,210,330,500,760],shards:[0,0,1,0,0,2],values:[0,12,24,48,60,72,108],name:'upgrade.magnet.name',desc:'upgrade.magnet.desc',effect:'upgrade.magnet.effect'},
+    {id:'salvage',category:'UTILITY',icon:'✦',x:27,y:77,max:8,cost:[70,120,185,285,410,570,760,990],shards:[0,0,0,1,0,0,0,2],values:[0,8,16,24,40,48,56,64,88],name:'upgrade.salvage.name',desc:'upgrade.salvage.desc',effect:'upgrade.salvage.effect'},
+    {id:'armor',category:'SURVIVAL',icon:'▣',x:13,y:52,max:6,cost:[110,180,290,440,640,900],shards:[0,0,1,0,0,2],values:[0,2,4,8,10,12,18],name:'upgrade.armor.name',desc:'upgrade.armor.desc',effect:'upgrade.armor.effect'},
+    {id:'slot5',category:'EXPANSION',icon:'Ⅴ',x:39,y:12,max:1,cost:[350],shards:[1],values:[0,1],name:'upgrade.slot5.name',desc:'upgrade.slot5.desc',effect:'upgrade.slot5.effect'},
+    {id:'slot6',category:'EXPANSION',icon:'Ⅵ',x:61,y:12,max:1,cost:[900],shards:[3],values:[0,1],requires:'slot5',name:'upgrade.slot6.name',desc:'upgrade.slot6.desc',effect:'upgrade.slot6.effect'}
   ]);
   const byId=id=>CATALOG.find(row=>row.id===id)||null;
   const level=id=>window.stackfallUpgradeLevel?.(id)||0;
+  const valueAt=(row,lv=level(row.id))=>{const values=row?.values||[0];return Number(values[Math.max(0,Math.min(row.max,Math.floor(Number(lv)||0)))])||0;};
   const maxed=row=>level(row.id)>=row.max;
   const currency=key=>window.stackfallCurrency?.(key)||0;
   const fmt=(key,n)=>String(tr(key)).replace('{n}',String(n));
@@ -20,21 +21,21 @@
     const fifth=level('slot5')>0?1:0,sixth=fifth&&level('slot6')>0?1:0;
     return 4+fifth+sixth;
   };
-  window.stackfallCurrencyMultiplier=()=>Math.max(.25,(1+level('salvage')*.08)*(window.stackfallDifficultyRewardMultiplier?.()||1));
+  window.stackfallCurrencyMultiplier=()=>Math.max(.25,(1+valueAt(byId('salvage'))*.01)*(window.stackfallDifficultyRewardMultiplier?.()||1));
   window.STACKFALL_META_UPGRADES=CATALOG;
 
   const baseDamageMult=damageMult;
-  damageMult=function metaUpgradeDamageMult(){return baseDamageMult()*(1+level('output')*.03);};
+  damageMult=function metaUpgradeDamageMult(){return baseDamageMult()*(1+valueAt(byId('output'))*.01);};
   const baseHasteMult=hasteMult;
-  hasteMult=function metaUpgradeHasteMult(){return Math.max(.14,baseHasteMult()*(1-level('cycle')*.02));};
+  hasteMult=function metaUpgradeHasteMult(){return Math.max(.14,baseHasteMult()*(1-valueAt(byId('cycle'))*.01));};
   const baseMagnetRange=magnetRange;
-  magnetRange=function metaUpgradeMagnetRange(){return baseMagnetRange()+level('magnet')*12;};
+  magnetRange=function metaUpgradeMagnetRange(){return baseMagnetRange()+valueAt(byId('magnet'));};
   const baseDamageReduction=damageReduction;
-  damageReduction=function metaUpgradeDamageReduction(){return Math.min(.82,baseDamageReduction()+level('armor')*.02);};
+  damageReduction=function metaUpgradeDamageReduction(){return Math.min(.82,baseDamageReduction()+valueAt(byId('armor'))*.01);};
   const baseResetGame=resetGame;
   resetGame=function metaUpgradeResetGame(){
     baseResetGame();state.runCurrencyEarned={stardust:0,coreShard:0};
-    const hpBonus=1+level('vitality')*.04;
+    const hpBonus=1+valueAt(byId('vitality'))*.01;
     if(hpBonus>1){player.maxHp=Math.max(1,Math.round(player.maxHp*hpBonus));player.hp=player.maxHp;updateHUD?.();}
   };
 
@@ -72,15 +73,22 @@
   let selected='vitality',animationFrame=0,lastFocus=null,profileLastFocus=null;
 
   function effectText(row,nextLevel=level(row.id)){
-    if(row.id==='vitality')return fmt(row.effect,nextLevel*4);
-    if(row.id==='output')return fmt(row.effect,nextLevel*3);
-    if(row.id==='cycle')return fmt(row.effect,nextLevel*2);
-    if(row.id==='magnet')return fmt(row.effect,nextLevel*12);
-    if(row.id==='salvage')return fmt(row.effect,nextLevel*8);
-    if(row.id==='armor')return fmt(row.effect,nextLevel*2);
-    if(row.id==='slot5')return tr(row.effect);
-    if(row.id==='slot6')return tr(row.effect);
-    return'';
+    if(row.id==='slot5'||row.id==='slot6')return tr(row.effect);
+    return fmt(row.effect,valueAt(row,nextLevel));
+  }
+  function effectLabels(){
+    const lang=GAME_SETTINGS.language||'ko';
+    if(lang==='en')return{current:'CURRENT',next:'NEXT',gain:'GAIN',breakthrough:'BREAKTHROUGH'};
+    if(lang==='ja')return{current:'現在',next:'次',gain:'増加',breakthrough:'突破'};
+    if(lang==='zh')return{current:'当前',next:'下一等级',gain:'提升',breakthrough:'突破'};
+    if(lang==='es')return{current:'ACTUAL',next:'SIGUIENTE',gain:'MEJORA',breakthrough:'AVANCE'};
+    if(lang==='fr')return{current:'ACTUEL',next:'SUIVANT',gain:'GAIN',breakthrough:'PALIER'};
+    return{current:'현재',next:'다음',gain:'증가',breakthrough:'돌파'};
+  }
+  function nextGainText(row,lv){
+    if(row.id==='slot5'||row.id==='slot6')return'';
+    const gain=valueAt(row,Math.min(row.max,lv+1))-valueAt(row,lv);
+    return row.id==='magnet'?'+'+gain:'+'+gain+'%';
   }
   function nodeState(row){
     if(maxed(row))return'maxed';
@@ -112,8 +120,10 @@
   function renderDetail(){
     const row=byId(selected)||CATALOG[0],lv=level(row.id),stateName=nodeState(row),cost=costAt(row);
     detail.category.textContent=row.category;detail.name.textContent=tr(row.name);detail.desc.textContent=tr(row.desc);detail.level.textContent=lv+' / '+row.max;
-    detail.effect.textContent=effectText(row,Math.min(row.max,lv+(maxed(row)?0:1)));
-    detail.cost.innerHTML=maxed(row)?'<strong>'+tr('upgrade.maxed')+'</strong>':('<span><i>✦</i>'+cost.stardust+'</span>'+(cost.coreShard?'<span><i>◆</i>'+cost.coreShard+'</span>':''));
+    const labels=effectLabels(),nextLv=Math.min(row.max,lv+1),breakthrough=!maxed(row)&&cost.coreShard>0;
+    if(maxed(row))detail.effect.innerHTML='<span class="upgrade-effect-current"><small>'+labels.current+'</small><b>'+effectText(row,lv)+'</b></span>';
+    else detail.effect.innerHTML='<span class="upgrade-effect-current"><small>'+labels.current+'</small><b>'+(lv>0?effectText(row,lv):'—')+'</b></span><span class="upgrade-effect-next"><small>'+labels.next+'</small><b>'+effectText(row,nextLv)+'</b><em>'+labels.gain+' '+nextGainText(row,lv)+'</em></span>'+(breakthrough?'<strong class="upgrade-breakthrough">◆ '+labels.breakthrough+'</strong>':'');
+    detail.cost.innerHTML=maxed(row)?'<strong>'+tr('upgrade.maxed')+'</strong>':('<span><i>✦</i>'+cost.stardust+'</span>'+(cost.coreShard?'<span class="breakthrough-cost"><i>◆</i>'+cost.coreShard+'</span>':''));
     detail.lock.textContent=!prereqMet(row)?fmt('upgrade.requires',tr(byId(row.requires)?.name||row.requires)):stateName==='poor'?tr('upgrade.insufficient'):'';
     buyBtn.disabled=maxed(row)||!prereqMet(row)||stateName==='poor';buyBtn.querySelector('span').textContent=maxed(row)?tr('upgrade.maxed'):tr('upgrade.buy');
   }
