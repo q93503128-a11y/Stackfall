@@ -68,7 +68,7 @@
   };
 
   const screen=document.querySelector('#upgradeScreen'),entry=document.querySelector('#upgradeHubBtn'),closeBtn=document.querySelector('#upgradeCloseBtn'),nodeRoot=document.querySelector('#upgradeNodes'),links=document.querySelector('#upgradeLinks'),buyBtn=document.querySelector('#upgradeBuyBtn'),resetBtn=document.querySelector('#upgradeResetBtn'),coreCanvas=document.querySelector('#upgradeCoreCanvas');
-  const profileEntry=document.querySelector('#hubProfile'),profileScreen=document.querySelector('#profileScreen'),profileCloseBtn=document.querySelector('#profileCloseBtn');
+  const profileEntry=document.querySelector('#hubProfile'),profileScreen=document.querySelector('#profileScreen'),profileCloseBtn=document.querySelector('#profileCloseBtn'),profileRenameBtn=document.querySelector('#profileRenameBtn'),profileNameEditor=document.querySelector('#profileNameEditor'),profileNameInput=document.querySelector('#profileNameInput'),profileNameSaveBtn=document.querySelector('#profileNameSaveBtn');
   const detail={category:document.querySelector('#upgradeCategory'),name:document.querySelector('#upgradeName'),desc:document.querySelector('#upgradeDesc'),level:document.querySelector('#upgradeLevel'),effect:document.querySelector('#upgradeEffect'),cost:document.querySelector('#upgradeCost'),lock:document.querySelector('#upgradeLockReason')};
   let selected='vitality',animationFrame=0,lastFocus=null,profileLastFocus=null;
 
@@ -162,13 +162,19 @@
     buyBtn.disabled=maxed(row)||!prereqMet(row)||stateName==='poor';buyBtn.querySelector('span').textContent=maxed(row)?tr('upgrade.maxed'):tr('upgrade.buy');
   }
   function renderProfile(){
-    const m=window.stackfallMeta||{},clears=m.clearedStages?.length||0,dust=currency('stardust'),shards=currency('coreShard');
+    const m=window.stackfallMeta||{},clears=m.clearedStages?.length||0,totalStages=window.STACKFALL_STAGE_CATALOG?.length||18,dust=currency('stardust'),shards=currency('coreShard'),name=(String(m.profileName||'').trim()||tr('profile.name'));
     const set=(id,value)=>{const el=document.querySelector(id);if(el)el.textContent=String(value);};
-    set('#profileClearCount',clears);set('#profileStardust',dust);set('#profileCoreShard',shards);set('#upgradeStardust',dust);set('#upgradeCoreShard',shards);
-    set('#profileDetailClears',clears);set('#profileDetailRuns',m.lifetime?.runs||0);set('#profileDetailKills',m.lifetime?.kills||0);
-    set('#profileDetailSlots',window.stackfallEquipmentSlotLimit?.()||4);set('#profileDetailWeapons',m.unlockedWeapons?.length||0);set('#profileDetailStardust',dust);set('#profileDetailCoreShard',shards);
-    const best=Number(m.bestStageTimes?.['stage-01']),bestEl=document.querySelector('#profileDetailBest');if(bestEl)bestEl.textContent=Number.isFinite(best)&&best>0?formatTime(best):'—';
+    set('#profileNameHub',name);set('#profileTitle',name);set('#profileClearCount',clears+' / '+totalStages);set('#profileStardust',dust);set('#profileCoreShard',shards);set('#upgradeStardust',dust);set('#upgradeCoreShard',shards);
+    set('#profileDetailClears',clears+' / '+totalStages);set('#profileDetailRuns',m.lifetime?.runs||0);set('#profileDetailKills',m.lifetime?.kills||0);set('#profileDetailBosses',m.lifetime?.bosses||0);
+    set('#profileDetailSlots',window.stackfallEquipmentSlotLimit?.()||4);set('#profileDetailWeapons',(m.unlockedWeapons?.length||0)+1);set('#profileDetailStardust',dust);set('#profileDetailCoreShard',shards);
+    if(profileRenameBtn){profileRenameBtn.title=tr('profile.rename');profileRenameBtn.setAttribute('aria-label',tr('profile.rename'));}
   }
+  function openNameEditor(){
+    if(!profileNameEditor||!profileNameInput)return;const m=window.stackfallMeta||{};profileNameInput.value=String(m.profileName||'').trim()||tr('profile.name');profileNameEditor.classList.remove('hidden');profileNameInput.focus();profileNameInput.select();
+  }
+  function closeNameEditor(){profileNameEditor?.classList.add('hidden');}
+  function saveProfileName(){if(!profileNameInput)return;window.stackfallSetProfileName?.(profileNameInput.value);closeNameEditor();renderProfile();try{audio.pickup();}catch{}}
+
   function renderResultReward(){
     const root=document.querySelector('#resultCurrencyReward');if(!root)return;const reward=state.lastMetaReward||{stardust:0,coreShard:0},cashout=state.lastAwakeningCoreCashout||{cores:0,stardust:0};
     root.innerHTML=reward.stardust||reward.coreShard?'<span>'+tr('currency.earned')+'</span>'+(reward.stardust?'<b>✦ '+reward.stardust+'</b>':'')+(reward.coreShard?'<b>◆ '+reward.coreShard+'</b>':'')+(cashout.cores?'<em>CORE ×'+cashout.cores+' → ✦ '+cashout.stardust+'</em>':''):'';
@@ -198,9 +204,12 @@
   }
   entry?.addEventListener('click',open);closeBtn?.addEventListener('click',close);buyBtn?.addEventListener('click',buySelected);
   profileEntry?.addEventListener('click',openProfile);profileCloseBtn?.addEventListener('click',()=>closeProfile());
+  profileRenameBtn?.addEventListener('click',openNameEditor);profileNameSaveBtn?.addEventListener('click',saveProfileName);
+  profileNameInput?.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();saveProfileName();}else if(event.key==='Escape'){event.preventDefault();closeNameEditor();profileRenameBtn?.focus();}});
   profileScreen?.addEventListener('click',event=>{if(event.target===profileScreen)closeProfile();});
   window.addEventListener('keydown',event=>{
     if(event.code!=='Escape')return;
+    if(profileNameEditor&&!profileNameEditor.classList.contains('hidden')){event.preventDefault();event.stopImmediatePropagation();closeNameEditor();profileRenameBtn?.focus();return;}
     if(profileScreen&&!profileScreen.classList.contains('hidden')){event.preventDefault();event.stopImmediatePropagation();closeProfile();return;}
     if(screen&&!screen.classList.contains('hidden')){event.preventDefault();event.stopImmediatePropagation();close();}
   },true);
