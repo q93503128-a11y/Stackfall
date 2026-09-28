@@ -6,9 +6,9 @@ const fail=[],expect=(name,ok)=>{if(!ok)fail.push(name);};
 expect('A14-A19 runtime loads after A8-A13',index.includes('src/weapon-awakening-effects-a14-a19.js')&&index.indexOf('src/weapon-awakening-effects-a14-a19.js')>index.indexOf('src/weapon-awakening-effects-a8-a13.js'));
 
 expect('Genesis Galaxy moves awakened spiral origins onto galaxy-arm nodes',source.includes('function spawnSpiralBody')&&source.includes('ox=player.x+Math.cos(galaxyAngle)*orbit')&&source.includes('oy=player.y+Math.sin(galaxyAngle)*orbit')&&source.includes('awGenesis:true'));
-expect('Genesis Galaxy preserves an obvious spiral trajectory instead of collapsing into straight homing',source.includes('orbit=42+step*11')&&source.includes('tangent=galaxyAngle+direction*Math.PI/2')&&source.includes('for(let segment=0;segment<3;segment++)'));
-expect('Genesis Galaxy counts only non-echo original casts',source.includes("if(!awake('spiral')||echoed)return")&&source.includes('player.awSpiralCycle%4===0')&&source.includes('triggerGenesisGalaxy'));
-expect('Counter-Spiral Galaxy works before and after awakening without recursive signature count',source.includes("if(!echoed&&state.weaponAugments?.spiral)fireCounterSpiral")&&source.includes("source:'spiral-counter'")&&source.includes('fireAwakenedSpiral(n,echoed,false)'));
+expect('Genesis Galaxy preserves an obvious spiral trajectory instead of collapsing into straight homing',source.includes('orbit=52+step*14')&&source.includes('tangent=galaxyAngle+direction*Math.PI/2')&&source.includes('for(let segment=0;segment<3;segment++)'));
+expect('Genesis Galaxy uses dual counter-rotating awakened streams and signatures every third original cast',source.includes('scheduleWeaponAction(105,()=>fireAwakenedSpiral(n,false,true))')&&source.includes('player.awSpiralCycle%3===0')&&source.includes('triggerGenesisGalaxy'));
+expect('Counter-Spiral augment remains available before awakening while awakened form owns its reverse stream',source.includes("if(state.weaponAugments?.spiral&&!echoed)fireCounterSpiral")&&source.includes("source:'spiral-counter'")&&source.includes('fireAwakenedSpiral(n,echoed,false)'));
 
 expect('Mirror Sanctuary charges at most six shared faces from original casts and reflected shots',source.includes('player.awMirrorFaces=[null,null,null,null,null,null]')&&source.includes('chargeMirrorFace')&&source.includes('for(const snap of reflected)chargeMirrorFace(snap.a)'));
 expect('Perfect Reflection waits 0.18 seconds and clears shared charge',source.includes('scheduleWeaponAction(180')&&source.includes("kind:'mirror-sanctuary'")&&source.includes('player.awMirrorFaces=[null,null,null,null,null,null]'));
@@ -16,10 +16,10 @@ expect('Perfect Reflection projects long full-field signature beams',source.incl
 expect('Twin-Face Reflection is restored before and after awakening',source.includes('function mirrorTwinRays')&&source.includes("'#dffdf7','mirror-twin-reflect',1")&&source.includes('if(state.weaponAugments?.mirror)for(const snap of reflected)'));
 expect('Perfect Reflection caps augment shield gain',source.includes('beforeShield=Number(player.shield)||0')&&source.includes('beforeShield+Math.min(22,profile.gain*5)'));
 
-expect('Black-Star Lotus creates a bounded 0.85 second residual field',source.includes('life:.85,max:.85')&&source.includes('while(lotusFields.length>3)')&&source.includes('closeLotus'));
+expect('Black-Star Lotus creates a bounded 1.22 second residual field',source.includes('life:1.22,max:1.22')&&source.includes('while(lotusFields.length>3)')&&source.includes('closeLotus'));
 const lotusBlock=source.slice(source.indexOf('// A16 — Black-Star Lotus.'),source.indexOf('// A17 — Phase Starrail.'));
 expect('Black-Star Lotus preserves Devouring Pollen scaling exactly once',lotusBlock.includes('1+absorbed*.06')&&lotusBlock.includes('1+absorbed*.025')&&!lotusBlock.includes('1+field.absorbed*.06'));
-expect('Black-Star Lotus preserves the base forced-bloom power exactly once',lotusBlock.includes('r:radius*(forced?.78:1),damage,life:.85')&&!lotusBlock.includes('damage:damage*(forced?.70:1)'));
+expect('Black-Star Lotus preserves the base forced-bloom power exactly once',lotusBlock.includes('r:radius*(forced?.78:1),damage,life:1.22')&&!lotusBlock.includes('damage:damage*(forced?.70:1)'));
 expect('Lotus fields do not directly plant or force-bloom seeds',lotusBlock.includes('lotusFields.push({id:state.nextId++,x:seed.x,y:seed.y,n,r:radius')&&!lotusBlock.includes('plantVacuumSeed(')&&!lotusBlock.includes('beginVacuumBloom('));
 expect('Black-Star Lotus uses existing vacuum damage family',source.includes("source:'vacuum-bloom'")||source.includes("'vacuum-bloom'"));
 
@@ -28,6 +28,7 @@ expect('Phase Starrail keeps at most six recent nodes',source.includes('while(st
 expect('Phase Starrail detonates one representative real mine per traversed node',source.includes('for(const id of node.mineIds)')&&source.includes('if(d2<best){best=d2;mine=candidate;}')&&source.includes('if(mine)detonatePhaseMine(mine,.82)'));
 
 expect('Starbreaker Arsenal counts only original non-echo salvos and triggers every third',source.includes("if(!awake('missile')||echoed)return baseFireInterstellarMissiles(n,echoed)")&&source.includes('player.awMissileCycle%3===0'));
+expect('Starbreaker ordinary awakened salvos use dedicated armored missiles',source.includes('function fireStarbreakerVolley')&&source.includes('m.awStarbreaker=true')&&source.includes('return fireStarbreakerVolley(n)')&&source.includes('function starbreakerMissileRaster'));
 expect('Starbreaker surround uses one priority target and synchronized group signal',source.includes('target=strongestPostRosterEnemy')&&source.includes('awGroup:group')&&source.includes('stat.ready>=required')&&source.includes('other.awSignalTimer=.15'));
 expect('Starbreaker requires at least three gathered missiles when the salvo has three or more',source.includes('required=Math.min(3,stat.count)'));
 expect('MIRV remains available only after surround missiles begin their dive',source.includes("m.awStage==='hold'")&&source.includes("m.awStage='dive'")&&source.includes("if(state.weaponAugments?.missile&&d<118)splitMirvMissile(m,target)"));
