@@ -1,4 +1,4 @@
-const DAMAGE_BUCKET_SECONDS=15;
+const DAMAGE_BUCKET_SECONDS=60;
 const DAMAGE_OTHER_KEY='other';
 
 function freshRunDamageStats(){
