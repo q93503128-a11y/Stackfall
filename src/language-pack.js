@@ -154,7 +154,7 @@ Object.assign(TEXT.ko,{
 Object.assign(TEXT.en,{
   'profile.local':'LOCAL PILOT','profile.name':'Pioneer','profile.clears':'CLEARS',
   'menu.upgradeKicker':'CORE DEVELOPMENT','menu.upgrade':'CORE DEVELOPMENT','menu.upgradeDesc':'Spend recovered resources on permanent stats and equipment slots.',
-  'currency.stardust':'STARDUST','currency.coreShard':'CORE SHARD','currency.earned':'RECOVERED',
+  'currency.stardust':'STARDUST','currency.coreShard':'CORE SHARD','currency.awakeningCore':'AWAKENING CORE','currency.earned':'RECOVERED',
   'upgrade.kicker':'CORE DEVELOPMENT','upgrade.title':'CORE DEVELOPMENT','upgrade.subtitle':'Expand permanent growth around the central core.','upgrade.level':'LEVEL','upgrade.buy':'UPGRADE','upgrade.maxed':'MAX LEVEL','upgrade.insufficient':'Insufficient resources.','upgrade.requires':'Requires · {n}',
   'upgrade.vitality.name':'Vital Core','upgrade.vitality.desc':'Reinforce the core shell to increase maximum health in every run.','upgrade.vitality.effect':'Permanent max HP +{n}%',
   'upgrade.output.name':'Output Amplifier','upgrade.output.desc':'Amplify the base power circuit to increase all outgoing damage.','upgrade.output.effect':'Permanent damage +{n}%',
@@ -196,7 +196,7 @@ Object.assign(TEXT['zh-CN'],{
 Object.assign(TEXT.es,{
   'profile.local':'LOCAL PILOT','profile.name':'Pionero','profile.clears':'COMPLETADAS',
   'menu.upgradeKicker':'CORE DEVELOPMENT','menu.upgrade':'DESARROLLO DEL NÚCLEO','menu.upgradeDesc':'Usa recursos para mejorar estadísticas permanentes y ranuras.',
-  'currency.stardust':'POLVO ESTELAR','currency.coreShard':'FRAGMENTO DE NÚCLEO','currency.earned':'RECURSOS',
+  'currency.stardust':'POLVO ESTELAR','currency.coreShard':'FRAGMENTO DE NÚCLEO','currency.awakeningCore':'NÚCLEO DE DESPERTAR','currency.earned':'RECURSOS',
   'upgrade.kicker':'CORE DEVELOPMENT','upgrade.title':'DESARROLLO DEL NÚCLEO','upgrade.subtitle':'Expande el crecimiento permanente alrededor del núcleo.','upgrade.level':'NIVEL','upgrade.buy':'MEJORAR','upgrade.maxed':'NIVEL MÁX.','upgrade.insufficient':'Recursos insuficientes.','upgrade.requires':'Requiere · {n}',
   'upgrade.vitality.name':'Núcleo Vital','upgrade.vitality.desc':'Refuerza el núcleo para aumentar la vida máxima en cada partida.','upgrade.vitality.effect':'Vida máxima permanente +{n}%',
   'upgrade.output.name':'Amplificador','upgrade.output.desc':'Aumenta la potencia base de todos los ataques.','upgrade.output.effect':'Daño permanente +{n}%',
@@ -210,7 +210,7 @@ Object.assign(TEXT.es,{
 Object.assign(TEXT.fr,{
   'profile.local':'LOCAL PILOT','profile.name':'Pionnier','profile.clears':'TERMINÉES',
   'menu.upgradeKicker':'CORE DEVELOPMENT','menu.upgrade':'DÉVELOPPEMENT DU CŒUR','menu.upgradeDesc':'Dépensez des ressources pour les bonus permanents et les emplacements.',
-  'currency.stardust':'POUSSIÈRE D’ÉTOILE','currency.coreShard':'FRAGMENT DE CŒUR','currency.earned':'RESSOURCES',
+  'currency.stardust':'POUSSIÈRE D’ÉTOILE','currency.coreShard':'FRAGMENT DE CŒUR','currency.awakeningCore':'CŒUR D’ÉVEIL','currency.earned':'RESSOURCES',
   'upgrade.kicker':'CORE DEVELOPMENT','upgrade.title':'DÉVELOPPEMENT DU CŒUR','upgrade.subtitle':'Développez la progression permanente autour du cœur central.','upgrade.level':'NIVEAU','upgrade.buy':'AMÉLIORER','upgrade.maxed':'NIVEAU MAX','upgrade.insufficient':'Ressources insuffisantes.','upgrade.requires':'Requiert · {n}',
   'upgrade.vitality.name':'Cœur Vital','upgrade.vitality.desc':'Renforce la coque du cœur et augmente la vie maximale de chaque partie.','upgrade.vitality.effect':'PV max permanents +{n}%',
   'upgrade.output.name':'Amplificateur','upgrade.output.desc':'Amplifie la puissance de base de toutes les attaques.','upgrade.output.effect':'Dégâts permanents +{n}%',
