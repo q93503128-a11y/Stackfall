@@ -11,6 +11,7 @@ expect('Eclipse Blades uses a bounded align windup before its cut',source.includ
 expect('Nebula Starcaster tracks consecutive hits on one target',source.includes('awEmberTargetId:null')&&source.includes('targetId!==player.awEmberTargetId')&&source.includes('player.awEmberHits=0'));
 expect('Nebula Starcaster signature charge accepts only original caster hits',source.includes("awake('ember')&&wasAlive&&source==='ember'")&&!source.includes("['ember','echo-star','ember-multiplicity'].includes(source)"));
 expect('Nebula Starcaster signature damage is guarded against recursive charge',source.includes('emberSignatureGuard=true')&&source.includes('!emberSignatureGuard'));
+expect('Nebula Starcaster awakening replaces ordinary fire with red meteor volleys',source.includes('function awakenedRedMeteorCaster')&&source.includes("playerVisual:'ember-awakened'")&&source.includes("color:core?'#fff0f2':'#ff3b5d'")&&source.includes('awEmberMeteorVolley%4===0'));
 
 expect('Celestial Bastion counterwave is tied to a real shield break',source.includes('beforeShield>0&&player.shield<=0')&&source.includes("'barrier-lance',{shake:false}"));
 expect('Binary Collapse excludes Multiplicity wells from the paired signature',source.includes("filter(w=>w&&!w.multiplicity)")&&source.includes('w.awBinaryMerged=true'));
