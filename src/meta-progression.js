@@ -1,5 +1,5 @@
 (()=>{
-  let DEV_PROFILE=false;try{DEV_PROFILE=new URLSearchParams(location.search).get('dev')==='1'||localStorage.getItem('stackfall.devMode')==='1';}catch{}
+  let DEV_PROFILE=false;try{DEV_PROFILE=new URLSearchParams(location.search).get('dev')==='1';}catch{}
   const STORAGE_KEY=DEV_PROFILE?'stackfall.meta.dev.v1':'stackfall.meta.v1';
   window.stackfallMetaStorageProfile=DEV_PROFILE?'developer':'player';
   const INITIAL_WEAPONS=Object.freeze(['blade','ember','bulwark','gravity']);
