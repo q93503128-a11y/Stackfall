@@ -211,15 +211,15 @@
   function launchFallingStarFleet(n,target){
     if(!target||target.dead)return;
     const count=Math.min(5,(n>=6?3:n>=2?2:1)+multiplicity()),targetId=target.id,angle=Math.atan2(target.y-player.y,target.x-player.x),size=weaponSizeMultiplier();
-    pushFx({kind:'fleet-form',targetId,x:player.x,y:player.y,a:angle,count,life:.32,max:.32});
-    scheduleWeaponAction(270,()=>{
+    pushFx({kind:'fleet-form',targetId,x:player.x,y:player.y,a:angle,count,life:.74,max:.74});
+    scheduleWeaponAction(520,()=>{
       const live=enemyById(targetId)||strongestDroneTarget();if(!live)return;
       const a=Math.atan2(live.y-player.y,live.x-player.x),dx=Math.cos(a),dy=Math.sin(a),nx=-dy,ny=dx,length=Math.max(520,Math.min(weaponRange('drone')*1.22,Math.hypot(live.x-player.x,live.y-player.y)+280)),startX=player.x-dx*95,startY=player.y-dy*95;
       for(let i=0;i<count;i++){
         const offset=(i-(count-1)/2)*22*size,x1=startX+nx*offset,y1=startY+ny*offset,x2=x1+dx*length,y2=y1+dy*length;
         applyRailBeam(x1,y1,x2,y2,4.4*size,(13+n*3.5)*.70,'#baffea',i>=Math.max(1,count-multiplicity())?'drone-multiplicity':'meteor-drone',1);
       }
-      pushFx({kind:'fleet-run',x:startX,y:startY,a,count,length,life:.44,max:.44});
+      pushFx({kind:'fleet-run',x:startX,y:startY,a,count,length,life:.68,max:.68});
       scheduleWeaponAction(115,()=>{
         const final=enemyById(targetId)||live;if(!final||final.dead)return;
         areaDamage(final.x,final.y,82*size,24+n*4.6,'#e8fff7','meteor-drone',{shake:false});
@@ -265,43 +265,38 @@
       scheduleWeaponAction(index*72,()=>{areaDamage(px,py,44+n*3.4,13+n*3.4,'#e9fbff','rail-fracture',{shake:false});shockwave(px,py,'#ffffff',58+n*4,.24,1.9);});
     }
   }
-  function fireTerminusRail(n,target){
-    if(!target||target.dead)return;
-    const targetId=target.id,a=Math.atan2(target.y-player.y,target.x-player.x),length=weaponRange('rail')*1.38,size=weaponSizeMultiplier();
-    pushFx({kind:'rail-assemble',targetId,x:player.x,y:player.y,a,length,life:.42,max:.42});
-    scheduleWeaponAction(400,()=>{
-      const live=enemyById(targetId)||railAwakeningTarget();if(!live)return;
-      const angle=Math.atan2(live.y-player.y,live.x-player.x),dx=Math.cos(angle),dy=Math.sin(angle),nx=-dy,ny=dx,startX=player.x-dx*62,startY=player.y-dy*62,width=(21+n*1.8)*size,damage=88+n*13.5,eliteBonus=n>=5?1.38:1;
-      applyRailBeam(startX,startY,startX+dx*length,startY+dy*length,width,damage,'#ffffff','rail',eliteBonus);
-      const extra=multiplicity();for(let i=0;i<extra;i++){const side=i%2?1:-1,offset=side*(24+Math.floor(i/2)*16)*size;applyRailBeam(startX+nx*offset,startY+ny*offset,startX+dx*length+nx*offset,startY+dy*length+ny*offset,width*.48,damage*.46,'#cfefff','rail-multiplicity',eliteBonus);}
-      terminusFracture(startX,startY,angle,length,n);
-      pushFx({kind:'rail-fire',x:startX,y:startY,a:angle,length,width,life:.46,max:.46});
-      state.camera.shake=Math.max(state.camera.shake,6);state.flash=Math.max(state.flash,.09);audio.weapon?.('rail',false,1.75);
-    });
-  }
-  function fireAwakenedRailLattice(n,target){
-    if(!target||target.dead)return;
-    const a0=Math.atan2(target.y-player.y,target.x-player.x),dx=Math.cos(a0),dy=Math.sin(a0),nx=-dy,ny=dx,size=weaponSizeMultiplier(),length=weaponRange('rail')*1.06,eliteBonus=n>=5?1.36:1;
-    const baseDamage=(40+n*9.4)*.73,width=(4.8+n*.62)*size,offsets=[-28,0,28].map(v=>v*size);
-    for(let i=0;i<offsets.length;i++){
-      const offset=offsets[i],x1=player.x+nx*offset-dx*20,y1=player.y+ny*offset-dy*20,x2=x1+dx*length,y2=y1+dy*length;
-      applyRailBeam(x1,y1,x2,y2,width*(i===1?1.20:.78),baseDamage*(i===1?1.08:.82),i===1?'#ffffff':'#aeeaff',i===1?'rail':'rail-afterimage',eliteBonus);
+  function damageAwakenedRailPulse(x1,y1,x2,y2,width,damage,eliteBonus=1){
+    for(const enemy of state.entities.enemies){
+      if(!enemy||enemy.dead)continue;
+      if(segmentDistance(enemy.x,enemy.y,x1,y1,x2,y2)<enemy.r+width*.78){
+        const elite=enemy.type==='boss'||enemy.type==='mini';
+        dealDamage(enemy,damage*(elite?eliteBonus:1),{color:'#ffffff',source:'rail'});
+      }
     }
-    scheduleWeaponAction(105,()=>{
-      const live=target&&!target.dead?target:railAwakeningTarget();if(!live)return;
-      const a=Math.atan2(live.y-player.y,live.x-player.x),ddx=Math.cos(a),ddy=Math.sin(a),nnx=-ddy,nny=ddx;
-      for(const offset of[-16,16])applyRailBeam(player.x+nnx*offset,player.y+nny*offset,player.x+ddx*length+nnx*offset,player.y+ddy*length+nny*offset,width*.56,baseDamage*.34,'#dff8ff','rail-afterimage',eliteBonus);
+  }
+  function fireAwakenedRailWave(n,target,overdrive=false){
+    if(!target||target.dead)return;
+    const angle=Math.atan2(target.y-player.y,target.x-player.x),dx=Math.cos(angle),dy=Math.sin(angle),
+      size=weaponSizeMultiplier(),length=weaponRange('rail')*(overdrive?1.34:1.18),width=(30+n*2.35)*size*(overdrive?1.22:1),
+      x1=player.x-dx*34,y1=player.y-dy*34,x2=x1+dx*length,y2=y1+dy*length,
+      perPulse=(40+n*9.4)*.60,eliteBonus=n>=5?1.36:1;
+    pushFx({kind:'rail-wave',x:x1,y:y1,a:angle,length,width,life:.64,max:.64,overdrive});
+    const pulseTimes=[70,235,400];
+    for(let i=0;i<pulseTimes.length;i++)scheduleWeaponAction(pulseTimes[i],()=>{
+      damageAwakenedRailPulse(x1,y1,x2,y2,width,perPulse,eliteBonus);
+      pushFx({kind:'rail-wave-pulse',x:x1,y:y1,a:angle,length,width,life:.20,max:.20,index:i,overdrive});
+      if(i===1)state.camera.shake=Math.max(state.camera.shake,overdrive?5.8:4.2);
+      if(i===2)terminusFracture(x1,y1,angle,length,n);
     });
-    pushFx({kind:'rail-fire',x:player.x-dx*28,y:player.y-dy*28,a:a0,length,width:width*1.15,life:.25,max:.25});
-    state.camera.shake=Math.max(state.camera.shake,2.5);audio.weapon?.('rail',false,1.25);
+    state.flash=Math.max(state.flash,overdrive?.075:.05);
+    audio.weapon?.('rail',false,overdrive?1.68:1.42);
   }
   const baseFireRailgun=fireRailgun;
   fireRailgun=function terminusRailgun(n,echoed=false){
     if(!awake('rail')||echoed)return baseFireRailgun(n,echoed);
     const target=railAwakeningTarget();if(!target)return;
     player.awRailCycle=(player.awRailCycle||0)+1;
-    if(player.awRailCycle%4===0)return fireTerminusRail(n,target);
-    fireAwakenedRailLattice(n,target);
+    fireAwakenedRailWave(n,target,player.awRailCycle%4===0);
   };
 
   // Shared timer/status layer for A8-A13.
@@ -387,9 +382,9 @@
       else if(e.kind==='drone-mark'){const target=enemyById(e.targetId),p=worldToScreen(target?.x??e.x,target?.y??e.y),r=30+age*8;ctx.translate(p.x,p.y);ctx.rotate(age*.8);ctx.strokeStyle='#d8fff1';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<4;i++){const a=i/4*TAU;ctx.moveTo(Math.cos(a)*r*.55,Math.sin(a)*r*.55);ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);}ctx.stroke();}
       else if(e.kind==='drone-meteor'){const p=worldToScreen(e.x,e.y);ctx.strokeStyle='#eafff8';ctx.lineWidth=5;ctx.shadowBlur=24;ctx.shadowColor='#8fffd0';ctx.beginPath();ctx.moveTo(p.x-70,p.y-140);ctx.lineTo(p.x,p.y);ctx.stroke();}
       else if(e.kind==='fleet-form'){const dir={x:Math.cos(e.a),y:Math.sin(e.a)},normal={x:-dir.y,y:dir.x};for(let i=0;i<e.count;i++){const row=Math.abs(i-(e.count-1)/2),offset=(i-(e.count-1)/2)*26,d=-70-row*15,point={x:e.x+dir.x*d+normal.x*offset,y:e.y+dir.y*d+normal.y*offset};drawFleetDrone(point,e.a,1.0,age);}}
-      else if(e.kind==='fleet-run'){const p=worldToScreen(e.x,e.y),dx=Math.cos(e.a),dy=Math.sin(e.a),nx=-dy,ny=dx;ctx.strokeStyle='#baffea';ctx.shadowBlur=18;ctx.shadowColor='#8fffd0';for(let i=0;i<e.count;i++){const off=(i-(e.count-1)/2)*22;ctx.globalAlpha=.18+.55*q;ctx.lineWidth=2+i%2;ctx.beginPath();ctx.moveTo(p.x+nx*off,p.y+ny*off);ctx.lineTo(p.x+dx*e.length+nx*off,p.y+dy*e.length+ny*off);ctx.stroke();}}
-      else if(e.kind==='rail-assemble'){const p=worldToScreen(e.x,e.y),dx=Math.cos(e.a),dy=Math.sin(e.a),nx=-dy,ny=dx,spread=42*(.92-.48*age),len=185+age*90,back=76;ctx.strokeStyle='#e5f8ff';ctx.shadowBlur=32;ctx.shadowColor='#b7e7ff';ctx.lineWidth=5.5;for(const side of[-1,1]){ctx.beginPath();ctx.moveTo(p.x-dx*back+nx*spread*side,p.y-dy*back+ny*spread*side);ctx.lineTo(p.x+dx*len+nx*spread*.46*side,p.y+dy*len+ny*spread*.46*side);ctx.stroke();ctx.beginPath();ctx.moveTo(p.x-dx*24+nx*spread*.55*side,p.y-dy*24+ny*spread*.55*side);ctx.lineTo(p.x+dx*54,p.y+dy*54);ctx.stroke();}ctx.strokeStyle='rgba(255,255,255,.72)';ctx.lineWidth=1.5;ctx.setLineDash([18,10]);ctx.beginPath();ctx.moveTo(p.x-dx*24,p.y-dy*24);ctx.lineTo(p.x+dx*e.length,p.y+dy*e.length);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(p.x+dx*28,p.y+dy*28,9,0,TAU);ctx.fill();}
-      else if(e.kind==='rail-fire'){const p=worldToScreen(e.x,e.y),dx=Math.cos(e.a),dy=Math.sin(e.a),nx=-dy,ny=dx;ctx.strokeStyle='#ffffff';ctx.shadowBlur=48;ctx.shadowColor='#b7e7ff';ctx.lineWidth=Math.max(7,e.width*q);ctx.beginPath();ctx.moveTo(p.x-dx*70,p.y-dy*70);ctx.lineTo(p.x+dx*e.length,p.y+dy*e.length);ctx.stroke();ctx.globalAlpha=q*.48;ctx.strokeStyle='#77dfff';ctx.lineWidth=Math.max(2,e.width*.22);for(const side of[-1,1]){ctx.beginPath();ctx.moveTo(p.x-dx*48+nx*e.width*.72*side,p.y-dy*48+ny*e.width*.72*side);ctx.lineTo(p.x+dx*e.length+nx*e.width*.28*side,p.y+dy*e.length+ny*e.width*.28*side);ctx.stroke();}}
+      else if(e.kind==='fleet-run'){const p=worldToScreen(e.x,e.y),dx=Math.cos(e.a),dy=Math.sin(e.a),nx=-dy,ny=dx,travel=clamp(age*1.08,0,1);ctx.strokeStyle='#baffea';ctx.shadowBlur=18;ctx.shadowColor='#8fffd0';for(let i=0;i<e.count;i++){const off=(i-(e.count-1)/2)*22,row=Math.abs(i-(e.count-1)/2),lag=row*.055,progress=clamp((travel-lag)/(1-lag),0,1),wx=e.x+dx*e.length*progress+nx*off,wy=e.y+dy*e.length*progress+ny*off;ctx.globalAlpha=.16+.38*q;ctx.lineWidth=1.5+i%2;ctx.beginPath();ctx.moveTo(p.x+nx*off,p.y+ny*off);ctx.lineTo(p.x+dx*e.length*progress+nx*off,p.y+dy*e.length*progress+ny*off);ctx.stroke();drawFleetDrone({x:wx,y:wy},e.a,1.06,1);}}
+      else if(e.kind==='rail-wave'){const p=worldToScreen(e.x,e.y),dx=Math.cos(e.a),dy=Math.sin(e.a),nx=-dy,ny=dx,w=e.width*(.86+.14*Math.sin(age*Math.PI)),len=e.length,over=!!e.overdrive,grad=ctx.createLinearGradient(p.x,p.y,p.x+dx*len,p.y+dy*len);grad.addColorStop(0,'rgba(255,255,255,.98)');grad.addColorStop(.12,over?'rgba(168,229,255,.98)':'rgba(198,240,255,.96)');grad.addColorStop(.58,over?'rgba(83,177,255,.82)':'rgba(104,202,255,.72)');grad.addColorStop(1,'rgba(76,164,255,.10)');ctx.fillStyle=grad;ctx.shadowBlur=over?62:48;ctx.shadowColor='#8bdcff';ctx.globalAlpha=.50+.42*q;ctx.beginPath();ctx.moveTo(p.x-dx*18+nx*w*.18,p.y-dy*18+ny*w*.18);ctx.quadraticCurveTo(p.x+dx*len*.18+nx*w*.74,p.y+dy*len*.18+ny*w*.74,p.x+dx*len+nx*w*.34,p.y+dy*len+ny*w*.34);ctx.lineTo(p.x+dx*len-nx*w*.34,p.y+dy*len-ny*w*.34);ctx.quadraticCurveTo(p.x+dx*len*.18-nx*w*.74,p.y+dy*len*.18-ny*w*.74,p.x-dx*18-nx*w*.18,p.y-dy*18-ny*w*.18);ctx.closePath();ctx.fill();ctx.globalAlpha=.92*q+.06;ctx.strokeStyle='#ffffff';ctx.lineWidth=Math.max(6,w*.30);ctx.shadowBlur=38;ctx.beginPath();ctx.moveTo(p.x-dx*8,p.y-dy*8);ctx.lineTo(p.x+dx*len,p.y+dy*len);ctx.stroke();ctx.globalAlpha=.85*q;ctx.fillStyle='#ffffff';ctx.shadowBlur=46;ctx.beginPath();ctx.arc(p.x,p.y,w*.54*(.88+.12*Math.sin(age*TAU*2)),0,TAU);ctx.fill();ctx.globalAlpha=.42*q;ctx.strokeStyle='#b6efff';ctx.lineWidth=2.2;for(let ring=0;ring<3;ring++){const rr=w*(.70+ring*.27)+age*w*.38;ctx.beginPath();ctx.ellipse(p.x-dx*2,p.y-dy*2,rr,rr*.46,e.a,0,TAU);ctx.stroke();}}
+      else if(e.kind==='rail-wave-pulse'){const p=worldToScreen(e.x,e.y),dx=Math.cos(e.a),dy=Math.sin(e.a),nx=-dy,ny=dx,w=e.width*(1+age*.34);ctx.globalAlpha=q*.72;ctx.strokeStyle='#ffffff';ctx.shadowBlur=32;ctx.shadowColor='#9fe5ff';ctx.lineWidth=Math.max(3,w*.11);for(const f of[.16,.46,.76]){const cx=p.x+dx*e.length*f,cy=p.y+dy*e.length*f,rr=w*(.30+.32*age);ctx.beginPath();ctx.ellipse(cx,cy,rr,rr*.34,e.a,0,TAU);ctx.stroke();}}
       ctx.restore();
     }
   }
