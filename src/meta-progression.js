@@ -7,6 +7,7 @@
   const sanitizeList=value=>Array.isArray(value)?[...new Set(value.filter(item=>typeof item==='string'))]:[];
   const sanitizeNumber=value=>Math.max(0,Math.floor(Number(value)||0));
   const sanitizeMap=value=>value&&typeof value==='object'&&!Array.isArray(value)?{...value}:{};
+  const sanitizeProfileName=value=>String(value??'').replace(/[\u0000-\u001f\u007f]/g,'').replace(/\s+/g,' ').trim().slice(0,16);
   function canonicalClearedStages(value){const saved=new Set(sanitizeList(value)),accepted=[];for(const stage of [...(window.STACKFALL_STAGE_CATALOG||[])].sort((a,b)=>a.order-b.order)){if(!saved.has(stage.id))continue;const previous=stage.requirements?.previous;if(previous&&!accepted.includes(previous))continue;accepted.push(stage.id);}return accepted;}
   function progressionUnlockedWeapons(clearedStages){const unlocked=new Set(INITIAL_WEAPONS);for(const stage of window.STACKFALL_STAGE_CATALOG||[]){if(!clearedStages.includes(stage.id))continue;for(const reward of stage.rewards||[])if(reward.type==='weapon'&&WEAPONS[reward.key])unlocked.add(reward.key);}return[...unlocked];}
   function load(){
@@ -19,6 +20,7 @@
       for(const key of Object.keys(upgrades))upgrades[key]=sanitizeNumber(upgrades[key]);
       return{
         version:4,
+        profileName:sanitizeProfileName(saved.profileName),
         unlockedWeapons:unlocked,
         clearedStages,
         bestStageTimes:sanitizeMap(saved.bestStageTimes),
@@ -28,11 +30,12 @@
         lifetime:{runs:sanitizeNumber(saved.lifetime?.runs),kills:sanitizeNumber(saved.lifetime?.kills),bosses:sanitizeNumber(saved.lifetime?.bosses)}
       };
     }catch{
-      return{version:4,unlockedWeapons:[...INITIAL_WEAPONS],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},lifetime:{runs:0,kills:0,bosses:0}};
+      return{version:4,profileName:'',unlockedWeapons:[...INITIAL_WEAPONS],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},lifetime:{runs:0,kills:0,bosses:0}};
     }
   }
   const meta=load();
   function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(meta));}catch{}window.renderStackfallMetaUi?.();}
+  function setProfileName(value){meta.profileName=sanitizeProfileName(value);save();return meta.profileName;}
   function isWeaponUnlocked(key){return key==='core'||meta.unlockedWeapons.includes(key);}
   function unlockWeapon(key){
     if(!WEAPONS[key]||isWeaponUnlocked(key))return false;
@@ -91,6 +94,7 @@
   window.STACKFALL_CURRENCY_KEYS=CURRENCY_KEYS;
   window.stackfallMeta=meta;
   window.stackfallSaveMeta=save;
+  window.stackfallSetProfileName=setProfileName;
   window.stackfallIsWeaponUnlocked=isWeaponUnlocked;
   window.stackfallUnlockWeapon=unlockWeapon;
   window.stackfallCurrency=currency;
