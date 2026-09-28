@@ -52,9 +52,9 @@ expect('Prism flashes when attack begins rather than blinking during aim',prism.
 expect('normal Bulwark uses segmented armor instead of a single hex',read('src/canonical-weapon-visuals.js').includes('barrierSegmentPath')&&read('src/canonical-weapon-visuals.js').includes('canonicalDefenseBarrier'));
 expect('normal Comet Lance fires immediately',guidance.includes('fireComet=function rangedCometVolley')&&!guidance.includes('COMET_WINDUP_MS')&&!guidance.includes('stackfallAddCometWindup'));
 expect('Comet Multiplicity has no awakening windup',!endgame.includes('stackfallCometWindupDelayMs')&&!endgame.includes('stackfallAddCometWindup')&&endgame.includes('multiplicityComet'));
-expect('Final Comet owns the sole charge path',!gpu.includes('stackfallDrawCometWindups')&&awakening.includes("kind:'comet-charge'")&&awakening.includes('scheduleWeaponAction(220'));
-expect('normal Boomerang retains its crescent throughout the route',!entities.includes('boomerangMoonPhase')&&entities.includes('phase=.14')&&entities.includes('drawMoonDisc'));
-expect('awakened Lunar Return changes phase on return',awakening.includes("p.stage='return'")&&awakening.includes('p.awMoonPhase=1-.86*clamp(p.returnLife/1.15,0,1)'));
+expect('Final Comet owns the sole charge path',!gpu.includes('stackfallDrawCometWindups')&&awakening.includes("kind:'comet-charge'")&&awakening.includes('scheduleWeaponAction(340')&&awakening.includes('pierce:999'));
+expect('normal Boomerang retains its non-lunar curved energy blade',!entities.includes('boomerangMoonPhase')&&!entities.includes('drawMoonDisc')&&entities.includes('quadraticCurveTo(0,-p.r*1.05,p.r*1.15,0)'));
+expect('awakened Lunar Return owns the lunar phase transformation',awakening.includes('function drawMoonBoomerang(p)')&&awakening.includes("p.stage='return'")&&awakening.includes('p.awMoonPhase=1-.86*clamp(p.returnLife/1.15,0,1)'));
 
 expect('damage results include timeline series and per-series toggles',damage.includes('damageTrend')&&damage.includes('damageTrendHidden'));
 expect('runtime keeps explicit x1 and x2 combat speed control',runtimeControls.includes("speed.textContent=state.gameSpeed===2?'×2':'×1'")&&runtimeControls.includes('stackfallGameSpeed'));
