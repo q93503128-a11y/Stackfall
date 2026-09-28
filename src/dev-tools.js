@@ -144,6 +144,14 @@
   function fullHeal(){player.hp=player.maxHp;player.shield=Math.max(player.shield||0,typeof shieldCapacity==='function'?shieldCapacity():0);player.invuln=Math.max(player.invuln||0,2);syncUi();}
   function giveCores(){state.awakeningCores=99;syncUi();}
   function clearAwakenings(){resetAwakeningTransients();state.awakenedWeapons={};syncUi();}
+  function openSpecialReward(){
+    if(state.mode==='gameover'||state.mode==='menu')return false;
+    try{closeAbilityLedger?.(true);}catch{}
+    if(!Array.isArray(state.rewardQueue))state.rewardQueue=[];
+    state.rewardQueue.push('dev');
+    window.updateRewardQueue?.();
+    return state.mode==='bossReward';
+  }
 
   const style=document.createElement('style');
   style.textContent=`
@@ -178,7 +186,7 @@
   const stageOptions=allStages().map(stage=>`<option value="${stage.id}">STAGE ${String(stage.order).padStart(2,'0')} · ${stageName(stage)}</option>`).join('');
   panel.innerHTML=`
     <h3>DEVELOPER TEST</h3>
-    <p>로컬 테스트 프로필 · 실제 로그인/서버 인증 없음</p>
+    <p>로컬 테스트 프로필 · 실제 로그인/서버 인증 없음 · F8/F10 패널 토글</p>
     <label>슬롯별 무기 설정</label>
     <div id="devWeaponSlots" class="dev-slot-editor"></div>
     <div class="dev-slot-note">각 슬롯은 무기·중첩·각성을 독립 설정한다. 각성 ON은 해당 무기를 자동으로 6중첩으로 맞춘다. 외부 테스트 버튼이나 런타임 변경 뒤에는 새로고침으로 실제 현재 상태를 다시 읽을 수 있다.</div>
@@ -203,7 +211,8 @@
       <button id="devClearEnemies">적/투사체 정리</button>
       <button id="devHeal">체력·보호막 회복</button>
       <button id="devCores">각성 코어 ×99</button>
-      <button id="devInfiniteCurrency" class="accent dev-wide">재화 무한 OFF</button>
+      <button id="devReward" class="accent">특수능력 보상창</button>
+      <button id="devInfiniteCurrency" class="accent">재화 무한 OFF</button>
     </div>
     <button id="devDisable" class="danger">이 브라우저에서 개발 모드 해제</button>
     <div id="devStatus" class="dev-status"></div>
@@ -246,14 +255,15 @@
   $('#devClearEnemies').onclick=()=>{clearCombatEntities();updateStatus();};
   $('#devHeal').onclick=()=>{fullHeal();updateStatus();};
   $('#devCores').onclick=()=>{giveCores();updateStatus();};
+  $('#devReward').onclick=()=>{openSpecialReward();updateStatus();};
   $('#devInfiniteCurrency').onclick=()=>{setInfiniteCurrency(window.stackfallDevInfiniteCurrency!==true);updateStatus();};
   $('#devDisable').onclick=()=>{try{localStorage.removeItem('stackfall.devMode');localStorage.removeItem('stackfall.devInfiniteCurrency');}catch{}window.stackfallDevInfiniteCurrency=false;const url=new URL(location.href);url.searchParams.delete('dev');location.replace(url.toString());};
   weapon.onchange=updateStatus;stage.onchange=updateStatus;
-  window.addEventListener('keydown',event=>{if(event.code==='F10'){event.preventDefault();panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))refreshDevPanel();}});
+  window.addEventListener('keydown',event=>{if(event.code==='F8'||event.code==='F10'){event.preventDefault();panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))refreshDevPanel();}});
   renderSlotEditor();updateStatus();window.renderStackfallMetaUi?.();
   window.stackfallDeveloperTest={
     enabled:true,
-    equipOnly,equipAll,assignSlot:assignDevSlot,setSlotLevel:setDevSlotLevel,setSlotAwakening:setDevSlotAwakening,setCoreLevel:setDevCoreLevel,setCoreAwakening:setDevCoreAwakening,setInfiniteCurrency,startStage,startEndless,jumpStageBoss,giveCores,clearAwakenings,
+    equipOnly,equipAll,assignSlot:assignDevSlot,setSlotLevel:setDevSlotLevel,setSlotAwakening:setDevSlotAwakening,setCoreLevel:setDevCoreLevel,setCoreAwakening:setDevCoreAwakening,setInfiniteCurrency,startStage,startEndless,jumpStageBoss,giveCores,clearAwakenings,openSpecialReward,
     snapshot:()=>({run:window.stackfallCurrentRunConfig?.(),weaponSlots:[...(state.weaponSlots||[])],weaponStacks:{...(state.weaponStacks||{})},awakened:{...(state.awakenedWeapons||{})},cores:state.awakeningCores||0,infiniteCurrency:window.stackfallDevInfiniteCurrency===true,canonicalVisuals:window.stackfallCanonicalWeaponVisualDiagnostics?.()||null,renderer:window.stackfallRendererInfo?.()||null})
   };
 })();
