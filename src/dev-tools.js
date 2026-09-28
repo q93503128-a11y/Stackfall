@@ -2,10 +2,8 @@
   'use strict';
   const params=new URLSearchParams(location.search);
   const requested=params.get('dev')==='1';
-  if(requested){try{localStorage.setItem('stackfall.devMode','1');}catch{}}
-  let enabled=requested;
-  try{enabled=enabled||localStorage.getItem('stackfall.devMode')==='1';}catch{}
-  if(!enabled)return;
+  try{localStorage.removeItem('stackfall.devMode');}catch{}
+  if(!requested)return;
 
   const allWeapons=()=>Object.keys(window.stackfallAwakeningDefs||{}).filter(key=>WEAPONS?.[key]);
   const equipmentWeapons=()=>allWeapons().filter(key=>key!=='core');
