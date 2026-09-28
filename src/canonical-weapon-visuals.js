@@ -85,9 +85,9 @@
       const c=variant==='echo'?'#ff9bbb':'#d8f7ff';g.translate(w*.5,h*.5);g.shadowBlur=15;g.shadowColor=c;g.fillStyle=c;g.strokeStyle='#ffffff';g.lineWidth=1;
       g.beginPath();g.moveTo(46,0);g.lineTo(3,-10);g.lineTo(-37,-4);g.lineTo(-49,0);g.lineTo(-37,4);g.lineTo(3,10);g.closePath();g.fill();g.stroke();g.globalAlpha=.45;g.beginPath();g.moveTo(-67,0);g.lineTo(21,0);g.stroke();
     });
-    if(kind==='drone')return makeRaster(key,138,64,(g,w,h)=>{
-      const c=variant==='echo'?'#ff91ba':'#8fffd0';g.translate(w*.5,h*.5);g.shadowBlur=14;g.shadowColor=c;g.fillStyle='#eafff7';g.strokeStyle=c;g.lineWidth=1.4;
-      g.beginPath();g.moveTo(38,0);g.lineTo(7,-8);g.lineTo(-27,-5);g.lineTo(-39,0);g.lineTo(-27,5);g.lineTo(7,8);g.closePath();g.fill();g.stroke();g.globalAlpha=.42;g.beginPath();g.moveTo(-58,0);g.lineTo(11,0);g.stroke();
+    if(kind==='drone')return makeRaster(key,178,78,(g,w,h)=>{
+      const echo=variant==='echo',aw=variant==='awakened',c=echo?'#ff91ba':aw?'#baffea':'#8fffd0';g.translate(w*.54,h*.5);g.shadowBlur=aw?24:14;g.shadowColor=c;g.fillStyle=aw?'#ffffff':'#eafff7';g.strokeStyle=c;g.lineWidth=aw?1.8:1.4;
+      g.beginPath();g.moveTo(aw?54:38,0);g.lineTo(aw?12:7,aw?-10:-8);g.lineTo(aw?-31:-27,aw?-7:-5);g.lineTo(aw?-46:-39,0);g.lineTo(aw?-31:-27,aw?7:5);g.lineTo(aw?12:7,aw?10:8);g.closePath();g.fill();g.stroke();g.globalAlpha=aw?.70:.42;g.lineWidth=aw?3.2:1.4;g.beginPath();g.moveTo(aw?-82:-58,0);g.lineTo(aw?18:11,0);g.stroke();if(aw){g.globalAlpha=.45;g.strokeStyle='#ffffff';g.beginPath();g.moveTo(-65,-9);g.lineTo(26,-4);g.moveTo(-65,9);g.lineTo(26,4);g.stroke();}
     });
     if(kind==='spiral')return makeRaster(key,132,72,(g,w,h)=>{
       const c=variant==='echo'?'#ff8fba':'#e3a7ff';g.translate(w*.5,h*.5);g.shadowBlur=17;g.shadowColor=c;g.strokeStyle=c;g.lineWidth=2;g.beginPath();g.arc(0,0,13,-2.55,2.55);g.stroke();g.fillStyle='#ffffff';g.beginPath();g.ellipse(27,0,13,5,0,0,TAU);g.fill();g.globalAlpha=.36;g.beginPath();g.moveTo(-52,0);g.lineTo(17,0);g.stroke();
@@ -102,7 +102,7 @@
     if(kind==='blade-wave')return[r*8.8,r*4.8];
     if(kind==='gate')return[r*7.4,r*3.8];
     if(kind==='shard')return[r*6.4,r*3.0];
-    if(kind==='drone')return[r*5.7,r*2.8];
+    if(kind==='drone')return[p.awakeningChild?r*7.4:r*5.7,p.awakeningChild?r*3.5:r*2.8];
     if(kind==='spiral')return[r*5.5,r*3.0];
     return[r*4,r*2.5];
   }
