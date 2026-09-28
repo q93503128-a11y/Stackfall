@@ -12,8 +12,8 @@
     for(const w of state.entities.wells||[])if(w){delete w.awBinaryGroup;delete w.awBinarySide;delete w.awBinaryEcho;delete w.awBinaryMerged;}
     for(const p of state.entities.curves||[])if(p?.awLunar){p.awLunar=false;p.awMoonRippleDone=false;delete p.awMoonPhase;delete p.awOrbitX;delete p.awOrbitY;delete p.awOrbitR;delete p.awOrbitAngle;delete p.awOrbitDuration;if(p.stage==='lunarOrbit'){p.stage='return';p.stageTime=0;p.returnLife=0;}}
     Object.assign(player,{
-      awCoreCycle:0,awBladeCd:4.6,awBladeWindup:0,awEmberHits:0,awEmberTargetId:null,awEmberChargeFlash:0,awEmberMeteorVolley:0,
-      awBulwarkHitAngle:0,awBulwarkHitFlash:0,awBulwarkStrong:0,awCometCycle:0
+      awCoreCycle:0,awBladeCd:4.6,awBladeWindup:0,awBladeWaveCd:.35,awEmberHits:0,awEmberTargetId:null,awEmberChargeFlash:0,awEmberMeteorVolley:0,
+      awBulwarkHitAngle:0,awBulwarkHitFlash:0,awBulwarkStrong:0,awBulwarkVolleyCd:1.1,awCometCycle:0
     });
   }
   window.stackfallResetAwakeningFirstSetCombat=resetAwakeningCombatState;
@@ -42,11 +42,22 @@
     pushFx({kind:'eclipse-cut',x:player.x,y:player.y,r:radius,life:.42,max:.42});
     audio.weapon?.('blade',false,1.45);
   }
+  function fireEclipseBladeWaves(){
+    const n=Math.max(1,weaponCount('blade')),targets=nearestEnemies(player.x,player.y,3,null,weaponRange('blade')*2.8),size=weaponSizeMultiplier(),count=3+mult();
+    if(!targets.length)return;
+    for(let i=0;i<count;i++){
+      const orbitA=player.angle+i*TAU/count,ox=player.x+Math.cos(orbitA)*orbitRadiusFor('blade'),oy=player.y+Math.sin(orbitA)*orbitRadiusFor('blade'),target=targets[i%targets.length],
+        a=Math.atan2(target.y-oy,target.x-ox),speed=560+n*18;
+      spawnPlayerProjectile({x:ox,y:oy,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:8.5*size,life:1.15,maxRange:weaponRange('blade')*2.7,damage:12+n*2.8,color:'#9cefff',pierce:2+(n>=6?1:0),source:'blade',playerVisual:'blade-wave',homingTargetId:target.id,homingReacquire:false,homingTurn:.55,awakeningChild:true});
+    }
+    pushFx({kind:'eclipse-wave',x:player.x,y:player.y,life:.28,max:.28});
+  }
   const baseUpdateWeapons=updateWeapons;
   updateWeapons=function awakenedFirstSetWeapons(dt){
     baseUpdateWeapons(dt);
     if(awake('blade')){
-      player.awBladeCd=(Number(player.awBladeCd)||4.6)-dt;
+      player.awBladeCd=(Number(player.awBladeCd)||4.6)-dt;player.awBladeWaveCd=(Number(player.awBladeWaveCd)||0)-dt;
+      if(player.awBladeWaveCd<=0){player.awBladeWaveCd=Math.max(.48,.82*hasteMult());fireEclipseBladeWaves();}
       if((player.awBladeWindup||0)>0){
         player.awBladeWindup=Math.max(0,player.awBladeWindup-dt);
         if(player.awBladeWindup===0)triggerEclipseCut();
@@ -55,10 +66,11 @@
         player.awBladeWindup=.24;
         pushFx({kind:'blade-align',x:player.x,y:player.y,life:.24,max:.24});
       }
-    }else{player.awBladeCd=4.6;player.awBladeWindup=0;}
+    }else{player.awBladeCd=4.6;player.awBladeWindup=0;player.awBladeWaveCd=.35;}
     player.awEmberChargeFlash=Math.max(0,(player.awEmberChargeFlash||0)-dt);
     player.awBulwarkHitFlash=Math.max(0,(player.awBulwarkHitFlash||0)-dt);
     player.awBulwarkStrong=Math.max(0,(player.awBulwarkStrong||0)-dt);
+    if(awake('bulwark')){player.awBulwarkVolleyCd=(Number(player.awBulwarkVolleyCd)||0)-dt;if(player.awBulwarkVolleyCd<=0){player.awBulwarkVolleyCd=Math.max(1.55,2.75*hasteMult());fireBastionVolley();}}else player.awBulwarkVolleyCd=1.1;
   };
 
   const baseFireEmber=fireEmber;
@@ -104,6 +116,16 @@
   };
 
   // A4 — Celestial Bastion: hit-facing armor deployment plus a real break counterwave.
+  function fireBastionVolley(){
+    const n=Math.max(1,weaponCount('bulwark')),targets=nearestEnemies(player.x,player.y,4,null,620),size=weaponSizeMultiplier();if(!targets.length)return;
+    const count=Math.min(4,Math.max(2,targets.length));
+    for(let i=0;i<count;i++){
+      const target=targets[i%targets.length],a=Math.atan2(target.y-player.y,target.x-player.x),ox=player.x+Math.cos(a)*54,oy=player.y+Math.sin(a)*54,speed=510+n*15;
+      spawnPlayerProjectile({x:ox,y:oy,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:7.2*size,life:1.35,maxRange:660,damage:17+n*3.2,color:'#cafff2',pierce:3,source:'barrier-lance',playerVisual:'comet-awakened',awakeningChild:true});
+    }
+    pushFx({kind:'bastion-volley',x:player.x,y:player.y,count,life:.34,max:.34});
+    audio.weapon?.('bulwark',false,1.18);
+  }
   const baseHurtPlayer=hurtPlayer;
   hurtPlayer=function celestialBastionHurt(amount,source='contact'){
     const beforeShield=Math.max(0,Number(player.shield)||0),beforeHp=Math.max(0,Number(player.hp)||0);
@@ -130,8 +152,8 @@
     if(!awake('gravity')||n<6)return;
     const created=state.entities.wells.slice(before).filter(w=>w&&!w.multiplicity);
     if(created.length<2)return;
-    const group=++gravityGroupId,pair=created.slice(0,2),mergeX=(pair[0].x+pair[1].x)/2,mergeY=(pair[0].y+pair[1].y)/2;
-    pair.forEach((w,index)=>{w.awBinaryGroup=group;w.awBinarySide=index;w.awBinaryEcho=!!echoed;w.awBinaryStartX=w.x;w.awBinaryStartY=w.y;w.awBinaryMergeX=mergeX;w.awBinaryMergeY=mergeY;});
+    const group=++gravityGroupId,pair=created.slice(0,2),mergeX=(pair[0].x+pair[1].x)/2,mergeY=(pair[0].y+pair[1].y)/2,orbitR=Math.max(48,Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y)*.5),orbitA=Math.atan2(pair[0].y-mergeY,pair[0].x-mergeX);
+    pair.forEach((w,index)=>{w.awBinaryGroup=group;w.awBinarySide=index;w.awBinaryEcho=!!echoed;w.awBinaryStartX=w.x;w.awBinaryStartY=w.y;w.awBinaryMergeX=mergeX;w.awBinaryMergeY=mergeY;w.awBinaryOrbitR=orbitR;w.awBinaryOrbitA=orbitA;});
   };
   function triggerBinaryMerge(pair){
     const a=pair[0],b=pair[1],cx=(a.x+b.x)/2,cy=(a.y+b.y)/2,echoed=!!(a.awBinaryEcho||b.awBinaryEcho),n=Math.max(1,weaponCount('gravity')),size=weaponSizeMultiplier(),power=echoed?.55:1;
@@ -150,9 +172,12 @@
       for(const w of state.entities.wells){if(!w?.awBinaryGroup||w.awBinaryMerged)continue;const list=groups.get(w.awBinaryGroup)||[];list.push(w);groups.set(w.awBinaryGroup,list);}
       for(const group of groups.values()){
         if(group.length<2)continue;const pair=group.slice(0,2),life=Math.min(pair[0].life,pair[1].life);
-        if(life<=.92){
+        if(life>.92){
+          const cx=Number(pair[0].awBinaryMergeX)||((pair[0].x+pair[1].x)/2),cy=Number(pair[0].awBinaryMergeY)||((pair[0].y+pair[1].y)/2),rr=Number(pair[0].awBinaryOrbitR)||90,base=(Number(pair[0].awBinaryOrbitA)||0)+(state.time||0)*1.35;
+          pair.forEach((w,index)=>{const a=base+(index?Math.PI:0),pulse=.92+.08*Math.sin((state.time||0)*3.1+index);w.x=cx+Math.cos(a)*rr*pulse;w.y=cy+Math.sin(a)*rr*pulse;});
+        }else{
           const raw=clamp((.92-life)/.74,0,1),ease=raw*raw*(3-2*raw),pull=.90*ease;
-          for(const w of pair){w.x=lerp(Number(w.awBinaryStartX)||w.x,Number(w.awBinaryMergeX)||w.x,pull);w.y=lerp(Number(w.awBinaryStartY)||w.y,Number(w.awBinaryMergeY)||w.y,pull);}
+          for(const w of pair){w.x=lerp(w.x,Number(w.awBinaryMergeX)||w.x,.18+pull*.26);w.y=lerp(w.y,Number(w.awBinaryMergeY)||w.y,.18+pull*.26);}
         }
         if(pair.every(w=>w.life<=.18)||Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y)<=24)triggerBinaryMerge(pair);
       }
@@ -308,8 +333,10 @@
     for(const e of fx){const p=worldToScreen(e.x,e.y),q=clamp(e.life/Math.max(.001,e.max),0,1),age=1-q;ctx.save();ctx.globalAlpha=Math.min(1,q*1.7);
       if(e.kind==='stellar-volley'){ctx.translate(p.x,p.y);ctx.strokeStyle='#dffcff';ctx.shadowBlur=20;ctx.shadowColor='#8ff5ff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,40+age*20,0,TAU);ctx.stroke();}
       else if(e.kind==='blade-align'){ctx.translate(p.x,p.y);ctx.strokeStyle='#bfefff';ctx.setLineDash([8,7]);ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(0,0,90+age*55,0,TAU);ctx.stroke();ctx.setLineDash([]);}
+      else if(e.kind==='eclipse-wave'){ctx.translate(p.x,p.y);ctx.rotate(age*.8);ctx.strokeStyle='#dffaff';ctx.shadowBlur=20;ctx.shadowColor='#76ddff';ctx.lineWidth=2.4;for(let i=0;i<3;i++){const a=i*TAU/3,r=52+age*38;ctx.beginPath();ctx.arc(Math.cos(a)*r*.18,Math.sin(a)*r*.18,r*.72,a-.62,a+.62);ctx.stroke();}}
       else if(e.kind==='eclipse-cut'){ctx.translate(p.x,p.y);ctx.strokeStyle='#f2fbff';ctx.shadowBlur=30;ctx.shadowColor='#9bdcff';ctx.lineWidth=7*(1-age)+2;ctx.beginPath();ctx.arc(0,0,e.r*(.72+.28*age),0,TAU);ctx.stroke();ctx.strokeStyle='rgba(18,26,46,.9)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,e.r*(.62+.34*age),0,TAU);ctx.stroke();}
       else if(e.kind==='starline-flash'){ctx.translate(p.x,p.y);ctx.fillStyle='#ffffff';ctx.shadowBlur=34;ctx.shadowColor='#ffd9ed';ctx.beginPath();ctx.arc(0,0,7+age*24,0,TAU);ctx.fill();}
+      else if(e.kind==='bastion-volley'){ctx.translate(p.x,p.y);ctx.strokeStyle='#dffff8';ctx.shadowBlur=20;ctx.shadowColor='#9dffe2';ctx.lineWidth=3;for(let i=0;i<e.count;i++){const a=i*TAU/e.count+age*.22,r=46+age*26;ctx.beginPath();ctx.moveTo(Math.cos(a)*r*.55,Math.sin(a)*r*.55);ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);ctx.stroke();}}
       else if(e.kind==='bastion-break'){ctx.translate(p.x,p.y);ctx.strokeStyle='#eafff7';ctx.lineWidth=4;for(let i=0;i<8;i++){const a=i*TAU/8,rr=e.r*(.28+.65*age);ctx.beginPath();ctx.moveTo(Math.cos(a)*rr*.62,Math.sin(a)*rr*.62);ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);ctx.stroke();}}
       else if(e.kind==='binary-merge'){const a=worldToScreen(e.ax,e.ay),b=worldToScreen(e.bx,e.by),cx=p.x,cy=p.y,ang=age*TAU*1.35,r=(1-age)*Math.hypot(a.x-b.x,a.y-b.y)*.5;ctx.strokeStyle=e.echoed?'#ff83ae':'#ecf7ff';ctx.lineWidth=2;ctx.shadowBlur=22;ctx.shadowColor=e.echoed?'#ff5b91':'#9bdcff';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(cx+Math.cos(ang)*r*.45,cy+Math.sin(ang)*r*.45,cx+Math.cos(ang)*r,cy+Math.sin(ang)*r);ctx.stroke();ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.quadraticCurveTo(cx-Math.cos(ang)*r*.45,cy-Math.sin(ang)*r*.45,cx-Math.cos(ang)*r,cy-Math.sin(ang)*r);ctx.stroke();}
       else if(e.kind==='binary-core'){ctx.translate(p.x,p.y);ctx.fillStyle='#020207';ctx.shadowBlur=38;ctx.shadowColor=e.echoed?'#ff5f97':'#ffffff';ctx.beginPath();ctx.arc(0,0,16+age*20,0,TAU);ctx.fill();ctx.strokeStyle=e.echoed?'#ff8bb1':'#e9fbff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,20+age*34,0,TAU);ctx.stroke();}
