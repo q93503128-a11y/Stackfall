@@ -27,6 +27,14 @@
 
   const app=document.querySelector('#app');
   if(!app)return;
+  const hud=document.querySelector('#hud'),hudVitals=hud?.querySelector('.top-left');
+  const coreHud=document.createElement('div');coreHud.className='awakening-core-hud';coreHud.innerHTML='<span>AWAKEN</span><b>CORE ×0</b>';hudVitals?.appendChild(coreHud);
+  function syncAwakeningCoreHud(){
+    const cores=Math.max(0,Math.floor(Number(state.awakeningCores)||0));
+    coreHud.querySelector('b').textContent=`CORE ×${cores}`;
+    coreHud.classList.toggle('charged',cores>0);
+    if(coreCount)coreCount.textContent=`각성 코어 ×${cores}`;
+  }
   const screen=document.createElement('section');
   screen.id='awakeningScreen';screen.className='overlay awakening-screen hidden';
   screen.innerHTML=`
@@ -57,6 +65,7 @@
     .awakening-transform{position:absolute;inset:0;z-index:52;pointer-events:none;display:grid;place-items:center;text-align:center;background:radial-gradient(circle,rgba(138,0,24,.30),rgba(1,1,7,.80) 62%);animation:awakeningTransformFade .9s ease both}.awakening-transform-eclipse{position:absolute;width:min(330px,46vw);aspect-ratio:1;border-radius:50%;background:#010106;box-shadow:0 0 0 5px #6f0717,0 0 45px 18px rgba(255,43,62,.56),0 0 120px 46px rgba(175,0,29,.24);animation:awakeningPulse .9s ease both}.awakening-transform>span,.awakening-transform>strong,.awakening-transform>small{position:absolute;z-index:2}.awakening-transform>span{margin-top:-90px;color:#ff7180;font-size:10px;font-weight:900;letter-spacing:.42em}.awakening-transform>strong{font:clamp(38px,5vw,62px)/1 "Black Han Sans",sans-serif;text-shadow:0 0 28px rgba(255,70,86,.55)}.awakening-transform>small{margin-top:86px;color:#d6b9c0;font-size:12px}
     @keyframes awakeningPulse{0%{transform:scale(.42);opacity:0}35%{transform:scale(1.08);opacity:1}58%{transform:scale(.90)}100%{transform:scale(1.22);opacity:0}}@keyframes awakeningTransformFade{0%{opacity:0}12%,76%{opacity:1}100%{opacity:0}}
     .weapon-slot.awakened{border-color:rgba(255,93,108,.46)!important;box-shadow:0 0 18px rgba(255,40,62,.13),inset 0 0 18px rgba(126,0,22,.10)}.weapon-slot.awakened .stack{color:#ff8a99}.weapon-slot.awakened .icon{color:#ffe2e5;text-shadow:0 0 13px rgba(255,70,89,.8)}
+    .awakening-core-hud{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px;padding-top:6px;border-top:1px solid rgba(255,255,255,.07);color:#7584a8;font-size:8px;font-weight:900;letter-spacing:.08em}.awakening-core-hud b{color:#9da9c8;font-size:10px}.awakening-core-hud.charged span{color:#ff8796}.awakening-core-hud.charged b{color:#ffd3d9;text-shadow:0 0 10px rgba(255,70,90,.45)}
     @media(max-width:760px){.awakening-cards{grid-template-columns:1fr;max-height:57vh}.awakening-card{min-height:132px;padding:12px 14px 12px 88px;text-align:left;position:relative}.awakening-card>i{position:absolute;left:16px;top:26px;width:54px;height:54px;margin:0}.awakening-card h3{font-size:19px}.awakening-card p{font-size:9px}}
   `;
   document.head.appendChild(style);
@@ -95,7 +104,7 @@
   }
   function confirm(key){
     if(state.mode!=='awakeningChoice'||(state.awakeningCores||0)<1||weaponCount(key)<6||state.awakenedWeapons?.[key])return;
-    const def=defs[key];state.awakeningCores--;state.awakenedWeapons[key]=true;closeScreen();
+    const def=defs[key];state.awakeningCores--;state.awakenedWeapons[key]=true;syncAwakeningCoreHud();closeScreen();
     transform.querySelector('strong').textContent=awakeningName(key);
     transform.querySelector('small').textContent=def.signature;
     transform.classList.remove('hidden');transform.style.animation='none';void transform.offsetWidth;transform.style.animation='';
@@ -128,7 +137,7 @@
 
   const baseReset=resetGame;
   resetGame=function awakeningReset(){
-    closeScreen();transform.classList.add('hidden');state.awakeningCores=0;state.awakenedWeapons={};state.lastAwakeningCoreCashout=null;
+    closeScreen();transform.classList.add('hidden');state.awakeningCores=0;state.awakenedWeapons={};state.lastAwakeningCoreCashout=null;syncAwakeningCoreHud();
     const result=baseReset();renderLoadout();return result;
   };
   const baseMenu=showMainMenu;
@@ -145,7 +154,7 @@
     const granted=Math.max(0,Number(window.stackfallGrantCurrency?.('stardust',requested))||0);
     state.runCurrencyEarned=state.runCurrencyEarned||{stardust:0,coreShard:0};
     state.runCurrencyEarned.stardust=(state.runCurrencyEarned.stardust||0)+granted;
-    state.lastAwakeningCoreCashout={cores,stardust:granted,rate:AWAKENING_CORE_CASHOUT_STARDUST};
+    state.lastAwakeningCoreCashout={cores,stardust:granted,rate:AWAKENING_CORE_CASHOUT_STARDUST};syncAwakeningCoreHud();
     return state.lastAwakeningCoreCashout;
   }
   window.stackfallCashOutAwakeningCores=cashOutAwakeningCores;
@@ -155,7 +164,7 @@
 
   window.stackfallGrantAwakeningCore=function grantAwakeningCore(amount=1){
     const add=Math.max(0,Math.floor(Number(amount)||0));if(!add)return state.awakeningCores||0;
-    state.awakeningCores=(state.awakeningCores||0)+add;
+    state.awakeningCores=(state.awakeningCores||0)+add;syncAwakeningCoreHud();
     const kicker=document.querySelector('#resonanceKicker');if(kicker)kicker.textContent='각성 자원';
     ui.resonanceTitle.textContent=`각성 코어 +${add}`;ui.resonanceDesc.textContent=`보유: ${state.awakeningCores}`;showTimedResonance(2200);audio.resonance();
     return state.awakeningCores;
@@ -184,5 +193,7 @@
   };
   window.stackfallAwakeningCoreDropAmount=awakeningCoreDropAmount;
 
-  renderLoadout();
+  const baseUpdateHudForAwakening=updateHUD;
+  updateHUD=function awakeningCoreAwareHud(){const result=baseUpdateHudForAwakening();syncAwakeningCoreHud();return result;};
+  syncAwakeningCoreHud();renderLoadout();
 })();
