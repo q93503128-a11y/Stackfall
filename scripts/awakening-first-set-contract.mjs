@@ -14,7 +14,8 @@ expect('Nebula Starcaster signature damage is guarded against recursive charge',
 
 expect('Celestial Bastion counterwave is tied to a real shield break',source.includes('beforeShield>0&&player.shield<=0')&&source.includes("'barrier-lance',{shake:false}"));
 expect('Binary Collapse excludes Multiplicity wells from the paired signature',source.includes("filter(w=>w&&!w.multiplicity)")&&source.includes('w.awBinaryMerged=true'));
-expect('Final Comet Lance counts only non-echo original casts',source.includes("if(!awake('comet')||echoed||!target)return")&&source.includes('player.awCometCycle%4!==0')&&source.includes('awakeningChild:true'));
+expect('Binary Collapse visibly converges its pair before final collapse',source.includes('awBinaryMergeX')&&source.includes('awBinaryStartX')&&source.includes("if(life<=.92)")&&source.includes('Math.hypot(pair[0].x-pair[1].x'));
+expect('Final Comet Lance counts only non-echo original casts',source.includes("if(!awake('comet')||echoed||!target)return")&&source.includes('player.awCometCycle%4!==0')&&source.includes('scheduleWeaponAction(340')&&source.includes('pierce:999')&&source.includes('awakeningChild:true'));
 expect('Lunar Return has a bounded lunar orbit and one return ripple',source.includes("p.stage='lunarOrbit'")&&source.includes('p.awOrbitDuration=.48')&&source.includes('!p.awMoonRippleDone'));
 
 expect('A1-A7 implementation state is canonicalized in design',design.includes('A1~A19')&&design.includes('A3. Starlight Caster')&&design.includes('A7. Nebula Boomerang'));
