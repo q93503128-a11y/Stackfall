@@ -389,5 +389,8 @@
       "text": "[Stackfall] PixiJS download failed; Canvas 2D fallback remains active."
     }
   ],
-  "scope": "Local deterministic fixtures and screenshot samples; not exhaustive playthrough or golden-image equivalence."
+  "scope": "Local deterministic fixtures and screenshot samples; not exhaustive playthrough or golden-image equivalence.",
+  "historicalSnapshot": true,
+  "supersededBy": "docs/CANONICAL_AUDIT_2026-09-28.md",
+  "note": "This JSON preserves the 2026-09-27 audit measurements and fingerprint. It is not the current canonical build state."
 }
