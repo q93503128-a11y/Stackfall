@@ -121,7 +121,7 @@
     const count=Math.min(4,Math.max(2,targets.length));
     for(let i=0;i<count;i++){
       const target=targets[i%targets.length],a=Math.atan2(target.y-player.y,target.x-player.x),ox=player.x+Math.cos(a)*54,oy=player.y+Math.sin(a)*54,speed=510+n*15;
-      spawnPlayerProjectile({x:ox,y:oy,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:7.2*size,life:1.35,maxRange:660,damage:17+n*3.2,color:'#cafff2',pierce:3,source:'barrier-lance',playerVisual:'comet-awakened',awakeningChild:true});
+      spawnPlayerProjectile({x:ox,y:oy,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:7.2*size,life:1.35,maxRange:660,damage:17+n*3.2,color:'#cafff2',pierce:3,source:'barrier-lance',playerVisual:'bulwark-awakened',awakeningChild:true});
     }
     pushFx({kind:'bastion-volley',x:player.x,y:player.y,count,life:.34,max:.34});
     audio.weapon?.('bulwark',false,1.18);
