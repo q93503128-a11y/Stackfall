@@ -77,7 +77,7 @@
 
 `?dev=1`이 현재 URL에 명시된 경우에만 로컬 개발자 테스트 프로필을 활성화한다. 일반 주소로 돌아오면 DEV 버튼과 개발 프로필은 활성화되지 않는다. 실제 로그인이나 서버 계정은 사용하지 않는다. 일반 플레이의 `stackfall.meta.v1`과 개발 테스트의 `stackfall.meta.dev.v1`을 분리해 클리어·재화·해금 기록이 섞이지 않는다.
 
-개발 패널에서는 CORE와 S1~S6을 각각 무기·1~6중첩·각성 여부로 설정하고, 전체 무기 빠른 테스트, Stage 1~18 직접 시작, Stage 보스 즉시 진입, Endless 시작, 전투 엔티티 정리, 체력·보호막 회복, 각성 코어 지급, 개발 프로필 전용 재화 무한을 사용할 수 있다. `F10`으로 패널을 열고 닫는다. 각성 코어 수는 전투 HUD와 코어 성장 화면 지갑에서 확인한다.
+개발 패널에서는 CORE와 S1~S6을 각각 무기·1~6중첩·각성 여부로 설정하고, 전체 무기 빠른 테스트, Stage 1~18 직접 시작, Stage 보스 즉시 진입, Endless 시작, 전투 엔티티 정리, 체력·보호막 회복, 각성 코어 지급, 개발 프로필 전용 영구 재화 무한을 사용할 수 있다. `F10`으로 패널을 열고 닫는다. **각성 코어는 런 내부 임시 자원**이므로 전투 HUD/각성 선택창에서만 보유량을 확인하며 코어 성장 화면의 영구 재화 지갑에는 표시하지 않는다.
 
 ## 4. 무기 각성
 
@@ -277,7 +277,7 @@
 | 17 | 암호 묘역 | 14:00 |
 | 18 | 침묵 배열핵 | 15:00 |
 
-결과 화면의 피해 분석은 전체 DPS와 무기별 15초 구간 DPS 추이를 함께 제공한다. 전체 및 개별 무기 선은 각각 토글할 수 있다.
+결과 화면의 피해 분석은 전체 DPS와 무기별 **1분 구간 DPS 추이**를 함께 제공한다. 전체 및 개별 무기 선은 각각 토글할 수 있다.
 
 The three current constellations remain **Shardway**, **Abyssal Bloom**, and **Silent Array**. Their existing enemies, boss identities, backgrounds, weapon rewards, and progression chain are retained. The original 14-weapon roster is fully unlockable by Stage 10, then expands to 18: Stage 11 unlocks Vacuum Bloom, Stage 13 Phase Minefield, Stage 15 Interstellar Missile Pods, and Stage 17 Orbital Gate. Stages 12/14/16/18 retain currency/Core-Shard rewards.
 
