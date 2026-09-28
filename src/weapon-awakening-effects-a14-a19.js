@@ -84,7 +84,7 @@
   const baseFireGalacticSpiral=fireGalacticSpiral;
   fireGalacticSpiral=function genesisGalaxyFire(n,echoed=false){
     const target=spiralTarget(),awakened=awake('spiral');
-    if(!awakened)return baseFireGalacticSpiral(n,echoed)+(state.weaponAugments?.spiral&&!echoed?(fireCounterSpiral(n,target),0):0);
+    if(!awakened){baseFireGalacticSpiral(n,echoed);if(state.weaponAugments?.spiral&&!echoed)fireCounterSpiral(n,target);return;}
     fireAwakenedSpiral(n,echoed,false);
     if(!echoed)scheduleWeaponAction(105,()=>fireAwakenedSpiral(n,false,true));
     if(echoed)return;
