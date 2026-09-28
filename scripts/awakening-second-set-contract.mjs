@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
-const index=read('index.html'),source=read('src/weapon-awakening-effects-a8-a13.js'),design=read('docs/GAME_DESIGN.md');
+const index=read('index.html'),source=read('src/weapon-awakening-effects-a8-a13.js'),beamRenderer=read('src/render-entities.js'),design=read('docs/GAME_DESIGN.md');
 const fail=[],expect=(name,ok)=>{if(!ok)fail.push(name);};
 expect('A8-A13 runtime loads after A1-A7',index.includes('src/weapon-awakening-effects-a8-a13.js')&&index.indexOf('src/weapon-awakening-effects-a8-a13.js')>index.indexOf('src/weapon-awakening-effects-a1-a7.js'));
 expect('Constellation Crown requires max focus and fires once per acquired target',source.includes("stage===2&&lock.awCrownFiredTargetId!==target.id")&&source.includes('fireConstellationCrown(target,n)')&&source.includes('scheduleWeaponAction(300')&&source.includes("kind:'prism-column'"));
@@ -14,9 +14,9 @@ expect('Falling-Star Fleet replaces ordinary awakened volleys and triggers its r
 expect('Falling-Star Fleet visible ships and beam origins share one live aim',source.includes('aim=target?Math.atan2(target.y-player.y,target.x-player.x):e.a')&&source.includes('origins.push({x:x1,y:y1,offset})')&&source.includes('Array.isArray(e.origins)?e.origins:[]'));
 expect('Falling-Star Mark exists before and after awakening',source.includes("if(state.weaponAugments?.drone)fallingStarMark(n,target)")&&source.includes("'drone-meteor'"));
 expect('Fleet multiplicity stays inside one attack formation',source.includes("count=Math.min(5,(n>=6?3:n>=2?2:1)+multiplicity())")&&source.includes("'drone-multiplicity'"));
-expect('Awakened rail uses one sustained beam with three damage pulses',source.includes('function fireAwakenedRailWave')&&source.includes('pulseTimes=[80,245,410]')&&source.includes("overdrive?.72:.60")&&source.includes("kind:'rail-wave'"));
-expect('Every fourth awakened rail cast visibly overdrives the same single-beam identity',source.includes('player.awRailCycle%4===0')&&source.includes('fireAwakenedRailWave(n,target,player.awRailCycle%4===0)')&&source.includes('overdrive?1.62:1')&&source.includes("kind:'rail-overdrive-charge'")&&source.includes('scheduleWeaponAction(280'));
-expect('Awakened rail visual is a very thick tapered energy-wave geometry rather than parallel rectangles',source.includes("visualWidth=(72+n*5.5)")&&source.includes("kind==='rail-wave'")&&source.includes('quadraticCurveTo')&&source.includes('ctx.arc(p.x,p.y,w*.54')&&source.includes("kind==='rail-wave-pulse'"));
+expect('Awakened rail uses one canonical sustained beam entity with three damage pulses',source.includes('function fireAwakenedRailWave')&&source.includes('pulseTimes=[80,255,430]')&&source.includes("overdrive?.74:.60")&&source.includes('terminus:true'));
+expect('Every fourth awakened rail cast visibly overdrives the same single-beam identity',source.includes('player.awRailCycle%4===0')&&source.includes('fireAwakenedRailWave(n,target,player.awRailCycle%4===0)')&&source.includes('overdrive?1.85:1')&&source.includes("kind:'rail-overdrive-charge'")&&source.includes('scheduleWeaponAction(460'));
+expect('Awakened rail visual is owned by the canonical beam renderer and is substantially thicker',source.includes("visualWidth=(164+n*9.5)")&&beamRenderer.includes('beam.terminus===true')&&beamRenderer.includes("mid=w*(over?1.08:.92)")&&beamRenderer.includes('quadraticCurveTo')&&source.includes("kind==='rail-wave-pulse'"));
 expect('Terminus path preserves Orbital Fracture once per sustained shot',source.includes("for(const[index,f]of[.30,.56,.82].entries())")&&source.includes("if(i===2)terminusFracture")&&source.includes("'rail-fracture'"));
 expect('A8-A13 implementation state is canonicalized in design',design.includes('A1~A19')&&design.includes('A8 성좌 왕관')&&design.includes('A13 종언 레일포'));
 for(const name of fail)console.error('FAIL',name);
