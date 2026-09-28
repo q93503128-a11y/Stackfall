@@ -133,6 +133,17 @@ function drawBeamEffects(){
   for(const beam of state.entities.beams){
     if(!beam||beam.life<=0)continue;
     const a=worldToScreen(beam.x1,beam.y1),b=worldToScreen(beam.x2,beam.y2),alpha=clamp(beam.life/Math.max(.001,beam.max||beam.life),0,1);
+    if(beam.terminus===true){
+      const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len,nx=-uy,ny=ux,w=Math.max(42,Number(beam.width)||120),over=beam.overdrive===true,pulse=.90+.10*Math.sin((1-alpha)*Math.PI*3);
+      ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=(.54+.42*alpha);ctx.shadowBlur=over?78:58;ctx.shadowColor=over?'#badaff':'#75d8ff';
+      const grad=ctx.createLinearGradient(a.x,a.y,b.x,b.y);grad.addColorStop(0,'rgba(255,255,255,.99)');grad.addColorStop(.12,over?'rgba(204,225,255,.98)':'rgba(188,239,255,.96)');grad.addColorStop(.52,over?'rgba(112,151,255,.88)':'rgba(73,184,255,.74)');grad.addColorStop(1,'rgba(53,131,255,.08)');ctx.fillStyle=grad;
+      const near=w*.44*pulse,mid=w*(over?1.08:.92)*pulse,far=w*(over?.48:.38)*pulse;
+      ctx.beginPath();ctx.moveTo(a.x-ux*24+nx*near,a.y-uy*24+ny*near);ctx.quadraticCurveTo(a.x+ux*len*.20+nx*mid,a.y+uy*len*.20+ny*mid,b.x+nx*far,b.y+ny*far);ctx.lineTo(b.x-nx*far,b.y-ny*far);ctx.quadraticCurveTo(a.x+ux*len*.20-nx*mid,a.y+uy*len*.20-ny*mid,a.x-ux*24-nx*near,a.y-uy*24-ny*near);ctx.closePath();ctx.fill();
+      ctx.globalAlpha=.94*alpha+.05;ctx.strokeStyle='#ffffff';ctx.lineCap='round';ctx.lineWidth=Math.max(10,w*(over?.24:.18));ctx.shadowBlur=46;ctx.beginPath();ctx.moveTo(a.x-ux*9,a.y-uy*9);ctx.lineTo(b.x,b.y);ctx.stroke();
+      ctx.globalAlpha=.35+.38*alpha;ctx.strokeStyle=over?'#d8caff':'#a7ebff';ctx.lineWidth=over?5:3;for(const s of[-1,1]){ctx.beginPath();ctx.moveTo(a.x+nx*s*w*.50,a.y+ny*s*w*.50);ctx.quadraticCurveTo(a.x+ux*len*.30+nx*s*w*(over?.92:.76),a.y+uy*len*.30+ny*s*w*(over?.92:.76),b.x+nx*s*w*.26,b.y+ny*s*w*.26);ctx.stroke();}
+      ctx.globalAlpha=.78*alpha;ctx.strokeStyle='#ffffff';ctx.lineWidth=2.4;for(let ring=0;ring<(over?5:3);ring++){const rr=w*(.44+ring*.20)+(1-alpha)*w*.24;ctx.beginPath();ctx.ellipse(a.x-ux*3,a.y-uy*3,rr,rr*.46,Math.atan2(dy,dx),0,TAU);ctx.stroke();}
+      ctx.restore();continue;
+    }
     ctx.save();ctx.globalAlpha=alpha;ctx.shadowBlur=18;ctx.shadowColor=beam.color;ctx.strokeStyle=beam.color;ctx.lineCap='round';ctx.lineWidth=beam.width*2.8;
     ctx.globalAlpha=alpha*.18;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
     ctx.globalAlpha=alpha;ctx.lineWidth=beam.width;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
