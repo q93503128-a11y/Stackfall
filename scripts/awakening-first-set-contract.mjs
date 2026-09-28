@@ -5,9 +5,9 @@ const fail=[],expect=(name,ok)=>{if(!ok)fail.push(name);};
 
 expect('A1-A7 runtime loads after awakening selection and before A8-A13',index.includes('src/weapon-awakening-effects-a1-a7.js')&&index.indexOf('src/weapon-awakening-effects-a1-a7.js')>index.indexOf('src/weapon-awakening.js')&&index.indexOf('src/weapon-awakening-effects-a1-a7.js')<index.indexOf('src/weapon-awakening-effects-a8-a13.js'));
 
-expect('Stellar Core signature counts only original non-echo casts',source.includes("if(!awake('core')||echoed||!target)return")&&source.includes('player.awCoreCycle%4!==0')&&source.includes('awakeningChild:true'));
-expect('Eclipse Blades uses a bounded align windup before its cut',source.includes("kind:'blade-align'")&&source.includes('player.awBladeWindup=.24')&&source.includes('triggerEclipseCut()'));
-expect('Eclipse Blades transforms ordinary combat with aimed crescent waves',source.includes('function fireEclipseBladeWaves')&&source.includes("playerVisual:'blade-wave'")&&source.includes("source:'blade'")&&source.includes('awBladeWaveCd'));
+expect('Stellar Core replaces every awakened Core Pulse with one central lance and three satellite lances',source.includes("if(!awake('core'))return baseSpawnCoreShot")&&source.includes("playerVisual:echoed?'echo-stellar-core-lance':'stellar-core-lance'")&&source.includes("playerVisual:echoed?'echo-stellar-core-node':'stellar-core-node'")&&source.includes('for(let i=0;i<3;i++')&&!source.includes('awCoreCycle%4'));
+expect('Eclipse Blades has no periodic gathering signature',!source.includes('triggerEclipseCut')&&!source.includes('fireEclipseBladeWaves')&&!source.includes('awBladeWindup')&&!source.includes("kind:'blade-align'"));
+expect('Eclipse Blades uses five native blades and a continuous slow-fast-slow orbit cycle',source.includes('function bladeOrbitSpeedMultiplier')&&source.includes('return .68+wave*1.62')&&source.includes('nativeCount=5')&&source.includes('stackfallAwakenedBladeOrbitSpeedMultiplier'));
 
 expect('Nebula Starcaster tracks consecutive hits on one target',source.includes('awEmberTargetId:null')&&source.includes('targetId!==player.awEmberTargetId')&&source.includes('player.awEmberHits=0'));
 expect('Nebula Starcaster signature charge accepts only original caster hits',source.includes("awake('ember')&&wasAlive&&source==='ember'")&&!source.includes("['ember','echo-star','ember-multiplicity'].includes(source)"));
