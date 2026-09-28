@@ -278,27 +278,30 @@
   function releaseAwakenedRailWave(n,target,overdrive=false){
     if(!target||target.dead)return;
     const angle=Math.atan2(target.y-player.y,target.x-player.x),dx=Math.cos(angle),dy=Math.sin(angle),
-      size=weaponSizeMultiplier(),length=weaponRange('rail')*(overdrive?1.46:1.18),
-      visualWidth=(72+n*5.5)*size*(overdrive?1.62:1),hitWidth=(34+n*2.6)*size*(overdrive?1.28:1),
-      x1=player.x-dx*34,y1=player.y-dy*34,x2=x1+dx*length,y2=y1+dy*length,
-      perPulse=(40+n*9.4)*(overdrive?.72:.60),eliteBonus=n>=5?1.36:1;
-    pushFx({kind:'rail-wave',x:x1,y:y1,a:angle,length,width:visualWidth,life:.68,max:.68,overdrive});
-    const pulseTimes=[80,245,410];
+      size=weaponSizeMultiplier(),length=weaponRange('rail')*(overdrive?1.52:1.20),
+      visualWidth=(164+n*9.5)*size*(overdrive?1.85:1),hitWidth=(35+n*2.7)*size*(overdrive?1.30:1),
+      x1=player.x-dx*38,y1=player.y-dy*38,x2=x1+dx*length,y2=y1+dy*length,
+      perPulse=(40+n*9.4)*(overdrive?.74:.60),eliteBonus=n>=5?1.36:1;
+    state.entities.beams.push({x1,y1,x2,y2,life:.76,max:.76,color:overdrive?'#dff7ff':'#9fe5ff',width:visualWidth,terminus:true,overdrive:!!overdrive});
+    trimOldest(state.entities.beams,entityCap('beams'));
+    const pulseTimes=[80,255,430];
     for(let i=0;i<pulseTimes.length;i++)scheduleWeaponAction(pulseTimes[i],()=>{
       damageAwakenedRailPulse(x1,y1,x2,y2,hitWidth,perPulse,eliteBonus);
-      pushFx({kind:'rail-wave-pulse',x:x1,y:y1,a:angle,length,width:visualWidth,life:.22,max:.22,index:i,overdrive});
-      if(i===1)state.camera.shake=Math.max(state.camera.shake,overdrive?8.2:5.0);
+      pushFx({kind:'rail-wave-pulse',x:x1,y:y1,a:angle,length,width:visualWidth,life:.24,max:.24,index:i,overdrive});
+      if(i===1)state.camera.shake=Math.max(state.camera.shake,overdrive?11:6.2);
       if(i===2)terminusFracture(x1,y1,angle,length,n);
     });
-    state.flash=Math.max(state.flash,overdrive?.11:.06);
-    audio.weapon?.('rail',false,overdrive?1.86:1.50);
+    state.flash=Math.max(state.flash,overdrive?.17:.08);
+    audio.weapon?.('rail',false,overdrive?1.94:1.56);
   }
   function fireAwakenedRailWave(n,target,overdrive=false){
     if(!target||target.dead)return;
     if(!overdrive)return releaseAwakenedRailWave(n,target,false);
-    const angle=Math.atan2(target.y-player.y,target.x-player.x),size=weaponSizeMultiplier();
-    pushFx({kind:'rail-overdrive-charge',x:player.x,y:player.y,a:angle,r:(94+n*7)*size,life:.28,max:.28});
-    scheduleWeaponAction(280,()=>{const live=target&&!target.dead?target:railAwakeningTarget();if(live)releaseAwakenedRailWave(n,live,true);});
+    const angle=Math.atan2(target.y-player.y,target.x-player.x),size=weaponSizeMultiplier(),r=(118+n*9)*size;
+    pushFx({kind:'rail-overdrive-charge',x:player.x,y:player.y,a:angle,r,life:.46,max:.46});
+    shockwave(player.x,player.y,'#c7efff',r*1.18,.44,4.8);
+    state.flash=Math.max(state.flash,.12);state.camera.shake=Math.max(state.camera.shake,4.5);
+    scheduleWeaponAction(460,()=>{const live=target&&!target.dead?target:railAwakeningTarget();if(live)releaseAwakenedRailWave(n,live,true);});
   }
   const baseFireRailgun=fireRailgun;
   fireRailgun=function terminusRailgun(n,echoed=false){
@@ -392,8 +395,7 @@
       else if(e.kind==='drone-meteor'){const p=worldToScreen(e.x,e.y);ctx.strokeStyle='#eafff8';ctx.lineWidth=5;ctx.shadowBlur=24;ctx.shadowColor='#8fffd0';ctx.beginPath();ctx.moveTo(p.x-70,p.y-140);ctx.lineTo(p.x,p.y);ctx.stroke();}
       else if(e.kind==='fleet-form'){const target=enemyById(e.targetId),aim=target?Math.atan2(target.y-player.y,target.x-player.x):e.a,dir={x:Math.cos(aim),y:Math.sin(aim)},normal={x:-dir.y,y:dir.x};e.a=aim;for(let i=0;i<e.count;i++){const row=Math.abs(i-(e.count-1)/2),offset=(i-(e.count-1)/2)*26,d=-76-row*15,point={x:player.x+dir.x*d+normal.x*offset,y:player.y+dir.y*d+normal.y*offset};drawFleetDrone(point,aim,1.0,age);}}
       else if(e.kind==='fleet-run'){const dx=Math.cos(e.a),dy=Math.sin(e.a),travel=clamp(age*1.08,0,1),origins=Array.isArray(e.origins)?e.origins:[];ctx.strokeStyle='#baffea';ctx.shadowBlur=18;ctx.shadowColor='#8fffd0';for(let i=0;i<origins.length;i++){const origin=origins[i],row=Math.abs(i-(origins.length-1)/2),lag=row*.055,progress=clamp((travel-lag)/(1-lag),0,1),wx=origin.x+dx*e.length*progress,wy=origin.y+dy*e.length*progress,p=worldToScreen(origin.x,origin.y),end=worldToScreen(wx,wy);ctx.globalAlpha=.16+.38*q;ctx.lineWidth=1.5+i%2;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(end.x,end.y);ctx.stroke();drawFleetDrone({x:wx,y:wy},e.a,1.06,1);}}
-      else if(e.kind==='rail-overdrive-charge'){const p=worldToScreen(e.x,e.y),r=e.r*(.74+.26*age);ctx.translate(p.x,p.y);ctx.rotate(age*.7);ctx.globalAlpha=.38+.58*q;ctx.strokeStyle='#ffffff';ctx.shadowBlur=44;ctx.shadowColor='#7edcff';ctx.lineWidth=4.5;for(let ring=0;ring<3;ring++){ctx.beginPath();ctx.arc(0,0,r*(.62+ring*.23),0,TAU);ctx.stroke();}ctx.globalAlpha=.92*q;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(Math.cos(e.a)*r*.24,Math.sin(e.a)*r*.24,12+age*7,0,TAU);ctx.fill();}
-      else if(e.kind==='rail-wave'){const p=worldToScreen(e.x,e.y),dx=Math.cos(e.a),dy=Math.sin(e.a),nx=-dy,ny=dx,w=e.width*(.86+.14*Math.sin(age*Math.PI)),len=e.length,over=!!e.overdrive,grad=ctx.createLinearGradient(p.x,p.y,p.x+dx*len,p.y+dy*len);grad.addColorStop(0,'rgba(255,255,255,.98)');grad.addColorStop(.12,over?'rgba(168,229,255,.98)':'rgba(198,240,255,.96)');grad.addColorStop(.58,over?'rgba(83,177,255,.82)':'rgba(104,202,255,.72)');grad.addColorStop(1,'rgba(76,164,255,.10)');ctx.fillStyle=grad;ctx.shadowBlur=over?62:48;ctx.shadowColor='#8bdcff';ctx.globalAlpha=.50+.42*q;ctx.beginPath();ctx.moveTo(p.x-dx*18+nx*w*.18,p.y-dy*18+ny*w*.18);ctx.quadraticCurveTo(p.x+dx*len*.18+nx*w*.74,p.y+dy*len*.18+ny*w*.74,p.x+dx*len+nx*w*.34,p.y+dy*len+ny*w*.34);ctx.lineTo(p.x+dx*len-nx*w*.34,p.y+dy*len-ny*w*.34);ctx.quadraticCurveTo(p.x+dx*len*.18-nx*w*.74,p.y+dy*len*.18-ny*w*.74,p.x-dx*18-nx*w*.18,p.y-dy*18-ny*w*.18);ctx.closePath();ctx.fill();ctx.globalAlpha=.92*q+.06;ctx.strokeStyle='#ffffff';ctx.lineWidth=Math.max(6,w*.30);ctx.shadowBlur=38;ctx.beginPath();ctx.moveTo(p.x-dx*8,p.y-dy*8);ctx.lineTo(p.x+dx*len,p.y+dy*len);ctx.stroke();ctx.globalAlpha=.85*q;ctx.fillStyle='#ffffff';ctx.shadowBlur=46;ctx.beginPath();ctx.arc(p.x,p.y,w*.54*(.88+.12*Math.sin(age*TAU*2)),0,TAU);ctx.fill();ctx.globalAlpha=.42*q;ctx.strokeStyle='#b6efff';ctx.lineWidth=2.2;for(let ring=0;ring<3;ring++){const rr=w*(.70+ring*.27)+age*w*.38;ctx.beginPath();ctx.ellipse(p.x-dx*2,p.y-dy*2,rr,rr*.46,e.a,0,TAU);ctx.stroke();}}
+      else if(e.kind==='rail-overdrive-charge'){const p=worldToScreen(e.x,e.y),r=e.r*(.58+.42*age);ctx.translate(p.x,p.y);ctx.rotate(age*1.15);ctx.globalAlpha=.46+.52*q;ctx.strokeStyle='#ffffff';ctx.shadowBlur=58;ctx.shadowColor='#7edcff';ctx.lineWidth=5.5;for(let ring=0;ring<4;ring++){ctx.beginPath();ctx.arc(0,0,r*(.48+ring*.22),0,TAU);ctx.stroke();}ctx.rotate(-age*2.1);ctx.globalAlpha=.62*q;ctx.strokeStyle='#8bdcff';ctx.lineWidth=2.6;for(let i=0;i<6;i++){const a=i*TAU/6;ctx.beginPath();ctx.moveTo(Math.cos(a)*r*.22,Math.sin(a)*r*.22);ctx.lineTo(Math.cos(a)*r*.92,Math.sin(a)*r*.92);ctx.stroke();}ctx.globalAlpha=.98*q;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(Math.cos(e.a)*r*.28,Math.sin(e.a)*r*.28,15+age*11,0,TAU);ctx.fill();}
       else if(e.kind==='rail-wave-pulse'){const p=worldToScreen(e.x,e.y),dx=Math.cos(e.a),dy=Math.sin(e.a),nx=-dy,ny=dx,w=e.width*(1+age*.34);ctx.globalAlpha=q*.72;ctx.strokeStyle='#ffffff';ctx.shadowBlur=32;ctx.shadowColor='#9fe5ff';ctx.lineWidth=Math.max(3,w*.11);for(const f of[.16,.46,.76]){const cx=p.x+dx*e.length*f,cy=p.y+dy*e.length*f,rr=w*(.30+.32*age);ctx.beginPath();ctx.ellipse(cx,cy,rr,rr*.34,e.a,0,TAU);ctx.stroke();}}
       ctx.restore();
     }
