@@ -6,11 +6,13 @@ const fail=[],expect=(name,ok)=>{if(!ok)fail.push(name);};
 expect('A14-A19 runtime loads after A8-A13',index.includes('src/weapon-awakening-effects-a14-a19.js')&&index.indexOf('src/weapon-awakening-effects-a14-a19.js')>index.indexOf('src/weapon-awakening-effects-a8-a13.js'));
 
 expect('Genesis Galaxy moves awakened spiral origins onto galaxy-arm nodes',source.includes('function spawnSpiralBody')&&source.includes('ox=player.x+Math.cos(galaxyAngle)*orbit')&&source.includes('oy=player.y+Math.sin(galaxyAngle)*orbit')&&source.includes('awGenesis:true'));
+expect('Genesis Galaxy preserves an obvious spiral trajectory instead of collapsing into straight homing',source.includes('orbit=42+step*11')&&source.includes('tangent=galaxyAngle+direction*Math.PI/2')&&source.includes('for(let segment=0;segment<3;segment++)'));
 expect('Genesis Galaxy counts only non-echo original casts',source.includes("if(!awake('spiral')||echoed)return")&&source.includes('player.awSpiralCycle%4===0')&&source.includes('triggerGenesisGalaxy'));
 expect('Counter-Spiral Galaxy works before and after awakening without recursive signature count',source.includes("if(!echoed&&state.weaponAugments?.spiral)fireCounterSpiral")&&source.includes("source:'spiral-counter'")&&source.includes('fireAwakenedSpiral(n,echoed,false)'));
 
 expect('Mirror Sanctuary charges at most six shared faces from original casts and reflected shots',source.includes('player.awMirrorFaces=[null,null,null,null,null,null]')&&source.includes('chargeMirrorFace')&&source.includes('for(const snap of reflected)chargeMirrorFace(snap.a)'));
 expect('Perfect Reflection waits 0.18 seconds and clears shared charge',source.includes('scheduleWeaponAction(180')&&source.includes("kind:'mirror-sanctuary'")&&source.includes('player.awMirrorFaces=[null,null,null,null,null,null]'));
+expect('Perfect Reflection projects long full-field signature beams',source.includes("length=Math.max(960*size,weaponRange('mirror')*1.72)")&&source.includes("10.2*size"));
 expect('Twin-Face Reflection is restored before and after awakening',source.includes('function mirrorTwinRays')&&source.includes("'#dffdf7','mirror-twin-reflect',1")&&source.includes('if(state.weaponAugments?.mirror)for(const snap of reflected)'));
 expect('Perfect Reflection caps augment shield gain',source.includes('beforeShield=Number(player.shield)||0')&&source.includes('beforeShield+Math.min(22,profile.gain*5)'));
 
