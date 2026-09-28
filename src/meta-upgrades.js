@@ -67,7 +67,7 @@
     else if(kind==='void'&&isRewardTwin)grantRunCurrency('stardust',Math.floor(30*window.stackfallCurrencyMultiplier()));
   };
 
-  const screen=document.querySelector('#upgradeScreen'),entry=document.querySelector('#upgradeHubBtn'),closeBtn=document.querySelector('#upgradeCloseBtn'),nodeRoot=document.querySelector('#upgradeNodes'),links=document.querySelector('#upgradeLinks'),buyBtn=document.querySelector('#upgradeBuyBtn'),coreCanvas=document.querySelector('#upgradeCoreCanvas');
+  const screen=document.querySelector('#upgradeScreen'),entry=document.querySelector('#upgradeHubBtn'),closeBtn=document.querySelector('#upgradeCloseBtn'),nodeRoot=document.querySelector('#upgradeNodes'),links=document.querySelector('#upgradeLinks'),buyBtn=document.querySelector('#upgradeBuyBtn'),resetBtn=document.querySelector('#upgradeResetBtn'),coreCanvas=document.querySelector('#upgradeCoreCanvas');
   const profileEntry=document.querySelector('#hubProfile'),profileScreen=document.querySelector('#profileScreen'),profileCloseBtn=document.querySelector('#profileCloseBtn');
   const detail={category:document.querySelector('#upgradeCategory'),name:document.querySelector('#upgradeName'),desc:document.querySelector('#upgradeDesc'),level:document.querySelector('#upgradeLevel'),effect:document.querySelector('#upgradeEffect'),cost:document.querySelector('#upgradeCost'),lock:document.querySelector('#upgradeLockReason')};
   let selected='vitality',animationFrame=0,lastFocus=null,profileLastFocus=null;
@@ -89,6 +89,40 @@
     if(row.id==='slot5'||row.id==='slot6')return'';
     const gain=valueAt(row,Math.min(row.max,lv+1))-valueAt(row,lv);
     return row.id==='magnet'?'+'+gain:'+'+gain+'%';
+  }
+  function investedCost(){
+    const refund={stardust:0,coreShard:0};
+    for(const row of CATALOG){
+      const lv=Math.min(row.max,level(row.id));
+      for(let i=0;i<lv;i++){refund.stardust+=Number(row.cost[i])||0;refund.coreShard+=Number(row.shards[i])||0;}
+    }
+    return refund;
+  }
+  function resetLabels(){
+    const lang=GAME_SETTINGS.language||'ko';
+    if(lang==='en')return{button:'RESET ALL · FULL REFUND',confirm:'Reset every Core Development upgrade and refund all Stardust and Core Shards?'};
+    if(lang==='ja')return{button:'全リセット · 全額返却',confirm:'コア成長をすべて初期化し、使用したスターダストとコア欠片を全額返却しますか？'};
+    if(lang==='zh-CN')return{button:'全部重置 · 全额返还',confirm:'重置全部核心成长，并返还所有已消耗的星尘和核心碎片吗？'};
+    if(lang==='es')return{button:'REINICIAR TODO · REEMBOLSO TOTAL',confirm:'¿Restablecer todo el desarrollo del núcleo y devolver todo el Polvo Estelar y los Fragmentos de Núcleo?'};
+    if(lang==='fr')return{button:'TOUT RÉINITIALISER · REMBOURSEMENT INTÉGRAL',confirm:'Réinitialiser tout le développement du noyau et rembourser toute la Poussière d’étoile et tous les Fragments de noyau ?'};
+    return{button:'전체 초기화 · 전액 환불',confirm:'코어 성장 전체를 초기화하고 사용한 성진과 코어 조각을 전액 돌려받을까요?'};
+  }
+  function renderResetButton(){
+    if(!resetBtn)return;
+    const refund=investedCost(),labels=resetLabels(),parts=[];
+    if(refund.stardust)parts.push('✦ '+refund.stardust);
+    if(refund.coreShard)parts.push('◆ '+refund.coreShard);
+    resetBtn.disabled=!parts.length;
+    resetBtn.textContent=labels.button+(parts.length?' · '+parts.join(' / '):'');
+  }
+  function resetAllUpgrades(){
+    const refund=investedCost();if(!refund.stardust&&!refund.coreShard)return;
+    if(!window.confirm(resetLabels().confirm))return;
+    for(const row of CATALOG)if(level(row.id)>0)window.stackfallSetUpgradeLevel?.(row.id,0);
+    if(refund.stardust)window.stackfallGrantCurrency?.('stardust',refund.stardust);
+    if(refund.coreShard)window.stackfallGrantCurrency?.('coreShard',refund.coreShard);
+    try{audio.resonance();}catch{}
+    renderUpgradeUi();renderLoadout?.();
   }
   function nodeState(row){
     if(maxed(row))return'maxed';
@@ -139,7 +173,7 @@
     const root=document.querySelector('#resultCurrencyReward');if(!root)return;const reward=state.lastMetaReward||{stardust:0,coreShard:0},cashout=state.lastAwakeningCoreCashout||{cores:0,stardust:0};
     root.innerHTML=reward.stardust||reward.coreShard?'<span>'+tr('currency.earned')+'</span>'+(reward.stardust?'<b>✦ '+reward.stardust+'</b>':'')+(reward.coreShard?'<b>◆ '+reward.coreShard+'</b>':'')+(cashout.cores?'<em>CORE ×'+cashout.cores+' → ✦ '+cashout.stardust+'</em>':''):'';
   }
-  function renderUpgradeUi(){renderProfile();renderLinks();renderNodes();renderDetail();}
+  function renderUpgradeUi(){renderProfile();renderLinks();renderNodes();renderDetail();renderResetButton();}
   window.renderStackfallMetaUi=renderUpgradeUi;
 
   function buySelected(){
@@ -149,6 +183,7 @@
     try{audio.resonance();}catch{}
     renderUpgradeUi();renderLoadout?.();
   }
+  resetBtn?.addEventListener('click',resetAllUpgrades);
   function open(){
     if(!screen)return;lastFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;screen.classList.remove('hidden');renderUpgradeUi();startCoreAnimation();closeBtn?.focus();try{audio.pickup();}catch{}
   }
