@@ -16,6 +16,8 @@ const checks=[
  ['stage launch routes through sortie preparation',map.includes("openStackfallSortiePrep?.('stage',stage.id")],
  ['Endless remains default outside the stage map',modes.includes("return{mode:MODES.ENDLESS,stageId:null}")],
  ['constellation controls are map overlays and remain responsive',styles.includes('.galaxy-constellation-bar')&&styles.includes('grid-template-columns:38px minmax(0,1fr) auto 38px')],
+ ['constellation pages own visibly distinct route bloom and array map backgrounds',styles.includes('[data-constellation-theme="route"]')&&styles.includes('[data-constellation-theme="bloom"]')&&styles.includes('[data-constellation-theme="array"]')&&styles.includes('.galaxy-path-bloom')&&styles.includes('.galaxy-path-array')],
+ ['later constellation node layouts do not reuse the Shardway zigzag template',catalog.includes("id:'stage-08'")&&catalog.includes('node:{x:.32,y:.72}')&&catalog.includes("id:'stage-12'")&&catalog.includes('node:{x:.35,y:.30}')&&catalog.includes("id:'stage-14'")&&catalog.includes('node:{x:.16,y:.32}')&&catalog.includes("id:'stage-18'")&&catalog.includes('node:{x:.86,y:.34}')],
  ['all supported languages retain stage detail labels',(lang.match(/'stageMap\.gameTime'/g)||[]).length>=6&&(lang.match(/'stageMap\.unlockable'/g)||[]).length>=6]
 ];
 let failed=0;for(const[name,ok]of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failed++;}console.log(`Checked ${checks.length} stage map contracts; failures=${failed}`);if(failed)process.exit(1);
