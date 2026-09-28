@@ -24,17 +24,16 @@
   // A14 — Genesis Galaxy. Counter-Spiral Galaxy is restored for both normal and awakened forms.
   function spiralTarget(){return nearestWeaponTarget('spiral');}
   function spawnSpiralBody(target,n,echoed,arm,arms,step,reverse=false){
-    const size=weaponSizeMultiplier(),galaxyAngle=(state.time||0)*.75+(reverse?-1:1)*(arm*TAU/Math.max(1,arms)+step*.20),orbit=34+arm%2*5,
+    const size=weaponSizeMultiplier(),direction=reverse?-1:1,galaxyAngle=(state.time||0)*.72+direction*(arm*TAU/Math.max(1,arms)+step*.54),orbit=42+step*11+(arm%2)*6,
       ox=player.x+Math.cos(galaxyAngle)*orbit,oy=player.y+Math.sin(galaxyAngle)*orbit,
-      live=target&&!target.dead?target:spiralTarget(),base=live?Math.atan2(live.y-oy,live.x-ox):player.angle,
-      spread=(arm-(arms-1)/2)*.10,curve=(reverse?-1:1)*(arm%2?-1:1)*(.15+step*.018),
-      a=base+spread+curve,speed=(310+n*18+step*17)*(reverse?.94:1),extra=arm>=Math.max(0,arms-mult());
+      live=target&&!target.dead?target:spiralTarget(),toward=live?Math.atan2(live.y-oy,live.x-ox):player.angle,tangent=galaxyAngle+direction*Math.PI/2,
+      blend=.42+step*.08,a=lerpAngle(tangent,toward,Math.min(.78,blend)),speed=(300+n*18+step*19)*(reverse?.94:1),extra=arm>=Math.max(0,arms-mult());
     spawnPlayerProjectile({
       x:ox,y:oy,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:(4.4+n*.25)*size,
-      life:1.62,maxRange:weaponRange('spiral'),damage:(7+n*2.05)*(echoed?.62:1)*(reverse?.58:1),
+      life:1.72,maxRange:weaponRange('spiral'),damage:(7+n*2.05)*(echoed?.62:1)*(reverse?.58:1),
       color:echoed?COLORS.pink:reverse?'#c8a9ff':'#e8b8ff',pierce:n>=5?1:0,
       source:echoed?'echo-spiral':reverse?'spiral-counter':extra?'spiral-multiplicity':'spiral-bolt',
-      homingTargetId:live?.id,homingReacquire:false,homingTurn:n>=3?1.75:1.2,
+      homingTargetId:live?.id,homingReacquire:false,homingTurn:n>=3?1.28:.92,
       multiplicityTargetId:live?.id||null,awGenesis:true
     });
   }
@@ -67,9 +66,13 @@
     for(let tick=0;tick<4;tick++)scheduleWeaponAction(90+tick*82,()=>{
       const live=enemyById(id),cx=live?.x??x,cy=live?.y??y,base=(tick/4)*TAU;
       for(let arm=0;arm<4;arm++){
-        const a=base+arm*TAU/4,r1=radius*(.96-tick*.12),r2=radius*(.74-tick*.14),x1=cx+Math.cos(a)*r1,y1=cy+Math.sin(a)*r1,x2=cx+Math.cos(a+.48)*r2,y2=cy+Math.sin(a+.48)*r2;
-        applyRailBeam(x1,y1,x2,y2,4.2*size,8+n*1.7,'#e9c7ff','spiral-bolt',1);
-        if(augment){const ra=-base-arm*TAU/4-.18,or1=radius*(1.16-tick*.08),or2=radius*(1.02-tick*.10);applyRailBeam(cx+Math.cos(ra)*or1,cy+Math.sin(ra)*or1,cx+Math.cos(ra-.40)*or2,cy+Math.sin(ra-.40)*or2,2.4*size,(8+n*1.7)*.42,'#bda4ff','spiral-counter',1);}
+        const armBase=base+arm*TAU/4;
+        for(let segment=0;segment<3;segment++){
+          const z0=segment/3,z1=(segment+1)/3,r1=radius*(.98-tick*.10-z0*.23),r2=radius*(.98-tick*.10-z1*.23),a1=armBase+z0*.78,a2=armBase+z1*.78,
+            x1=cx+Math.cos(a1)*r1,y1=cy+Math.sin(a1)*r1,x2=cx+Math.cos(a2)*r2,y2=cy+Math.sin(a2)*r2;
+          applyRailBeam(x1,y1,x2,y2,(4.4-segment*.55)*size,(8+n*1.7)*.42,'#e9c7ff','spiral-bolt',1);
+        }
+        if(augment){const ra=-base-arm*TAU/4-.18,or1=radius*(1.16-tick*.08),or2=radius*(.78-tick*.08);applyRailBeam(cx+Math.cos(ra)*or1,cy+Math.sin(ra)*or1,cx+Math.cos(ra-.72)*or2,cy+Math.sin(ra-.72)*or2,2.6*size,(8+n*1.7)*.42,'#bda4ff','spiral-counter',1);}
       }
     });
     scheduleWeaponAction(430,()=>{
@@ -104,10 +107,10 @@
     player.awMirrorSignaturePending=true;const stored=[...faces],target=strongestPostRosterEnemy(player.x,player.y,weaponRange('mirror')),beforeShield=Number(player.shield)||0,size=weaponSizeMultiplier();
     pushFx({kind:'mirror-sanctuary',x:player.x,y:player.y,angles:stored,life:.31,max:.31});
     scheduleWeaponAction(180,()=>{
-      const live=target&&!target.dead?target:strongestPostRosterEnemy(player.x,player.y,weaponRange('mirror')),targetAngle=live?Math.atan2(live.y-player.y,live.x-player.x):(Number.isFinite(player.facingAngle)?player.facingAngle:0),length=weaponRange('mirror');
+      const live=target&&!target.dead?target:strongestPostRosterEnemy(player.x,player.y,weaponRange('mirror')),targetAngle=live?Math.atan2(live.y-player.y,live.x-player.x):(Number.isFinite(player.facingAngle)?player.facingAngle:0),length=Math.max(960*size,weaponRange('mirror')*1.72);
       for(let i=0;i<6;i++){
-        const panelA=i*TAU/6-Math.PI/2,origin={x:player.x+Math.cos(panelA)*54,y:player.y+Math.sin(panelA)*54},storedA=stored[i],a=Number.isFinite(storedA)?lerpAngle(storedA,targetAngle,.58):targetAngle+(i-2.5)*.11;
-        applyRailBeam(origin.x,origin.y,origin.x+Math.cos(a)*length,origin.y+Math.sin(a)*length,7.2*size,19+n*3.7,'#ffffff','mirror-return',1);
+        const panelA=i*TAU/6-Math.PI/2,origin={x:player.x+Math.cos(panelA)*64,y:player.y+Math.sin(panelA)*64},storedA=stored[i],a=Number.isFinite(storedA)?lerpAngle(storedA,targetAngle,.72):targetAngle+(i-2.5)*.085;
+        applyRailBeam(origin.x,origin.y,origin.x+Math.cos(a)*length,origin.y+Math.sin(a)*length,10.2*size,19+n*3.7,'#ffffff','mirror-return',1);
         mirrorTwinRays(origin,a,n,.72);
       }
       const profile=state.weaponAugments?.mirror?mirrorAugmentShieldProfile(n):null;if(profile)player.shield=Math.min(profile.cap,Math.min(Number(player.shield)||0,beforeShield+Math.min(22,profile.gain*5)));
