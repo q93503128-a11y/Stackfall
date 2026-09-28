@@ -117,8 +117,8 @@
     if(!awake('gravity')||n<6)return;
     const created=state.entities.wells.slice(before).filter(w=>w&&!w.multiplicity);
     if(created.length<2)return;
-    const group=++gravityGroupId;
-    created.slice(0,2).forEach((w,index)=>{w.awBinaryGroup=group;w.awBinarySide=index;w.awBinaryEcho=!!echoed;});
+    const group=++gravityGroupId,pair=created.slice(0,2),mergeX=(pair[0].x+pair[1].x)/2,mergeY=(pair[0].y+pair[1].y)/2;
+    pair.forEach((w,index)=>{w.awBinaryGroup=group;w.awBinarySide=index;w.awBinaryEcho=!!echoed;w.awBinaryStartX=w.x;w.awBinaryStartY=w.y;w.awBinaryMergeX=mergeX;w.awBinaryMergeY=mergeY;});
   };
   function triggerBinaryMerge(pair){
     const a=pair[0],b=pair[1],cx=(a.x+b.x)/2,cy=(a.y+b.y)/2,echoed=!!(a.awBinaryEcho||b.awBinaryEcho),n=Math.max(1,weaponCount('gravity')),size=weaponSizeMultiplier(),power=echoed?.55:1;
@@ -135,7 +135,14 @@
     if(awake('gravity')){
       const groups=new Map();
       for(const w of state.entities.wells){if(!w?.awBinaryGroup||w.awBinaryMerged)continue;const list=groups.get(w.awBinaryGroup)||[];list.push(w);groups.set(w.awBinaryGroup,list);}
-      for(const pair of groups.values())if(pair.length>=2&&pair.every(w=>w.life<=.34))triggerBinaryMerge(pair.slice(0,2));
+      for(const group of groups.values()){
+        if(group.length<2)continue;const pair=group.slice(0,2),life=Math.min(pair[0].life,pair[1].life);
+        if(life<=.92){
+          const raw=clamp((.92-life)/.74,0,1),ease=raw*raw*(3-2*raw),pull=.90*ease;
+          for(const w of pair){w.x=lerp(Number(w.awBinaryStartX)||w.x,Number(w.awBinaryMergeX)||w.x,pull);w.y=lerp(Number(w.awBinaryStartY)||w.y,Number(w.awBinaryMergeY)||w.y,pull);}
+        }
+        if(pair.every(w=>w.life<=.18)||Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y)<=24)triggerBinaryMerge(pair);
+      }
     }
     baseUpdateWells(dt);
   };
@@ -147,14 +154,14 @@
     if(!awake('comet')||echoed||!target)return;
     player.awCometCycle=(player.awCometCycle||0)+1;
     if(player.awCometCycle%4!==0)return;
-    const targetId=target.id,a=Math.atan2(target.y-player.y,target.x-player.x),sx=player.x+Math.cos(a)*58,sy=player.y+Math.sin(a)*58;
-    pushFx({kind:'comet-charge',x:sx,y:sy,a,targetId,life:.22,max:.22});
-    scheduleWeaponAction(220,()=>{
+    const targetId=target.id,a=Math.atan2(target.y-player.y,target.x-player.x),sx=player.x+Math.cos(a)*76,sy=player.y+Math.sin(a)*76;
+    pushFx({kind:'comet-charge',x:sx,y:sy,a,targetId,length:184,width:34,life:.34,max:.34});
+    scheduleWeaponAction(340,()=>{
       const live=enemyById(targetId)||nearestWeaponTarget('comet');if(!live)return;
-      const angle=Math.atan2(live.y-player.y,live.x-player.x),startX=player.x+Math.cos(angle)*55,startY=player.y+Math.sin(angle)*55,range=weaponRange('comet'),speed=1080,nx=Math.cos(angle),ny=Math.sin(angle);
-      spawnPlayerProjectile({x:startX,y:startY,vx:nx*speed,vy:ny*speed,r:18,life:1.15,maxRange:range,damage:48+n*8.2,color:'#dffbff',pierce:9,source:'comet',explode:true,awakeningChild:true});
-      pushFx({kind:'comet-fracture',x:startX,y:startY,x2:startX+nx*range,y2:startY+ny*range,life:.30,max:.30});
-      shockwave(startX,startY,'#ffffff',92,.25,4);audio.weapon?.('comet',false,1.6);
+      const angle=Math.atan2(live.y-player.y,live.x-player.x),startX=player.x+Math.cos(angle)*74,startY=player.y+Math.sin(angle)*74,range=weaponRange('comet')*1.22,speed=1540,nx=Math.cos(angle),ny=Math.sin(angle);
+      spawnPlayerProjectile({x:startX,y:startY,vx:nx*speed,vy:ny*speed,r:24,life:1.05,maxRange:range,damage:48+n*8.2,color:'#dffbff',pierce:999,source:'comet',explode:true,awakeningChild:true});
+      pushFx({kind:'comet-fracture',x:startX,y:startY,x2:startX+nx*range,y2:startY+ny*range,life:.34,max:.34});
+      shockwave(startX,startY,'#ffffff',118,.28,5);state.camera.shake=Math.max(state.camera.shake,5);audio.weapon?.('comet',false,1.72);
     });
   };
 
@@ -293,7 +300,7 @@
       else if(e.kind==='bastion-break'){ctx.translate(p.x,p.y);ctx.strokeStyle='#eafff7';ctx.lineWidth=4;for(let i=0;i<8;i++){const a=i*TAU/8,rr=e.r*(.28+.65*age);ctx.beginPath();ctx.moveTo(Math.cos(a)*rr*.62,Math.sin(a)*rr*.62);ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);ctx.stroke();}}
       else if(e.kind==='binary-merge'){const a=worldToScreen(e.ax,e.ay),b=worldToScreen(e.bx,e.by),cx=p.x,cy=p.y,ang=age*TAU*1.35,r=(1-age)*Math.hypot(a.x-b.x,a.y-b.y)*.5;ctx.strokeStyle=e.echoed?'#ff83ae':'#ecf7ff';ctx.lineWidth=2;ctx.shadowBlur=22;ctx.shadowColor=e.echoed?'#ff5b91':'#9bdcff';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(cx+Math.cos(ang)*r*.45,cy+Math.sin(ang)*r*.45,cx+Math.cos(ang)*r,cy+Math.sin(ang)*r);ctx.stroke();ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.quadraticCurveTo(cx-Math.cos(ang)*r*.45,cy-Math.sin(ang)*r*.45,cx-Math.cos(ang)*r,cy-Math.sin(ang)*r);ctx.stroke();}
       else if(e.kind==='binary-core'){ctx.translate(p.x,p.y);ctx.fillStyle='#020207';ctx.shadowBlur=38;ctx.shadowColor=e.echoed?'#ff5f97':'#ffffff';ctx.beginPath();ctx.arc(0,0,16+age*20,0,TAU);ctx.fill();ctx.strokeStyle=e.echoed?'#ff8bb1':'#e9fbff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,20+age*34,0,TAU);ctx.stroke();}
-      else if(e.kind==='comet-charge'){ctx.translate(p.x,p.y);ctx.rotate(e.a);ctx.shadowBlur=28;ctx.shadowColor='#dffbff';ctx.strokeStyle='#f5ffff';ctx.lineWidth=2.4;const len=85*(.45+.55*age);ctx.beginPath();ctx.moveTo(-len*.65,0);ctx.lineTo(len*.9,0);ctx.stroke();ctx.fillStyle='#ffffff';ctx.beginPath();ctx.moveTo(len,0);ctx.lineTo(len*.55,-9);ctx.lineTo(len*.62,0);ctx.lineTo(len*.55,9);ctx.closePath();ctx.fill();}
+      else if(e.kind==='comet-charge'){ctx.translate(p.x,p.y);ctx.rotate(e.a);const len=(e.length||184)*(.68+.32*age),half=(e.width||34)*(.54+.46*age),compress=1-.42*age;ctx.scale(compress,1);ctx.shadowBlur=32+age*22;ctx.shadowColor='#9deaff';const halo=ctx.createLinearGradient(-len*.72,0,len*.58,0);halo.addColorStop(0,'rgba(111,220,255,0)');halo.addColorStop(.48,'rgba(132,231,255,.24)');halo.addColorStop(1,'rgba(255,255,255,.86)');ctx.fillStyle=halo;ctx.beginPath();ctx.moveTo(-len*.72,-half*.15);ctx.lineTo(len*.26,-half*.42);ctx.lineTo(len*.58,-half);ctx.lineTo(len,0);ctx.lineTo(len*.58,half);ctx.lineTo(len*.26,half*.42);ctx.lineTo(-len*.72,half*.15);ctx.closePath();ctx.fill();ctx.strokeStyle='#f5ffff';ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(-len*.48,0);ctx.lineTo(len*.90,0);ctx.stroke();ctx.globalAlpha=.46+age*.38;ctx.strokeStyle='#73dcff';ctx.lineWidth=1.3;for(const side of[-1,1]){ctx.beginPath();ctx.moveTo(-len*.58,side*half*.64);ctx.lineTo(len*.38,side*half*.36);ctx.stroke();}}
       else if(e.kind==='comet-fracture'){const b=worldToScreen(e.x2,e.y2);ctx.strokeStyle='rgba(230,248,255,.78)';ctx.lineWidth=2.2;ctx.setLineDash([16,13]);ctx.lineDashOffset=-age*90;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);}
       else if(e.kind==='moon-ripple'){ctx.translate(p.x,p.y);ctx.strokeStyle='#effaff';ctx.shadowBlur=22;ctx.shadowColor='#bfeaff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,e.r*(.35+.65*age),0,TAU);ctx.stroke();}
       ctx.restore();
