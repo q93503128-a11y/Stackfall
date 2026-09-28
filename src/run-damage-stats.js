@@ -82,8 +82,22 @@ function damageWeaponName(key){
   return typeof weaponText==='function'&&WEAPONS[key]?weaponText(key).name:(WEAPONS[key]?.name||key);
 }
 
-function renderDamageBars(snapshot){
-  const root=document.querySelector('#resultDamageBars');
+function damageResultTarget(scope='gameover'){
+  const stage=scope==='stage';
+  return{
+    scope:stage?'stage':'gameover',
+    total:document.querySelector(stage?'#stageDamageTotal':'#resultDamageTotal'),
+    average:document.querySelector(stage?'#stageDamageDps':'#resultDamageDps'),
+    peak:document.querySelector(stage?'#stagePeakDps':'#resultPeakDps'),
+    bars:document.querySelector(stage?'#stageDamageBars':'#resultDamageBars'),
+    trend:document.querySelector(stage?'#stageDamageTrendChart':'#damageTrendChart'),
+    trendStart:document.querySelector(stage?'#stageDamageTrendStart':'#damageTrendStart'),
+    trendEnd:document.querySelector(stage?'#stageDamageTrendEnd':'#damageTrendEnd'),
+    toggleId:stage?'stageDamageTrendToggles':'damageTrendToggles'
+  };
+}
+function renderDamageBars(snapshot,target=damageResultTarget()){
+  const root=target.bars;
   if(!root)return;
   root.replaceChildren();
   const ranked=Object.entries(snapshot.byWeapon).filter(([,damage])=>Number(damage)>0).sort((a,b)=>b[1]-a[1]);
@@ -116,16 +130,16 @@ function damageTrendColor(key){
   if(key===DAMAGE_OTHER_KEY)return'#8b96b8';
   return WEAPONS[key]?.color||'#b9c4df';
 }
-function ensureDamageTrendControls(snapshot){
-  const svg=document.querySelector('#damageTrendChart');if(!svg)return;
-  let root=document.querySelector('#damageTrendToggles');
-  if(!root){root=document.createElement('div');root.id='damageTrendToggles';root.className='damage-trend-toggles';svg.before(root);}
+function ensureDamageTrendControls(snapshot,target=damageResultTarget()){
+  const svg=target.trend;if(!svg)return;
+  let root=document.querySelector('#'+target.toggleId);
+  if(!root){root=document.createElement('div');root.id=target.toggleId;root.className='damage-trend-toggles';svg.before(root);}
   root.replaceChildren();
   const rows=[['total',tr('gameover.damage.total')],...Object.entries(snapshot.byWeapon).filter(([,damage])=>Number(damage)>0).sort((a,b)=>b[1]-a[1]).map(([key])=>[key,damageWeaponName(key)])];
   for(const[key,label]of rows){
     const button=document.createElement('button'),dot=document.createElement('i'),text=document.createElement('span'),visible=!damageTrendHidden.has(key);
     button.type='button';button.className='damage-trend-toggle'+(visible?'':' off');button.style.setProperty('--trend-color',damageTrendColor(key));button.dataset.trendKey=key;button.setAttribute('aria-pressed',visible?'true':'false');button.title=visible?'그래프 숨기기':'그래프 표시';
-    text.textContent=label;button.append(dot,text);button.addEventListener('click',()=>{if(damageTrendHidden.has(key))damageTrendHidden.delete(key);else damageTrendHidden.add(key);button.classList.toggle('off',damageTrendHidden.has(key));button.setAttribute('aria-pressed',damageTrendHidden.has(key)?'false':'true');renderDamageTrend(lastDamageTrendSnapshot||snapshot,false);});
+    text.textContent=label;button.append(dot,text);button.addEventListener('click',()=>{if(damageTrendHidden.has(key))damageTrendHidden.delete(key);else damageTrendHidden.add(key);button.classList.toggle('off',damageTrendHidden.has(key));button.setAttribute('aria-pressed',damageTrendHidden.has(key)?'false':'true');renderDamageTrend(lastDamageTrendSnapshot||snapshot,false,target.scope);});
     root.appendChild(button);
   }
 }
@@ -136,10 +150,10 @@ function damageTrendPath(samples,left,right){
   let points=samples;if(samples.length===1)points=[{...samples[0],x:left},{...samples[0],x:right}];
   return{points,line:points.map((point,index)=>(index?'L':'M')+point.x.toFixed(2)+' '+point.y.toFixed(2)).join(' ')};
 }
-function renderDamageTrend(snapshot,rebuildControls=true){
+function renderDamageTrend(snapshot,rebuildControls=true,scope='gameover'){
   if(!snapshot)return;lastDamageTrendSnapshot=snapshot;
-  const svg=document.querySelector('#damageTrendChart'),startLabel=document.querySelector('#damageTrendStart'),endLabel=document.querySelector('#damageTrendEnd');
-  if(!svg)return;if(rebuildControls)ensureDamageTrendControls(snapshot);
+  const target=damageResultTarget(scope),svg=target.trend,startLabel=target.trendStart,endLabel=target.trendEnd;
+  if(!svg)return;if(rebuildControls)ensureDamageTrendControls(snapshot,target);
   svg.replaceChildren();svg.setAttribute('aria-label',tr('gameover.damage.trend'));
   if(startLabel)startLabel.textContent='00:00';if(endLabel)endLabel.textContent=formatTime(snapshot.totalSeconds);
   const width=600,height=160,left=8,right=8,top=8,bottom=8,plotWidth=width-left-right,plotHeight=height-top-bottom,baseline=height-bottom;
@@ -158,15 +172,16 @@ function renderDamageTrend(snapshot,rebuildControls=true){
     }
   }
 }
-function renderRunDamageResults(){
-  const snapshot=runDamageSnapshot(),total=document.querySelector('#resultDamageTotal'),average=document.querySelector('#resultDamageDps'),peak=document.querySelector('#resultPeakDps');
-  if(total)total.textContent=formatDamageValue(snapshot.total);if(average)average.textContent=formatDamageValue(snapshot.averageDps);if(peak)peak.textContent=formatDamageValue(snapshot.peakDps);
-  damageTrendHidden.clear();renderDamageBars(snapshot);renderDamageTrend(snapshot,true);
+function renderRunDamageResults(scope='gameover'){
+  const snapshot=runDamageSnapshot(),target=damageResultTarget(scope);
+  if(target.total)target.total.textContent=formatDamageValue(snapshot.total);if(target.average)target.average.textContent=formatDamageValue(snapshot.averageDps);if(target.peak)target.peak.textContent=formatDamageValue(snapshot.peakDps);
+  damageTrendHidden.clear();renderDamageBars(snapshot,target);renderDamageTrend(snapshot,true,target.scope);
 }
 
 resetRunDamageStats();
 const damageStatsResetBase=resetGame;
 resetGame=function resetGameWithDamageStats(){resetRunDamageStats();return damageStatsResetBase();};
 const damageStatsEndBase=endGame;
-endGame=function endGameWithDamageStats(){const result=damageStatsEndBase();renderRunDamageResults();return result;};
+endGame=function endGameWithDamageStats(){const result=damageStatsEndBase();renderRunDamageResults('gameover');return result;};
+window.stackfallRenderRunDamageResults=scope=>renderRunDamageResults(scope);
 window.stackfallDamageStats={snapshot:runDamageSnapshot,sourceKey:damageSourceWeaponKey};
