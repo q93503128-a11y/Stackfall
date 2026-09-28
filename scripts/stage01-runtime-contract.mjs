@@ -6,7 +6,8 @@ const authoredStageIds=[...catalog.matchAll(/id:'(stage-\d{2})'/g)].map(match=>m
 const checks=[
  ['Stage 1 boss enters at exactly five minutes',catalog.includes('durationSeconds:300')&&catalog.includes("spawnAt:300")&&catalog.includes("at:300,kind:'boss'")],
  ['Stage 1 introduces four dedicated enemy variants',['shardling','dart','bombardier','bulwark'].every(id=>catalog.includes("id:'"+id+"'"))&&['shardling','dart','bombardier','bulwark'].every(id=>runtime.includes(id))],
- ['Stage 1 fixed timeline reaches the boss at 300 seconds',[45,105,150,210,250,300].every(n=>catalog.includes('at:'+n))],
+ ['Stage 1 fixed timeline reaches the boss at 300 seconds',[45,135,175,220,260,300].every(n=>catalog.includes('at:'+n))],
+ ['Stage 1 delays concentrated ranged pressure until the early build has formed',catalog.includes("id:'bombardier',type:'ranged',unlockAt:175")&&catalog.includes("id:'bombardment',at:175,kind:'wave',variant:'bombardier',count:3")&&runtime.includes("if(time<360)return[['shardling',.68],['dart',.32]]")],
  ['Stage 1 owns a persistent recurring map gimmick',catalog.includes("gimmick:{startAt:45,interval:38,waveEvery:4,accelerate:0.16}")&&runtime.includes('updateAmbientGimmick(run,def)')],
  ['shared stage runtime never clears because a timer expired',!runtime.includes('state.time>=run.stage.durationSeconds')],
  ['one shared runtime owns spawn reset map-event and boss-death routing',runtime.includes('updateSpawning=function stageAwareSpawning')&&runtime.includes('resetGame=function stageAwareReset')&&runtime.includes('window.updateMapEvents=function stageAwareMapEvents')&&runtime.includes('window.handleStageBossDefeated=function')&&adapters.every(row=>forbiddenAdapterOwners.every(token=>!row.source.includes(token)))],
