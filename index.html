@@ -214,6 +214,23 @@
           <div><span data-i18n="stageClear.kills">처치</span><b id="stageCompleteKills">0</b></div>
         </div>
         <div id="stageCompleteReward" class="stage-complete-reward"></div>
+        <section class="damage-results stage-damage-results" aria-labelledby="stageDamageResultsTitle">
+          <h3 id="stageDamageResultsTitle" data-i18n="gameover.damage.title">피해 분석</h3>
+          <div class="damage-summary-grid">
+            <div><span data-i18n="gameover.damage.total">총 피해량</span><b id="stageDamageTotal">0</b></div>
+            <div><span data-i18n="gameover.damage.average">평균 DPS</span><b id="stageDamageDps">0</b></div>
+            <div><span data-i18n="gameover.damage.peak">최고 구간 DPS</span><b id="stagePeakDps">0</b></div>
+          </div>
+          <div class="damage-chart-block">
+            <div class="damage-chart-title"><span data-i18n="gameover.damage.breakdown">장비별 피해량</span></div>
+            <div id="stageDamageBars" class="damage-bars" aria-live="polite"></div>
+          </div>
+          <div class="damage-chart-block damage-trend-block">
+            <div class="damage-chart-title"><span data-i18n="gameover.damage.trend">딜 추이</span><small>15s</small></div>
+            <svg id="stageDamageTrendChart" class="damage-trend-chart" viewBox="0 0 600 160" role="img" aria-label="딜 추이"></svg>
+            <div class="damage-trend-axis"><span id="stageDamageTrendStart">00:00</span><span id="stageDamageTrendEnd">00:00</span></div>
+          </div>
+        </section>
         <button id="stageCompleteMapBtn" class="primary-btn" type="button"><span data-i18n="stageClear.map">은하 지도로</span></button>
         <button id="stageCompleteMenuBtn" class="secondary-btn" type="button" data-i18n="stageClear.menu">메인 메뉴</button>
       </div>
