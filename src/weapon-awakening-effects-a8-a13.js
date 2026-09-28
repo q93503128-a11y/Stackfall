@@ -214,12 +214,13 @@
     pushFx({kind:'fleet-form',targetId,x:player.x,y:player.y,a:angle,count,life:.74,max:.74});
     scheduleWeaponAction(520,()=>{
       const live=enemyById(targetId)||strongestDroneTarget();if(!live)return;
-      const a=Math.atan2(live.y-player.y,live.x-player.x),dx=Math.cos(a),dy=Math.sin(a),nx=-dy,ny=dx,length=Math.max(520,Math.min(weaponRange('drone')*1.22,Math.hypot(live.x-player.x,live.y-player.y)+280)),startX=player.x-dx*95,startY=player.y-dy*95;
+      const a=Math.atan2(live.y-player.y,live.x-player.x),dx=Math.cos(a),dy=Math.sin(a),nx=-dy,ny=dx,length=Math.max(520,Math.min(weaponRange('drone')*1.22,Math.hypot(live.x-player.x,live.y-player.y)+280)),origins=[];
       for(let i=0;i<count;i++){
-        const offset=(i-(count-1)/2)*22*size,x1=startX+nx*offset,y1=startY+ny*offset,x2=x1+dx*length,y2=y1+dy*length;
+        const row=Math.abs(i-(count-1)/2),offset=(i-(count-1)/2)*22*size,d=-76-row*15,x1=player.x+dx*d+nx*offset,y1=player.y+dy*d+ny*offset,x2=x1+dx*length,y2=y1+dy*length;
+        origins.push({x:x1,y:y1,offset});
         applyRailBeam(x1,y1,x2,y2,4.4*size,(13+n*3.5)*.70,'#baffea',i>=Math.max(1,count-multiplicity())?'drone-multiplicity':'meteor-drone',1);
       }
-      pushFx({kind:'fleet-run',x:startX,y:startY,a,count,length,life:.68,max:.68});
+      pushFx({kind:'fleet-run',origins,a,count,length,life:.68,max:.68});
       scheduleWeaponAction(115,()=>{
         const final=enemyById(targetId)||live;if(!final||final.dead)return;
         areaDamage(final.x,final.y,82*size,24+n*4.6,'#e8fff7','meteor-drone',{shake:false});
@@ -274,22 +275,30 @@
       }
     }
   }
-  function fireAwakenedRailWave(n,target,overdrive=false){
+  function releaseAwakenedRailWave(n,target,overdrive=false){
     if(!target||target.dead)return;
     const angle=Math.atan2(target.y-player.y,target.x-player.x),dx=Math.cos(angle),dy=Math.sin(angle),
-      size=weaponSizeMultiplier(),length=weaponRange('rail')*(overdrive?1.34:1.18),width=(30+n*2.35)*size*(overdrive?1.22:1),
+      size=weaponSizeMultiplier(),length=weaponRange('rail')*(overdrive?1.46:1.18),
+      visualWidth=(72+n*5.5)*size*(overdrive?1.62:1),hitWidth=(34+n*2.6)*size*(overdrive?1.28:1),
       x1=player.x-dx*34,y1=player.y-dy*34,x2=x1+dx*length,y2=y1+dy*length,
-      perPulse=(40+n*9.4)*.60,eliteBonus=n>=5?1.36:1;
-    pushFx({kind:'rail-wave',x:x1,y:y1,a:angle,length,width,life:.64,max:.64,overdrive});
-    const pulseTimes=[70,235,400];
+      perPulse=(40+n*9.4)*(overdrive?.72:.60),eliteBonus=n>=5?1.36:1;
+    pushFx({kind:'rail-wave',x:x1,y:y1,a:angle,length,width:visualWidth,life:.68,max:.68,overdrive});
+    const pulseTimes=[80,245,410];
     for(let i=0;i<pulseTimes.length;i++)scheduleWeaponAction(pulseTimes[i],()=>{
-      damageAwakenedRailPulse(x1,y1,x2,y2,width,perPulse,eliteBonus);
-      pushFx({kind:'rail-wave-pulse',x:x1,y:y1,a:angle,length,width,life:.20,max:.20,index:i,overdrive});
-      if(i===1)state.camera.shake=Math.max(state.camera.shake,overdrive?5.8:4.2);
+      damageAwakenedRailPulse(x1,y1,x2,y2,hitWidth,perPulse,eliteBonus);
+      pushFx({kind:'rail-wave-pulse',x:x1,y:y1,a:angle,length,width:visualWidth,life:.22,max:.22,index:i,overdrive});
+      if(i===1)state.camera.shake=Math.max(state.camera.shake,overdrive?8.2:5.0);
       if(i===2)terminusFracture(x1,y1,angle,length,n);
     });
-    state.flash=Math.max(state.flash,overdrive?.075:.05);
-    audio.weapon?.('rail',false,overdrive?1.68:1.42);
+    state.flash=Math.max(state.flash,overdrive?.11:.06);
+    audio.weapon?.('rail',false,overdrive?1.86:1.50);
+  }
+  function fireAwakenedRailWave(n,target,overdrive=false){
+    if(!target||target.dead)return;
+    if(!overdrive)return releaseAwakenedRailWave(n,target,false);
+    const angle=Math.atan2(target.y-player.y,target.x-player.x),size=weaponSizeMultiplier();
+    pushFx({kind:'rail-overdrive-charge',x:player.x,y:player.y,a:angle,r:(94+n*7)*size,life:.28,max:.28});
+    scheduleWeaponAction(280,()=>{const live=target&&!target.dead?target:railAwakeningTarget();if(live)releaseAwakenedRailWave(n,live,true);});
   }
   const baseFireRailgun=fireRailgun;
   fireRailgun=function terminusRailgun(n,echoed=false){
@@ -381,8 +390,9 @@
       else if(e.kind==='nova-ring-light'||e.kind==='hypernova-charge'||e.kind==='hypernova-release'){const p=worldToScreen(e.x,e.y);ctx.translate(p.x,p.y);const release=e.kind==='hypernova-release',charge=e.kind==='hypernova-charge';ctx.strokeStyle=release?'#ffbd69':'#fff0b5';ctx.shadowBlur=release?38:30;ctx.shadowColor='#ffbd69';ctx.lineWidth=e.kind==='nova-ring-light'?2.5:release?7:5;const base=e.r||54+(e.index||0)*14,r=base*(charge?(1.14-age*.40):.38+.62*age);if(charge||release){ctx.globalAlpha=(release?.16:.10)+q*.18;ctx.fillStyle=release?'#ffbd69':'#fff4c9';ctx.beginPath();ctx.arc(0,0,r*(release?.82:.58),0,TAU);ctx.fill();ctx.globalAlpha=Math.min(1,q*1.5);for(let i=0;i<(release?16:12);i++){const a=i*TAU/(release?16:12)+age*.38,inner=r*(release?.48:.32),outer=r*(release?1.16:.88);ctx.lineWidth=release?3.2:1.8;ctx.beginPath();ctx.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);ctx.lineTo(Math.cos(a)*outer,Math.sin(a)*outer);ctx.stroke();}}ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.stroke();if(charge){ctx.fillStyle='#ffffff';ctx.globalAlpha=q*.96;ctx.beginPath();ctx.arc(0,0,11*(1-age*.62),0,TAU);ctx.fill();}}
       else if(e.kind==='drone-mark'){const target=enemyById(e.targetId),p=worldToScreen(target?.x??e.x,target?.y??e.y),r=30+age*8;ctx.translate(p.x,p.y);ctx.rotate(age*.8);ctx.strokeStyle='#d8fff1';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<4;i++){const a=i/4*TAU;ctx.moveTo(Math.cos(a)*r*.55,Math.sin(a)*r*.55);ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);}ctx.stroke();}
       else if(e.kind==='drone-meteor'){const p=worldToScreen(e.x,e.y);ctx.strokeStyle='#eafff8';ctx.lineWidth=5;ctx.shadowBlur=24;ctx.shadowColor='#8fffd0';ctx.beginPath();ctx.moveTo(p.x-70,p.y-140);ctx.lineTo(p.x,p.y);ctx.stroke();}
-      else if(e.kind==='fleet-form'){const dir={x:Math.cos(e.a),y:Math.sin(e.a)},normal={x:-dir.y,y:dir.x};for(let i=0;i<e.count;i++){const row=Math.abs(i-(e.count-1)/2),offset=(i-(e.count-1)/2)*26,d=-70-row*15,point={x:e.x+dir.x*d+normal.x*offset,y:e.y+dir.y*d+normal.y*offset};drawFleetDrone(point,e.a,1.0,age);}}
-      else if(e.kind==='fleet-run'){const p=worldToScreen(e.x,e.y),dx=Math.cos(e.a),dy=Math.sin(e.a),nx=-dy,ny=dx,travel=clamp(age*1.08,0,1);ctx.strokeStyle='#baffea';ctx.shadowBlur=18;ctx.shadowColor='#8fffd0';for(let i=0;i<e.count;i++){const off=(i-(e.count-1)/2)*22,row=Math.abs(i-(e.count-1)/2),lag=row*.055,progress=clamp((travel-lag)/(1-lag),0,1),wx=e.x+dx*e.length*progress+nx*off,wy=e.y+dy*e.length*progress+ny*off;ctx.globalAlpha=.16+.38*q;ctx.lineWidth=1.5+i%2;ctx.beginPath();ctx.moveTo(p.x+nx*off,p.y+ny*off);ctx.lineTo(p.x+dx*e.length*progress+nx*off,p.y+dy*e.length*progress+ny*off);ctx.stroke();drawFleetDrone({x:wx,y:wy},e.a,1.06,1);}}
+      else if(e.kind==='fleet-form'){const target=enemyById(e.targetId),aim=target?Math.atan2(target.y-player.y,target.x-player.x):e.a,dir={x:Math.cos(aim),y:Math.sin(aim)},normal={x:-dir.y,y:dir.x};e.a=aim;for(let i=0;i<e.count;i++){const row=Math.abs(i-(e.count-1)/2),offset=(i-(e.count-1)/2)*26,d=-76-row*15,point={x:player.x+dir.x*d+normal.x*offset,y:player.y+dir.y*d+normal.y*offset};drawFleetDrone(point,aim,1.0,age);}}
+      else if(e.kind==='fleet-run'){const dx=Math.cos(e.a),dy=Math.sin(e.a),travel=clamp(age*1.08,0,1),origins=Array.isArray(e.origins)?e.origins:[];ctx.strokeStyle='#baffea';ctx.shadowBlur=18;ctx.shadowColor='#8fffd0';for(let i=0;i<origins.length;i++){const origin=origins[i],row=Math.abs(i-(origins.length-1)/2),lag=row*.055,progress=clamp((travel-lag)/(1-lag),0,1),wx=origin.x+dx*e.length*progress,wy=origin.y+dy*e.length*progress,p=worldToScreen(origin.x,origin.y),end=worldToScreen(wx,wy);ctx.globalAlpha=.16+.38*q;ctx.lineWidth=1.5+i%2;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(end.x,end.y);ctx.stroke();drawFleetDrone({x:wx,y:wy},e.a,1.06,1);}}
+      else if(e.kind==='rail-overdrive-charge'){const p=worldToScreen(e.x,e.y),r=e.r*(.74+.26*age);ctx.translate(p.x,p.y);ctx.rotate(age*.7);ctx.globalAlpha=.38+.58*q;ctx.strokeStyle='#ffffff';ctx.shadowBlur=44;ctx.shadowColor='#7edcff';ctx.lineWidth=4.5;for(let ring=0;ring<3;ring++){ctx.beginPath();ctx.arc(0,0,r*(.62+ring*.23),0,TAU);ctx.stroke();}ctx.globalAlpha=.92*q;ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(Math.cos(e.a)*r*.24,Math.sin(e.a)*r*.24,12+age*7,0,TAU);ctx.fill();}
       else if(e.kind==='rail-wave'){const p=worldToScreen(e.x,e.y),dx=Math.cos(e.a),dy=Math.sin(e.a),nx=-dy,ny=dx,w=e.width*(.86+.14*Math.sin(age*Math.PI)),len=e.length,over=!!e.overdrive,grad=ctx.createLinearGradient(p.x,p.y,p.x+dx*len,p.y+dy*len);grad.addColorStop(0,'rgba(255,255,255,.98)');grad.addColorStop(.12,over?'rgba(168,229,255,.98)':'rgba(198,240,255,.96)');grad.addColorStop(.58,over?'rgba(83,177,255,.82)':'rgba(104,202,255,.72)');grad.addColorStop(1,'rgba(76,164,255,.10)');ctx.fillStyle=grad;ctx.shadowBlur=over?62:48;ctx.shadowColor='#8bdcff';ctx.globalAlpha=.50+.42*q;ctx.beginPath();ctx.moveTo(p.x-dx*18+nx*w*.18,p.y-dy*18+ny*w*.18);ctx.quadraticCurveTo(p.x+dx*len*.18+nx*w*.74,p.y+dy*len*.18+ny*w*.74,p.x+dx*len+nx*w*.34,p.y+dy*len+ny*w*.34);ctx.lineTo(p.x+dx*len-nx*w*.34,p.y+dy*len-ny*w*.34);ctx.quadraticCurveTo(p.x+dx*len*.18-nx*w*.74,p.y+dy*len*.18-ny*w*.74,p.x-dx*18-nx*w*.18,p.y-dy*18-ny*w*.18);ctx.closePath();ctx.fill();ctx.globalAlpha=.92*q+.06;ctx.strokeStyle='#ffffff';ctx.lineWidth=Math.max(6,w*.30);ctx.shadowBlur=38;ctx.beginPath();ctx.moveTo(p.x-dx*8,p.y-dy*8);ctx.lineTo(p.x+dx*len,p.y+dy*len);ctx.stroke();ctx.globalAlpha=.85*q;ctx.fillStyle='#ffffff';ctx.shadowBlur=46;ctx.beginPath();ctx.arc(p.x,p.y,w*.54*(.88+.12*Math.sin(age*TAU*2)),0,TAU);ctx.fill();ctx.globalAlpha=.42*q;ctx.strokeStyle='#b6efff';ctx.lineWidth=2.2;for(let ring=0;ring<3;ring++){const rr=w*(.70+ring*.27)+age*w*.38;ctx.beginPath();ctx.ellipse(p.x-dx*2,p.y-dy*2,rr,rr*.46,e.a,0,TAU);ctx.stroke();}}
       else if(e.kind==='rail-wave-pulse'){const p=worldToScreen(e.x,e.y),dx=Math.cos(e.a),dy=Math.sin(e.a),nx=-dy,ny=dx,w=e.width*(1+age*.34);ctx.globalAlpha=q*.72;ctx.strokeStyle='#ffffff';ctx.shadowBlur=32;ctx.shadowColor='#9fe5ff';ctx.lineWidth=Math.max(3,w*.11);for(const f of[.16,.46,.76]){const cx=p.x+dx*e.length*f,cy=p.y+dy*e.length*f,rr=w*(.30+.32*age);ctx.beginPath();ctx.ellipse(cx,cy,rr,rr*.34,e.a,0,TAU);ctx.stroke();}}
       ctx.restore();
