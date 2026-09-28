@@ -130,7 +130,7 @@
   function renderProfile(){
     const m=window.stackfallMeta||{},clears=m.clearedStages?.length||0,dust=currency('stardust'),shards=currency('coreShard');
     const set=(id,value)=>{const el=document.querySelector(id);if(el)el.textContent=String(value);};
-    set('#profileClearCount',clears);set('#profileStardust',dust);set('#profileCoreShard',shards);set('#upgradeStardust',dust);set('#upgradeCoreShard',shards);set('#upgradeAwakeningCore',Math.max(0,Math.floor(Number(state.awakeningCores)||0)));
+    set('#profileClearCount',clears);set('#profileStardust',dust);set('#profileCoreShard',shards);set('#upgradeStardust',dust);set('#upgradeCoreShard',shards);
     set('#profileDetailClears',clears);set('#profileDetailRuns',m.lifetime?.runs||0);set('#profileDetailKills',m.lifetime?.kills||0);
     set('#profileDetailSlots',window.stackfallEquipmentSlotLimit?.()||4);set('#profileDetailWeapons',m.unlockedWeapons?.length||0);set('#profileDetailStardust',dust);set('#profileDetailCoreShard',shards);
     const best=Number(m.bestStageTimes?.['stage-01']),bestEl=document.querySelector('#profileDetailBest');if(bestEl)bestEl.textContent=Number.isFinite(best)&&best>0?formatTime(best):'—';
