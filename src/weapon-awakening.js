@@ -1,7 +1,7 @@
 (()=>{
   const defs={
-    core:{icon:'✹',ko:'항성핵',en:'Stellar Core',signature:'보조핵 3개 동시 사격'},
-    blade:{icon:'◒',ko:'월식 검륜',en:'Eclipse Blades',signature:'정렬 후 거대 월식 절단'},
+    core:{icon:'✹',ko:'항성핵',en:'Stellar Core',signature:'중앙 성창 + 보조핵 3중 동시 사격'},
+    blade:{icon:'◒',ko:'월식 검륜',en:'Eclipse Blades',signature:'5검륜 가변속 영구 공전'},
     ember:{icon:'✦',ko:'성운 성창기',en:'Nebula Starcaster',signature:'연속 적중 후 성광 관통탄'},
     bulwark:{icon:'⛨',ko:'천궁 성채',en:'Celestial Bastion',signature:'방향 전개 성채와 파괴 반격파'},
     gravity:{icon:'◉',ko:'쌍성 붕괴',en:'Binary Collapse',signature:'쌍성 특이점의 최종 합체 붕괴'},
