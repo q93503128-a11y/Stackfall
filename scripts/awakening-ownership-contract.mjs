@@ -30,7 +30,8 @@ assert(!/stackfallResolutionScale\s*=\s*\.(?:30|55)/.test(read('src/performance-
 assert(!read('src/render-entities.js').includes("orbitWeaponRaster('prism'"));
 assert(!read('src/endgame-balance-expansion.js').includes('if(bladeN&&extra){'));
 const renderEntities=read('src/render-entities.js');
-assert(renderEntities.includes('function boomerangMoonPhase(p)')&&renderEntities.includes('phase=boomerangMoonPhase(p)'),'BASE boomerang moon-phase progression must remain authored');
+assert(renderEntities.includes("quadraticCurveTo(0,-p.r*1.05,p.r*1.15,0)")&&!renderEntities.includes('function boomerangMoonPhase(p)'),'BASE boomerang must retain the authored non-lunar curved blade silhouette');
+assert(effects[0].includes('function drawMoonBoomerang(p)')&&effects[0].includes('p.awMoonPhase'),'A7 awakening must own the lunar phase transformation');
 
 // Execute the canonical closure with a recording Canvas, rather than trusting
 // descriptive diagnostics or looking only for a sourceFamily string.
