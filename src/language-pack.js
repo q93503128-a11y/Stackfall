@@ -223,22 +223,22 @@ Object.assign(TEXT.fr,{
 });
 
 Object.assign(TEXT.ko,{
-  'profile.localSave':'이 진행도는 현재 기기에 저장됩니다.','profile.runs':'총 출격','profile.kills':'누적 처치','profile.slots':'장비 슬롯','profile.weapons':'해금 무기','profile.bestStage1':'Stage 1 최고 기록'
+  'profile.localSave':'이 진행도는 현재 기기에 저장됩니다.','profile.runs':'총 출격','profile.kills':'누적 처치','profile.slots':'장비 슬롯','profile.weapons':'해금 무기','profile.bosses':'보스 처치','profile.rename':'닉네임 변경','profile.save':'저장'
 });
 Object.assign(TEXT.en,{
-  'profile.localSave':'Progress is currently stored on this device.','profile.runs':'TOTAL RUNS','profile.kills':'TOTAL KILLS','profile.slots':'EQUIPMENT SLOTS','profile.weapons':'UNLOCKED WEAPONS','profile.bestStage1':'STAGE 1 BEST'
+  'profile.localSave':'Progress is currently stored on this device.','profile.runs':'TOTAL RUNS','profile.kills':'TOTAL KILLS','profile.slots':'EQUIPMENT SLOTS','profile.weapons':'UNLOCKED WEAPONS','profile.bosses':'BOSSES DEFEATED','profile.rename':'RENAME','profile.save':'SAVE'
 });
 Object.assign(TEXT.ja,{
-  'profile.localSave':'進行状況は現在この端末に保存されます。','profile.runs':'総出撃','profile.kills':'累計撃破','profile.slots':'装備スロット','profile.weapons':'解放武器','profile.bestStage1':'STAGE 1 ベスト'
+  'profile.localSave':'進行状況は現在この端末に保存されます。','profile.runs':'総出撃','profile.kills':'累計撃破','profile.slots':'装備スロット','profile.weapons':'解放武器','profile.bosses':'ボス撃破','profile.rename':'名前変更','profile.save':'保存'
 });
 Object.assign(TEXT['zh-CN'],{
-  'profile.localSave':'当前进度保存在此设备上。','profile.runs':'总出击','profile.kills':'累计击杀','profile.slots':'装备槽','profile.weapons':'已解锁武器','profile.bestStage1':'STAGE 1 最佳记录'
+  'profile.localSave':'当前进度保存在此设备上。','profile.runs':'总出击','profile.kills':'累计击杀','profile.slots':'装备槽','profile.weapons':'已解锁武器','profile.bosses':'击败首领','profile.rename':'修改昵称','profile.save':'保存'
 });
 Object.assign(TEXT.es,{
-  'profile.localSave':'El progreso se guarda actualmente en este dispositivo.','profile.runs':'PARTIDAS','profile.kills':'BAJAS TOTALES','profile.slots':'RANURAS','profile.weapons':'ARMAS DESBLOQUEADAS','profile.bestStage1':'MEJOR STAGE 1'
+  'profile.localSave':'El progreso se guarda actualmente en este dispositivo.','profile.runs':'PARTIDAS','profile.kills':'BAJAS TOTALES','profile.slots':'RANURAS','profile.weapons':'ARMAS DESBLOQUEADAS','profile.bosses':'JEFES DERROTADOS','profile.rename':'CAMBIAR NOMBRE','profile.save':'GUARDAR'
 });
 Object.assign(TEXT.fr,{
-  'profile.localSave':'La progression est actuellement enregistrée sur cet appareil.','profile.runs':'SORTIES','profile.kills':'ÉLIMINATIONS','profile.slots':'EMPLACEMENTS','profile.weapons':'ARMES DÉBLOQUÉES','profile.bestStage1':'MEILLEUR STAGE 1'
+  'profile.localSave':'La progression est actuellement enregistrée sur cet appareil.','profile.runs':'SORTIES','profile.kills':'ÉLIMINATIONS','profile.slots':'EMPLACEMENTS','profile.weapons':'ARMES DÉBLOQUÉES','profile.bosses':'BOSS VAINCUS','profile.rename':'RENOMMER','profile.save':'ENREGISTRER'
 });
 
 Object.assign(TEXT.ko,{
