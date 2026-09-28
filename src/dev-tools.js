@@ -14,6 +14,16 @@
   const baseDevCurrency=window.stackfallCurrency;
   const baseDevSpendCurrency=window.stackfallSpendCurrency;
   let infiniteCurrency=false,refreshSlotEditor=()=>{};
+  window.stackfallDevInvincible=false;
+  window.stackfallDevDisableLevelUps=false;
+  const baseDevHurtPlayer=hurtPlayer;
+  hurtPlayer=function developerInvincibility(amount,source='contact'){
+    if(window.stackfallDevInvincible===true){player.invuln=Math.max(Number(player.invuln)||0,.15);return;}
+    return baseDevHurtPlayer(amount,source);
+  };
+  const baseDevGainXp=gainXp,baseDevTryLevelUp=tryLevelUp;
+  gainXp=function developerGainXp(value){if(window.stackfallDevDisableLevelUps===true){state.xp=0;return;}return baseDevGainXp(value);};
+  tryLevelUp=function developerTryLevelUp(){if(window.stackfallDevDisableLevelUps===true){state.xp=0;return false;}return baseDevTryLevelUp();};
   try{infiniteCurrency=localStorage.getItem('stackfall.devInfiniteCurrency')==='1';}catch{}
   window.stackfallDevInfiniteCurrency=infiniteCurrency;
   if(typeof baseDevCurrency==='function')window.stackfallCurrency=key=>window.stackfallDevInfiniteCurrency===true?DEV_INFINITE_CURRENCY_VALUE:baseDevCurrency(key);
@@ -142,6 +152,16 @@
     state.time=Math.max(state.time||0,Number(cfg.stage.boss?.spawnAt||cfg.stage.durationSeconds||60)+.05);state.spawnTimer=0;
   }
   function fullHeal(){player.hp=player.maxHp;player.shield=Math.max(player.shield||0,typeof shieldCapacity==='function'?shieldCapacity():0);player.invuln=Math.max(player.invuln||0,2);syncUi();}
+  function setInvincible(on){window.stackfallDevInvincible=on===true;if(window.stackfallDevInvincible){player.hp=player.maxHp;player.invuln=Math.max(Number(player.invuln)||0,1);}syncUi();}
+  function setLevelUpsDisabled(on){window.stackfallDevDisableLevelUps=on===true;if(window.stackfallDevDisableLevelUps)state.xp=0;syncUi();}
+  function completeAllStages(){
+    const meta=window.stackfallMeta,stages=allStages();if(!meta||!stages.length)return false;
+    meta.clearedStages=stages.map(stage=>stage.id);meta.stageClearCounts=meta.stageClearCounts||{};
+    for(const stage of stages){meta.stageClearCounts[stage.id]=Math.max(1,Math.floor(Number(meta.stageClearCounts[stage.id])||0));}
+    const unlocked=new Set([...(window.STACKFALL_INITIAL_WEAPONS||[]),...(meta.unlockedWeapons||[])]);
+    for(const stage of stages)for(const reward of stage.rewards||[])if(reward.type==='weapon'&&WEAPONS?.[reward.key])unlocked.add(reward.key);
+    meta.unlockedWeapons=[...unlocked];window.stackfallSaveMeta?.();renderStarterOptions?.();syncUi();return true;
+  }
   function giveCores(){state.awakeningCores=99;syncUi();}
   function clearAwakenings(){resetAwakeningTransients();state.awakenedWeapons={};syncUi();}
   function openSpecialReward(){
@@ -186,7 +206,7 @@
   const stageOptions=allStages().map(stage=>`<option value="${stage.id}">STAGE ${String(stage.order).padStart(2,'0')} · ${stageName(stage)}</option>`).join('');
   panel.innerHTML=`
     <h3>DEVELOPER TEST</h3>
-    <p>로컬 테스트 프로필 · 실제 로그인/서버 인증 없음 · F8/F10 패널 토글</p>
+    <p>로컬 테스트 프로필 · 실제 로그인/서버 인증 없음 · P 패널 토글</p>
     <label>슬롯별 무기 설정</label>
     <div id="devWeaponSlots" class="dev-slot-editor"></div>
     <div class="dev-slot-note">각 슬롯은 무기·중첩·각성을 독립 설정한다. 각성 ON은 해당 무기를 자동으로 6중첩으로 맞춘다. 외부 테스트 버튼이나 런타임 변경 뒤에는 새로고침으로 실제 현재 상태를 다시 읽을 수 있다.</div>
@@ -210,6 +230,9 @@
       <button id="devEndless">Endless 시작</button>
       <button id="devClearEnemies">적/투사체 정리</button>
       <button id="devHeal">체력·보호막 회복</button>
+      <button id="devInvincible" class="accent">무적 OFF</button>
+      <button id="devNoLevel" class="accent">레벨업 불가 OFF</button>
+      <button id="devClearStages">Stage 전부 클리어</button>
       <button id="devCores">각성 코어 ×99</button>
       <button id="devReward" class="accent">특수능력 보상창</button>
       <button id="devInfiniteCurrency" class="accent">재화 무한 OFF</button>
@@ -220,7 +243,7 @@
   document.body.appendChild(panel);
 
   const toggle=document.createElement('button');toggle.id='stackfallDevToggle';toggle.type='button';toggle.textContent='DEV';document.body.appendChild(toggle);
-  const $=sel=>panel.querySelector(sel),weapon=$('#devWeapon'),stage=$('#devStage'),status=$('#devStatus'),slotEditor=$('#devWeaponSlots'),currencyButton=$('#devInfiniteCurrency');
+  const $=sel=>panel.querySelector(sel),weapon=$('#devWeapon'),stage=$('#devStage'),status=$('#devStatus'),slotEditor=$('#devWeaponSlots'),currencyButton=$('#devInfiniteCurrency'),invincibleButton=$('#devInvincible'),noLevelButton=$('#devNoLevel');
   function renderSlotEditor(){
     if(!slotEditor)return;
     const config=currentSlotConfig(),core=currentCoreConfig(),options=equipmentWeapons().map(key=>`<option value="${key}">${weaponName(key)}</option>`).join(''),levels=Array.from({length:6},(_,i)=>i+1);
@@ -238,7 +261,7 @@
     }
   }
   refreshSlotEditor=renderSlotEditor;
-  const updateStatus=()=>{const cfg=window.stackfallCurrentRunConfig?.(),key=weapon.value,currency=window.stackfallDevInfiniteCurrency===true?'∞':'일반';if(currencyButton)currencyButton.textContent=`재화 무한 ${window.stackfallDevInfiniteCurrency===true?'ON':'OFF'}`;status.textContent=`RUN ${cfg?.mode||state.mode} · ${cfg?.stage?.id||'-'} · 장비 ${Math.min(DEV_SLOT_COUNT,state.weaponSlots?.length||0)}/${DEV_SLOT_COUNT} · ${weaponName(key)} ${weaponCount(key)||0}중첩 · 각성 ${state.awakenedWeapons?.[key]?'ON':'OFF'} · 재화 ${currency}`;};
+  const updateStatus=()=>{const cfg=window.stackfallCurrentRunConfig?.(),key=weapon.value,currency=window.stackfallDevInfiniteCurrency===true?'∞':'일반';if(currencyButton)currencyButton.textContent=`재화 무한 ${window.stackfallDevInfiniteCurrency===true?'ON':'OFF'}`;if(invincibleButton)invincibleButton.textContent=`무적 ${window.stackfallDevInvincible===true?'ON':'OFF'}`;if(noLevelButton)noLevelButton.textContent=`레벨업 불가 ${window.stackfallDevDisableLevelUps===true?'ON':'OFF'}`;const railCycle=key==='rail'?` · 레일 주기 ${Number(player.awRailCycle||0)%4}/4`:'';status.textContent=`RUN ${cfg?.mode||state.mode} · ${cfg?.stage?.id||'-'} · 장비 ${Math.min(DEV_SLOT_COUNT,state.weaponSlots?.length||0)}/${DEV_SLOT_COUNT} · ${weaponName(key)} ${weaponCount(key)||0}중첩 · 각성 ${state.awakenedWeapons?.[key]?'ON':'OFF'} · 무적 ${window.stackfallDevInvincible?'ON':'OFF'} · 레벨업 ${window.stackfallDevDisableLevelUps?'잠금':'정상'} · 재화 ${currency}${railCycle}`;};
   const refreshDevPanel=()=>{renderSlotEditor();updateStatus();};
   toggle.onclick=()=>{panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))refreshDevPanel();};
   $('#devRefreshSlots').onclick=refreshDevPanel;
@@ -254,16 +277,19 @@
   $('#devEndless').onclick=()=>{startEndless();updateStatus();};
   $('#devClearEnemies').onclick=()=>{clearCombatEntities();updateStatus();};
   $('#devHeal').onclick=()=>{fullHeal();updateStatus();};
+  $('#devInvincible').onclick=()=>{setInvincible(window.stackfallDevInvincible!==true);updateStatus();};
+  $('#devNoLevel').onclick=()=>{setLevelUpsDisabled(window.stackfallDevDisableLevelUps!==true);updateStatus();};
+  $('#devClearStages').onclick=()=>{completeAllStages();updateStatus();};
   $('#devCores').onclick=()=>{giveCores();updateStatus();};
   $('#devReward').onclick=()=>{openSpecialReward();updateStatus();};
   $('#devInfiniteCurrency').onclick=()=>{setInfiniteCurrency(window.stackfallDevInfiniteCurrency!==true);updateStatus();};
   $('#devDisable').onclick=()=>{try{localStorage.removeItem('stackfall.devMode');localStorage.removeItem('stackfall.devInfiniteCurrency');}catch{}window.stackfallDevInfiniteCurrency=false;const url=new URL(location.href);url.searchParams.delete('dev');location.replace(url.toString());};
   weapon.onchange=updateStatus;stage.onchange=updateStatus;
-  window.addEventListener('keydown',event=>{if(event.code==='F8'||event.code==='F10'){event.preventDefault();panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))refreshDevPanel();}});
+  window.addEventListener('keydown',event=>{const target=event.target,typing=target instanceof HTMLInputElement||target instanceof HTMLTextAreaElement||target instanceof HTMLSelectElement||target?.isContentEditable;if(typing||event.code!=='KeyP')return;event.preventDefault();panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))refreshDevPanel();});
   renderSlotEditor();updateStatus();window.renderStackfallMetaUi?.();
   window.stackfallDeveloperTest={
     enabled:true,
-    equipOnly,equipAll,assignSlot:assignDevSlot,setSlotLevel:setDevSlotLevel,setSlotAwakening:setDevSlotAwakening,setCoreLevel:setDevCoreLevel,setCoreAwakening:setDevCoreAwakening,setInfiniteCurrency,startStage,startEndless,jumpStageBoss,giveCores,clearAwakenings,openSpecialReward,
-    snapshot:()=>({run:window.stackfallCurrentRunConfig?.(),weaponSlots:[...(state.weaponSlots||[])],weaponStacks:{...(state.weaponStacks||{})},awakened:{...(state.awakenedWeapons||{})},cores:state.awakeningCores||0,infiniteCurrency:window.stackfallDevInfiniteCurrency===true,canonicalVisuals:window.stackfallCanonicalWeaponVisualDiagnostics?.()||null,renderer:window.stackfallRendererInfo?.()||null})
+    equipOnly,equipAll,assignSlot:assignDevSlot,setSlotLevel:setDevSlotLevel,setSlotAwakening:setDevSlotAwakening,setCoreLevel:setDevCoreLevel,setCoreAwakening:setDevCoreAwakening,setInfiniteCurrency,setInvincible,setLevelUpsDisabled,completeAllStages,startStage,startEndless,jumpStageBoss,giveCores,clearAwakenings,openSpecialReward,
+    snapshot:()=>({run:window.stackfallCurrentRunConfig?.(),weaponSlots:[...(state.weaponSlots||[])],weaponStacks:{...(state.weaponStacks||{})},awakened:{...(state.awakenedWeapons||{})},cores:state.awakeningCores||0,infiniteCurrency:window.stackfallDevInfiniteCurrency===true,invincible:window.stackfallDevInvincible===true,disableLevelUps:window.stackfallDevDisableLevelUps===true,railCycle:player.awRailCycle||0,canonicalVisuals:window.stackfallCanonicalWeaponVisualDiagnostics?.()||null,renderer:window.stackfallRendererInfo?.()||null})
   };
 })();
