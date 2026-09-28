@@ -80,7 +80,7 @@
     const lang=GAME_SETTINGS.language||'ko';
     if(lang==='en')return{current:'CURRENT',next:'NEXT',gain:'GAIN',breakthrough:'BREAKTHROUGH'};
     if(lang==='ja')return{current:'現在',next:'次',gain:'増加',breakthrough:'突破'};
-    if(lang==='zh')return{current:'当前',next:'下一等级',gain:'提升',breakthrough:'突破'};
+    if(lang==='zh-CN')return{current:'当前',next:'下一等级',gain:'提升',breakthrough:'突破'};
     if(lang==='es')return{current:'ACTUAL',next:'SIGUIENTE',gain:'MEJORA',breakthrough:'AVANCE'};
     if(lang==='fr')return{current:'ACTUEL',next:'SUIVANT',gain:'GAIN',breakthrough:'PALIER'};
     return{current:'현재',next:'다음',gain:'증가',breakthrough:'돌파'};
