@@ -104,22 +104,7 @@ function drawEnemies(){for(const e of state.entities.enemies){const p=worldToScr
     if(!['mini','boss'].includes(e.type)&&e.hp<e.maxHp){const width=clamp(e.r*2.15,28,92),y=p.y-e.r*1.28-17;ctx.save();ctx.fillStyle='rgba(0,0,0,.62)';ctx.fillRect(p.x-width/2,y,width,5);ctx.fillStyle=e.color;ctx.fillRect(p.x-width/2,y,width*clamp(e.hp/e.maxHp,0,1),5);ctx.restore();}}
 }
 function projectileColor(p,fallback=COLORS.white){if(typeof p.color!=='string'||!CSS.supports('color',p.color))p.color=fallback;return p.color;}
-function boomerangMoonPhase(p){
-  if(Number.isFinite(p?.awMoonPhase))return clamp(p.awMoonPhase,.10,1);
-  if(p?.stage==='return')return 1-.86*clamp((p.returnLife||0)/1.05,0,1);
-  const progress=clamp((p?.stageTime||0)/Math.max(.001,p?.stageDuration||.55),0,1),smooth=progress*progress*(3-2*progress);
-  return .14+.86*smooth;
-}
-function drawMoonDisc(p,s,angle){
-  const r=p.r*1.22,phase=boomerangMoonPhase(p),side=p.side||1;
-  ctx.save();ctx.translate(s.x,s.y);ctx.rotate(angle);
-  ctx.globalAlpha=.20;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(0,0,r*1.42,0,TAU);ctx.fill();
-  ctx.globalAlpha=1;ctx.fillStyle='#f7fbff';ctx.strokeStyle=p.color;ctx.lineWidth=1.35;ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.fill();ctx.stroke();
-  if(phase<.985){const offset=side*r*(.22+phase*1.90);ctx.fillStyle='rgba(5,10,25,.97)';ctx.beginPath();ctx.arc(offset,0,r*1.02,0,TAU);ctx.fill();}
-  if(p.stacks>=3){ctx.globalAlpha=.38;ctx.strokeStyle='#d9fff8';ctx.lineWidth=1.05;ctx.beginPath();ctx.arc(0,0,r*1.30,0,TAU);ctx.stroke();}
-  ctx.restore();
-}
-function drawBoomerangs(){for(const p of state.entities.curves){if(!p||p.dead)continue;const historyCount=Math.min(p.historyCount||0,p.history?.length||0);if(historyCount>1){ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=p.color;ctx.globalAlpha=.12;ctx.lineWidth=p.r*1.18;ctx.beginPath();for(let i=0;i<historyCount;i++){const index=((p.historyStart||0)+i)%p.history.length,h=p.history[index],sx=h.x-player.x+vw/2,sy=h.y-player.y+vh/2;i?ctx.lineTo(sx,sy):ctx.moveTo(sx,sy);}ctx.stroke();ctx.globalAlpha=.52;ctx.lineWidth=1.8;ctx.stroke();ctx.restore();}const point=setRenderScreenPoint(RENDER_SCREEN_A,p.x,p.y),angle=Math.atan2(p.y-p.lastY,p.x-p.lastX);drawMoonDisc(p,point,angle);}}
+function drawBoomerangs(){for(const p of state.entities.curves){if(!p||p.dead)continue;const historyCount=Math.min(p.historyCount||0,p.history?.length||0);if(historyCount>1){ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=p.color;ctx.globalAlpha=.18;ctx.lineWidth=p.r*.95;ctx.shadowBlur=18;ctx.shadowColor=p.color;ctx.beginPath();for(let i=0;i<historyCount;i++){const index=((p.historyStart||0)+i)%p.history.length,h=p.history[index],sx=h.x-player.x+vw/2,sy=h.y-player.y+vh/2;i?ctx.lineTo(sx,sy):ctx.moveTo(sx,sy);}ctx.stroke();ctx.globalAlpha=.62;ctx.lineWidth=2.1;ctx.stroke();ctx.restore();}const point=setRenderScreenPoint(RENDER_SCREEN_A,p.x,p.y),angle=Math.atan2(p.y-p.lastY,p.x-p.lastX);ctx.save();ctx.translate(point.x,point.y);ctx.rotate(angle);ctx.shadowBlur=24;ctx.shadowColor=p.color;const g=ctx.createLinearGradient(-p.r,0,p.r,0);g.addColorStop(0,'rgba(105,255,224,.10)');g.addColorStop(.58,p.color);g.addColorStop(1,'#ffffff');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(-p.r*.95,-p.r*.25);ctx.quadraticCurveTo(0,-p.r*1.05,p.r*1.15,0);ctx.quadraticCurveTo(0,p.r*1.05,-p.r*.95,p.r*.25);ctx.quadraticCurveTo(-p.r*.38,0,-p.r*.95,-p.r*.25);ctx.fill();if(p.stacks>=3){ctx.globalAlpha=.38;ctx.strokeStyle='#d9fff8';ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(0,0,p.r*1.5,p.r*.58,0,0,TAU);ctx.stroke();}ctx.restore();}}
 function drawEnemyProjectileShape(p,kind,tier){
   const r=Math.max(2.4,p.r),color=projectileColor(p,'#ff6ccf');ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=tier===2?1:1.6;
   if(kind==='missile'){ctx.fillStyle='#ffdec4';ctx.beginPath();ctx.moveTo(r*2.25,0);ctx.lineTo(r*.58,-r*.62);ctx.lineTo(-r*1.08,-r*.52);ctx.lineTo(-r*.82,0);ctx.lineTo(-r*1.08,r*.52);ctx.lineTo(r*.58,r*.62);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(-r*.72,-r*.34);ctx.lineTo(-r*1.55,-r*.92);ctx.lineTo(-r*1.18,0);ctx.lineTo(-r*1.55,r*.92);ctx.lineTo(-r*.72,r*.34);ctx.closePath();ctx.fill();}
