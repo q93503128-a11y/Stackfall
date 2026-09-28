@@ -15,6 +15,7 @@ expect('Perfect Reflection waits 0.18 seconds and clears shared charge',source.i
 expect('Perfect Reflection projects long full-field signature beams',source.includes("length=Math.max(960*size,weaponRange('mirror')*1.72)")&&source.includes("10.2*size"));
 expect('Twin-Face Reflection is restored before and after awakening',source.includes('function mirrorTwinRays')&&source.includes("'#dffdf7','mirror-twin-reflect',1")&&source.includes('if(state.weaponAugments?.mirror)for(const snap of reflected)'));
 expect('Perfect Reflection caps augment shield gain',source.includes('beforeShield=Number(player.shield)||0')&&source.includes('beforeShield+Math.min(22,profile.gain*5)'));
+expect('Mirror Sanctuary owns a separate outer visual lane from close defensive armor',source.includes('rr=112*weaponSizeMultiplier()')&&source.includes("mirror-plate:")&&source.includes("ctx.setLineDash([7,9])"));
 
 expect('Black-Star Lotus creates a bounded 1.22 second residual field',source.includes('life:1.22,max:1.22')&&source.includes('while(lotusFields.length>3)')&&source.includes('closeLotus'));
 const lotusBlock=source.slice(source.indexOf('// A16 — Black-Star Lotus.'),source.indexOf('// A17 — Phase Starrail.'));
@@ -29,6 +30,7 @@ expect('Phase Starrail detonates one representative real mine per traversed node
 
 expect('Starbreaker Arsenal counts only original non-echo salvos and triggers every third',source.includes("if(!awake('missile')||echoed)return baseFireInterstellarMissiles(n,echoed)")&&source.includes('player.awMissileCycle%3===0'));
 expect('Starbreaker ordinary awakened salvos use dedicated armored missiles',source.includes('function fireStarbreakerVolley')&&source.includes('m.awStarbreaker=true')&&source.includes('return fireStarbreakerVolley(n)')&&source.includes('function starbreakerMissileRaster'));
+expect('Starbreaker side arsenals stay outside the inner shield lane and retain six launch tubes',source.includes('lateral=(70+flash*12)*size')&&source.includes('back=30*size')&&source.includes('for(let row=0;row<2;row++)for(let col=0;col<3;col++)'));
 expect('Starbreaker surround uses one priority target and synchronized group signal',source.includes('target=strongestPostRosterEnemy')&&source.includes('awGroup:group')&&source.includes('stat.ready>=required')&&source.includes('other.awSignalTimer=.15'));
 expect('Starbreaker requires at least three gathered missiles when the salvo has three or more',source.includes('required=Math.min(3,stat.count)'));
 expect('MIRV remains available only after surround missiles begin their dive',source.includes("m.awStage==='hold'")&&source.includes("m.awStage='dive'")&&source.includes("if(state.weaponAugments?.missile&&d<118)splitMirvMissile(m,target)"));
