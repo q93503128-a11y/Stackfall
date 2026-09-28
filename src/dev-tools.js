@@ -157,11 +157,12 @@
     #stackfallDevPanel label{display:block;margin:12px 0 5px;color:#a9badb;font-size:11px;font-weight:800;letter-spacing:.06em}
     #stackfallDevPanel select,#stackfallDevPanel button{width:100%;min-height:38px;border:1px solid rgba(140,174,230,.22);border-radius:10px;background:#10162a;color:#eef5ff;font:700 12px/1.2 "IBM Plex Sans KR",sans-serif}
     #stackfallDevPanel .dev-slot-editor{display:grid;gap:6px;margin:7px 0 14px}
-    #stackfallDevPanel .dev-slot-row{display:grid;grid-template-columns:42px minmax(0,1fr) 64px 58px;gap:6px;align-items:center;padding:6px;border:1px solid rgba(140,174,230,.13);border-radius:10px;background:rgba(255,255,255,.025)}
+    #stackfallDevPanel .dev-slot-row{display:grid;grid-template-columns:42px minmax(0,1fr) 64px 58px 32px;gap:6px;align-items:center;padding:6px;border:1px solid rgba(140,174,230,.13);border-radius:10px;background:rgba(255,255,255,.025)}
     #stackfallDevPanel .dev-slot-row>b{font-size:10px;color:#91a8ce;text-align:center}
     #stackfallDevPanel .dev-slot-row select{min-height:32px;font-size:10px;padding:0 5px}
     #stackfallDevPanel .dev-slot-awake{display:flex;align-items:center;justify-content:center;gap:4px;margin:0!important;min-height:32px;border:1px solid rgba(126,232,255,.18);border-radius:8px;color:#bdf7ff!important;font-size:9px!important;letter-spacing:0!important}
     #stackfallDevPanel .dev-slot-awake input{margin:0;accent-color:#7ce8ff}
+    #stackfallDevPanel .dev-slot-refresh{min-height:32px!important;padding:0!important;font-size:16px!important;line-height:1!important;color:#9eefff!important;border-color:rgba(126,232,255,.18)!important}
     #stackfallDevPanel .dev-slot-core{border-color:rgba(255,208,112,.22);background:rgba(255,208,112,.035)}
     #stackfallDevPanel .dev-slot-note{margin:-6px 0 10px;color:#7285aa;font-size:10px;line-height:1.45}
     #stackfallDevPanel button{cursor:pointer;padding:8px}
@@ -180,7 +181,8 @@
     <p>로컬 테스트 프로필 · 실제 로그인/서버 인증 없음</p>
     <label>슬롯별 무기 설정</label>
     <div id="devWeaponSlots" class="dev-slot-editor"></div>
-    <div class="dev-slot-note">각 슬롯은 무기·중첩·각성을 독립 설정한다. 각성 ON은 해당 무기를 자동으로 6중첩으로 맞춘다.</div>
+    <div class="dev-slot-note">각 슬롯은 무기·중첩·각성을 독립 설정한다. 각성 ON은 해당 무기를 자동으로 6중첩으로 맞춘다. 외부 테스트 버튼이나 런타임 변경 뒤에는 새로고침으로 실제 현재 상태를 다시 읽을 수 있다.</div>
+    <button id="devRefreshSlots" class="accent">↻ 슬롯 정보 새로고침</button>
     <label>빠른 단일/일괄 테스트</label>
     <select id="devWeapon">${weaponOptions}</select>
     <div class="dev-grid">
@@ -213,20 +215,24 @@
   function renderSlotEditor(){
     if(!slotEditor)return;
     const config=currentSlotConfig(),core=currentCoreConfig(),options=equipmentWeapons().map(key=>`<option value="${key}">${weaponName(key)}</option>`).join(''),levels=Array.from({length:6},(_,i)=>i+1);
-    slotEditor.innerHTML=`<div class="dev-slot-row dev-slot-core"><b>CORE</b><span>${weaponName('core')}</span><select data-core-level><option value="0">OFF</option>${levels.map(level=>`<option value="${level}"${core.level===level?' selected':''}>${level}중첩</option>`).join('')}</select><label class="dev-slot-awake"><input data-core-awake type="checkbox"${core.awake?' checked':''}${core.level===0?' disabled':''}>각성</label></div>`+
-      config.map((entry,index)=>`<div class="dev-slot-row" data-slot="${index}"><b>S${index+1}</b><select data-slot-weapon><option value="">— 비움 —</option>${options.replace(`value="${entry.key}"`,`value="${entry.key}" selected`)}</select><select data-slot-level${entry.key?'':' disabled'}>${levels.map(level=>`<option value="${level}"${entry.level===level?' selected':''}>${level}중첩</option>`).join('')}</select><label class="dev-slot-awake"><input data-slot-awake type="checkbox"${entry.awake?' checked':''}${entry.key?'':' disabled'}>각성</label></div>`).join('');
+    slotEditor.innerHTML=`<div class="dev-slot-row dev-slot-core"><b>CORE</b><span>${weaponName('core')}</span><select data-core-level><option value="0">OFF</option>${levels.map(level=>`<option value="${level}"${core.level===level?' selected':''}>${level}중첩</option>`).join('')}</select><label class="dev-slot-awake"><input data-core-awake type="checkbox"${core.awake?' checked':''}${core.level===0?' disabled':''}>각성</label><button class="dev-slot-refresh" data-slot-refresh type="button" title="현재 상태 다시 읽기">↻</button></div>`+
+      config.map((entry,index)=>`<div class="dev-slot-row" data-slot="${index}"><b>S${index+1}</b><select data-slot-weapon><option value="">— 비움 —</option>${options.replace(`value="${entry.key}"`,`value="${entry.key}" selected`)}</select><select data-slot-level${entry.key?'':' disabled'}>${levels.map(level=>`<option value="${level}"${entry.level===level?' selected':''}>${level}중첩</option>`).join('')}</select><label class="dev-slot-awake"><input data-slot-awake type="checkbox"${entry.awake?' checked':''}${entry.key?'':' disabled'}>각성</label><button class="dev-slot-refresh" data-slot-refresh type="button" title="현재 상태 다시 읽기">↻</button></div>`).join('');
     slotEditor.querySelector('[data-core-level]')?.addEventListener('change',event=>setDevCoreLevel(event.target.value));
     slotEditor.querySelector('[data-core-awake]')?.addEventListener('change',event=>setDevCoreAwakening(event.target.checked));
+    slotEditor.querySelector('.dev-slot-core [data-slot-refresh]')?.addEventListener('click',()=>{renderSlotEditor();updateStatus();});
     for(const row of slotEditor.querySelectorAll('[data-slot]')){
       const index=Number(row.dataset.slot);
       row.querySelector('[data-slot-weapon]')?.addEventListener('change',event=>assignDevSlot(index,event.target.value));
       row.querySelector('[data-slot-level]')?.addEventListener('change',event=>setDevSlotLevel(index,event.target.value));
       row.querySelector('[data-slot-awake]')?.addEventListener('change',event=>setDevSlotAwakening(index,event.target.checked));
+      row.querySelector('[data-slot-refresh]')?.addEventListener('click',()=>{renderSlotEditor();updateStatus();});
     }
   }
   refreshSlotEditor=renderSlotEditor;
   const updateStatus=()=>{const cfg=window.stackfallCurrentRunConfig?.(),key=weapon.value,currency=window.stackfallDevInfiniteCurrency===true?'∞':'일반';if(currencyButton)currencyButton.textContent=`재화 무한 ${window.stackfallDevInfiniteCurrency===true?'ON':'OFF'}`;status.textContent=`RUN ${cfg?.mode||state.mode} · ${cfg?.stage?.id||'-'} · 장비 ${Math.min(DEV_SLOT_COUNT,state.weaponSlots?.length||0)}/${DEV_SLOT_COUNT} · ${weaponName(key)} ${weaponCount(key)||0}중첩 · 각성 ${state.awakenedWeapons?.[key]?'ON':'OFF'} · 재화 ${currency}`;};
-  toggle.onclick=()=>{panel.classList.toggle('hidden');updateStatus();};
+  const refreshDevPanel=()=>{renderSlotEditor();updateStatus();};
+  toggle.onclick=()=>{panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))refreshDevPanel();};
+  $('#devRefreshSlots').onclick=refreshDevPanel;
   $('#devWeapon1').onclick=()=>{equipOnly(weapon.value,1,false);updateStatus();};
   $('#devWeapon6').onclick=()=>{equipOnly(weapon.value,6,false);updateStatus();};
   $('#devAwaken').onclick=()=>{toggleSelectedAwakening(weapon.value);updateStatus();};
@@ -243,7 +249,7 @@
   $('#devInfiniteCurrency').onclick=()=>{setInfiniteCurrency(window.stackfallDevInfiniteCurrency!==true);updateStatus();};
   $('#devDisable').onclick=()=>{try{localStorage.removeItem('stackfall.devMode');localStorage.removeItem('stackfall.devInfiniteCurrency');}catch{}window.stackfallDevInfiniteCurrency=false;const url=new URL(location.href);url.searchParams.delete('dev');location.replace(url.toString());};
   weapon.onchange=updateStatus;stage.onchange=updateStatus;
-  window.addEventListener('keydown',event=>{if(event.code==='F10'){event.preventDefault();panel.classList.toggle('hidden');updateStatus();}});
+  window.addEventListener('keydown',event=>{if(event.code==='F10'){event.preventDefault();panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))refreshDevPanel();}});
   renderSlotEditor();updateStatus();window.renderStackfallMetaUi?.();
   window.stackfallDeveloperTest={
     enabled:true,
