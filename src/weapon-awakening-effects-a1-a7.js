@@ -12,7 +12,7 @@
     for(const w of state.entities.wells||[])if(w){delete w.awBinaryGroup;delete w.awBinarySide;delete w.awBinaryEcho;delete w.awBinaryMerged;}
     for(const p of state.entities.curves||[])if(p?.awLunar){p.awLunar=false;p.awMoonRippleDone=false;delete p.awMoonPhase;delete p.awOrbitX;delete p.awOrbitY;delete p.awOrbitR;delete p.awOrbitAngle;delete p.awOrbitDuration;if(p.stage==='lunarOrbit'){p.stage='return';p.stageTime=0;p.returnLife=0;}}
     Object.assign(player,{
-      awCoreCycle:0,awBladeCd:4.6,awBladeWindup:0,awEmberHits:0,awEmberTargetId:null,awEmberChargeFlash:0,
+      awCoreCycle:0,awBladeCd:4.6,awBladeWindup:0,awEmberHits:0,awEmberTargetId:null,awEmberChargeFlash:0,awEmberMeteorVolley:0,
       awBulwarkHitAngle:0,awBulwarkHitFlash:0,awBulwarkStrong:0,awCometCycle:0
     });
   }
@@ -59,6 +59,19 @@
     player.awEmberChargeFlash=Math.max(0,(player.awEmberChargeFlash||0)-dt);
     player.awBulwarkHitFlash=Math.max(0,(player.awBulwarkHitFlash||0)-dt);
     player.awBulwarkStrong=Math.max(0,(player.awBulwarkStrong||0)-dt);
+  };
+
+  const baseFireEmber=fireEmber;
+  fireEmber=function awakenedRedMeteorCaster(target,n,echoed=false){
+    if(!awake('ember')||echoed)return baseFireEmber(target,n,echoed);
+    if(!target||target.dead)return;
+    player.awEmberMeteorVolley=(player.awEmberMeteorVolley||0)+1;
+    const base=Math.atan2(target.y-player.y,target.x-player.x),shots=n>=5?4:n>=2?3:2,range=weaponRange('ember'),speed=(610+n*11)*(1+stat('projectileSpeed')*.10),meteor=player.awEmberMeteorVolley%4===0;
+    for(let i=0;i<shots;i++){
+      const spread=(i-(shots-1)/2)*(shots>=4?.13:.16),a=base+spread,side=(i-(shots-1)/2),lateral=side*13,ox=player.x-Math.sin(base)*lateral,oy=player.y+Math.cos(base)*lateral,core=meteor&&Math.abs(side)<.51;
+      spawnPlayerProjectile({x:ox,y:oy,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:core?11.5:7.2,life:1.48,maxRange:range*1.04,damage:(12+n*3.4)*(core?1.55:.86),color:core?'#fff0f2':'#ff3b5d',pierce:core?5:2+(n>=5?1:0),source:'ember',playerVisual:'ember-awakened',homingTargetId:target.id,homingReacquire:false,homingTurn:core?1.85:1.35,awakeningChild:true});
+    }
+    if(meteor){pushFx({kind:'red-meteor-volley',x:player.x,y:player.y,a:base,life:.30,max:.30});player.awEmberChargeFlash=Math.max(player.awEmberChargeFlash||0,.24);}
   };
 
   // A3 — Nebula Starcaster: repeated starlight hits charge two side crystals and release a thick piercing starline.
