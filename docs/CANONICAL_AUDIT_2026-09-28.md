@@ -178,3 +178,13 @@ Stage 1~18 배경 구조는 미구현이 아니었다.
 4. Stage 13~18 기믹이 실제 화면에서도 서로 즉시 구분되는지 확인.
 5. 별도 작업으로 수동 조준 재현 및 수정.
 6. 안정화 뒤에만 무기 레지스트리/전역 래퍼 구조 단순화를 검토한다.
+
+
+## 13. 감사 종료 상태
+
+- 정본 교정 후 배포 fingerprint 대상 자산 **72개**를 다시 해시했다.
+- fingerprint 대상 runtime JavaScript **65개**를 소스 파싱 검사했고 오류가 없었다. fingerprint에서 의도적으로 제외되는 `src/build-info.js`도 별도로 파싱했다.
+- 최신 계산 fingerprint: `sha256-de4ad680ead841b55f8dd679610b721420baef5c34346f34ee24f4cb4c820fcd`
+- `GAME_DESIGN.md` / `WIKI.md`에서 피해 분석의 구 15초 계약과 Core Development의 Awakening Core 영구 지갑 표현이 제거된 것을 재확인했다.
+- legacy 계약은 Final Comet 340ms 및 기본 non-lunar Boomerang 기준으로 정정했다.
+- 현재 환경에서는 GitHub 저장소를 로컬 clone하여 실제 Node/browser 테스트를 재실행할 네트워크 경로가 없었으므로, **이번 종료 검증은 원격 소스 정적 감사·문법·계약 문자열·fingerprint 재계산 범위**다. 과거 2026-09-27 브라우저 soak 수치를 현재 결과처럼 재사용하지 않는다.
