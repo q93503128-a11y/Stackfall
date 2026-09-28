@@ -228,14 +228,28 @@
       audio.weapon?.('drone',false,1.55);
     });
   }
+  function fireAwakenedFleetVolley(n){
+    const target=strongestDroneTarget()||nearestWeaponTarget('drone');if(!target)return;
+    const basePoints=meteorDronePositions(n),extra=multiplicity(),points=[...basePoints],rr=orbitRadiusFor('drone')+18;
+    for(let i=0;i<extra;i++){const aa=(i+.5)*TAU/Math.max(1,extra)+(player.angle||0)*.31;points.push({x:player.x+Math.cos(aa)*rr,y:player.y+Math.sin(aa)*rr,a:aa});}
+    const bursts=n>=4?2:1,damage=(12+n*3.6)*(bursts===2?.82:1),speed=(680+n*18)*(1+stat('projectileSpeed')*.10),range=weaponRange('drone');
+    player.awDroneVolleyFlash=.30;
+    for(let burst=0;burst<bursts;burst++)scheduleWeaponAction(burst*82,()=>{
+      const live=target&&!target.dead?target:strongestDroneTarget()||nearestWeaponTarget('drone');if(!live)return;
+      for(let i=0;i<points.length;i++){
+        const pos=points[i],lead=(i-(points.length-1)/2)*.028,a0=Math.atan2(live.y-pos.y,live.x-pos.x)+lead;
+        spawnPlayerProjectile({x:pos.x,y:pos.y,vx:Math.cos(a0)*speed,vy:Math.sin(a0)*speed,r:6.4+n*.22,life:1.25,maxRange:range,damage,pierce:2+(n>=5?1:0),color:'#baffea',source:'meteor-drone',playerVisual:'drone-awakened',homingTargetId:live.id,homingReacquire:false,homingTurn:1.55,awakeningChild:true});
+      }
+    });
+  }
   const baseFireMeteorDrones=fireMeteorDrones;
   fireMeteorDrones=function fallingStarFleetDrones(n,echoed=false){
-    baseFireMeteorDrones(n,echoed);
+    if(!awake('drone')||echoed)baseFireMeteorDrones(n,echoed);else fireAwakenedFleetVolley(n);
     if(echoed)return;
     const target=strongestDroneTarget();if(state.weaponAugments?.drone)fallingStarMark(n,target);
     if(!awake('drone'))return;
     player.awDroneFleetCycle=(player.awDroneFleetCycle||0)+1;
-    if(player.awDroneFleetCycle%5===0)launchFallingStarFleet(n,target||nearestWeaponTarget('drone'));
+    if(player.awDroneFleetCycle%4===0)launchFallingStarFleet(n,target||nearestWeaponTarget('drone'));
   };
 
   // A13 — Terminus Railgun.
@@ -265,12 +279,29 @@
       state.camera.shake=Math.max(state.camera.shake,6);state.flash=Math.max(state.flash,.09);audio.weapon?.('rail',false,1.75);
     });
   }
+  function fireAwakenedRailLattice(n,target){
+    if(!target||target.dead)return;
+    const a0=Math.atan2(target.y-player.y,target.x-player.x),dx=Math.cos(a0),dy=Math.sin(a0),nx=-dy,ny=dx,size=weaponSizeMultiplier(),length=weaponRange('rail')*1.06,eliteBonus=n>=5?1.36:1;
+    const baseDamage=(40+n*9.4)*.73,width=(4.8+n*.62)*size,offsets=[-28,0,28].map(v=>v*size);
+    for(let i=0;i<offsets.length;i++){
+      const offset=offsets[i],x1=player.x+nx*offset-dx*20,y1=player.y+ny*offset-dy*20,x2=x1+dx*length,y2=y1+dy*length;
+      applyRailBeam(x1,y1,x2,y2,width*(i===1?1.20:.78),baseDamage*(i===1?1.08:.82),i===1?'#ffffff':'#aeeaff',i===1?'rail':'rail-afterimage',eliteBonus);
+    }
+    scheduleWeaponAction(105,()=>{
+      const live=target&&!target.dead?target:railAwakeningTarget();if(!live)return;
+      const a=Math.atan2(live.y-player.y,live.x-player.x),ddx=Math.cos(a),ddy=Math.sin(a),nnx=-ddy,nny=ddx;
+      for(const offset of[-16,16])applyRailBeam(player.x+nnx*offset,player.y+nny*offset,player.x+ddx*length+nnx*offset,player.y+ddy*length+nny*offset,width*.56,baseDamage*.34,'#dff8ff','rail-afterimage',eliteBonus);
+    });
+    pushFx({kind:'rail-fire',x:player.x-dx*28,y:player.y-dy*28,a:a0,length,width:width*1.15,life:.25,max:.25});
+    state.camera.shake=Math.max(state.camera.shake,2.5);audio.weapon?.('rail',false,1.25);
+  }
   const baseFireRailgun=fireRailgun;
   fireRailgun=function terminusRailgun(n,echoed=false){
-    baseFireRailgun(n,echoed);
-    if(!awake('rail')||echoed)return;
+    if(!awake('rail')||echoed)return baseFireRailgun(n,echoed);
+    const target=railAwakeningTarget();if(!target)return;
     player.awRailCycle=(player.awRailCycle||0)+1;
-    if(player.awRailCycle%4===0)fireTerminusRail(n,railAwakeningTarget());
+    if(player.awRailCycle%4===0)return fireTerminusRail(n,target);
+    fireAwakenedRailLattice(n,target);
   };
 
   // Shared timer/status layer for A8-A13.
@@ -295,7 +326,8 @@
     else if(player.awIonCircuitCd<=0&&ionNodes.length>=5)triggerCelestialThunder(Math.max(1,weaponCount('ion')));
 
     if(!awake('nova'))player.awNovaCharge=0;
-    if(!awake('drone'))player.awDroneFleetCycle=0;
+    player.awDroneVolleyFlash=Math.max(0,(player.awDroneVolleyFlash||0)-dt);
+    if(!awake('drone')){player.awDroneFleetCycle=0;player.awDroneVolleyFlash=0;}
     if(!awake('rail'))player.awRailCycle=0;
   };
 
@@ -304,13 +336,13 @@
   const AW2_RASTER_CACHE=new Map();
   function aw2Raster(key,size,painter){return cachedRasterSurface(AW2_RASTER_CACHE,key,size,painter,64);}
   function crownPrismRaster(){return aw2Raster('crown-prism',80,(g,sz)=>{g.save();g.translate(sz/2,sz/2);g.shadowBlur=22;g.shadowColor='#dccbff';g.fillStyle='#181129';g.strokeStyle='#f2eaff';g.lineWidth=1.7;g.beginPath();g.moveTo(0,-19);g.lineTo(10,-7);g.lineTo(7,13);g.lineTo(0,8);g.lineTo(-7,13);g.lineTo(-10,-7);g.closePath();g.fill();g.stroke();g.strokeStyle='#c4aeff';g.beginPath();g.moveTo(0,-19);g.lineTo(0,8);g.moveTo(-10,-7);g.lineTo(10,-7);g.stroke();g.restore();});}
-  function fleetDroneRaster(boost=0){const b=boost>0?1:0;return aw2Raster(`fleet-drone:${b}`,80,(g,sz)=>{g.save();g.translate(sz/2,sz/2);g.shadowBlur=15+b*14;g.shadowColor='#8fffd0';g.fillStyle='#0b2630';g.strokeStyle='#d9fff5';g.lineWidth=1.45;g.beginPath();g.moveTo(15,0);g.lineTo(3,-5);g.lineTo(-7,-11);g.lineTo(-5,-3);g.lineTo(-12,0);g.lineTo(-5,3);g.lineTo(-7,11);g.lineTo(3,5);g.closePath();g.fill();g.stroke();g.fillStyle=b?'#ffffff':'#8fffd0';g.beginPath();g.moveTo(-8,-3);g.lineTo(-15,0);g.lineTo(-8,3);g.closePath();g.fill();g.restore();});}
+  function fleetDroneRaster(boost=0){const b=boost>0?1:0;return aw2Raster(`fleet-drone:${b}`,96,(g,sz)=>{g.save();g.translate(sz/2,sz/2);g.shadowBlur=18+b*18;g.shadowColor='#8fffd0';g.fillStyle='#071c28';g.strokeStyle=b?'#ffffff':'#cffff3';g.lineWidth=1.7;g.beginPath();g.moveTo(24,0);g.lineTo(6,-6);g.lineTo(-6,-18);g.lineTo(-2,-6);g.lineTo(-18,-10);g.lineTo(-12,0);g.lineTo(-18,10);g.lineTo(-2,6);g.lineTo(-6,18);g.lineTo(6,6);g.closePath();g.fill();g.stroke();g.fillStyle=b?'#ffffff':'#8fffd0';g.beginPath();g.moveTo(-12,-4);g.lineTo(-28,0);g.lineTo(-12,4);g.closePath();g.fill();if(b){g.globalAlpha=.72;g.strokeStyle='#8fffd0';g.lineWidth=4;g.beginPath();g.moveTo(-26,0);g.lineTo(-42,0);g.stroke();}g.restore();});}
   function eternalClockRaster(n,r){const rb=Math.round(r/8)*8,size=Math.ceil((rb+26)*2);return aw2Raster(`clock:${n}:${rb}`,size,(g,sz)=>{const c=sz/2;g.save();g.translate(c,c);g.globalAlpha=.34;g.shadowBlur=10;g.shadowColor='#bffdf2';for(const[index,rr]of[rb,rb-22].entries()){g.strokeStyle=index?'#9caeff':'#8fffe0';g.lineWidth=index?1.2:1.8;g.setLineDash(index?[8,9]:[18,6]);g.beginPath();g.arc(0,0,rr,0,TAU);g.stroke();}g.setLineDash([]);for(let i=0;i<12;i++){const a=i/12*TAU-Math.PI/2,major=i%3===0,inner=rb-(major?17:10);g.strokeStyle=major?'rgba(239,255,252,.82)':'rgba(143,255,224,.55)';g.lineWidth=major?2.1:1;g.beginPath();g.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);g.lineTo(Math.cos(a)*(rb+3),Math.sin(a)*(rb+3));g.stroke();}g.fillStyle='#ffffff';g.beginPath();g.arc(0,0,5,0,TAU);g.fill();g.restore();});}
   function prismCrownRaster(heat){const hb=Math.round(clamp(heat,0,1)*6),r=42+(hb/6)*18,size=160;return aw2Raster(`prism-target-crown:${hb}`,size,(g,sz)=>{const c=sz/2;g.save();g.translate(c,c);g.shadowBlur=18;g.shadowColor='#e8ddff';g.strokeStyle='rgba(229,215,255,.78)';g.lineWidth=1.5;g.beginPath();for(let i=0;i<6;i++){const a=i/6*TAU,x=Math.cos(a)*r,y=Math.sin(a)*r*.58;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();g.stroke();for(let i=0;i<6;i++){const a=i/6*TAU,x=Math.cos(a)*r,y=Math.sin(a)*r*.58;g.fillStyle=i<hb?'#ffffff':'rgba(196,174,255,.32)';g.beginPath();g.arc(x,y,i<hb?3.8:2.4,0,TAU);g.fill();}g.restore();});}
   function novaCoronaRaster(charge){const c=Math.max(0,Math.min(2,Math.floor(charge)));return aw2Raster(`nova-corona:${c}`,180,(g,sz)=>{g.save();g.translate(sz/2,sz/2);for(let i=0;i<3;i++){g.globalAlpha=i<c?.72:.18;g.strokeStyle=i<c?'#fff0b5':'#ffbd69';g.lineWidth=i<c?3:1.2;g.shadowBlur=i<c?18:5;g.shadowColor='#ffbd69';g.setLineDash([10+i*4,7]);g.beginPath();g.arc(0,0,48+i*13,0,TAU);g.stroke();}g.setLineDash([]);g.restore();});}
   function drawCrownPrism(point,t,size){const sx=point.x-player.x+vw/2,sy=point.y-player.y+vh/2,image=crownPrismRaster();ctx.save();ctx.translate(sx,sy);ctx.rotate(-point.a+t*.00052);ctx.scale(size,size);ctx.drawImage(image,-40,-40,80,80);ctx.restore();}
 
-  function drawFleetDrone(point,a,size,boost=0){const sx=point.x-player.x+vw/2,sy=point.y-player.y+vh/2,image=fleetDroneRaster(boost);ctx.save();ctx.translate(sx,sy);ctx.rotate(a);ctx.scale(size,size);ctx.drawImage(image,-40,-40,80,80);ctx.restore();}
+  function drawFleetDrone(point,a,size,boost=0){const sx=point.x-player.x+vw/2,sy=point.y-player.y+vh/2,image=fleetDroneRaster(boost);ctx.save();ctx.translate(sx,sy);ctx.rotate(a);ctx.scale(size,size);ctx.drawImage(image,-48,-48,96,96);ctx.restore();}
 
   drawEquippedOrbits=function awakenedCrownFleetOrbits(x,y,t){
     const prismN=weaponCount('prism'),droneN=weaponCount('drone'),hidePrism=prismN&&awake('prism'),hideDrone=droneN&&awake('drone'),savedPrism=state.weaponStacks.prism,savedDrone=state.weaponStacks.drone;
@@ -322,8 +354,8 @@
       if(points.length>=2){ctx.save();ctx.strokeStyle='rgba(225,211,255,.34)';ctx.lineWidth=1.4;ctx.setLineDash([5,7]);ctx.beginPath();for(let i=0;i<points.length;i++){const point=points[i],sx=point.x-player.x+vw/2,sy=point.y-player.y+vh/2;i?ctx.lineTo(sx,sy):ctx.moveTo(sx,sy);}if(points.length>2)ctx.closePath();ctx.stroke();ctx.setLineDash([]);ctx.restore();}
     }
     if(hideDrone){
-      const points=meteorDronePositions(droneN);for(const point of points)drawFleetDrone(point,point.a+Math.PI/2,size*.92,0);
-      const extra=multiplicity(),rr=orbitRadiusFor('drone')+18;for(let i=0;i<extra;i++){const a=(i+.5)*TAU/Math.max(1,extra)+player.angle*.31;drawFleetDrone({x:player.x+Math.cos(a)*rr,y:player.y+Math.sin(a)*rr,a},a+Math.PI/2,size*.92,0);}
+      const points=meteorDronePositions(droneN);for(const point of points)drawFleetDrone(point,point.a+Math.PI/2,size*.98,player.awDroneVolleyFlash||0);
+      const extra=multiplicity(),rr=orbitRadiusFor('drone')+18;for(let i=0;i<extra;i++){const a=(i+.5)*TAU/Math.max(1,extra)+player.angle*.31;drawFleetDrone({x:player.x+Math.cos(a)*rr,y:player.y+Math.sin(a)*rr,a},a+Math.PI/2,size*.98,player.awDroneVolleyFlash||0);}
     }
   };
 
