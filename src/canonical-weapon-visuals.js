@@ -25,6 +25,7 @@
     if(s==='ember'||s==='echo-star'||s==='star-spark'||s==='apex-forge-star'||s.includes('ember'))return'ember';
     if(s==='wave'||s==='blade-shear'||s.includes('blade-wave'))return'blade-wave';
     if(s.includes('comet')&&!s.includes('fragment'))return'comet';
+    if(s.includes('bulwark-awakened'))return'bulwark-lance';
     if(s==='barrier-lance'||s==='echo-reflect'||s.includes('fragment')||s.includes('shard')||s.includes('mirror'))return'shard';
     if(s.includes('drone'))return'drone';
     if(s.includes('spiral'))return'spiral';
@@ -85,6 +86,11 @@
       const c=variant==='echo'?'#ff9bbb':'#d8f7ff';g.translate(w*.5,h*.5);g.shadowBlur=15;g.shadowColor=c;g.fillStyle=c;g.strokeStyle='#ffffff';g.lineWidth=1;
       g.beginPath();g.moveTo(46,0);g.lineTo(3,-10);g.lineTo(-37,-4);g.lineTo(-49,0);g.lineTo(-37,4);g.lineTo(3,10);g.closePath();g.fill();g.stroke();g.globalAlpha=.45;g.beginPath();g.moveTo(-67,0);g.lineTo(21,0);g.stroke();
     });
+    if(kind==='bulwark-lance')return makeRaster(key,196,92,(g,w,h)=>{
+      g.translate(w*.54,h*.5);g.shadowBlur=22;g.shadowColor='#9dffe2';const body=g.createLinearGradient(-72,0,58,0);body.addColorStop(0,'rgba(120,255,222,0)');body.addColorStop(.35,'rgba(120,255,222,.24)');body.addColorStop(.72,'#dffff8');body.addColorStop(1,'#ffffff');g.fillStyle=body;g.strokeStyle='#baffdf';g.lineWidth=1.7;
+      g.beginPath();g.moveTo(64,0);g.lineTo(25,-13);g.lineTo(2,-8);g.lineTo(-18,-17);g.lineTo(-12,-5);g.lineTo(-64,-3);g.lineTo(-78,0);g.lineTo(-64,3);g.lineTo(-12,5);g.lineTo(-18,17);g.lineTo(2,8);g.lineTo(25,13);g.closePath();g.fill();g.stroke();
+      g.globalAlpha=.82;g.strokeStyle='#ffffff';g.lineWidth=1.2;g.beginPath();g.moveTo(-48,0);g.lineTo(51,0);g.stroke();g.globalAlpha=.38;g.strokeStyle='#7effd4';g.lineWidth=2;g.beginPath();g.moveTo(-82,-9);g.lineTo(13,-4);g.moveTo(-82,9);g.lineTo(13,4);g.stroke();
+    });
     if(kind==='drone')return makeRaster(key,178,78,(g,w,h)=>{
       const echo=variant==='echo',aw=variant==='awakened',c=echo?'#ff91ba':aw?'#baffea':'#8fffd0';g.translate(w*.54,h*.5);g.shadowBlur=aw?24:14;g.shadowColor=c;g.fillStyle=aw?'#ffffff':'#eafff7';g.strokeStyle=c;g.lineWidth=aw?1.8:1.4;
       g.beginPath();g.moveTo(aw?54:38,0);g.lineTo(aw?12:7,aw?-10:-8);g.lineTo(aw?-31:-27,aw?-7:-5);g.lineTo(aw?-46:-39,0);g.lineTo(aw?-31:-27,aw?7:5);g.lineTo(aw?12:7,aw?10:8);g.closePath();g.fill();g.stroke();g.globalAlpha=aw?.70:.42;g.lineWidth=aw?3.2:1.4;g.beginPath();g.moveTo(aw?-82:-58,0);g.lineTo(aw?18:11,0);g.stroke();if(aw){g.globalAlpha=.45;g.strokeStyle='#ffffff';g.beginPath();g.moveTo(-65,-9);g.lineTo(26,-4);g.moveTo(-65,9);g.lineTo(26,4);g.stroke();}
@@ -102,6 +108,7 @@
     if(kind==='blade-wave')return[r*8.8,r*4.8];
     if(kind==='gate')return[r*7.4,r*3.8];
     if(kind==='shard')return[r*6.4,r*3.0];
+    if(kind==='bulwark-lance')return[r*9.4,r*4.3];
     if(kind==='drone')return[p.awakeningChild?r*7.4:r*5.7,p.awakeningChild?r*3.5:r*2.8];
     if(kind==='spiral')return[r*5.5,r*3.0];
     return[r*4,r*2.5];
