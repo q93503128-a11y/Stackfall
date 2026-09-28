@@ -106,7 +106,7 @@ function drawStageWorldBackdrop(order){
 }
 function drawStageMajorLandmarks(g,order,w,h,tier){
   const family=order<=6?'route':order<=12?'bloom':'array',local=(order-1)%6,thin=tier===2?1:1.6;
-  g.save();g.lineCap='round';g.lineJoin='round';
+  g.save();g.lineCap='round';g.lineJoin='round';g.globalAlpha=tier===2?.56:.84;
   if(family==='route'){
     g.strokeStyle='rgba(132,190,235,.34)';g.fillStyle='rgba(8,16,35,.72)';g.lineWidth=thin;
     if(local===0){
@@ -148,15 +148,15 @@ const STAGE_FIELD_TILE_CACHE=new Map();
 function buildStageFieldTile(order,tier){
   const local=(order-1)%6,family=order<=6?'route':order<=12?'bloom':'array',w=1400,h=1000,surface=typeof OffscreenCanvas==='function'?new OffscreenCanvas(w,h):document.createElement('canvas');surface.width=w;surface.height=h;const g=surface.getContext('2d',{alpha:true});g.lineCap='round';g.lineJoin='round';
   if(family==='route'){
-    const angle=-.26+(local-2.5)*.045,dx=Math.cos(angle),dy=Math.sin(angle),nx=-dy,ny=dx,lanes=tier===2?2:3,spacing=105+local*7,span=Math.hypot(w,h)*1.4;g.globalAlpha=tier===2?.12:.18;
+    const angle=-.26+(local-2.5)*.045,dx=Math.cos(angle),dy=Math.sin(angle),nx=-dy,ny=dx,lanes=tier===2?2:3,spacing=105+local*7,span=Math.hypot(w,h)*1.4;g.globalAlpha=tier===2?.17:.27;
     for(let lane=-(lanes-1)/2;lane<=(lanes-1)/2;lane++){const cx=w*.5+nx*lane*spacing,cy=h*.5+ny*lane*spacing;g.strokeStyle=lane===0?'rgba(119,223,255,.42)':'rgba(126,151,220,.28)';g.lineWidth=lane===0?2.8:1.5;g.setLineDash(lane===0?[38,17]:[14,24]);g.beginPath();g.moveTo(cx-dx*span,cy-dy*span);g.lineTo(cx+dx*span,cy+dy*span);g.stroke();if(tier<2){g.setLineDash([]);for(let k=-4;k<=4;k++){const q=k*150,x=cx+dx*q,y=cy+dy*q,ww=12+local%3*2;g.strokeStyle='rgba(166,201,241,.20)';g.lineWidth=1;g.strokeRect(x-nx*ww*.5-8,y-ny*ww*.5-4,16,8);}}}
     g.setLineDash([]);g.globalAlpha=tier===2?.07:.12;g.strokeStyle='rgba(154,168,255,.42)';g.lineWidth=1.5;g.save();g.translate(w*.68,h*.42);for(let ring=0;ring<2+(local===5?1:0);ring++){g.beginPath();g.arc(0,0,86+ring*42,local*.20,Math.PI*1.72+local*.20);g.stroke();}g.restore();
   }else if(family==='bloom'){
-    const roots=tier===2?3:5;g.globalAlpha=tier===2?.10:.16;
+    const roots=tier===2?3:5;g.globalAlpha=tier===2?.15:.24;
     for(let root=0;root<roots;root++){const baseY=95+root*(h-190)/Math.max(1,roots-1)+local*7,startX=-120+root*95+local*23,endX=w*.74+root*50;g.strokeStyle=root%2?'rgba(119,216,189,.28)':'rgba(213,140,255,.28)';g.lineWidth=3+(root+local)%3;g.beginPath();g.moveTo(startX-180,baseY);g.bezierCurveTo(startX+w*.16,baseY-95-local*5,endX-w*.11,baseY+95+root*8,endX+180,baseY-20);g.stroke();if(tier<2){for(let node=1;node<=4;node++){const q=node/5,x=lerp(startX-120,endX+120,q),y=baseY+Math.sin(q*Math.PI*2+root+local)*46;g.fillStyle=node%2?'rgba(213,140,255,.22)':'rgba(119,216,189,.22)';g.beginPath();g.ellipse(x,y,10+local%3*2,5+(root%2)*2,(root-local)*.27,0,TAU);g.fill();}}}
     g.globalAlpha=tier===2?.06:.10;g.save();g.translate(w*.64,h*.48);g.strokeStyle='rgba(222,176,255,.28)';g.lineWidth=1.4;for(let petal=0;petal<6;petal++){g.save();g.rotate(petal*TAU/6);g.beginPath();g.moveTo(34,-8);g.quadraticCurveTo(125,-52,210+local*10,0);g.quadraticCurveTo(125,52,34,8);g.stroke();g.restore();}g.restore();
   }else{
-    const grid=92+local*8;g.globalAlpha=tier===2?.09:.15;g.strokeStyle='rgba(112,220,233,.22)';g.lineWidth=1;for(let x=-grid;x<w+grid;x+=grid*2){g.beginPath();g.moveTo(x,-20);g.lineTo(x,h+20);g.stroke();}for(let y=-grid;y<h+grid;y+=grid*2){g.beginPath();g.moveTo(-20,y);g.lineTo(w+20,y);g.stroke();}const relays=tier===2?4:8;for(let i=0;i<relays;i++){const x=90+(i*251+local*61)%w,y=70+(i*137+local*83)%h,ww=24+(i+local)%3*8,hh=14+(i*2+local)%3*6;g.strokeStyle=i%3===0?'rgba(226,186,104,.36)':'rgba(112,220,233,.32)';g.lineWidth=1.4;g.strokeRect(x-ww,y-hh,ww*2,hh*2);g.beginPath();g.moveTo(x-ww-42,y);g.lineTo(x-ww,y);g.moveTo(x+ww,y);g.lineTo(x+ww+42,y);g.stroke();}}
+    const grid=92+local*8;g.globalAlpha=tier===2?.14:.23;g.strokeStyle='rgba(112,220,233,.22)';g.lineWidth=1;for(let x=-grid;x<w+grid;x+=grid*2){g.beginPath();g.moveTo(x,-20);g.lineTo(x,h+20);g.stroke();}for(let y=-grid;y<h+grid;y+=grid*2){g.beginPath();g.moveTo(-20,y);g.lineTo(w+20,y);g.stroke();}const relays=tier===2?4:8;for(let i=0;i<relays;i++){const x=90+(i*251+local*61)%w,y=70+(i*137+local*83)%h,ww=24+(i+local)%3*8,hh=14+(i*2+local)%3*6;g.strokeStyle=i%3===0?'rgba(226,186,104,.36)':'rgba(112,220,233,.32)';g.lineWidth=1.4;g.strokeRect(x-ww,y-hh,ww*2,hh*2);g.beginPath();g.moveTo(x-ww-42,y);g.lineTo(x-ww,y);g.moveTo(x+ww,y);g.lineTo(x+ww+42,y);g.stroke();}}
   drawStageMajorLandmarks(g,order,w,h,tier);
   g.globalAlpha=1;g.setLineDash([]);return surface;
 }
@@ -167,7 +167,7 @@ function drawStageConstellationField(theme){
   // Stage terrain is world-anchored: player movement must visibly move the battlefield, not just nudge a backdrop.
   const drift=family==='route'?t*2.2:family==='bloom'?t*.7:0,ox=wrap(-(player.x||0)+drift,tw),oy=wrap(-(player.y||0),th);
   ctx.save();ctx.globalAlpha=1;for(let y=oy-th;y<vh+th;y+=th)for(let x=ox-tw;x<vw+tw;x+=tw)ctx.drawImage(tile,Math.round(x),Math.round(y));
-  if(family==='array'){const local=(order-1)%6,scan=wrap(t*(18+local*2)-(player.y||0),vh+180)-90;ctx.globalAlpha=tier===2?.05:.08;ctx.fillStyle=local%2?'rgba(226,186,104,.42)':'rgba(112,220,233,.42)';ctx.fillRect(0,scan,vw,2);}
+  if(family==='array'){const local=(order-1)%6,scan=wrap(t*(18+local*2)-(player.y||0),vh+180)-90;ctx.globalAlpha=tier===2?.08:.13;ctx.fillStyle=local%2?'rgba(226,186,104,.42)':'rgba(112,220,233,.42)';ctx.fillRect(0,scan,vw,2);}
   ctx.restore();
 }
 function drawThemeRaw(theme){
