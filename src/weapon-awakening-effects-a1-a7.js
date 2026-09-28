@@ -12,61 +12,48 @@
     for(const w of state.entities.wells||[])if(w){delete w.awBinaryGroup;delete w.awBinarySide;delete w.awBinaryEcho;delete w.awBinaryMerged;}
     for(const p of state.entities.curves||[])if(p?.awLunar){p.awLunar=false;p.awMoonRippleDone=false;delete p.awMoonPhase;delete p.awOrbitX;delete p.awOrbitY;delete p.awOrbitR;delete p.awOrbitAngle;delete p.awOrbitDuration;if(p.stage==='lunarOrbit'){p.stage='return';p.stageTime=0;p.returnLife=0;}}
     Object.assign(player,{
-      awCoreCycle:0,awBladeCd:4.6,awBladeWindup:0,awBladeWaveCd:.35,awEmberHits:0,awEmberTargetId:null,awEmberChargeFlash:0,awEmberMeteorVolley:0,
+      awEmberHits:0,awEmberTargetId:null,awEmberChargeFlash:0,awEmberMeteorVolley:0,
       awBulwarkHitAngle:0,awBulwarkHitFlash:0,awBulwarkStrong:0,awBulwarkVolleyCd:1.1,awCometCycle:0
     });
   }
   window.stackfallResetAwakeningFirstSetCombat=resetAwakeningCombatState;
   resetAwakeningCombatState();
 
-  // A1 — Stellar Core: ordinary Core Pulse remains intact; every fourth original cast adds one simultaneous three-satellite volley.
+  // A1 — Stellar Core: every Core Pulse is replaced by one central stellar lance plus three satellite lances.
   const baseSpawnCoreShot=spawnCoreShot;
   spawnCoreShot=function stellarCoreShot(target,echoed=false){
-    baseSpawnCoreShot(target,echoed);
-    if(!awake('core')||echoed||!target)return;
-    player.awCoreCycle=(player.awCoreCycle||0)+1;
-    if(player.awCoreCycle%4!==0)return;
-    const n=Math.max(1,weaponCount('core')),range=weaponRange('core'),speed=540*(1+stat('projectileSpeed')*.10),phase=(state.time||0)*2.2;
+    if(!awake('core'))return baseSpawnCoreShot(target,echoed);
+    if(!target||target.dead)return;
+    const n=Math.max(1,weaponCount('core')),range=weaponRange('core'),size=weaponSizeMultiplier(),power=echoed?.72:1,
+      baseDamage=corePulseDamage(n),phase=(state.time||0)*1.4,targetId=target.id,
+      centralA=Math.atan2(target.y-player.y,target.x-player.x),centralSpeed=690*(1+stat('projectileSpeed')*.10);
+    spawnPlayerProjectile({
+      x:player.x,y:player.y,vx:Math.cos(centralA)*centralSpeed,vy:Math.sin(centralA)*centralSpeed,r:9.2*size,life:1.34,maxRange:range*1.10,
+      damage:baseDamage*.72*power,color:echoed?'#ffb4d0':'#efffff',pierce:2+(n>=4?1:0),source:echoed?'core-echo':'core',
+      playerVisual:echoed?'echo-stellar-core-lance':'stellar-core-lance',homingTargetId:targetId,homingReacquire:false,homingTurn:1.75,awakeningChild:true
+    });
     for(let i=0;i<3;i++){
-      const oa=phase+i*TAU/3,ox=player.x+Math.cos(oa)*38,oy=player.y+Math.sin(oa)*38,a=Math.atan2(target.y-oy,target.x-ox);
-      spawnPlayerProjectile({x:ox,y:oy,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:6.2,life:1.35,maxRange:range,damage:(10+n*2.55)*.78,color:'#dffcff',pierce:n>=4?1:0,source:'core',playerVisual:'core',homingTargetId:target.id,homingReacquire:false,homingTurn:2.6,awakeningChild:true});
+      const oa=phase+i*TAU/3,ox=player.x+Math.cos(oa)*39,oy=player.y+Math.sin(oa)*39,a=Math.atan2(target.y-oy,target.x-ox),speed=(565+i*18)*(1+stat('projectileSpeed')*.10);
+      spawnPlayerProjectile({
+        x:ox,y:oy,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:5.8*size,life:1.42,maxRange:range*1.08,
+        damage:baseDamage*.25*power,color:echoed?'#ff9fc5':'#bffaff',pierce:n>=5?1:0,source:echoed?'core-echo':'core',
+        playerVisual:echoed?'echo-stellar-core-node':'stellar-core-node',homingTargetId:targetId,homingReacquire:false,homingTurn:2.9,awakeningChild:true
+      });
     }
-    pushFx({kind:'stellar-volley',x:player.x,y:player.y,life:.34,max:.34});
+    pushFx({kind:'stellar-volley',x:player.x,y:player.y,life:.30,max:.30});
   };
 
-  // A2 — Eclipse Blades: native orbit/contact attacks continue. A periodic alignment wind-up ends in one large circular cut.
-  function triggerEclipseCut(){
-    const n=Math.max(1,weaponCount('blade')),size=weaponSizeMultiplier(),radius=225*size;
-    areaDamage(player.x,player.y,radius,32+n*5.0,'#d8fbff','blade',{shake:false});
-    shockwave(player.x,player.y,'#eefcff',radius,.42,6);
-    pushFx({kind:'eclipse-cut',x:player.x,y:player.y,r:radius,life:.42,max:.42});
-    audio.weapon?.('blade',false,1.45);
+  // A2 — Eclipse Blades: no periodic alignment attack. Five real blades orbit continuously with a breathing speed cycle.
+  function bladeOrbitSpeedMultiplier(){
+    if(!awake('blade'))return 1;
+    const phase=((state.time||0)*1.08)-Math.PI/2,wave=(Math.sin(phase)+1)*.5;
+    return .68+wave*1.62;
   }
-  function fireEclipseBladeWaves(){
-    const n=Math.max(1,weaponCount('blade')),targets=nearestEnemies(player.x,player.y,3,null,weaponRange('blade')*2.8),size=weaponSizeMultiplier(),count=3+mult();
-    if(!targets.length)return;
-    for(let i=0;i<count;i++){
-      const orbitA=player.angle+i*TAU/count,ox=player.x+Math.cos(orbitA)*orbitRadiusFor('blade'),oy=player.y+Math.sin(orbitA)*orbitRadiusFor('blade'),target=targets[i%targets.length],
-        a=Math.atan2(target.y-oy,target.x-ox),speed=560+n*18;
-      spawnPlayerProjectile({x:ox,y:oy,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:8.5*size,life:1.15,maxRange:weaponRange('blade')*2.7,damage:12+n*2.8,color:'#9cefff',pierce:2+(n>=6?1:0),source:'blade',playerVisual:'blade-wave',homingTargetId:target.id,homingReacquire:false,homingTurn:.55,awakeningChild:true});
-    }
-    pushFx({kind:'eclipse-wave',x:player.x,y:player.y,life:.28,max:.28});
-  }
+  window.stackfallAwakenedBladeOrbitSpeedMultiplier=bladeOrbitSpeedMultiplier;
+
   const baseUpdateWeapons=updateWeapons;
   updateWeapons=function awakenedFirstSetWeapons(dt){
     baseUpdateWeapons(dt);
-    if(awake('blade')){
-      player.awBladeCd=(Number(player.awBladeCd)||4.6)-dt;player.awBladeWaveCd=(Number(player.awBladeWaveCd)||0)-dt;
-      if(player.awBladeWaveCd<=0){player.awBladeWaveCd=Math.max(.48,.82*hasteMult());fireEclipseBladeWaves();}
-      if((player.awBladeWindup||0)>0){
-        player.awBladeWindup=Math.max(0,player.awBladeWindup-dt);
-        if(player.awBladeWindup===0)triggerEclipseCut();
-      }else if(player.awBladeCd<=0){
-        player.awBladeCd=Math.max(3.2,5.15*hasteMult());
-        player.awBladeWindup=.24;
-        pushFx({kind:'blade-align',x:player.x,y:player.y,life:.24,max:.24});
-      }
-    }else{player.awBladeCd=4.6;player.awBladeWindup=0;player.awBladeWaveCd=.35;}
     player.awEmberChargeFlash=Math.max(0,(player.awEmberChargeFlash||0)-dt);
     player.awBulwarkHitFlash=Math.max(0,(player.awBulwarkHitFlash||0)-dt);
     player.awBulwarkStrong=Math.max(0,(player.awBulwarkStrong||0)-dt);
@@ -298,11 +285,8 @@
   drawEquippedOrbits=function eclipseBladeVisuals(x,y,t){
     if(!awake('blade'))return baseDrawEquippedOrbits(x,y,t);
     baseDrawEquippedOrbits(x,y,t);
-    const orbit=orbitRadiusFor('blade'),wind=(player.awBladeWindup||0)>0,progress=wind?1-clamp(player.awBladeWindup/.24,0,1):0;
-    for(let i=0;i<3;i++){
-      if(wind){const facing=Number.isFinite(player.facingAngle)?player.facingAngle:0,nx=-Math.sin(facing),ny=Math.cos(facing),spread=(i-1)*27*(1-progress*.25),forward=48+progress*16;drawCrescentBlade(x+Math.cos(facing)*forward+nx*spread,y+Math.sin(facing)*forward+ny*spread,facing,1.08,1);}
-      else{const a=player.angle+i*TAU/3;drawCrescentBlade(x+Math.cos(a)*orbit,y+Math.sin(a)*orbit,a,1.04,1);}
-    }
+    const orbit=orbitRadiusFor('blade'),nativeCount=5;
+    for(let i=0;i<nativeCount;i++){const a=player.angle+i*TAU/nativeCount;drawCrescentBlade(x+Math.cos(a)*orbit,y+Math.sin(a)*orbit,a,1.04,1);}
     const extra=mult();for(let i=0;i<extra;i++){const a=player.angle+(i+.5)*TAU/Math.max(1,extra),rr=orbit;drawCrescentBlade(x+Math.cos(a)*rr,y+Math.sin(a)*rr,a,.86,.82);}
   };
 
@@ -332,9 +316,6 @@
   function drawAwakeningFx(){
     for(const e of fx){const p=worldToScreen(e.x,e.y),q=clamp(e.life/Math.max(.001,e.max),0,1),age=1-q;ctx.save();ctx.globalAlpha=Math.min(1,q*1.7);
       if(e.kind==='stellar-volley'){ctx.translate(p.x,p.y);ctx.strokeStyle='#dffcff';ctx.shadowBlur=20;ctx.shadowColor='#8ff5ff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,40+age*20,0,TAU);ctx.stroke();}
-      else if(e.kind==='blade-align'){ctx.translate(p.x,p.y);ctx.strokeStyle='#bfefff';ctx.setLineDash([8,7]);ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(0,0,90+age*55,0,TAU);ctx.stroke();ctx.setLineDash([]);}
-      else if(e.kind==='eclipse-wave'){ctx.translate(p.x,p.y);ctx.rotate(age*.8);ctx.strokeStyle='#dffaff';ctx.shadowBlur=20;ctx.shadowColor='#76ddff';ctx.lineWidth=2.4;for(let i=0;i<3;i++){const a=i*TAU/3,r=52+age*38;ctx.beginPath();ctx.arc(Math.cos(a)*r*.18,Math.sin(a)*r*.18,r*.72,a-.62,a+.62);ctx.stroke();}}
-      else if(e.kind==='eclipse-cut'){ctx.translate(p.x,p.y);ctx.strokeStyle='#f2fbff';ctx.shadowBlur=30;ctx.shadowColor='#9bdcff';ctx.lineWidth=7*(1-age)+2;ctx.beginPath();ctx.arc(0,0,e.r*(.72+.28*age),0,TAU);ctx.stroke();ctx.strokeStyle='rgba(18,26,46,.9)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,e.r*(.62+.34*age),0,TAU);ctx.stroke();}
       else if(e.kind==='starline-flash'){ctx.translate(p.x,p.y);ctx.fillStyle='#ffffff';ctx.shadowBlur=34;ctx.shadowColor='#ffd9ed';ctx.beginPath();ctx.arc(0,0,7+age*24,0,TAU);ctx.fill();}
       else if(e.kind==='bastion-volley'){ctx.translate(p.x,p.y);ctx.strokeStyle='#dffff8';ctx.shadowBlur=20;ctx.shadowColor='#9dffe2';ctx.lineWidth=3;for(let i=0;i<e.count;i++){const a=i*TAU/e.count+age*.22,r=46+age*26;ctx.beginPath();ctx.moveTo(Math.cos(a)*r*.55,Math.sin(a)*r*.55);ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);ctx.stroke();}}
       else if(e.kind==='bastion-break'){ctx.translate(p.x,p.y);ctx.strokeStyle='#eafff7';ctx.lineWidth=4;for(let i=0;i<8;i++){const a=i*TAU/8,rr=e.r*(.28+.65*age);ctx.beginPath();ctx.moveTo(Math.cos(a)*rr*.62,Math.sin(a)*rr*.62);ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);ctx.stroke();}}
@@ -353,7 +334,7 @@
   const baseMenu=showMainMenu;showMainMenu=function awakeningFirstSetMenu(){resetAwakeningCombatState();return baseMenu();};
 
   window.stackfallAwakeningFirstSetDebug=()=>({
-    coreCycle:player.awCoreCycle||0,bladeCooldown:player.awBladeCd||0,bladeWindup:player.awBladeWindup||0,
+    bladeOrbitSpeed:bladeOrbitSpeedMultiplier(),bladeNativeCount:awake('blade')?5:(weaponCount('blade')>=5?3:weaponCount('blade')>=2?2:1),
     emberHits:player.awEmberHits||0,emberTargetId:player.awEmberTargetId??null,cometCycle:player.awCometCycle||0,fx:fx.length
   });
 })();
