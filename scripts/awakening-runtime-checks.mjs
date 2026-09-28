@@ -165,13 +165,10 @@ export function awakeningRuntimeChecks(){
     const extra=moves.slice(-2),orbit=orbitRadiusFor('blade');
     check(extra.length===2&&extra.every(([x,y],i)=>Math.hypot(x-vw/2-Math.cos(player.angle+(i+.5)*TAU/2)*orbit,y-vh/2-Math.sin(player.angle+(i+.5)*TAU/2)*orbit)<.001),'multiplicity blade visuals differ from damage orbit');
   }
-  setup('arc',6,false);const outlines=[],arc=ctx.arc;
-  ctx.arc=function(...args){outlines.push(args);return arc.apply(this,args);};
-  const lunar={r:12,side:1,color:'#69ffe0',stacks:6,stage:'outbound',stageDuration:1,stageTime:0};
-  drawMoonDisc(lunar,{x:100,y:100},0);const initial=JSON.stringify(outlines.splice(0));
-  lunar.stageTime=1;drawMoonDisc(lunar,{x:100,y:100},0);const outbound=JSON.stringify(outlines.splice(0));
-  lunar.stage='return';lunar.returnLife=.5;drawMoonDisc(lunar,{x:100,y:100},0);const returning=JSON.stringify(outlines);ctx.arc=arc;
-  check(initial!==outbound&&outbound!==returning&&initial!==returning,'base boomerang moon phase progression was lost');
+  setup('arc',6,false);fireBoomerang(state.entities.enemies[0],6);updateBoomerangs(.01);
+  check(state.entities.curves.length>0&&state.entities.curves.every(p=>!p.awLunar&&!Number.isFinite(p.awMoonPhase)),'base boomerang leaked lunar awakening form');
+  setup('arc',6,true);fireBoomerang(state.entities.enemies[0],6);updateBoomerangs(.01);
+  check(state.entities.curves.some(p=>p.awLunar&&Number.isFinite(p.awMoonPhase)),'awakened boomerang did not enter lunar form');
   for(const aw of [false,true]){
     const target=setup('comet',6,aw);fireComet(target,6);
     check(state.entities.projectiles.some(p=>p.source==='comet'&&!p.awakeningChild),'base comet did not launch immediately');
@@ -179,7 +176,7 @@ export function awakeningRuntimeChecks(){
     for(let i=0;i<3;i++)fireComet(target,6);
     check(hasSignature('comet')===aw,'final comet fourth-cast gate incorrect');
     check(!state.entities.projectiles.some(p=>p.awakeningChild),'final comet launched before charge');
-    updatePendingActions(.219);check(!state.entities.projectiles.some(p=>p.awakeningChild),'final comet charge shorter than 220ms');
+    updatePendingActions(.339);check(!state.entities.projectiles.some(p=>p.awakeningChild),'final comet charge shorter than 340ms');
     updatePendingActions(.002);check(state.entities.projectiles.some(p=>p.awakeningChild)===aw,'final comet delayed launch missing or leaked');
   }
   // All three canonical branches must actually call the awakening bridge.
