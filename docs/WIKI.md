@@ -306,7 +306,7 @@ Endless에는 현재 8종 이벤트가 등장한다.
 
 결과 화면의 피해 분석은 전체 DPS와 무기별 **1분 구간 DPS 추이**를 함께 제공한다. 전체 및 개별 무기 선은 각각 토글할 수 있다.
 
-The three current constellations remain **Shardway**, **Abyssal Bloom**, and **Silent Array**. The original 14-weapon roster is fully unlockable by Stage 10, then expands to 18 at Stage 11/13/15/17. **Current code has no direct weapon unlock at Stage 12/14/16/18.** Stage 12 and 18 have defined system rewards; Stage 14/16 are intentionally reopened reward slots pending a better progression reward.
+The three current constellations remain **Shardway**, **Abyssal Bloom**, and **Silent Array**. The original 14-weapon roster is fully unlockable by Stage 10, then expands to 18 at Stage 11/13/15/17. **Current code has no direct weapon unlock at Stage 12/14/16/18.** Their system rewards are Stage 12 four-way choices, Stage 14 Advanced Start +3, Stage 16 Core Development III, and Stage 18 Multiplicity expansion.
 
 ### Post-roster weapons
 
