@@ -6,16 +6,21 @@
   const INITIAL_WEAPONS=Object.freeze(['blade','ember','bulwark','gravity']);
   const CURRENCY_KEYS=Object.freeze(['stardust','coreShard']);
   const BOSS_RECORD_KEYS=Object.freeze(['mini','boss','apex','void','crash']);
+  const FEATURE_DEFS=Object.freeze({
+    'core-development':Object.freeze({ko:'코어 성장',en:'Core Development'}),
+    awakening:Object.freeze({ko:'무기 각성',en:'Weapon Awakening'})
+  });
   const sanitizeList=value=>Array.isArray(value)?[...new Set(value.filter(item=>typeof item==='string'))]:[];
   const sanitizeNumber=value=>Math.max(0,Math.floor(Number(value)||0));
   const sanitizeMap=value=>value&&typeof value==='object'&&!Array.isArray(value)?{...value}:{};
   const sanitizeProfileName=value=>String(value??'').replace(/[\u0000-\u001f\u007f]/g,'').replace(/\s+/g,' ').trim().slice(0,16);
   function canonicalClearedStages(value){const saved=new Set(sanitizeList(value)),accepted=[];for(const stage of [...(window.STACKFALL_STAGE_CATALOG||[])].sort((a,b)=>a.order-b.order)){if(!saved.has(stage.id))continue;const previous=stage.requirements?.previous;if(previous&&!accepted.includes(previous))continue;accepted.push(stage.id);}return accepted;}
   function progressionUnlockedWeapons(clearedStages){const unlocked=new Set(INITIAL_WEAPONS);for(const stage of window.STACKFALL_STAGE_CATALOG||[]){if(!clearedStages.includes(stage.id))continue;for(const reward of stage.rewards||[])if(reward.type==='weapon'&&WEAPONS[reward.key])unlocked.add(reward.key);}return[...unlocked];}
+  function progressionUnlockedFeatures(clearedStages){const unlocked=new Set();for(const stage of window.STACKFALL_STAGE_CATALOG||[]){if(!clearedStages.includes(stage.id))continue;for(const reward of stage.rewards||[])if(reward.type==='feature'&&FEATURE_DEFS[reward.key])unlocked.add(reward.key);}return[...unlocked];}
   function load(){
     try{
       const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'),sharedProfileName=sanitizeProfileName(localStorage.getItem(PROFILE_NAME_KEY)||saved.profileName);
-      const clearedStages=canonicalClearedStages(saved.clearedStages),unlocked=progressionUnlockedWeapons(clearedStages);
+      const clearedStages=canonicalClearedStages(saved.clearedStages),unlocked=progressionUnlockedWeapons(clearedStages),unlockedFeatures=progressionUnlockedFeatures(clearedStages);
       const currencies={stardust:0,coreShard:0,...sanitizeMap(saved.currencies)};
       for(const key of CURRENCY_KEYS)currencies[key]=sanitizeNumber(currencies[key]);
       const upgrades=sanitizeMap(saved.upgrades);
@@ -26,9 +31,10 @@
       if(!hasBossBreakdown)bossRecords.apex=sanitizeNumber(saved.lifetime?.bosses);
       const bossTotal=BOSS_RECORD_KEYS.reduce((sum,key)=>sum+bossRecords[key],0);
       return{
-        version:5,
+        version:6,
         profileName:sharedProfileName,
         unlockedWeapons:unlocked,
+        unlockedFeatures,
         clearedStages,
         bestStageTimes:sanitizeMap(saved.bestStageTimes),
         stageClearCounts:sanitizeMap(saved.stageClearCounts),
@@ -38,13 +44,15 @@
         lifetime:{runs:sanitizeNumber(saved.lifetime?.runs),kills:sanitizeNumber(saved.lifetime?.kills),bosses:bossTotal}
       };
     }catch{
-      return{version:5,profileName:'',unlockedWeapons:[...INITIAL_WEAPONS],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},bossRecords:{mini:0,boss:0,apex:0,void:0,crash:0},lifetime:{runs:0,kills:0,bosses:0}};
+      return{version:6,profileName:'',unlockedWeapons:[...INITIAL_WEAPONS],unlockedFeatures:[],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},bossRecords:{mini:0,boss:0,apex:0,void:0,crash:0},lifetime:{runs:0,kills:0,bosses:0}};
     }
   }
   const meta=load();
   function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(meta));if(meta.profileName)localStorage.setItem(PROFILE_NAME_KEY,meta.profileName);}catch{}window.renderStackfallMetaUi?.();}
   function setProfileName(value){meta.profileName=sanitizeProfileName(value);try{if(meta.profileName)localStorage.setItem(PROFILE_NAME_KEY,meta.profileName);else localStorage.removeItem(PROFILE_NAME_KEY);}catch{}save();return meta.profileName;}
   function isWeaponUnlocked(key){return key==='core'||meta.unlockedWeapons.includes(key);}
+  function isFeatureUnlocked(key){return DEV_PROFILE||meta.unlockedFeatures?.includes(key);}
+  function featureName(key){const def=FEATURE_DEFS[key];return def?.[GAME_SETTINGS?.language]||def?.en||def?.ko||key;}
   function unlockWeapon(key){
     if(!WEAPONS[key]||isWeaponUnlocked(key))return false;
     meta.unlockedWeapons.push(key);save();
@@ -79,9 +87,10 @@
     const clearCount=sanitizeNumber(meta.stageClearCounts[stageId])+1;meta.stageClearCounts[stageId]=clearCount;
     const previous=Number(meta.bestStageTimes[stageId]),time=Math.max(0,Number(timeSeconds)||0),best=!Number.isFinite(previous)||time<previous;
     if(best)meta.bestStageTimes[stageId]=time;
-    const newWeapons=[],currencyReward={stardust:0,coreShard:0};
+    const newWeapons=[],newFeatures=[],currencyReward={stardust:0,coreShard:0};
     for(const reward of stage.rewards||[]){
       if(reward.type==='weapon'&&unlockWeapon(reward.key))newWeapons.push(reward.key);
+      if(reward.type==='feature'&&firstClear&&FEATURE_DEFS[reward.key]&&!meta.unlockedFeatures.includes(reward.key)){meta.unlockedFeatures.push(reward.key);newFeatures.push(reward.key);}
       if(reward.type==='currency'&&(!reward.firstClearOnly||firstClear)){
         const multiplier=reward.key==='stardust'?(window.stackfallCurrencyMultiplier?.()||1):1;
         const amount=Math.max(0,Math.floor((Number(reward.amount)||0)*multiplier));
@@ -94,7 +103,7 @@
       currencyReward.coreShard=(currencyReward.coreShard||0)+1;
     }
     save();
-    return{newWeapons,firstClear,best,bestTime:meta.bestStageTimes[stageId],clearCount,currency:currencyReward};
+    return{newWeapons,newFeatures,firstClear,best,bestTime:meta.bestStageTimes[stageId],clearCount,currency:currencyReward};
   }
   function bossRecordCategory(enemy){
     if(!enemy)return null;
@@ -115,10 +124,13 @@
   window.STACKFALL_INITIAL_WEAPONS=INITIAL_WEAPONS;
   window.STACKFALL_CURRENCY_KEYS=CURRENCY_KEYS;
   window.STACKFALL_BOSS_RECORD_KEYS=BOSS_RECORD_KEYS;
+  window.STACKFALL_FEATURE_DEFS=FEATURE_DEFS;
   window.stackfallMeta=meta;
   window.stackfallSaveMeta=save;
   window.stackfallSetProfileName=setProfileName;
   window.stackfallIsWeaponUnlocked=isWeaponUnlocked;
+  window.stackfallIsFeatureUnlocked=isFeatureUnlocked;
+  window.stackfallFeatureName=featureName;
   window.stackfallUnlockWeapon=unlockWeapon;
   window.stackfallCurrency=currency;
   window.stackfallGrantCurrency=grantCurrency;
