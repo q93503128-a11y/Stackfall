@@ -101,7 +101,11 @@
     }
   }
   function updateStageEncounterSignatures(run,dt){
-    for(const enemy of state.entities.enemies){if(!enemy||enemy.dead||enemy.stageEncounter!==true)continue;enemy.stageEncounterSignatureCd=(Number.isFinite(enemy.stageEncounterSignatureCd)?enemy.stageEncounterSignatureCd:5.2)-dt;if(enemy.stageEncounterSignatureCd>0)continue;const boss=enemy.stageEncounterType==='boss';enemy.stageEncounterSignatureCd=(boss?6.2:7.4)-Math.min(1.25,(run.stage?.order||1)*.045);stageEncounterSignature(enemy,enemy.stageEncounterFamily||environmentFamily(run.stage),run);}
+    for(const enemy of state.entities.enemies){
+      if(!enemy||enemy.dead||enemy.stageEncounter!==true)continue;
+      if(enemy.twinGroup){const owner=state.entities.enemies.find(member=>member&&!member.dead&&member.stageEncounter===true&&member.twinGroup===enemy.twinGroup);if(owner!==enemy)continue;}
+      enemy.stageEncounterSignatureCd=(Number.isFinite(enemy.stageEncounterSignatureCd)?enemy.stageEncounterSignatureCd:5.2)-dt;if(enemy.stageEncounterSignatureCd>0)continue;const boss=enemy.stageEncounterType==='boss';enemy.stageEncounterSignatureCd=(boss?6.2:7.4)-Math.min(1.25,(run.stage?.order||1)*.045);stageEncounterSignature(enemy,enemy.stageEncounterFamily||environmentFamily(run.stage),run);
+    }
   }
   function updateStageEncounters(run,progress){
     const plan=stageEncounterPlan(run.stage);run.encountersTriggered=run.encountersTriggered||{};
