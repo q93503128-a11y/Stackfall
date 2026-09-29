@@ -79,7 +79,7 @@
 | projectileSize | 광자 팽창 | 투사체·광선·공격 판정 크기 +10% |
 | projectileSpeed | 광자 가속 | 투사체 속도 +10%, 공전 장비 회전 속도 증가 |
 | range | 심우주 조준기 | 무기 기본 조준·비행 사거리 +10% |
-| multiplicity | 다중 투영 코어 | 지원되는 공격체 +1, 원본 표적 공유, 최대 2중첩 |
+| multiplicity | 다중 투영 코어 | 지원되는 공격체 +1, 원본 표적 공유. Stage 18 전 성운 보관소 경로 최대 2중첩, Stage 18 이후 일반 성장 풀 포함 최대 3중첩 |
 
 ### 자석 코어
 
@@ -381,6 +381,7 @@ min(30%, 2.5% + 중첩 곡선 × 1.8% + 연쇄 보너스)
 - **외형/상시 변화**: 플레이어 뒤에 기울어진 소형 나선은하 원반이 상시 떠 있다. 밝은 백색 은하핵, 길게 휘어진 4개의 보랏빛 나선팔, 팔 끝의 발사 결절로 구성하며 기존의 작은 탄환 묶음과 실루엣부터 다르게 보이게 한다. 일반 탄환도 플레이어 중심이 아니라 이 나선팔 끝에서 뜯겨 나오는 성운 조각처럼 발사한다.
 - **공격 준비**: 기본 발동 직전 약 0.15초 동안 나선팔이 중심으로 조여 들고 은하핵이 백색으로 압축된다. 발사 순간 팔 끝이 순차 점등되며 같은 우선 표적을 향해 탄막 방향이 잡힌다.
 - **공격 발동**: 기본 은하 나선부터 플레이어 중심 직선 발사가 아니라 **회전하는 궤도 결절에서 접선 방향으로 뜯겨 나오는 실제 나선 발사**를 사용한다. 각성 후에는 정회전 나선팔 직후 역회전 나선팔이 한 겹 더 겹쳐 같은 표적을 양방향으로 감아 들어간다. 다중 투영이 추가한 공격체도 같은 표적과 회전 위상을 공유한다.
+- **런타임 소유권**: `performance-guard.js`가 최종 `updateProjectiles`를 덮어쓰므로 `spiralMotion`의 각도·반경 좌표 적분을 기본 `systems.js`와 성능 경로 양쪽에서 동일하게 처리한다. 한쪽만 구현해 탄환이 발사 위치에 고정되는 회귀를 금지한다.
 - **시그니처 — 창세 나선**: 비에코 기본 발동 3회마다 표적 주위에 거대한 완성형 나선은하가 약 0.45초 동안 그려진다. 네 나선팔이 표적 둘레를 한 바퀴 감은 뒤 갑자기 중심으로 접히고, 마지막에 백색 은하핵이 한 번 터진다. 이 연출은 적을 끌어당기지 않아 중력 우물/쌍성 붕괴와 역할이 겹치지 않는다.
 - **각성 메커닉**: 창세 나선의 네 팔은 각각 경로 피해를 주고 마지막 핵 수축이 별도 중심 타격을 준다. 발동 카운트는 투사체 수가 아니라 **원본 발동 횟수**로 계산해 다중 투영·에코로 시그니처 주기가 폭증하지 않게 한다.
 - **호환/재귀 경계**: **역나선 은하**는 각성 전후 모두 적용한다. 특수능력이 있으면 일반 발동에 반대 회전층이 추가되고 창세 나선에도 얇은 역회전 외곽팔이 한 겹 더 생기지만, 그 역회전층이 새 창세 나선을 만들지는 않는다. 기존 중력 매듭 폭발도 유지한다. 에코는 각성 외형의 추가 일반 탄막을 만들 수 있으나 창세 나선 카운트를 올리지 않는다. 투사체 크기·탄속·사거리·관통은 각 팔의 실제 탄체와 경로 판정에 반영하되, 창세 나선의 마지막 핵 폭발은 다시 나선 탄막을 생성하지 않는다.
@@ -725,7 +726,7 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - **Shardway / 파편의 항로 (Stage 1–6)**: collapsed route infrastructure, shard hosts, ion shear, refraction, time distortion, magnetar pressure, then route convergence.
 - **Abyssal Bloom / 심연의 개화 (Stage 7–12)**: living stellar growth, spores, roots, sap vessels, seed spirals, reflection petals, husk pressure, then full biological convergence.
 - **Silent Array / 침묵 중계망 (Stage 13–18)**: dead relay megastructures, broken carriers, static, packet storms, sensor blind zones, sealed protocols, then network-wide silence collapse.
-- The original 14-item normal weapon roster is permanently unlockable by Stage 10. The roster then expands to 18 through Vacuum Bloom (11), Phase Minefield (13), Interstellar Missile Pods (15), and Orbital Gate (17). Stages 12/14/16/18 are not currency-only gaps: they unlock four-way reconstruction, Advanced Passives I, Advanced Passives II, and the normal-pool Multiplicity Protocol.
+- The original 14-item normal weapon roster is permanently unlockable by Stage 10. The roster then expands to 18 through Vacuum Bloom (11), Phase Minefield (13), Interstellar Missile Pods (15), and Orbital Gate (17). **Current code has no direct weapon unlock at Stage 12, 14, 16, or 18.** Stage 12 owns the four-way level-up unlock and Stage 18 owns the Multiplicity expansion; Stage 14 and 16 gameplay rewards are intentionally reopened for further design instead of being prematurely fixed.
 
 ### Post-Stage-10 weapons
 
@@ -794,7 +795,7 @@ These four weapons are implemented and connected to Stage 11/13/15/17 first-clea
 - Identity boundary: Orbital Gate is an **installed arena tool**, not another orbiting weapon. Its tactical cost is positional: a badly placed network can be left behind, while a well-placed network can dominate a boss or choke point for its full lifetime.
 
 #### Projectile-count compatibility — Multiplicity Core / 다중 투영 코어
-- **Multiplicity Core / 다중 투영 코어** has maximum 2 stacks. Before Stage 18 it is obtainable through its existing event reward path only; Stage 18 first clear unlocks it into the ordinary level-up pool as well. The four post-roster weapons use the compatibility rules below.
+- **Multiplicity Core / 다중 투영 코어** is obtainable from the Nebula Vault before Stage 18 and is capped at **2 stacks** in that state. Stage 18 first clear additionally admits it to the ordinary level-up pool and raises the run cap to **3 stacks**. The existing Nebula Vault route remains valid after the unlock.
 - Each stack grants **+1 real attack body** to compatible equipment. "Attack body" is interpreted by weapon identity instead of blindly cloning every sub-projectile.
 - Extra projected attack bodies follow the weapon's existing target/placement intent. They must not randomly scatter to unrelated targets merely because Multiplicity is present.
 - Submunitions, reflected shots, chained hits, recursive copies, augment-generated children, and other secondary payloads are **not** independently multiplied unless explicitly stated below. This prevents exponential projectile growth.
@@ -816,7 +817,7 @@ These four weapons are implemented and connected to Stage 11/13/15/17 first-clea
 
 **Interstellar Missile Pods**
 - Attack body = **main missile**.
-- Each Multiplicity stack adds one additional full-damage main missile to the salvo: base salvo counts become 2→3→4 at Stack 1 with Multiplicity 0→1→2, and 6→7→8 at Stack 6.
+- Each Multiplicity stack adds one additional full-damage main missile to the salvo. Before Stage 18 the event-only cap remains 2; after Stage 18 the third stack adds one further main missile while preserving the same targeting and recursion boundaries.
 - Extra missiles alternate launch sides so the side-pod choreography remains balanced. They use the same outward-ejection → ignition → curved-homing motion as native missiles.
 - Extra missiles inherit the salvo's existing target assignment. Multiplicity must not create unrelated random targeting; if the base salvo is converging on one boss, projected missiles converge on that boss as well.
 - MIRV applies to every **main missile**, including a Multiplicity-created main missile. Its main warhead still preserves 100% parent damage and its two side warheads each add 34%.
@@ -826,7 +827,7 @@ These four weapons are implemented and connected to Stage 11/13/15/17 first-clea
 - Attack body = **routed network pulse**, not a gate and not an entire extra gate network.
 - Multiplicity never creates more gates and never creates another installation.
 - Each Multiplicity stack adds one additional full-strength pulse into the currently installed network, phase-offset from the other pulses. Thus gate geometry and installation count stay readable while throughput rises.
-- At Stack 6, the native Closed Circuit provides 2 pulses; Multiplicity raises this to 3 or 4 pulses, not 4/6/8 gates.
+- At Stack 6, the native Closed Circuit provides 2 pulses; pre-Stage-18 Multiplicity raises this to 3 or 4 pulses, and the post-Stage-18 third stack may raise it to 5 pulses. Multiplicity still never creates extra gates.
 - All pulses share the same central circuit-burst cooldown.
 - Photon Crossfeed copies are secondary payloads and are never multiplied by Multiplicity. A projectile already tagged as a gate copy or Multiplicity projection cannot recursively create more projected/crossfed copies.
 
@@ -836,31 +837,31 @@ These four weapons are implemented and connected to Stage 11/13/15/17 first-clea
 - Static contracts test the post-roster definitions, unlock positions, combat runtime, renderer, augment definitions, and Multiplicity export; runtime recursion barriers remain part of the weapon implementation contract.
 
 #### Unlock cadence
-| Stage | First-clear gameplay reward | Why |
+| Stage | First-clear gameplay reward | Current status |
 |---|---|---|
-| 11 | Vacuum Bloom / 진공 개화 | Post-Stage-10 roster expansion begins with kill-fed area control. |
-| 12 | 4중 재구성 | 일반 레벨업 선택지를 3개에서 4개로 확장한다. |
-| 13 | Phase Minefield / 위상 기뢰군 | 이동 경로 자체를 공격 자원으로 만든다. |
-| 14 | 상급 패시브 I | 거성 사냥꾼·관통 렌즈·자가 복원·성운 통찰을 일반 성장 풀에 연다. |
-| 15 | Interstellar Missile Pods / 성간 미사일 포드 | 후반 기술계 원거리 무기 확장. |
-| 16 | 상급 패시브 II | 임계 과출력·광자 팽창·심우주 조준기와 고급 연쇄 패시브군을 연다. |
-| 17 | Orbital Gate / 궤도 문 | Silent Array의 공간/네트워크 복잡도를 무기로 전환한다. |
-| 18 | 다중 투영 프로토콜 | 이벤트 획득은 유지하면서 다중 투영 코어를 일반 레벨업 풀에도 연다. |
-
+| 11 | Vacuum Bloom / 진공 개화 | 구현 완료 |
+| 12 | 4중 재구성 | 일반 레벨업 선택지를 3개에서 4개로 확장. 구현 완료 |
+| 13 | Phase Minefield / 위상 기뢰군 | 구현 완료 |
+| 14 | **미정 보상 슬롯** | 무기 해금 없음. `런 시작 레벨 +3` 같은 시작 성장 가속을 포함해 후속 설계 |
+| 15 | Interstellar Missile Pods / 성간 미사일 포드 | 구현 완료 |
+| 16 | **미정 보상 슬롯** | 무기 해금 없음. Stage 14와 역할이 겹치지 않는 별도 영구 해금으로 후속 설계 |
+| 17 | Orbital Gate / 궤도 문 | 구현 완료 |
+| 18 | 다중 투영 프로토콜 | 성운 보관소 획득 경로를 유지하면서 일반 레벨업 풀 진입 + 최대 중첩 2→3 |
 Implementation status: all four reward keys are connected only after their definitions, stack text, combat runtime, render/audio treatment, augment definitions, multiplicity barriers, progression reconstruction, and regression contracts were added together.
 
 ### Campaign system unlocks
 
 - **Stage 1**: Core Development / 코어 성장.
-- **Stage 2**: Weapon Awakening / 무기 각성.
-- **Stage 3**: Boss Special Abilities / 보스 특수능력. 해금 전 일반보스는 중간보스처럼 현재 무기 또는 패시브 +1을 주고, 해금 후부터 특수 패시브/무기 augment 선택창을 연다.
-- **Stage 6**: Endless Expedition + Hard 난이도. 월드 이벤트 자체는 해금 대상으로 삼지 않으며 Endless가 열린 뒤 기존 이벤트 스케줄을 그대로 사용한다.
+- **Stage 3**: Boss Special Abilities / 보스 특수능력. 이 해금 전 일반보스는 특수능력 선택창 대신 현재 보유 무기 또는 패시브 +1 성장 보상을 준다.
+- **Stage 6**: **Weapon Awakening + Endless Expedition + Hard**. 각성은 Stage 6 최초 클리어로 계정 진행도에 영구 획득된다. 이후 Stage 1을 재플레이해도 각성 코어 드랍, 각성 HUD, 6중첩 각성 선택을 정상 사용할 수 있다.
+- **각성 해금 전**에는 각성 코어가 드랍되지 않고 전투 HUD에도 각성 코어 항목을 노출하지 않는다. 해금 기능을 설정에서 일시 비활성화한 경우에도 같은 규칙을 적용한다.
 - **Stage 12**: 4중 재구성 — 일반 레벨업 선택지 4개.
-- **Stage 14**: 상급 패시브 I.
-- **Stage 16**: 상급 패시브 II.
-- **Stage 18**: 다중 투영 프로토콜 — 기존 이벤트 획득 경로는 유지하면서 일반 레벨업 풀에도 다중 투영 코어를 추가한다.
-- DEV 프로필(`?dev=1`)은 테스트 편의를 위해 시스템 잠금을 무시한다.
-- 장착 슬롯 V/VI는 기존 Core Development 확장 노드로 유지한다. Boss Rush는 추후 별도 모드로 검토하며 현재 구현하지 않는다.
+- **Stage 14 / 16**: 현재 무기 해금이 없는 미정 보상 슬롯. 이전에 임시로 넣었던 `상급 패시브 I/II`는 정본에서 철회했다. Stage 14의 후보로 `런 시작 레벨 +3` 같은 시작 성장 가속을 검토하되 아직 확정하지 않는다.
+- **Stage 18**: 다중 투영 프로토콜 — 기존 성운 보관소 획득은 유지하고 일반 레벨업 풀에도 추가하며 최대 중첩을 2에서 3으로 늘린다.
+- **설정 > 해금 관리**에는 이미 획득한 기능만 나타난다. 각 기능을 개별적으로 끄고 다시 켤 수 있지만, 아직 획득하지 않은 기능을 강제로 활성화할 수는 없다.
+- DEV 프로필(`?dev=1`)은 테스트 편의를 위해 획득 조건을 우회한다. 장착 슬롯 V/VI는 기존 Core Development 확장 노드로 유지한다.
+- Boss Rush는 추후 별도 모드로 검토하며 현재 구현하지 않는다.
+- 현재 Stage 모드는 `randomWorldEvents:false`이며 **성운 보관소 / 추락한 우주선 / 공허 균열의 Endless 이벤트 런타임을 아직 Stage에 직접 배치하지 않는다.** 이벤트 종류 확대와 Stage별 고정·반고정 배치는 별도 후속 패스로 진행한다.
 
 ### Galaxy map
 
