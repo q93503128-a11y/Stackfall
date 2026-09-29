@@ -660,7 +660,7 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 
 - `endless` remains non-finite, keeps random world events, exposes the full enemy family pool, and keeps the 600-second (10-minute) Apex cadence.
 - Endless의 일반 적 스폰은 기본 4종만 반복하지 않는다. **75초부터 파손 항로(route), 240초부터 심연 개화(bloom), 420초부터 침묵 중계망(array)**의 Stage 일반 적 변형이 시간 경과에 따라 기존 풀에 섞인다. 이 혼합은 Stage 클리어/해금 상태와 무관하며, 스테이지 전용 보스·환경 기믹·전장 구조물까지 가져오는 규칙은 아니다.
-- `stage` is a separate finite operation mode. Random world events and Apex scheduling are suppressed during stage runs.
+- `stage` is a separate finite operation mode. The **random** Endless event scheduler and Apex scheduling are suppressed, but curated world-event instances can be authored directly into each Stage.
 - Stage clear is **boss-death gated**, never timer gated. Reaching the authored duration spawns the final boss; the run continues until the player dies or that boss is defeated.
 - Every authored stage has fixed milestone incidents plus a persistent environmental gimmick loop that accelerates toward the final boss.
 - 스테이지 환경 기믹은 보스 공격과 같은 텔레그래프 문법을 사용하지 않는다. Stage 1–6은 **파손된 항로 레일·브레이스·셔터**, Stage 7–12는 **뿌리·꽃잎·생체 격벽**, Stage 13–18은 **중계 회로·스캔 섹터·데이터 셔터**를 공통 시각 언어로 사용한다. 같은 별자리 안에서는 계열감을 유지하되 `environmentVariant`에 따라 회전·노드·배치가 달라진다.
@@ -698,6 +698,10 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 | 16 | 블라인드 섹터 | 13:00 |
 | 17 | 암호 묘역 | 14:00 |
 | 18 | 침묵 배열핵 | 15:00 |
+
+### Stage completion ownership
+
+- Stage 최종보스 `kind:'stage-boss'` 처치 시 `handleEliteDeath()`가 `handleStageBossDefeated()`를 직접 호출해 **최종보스 처치 즉시** Stage 승리 시네마틱으로 전환한다. 다음 프레임의 간접 탐지에만 의존하지 않는다.
 
 ### Stage sub-boss cadence
 
@@ -871,7 +875,7 @@ Implementation status: all four reward keys are connected only after their defin
 - **설정 > 해금 관리**는 기본 접힘 상태이며, 이미 획득한 **자동 적용형** 해금만 개별 ON/OFF할 수 있다. 현재 대상은 무기 각성, 보스 특수능력, 4중 재구성, 선행 재구성 +3, 다중 투영 프로토콜이다. 코어 성장, Endless, Hard, 코어 성장 3차 돌파처럼 별도 메뉴/선택 행동이 필요한 해금은 토글 목록에서 제외한다.
 - DEV 프로필(`?dev=1`)은 테스트 편의를 위해 획득 조건을 우회한다. 장착 슬롯 V/VI는 기존 Core Development 확장 노드로 유지한다.
 - Boss Rush는 추후 별도 모드로 검토하며 현재 구현하지 않는다.
-- Stage 모드는 계속 `randomWorldEvents:false`라 Endless의 무작위 스케줄러는 돌지 않는다. 대신 같은 8종 이벤트 런타임을 **작가 배치형 Stage 이벤트**로 사용한다. 첫 등장은 S1 성운 보관소 → S2 조난 신호 → S3 추락한 우주선 → S4 유성 광맥 → S5 포식성 성운 → S6 중계기 복구 → S7 항성 폭풍의 눈 → S8 공허 균열 순서다. 이후에는 이미 등장한 이벤트를 재사용하며 한 Stage에 여러 이벤트가 들어갈 수 있고, 후반으로 갈수록 횟수가 늘어난다. Stage 이벤트 표식은 정예 조우 사이 빈 구간에만 생성하고, 이벤트가 진행 중일 때는 다음 Stage 정예 조우를 보류한다.
+- Stage 모드는 계속 `randomWorldEvents:false`라 Endless의 무작위 스케줄러는 돌지 않는다. 대신 같은 8종 이벤트 런타임을 **작가 배치형 Stage 이벤트**로 사용한다. 첫 등장은 **S1 성운 보관소 → S3 추락한 우주선 → S4 조난 신호 → S5 유성 광맥 → S7 포식성 성운 → S9 공허 균열 → S13 중계기 복구 → S15 항성 폭풍의 눈** 순서로 간격을 두고 소개한다. 이미 등장한 이벤트는 이후 Stage에서 반복되며 한 Stage에 여러 이벤트가 들어갈 수 있고, 후반으로 갈수록 횟수가 늘어난다. Stage 이벤트 표식은 정예 조우 사이 빈 구간에만 생성하고, 이벤트가 진행 중일 때는 다음 Stage 정예 조우를 보류한다.
 
 ### Galaxy map
 
