@@ -221,3 +221,9 @@
 .unlock-management:not(.collapsed) .unlock-management-title i{transform:rotate(180deg)}
 .unlock-management.collapsed{padding-bottom:10px}
 .unlock-management-list[hidden]{display:none!important}
+
+/* Unlock-management disclosure arrow belongs at the far-right edge of the row. */
+#unlockManagementToggle{position:relative;display:block;padding-right:46px}
+#unlockManagementToggle .unlock-management-title{display:block}
+#unlockManagementToggle .unlock-management-title i{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:24px;height:24px;font-size:18px;line-height:1}
+#unlockManagementSection:not(.collapsed) #unlockManagementToggle .unlock-management-title i{transform:translateY(-50%) rotate(180deg)}
