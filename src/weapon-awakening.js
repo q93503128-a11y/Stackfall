@@ -80,7 +80,7 @@
   };
   function awakeningName(key){const def=defs[key];return GAME_SETTINGS.language==='ko'?def?.ko:def?.en;}
   function available(){
-    if((state.awakeningCores||0)<1)return[];
+    if(window.stackfallIsFeatureUnlocked?.('awakening')===false||(state.awakeningCores||0)<1)return[];
     return Object.keys(defs).filter(key=>weaponCount(key)>=6&&!state.awakenedWeapons?.[key]);
   }
   function syncLoadoutAwakening(){
