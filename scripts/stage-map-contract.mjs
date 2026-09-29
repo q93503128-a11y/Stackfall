@@ -12,6 +12,8 @@ const checks=[
  ['stage nodes use luminous stellar points with separate number badges',map.includes('class="galaxy-node-star"')&&styles.includes('galaxyStellarPulse')&&styles.includes('.galaxy-stage-node>small')],
  ['node status comes from persistent progression',map.includes('window.stackfallStageStatus?.(stage)')&&meta.includes('function stageStatus(stage)')],
  ['detail panel exposes game time threat unlockable and boss',index.includes('id="galaxyStageTime"')&&index.includes('id="galaxyStageThreat"')&&index.includes('id="galaxyStageUnlocks"')&&index.includes('id="galaxyStageBoss"')],
+ ['locked stage nodes show conventional chain and padlock treatment',map.includes('galaxy-node-lock')&&map.includes('⛓')&&map.includes('🔒')&&styles.includes('.galaxy-node-lock')],
+ ['unlock rewards render one reward per row with explicit counts',map.includes('function renderUnlocks')&&map.includes('galaxy-unlock-row')&&styles.includes('.galaxy-unlock-row')],
  ['available or cleared stages can prepare a sortie',map.includes("const playable=resolvedStatus==='available'||resolvedStatus==='cleared'")&&catalog.includes("status:'available'")],
  ['stage launch routes through sortie preparation',map.includes("openStackfallSortiePrep?.('stage',stage.id")],
  ['Endless remains default outside the stage map',modes.includes("return{mode:MODES.ENDLESS,stageId:null}")],
