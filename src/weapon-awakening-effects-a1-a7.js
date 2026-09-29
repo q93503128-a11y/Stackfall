@@ -10,7 +10,7 @@
     fx.length=0;
     for(const p of state.entities.projectiles||[])if(p?.awakeningChild)p.life=0;
     for(const w of state.entities.wells||[])if(w){delete w.awBinaryGroup;delete w.awBinarySide;delete w.awBinaryEcho;delete w.awBinaryMerged;}
-    for(const p of state.entities.curves||[])if(p?.awLunar){p.awLunar=false;p.awMoonRippleDone=false;delete p.awMoonPhase;delete p.awOrbitX;delete p.awOrbitY;delete p.awOrbitR;delete p.awOrbitAngle;delete p.awOrbitDuration;if(p.stage==='lunarOrbit'){p.stage='return';p.stageTime=0;p.returnLife=0;}}
+    for(const p of state.entities.curves||[])if(p?.awLunar){p.awLunar=false;p.awMoonRippleDone=false;delete p.awMoonPhase;delete p.awMoonWaning;delete p.awOrbitX;delete p.awOrbitY;delete p.awOrbitR;delete p.awOrbitAngle;delete p.awOrbitDuration;if(p.stage==='lunarOrbit'){p.stage='return';p.stageTime=0;p.returnLife=0;}}
     Object.assign(player,{
       awEmberHits:0,awEmberTargetId:null,awEmberChargeFlash:0,awEmberMeteorVolley:0,
       awBulwarkHitAngle:0,awBulwarkHitFlash:0,awBulwarkStrong:0,awBulwarkVolleyCd:1.1,awCometCycle:0
@@ -225,18 +225,20 @@
       p.x=u*u*p.start.x+2*u*t*p.control.x+t*t*p.targetPoint.x;p.y=u*u*p.start.y+2*u*t*p.control.y+t*t*p.targetPoint.y;p.awMoonPhase=.14+.72*t;
       lunarHit(p,p.ricochet?'arc-ricochet':'arc',1);
       if(t>=1||Math.hypot(p.x-player.x,p.y-player.y)>weaponRange('arc')*1.2){
-        p.stage='lunarOrbit';p.stageTime=0;const liveTarget=enemyById(p.targetId);p.awOrbitX=liveTarget?.x??p.targetPoint.x;p.awOrbitY=liveTarget?.y??p.targetPoint.y;p.awOrbitR=72+p.stacks*6;p.awOrbitAngle=Math.atan2(p.y-p.awOrbitY,p.x-p.awOrbitX);p.awOrbitDuration=.48;
+        const liveTarget=enemyById(p.targetId);if(liveTarget&&!p.hitIds.has(liveTarget.id)){p.hitIds.add(liveTarget.id);dealDamage(liveTarget,p.damage,{color:p.color,source:p.ricochet?'arc-ricochet':'arc'});}
+        p.stage='lunarOrbit';p.stageTime=0;p.awOrbitX=liveTarget?.x??p.targetPoint.x;p.awOrbitY=liveTarget?.y??p.targetPoint.y;p.awOrbitR=72+p.stacks*6;p.awOrbitAngle=Math.atan2(p.y-p.awOrbitY,p.x-p.awOrbitX);p.awOrbitDuration=.56;
         if(p.stacks>=4)p.hitIds.clear();
       }
     }else if(p.stage==='lunarOrbit'){
-      const progress=clamp(p.stageTime/Math.max(.001,p.awOrbitDuration||.48),0,1),turn=(p.side||1)*TAU*1.12;
-      p.awOrbitAngle+=turn*dt/Math.max(.001,p.awOrbitDuration||.48);const rr=p.awOrbitR||96;
-      p.x=p.awOrbitX+Math.cos(p.awOrbitAngle)*rr;p.y=p.awOrbitY+Math.sin(p.awOrbitAngle)*rr;p.awMoonPhase=.86+.14*Math.sin(progress*Math.PI);
-      lunarHit(p,p.ricochet?'arc-ricochet':'arc',.82);
-      if(progress>=1){p.stage='return';p.stageTime=0;p.returnLife=0;p.hitIds.clear();p.historyStart=0;p.historyCount=0;p.awMoonPhase=1;}
+      const duration=Math.max(.001,p.awOrbitDuration||.56),progress=clamp(p.stageTime/duration,0,1),turn=(p.side||1)*TAU*1.18,liveTarget=enemyById(p.targetId);
+      if(liveTarget){p.awOrbitX=lerp(p.awOrbitX,liveTarget.x,.34);p.awOrbitY=lerp(p.awOrbitY,liveTarget.y,.34);}
+      p.awOrbitAngle+=turn*dt/duration;const envelope=Math.abs(Math.cos(progress*Math.PI)),rr=(p.awOrbitR||96)*envelope;
+      p.x=p.awOrbitX+Math.cos(p.awOrbitAngle)*rr;p.y=p.awOrbitY+Math.sin(p.awOrbitAngle)*rr;p.awMoonPhase=.82+.18*Math.sin(progress*Math.PI);p.awMoonWaning=false;
+      lunarHit(p,p.ricochet?'arc-ricochet':'arc',.88);
+      if(progress>=1){p.stage='return';p.stageTime=0;p.returnLife=0;p.hitIds.clear();p.historyStart=0;p.historyCount=0;p.awMoonPhase=1;p.awMoonWaning=true;}
     }else{
       p.returnLife+=dt;const dx=player.x-p.x,dy=player.y-p.y,d2=dx*dx+dy*dy,d=Math.sqrt(d2)||1,speed=840+p.stacks*42+(p.stacks>=4?105:0);
-      p.x+=dx/d*Math.min(d,speed*dt);p.y+=dy/d*Math.min(d,speed*dt);p.awMoonPhase=1-.86*clamp(p.returnLife/1.15,0,1);
+      p.x+=dx/d*Math.min(d,speed*dt);p.y+=dy/d*Math.min(d,speed*dt);p.awMoonPhase=1-.86*clamp(p.returnLife/1.15,0,1);p.awMoonWaning=true;
       lunarHit(p,p.ricochet?'arc-ricochet-return':'arc-return',p.returnDamageMult||1);
       if(d2<(player.r+13)**2||p.returnLife>1.45)p.dead=true;
     }
@@ -300,10 +302,10 @@
   const baseDrawBoomerangs=drawBoomerangs;
   function drawMoonBoomerang(p){
     const count=Math.min(p.historyCount||0,p.history?.length||0);if(count>1){ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#eaf7ff';ctx.globalAlpha=.26;ctx.lineWidth=4;ctx.shadowBlur=14;ctx.shadowColor='#bfeaff';ctx.beginPath();for(let i=0;i<count;i++){const index=((p.historyStart||0)+i)%p.history.length,h=p.history[index],sx=h.x-player.x+vw/2,sy=h.y-player.y+vh/2;i?ctx.lineTo(sx,sy):ctx.moveTo(sx,sy);}ctx.stroke();ctx.restore();}
-    const sx=p.x-player.x+vw/2,sy=p.y-player.y+vh/2,angle=Math.atan2(p.y-p.lastY,p.x-p.lastX),r=p.r*1.28,phase=clamp(Number(p.awMoonPhase)||.14,.10,1);
-    ctx.save();ctx.translate(sx,sy);ctx.rotate(angle);ctx.shadowBlur=24;ctx.shadowColor='#e7f8ff';ctx.fillStyle='#f6fbff';ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.fill();
-    if(phase<.985){const offset=(p.side||1)*r*(.22+phase*1.90);ctx.fillStyle='rgba(7,12,29,.96)';ctx.beginPath();ctx.arc(offset,0,r*1.02,0,TAU);ctx.fill();}
-    ctx.strokeStyle='rgba(194,235,255,.9)';ctx.lineWidth=1.3;ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.stroke();ctx.restore();
+    const sx=p.x-player.x+vw/2,sy=p.y-player.y+vh/2,angle=Math.atan2(p.y-p.lastY,p.x-p.lastX),r=p.r*1.28,phase=clamp(Number(p.awMoonPhase)||.14,.10,1),waning=p.awMoonWaning===true;
+    ctx.save();ctx.translate(sx,sy);ctx.rotate(angle);ctx.shadowBlur=24;ctx.shadowColor=phase>.88?'#ffffff':'#a9e9ff';ctx.fillStyle=phase>.92?'#ffffff':'#eefaff';ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.fill();
+    if(phase<.985){const direction=(waning?-1:1)*(p.side||1),offset=direction*r*(.12+phase*2.02);ctx.fillStyle='rgba(5,9,24,.985)';ctx.beginPath();ctx.arc(offset,0,r*1.03,0,TAU);ctx.fill();}
+    ctx.strokeStyle=phase>.90?'rgba(255,255,255,.98)':'rgba(174,232,255,.92)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.stroke();ctx.restore();
   }
   drawBoomerangs=function lunarReturnVisuals(){
     if(!awake('arc'))return baseDrawBoomerangs();
