@@ -1,4 +1,4 @@
-const APEX_INTERVAL_SECONDS=480;
+const APEX_INTERVAL_SECONDS=600;
 const BOSS_NAMES={
   eclipse:{ko:'일식의 군주',en:'Lord of Eclipse'},seraph:{ko:'성운의 세라프',en:'Nebula Seraph'},pulsar:{ko:'맥동성의 심장',en:'Heart of the Pulsar'},leviathan:{ko:'성간의 레비아탄',en:'Interstellar Leviathan'},archivist:{ko:'무한 기록자',en:'Infinite Archivist'},heliarch:{ko:'태양관의 군주',en:'Heliarch'},tempest:{ko:'성뢰의 여왕',en:'Queen of Astral Storms'},nullengine:{ko:'무효기관 제로',en:'Null Engine Zero'},
   knight:{ko:'균열의 기사',en:'Rift Knight'},warden:{ko:'초신성 감시자',en:'Nova Warden'},executioner:{ko:'궤도 집행자',en:'Orbital Executioner'},colossus:{ko:'결정 거상',en:'Crystal Colossus'},harvester:{ko:'성운 수확자',en:'Nebula Harvester'},mirror:{ko:'쌍성의 거울',en:'Twin-Star Mirror'},
