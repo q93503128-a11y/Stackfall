@@ -178,71 +178,79 @@
     state.entities.beams.push({x1,y1,x2,y2,life:.30,max:.30,color,width:Math.max(4,width),stageBossAttack:style,bend});
     if(damage>0)stageBossLineHit(x1,y1,x2,y2,width,damage);shockwave(x1,y1,color,34+width*.9,.28,2.4);
   }
-  function stageBossBlaster(e,api,origin,target,damage,color,later,delay=520,width=18){
-    if(!stageBossSignatureAlive(e,api))return;
-    rawLine(origin.x,origin.y,target.x,target.y,Math.max(7,width*.42),0,color,delay/1000,'boss-charge');
-    addCircle(origin.x,origin.y,18+width*.35,0,color,delay/1000);
-    later(delay,()=>stageBossActualBeam(origin.x,origin.y,target.x,target.y,width,damage,color,'blaster'));
-  }
-  function stageBossTentacle(e,api,origin,target,damage,color,later,delay=560,bend=1){
-    if(!stageBossSignatureAlive(e,api))return;
-    const dx=target.x-origin.x,dy=target.y-origin.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,amp=Math.min(110,len*.22)*bend,pts=[origin];
-    for(let i=1;i<4;i++){const t=i/4,wave=Math.sin(t*Math.PI*2)*amp*(1-t*.32);pts.push({x:origin.x+dx*t+nx*wave,y:origin.y+dy*t+ny*wave});}
-    pts.push(target);
-    for(let i=0;i<pts.length-1;i++)rawLine(pts[i].x,pts[i].y,pts[i+1].x,pts[i+1].y,11,0,color,delay/1000,'boss-tentacle-charge');
-    later(delay,()=>{for(let i=0;i<pts.length-1;i++)stageBossActualBeam(pts[i].x,pts[i].y,pts[i+1].x,pts[i+1].y,16+Math.abs(bend)*2,damage*.72,color,'tentacle',bend);});
-  }
-  function stageBossRift(e,api,x,y,damage,color,later,phase=1,delay=620,offset=0){
-    if(!stageBossSignatureAlive(e,api))return;
-    const radius=48+phase*7;addCircle(x,y,radius,0,color,delay/1000);
-    later(delay,()=>{
-      shockwave(x,y,color,radius*1.45,.54,4.2);
-      if(Math.hypot(player.x-x,player.y-y)<radius+player.r)hurtPlayer(damage*.82,'stage-apex-rift');
-      const count=6+phase*2;for(let i=0;i<count;i++){const a=i/count*TAU+offset;spawnEnemyProjectile(x,y,a,145+phase*18,damage*.42,color,4.8,5.4,'rift');}
-      const aim=Math.atan2(player.y-y,player.x-x);for(const side of[-1,1])spawnEnemyProjectile(x,y,aim+side*.12,225+phase*14,damage*.58,'#ffffff',4.2,4.6,'rift-lance');
-      for(let i=0;i<4;i++){const a=offset+i*TAU/4,rr=radius*.74;stageBossActualBeam(x-Math.cos(a)*rr,y-Math.sin(a)*rr,x+Math.cos(a)*rr,y+Math.sin(a)*rr,5,0,color,'rift');}
-    });
-  }
-  function stageBossManifestedTechnique(e,api,id,phase,cycle,damage,pred,later){
-    const d=Math.max(4,damage*.72),aim=Math.atan2(pred.y-e.y,pred.x-e.x),nx=-Math.sin(aim),ny=Math.cos(aim);
-    if(id==='stage-01'){
-      for(const side of[-1,1])stageBossBlaster(e,api,{x:e.x+nx*72*side,y:e.y+ny*72*side},{x:pred.x+nx*45*side,y:pred.y+ny*45*side},d,'#b8c5ff',later,500+side*35,19);
-    }else if(id==='stage-02'){
-      for(let i=0;i<3;i++){const a=i*TAU/3+cycle*.42;stageBossRift(e,api,pred.x+Math.cos(a)*(105+phase*12),pred.y+Math.sin(a)*(105+phase*12),d,'#ff91dc',later,phase,520+i*105,a);}
-    }else if(id==='stage-03'){
-      for(let i=0;i<3;i++){const a=-Math.PI/2+i*TAU/3+e.phase*.03,origin={x:e.x+Math.cos(a)*(105+phase*10),y:e.y+Math.sin(a)*(105+phase*10)};stageBossBlaster(e,api,origin,pred,d*.92,i===1?'#a8f4ff':'#dfb2ff',later,470+i*90,17+phase*2);}
-    }else if(id==='stage-04'){
-      for(let i=0;i<3+phase;i++){const a=aim+(i-(2+phase)/2)*.30,target={x:e.x+Math.cos(a)*620,y:e.y+Math.sin(a)*620};stageBossBlaster(e,api,{x:e.x,y:e.y},target,d*.76,i%2?'#a4bfff':'#8fffe0',later,430+i*115,15+phase);}
-    }else if(id==='stage-05'){
-      const left={x:e.x+nx*95,y:e.y+ny*95},right={x:e.x-nx*95,y:e.y-ny*95};stageBossTentacle(e,api,left,pred,d,'#79f7ff',later,520,1);stageBossTentacle(e,api,right,pred,d,'#b9a8ff',later,620,-1);
-    }else if(id==='stage-06'){
-      for(let i=0;i<3;i++){const a=i*TAU/3+cycle*.36,origin={x:pred.x+Math.cos(a)*300,y:pred.y+Math.sin(a)*300};stageBossBlaster(e,api,origin,pred,d,'#eef5ff',later,500+i*90,21+phase*2);}stageBossRift(e,api,pred.x,pred.y,d*1.05,'#ffcf8a',later,phase,820,.2);
-    }else if(id==='stage-07'){
-      for(let i=0;i<4;i++){const a=i*TAU/4+cycle*.29,origin={x:pred.x+Math.cos(a)*270,y:pred.y+Math.sin(a)*270};stageBossTentacle(e,api,origin,pred,d*.86,i%2?'#bd79ff':'#79dfc8',later,480+i*95,i%2?1:-1);}
-    }else if(id==='stage-08'){
-      for(let i=-1;i<=1;i++){const origin={x:e.x+nx*i*78,y:e.y+ny*i*78},target={x:pred.x+nx*i*54,y:pred.y+ny*i*54};stageBossTentacle(e,api,origin,target,d*.92,i?'#83d7c0':'#ff7fa8',later,500+(i+1)*95,i===0?1.25:i);}
-    }else if(id==='stage-09'){
-      for(let i=0;i<4+phase;i++){const a=i/(4+phase)*TAU+cycle*.38,rr=95+i*18;stageBossRift(e,api,pred.x+Math.cos(a)*rr,pred.y+Math.sin(a)*rr,d*.72,i%2?'#79dcc6':'#d59cff',later,phase,470+i*80,a);}
-    }else if(id==='stage-10'){
-      const mirror={x:e.x-(player.x-e.x),y:e.y-(player.y-e.y)};stageBossBlaster(e,api,{x:e.x,y:e.y},pred,d,'#8ee6d6',later,500,18+phase*2);stageBossBlaster(e,api,mirror,pred,d,'#f4b3ff',later,650,18+phase*2);
-    }else if(id==='stage-11'){
-      for(let i=0;i<3;i++){const a=i*TAU/3+cycle*.31,origin={x:pred.x+Math.cos(a)*230,y:pred.y+Math.sin(a)*230};stageBossTentacle(e,api,origin,pred,d*.78,'#e4b36c',later,520+i*90,i%2?1:-1);}stageBossRift(e,api,pred.x,pred.y,d*.82,'#f2cf8e',later,phase,790,.4);
-    }else if(id==='stage-12'){
-      for(let i=0;i<6;i++){const a=i*TAU/6+cycle*.21,origin={x:pred.x+Math.cos(a)*310,y:pred.y+Math.sin(a)*310};stageBossTentacle(e,api,origin,{x:pred.x+Math.cos(a)*55,y:pred.y+Math.sin(a)*55},d*.70,i%3===0?'#f39aba':i%2?'#ca98ff':'#79d6c1',later,500+i*55,i%2?1:-1);}stageBossRift(e,api,pred.x,pred.y,d,'#f0dcff',later,phase,900,.7);
-    }else if(id==='stage-13'){
-      for(let i=0;i<4;i++){const a=i*TAU/4+Math.PI/4,origin={x:pred.x+Math.cos(a)*310,y:pred.y+Math.sin(a)*310};stageBossBlaster(e,api,origin,pred,d*.88,'#6fe8f3',later,460+i*105,17+phase*2);}
-    }else if(id==='stage-14'){
-      for(let i=0;i<4;i++){const a=Math.PI/4+i*TAU/4,rr=190+phase*12;stageBossRift(e,api,pred.x+Math.cos(a)*rr,pred.y+Math.sin(a)*rr,d*.84,i%2?'#ef8de1':'#71e6f1',later,phase,500+i*110,a);}
-    }else if(id==='stage-15'){
-      for(let i=-2;i<=2;i++){const origin={x:e.x+nx*i*62,y:e.y+ny*i*62},target={x:pred.x+nx*i*46,y:pred.y+ny*i*46};stageBossBlaster(e,api,origin,target,d*.78,i===0?'#c39cff':'#70e8ef',later,430+(i+2)*85,15+phase*2);}
-    }else if(id==='stage-16'){
-      for(let i=0;i<5+phase;i++){const a=aim-.62+i*(1.24/(4+phase)),target={x:e.x+Math.cos(a)*660,y:e.y+Math.sin(a)*660};stageBossBlaster(e,api,{x:e.x,y:e.y},target,d*.72,'#70dce4',later,420+i*80,16+phase*2);}
-    }else if(id==='stage-17'){
-      for(let i=0;i<4;i++){const a=Math.PI/4+i*TAU/4,origin={x:pred.x+Math.cos(a)*250,y:pred.y+Math.sin(a)*190};stageBossRift(e,api,origin.x,origin.y,d*.86,i%2?'#fff0c9':'#e4bd72',later,phase,500+i*110,a);}later(900,()=>api.spawnBurst('cipher-warden',Math.min(2,phase)));
-    }else if(id==='stage-18'){
-      for(let i=0;i<4;i++){const a=i*TAU/4+cycle*.18,origin={x:pred.x+Math.cos(a)*330,y:pred.y+Math.sin(a)*330};stageBossBlaster(e,api,origin,pred,d*.80,i%2?'#70e7ef':'#c79cff',later,430+i*85,20+phase*2);stageBossTentacle(e,api,origin,{x:pred.x+Math.cos(a)*70,y:pred.y+Math.sin(a)*70},d*.62,'#e6c276',later,720+i*70,i%2?1:-1);}stageBossRift(e,api,pred.x,pred.y,d*1.08,'#f3ecff',later,phase,1040,.9);
+  const STAGE_APEX_UNIQUE_TECHNIQUES=Object.freeze({
+    'stage-01':(e,api,phase,cycle,d,pred,later)=>{
+      const a=Math.atan2(player.y-e.y,player.x-e.x),dx=Math.cos(a),dy=Math.sin(a),nx=-dy,ny=dx;
+      for(let gate=0;gate<3;gate++){const off=(gate-1)*(105-phase*8),x1=pred.x-dx*390+nx*off,y1=pred.y-dy*390+ny*off,x2=pred.x+dx*390+nx*off,y2=pred.y+dy*390+ny*off;rawLine(x1,y1,x2,y2,8,0,'#aebaff',.54+gate*.10,'boss-charge');later(520+gate*95,()=>stageBossActualBeam(x1,y1,x2,y2,18+phase*2,d*.72,'#d9e2ff','shutter'));}
+      later(760,()=>{const aim=Math.atan2(player.y-e.y,player.x-e.x);e.dash=.34;e.dashX=Math.cos(aim)*(310+phase*35);e.dashY=Math.sin(aim)*(310+phase*35);});
+    },
+    'stage-02':(e,api,phase,cycle,d,pred,later)=>{
+      addCircle(e.x,e.y,118+phase*18,0,'#ff91dc',.58);later(580,()=>{const dx=e.x-player.x,dy=e.y-player.y,dist=Math.hypot(dx,dy)||1;if(dist<560){player.x+=dx/dist*(48+phase*13);player.y+=dy/dist*(48+phase*13);}shockwave(e.x,e.y,'#ffc0eb',210+phase*28,.42,4);fireRing(e,16+phase*4,170+phase*12,d*.55,'#ffc0eb',cycle*.28,5);addCircle(player.x,player.y,62+phase*7,d*.92,'#ff75cb',.48);});
+    },
+    'stage-03':(e,api,phase,cycle,d,pred,later)=>{
+      const rr=235+phase*18,pts=Array.from({length:3},(_,i)=>{const a=-Math.PI/2+i*TAU/3+cycle*.18;return{x:pred.x+Math.cos(a)*rr,y:pred.y+Math.sin(a)*rr};});
+      for(let i=0;i<3;i++){const p=pts[i],q=pts[(i+1)%3];rawLine(p.x,p.y,q.x,q.y,7,0,i===1?'#a8f4ff':'#dfb2ff',.70+i*.08,'boss-charge');}
+      later(720,()=>{for(let i=0;i<3;i++){const p=pts[i],q=pts[(i+1)%3];stageBossActualBeam(p.x,p.y,q.x,q.y,14+phase*2,d*.62,i===1?'#a8f4ff':'#dfb2ff','prism');const aim=Math.atan2(player.y-p.y,player.x-p.x);spawnEnemyProjectile(p.x,p.y,aim,255+phase*18,d*.52,'#ffffff',4.4,4.4,'needle');}});
+    },
+    'stage-04':(e,api,phase,cycle,d,pred,later)=>{
+      const now={x:player.x,y:player.y},past=e.stageTimeEcho||now;e.stageTimeEcho=now;addCircle(past.x,past.y,54+phase*5,d*.72,'#8fffe0',.82);addCircle(now.x,now.y,42+phase*4,d*.84,'#a4bfff',.62);
+      later(520,()=>{const hands=4+phase;for(let i=0;i<hands;i++){const a=i*TAU/hands+cycle*.31;stageBossActualBeam(e.x,e.y,e.x+Math.cos(a)*620,e.y+Math.sin(a)*620,15+phase,d*.56,i%2?'#8fffe0':'#a4bfff','clock');}});
+    },
+    'stage-05':(e,api,phase,cycle,d,pred,later)=>{
+      const aim=Math.atan2(pred.y-e.y,pred.x-e.x),nx=-Math.sin(aim),ny=Math.cos(aim),sep=165+phase*18,left={x:pred.x+nx*sep,y:pred.y+ny*sep},right={x:pred.x-nx*sep,y:pred.y-ny*sep};
+      addCircle(left.x,left.y,36,0,'#79f7ff',.62);addCircle(right.x,right.y,36,0,'#b9a8ff',.62);rawLine(left.x,left.y,right.x,right.y,9,0,'#e9ffff',.72,'boss-charge');
+      later(650,()=>{stageBossActualBeam(left.x,left.y,right.x,right.y,22+phase*2,d*.78,'#e9ffff','polarity');const side=cycle%2?1:-1;player.x+=nx*side*(52+phase*16);player.y+=ny*side*(52+phase*16);for(const p of[left,right]){const a=Math.atan2(player.y-p.y,player.x-p.x);spawnEnemyProjectile(p.x,p.y,a,245,d*.48,p===left?'#79f7ff':'#b9a8ff',5,4.8,'storm');}});
+    },
+    'stage-06':(e,api,phase,cycle,d,pred,later)=>{
+      e.stageFinaleMode='route-convergence';const center={x:(e.x+pred.x)*.5,y:(e.y+pred.y)*.5},arms=6;
+      for(let step=0;step<2+Math.floor(phase/2);step++)later(step*270,()=>{for(let i=0;i<arms;i++){const a=i*TAU/arms+cycle*.19+step*.22,x1=center.x+Math.cos(a)*390,y1=center.y+Math.sin(a)*390,x2=center.x-Math.cos(a)*390,y2=center.y-Math.sin(a)*390;stageBossActualBeam(x1,y1,x2,y2,15+phase*2,d*.54,i%3===0?'#ffcf8a':i%2?'#8af6ff':'#c7a7ff','convergence');}});
+      later(720,()=>{api.spawnBurst(cycle%2?'conduit-leech':'phase-drifter',1+phase);addCircle(player.x,player.y,58+phase*8,d*.86,'#ffffff',.44);});
+    },
+    'stage-07':(e,api,phase,cycle,d,pred,later)=>{
+      let prey=null,best=Infinity;for(const m of state.entities.enemies){if(m===e||m.dead||m.type==='boss'||m.type==='mini')continue;const dd=(m.x-e.x)**2+(m.y-e.y)**2;if(dd<best){best=dd;prey=m;}}
+      if(prey){rawLine(e.x,e.y,prey.x,prey.y,7,0,'#79dfc8',.62,'boss-root');later(620,()=>{if(prey.dead)return;prey.dead=true;e.hp=Math.min(e.maxHp,e.hp+e.maxHp*(.025+phase*.008));e.x=prey.x;e.y=prey.y;shockwave(e.x,e.y,'#bd79ff',105,.38,3.5);});}
+      for(let i=0;i<3+phase;i++){const a=i/(3+phase)*TAU+cycle*.23,x=pred.x+Math.cos(a)*(105+phase*14),y=pred.y+Math.sin(a)*(105+phase*14);addCircle(x,y,38+phase*3,d*.62,i%2?'#bd79ff':'#79dfc8',.72+i*.06);}
+    },
+    'stage-08':(e,api,phase,cycle,d,pred,later)=>{
+      const roots=3+Math.floor(phase/2);for(let root=0;root<roots;root++){const side=root-(roots-1)/2,base=Math.atan2(pred.y-e.y,pred.x-e.x)+side*.30,pts=[{x:e.x,y:e.y}];for(let k=1;k<=4;k++){const dist=105*k,curve=Math.sin(k*1.7+cycle)*42*(side||1);pts.push({x:e.x+Math.cos(base)*dist-Math.sin(base)*curve,y:e.y+Math.sin(base)*dist+Math.cos(base)*curve});}for(let k=0;k<pts.length-1;k++)rawLine(pts[k].x,pts[k].y,pts[k+1].x,pts[k+1].y,9,0,'#ff7fa8',.62,'boss-root');later(620+root*70,()=>{for(let k=0;k<pts.length-1;k++)stageBossActualBeam(pts[k].x,pts[k].y,pts[k+1].x,pts[k+1].y,16+phase,d*.48,'#ff9fbd','tentacle',side||1);});}
+    },
+    'stage-09':(e,api,phase,cycle,d,pred,later)=>{
+      const waves=5+phase;for(let wave=0;wave<waves;wave++)later(wave*95,()=>{const r=34+wave*23,spin=cycle*.35+wave*.48;for(const side of[-1,1]){const a=spin+side*.92*wave,x=e.x+Math.cos(a)*r,y=e.y+Math.sin(a)*r,aim=Math.atan2(pred.y-y,pred.x-x);spawnEnemyProjectile(x,y,aim+side*.18,205+wave*9,d*.46,side>0?'#79dcc6':'#d59cff',4.5,5,'spiral');}});
+    },
+    'stage-10':(e,api,phase,cycle,d,pred,later)=>{
+      const mirror={x:2*player.x-e.x,y:2*player.y-e.y},now={x:player.x,y:player.y};addCircle(mirror.x,mirror.y,44,0,'#f4b3ff',.58);rawLine(e.x,e.y,now.x,now.y,7,0,'#8ee6d6',.58,'boss-mirror');rawLine(mirror.x,mirror.y,now.x,now.y,7,0,'#f4b3ff',.72,'boss-mirror');
+      later(600,()=>{stageBossActualBeam(e.x,e.y,player.x,player.y,18+phase*2,d*.62,'#8ee6d6','mirror');stageBossActualBeam(mirror.x,mirror.y,player.x,player.y,18+phase*2,d*.62,'#f4b3ff','mirror');for(let i=-2;i<=2;i++){const a=Math.atan2(player.y-mirror.y,player.x-mirror.x)+i*.15;spawnEnemyProjectile(mirror.x,mirror.y,a,230+phase*14,d*.38,'#efd5ff',4.5,4.8,'mirror');}});
+    },
+    'stage-11':(e,api,phase,cycle,d,pred,later)=>{
+      for(let step=0;step<3;step++)later(step*220,()=>{const half=225-step*(52+phase*5),color=step===2?'#fff0cf':'#e4b36c';stageBossSigLine(pred.x-half,pred.y-half,pred.x+half,pred.y-half,15+phase,d*.54,color,.54);stageBossSigLine(pred.x+half,pred.y-half,pred.x+half,pred.y+half,15+phase,d*.54,color,.54);stageBossSigLine(pred.x+half,pred.y+half,pred.x-half,pred.y+half,15+phase,d*.54,color,.54);stageBossSigLine(pred.x-half,pred.y+half,pred.x-half,pred.y-half,15+phase,d*.54,color,.54);});
+      later(700,()=>{for(let i=0;i<4;i++){const a=i*TAU/4+Math.PI/4,x=pred.x+Math.cos(a)*170,y=pred.y+Math.sin(a)*170,aim=Math.atan2(player.y-y,player.x-x);for(let j=-1;j<=1;j++)spawnEnemyProjectile(x,y,aim+j*.13,220,d*.42,'#f2cf8e',5,5,'seed-shell');}});
+    },
+    'stage-12':(e,api,phase,cycle,d,pred,later)=>{
+      e.stageShellOpen=phase>=2;const petals=8+phase*2,outer=245+phase*18;for(let i=0;i<petals;i++){const a=i/petals*TAU+cycle*.17,x=pred.x+Math.cos(a)*outer,y=pred.y+Math.sin(a)*outer;rawLine(x,y,pred.x+Math.cos(a)*58,pred.y+Math.sin(a)*58,10,0,i%3===0?'#f39aba':i%3===1?'#ca98ff':'#79d6c1',.72,'boss-bloom');}
+      later(720,()=>{for(let i=0;i<petals;i++){const a=i/petals*TAU+cycle*.17,x=pred.x+Math.cos(a)*outer,y=pred.y+Math.sin(a)*outer;stageBossActualBeam(x,y,pred.x+Math.cos(a)*58,pred.y+Math.sin(a)*58,14+phase,d*.38,i%3===0?'#f39aba':i%3===1?'#ca98ff':'#79d6c1','bloom');}addCircle(player.x,player.y,66+phase*9,d*.84,'#f0dcff',.46);if(phase>=3)api.spawnBurst('husk-warden',2);});
+    },
+    'stage-13':(e,api,phase,cycle,d,pred,later)=>{
+      const horizontal=cycle%2===0,lanes=6+phase,spacing=74;for(let lane=0;lane<lanes;lane++)later(lane*90,()=>{const off=(lane-(lanes-1)/2)*spacing;if(horizontal)stageBossSigLine(player.x-480,player.y+off,player.x+480,player.y+off,16+phase,d*.58,lane%2?'#6fe8f3':'#9a8cff',.55);else stageBossSigLine(player.x+off,player.y-480,player.x+off,player.y+480,16+phase,d*.58,lane%2?'#6fe8f3':'#9a8cff',.55);});
+    },
+    'stage-14':(e,api,phase,cycle,d,pred,later)=>{
+      const spacing=112,safeA=(cycle+phase)%9,safeB=(safeA+4)%9;for(let cell=0;cell<9;cell++){if(cell===safeA||cell===safeB)continue;const col=cell%3,row=Math.floor(cell/3),x=pred.x+(col-1)*spacing,y=pred.y+(row-1)*spacing;addCircle(x,y,46+phase*3,d*.58,cell%2?'#ef8de1':'#71e6f1',.64+(cell%3)*.06);}later(720,()=>{const a=Math.atan2(player.y-e.y,player.x-e.x);for(let i=-2;i<=2;i++)spawnEnemyProjectile(e.x,e.y,a+i*.13,250+phase*15,d*.45,'#ffd8f7',4.5,4.5,'rune');});
+    },
+    'stage-15':(e,api,phase,cycle,d,pred,later)=>{
+      const channels=3+phase;for(let channel=0;channel<channels;channel++){const a=channel/channels*TAU+cycle*.23,origin={x:pred.x+Math.cos(a)*410,y:pred.y+Math.sin(a)*410};addCircle(origin.x,origin.y,26,0,channel%2?'#c39cff':'#70e8ef',.48+channel*.06);later(500+channel*90,()=>{const target={x:player.x,y:player.y};stageBossActualBeam(origin.x,origin.y,target.x,target.y,15+phase,d*.52,channel%2?'#c39cff':'#70e8ef','multiplex');});}
+    },
+    'stage-16':(e,api,phase,cycle,d,pred,later)=>{
+      const aim=Math.atan2(player.y-e.y,player.x-e.x),steps=5+phase;for(let step=0;step<steps;step++){const a=aim-.72+step*(1.44/(steps-1));rawLine(e.x,e.y,e.x+Math.cos(a)*650,e.y+Math.sin(a)*650,6,0,'#70dce4',.42+step*.07,'boss-scan');later(440+step*75,()=>stageBossActualBeam(e.x,e.y,e.x+Math.cos(a)*650,e.y+Math.sin(a)*650,17+phase,d*.52,'#70dce4','beacon'));}later(760,()=>addCircle(player.x,player.y,54+phase*6,d*.72,'#d9f8ff',.44));
+    },
+    'stage-17':(e,api,phase,cycle,d,pred,later)=>{
+      for(let step=0;step<3;step++)later(step*240,()=>{const half=255-step*58;stageBossSigLine(pred.x-half,pred.y-half,pred.x+half,pred.y-half,18+phase,d*.50,'#e4bd72',.60);stageBossSigLine(pred.x+half,pred.y-half,pred.x+half,pred.y+half,18+phase,d*.50,'#e4bd72',.60);stageBossSigLine(pred.x+half,pred.y+half,pred.x-half,pred.y+half,18+phase,d*.50,'#73ded0',.60);stageBossSigLine(pred.x-half,pred.y+half,pred.x-half,pred.y-half,18+phase,d*.50,'#73ded0',.60);});
+      later(680,()=>{for(let gate=0;gate<4;gate++){const a=gate*TAU/4,x=pred.x+Math.cos(a)*235,y=pred.y+Math.sin(a)*235,aim=Math.atan2(player.y-y,player.x-x);spawnEnemyProjectile(x,y,aim,205+phase*20,d*.54,gate%2?'#73ded0':'#e4bd72',9,5,'saw');}});
+    },
+    'stage-18':(e,api,phase,cycle,d,pred,later)=>{
+      e.stageCoreExposed=phase>=2;const center=e.stageRewriteCenter||{x:pred.x,y:pred.y};e.stageRewriteCenter={x:lerp(center.x,pred.x+(cycle%2?90:-90),.65),y:lerp(center.y,pred.y+(cycle%3-1)*70,.65)};const c=e.stageRewriteCenter,sides=phase>=3?8:6,radius=300-phase*18,pts=Array.from({length:sides},(_,i)=>({x:c.x+Math.cos(i*TAU/sides-Math.PI/2)*radius,y:c.y+Math.sin(i*TAU/sides-Math.PI/2)*radius}));
+      for(let i=0;i<sides;i++){const a=pts[i],b=pts[(i+1)%sides];rawLine(a.x,a.y,b.x,b.y,9,0,i%3===0?'#e6c276':i%3===1?'#70e7ef':'#c79cff',.72,'boss-rewrite');}
+      later(720,()=>{for(let i=0;i<sides;i++){const a=pts[i],b=pts[(i+1)%sides];stageBossActualBeam(a.x,a.y,b.x,b.y,14+phase,d*.34,i%3===0?'#e6c276':i%3===1?'#70e7ef':'#c79cff','mainframe');}const dx=c.x-player.x,dy=c.y-player.y;player.x+=dx*.22;player.y+=dy*.22;stageBossActualBeam(c.x-radius,c.y,c.x+radius,c.y,18+phase,d*.58,'#70e7ef','mainframe');stageBossActualBeam(c.x,c.y-radius,c.x,c.y+radius,18+phase,d*.58,'#c79cff','mainframe');if(phase>=3)api.spawnBurst(cycle%2?'cipher-warden':'packet-lancer',2+phase);});
     }
-  }
+  });
   function stageBossSignature(e,api){
     const id=e.eventKind,phase=Math.max(1,Math.min(3,Number(e.stagePhase)||1)),damage=Math.max(5,e.damage*.40),cycle=(e.stageSignatureCycle=(e.stageSignatureCycle||0)+1),pred=typeof predictedPlayer==='function'?predictedPlayer(135+phase*28):{x:player.x,y:player.y};
     const later=(ms,fn)=>scheduleWeaponAction(ms,()=>{if(stageBossSignatureAlive(e,api))fn();});
@@ -295,7 +303,7 @@
       const sides=phase===3?8:6;for(let step=0;step<3;step++)later(step*300,()=>{const r=340-step*88,pts=Array.from({length:sides},(_,i)=>({x:pred.x+Math.cos(i*TAU/sides-Math.PI/2)*r,y:pred.y+Math.sin(i*TAU/sides-Math.PI/2)*r}));for(let i=0;i<sides;i++){const a=pts[i],b=pts[(i+1)%sides];stageBossSigLine(a.x,a.y,b.x,b.y,24+phase*2,damage*.90,i%3===0?'#e6c276':i%3===1?'#70e7ef':'#c79cff',.88);}});
       later(900,()=>{addCircle(pred.x,pred.y,86+phase*8,damage*1.18,'#f3ecff',.66);api.spawnBurst(phase===3?'cipher-warden':'packet-lancer',phase+2);});
     }
-    if(cycle%2===1||phase>=3)stageBossManifestedTechnique(e,api,id,phase,cycle,damage,pred,later);
+    STAGE_APEX_UNIQUE_TECHNIQUES[id]?.(e,api,phase,cycle,damage,pred,later);
   }
   function updateStageBossSignatureLayer(enemy,dt,api){
     if(!enemy||enemy.dead)return;
