@@ -206,7 +206,7 @@
   const stageOptions=allStages().map(stage=>`<option value="${stage.id}">STAGE ${String(stage.order).padStart(2,'0')} · ${stageName(stage)}</option>`).join('');
   panel.innerHTML=`
     <h3>DEVELOPER TEST</h3>
-    <p>로컬 테스트 프로필 · 실제 로그인/서버 인증 없음 · P 패널 토글</p>
+    <p>로컬 테스트 프로필 · 실제 로그인/서버 인증 없음 · TAB 패널 토글</p>
     <label>슬롯별 무기 설정</label>
     <div id="devWeaponSlots" class="dev-slot-editor"></div>
     <div class="dev-slot-note">각 슬롯은 무기·중첩·각성을 독립 설정한다. 각성 ON은 해당 무기를 자동으로 6중첩으로 맞춘다. 외부 테스트 버튼이나 런타임 변경 뒤에는 새로고침으로 실제 현재 상태를 다시 읽을 수 있다.</div>
@@ -285,7 +285,7 @@
   $('#devInfiniteCurrency').onclick=()=>{setInfiniteCurrency(window.stackfallDevInfiniteCurrency!==true);updateStatus();};
   $('#devDisable').onclick=()=>{try{localStorage.removeItem('stackfall.devMode');localStorage.removeItem('stackfall.devInfiniteCurrency');}catch{}window.stackfallDevInfiniteCurrency=false;const url=new URL(location.href);url.searchParams.delete('dev');location.replace(url.toString());};
   weapon.onchange=updateStatus;stage.onchange=updateStatus;
-  window.addEventListener('keydown',event=>{const target=event.target,typing=target instanceof HTMLInputElement||target instanceof HTMLTextAreaElement||target instanceof HTMLSelectElement||target?.isContentEditable;if(typing||event.code!=='KeyP')return;event.preventDefault();panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))refreshDevPanel();});
+  window.addEventListener('keydown',event=>{const target=event.target,typing=target instanceof HTMLInputElement||target instanceof HTMLTextAreaElement||target instanceof HTMLSelectElement||target?.isContentEditable;if(typing||event.code!=='Tab')return;event.preventDefault();panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))refreshDevPanel();});
   renderSlotEditor();updateStatus();window.renderStackfallMetaUi?.();
   window.stackfallDeveloperTest={
     enabled:true,
