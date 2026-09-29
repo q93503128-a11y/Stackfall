@@ -57,9 +57,10 @@
   const meta=load();
   function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(meta));if(meta.profileName)localStorage.setItem(PROFILE_NAME_KEY,meta.profileName);}catch{}syncFeatureEntries();window.renderStackfallMetaUi?.();}
   function setProfileName(value){meta.profileName=sanitizeProfileName(value);try{if(meta.profileName)localStorage.setItem(PROFILE_NAME_KEY,meta.profileName);else localStorage.removeItem(PROFILE_NAME_KEY);}catch{}save();return meta.profileName;}
+  const TOGGLEABLE_FEATURES=Object.freeze(new Set(['awakening','special-ability','choice-4','start-level-3','multiplicity-protocol']));
   function isWeaponUnlocked(key){return key==='core'||meta.unlockedWeapons.includes(key);}
   function isFeatureAcquired(key){return DEV_PROFILE||meta.unlockedFeatures?.includes(key);}
-  function isFeatureUnlocked(key){return isFeatureAcquired(key)&&GAME_SETTINGS?.unlocks?.[key]!==false;}
+  function isFeatureUnlocked(key){return isFeatureAcquired(key)&&(!TOGGLEABLE_FEATURES.has(key)||GAME_SETTINGS?.unlocks?.[key]!==false);}
   function isPassiveChoiceUnlocked(key){if(key==='multiplicity')return isFeatureUnlocked('multiplicity-protocol');return true;}
   function featureName(key){const def=FEATURE_DEFS[key];return def?.[GAME_SETTINGS?.language]||def?.en||def?.ko||key;}
   function syncFeatureEntries(){
@@ -145,6 +146,7 @@
   window.stackfallIsFeatureUnlocked=isFeatureUnlocked;
   window.stackfallIsPassiveChoiceUnlocked=isPassiveChoiceUnlocked;
   window.stackfallFeatureName=featureName;
+  window.stackfallFeatureToggleable=key=>TOGGLEABLE_FEATURES.has(key);
   window.stackfallUnlockWeapon=unlockWeapon;
   window.stackfallCurrency=currency;
   window.stackfallGrantCurrency=grantCurrency;
