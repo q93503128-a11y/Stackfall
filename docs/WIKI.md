@@ -128,7 +128,7 @@
 
 모든 각성은 기존 1~6중첩 성장과 특수능력 호환성을 유지한다. 다만 일반 무기는 각성 시 **기본 공격 자체가 각성 전용 공격으로 크게 바뀔 수 있으며**, 색상/장식만 바뀌는 것을 목표로 하지 않는다.
 
-현재 공통 각성 런타임에는 19종 정의, 6중첩/코어 검사, 붉은 월식 선택창, 거부 후 같은 레벨업의 일반 선택 복귀, 코어 소비와 각성 상태/표시가 연결되어 있다. 자동 레벨업을 켜도 각성은 자동 확정되지 않는다. **각성 코어는 보스 전투 보상**이며 무한모드 일반 보스·공허 보스·기함급 보스와 스테이지 중간보스는 1개, 초월체는 2개를 지급한다. 스테이지 최종보스는 처치 즉시 런이 끝나므로 지급하지 않는다. 남은 코어는 런 종료 시 1개당 기본 Stardust 40으로 환전되고 Stardust 배율이 적용된다. **A1~A19 전 무기의 실제 전투 효과와 전용 외형 1차 구현이 완료**되었다. 마지막 6종은 창세 은하의 3회 주기 완성형 은하 수축, 천경 성역의 6면 완전 반사, 흑성 연화의 1.22초 잔류 꽃잎 영역과 폐화, 위상 성궤의 5배치 경로 주행, 성멸 포대의 장갑형 주탄두 및 3회 주기 집결→동시 돌입, 초공간 대관문의 3회로 대전송을 사용한다. 역나선 은하와 쌍면 반사처럼 후단 덮어쓰기로 빠져 있던 augment 런타임도 각성 전후 모두 다시 연결되어 있다.
+현재 공통 각성 런타임에는 19종 정의, 6중첩/코어 검사, 붉은 월식 선택창, 거부 후 같은 레벨업의 일반 선택 복귀, 코어 소비와 각성 상태/표시가 연결되어 있다. 자동 레벨업을 켜도 각성은 자동 확정되지 않는다. **각성 코어는 런 내부 보스 성장 자원**이며 일반보스는 1개 확정, Stage 중간보스는 35% 확률로 1개, Endless 초월체는 2개를 지급한다. 스테이지 최종 초월체는 처치 즉시 런이 끝나므로 지급하지 않는다. 남은 코어는 런 종료 시 1개당 기본 Stardust 40으로 환전되고 Stardust 배율이 적용된다. **A1~A19 전 무기의 실제 전투 효과와 전용 외형 1차 구현이 완료**되었다. 마지막 6종은 창세 은하의 3회 주기 완성형 은하 수축, 천경 성역의 6면 완전 반사, 흑성 연화의 1.22초 잔류 꽃잎 영역과 폐화, 위상 성궤의 5배치 경로 주행, 성멸 포대의 장갑형 주탄두 및 3회 주기 집결→동시 돌입, 초공간 대관문의 3회로 대전송을 사용한다. 역나선 은하와 쌍면 반사처럼 후단 덮어쓰기로 빠져 있던 augment 런타임도 각성 전후 모두 다시 연결되어 있다.
 
 전투 중 HUD 우측의 **×1 / ×2** 버튼으로 게임 속도를 바꿀 수 있다. 2배속은 전투 업데이트를 프레임당 2회 진행하며, 자동 레벨업을 사용하면 자동으로 고른 장비/패시브와 중첩 변화가 화면에 순서대로 표시된다.
 
@@ -258,14 +258,14 @@
 - `endless`: infinite mode with random world events, all enemy families, and recurring Apex encounters. 기본 적에 더해 75초부터 route, 240초부터 bloom, 420초부터 array 계열의 Stage 일반 적 변형이 순차적으로 섞이며, Stage 해금 여부와는 무관하다.
 - `stage`: finite operations with authored enemy pools, milestone incidents, recurring environmental gimmicks, stage minibosses, and a stage final boss.
 - 최종보스 등장 시간은 Stage 1의 **5:00**에서 Stage 18의 **15:00**까지 증가한다. 시간에 도달하면 보스가 등장할 뿐이며, 실제 클리어는 보스를 처치해야 한다.
-- 일반 스테이지는 약 46% 진행 시 중간보스 1회, Stage 6/12/18은 약 32%와 62%에 중간보스 2회가 등장한다.
+- Stage 서브보스는 **중간보스 → 중간보스 → 일반보스** 3연전을 반복한다. S1~2는 2+1, S6은 6+3, S12는 10+5, S18은 16+8까지 증가한다. 동시 조우 상한은 Route 3 / Bloom 4 / Array 5다.
 - Stage 1~18의 최종보스는 모두 **초월체(Apex) 카테고리**다. 스테이지별 고유 이름·시그니처 공격·체력 스케일은 유지하지만, HUD/기록/안내에서는 초월체로 묶는다. 내부적으로는 Stage 클리어 흐름을 보존하기 위해 `kind:'stage-boss'`를 유지하고 `bossCategory:'apex'`로 분류한다.
-- Stage 1~18 최종보스는 공통 팬 탄막/직선 장판만 반복하지 않고 각 Stage 테마를 반영한 독립 시그니처 패턴을 가진다. 후반 Array 보스는 안전 채널, 안전 셀, 다중화 레인, 블라인드 팬, 수축 사각형·다각형 봉쇄처럼 환경 기믹과 연결되지만 보스 공격으로 별도 발동한다.
+- Stage 1~18 최종 초월체는 공용 공격 패턴을 받지 않는다. 18개 보스가 각각 독립 기술을 소유하며 정지 플레이어도 반복적으로 안전하지 않게 현재 위치/과거 위치/실제 이동 경로/전장 중심을 직접 사용하는 기술을 섞는다. S6은 항로 수렴, S12는 외피가 열리는 개화핵, S18은 전장 중심 재작성과 메인프레임 코어 노출로 각 성좌의 피날레를 대표한다.
 - 일반 적 동시 수는 Stage 번호와 진행도에 따라 증가하지만 성능 인식형 spawn budget으로 제한한다. 단순 물량 폭증 대신 기믹과 정예/보스 패턴도 난이도를 담당한다.
 - 정상 데스크톱 이론 상단은 Stage 1 약 42체, Stage 18 약 67체이며 콤팩트는 약 34체→53체다. 각 스테이지 자체 cap이 더 낮으면 그 값이 우선하고, 성능 Tier 1/2에서는 상단을 다시 약 92%/80%로 낮춘다.
 - 배경의 별과 이동 표식은 플레이어 월드 좌표에 따라 서로 다른 속도로 움직여 항로 이동을 체감할 수 있다.
 - 실전 전장도 Endless와 분리된다. Stage 1–6은 파손 항로망, Stage 7–12는 살아 있는 뿌리·개화 구조, Stage 13–18은 중계 격자·릴레이 장치를 월드 좌표 구조물로 추가하며 같은 성좌 안에서는 계열감을 공유한다.
-- 스테이지 환경 기믹은 보스의 원형 장판/레이저 텔레그래프와 별도 렌더러를 사용한다. 파편의 항로는 파손 레일·브레이스, 심연의 개화는 뿌리·꽃잎·생체 격벽, 침묵 중계망은 중계 회로·스캔 섹터·데이터 셔터로 보인다. 환경 경고도 보스 경고창과 분리된다.
+- 스테이지 환경 기믹은 보스 공격과 분리된 렌더/스케일을 사용한다. S1~3 초반은 피해 약 56% 수준·느린 속도·긴 경고로 시작하며 진행도와 Stage 번호에 따라 상승해 후반 Array는 최대 약 122%까지 거칠어질 수 있다. 이 보정은 환경 기믹에만 적용되고 보스 공격에는 적용되지 않는다.
 - 은하 지도는 성좌마다 노드 배치와 배경 문법도 다르다. 파편의 항로는 직선 항로망, 심연의 개화는 꽃잎형 곡선 가지와 생체성운, 침묵 중계망은 계단형 직각 회로와 청록 데이터 격자를 사용한다.
 
 | Stage | 작전 | 최종보스 등장 |
@@ -291,7 +291,7 @@
 
 결과 화면의 피해 분석은 전체 DPS와 무기별 **1분 구간 DPS 추이**를 함께 제공한다. 전체 및 개별 무기 선은 각각 토글할 수 있다.
 
-The three current constellations remain **Shardway**, **Abyssal Bloom**, and **Silent Array**. Their existing enemies, boss identities, backgrounds, weapon rewards, and progression chain are retained. The original 14-weapon roster is fully unlockable by Stage 10, then expands to 18: Stage 11 unlocks Vacuum Bloom, Stage 13 Phase Minefield, Stage 15 Interstellar Missile Pods, and Stage 17 Orbital Gate. Stages 12/14/16/18 retain currency/Core-Shard rewards.
+The three current constellations remain **Shardway**, **Abyssal Bloom**, and **Silent Array**. The original 14-weapon roster is fully unlockable by Stage 10, then expands to 18 at Stage 11/13/15/17. The alternating Stage 12/14/16/18 first clears now unlock build-system depth instead of acting as currency-only gaps.
 
 ### Post-roster weapons
 
@@ -309,15 +309,24 @@ The main menu is a mode hub rather than a direct loadout/start screen. `GALACTIC
 
 ### Stage content identity
 
-Stage environments are authored as distinct places rather than Endless background recolors. Ordinary enemies may be reused across stages; new common enemies are introduced only when useful and can enter later pools. Stage 중간 전투는 별자리별 공용 중간보스/일반보스 풀을 사용하며, 같은 형태를 공유하더라도 Route는 항로 절단, Bloom은 개화·붕괴, Array는 스캔·채널 공격층으로 전투 문법을 구분한다. Stage 1~2는 중간보스 1 + 일반보스 1부터 시작해 후반으로 갈수록 빈도가 증가하고 Stage 18은 4 + 3까지 올라간다. 보스를 늘린 목적에는 성장량 증가도 포함되므로 중간보스/일반보스는 정상 XP와 각성 코어를 지급한다. 한 Stage 안의 동시 서브보스 전투는 Route 2, Bloom 3, Array 4까지 허용한다. Final Stage Apex는 공용 보스 풀과 별개의 고유 보스이며, 기존 텔레그래프 외에도 실제 블래스터 광선·촉수형 에너지체·균열 분출 같은 manifested attack을 사용한다. Named minibosses/bosses require dedicated silhouettes and attack branches. Apex threats additionally require distinct signature attacks, set pieces, arena behavior, and persistent identity effects.
+Stage environments are authored as distinct places rather than Endless background recolors. Ordinary enemies may be reused across stages, but encounter rhythm and final-Apex identity must change by Stage. Stage 중간 전투는 별자리별 공용 중간보스/일반보스 풀을 사용하되 **M→M→B** 순서를 반복하고 후반으로 갈수록 묶음 수를 늘린다. 보스 수를 늘린 목적에는 성장량 증가도 포함되므로 XP를 임의 삭감하지 않는다. 각성 코어는 일반보스 확정, 중간보스 35%다. 보스 HUD는 현재 살아 있는 조우별 HP 바를 모두 표시하며 쌍둥이 조우만 합산한다.
 
+Final Stage Apex는 공용 보스 풀과 별개다. 18종 모두 독립 기술 세트를 사용하고 공용 Stage-Apex 공격 함수는 금지한다. Route는 붕괴 셔터·심장 맥동·프리즘 감옥·시간절단·쌍극 견인·항로 수렴, Bloom은 포식·굴곡 뿌리·이중나선·거울 교차사격·종자고 수축·외피 개방 개화, Array는 스캔·잡음 셀·외부 채널·등대 스윕·프로토콜 새장/톱날·전장 재작성으로 구분한다. 특히 S6/S12/S18은 각 성좌의 전투 언어를 종합한다.
+
+경험치 결정은 생성 시 가까운 기존 결정에 값을 합쳐 밀집도를 미리 낮추며, 누적 XP가 클수록 결정 크기도 커진다. 기존 엔티티 상한 압축은 최후 안전장치다.
 
 ### 시스템 해금
 
-- Stage 1 최초 클리어: 코어 성장 해금.
-- Stage 2 최초 클리어: 무기 각성 해금.
-- DEV 프로필은 시스템 잠금을 무시한다.
-- 장착 슬롯 V/VI는 코어 성장 내부 확장 노드로 유지한다.
+- Stage 1: 코어 성장.
+- Stage 2: 무기 각성.
+- Stage 3: 보스 특수능력. 이전 일반보스는 현재 무기/패시브 +1, 이후 일반보스는 특수능력 선택 보상.
+- Stage 6: Endless + Hard 난이도.
+- Stage 12: 일반 레벨업 4지선다.
+- Stage 14: 상급 패시브 I.
+- Stage 16: 상급 패시브 II.
+- Stage 18: 다중 투영 코어의 일반 레벨업 풀 진입.
+- 이벤트는 해금 대상으로 두지 않는다. Boss Rush는 추후 검토한다.
+- DEV 프로필은 시스템 잠금을 무시하고, 장착 슬롯 V/VI는 코어 성장 내부 확장 노드로 유지한다.
 
 ### 코어 성장 돌파
 
