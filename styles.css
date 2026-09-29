@@ -184,3 +184,7 @@
 .galaxy-stage-node.locked>small{color:#7e879e;border-color:rgba(127,139,168,.16);background:rgba(5,8,18,.88)}
 #galaxyStageUnlocks{display:grid!important;gap:6px;font-size:10px!important;font-weight:700!important}
 .galaxy-unlock-row{display:flex!important;align-items:center;justify-content:space-between;gap:10px;margin:0;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.055);font-size:10px!important}.galaxy-unlock-row:last-child{border-bottom:0}.galaxy-unlock-row>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#dce5fb!important}.galaxy-unlock-row>b{margin:0!important;flex:0 0 auto;color:#99e8ff;font-size:10px!important;font-variant-numeric:tabular-nums}
+
+.hub-mode-card.locked{cursor:not-allowed;filter:saturate(.38) brightness(.68)}
+.hub-mode-card.locked:hover{transform:none;border-color:rgba(175,195,255,.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 22px 55px rgba(0,0,0,.36)}
+.hub-mode-card.locked:after{content:"⛓  🔒";position:absolute;right:21px;top:18px;z-index:5;padding:7px 10px;border:1px solid rgba(176,184,207,.20);border-radius:999px;background:rgba(4,7,17,.78);color:#c6cada;font:800 14px/1 system-ui;letter-spacing:.02em;box-shadow:0 5px 16px rgba(0,0,0,.35)}
