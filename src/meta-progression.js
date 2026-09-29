@@ -13,8 +13,8 @@
     endless:Object.freeze({ko:'엔드리스 원정',en:'Endless Expedition'}),
     hard:Object.freeze({ko:'어려움 난이도',en:'Hard Difficulty'}),
     'choice-4':Object.freeze({ko:'4중 재구성',en:'Four-way Reconstruction'}),
-    'start-level-3':Object.freeze({ko:'선행 재구성 +3',en:'Advanced Start +3'}),
-    'core-development-iii':Object.freeze({ko:'코어 성장 3차 돌파',en:'Core Development III'}),
+    'start-level-3':Object.freeze({ko:'선행 재구성 +3',en:'Advanced Start +3',ja:'先行再構成 +3','zh-CN':'先行重构 +3',es:'Inicio avanzado +3',fr:'Départ avancé +3'}),
+    'core-development-iii':Object.freeze({ko:'코어 성장 3차 돌파',en:'Core Development III',ja:'コア成長 第3突破','zh-CN':'核心成长 III',es:'Desarrollo del núcleo III',fr:'Développement du cœur III'}),
     'multiplicity-protocol':Object.freeze({ko:'다중 투영 프로토콜',en:'Multiplicity Protocol'})
   });
   const sanitizeList=value=>Array.isArray(value)?[...new Set(value.filter(item=>typeof item==='string'))]:[];
