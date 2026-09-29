@@ -13,14 +13,7 @@
     endless:Object.freeze({ko:'엔드리스 원정',en:'Endless Expedition'}),
     hard:Object.freeze({ko:'어려움 난이도',en:'Hard Difficulty'}),
     'choice-4':Object.freeze({ko:'4중 재구성',en:'Four-way Reconstruction'}),
-    'advanced-passives-1':Object.freeze({ko:'상급 패시브 I',en:'Advanced Passives I'}),
-    'advanced-passives-2':Object.freeze({ko:'상급 패시브 II',en:'Advanced Passives II'}),
     'multiplicity-protocol':Object.freeze({ko:'다중 투영 프로토콜',en:'Multiplicity Protocol'})
-  });
-  const PASSIVE_FEATURE_REQUIREMENTS=Object.freeze({
-    eliteHunter:'advanced-passives-1',pierce:'advanced-passives-1',regen:'advanced-passives-1',wisdom:'advanced-passives-1',
-    overdrive:'advanced-passives-2',projectileSize:'advanced-passives-2',range:'advanced-passives-2',
-    chainDrive:'advanced-passives-2',chainBurst:'advanced-passives-2',chainRecovery:'advanced-passives-2',chainField:'advanced-passives-2'
   });
   const sanitizeList=value=>Array.isArray(value)?[...new Set(value.filter(item=>typeof item==='string'))]:[];
   const sanitizeNumber=value=>Math.max(0,Math.floor(Number(value)||0));
@@ -63,8 +56,9 @@
   function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(meta));if(meta.profileName)localStorage.setItem(PROFILE_NAME_KEY,meta.profileName);}catch{}syncFeatureEntries();window.renderStackfallMetaUi?.();}
   function setProfileName(value){meta.profileName=sanitizeProfileName(value);try{if(meta.profileName)localStorage.setItem(PROFILE_NAME_KEY,meta.profileName);else localStorage.removeItem(PROFILE_NAME_KEY);}catch{}save();return meta.profileName;}
   function isWeaponUnlocked(key){return key==='core'||meta.unlockedWeapons.includes(key);}
-  function isFeatureUnlocked(key){return DEV_PROFILE||meta.unlockedFeatures?.includes(key);}
-  function isPassiveChoiceUnlocked(key){const required=PASSIVE_FEATURE_REQUIREMENTS[key];if(required&&!isFeatureUnlocked(required))return false;if(key==='multiplicity')return isFeatureUnlocked('multiplicity-protocol');return true;}
+  function isFeatureAcquired(key){return DEV_PROFILE||meta.unlockedFeatures?.includes(key);}
+  function isFeatureUnlocked(key){return isFeatureAcquired(key)&&GAME_SETTINGS?.unlocks?.[key]!==false;}
+  function isPassiveChoiceUnlocked(key){if(key==='multiplicity')return isFeatureUnlocked('multiplicity-protocol');return true;}
   function featureName(key){const def=FEATURE_DEFS[key];return def?.[GAME_SETTINGS?.language]||def?.en||def?.ko||key;}
   function syncFeatureEntries(){
     const endless=document.querySelector('#startBtn');if(endless){const unlocked=isFeatureUnlocked('endless');endless.disabled=!unlocked;endless.classList.toggle('locked',!unlocked);endless.title=unlocked?'':'Stage 6 클리어 후 엔드리스 해금';}
@@ -145,6 +139,7 @@
   window.stackfallSaveMeta=save;
   window.stackfallSetProfileName=setProfileName;
   window.stackfallIsWeaponUnlocked=isWeaponUnlocked;
+  window.stackfallIsFeatureAcquired=isFeatureAcquired;
   window.stackfallIsFeatureUnlocked=isFeatureUnlocked;
   window.stackfallIsPassiveChoiceUnlocked=isPassiveChoiceUnlocked;
   window.stackfallFeatureName=featureName;
