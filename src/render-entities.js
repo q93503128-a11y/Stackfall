@@ -144,6 +144,26 @@ function drawBeamEffects(){
       ctx.globalAlpha=.78*alpha;ctx.strokeStyle='#ffffff';ctx.lineWidth=2.4;for(let ring=0;ring<(over?5:3);ring++){const rr=w*(.44+ring*.20)+(1-alpha)*w*.24;ctx.beginPath();ctx.ellipse(a.x-ux*3,a.y-uy*3,rr,rr*.46,Math.atan2(dy,dx),0,TAU);ctx.stroke();}
       ctx.restore();continue;
     }
+    if(beam.stageBossAttack){
+      const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,w=Math.max(4,Number(beam.width)||8),style=beam.stageBossAttack;
+      ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowColor=beam.color;ctx.shadowBlur=style==='blaster'?34:style==='tentacle'?24:18;
+      if(style==='tentacle'){
+        const bend=(Number(beam.bend)||1)*Math.min(38,len*.18),mx=(a.x+b.x)/2+nx*bend,my=(a.y+b.y)/2+ny*bend;
+        ctx.globalAlpha=alpha*.22;ctx.strokeStyle=beam.color;ctx.lineWidth=w*2.6;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(mx,my,b.x,b.y);ctx.stroke();
+        ctx.globalAlpha=.88*alpha;ctx.lineWidth=w*.78;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(mx,my,b.x,b.y);ctx.stroke();
+        ctx.strokeStyle='#ffffff';ctx.globalAlpha=.74*alpha;ctx.lineWidth=Math.max(1.3,w*.20);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(mx,my,b.x,b.y);ctx.stroke();
+        for(let i=1;i<=3;i++){const t=i/4,qx=(1-t)*(1-t)*a.x+2*(1-t)*t*mx+t*t*b.x,qy=(1-t)*(1-t)*a.y+2*(1-t)*t*my+t*t*b.y;ctx.globalAlpha=.55*alpha;ctx.fillStyle=i%2?'#ffffff':beam.color;ctx.beginPath();ctx.arc(qx,qy,Math.max(2,w*.18),0,TAU);ctx.fill();}
+      }else if(style==='rift'){
+        ctx.globalAlpha=.78*alpha;ctx.strokeStyle=beam.color;ctx.lineWidth=w*1.15;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+        ctx.strokeStyle='#ffffff';ctx.globalAlpha=.66*alpha;ctx.lineWidth=Math.max(1,w*.22);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      }else{
+        ctx.globalAlpha=.22*alpha;ctx.strokeStyle=beam.color;ctx.lineWidth=w*3.4;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+        ctx.globalAlpha=.96*alpha;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+        ctx.strokeStyle='#ffffff';ctx.globalAlpha=.94*alpha;ctx.lineWidth=Math.max(2,w*.28);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+        ctx.globalAlpha=.76*alpha;ctx.strokeStyle='#ffffff';ctx.lineWidth=1.5;for(let ring=0;ring<3;ring++){const rr=w*(.60+ring*.34)+(1-alpha)*w*.30;ctx.beginPath();ctx.ellipse(a.x,a.y,rr,rr*.55,Math.atan2(dy,dx),0,TAU);ctx.stroke();}
+      }
+      ctx.restore();continue;
+    }
     ctx.save();ctx.globalAlpha=alpha;ctx.shadowBlur=18;ctx.shadowColor=beam.color;ctx.strokeStyle=beam.color;ctx.lineCap='round';ctx.lineWidth=beam.width*2.8;
     ctx.globalAlpha=alpha*.18;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
     ctx.globalAlpha=alpha;ctx.lineWidth=beam.width;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
