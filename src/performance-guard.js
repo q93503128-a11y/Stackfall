@@ -183,7 +183,7 @@
     for(const key of cache.keys()){cache.delete(key);if(++count>=remove)break;}
   }
   function projectileKind(p,enemy=false){
-    if(enemy)return p.visual==='missile'?'missile':'enemy';
+    if(enemy){if(p.visual==='missile')return'missile';if(p.visual==='saw')return'saw';return'enemy';}
     const source=String(p.source||'');
     if(source.includes('comet'))return'comet';
     if(['ember','echo-star','core','core-echo','star-spark'].includes(source))return'star';
@@ -200,6 +200,8 @@
       const coma=g.createRadialGradient(cx,cy,0,cx,cy,radius*1.8);coma.addColorStop(0,'#ffffff');coma.addColorStop(.38,color);coma.addColorStop(1,'rgba(181,245,255,0)');g.fillStyle=coma;g.beginPath();g.arc(cx,cy,radius*1.8,0,TAU);g.fill();g.fillStyle='#fff';g.beginPath();g.arc(cx+radius*.18,cy,radius*.62,0,TAU);g.fill();
     }else if(kind==='missile'){
       g.fillStyle='#ffdec4';g.strokeStyle=color;g.lineWidth=1.4;g.beginPath();g.moveTo(cx+radius*2.25,cy);g.lineTo(cx+radius*.58,cy-radius*.62);g.lineTo(cx-radius*1.08,cy-radius*.52);g.lineTo(cx-radius*.82,cy);g.lineTo(cx-radius*1.08,cy+radius*.52);g.lineTo(cx+radius*.58,cy+radius*.62);g.closePath();g.fill();g.stroke();g.fillStyle=color;g.beginPath();g.moveTo(cx-radius*.72,cy-radius*.34);g.lineTo(cx-radius*1.55,cy-radius*.92);g.lineTo(cx-radius*1.18,cy);g.lineTo(cx-radius*1.55,cy+radius*.92);g.lineTo(cx-radius*.72,cy+radius*.34);g.closePath();g.fill();g.fillStyle='#fff7bc';g.beginPath();g.moveTo(cx-radius*1.08,cy-radius*.24);g.lineTo(cx-radius*2.15,cy);g.lineTo(cx-radius*1.08,cy+radius*.24);g.closePath();g.fill();
+    }else if(kind==='saw'){
+      g.fillStyle=color;g.strokeStyle='#fff7dc';g.lineWidth=1.4;g.beginPath();const teeth=12;for(let i=0;i<teeth*2;i++){const a=i/(teeth*2)*TAU,rr=i%2?radius*.78:radius*1.36,x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();g.fill();g.stroke();g.fillStyle='#130f08';g.beginPath();g.arc(cx,cy,radius*.38,0,TAU);g.fill();g.strokeStyle='#fff2bf';g.beginPath();g.arc(cx,cy,radius*.18,0,TAU);g.stroke();
     }else if(kind==='enemy'){
       g.fillStyle=color;g.strokeStyle='rgba(255,238,244,.72)';g.lineWidth=1.2;g.beginPath();g.moveTo(cx+radius*1.75,cy);g.quadraticCurveTo(cx+radius*.25,cy-radius*.62,cx-radius*.92,cy);g.quadraticCurveTo(cx+radius*.25,cy+radius*.62,cx+radius*1.75,cy);g.closePath();g.fill();g.stroke();g.fillStyle='rgba(255,255,255,.84)';g.beginPath();g.ellipse(cx+radius*.72,cy-radius*.12,Math.max(1,radius*.28),Math.max(.7,radius*.15),0,0,TAU);g.fill();
     }else if(kind==='star'){
