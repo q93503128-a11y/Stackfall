@@ -3,7 +3,8 @@ const DEFAULT_SETTINGS = {
   audio: { master: true, combat: true, ui: true, ambient: true, volume:{master:.90,combat:.92,ui:.82,ambient:.58} },
   damageNumbers:true,
   autoLevelChoice:false,
-  screenShake:true
+  screenShake:true,
+  unlocks:{}
 };
 
 function loadGameSettings() {
@@ -15,7 +16,8 @@ function loadGameSettings() {
       audio:{...DEFAULT_SETTINGS.audio,...(saved.audio||{}),volume:{...DEFAULT_SETTINGS.audio.volume,...(saved.audio?.volume||{})}},
       damageNumbers:saved.damageNumbers!==false,
       autoLevelChoice:saved.autoLevelChoice===true,
-      screenShake:saved.screenShake!==false
+      screenShake:saved.screenShake!==false,
+      unlocks:saved.unlocks&&typeof saved.unlocks==='object'?{...saved.unlocks}:{}
     };
   } catch {
     return JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
