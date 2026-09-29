@@ -29,10 +29,12 @@
   if(!app)return;
   const hud=document.querySelector('#hud'),hudVitals=hud?.querySelector('.top-left');
   const coreHud=document.createElement('div');coreHud.className='awakening-core-hud';coreHud.innerHTML='<span>AWAKEN</span><b>CORE ×0</b>';hudVitals?.appendChild(coreHud);
+  function awakeningEnabled(){return window.stackfallIsFeatureUnlocked?.('awakening')===true;}
   function syncAwakeningCoreHud(){
-    const cores=Math.max(0,Math.floor(Number(state.awakeningCores)||0));
+    const enabled=awakeningEnabled(),cores=Math.max(0,Math.floor(Number(state.awakeningCores)||0));
+    coreHud.classList.toggle('hidden',!enabled);
     coreHud.querySelector('b').textContent=`CORE ×${cores}`;
-    coreHud.classList.toggle('charged',cores>0);
+    coreHud.classList.toggle('charged',enabled&&cores>0);
     if(coreCount)coreCount.textContent=`각성 코어 ×${cores}`;
   }
   const screen=document.createElement('section');
@@ -163,10 +165,11 @@
   endGame=function awakeningEnd(){closeScreen();transform.classList.add('hidden');cashOutAwakeningCores();return baseEnd();};
 
   window.stackfallGrantAwakeningCore=function grantAwakeningCore(amount=1){
+    if(!awakeningEnabled())return state.awakeningCores||0;
     const add=Math.max(0,Math.floor(Number(amount)||0));if(!add)return state.awakeningCores||0;
     state.awakeningCores=(state.awakeningCores||0)+add;syncAwakeningCoreHud();
     const kicker=document.querySelector('#resonanceKicker');if(kicker)kicker.textContent='각성 자원';
-    ui.resonanceTitle.textContent=`각성 코어 +${add}`;ui.resonanceDesc.textContent=`보유: ${state.awakeningCores}`;showTimedResonance(2200);audio.resonance();
+    ui.resonanceTitle.textContent=`각성 코어 +${add}`;ui.resonanceDesc.textContent=`보유: ${state.awakeningCores}`;showTimedResonance(4200);audio.resonance();
     return state.awakeningCores;
   };
   window.stackfallIsWeaponAwakened=key=>!!state.awakenedWeapons?.[key];
@@ -174,7 +177,7 @@
 
   const AWAKENING_MINIBOSS_CORE_CHANCE=.35;
   function awakeningCoreDropAmount(enemy){
-    if(!enemy||enemy.dead!==true||enemy.kind==='stage-boss')return 0;
+    if(!awakeningEnabled()||!enemy||enemy.dead!==true||enemy.kind==='stage-boss')return 0;
     if(enemy.twinGroup&&state.entities.enemies.some(other=>other!==enemy&&!other.dead&&other.twinGroup===enemy.twinGroup))return 0;
     if(enemy.kind==='apex')return 2;
     if(enemy.kind==='stage-mini')return enemy.noEliteReward===true?0:(Math.random()<AWAKENING_MINIBOSS_CORE_CHANCE?1:0);
