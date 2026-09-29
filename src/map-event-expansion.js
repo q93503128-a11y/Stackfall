@@ -72,7 +72,7 @@
     if(granted){state.runCurrencyEarned=state.runCurrencyEarned||{stardust:0,coreShard:0};state.runCurrencyEarned.stardust=(state.runCurrencyEarned.stardust||0)+granted;}return granted;
   }
   function finishFieldEvent(type,cards){
-    state.mapEventActive=null;state.entities.mapEvents.length=0;combatTimer.classList.add('hidden');
+    compactInPlace(state.entities.enemies,e=>e&&e.eventKind!==type);state.mapEventActive=null;state.entities.mapEvents.length=0;combatTimer.classList.add('hidden');
     showBossNotice(tx('fieldComplete'),meta(type).name);
     if(cards?.length)scheduleUiAction(420,()=>openCards(meta(type).name,tx('choose'),cards,'FIELD REWARD',type,()=>cards[0]?.action()));
     else scheduleType(type);
@@ -150,7 +150,7 @@
     ev.strikeCd-=dt;if(ev.strikeCd<=0){ev.strikeCd=1.35;const inside=Math.hypot(player.x-ev.center.x,player.y-ev.center.y)<118;if(!inside){addCircle(player.x+rand(-45,45),player.y+rand(-45,45),54,Math.max(5,7+state.threat*.38),'#9fb4ff',.72);}for(let i=0;i<2;i++){const a=Math.random()*TAU,r=rand(150,310);addCircle(ev.center.x+Math.cos(a)*r,ev.center.y+Math.sin(a)*r,42,Math.max(4,5+state.threat*.28),'#768dff',.92);}}
     if(ev.remainingTime<=0){finishFieldEvent('storm',fieldReward('storm'));return;}
   }
-  function failFieldEvent(type){state.mapEventActive=null;state.entities.mapEvents.length=0;combatTimer.classList.add('hidden');showBossNotice(tx('fieldFailed'),meta(type).name);scheduleType(type,70,105);}
+  function failFieldEvent(type){compactInPlace(state.entities.enemies,e=>e&&e.eventKind!==type);state.mapEventActive=null;state.entities.mapEvents.length=0;combatTimer.classList.add('hidden');showBossNotice(tx('fieldFailed'),meta(type).name);scheduleType(type,70,105);}
   function updateFieldEvent(dt){const type=state.mapEventActive?.type;if(type==='distress')updateDistress(dt);else if(type==='meteor')updateMeteor(dt);else if(type==='predator')updatePredator(dt);else if(type==='relay')updateRelay(dt);else if(type==='storm')updateStorm(dt);}
   function startFieldEvent(type){state.entities.mapEvents.length=0;if(type==='distress')startDistress();else if(type==='meteor')startMeteor();else if(type==='predator')startPredator();else if(type==='relay')startRelay();else if(type==='storm')startStorm();}
   const baseEventKillEnemy=killEnemy;
