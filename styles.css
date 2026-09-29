@@ -177,3 +177,10 @@
 @media(min-width:901px) and (max-height:760px){.upgrade-screen{padding:10px 20px}.upgrade-shell{height:calc(100dvh - 20px)}.upgrade-heading{margin-bottom:8px}.upgrade-heading h2{font-size:38px}.upgrade-heading p{display:none}.upgrade-wallet span{padding:7px 10px}.upgrade-body{gap:10px}.upgrade-detail{padding:16px}.upgrade-detail h3{font-size:25px}.upgrade-detail>p{min-height:38px}.upgrade-level{margin-top:12px}.upgrade-effect{min-height:48px}.upgrade-node{width:82px;min-height:64px}#upgradeCoreCanvas{width:220px;height:220px}}
 
 @media(max-width:600px){.stage-environment-notice{top:76px;min-width:210px;max-width:78vw;padding:7px 9px}.stage-environment-notice strong{font-size:10px}.stage-environment-notice small{font-size:7px}}
+
+.galaxy-path.locked{stroke:rgba(115,124,154,.22)!important;stroke-width:3!important;stroke-dasharray:1 7!important;filter:none!important}
+.galaxy-node-lock{position:absolute!important;left:50%;top:44px;z-index:7!important;width:56px;height:56px;transform:translate(-50%,-50%) rotate(-18deg);display:grid;place-items:center;pointer-events:none;color:#aeb6cc;text-shadow:0 2px 8px #000}
+.galaxy-node-lock em{position:absolute;font-style:normal;font-size:37px;line-height:1;letter-spacing:-8px;opacity:.76;filter:grayscale(1)}.galaxy-node-lock strong{position:absolute;z-index:2;transform:rotate(18deg);font-size:18px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.8))}
+.galaxy-stage-node.locked>small{color:#7e879e;border-color:rgba(127,139,168,.16);background:rgba(5,8,18,.88)}
+#galaxyStageUnlocks{display:grid!important;gap:6px;font-size:10px!important;font-weight:700!important}
+.galaxy-unlock-row{display:flex!important;align-items:center;justify-content:space-between;gap:10px;margin:0;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.055);font-size:10px!important}.galaxy-unlock-row:last-child{border-bottom:0}.galaxy-unlock-row>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#dce5fb!important}.galaxy-unlock-row>b{margin:0!important;flex:0 0 auto;color:#99e8ff;font-size:10px!important;font-variant-numeric:tabular-nums}
