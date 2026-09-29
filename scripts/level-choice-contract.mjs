@@ -13,6 +13,9 @@ const checks=[
  ['Nebula Boomerang is only granted by Stage 2 progression',catalog.includes("id:'stage-02'")&&catalog.includes("rewards:[{type:'weapon',key:'arc'}")&&!catalog.slice(catalog.indexOf("id:'stage-01'"),catalog.indexOf("id:'stage-02'")).includes("key:'arc'")],
  ['repeat Core Shard cadence belongs only to Stage 1',meta.includes("if(stageId==='stage-01'&&repeatClearCount>0&&repeatClearCount%3===0)")],
  ['choice pool still obeys unlocked equipment capacity',feature.includes("limit=window.stackfallEquipmentSlotLimit?.()||4")&&progression.includes("limit=window.stackfallEquipmentSlotLimit?.()||4")],
+ ['advanced passives are filtered by campaign feature gates',meta.includes('PASSIVE_FEATURE_REQUIREMENTS')&&feature.includes('stackfallIsPassiveChoiceUnlocked')&&progression.includes('stackfallIsPassiveChoiceUnlocked')],
+ ['Stage 12 unlocks four-way normal level choices',catalog.includes("type:'feature',key:'choice-4'")&&progression.includes("collectChoices(window.stackfallIsFeatureUnlocked?.('choice-4')===true?4:3)")],
+ ['Stage 18 lets Multiplicity enter normal choices without disabling event grants',catalog.includes("type:'feature',key:'multiplicity-protocol'")&&progression.includes("stackfallIsFeatureUnlocked?.('multiplicity-protocol')===true")],
  ['level-choice owners load after settings and progression remains final owner',index.indexOf('src/settings.js')<index.indexOf('src/progression-expansion.js')&&index.indexOf('src/feature-pack.js')<index.indexOf('src/progression-expansion.js')]
 ];
 let failed=0;for(const [name,ok] of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failed++;}console.log(`Checked ${checks.length} level-choice contracts; failures=${failed}`);if(failed)process.exit(1);
