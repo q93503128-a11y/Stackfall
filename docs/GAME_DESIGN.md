@@ -856,7 +856,8 @@ Implementation status: all four reward keys are connected only after their defin
 - **Stage 6**: **Weapon Awakening + Endless Expedition + Hard**. 각성은 Stage 6 최초 클리어로 계정 진행도에 영구 획득된다. 이후 Stage 1을 재플레이해도 각성 코어 드랍, 각성 HUD, 6중첩 각성 선택을 정상 사용할 수 있다.
 - **각성 해금 전**에는 각성 코어가 드랍되지 않고 전투 HUD에도 각성 코어 항목을 노출하지 않는다. 해금 기능을 설정에서 일시 비활성화한 경우에도 같은 규칙을 적용한다.
 - **Stage 12**: 4중 재구성 — 일반 레벨업 선택지 4개.
-- **Stage 14 / 16**: 현재 무기 해금이 없는 미정 보상 슬롯. 이전에 임시로 넣었던 `상급 패시브 I/II`는 정본에서 철회했다. Stage 14의 후보로 `런 시작 레벨 +3` 같은 시작 성장 가속을 검토하되 아직 확정하지 않는다.
+- **Stage 14**: `선행 재구성 +3` — 이후 Stage/Endless를 포함한 모든 런에서 시작 직후 일반 레벨업 선택을 3회 연속 수행하고 Lv.4로 전투를 시작한다. 경험치나 전투 시간을 소모하지 않는다.
+- **Stage 16**: `코어 성장 3차 돌파` — 생명 코어와 출력 증폭기에만 9~12레벨을 추가한다. 공격 주기·회수 자장·충격 격자·성진 회수기·장착 슬롯에는 3차 돌파를 추가하지 않는다.
 - **Stage 18**: 다중 투영 프로토콜 — 기존 성운 보관소 획득은 유지하고 일반 레벨업 풀에도 추가하며 최대 중첩을 2에서 3으로 늘린다.
 - **설정 > 해금 관리**에는 이미 획득한 기능만 나타난다. 각 기능을 개별적으로 끄고 다시 켤 수 있지만, 아직 획득하지 않은 기능을 강제로 활성화할 수는 없다.
 - DEV 프로필(`?dev=1`)은 테스트 편의를 위해 획득 조건을 우회한다. 장착 슬롯 V/VI는 기존 Core Development 확장 노드로 유지한다.
@@ -874,6 +875,29 @@ Implementation status: all four reward keys are connected only after their defin
 - Starter weapon and difficulty selection are shared by Stage and Endless in the sortie-preparation screen immediately before launch. Desktop keeps map and details side by side; compact/mobile layouts stack the detail sheet below the map.
 
 ### Stage enemy and boss identity rules
+#### Mid-boss / regular boss individual combat identities
+
+Stage 조우 감독은 어떤 별자리 공통 공격도 추가하지 않는다. 같은 Route/Bloom/Array라는 이유로 공용 선·꽃잎·격자 패턴을 덧씌우지 않고, 아래 폼의 자체 전투 로직만 사용한다.
+
+| Form | Individual combat identity |
+|---|---|
+| Rift Knight | 세 갈래 성창 조준과 예고 후 고속 돌진 |
+| Nova Warden | 자가 복구 + 자신 주변 위성 폭발, 예측 지점 3단 초신성 |
+| Orbital Executioner | 예측 위치 X자 절단 + 돌진 후 평행 참격 |
+| Crystal Colossus | 자기중심 대지 강타·6방향 균열 + 순차 낙하 충격 |
+| Nebula Harvester | 낫 모양 교차 절단 + 일반 적을 수확해 회복/탄막으로 변환 |
+| Twin-Star Mirror | α 탄막 / β 교차광선 역할 분담, 둘 사이 연결광 후 위치 교환 |
+| Lord of Eclipse | 회전하는 일식 셔터, 이중 엄브라, 안전 각도가 있는 일식 탄환환 |
+| Nebula Seraph | 양 날개 동시 사격, 회복 성역, 소환과 후속 성광환 |
+| Heart of the Pulsar | 한 지점을 세 번 팽창시키는 맥동파 + 빠르고 느린 이중 박동탄 |
+| Interstellar Leviathan | 긴 돌진 예고, 돌진 경로 잔류 충격, 후방 기뢰 꼬리 |
+| Infinite Archivist | 플레이어 위치 기록, 기록 좌표를 이용한 십자 기록선·회귀 이동·육각 기록망 |
+| Heliarch | 일부 안전 방사각을 남기는 태양 살, 황금비 낙하점, 안전각 탄환환 |
+| Queen of Astral Storms | 3연속 번개 도약, 이동 예측 낙뢰열, 짧은 추적 번개탄 |
+| Null Engine Zero | 아군 투사체 무효화·역변환, 한 줄 안전 채널을 남기는 널 격자 |
+
+공용 `stageEncounterSignature`와 일반 보스용 공통 anti-idle 공격은 사용하지 않는다. Endless Apex의 anti-idle 대책은 별도 최상위 보스 규칙으로만 남긴다.
+
 
 - Stage backgrounds are not palette swaps of Endless. Each stage owns a recognizable spatial concept, major silhouettes/landmarks, and environmental composition; Stage 1 uses a ruined defense gate, severed route lanes, wreckage, and a fractured frontier body.
 - Normal enemies may be reused between stages. A new stage does **not** require an entirely new trash roster; new common enemies should be introduced periodically and then may join later pools where appropriate.
@@ -885,8 +909,11 @@ Implementation status: all four reward keys are connected only after their defin
 
 ### 코어 성장 후반 확장
 
-- 영구 성장 노드는 초반의 작은 선형 강화 뒤 **중간 돌파와 최종 돌파**에서 증가량이 크게 뛰는 누적 수치표를 사용한다.
-- 코어 조각은 모든 후반 레벨에 반복해서 소모하지 않는다. 각 노드의 중간/최종 돌파와 장착 슬롯 V·VI 해금에만 사용하며, 그 외 레벨은 성진만 사용한다.
+- 영구 성장 노드는 초반의 작은 선형 강화 뒤 돌파 단계에서 증가량이 크게 뛰는 누적 수치표를 사용한다. Stage 16 이후 **생명 코어와 출력 증폭기만 3차 돌파**까지 확장된다.
+- 생명 코어: Lv.8 `+44%` → Lv.9/10/11 `+48/+52/+56%` → **Lv.12 3차 돌파 `+72%`**.
+- 출력 증폭기: Lv.8 `+33%` → Lv.9/10/11 `+36/+39/+42%` → **Lv.12 3차 돌파 `+54%`**.
+- 세 번째 돌파 비용은 두 노드 모두 Lv.12 진입 시 Core Shard 4개다. Lv.9~11은 Stardust만 사용한다.
+- 공격 주기·자석·피해 감소·성진 수급은 수치가 과도하게 압축되거나 경제를 왜곡하기 쉬워 3차 돌파 대상에서 제외한다. 장착 슬롯 V/VI도 그대로 유지한다.
 - 상세 패널은 현재 누적 효과, 다음 레벨 누적 효과, 이번 레벨업의 순증가량을 동시에 보여준다. 코어 조각이 필요한 단계에는 `◆ 돌파`를 별도로 표시한다.
 
 ### 후반 침묵 중계망 기믹 차별화
