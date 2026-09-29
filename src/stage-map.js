@@ -10,7 +10,12 @@
   function constellationAccessible(page){const first=stagesFor(page.id)[0];if(!first)return false;if(page.order===1)return true;const status=window.stackfallStageStatus?.(first)||first.status;return status==='available'||status==='cleared';}
   function pages(){const list=constellations();return list.filter(constellationAccessible);}
   function visibleStages(){return stagesFor(currentConstellationId);}
-  function unlockText(stage){const rewards=(stage.rewards||[]).filter(reward=>reward.type==='weapon');if(!rewards.length)return tr('stageMap.none');const unlocked=rewards.filter(reward=>window.stackfallIsWeaponUnlocked?.(reward.key)).length;return tr('stageMap.weaponProgress')+' '+unlocked+'/'+rewards.length;}
+  function unlockText(stage){
+    const rewards=stage.rewards||[],weapons=rewards.filter(reward=>reward.type==='weapon'),features=rewards.filter(reward=>reward.type==='feature'),parts=[];
+    if(weapons.length){const unlocked=weapons.filter(reward=>window.stackfallIsWeaponUnlocked?.(reward.key)).length;parts.push(tr('stageMap.weaponProgress')+' '+unlocked+'/'+weapons.length);}
+    for(const reward of features){const unlocked=window.stackfallIsFeatureUnlocked?.(reward.key)===true,name=window.stackfallFeatureName?.(reward.key)||reward.key;parts.push((unlocked?'✓ ':'◇ ')+name);}
+    return parts.length?parts.join(' · '):tr('stageMap.none');
+  }
   function renderStarfield(){if(starfield.childElementCount)return;const fragment=document.createDocumentFragment();for(let i=0;i<54;i++){const star=document.createElement('i'),x=(17+i*73)%997,y=(43+i*137)%641,size=1+(i%5===0?2:i%3===0?1:0);star.style.setProperty('--x',(x/10)+'%');star.style.setProperty('--y',(y/6.5)+'%');star.style.setProperty('--s',size+'px');star.style.setProperty('--d',((i%9)*-.31)+'s');fragment.appendChild(star);}starfield.appendChild(fragment);}
   function renderConstellationHeader(){const list=pages(),index=Math.max(0,list.findIndex(page=>page.id===currentConstellationId)),page=list[index]||list[0]||null;if(page&&page.id!==currentConstellationId)currentConstellationId=page.id;const theme=mapTheme(page?.id);canvas.dataset.constellationTheme=theme;screen.dataset.constellationTheme=theme;if(pageName)pageName.textContent=localized(page?.title)||tr('stageMap.title');if(pageCount)pageCount.textContent=list.length?String(index+1)+' / '+String(list.length):'0 / 0';if(prevPage)prevPage.disabled=index<=0;if(nextPage)nextPage.disabled=index<0||index>=list.length-1;}
   function renderConnections(){
