@@ -2,7 +2,7 @@ import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const catalog=read('src/boss-catalog.js'),core=read('src/core.js'),render=read('src/render.js'),eliteRenderers=read('src/elite-renderers.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),events=read('src/map-event-expansion.js'),difficulty=read('src/difficulty-augment-expansion.js'),endgame=read('src/endgame-balance-expansion.js'),combat=read('src/combat-balance-refinement.js'),smoke=read('scripts/browser-smoke.mjs');
 const checks=[
- ['apex interval is 480 game seconds',catalog.includes('APEX_INTERVAL_SECONDS=480')&&core.includes('nextApexAt:480')&&core.includes('state.nextApexAt=480')],
+ ['apex interval is 600 game seconds',catalog.includes('APEX_INTERVAL_SECONDS=600')&&core.includes('nextApexAt:600')&&core.includes('state.nextApexAt=600')],
  ['paused wall clock cannot advance apex',!render.includes('state.apexClock=')&&!catalog.includes('state.apexClock=0')],
  ['apex scheduling uses game time',bosses.includes('createdAt:state.time||0')&&bosses.includes('(state.time||0)>=(state.nextApexAt||APEX_INTERVAL_SECONDS)')&&events.includes('(state.nextApexAt||Infinity)-(state.time||0)')],
  ['pause smoke checks apex invariant',smoke.includes('pausedApexDue')&&smoke.includes('!cooldown.pausedApexDue')],
@@ -28,6 +28,6 @@ const checks=[
  ['last constellation legacy is not a shield tick',bosses.includes("source:'apex-constellation-lattice'")&&bosses.includes('projectile.life=0')&&!bosses.includes('player.shield=Math.min(cap,player.shield+gain)')],
  ['overall base difficulty slightly reduced',difficulty.includes('c.hp*=.88*d.enemyHp')&&difficulty.includes('c.damage*=.94*d.enemyDamage')&&difficulty.includes('c.speed*=.98*d.enemySpeed')],
  ['hard late scaling increased progressively',endgame.includes("hardLate=hard?(minutes*.014+Math.pow(minutes,1.08)*.0040):0")&&endgame.includes("hardLate=hard?(minutes*.0065+Math.pow(minutes,1.06)*.0022):0")],
- ['balance audit reports 480',endgame.includes("APEX_INTERVAL_SECONDS==='number'?APEX_INTERVAL_SECONDS:480")]
+ ['balance audit reports 600',endgame.includes("APEX_INTERVAL_SECONDS==='number'?APEX_INTERVAL_SECONDS:600")]
 ];
 let failed=0;for(const [name,ok] of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failed++;}console.log(`Checked ${checks.length} apex contracts; failures=${failed}`);if(failed)process.exit(1);
