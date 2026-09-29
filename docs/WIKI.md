@@ -156,6 +156,21 @@
 
 ## 6. 맵 이벤트
 
+Endless에는 현재 8종 이벤트가 등장한다.
+
+- **성운 보관소**: 봉인된 성장 보상 선택. 다중 투영 코어의 기존 희귀 획득처.
+- **추락한 우주선**: 방어 함대 웨이브와 주기적인 거대 기함 격리함 파멸자.
+- **공허 균열**: 공허 차원으로 진입해 전용 보스와 싸우는 선택형 이벤트.
+- **조난 신호**: 구조 캡슐 반경을 지키며 구조 게이지를 채운다.
+- **유성 광맥**: 이동하는 광맥 핵을 추적해 채굴 진행도를 채운다.
+- **포식성 성운**: 성운 영역 안에서 적을 처치해 포식핵을 포화시킨다.
+- **중계기 복구**: 3개 중계 노드를 순서대로 점유한다.
+- **항성 폭풍의 눈**: 이동하는 안전지대 안을 따라가며 낙뢰를 버틴다.
+
+현상금 신호와 중력 난파장은 포함하지 않는다. 이벤트 표식은 화면 밖에서도 방향·종류·거리를 표시한다. 현재 Stage는 이 Endless 이벤트 스케줄러를 직접 돌리지 않으며 Stage 배치는 별도 고정/반고정 설계로 남긴다.
+
+### 기존 3종 상세
+
 ### 성운 보관소
 
 청록색 각형 기록 보관소다. 세 개의 봉인 기록 중 하나를 복원해 피해, 속도, 체력, 자석, 투사체, 방벽 또는 연쇄 능력을 강화한다.
@@ -305,7 +320,7 @@ The three current constellations remain **Shardway**, **Abyssal Bloom**, and **S
 
 The galaxy map is divided into constellation pages. Only one constellation is displayed at a time; after a constellation is completed, the next constellation page becomes reachable when its first stage is unlocked.
 
-The main menu is a mode hub rather than a direct loadout/start screen. `GALACTIC OPERATIONS` opens the galaxy map, `ENDLESS` opens sortie preparation, and `CORE DEVELOPMENT` opens the permanent upgrade field. The upper-left local-pilot card is clickable and shows a detailed local-save panel with clears, runs, kills, equipment slots, unlocked weapons, best Stage 1 time, Stardust, and Core Shards; it is not an online account. The upgrade field keeps the exact shared in-game player-core renderer centered with floating orbital nodes and fits within one normal desktop viewport; compact/mobile layouts may scroll. Future skins can therefore propagate through the shared renderer automatically. Skins are otherwise deferred.
+The main menu is a mode hub rather than a direct loadout/start screen. `GALACTIC OPERATIONS` opens the galaxy map, `ENDLESS` opens sortie preparation, and `CORE DEVELOPMENT` opens the permanent upgrade field. 잠긴 Endless/Core Development 카드는 X자 금속 사슬과 중앙 자물쇠를 사용하지만, 은하 지도 잠금 노드는 별도 자물쇠 없이 회색 비활성 상태만 사용한다. The upper-left local-pilot card is clickable and shows a detailed local-save panel with clears, runs, kills, equipment slots, unlocked weapons, best Stage 1 time, Stardust, and Core Shards; it is not an online account. The upgrade field keeps the exact shared in-game player-core renderer centered with floating orbital nodes and fits within one normal desktop viewport; compact/mobile layouts may scroll. Future skins can therefore propagate through the shared renderer automatically. Skins are otherwise deferred.
 
 ### Stage content identity
 
@@ -315,7 +330,7 @@ Stage environments are authored as distinct places rather than Endless backgroun
 
 Final Stage Apex는 공용 보스 풀과 별개다. 18종 모두 독립 기술 세트를 사용하고 공용 Stage-Apex 공격 함수는 금지한다. Route는 붕괴 셔터·심장 맥동·프리즘 감옥·시간절단·쌍극 견인·항로 수렴, Bloom은 포식·굴곡 뿌리·이중나선·거울 교차사격·종자고 수축·외피 개방 개화, Array는 스캔·잡음 셀·외부 채널·등대 스윕·프로토콜 새장/톱날·전장 재작성으로 구분한다. 특히 S6/S12/S18은 각 성좌의 전투 언어를 종합한다.
 
-경험치 결정은 생성 시 가까운 기존 결정에 값을 합쳐 밀집도를 미리 낮추며, 누적 XP가 클수록 결정 크기도 커진다. 기존 엔티티 상한 압축은 최후 안전장치다.
+경험치 결정은 생성 시 병합하되 플레이어에게 더 가까운 결정을 남기고 더 먼 결정의 XP를 그쪽으로 넘긴다. hard cap에서도 가까운 결정을 우선 보존하고 먼 결정을 안쪽 결정에 합친다. 누적 XP가 클수록 결정 크기도 커진다.
 
 ### 시스템 해금
 
@@ -323,13 +338,13 @@ Final Stage Apex는 공용 보스 풀과 별개다. 18종 모두 독립 기술 �
 - Stage 3: 보스 특수능력. 이전 일반보스는 현재 무기/패시브 +1, 이후 일반보스는 특수능력 선택 보상.
 - Stage 6: **무기 각성 + Endless + Hard 난이도**. 한 번 획득하면 낮은 Stage를 재플레이해도 그대로 사용할 수 있다.
 - Stage 6 전에는 각성 코어 자체가 드랍되지 않고 HUD에도 표시되지 않는다.
-- Stage 12: 일반 레벨업 4지선다.
-- Stage 14: **선행 재구성 +3**. 이후 모든 런은 시작 직후 일반 레벨업 선택 3회를 실제로 수행해 Lv.4로 시작한다.
+- Stage 12: 일반 레벨업 4지선다. 데스크톱에서는 4개 카드를 한 줄에 배치한다.
+- Stage 14: **선행 재구성 +3**. 이후 모든 런은 시작 직후 일반 레벨업 선택 3회를 실제로 수행해 Lv.4로 시작한다. 게임 메뉴 재시작과 게임오버 재도전도 동일한 최신 런 초기화 경로를 사용한다.
 - Stage 16: **코어 성장 3차 돌파**. 생명 코어와 출력 증폭기만 12레벨까지 확장하며 Lv.12에 세 번째 돌파를 둔다. 주기·자석·피해 감소·성진 수급은 확장하지 않는다.
 - Stage 18: 다중 투영 코어의 일반 레벨업 풀 진입 + 최대 중첩 2→3. 기존 성운 보관소 획득 경로는 유지한다.
-- 설정의 **해금 관리**에는 이미 획득한 시스템만 표시하며 각 항목을 개별적으로 끄고 다시 켤 수 있다. 획득하지 않은 기능을 강제로 켤 수는 없다.
+- 설정의 **해금 관리**는 접기/펼치기가 가능하고, 자동 적용형 해금인 무기 각성·보스 특수능력·4중 재구성·선행 재구성 +3·다중 투영 프로토콜만 ON/OFF한다. 코어 성장·Endless·Hard·3차 돌파처럼 직접 메뉴/난이도를 선택해야 적용되는 해금은 토글하지 않는다.
 - 이벤트는 해금 대상으로 두지 않는다. Boss Rush는 추후 검토한다.
-- 현재 Stage 모드는 Endless의 성운 보관소/추락한 우주선/공허 균열 이벤트 런타임을 직접 사용하지 않는다. 이벤트 종류 확대와 Stage 배치는 후속 작업이다.
+- 현재 Stage 모드는 Endless의 8종 이벤트 런타임을 직접 사용하지 않는다. Stage별 이벤트 배치는 후속 작업이다.
 - DEV 프로필은 획득 조건을 우회하고, 장착 슬롯 V/VI는 코어 성장 내부 확장 노드로 유지한다.
 
 ### 코어 성장 돌파
