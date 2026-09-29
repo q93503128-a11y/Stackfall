@@ -3,7 +3,7 @@ const source=fs.readFileSync('src/stage-catalog.js','utf8'),core=fs.readFileSync
 const baseWeaponBlock=core.slice(core.indexOf('const WEAPONS={'),core.indexOf('const PASSIVES=')),knownWeapons=new Set();
 for(const match of baseWeaponBlock.matchAll(/^\s{2}([A-Za-z][A-Za-z0-9_-]*):\{name:/gm))knownWeapons.add(match[1]);
 for(const match of runtimeConfig.matchAll(/WEAPONS\.([A-Za-z][A-Za-z0-9_-]*)\s*=/g))knownWeapons.add(match[1]);
-const initialSource=(meta.match(/INITIAL_WEAPONS=Object\.freeze\(\[([^\]]*)\]\)/)||[])[1]||'',initialWeapons=new Set([...initialSource.matchAll(/'([^']+)'/g)].map(match=>match[1])),currencyKeys=new Set(['stardust','coreShard']),featureKeys=new Set(['core-development','awakening','special-ability','endless','hard','choice-4','multiplicity-protocol']);
+const initialSource=(meta.match(/INITIAL_WEAPONS=Object\.freeze\(\[([^\]]*)\]\)/)||[])[1]||'',initialWeapons=new Set([...initialSource.matchAll(/'([^']+)'/g)].map(match=>match[1])),currencyKeys=new Set(['stardust','coreShard']),featureKeys=new Set(['core-development','awakening','special-ability','endless','hard','choice-4','start-level-3','core-development-iii','multiplicity-protocol']);
 const stages=[...(sandbox.window.STACKFALL_STAGE_CATALOG||[])],pages=[...(sandbox.window.STACKFALL_CONSTELLATIONS||[])],expectedDurations=[300,330,360,390,420,450,480,510,540,570,600,630,660,690,720,780,840,900],fail=[];
 const assert=(condition,message)=>{if(!condition)fail.push(message);};
 assert(stages.length>0,'stage catalog is empty');assert(pages.length>0,'constellation catalog is empty');
@@ -27,6 +27,8 @@ assert(!stages.find(row=>row.id==='stage-02')?.rewards?.some(reward=>reward.type
 assert(stages.find(row=>row.id==='stage-03')?.rewards?.some(reward=>reward.type==='feature'&&reward.key==='special-ability'),'Stage 3 must unlock Boss Special Abilities');
 assert(['awakening','endless','hard'].every(key=>stages.find(row=>row.id==='stage-06')?.rewards?.some(reward=>reward.type==='feature'&&reward.key===key)),'Stage 6 must unlock Awakening, Endless, and Hard');
 assert(stages.find(row=>row.id==='stage-12')?.rewards?.some(reward=>reward.type==='feature'&&reward.key==='choice-4'),'Stage 12 must unlock four-way choices');
+assert(stages.find(row=>row.id==='stage-14')?.rewards?.some(reward=>reward.type==='feature'&&reward.key==='start-level-3'),'Stage 14 must unlock three opening level choices');
+assert(stages.find(row=>row.id==='stage-16')?.rewards?.some(reward=>reward.type==='feature'&&reward.key==='core-development-iii'),'Stage 16 must unlock Core Development III');
 assert(stages.find(row=>row.id==='stage-18')?.rewards?.some(reward=>reward.type==='feature'&&reward.key==='multiplicity-protocol'),'Stage 18 must unlock Multiplicity Protocol');
 const postRosterUnlocks=[['stage-11','vacuum'],['stage-13','mine'],['stage-15','missile'],['stage-17','gate']];
 for(const[stageId,key]of postRosterUnlocks){const stage=stages.find(row=>row.id===stageId);assert(stage?.rewards?.some(reward=>reward.type==='weapon'&&reward.key===key),'missing post-roster unlock '+key+' at '+stageId);}
