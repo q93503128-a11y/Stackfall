@@ -37,7 +37,7 @@ expect('prism final overheat buff',expansion.includes('damage=16+prismN*4.2')&&e
 expect('prism visual and firing positions share live synchronized owners',expansion.includes('const prismBodyCount=')&&expansion.includes('pushPrismBeam')&&expansion.includes('prismOriginIndex')&&expansion.includes('prismOriginCount')&&expansion.includes('prismTargetId')&&expansion.includes('syncedPrismBeamEffects')&&expansion.includes('prismPositions(count)')&&expansion.includes('synchronizedOrbitVisuals'));
 expect('prism echo respects shared lock',expansion.includes('firePrism=function sharedPrismEcho')&&expansion.includes("(lock?.readyAt||0)>(state.time||0)"));
 expect('weapon baseline buff',expansion.includes('amount*=1.08'));
-expect('event-only multiplicity',expansion.includes('max:2,eventOnly:true'));
+expect('Multiplicity keeps archive cap two before Stage 18 and raises runtime cap to three after unlock',expansion.includes("max:3,eventOnly:true")&&expansion.includes("multiplicityMax=()=>window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')===true?3:2"));
 expect('projection core copy is concise and effect-only',expansion.includes("desc:'일부 장비의 동시 공격 수 +1.'")&&expansion.includes("['Projection Core','Some equipment gains +1 simultaneous attack.']")&&!expansion.includes('추가 공격체는 원본과 같은 적을 노린다')&&!auditUi.includes('현재 복제 확률')&&!auditUi.includes('추가 흡인 속도')&&!auditUi.includes('sanitizeWorldEventCopy'));
 expect('Multiplicity stays event-only until its Stage 18 normal-pool unlock',expansion.includes("PASSIVES[choice.key]?.eventOnly&&window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')!==true")&&progression.includes("!p.eventOnly||window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')===true"));
 expect('four choice keyboard shortcuts',expansion.includes("'Digit1','Digit2','Digit3','Digit4'"));
@@ -45,7 +45,7 @@ expect('overdrive player health wording',expansion.includes('플레이어 체력
 expect('echo typo fixed',expansion.includes('guaranteed=')&&!expansion.includes('guaranted'));
 expect('boomerang uses farthest automatic target',targeting.includes("if(key==='arc')return farthestWeaponTarget")&&targeting.includes('function farthestWeaponTarget'));
 expect('boomerang continuous sweep and stronger trail',expansion.includes('continuousBoomerangs')&&expansion.includes("source:'arc-trail'")&&expansion.includes('2.8+p.stacks*1.0'));
-expect('Galactic Spiral uses true expanding rotating projectile motion',expansion.includes('spiralMotion:true')&&expansion.includes('spiralRadialSpeed')&&read('src/systems.js').includes('if(p.spiralMotion)'));
+expect('Galactic Spiral uses true expanding rotating projectile motion',expansion.includes('spiralMotion:true')&&expansion.includes('spiralRadialSpeed')&&read('src/systems.js').includes('if(p.spiralMotion)')&&read('src/performance-guard.js').includes('if(p.spiralMotion)'));
 expect('awakened Lunar Return crosses the target and visibly switches to waning',read('src/weapon-awakening-effects-a1-a7.js').includes('Math.abs(Math.cos(progress*Math.PI))')&&read('src/weapon-awakening-effects-a1-a7.js').includes('p.awMoonWaning=true'));
 expect('comet trail damage has one spatial update owner',performance.includes("source:'comet-trail'")&&!expansion.includes("source:'comet-trail'")&&!expansion.includes('visibleDotProjectiles'));
 expect('uncapped late enemy damage curve',expansion.includes('Math.pow(minutes,1.14)'));
@@ -56,7 +56,7 @@ expect('event choices have no clock',!mapEvents.includes('armChoiceClock(LIMITS.
 expect('endless events arrive faster and announce their signal',mapEvents.includes("INTERVALS={vault:[54,74],crash:[82,112],void:[132,178]}")&&mapEvents.includes("FIRST={vault:38,crash:68,void:104}")&&mapEvents.includes("showBossNotice(m.name,tx('eventDetected'))"));
 expect('auto level choice survives the final stable choice owner',index.includes('id="autoLevelChoice"')&&settingsJs.includes("GAME_SETTINGS.autoLevelChoice=saved.autoLevelChoice===true")&&progression.includes("state.mode='choice';if(GAME_SETTINGS.autoLevelChoice===true){window.stackfallShowAutoChoice?.(choices[0]);selectChoice(choices[0]);return;}"));
 expect('miniboss reward notice has readable lifetime',rewards.includes('showTimedResonance(5200)')&&interfaceJs.includes('function showTimedResonance(duration=2400)'));
-expect('event grants multiplicity through max two',mapEvents.includes('PASSIVES.multiplicity.max')&&expansion.includes("Math.min(2,passiveStacks('multiplicity'))"));
+expect('Nebula Vault uses the dynamic pre/post Stage 18 Multiplicity cap',mapEvents.includes("window.stackfallMultiplicityMax?.()||2")&&expansion.includes("Math.min(multiplicityMax(),passiveStacks('multiplicity'))"));
 expect('extra attack bodies focus original target without copy TMI',expansion.includes('homingTargetId:target.id')&&!expansion.includes('const multiplicityTargets=')&&!expansion.includes('원본과 같은 적을 노린다'));
 expect('ion chain remains separate',weapons.includes('function fireIonChain')&&!expansion.includes('multiplicityIon'));
 expect('manual aim setting persists',targeting.includes("GAME_SETTINGS.manualAim=saved.manualAim===true")&&targeting.includes('id="manualAim"')&&targeting.includes('saveGameSettings()'));
