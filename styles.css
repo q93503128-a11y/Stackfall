@@ -178,16 +178,46 @@
 
 @media(max-width:600px){.stage-environment-notice{top:76px;min-width:210px;max-width:78vw;padding:7px 9px}.stage-environment-notice strong{font-size:10px}.stage-environment-notice small{font-size:7px}}
 
-.galaxy-path.locked{stroke:rgba(115,124,154,.22)!important;stroke-width:3!important;stroke-dasharray:1 7!important;filter:none!important}
-.galaxy-node-lock{position:absolute!important;left:50%;top:44px;z-index:7!important;width:56px;height:56px;transform:translate(-50%,-50%) rotate(-18deg);display:grid;place-items:center;pointer-events:none;color:#aeb6cc;text-shadow:0 2px 8px #000}
-.galaxy-node-lock em{position:absolute;font-style:normal;font-size:37px;line-height:1;letter-spacing:-8px;opacity:.76;filter:grayscale(1)}.galaxy-node-lock strong{position:absolute;z-index:2;transform:rotate(18deg);font-size:18px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.8))}
 .galaxy-stage-node.locked>small{color:#7e879e;border-color:rgba(127,139,168,.16);background:rgba(5,8,18,.88)}
 #galaxyStageUnlocks{display:grid!important;gap:6px;font-size:10px!important;font-weight:700!important}
 .galaxy-unlock-row{display:flex!important;align-items:center;justify-content:space-between;gap:10px;margin:0;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.055);font-size:10px!important}.galaxy-unlock-row:last-child{border-bottom:0}.galaxy-unlock-row>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#dce5fb!important}.galaxy-unlock-row>b{margin:0!important;flex:0 0 auto;color:#99e8ff;font-size:10px!important;font-variant-numeric:tabular-nums}
 
 .hub-mode-card.locked{cursor:not-allowed;filter:saturate(.38) brightness(.68)}
 .hub-mode-card.locked:hover{transform:none;border-color:rgba(175,195,255,.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 22px 55px rgba(0,0,0,.36)}
-.hub-mode-card.locked:after{content:"⛓  🔒";position:absolute;right:21px;top:18px;z-index:5;padding:7px 10px;border:1px solid rgba(176,184,207,.20);border-radius:999px;background:rgba(4,7,17,.78);color:#c6cada;font:800 14px/1 system-ui;letter-spacing:.02em;box-shadow:0 5px 16px rgba(0,0,0,.35)}
 
 .upgrade-node.tier-extension-locked{border-color:rgba(157,166,194,.14);box-shadow:0 8px 24px rgba(0,0,0,.24)}
 .upgrade-node.tier-extension-locked small{color:#9ba4bd}.upgrade-node.tier-extension-locked small::first-letter{color:#d5d9e6}
+
+/* Locked hub cards: crossed dark-metal chains + central lock. Stage-map nodes stay simple grey. */
+.hub-chain-lock{display:none;position:absolute;inset:0;z-index:8;overflow:hidden;border-radius:inherit;pointer-events:none;background:rgba(3,6,16,.20)}
+.hub-mode-card.locked .hub-chain-lock{display:block}
+.hub-chain-lock .chain{position:absolute;left:50%;top:50%;width:118%;height:22px;transform-origin:center;background:
+  radial-gradient(ellipse at center,transparent 0 26%,rgba(61,78,111,.96) 28% 39%,rgba(23,31,51,.96) 41% 49%,transparent 51%) 0 50%/30px 18px repeat-x;
+  filter:drop-shadow(0 3px 2px rgba(0,0,0,.72)) drop-shadow(0 0 5px rgba(79,106,153,.16));opacity:.92}
+.hub-chain-lock .chain-a{transform:translate(-50%,-50%) rotate(18deg)}
+.hub-chain-lock .chain-b{transform:translate(-50%,-50%) rotate(-18deg)}
+.hub-chain-lock>b{position:absolute;left:50%;top:50%;width:54px;height:48px;transform:translate(-50%,-38%);border:2px solid #596985;border-radius:10px;background:linear-gradient(145deg,#222d46,#11192b 68%,#0a1020);box-shadow:0 8px 22px rgba(0,0,0,.72),inset 0 0 0 2px rgba(112,138,183,.10),0 0 18px rgba(89,110,157,.10);font-size:0}
+.hub-chain-lock>b:before{content:"";position:absolute;left:50%;top:-24px;width:29px;height:30px;transform:translateX(-50%);border:5px solid #596985;border-bottom:0;border-radius:18px 18px 0 0;background:transparent;box-shadow:inset 0 0 0 2px rgba(9,14,26,.75)}
+.hub-chain-lock>b:after{content:"";position:absolute;left:50%;top:17px;width:8px;height:15px;transform:translateX(-50%);border-radius:50% 50% 3px 3px;background:#060a13;box-shadow:0 0 0 1px rgba(122,151,197,.18)}
+.hub-mode-card.locked{cursor:not-allowed;filter:saturate(.42) brightness(.66)}
+.hub-mode-card.locked:hover{transform:none}
+
+/* Four ordinary level-up choices use the same single-row grammar as boss rewards. */
+@media(pointer:fine) and (min-width:1000px){
+  .choice-cards.four-choice{width:min(1320px,94vw);grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .choice-cards.four-choice .choice-card{min-height:218px}
+}
+
+/* Keep boss identity and health below the timer/objective cluster. */
+.boss-bar{top:118px!important;width:min(620px,58vw)!important}
+.boss-bar>span{min-height:16px;margin-bottom:7px!important;padding:0 8px;line-height:1.35;background:rgba(3,6,17,.55);border-radius:7px}
+.boss-bar-extras{margin-top:8px!important}
+
+/* Unlock management can collapse. */
+.unlock-management-heading{width:100%;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}
+.unlock-management-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.unlock-management-title h3{margin:4px 0 3px}
+.unlock-management-title i{font-style:normal;color:#83eaff;transition:transform .18s}
+.unlock-management:not(.collapsed) .unlock-management-title i{transform:rotate(180deg)}
+.unlock-management.collapsed{padding-bottom:10px}
+.unlock-management-list[hidden]{display:none!important}
