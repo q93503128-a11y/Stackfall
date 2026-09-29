@@ -55,24 +55,25 @@
   const STAGE_ENCOUNTER_SCHEDULES=Object.freeze(Object.fromEntries(Array.from({length:18},(_,i)=>[i+1,buildStageEncounterSchedule(i+1)])));
   function stageEncounterPlan(stage){return STAGE_ENCOUNTER_SCHEDULES[Math.max(1,Number(stage?.order)||1)]||STAGE_ENCOUNTER_SCHEDULES[1];}
   const STAGE_WORLD_EVENT_PLAN=Object.freeze({
-    1:Object.freeze([{at:.22,type:'vault'},{at:.62,type:'vault'}]),
-    2:Object.freeze([{at:.18,type:'vault'},{at:.48,type:'distress'},{at:.74,type:'vault'}]),
-    3:Object.freeze([{at:.17,type:'vault'},{at:.42,type:'crash'},{at:.70,type:'distress'}]),
-    4:Object.freeze([{at:.15,type:'distress'},{at:.39,type:'meteor'},{at:.67,type:'vault'}]),
-    5:Object.freeze([{at:.15,type:'meteor'},{at:.40,type:'predator'},{at:.69,type:'crash'}]),
-    6:Object.freeze([{at:.13,type:'vault'},{at:.34,type:'relay'},{at:.56,type:'crash'},{at:.76,type:'meteor'}]),
-    7:Object.freeze([{at:.13,type:'predator'},{at:.36,type:'storm'},{at:.64,type:'relay'}]),
-    8:Object.freeze([{at:.12,type:'vault'},{at:.32,type:'void'},{at:.54,type:'distress'},{at:.74,type:'storm'}]),
-    9:Object.freeze([{at:.11,type:'meteor'},{at:.31,type:'crash'},{at:.52,type:'predator'},{at:.73,type:'vault'}]),
-    10:Object.freeze([{at:.10,type:'relay'},{at:.29,type:'storm'},{at:.49,type:'vault'},{at:.70,type:'crash'}]),
-    11:Object.freeze([{at:.10,type:'distress'},{at:.28,type:'void'},{at:.47,type:'predator'},{at:.68,type:'meteor'}]),
-    12:Object.freeze([{at:.09,type:'crash'},{at:.25,type:'relay'},{at:.42,type:'meteor'},{at:.59,type:'vault'},{at:.75,type:'storm'}]),
-    13:Object.freeze([{at:.09,type:'storm'},{at:.25,type:'void'},{at:.42,type:'crash'},{at:.59,type:'predator'},{at:.75,type:'relay'}]),
-    14:Object.freeze([{at:.08,type:'relay'},{at:.24,type:'vault'},{at:.40,type:'predator'},{at:.57,type:'distress'},{at:.74,type:'meteor'}]),
-    15:Object.freeze([{at:.08,type:'meteor'},{at:.23,type:'crash'},{at:.38,type:'storm'},{at:.54,type:'relay'},{at:.71,type:'void'}]),
-    16:Object.freeze([{at:.08,type:'void'},{at:.23,type:'relay'},{at:.38,type:'predator'},{at:.54,type:'vault'},{at:.71,type:'crash'}]),
-    17:Object.freeze([{at:.07,type:'crash'},{at:.20,type:'meteor'},{at:.34,type:'storm'},{at:.48,type:'distress'},{at:.62,type:'void'},{at:.77,type:'relay'}]),
-    18:Object.freeze([{at:.07,type:'vault'},{at:.19,type:'crash'},{at:.31,type:'predator'},{at:.43,type:'meteor'},{at:.55,type:'relay'},{at:.68,type:'storm'},{at:.81,type:'void'}])
+    // First appearances are deliberately staggered so each few stages adds a new world-event grammar.
+    1:Object.freeze([{at:.30,type:'vault'},{at:.68,type:'vault'}]),
+    2:Object.freeze([{at:.28,type:'vault'},{at:.66,type:'vault'}]),
+    3:Object.freeze([{at:.20,type:'vault'},{at:.49,type:'crash'},{at:.77,type:'vault'}]),
+    4:Object.freeze([{at:.22,type:'distress'},{at:.52,type:'vault'},{at:.78,type:'crash'}]),
+    5:Object.freeze([{at:.20,type:'meteor'},{at:.47,type:'distress'},{at:.73,type:'crash'}]),
+    6:Object.freeze([{at:.14,type:'vault'},{at:.34,type:'crash'},{at:.55,type:'distress'},{at:.76,type:'meteor'}]),
+    7:Object.freeze([{at:.18,type:'predator'},{at:.46,type:'vault'},{at:.73,type:'distress'}]),
+    8:Object.freeze([{at:.16,type:'predator'},{at:.38,type:'crash'},{at:.61,type:'meteor'},{at:.79,type:'vault'}]),
+    9:Object.freeze([{at:.18,type:'void'},{at:.40,type:'vault'},{at:.62,type:'crash'},{at:.80,type:'predator'}]),
+    10:Object.freeze([{at:.16,type:'distress'},{at:.37,type:'meteor'},{at:.58,type:'void'},{at:.78,type:'crash'}]),
+    11:Object.freeze([{at:.14,type:'predator'},{at:.34,type:'vault'},{at:.54,type:'meteor'},{at:.74,type:'void'}]),
+    12:Object.freeze([{at:.12,type:'crash'},{at:.29,type:'predator'},{at:.46,type:'vault'},{at:.63,type:'meteor'},{at:.80,type:'void'}]),
+    13:Object.freeze([{at:.16,type:'relay'},{at:.35,type:'vault'},{at:.55,type:'crash'},{at:.75,type:'void'}]),
+    14:Object.freeze([{at:.14,type:'relay'},{at:.31,type:'distress'},{at:.48,type:'meteor'},{at:.65,type:'predator'},{at:.81,type:'vault'}]),
+    15:Object.freeze([{at:.14,type:'storm'},{at:.30,type:'relay'},{at:.47,type:'crash'},{at:.63,type:'meteor'},{at:.79,type:'void'}]),
+    16:Object.freeze([{at:.12,type:'relay'},{at:.27,type:'storm'},{at:.42,type:'vault'},{at:.57,type:'predator'},{at:.73,type:'crash'}]),
+    17:Object.freeze([{at:.10,type:'storm'},{at:.24,type:'relay'},{at:.38,type:'meteor'},{at:.52,type:'distress'},{at:.67,type:'void'},{at:.81,type:'crash'}]),
+    18:Object.freeze([{at:.09,type:'vault'},{at:.21,type:'relay'},{at:.33,type:'storm'},{at:.45,type:'crash'},{at:.57,type:'predator'},{at:.69,type:'meteor'},{at:.82,type:'void'}])
   });
   function stageWorldEventPlan(stage){return STAGE_WORLD_EVENT_PLAN[Math.max(1,Math.min(18,Number(stage?.order)||1))]||STAGE_WORLD_EVENT_PLAN[1];}
   function updateStageWorldEvents(run,progress){
@@ -188,6 +189,11 @@
     const run=stageRuntime();if(!run||run.completed||!enemy)return;run.completed=true;run.completedAt=state.time;run.victoryStarted=true;state.stageVictory={x:enemy.x,y:enemy.y,color:enemy.color||'#aeb9ff',elapsed:0,duration:VICTORY_DURATION,pulseA:false,pulseB:false};state.mode='stageVictory';state.pendingActions.length=0;clearRunUiActions?.();state.bossActiveId=null;ui.bossBar.classList.add('hidden');objective?.classList.add('hidden');state.entities.enemyProjectiles.length=0;state.entities.telegraphs.length=0;state.entities.beams.length=0;for(const key of['vacuumSeeds','phaseMines','guidedMissiles','gateNetworks'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;
     for(const other of state.entities.enemies){if(other!==enemy&&!other.dead){other.dead=true;spawnParticle(other.x,other.y,other.color||'#9aa7ff',4,120,3);}}state.camera.shake=Math.max(state.camera.shake,24);state.flash=Math.max(state.flash,.34);shockwave(enemy.x,enemy.y,'#eef2ff',220,.90,8);spawnParticle(enemy.x,enemy.y,'#ffffff',54,410,9);spawnParticle(enemy.x,enemy.y,enemy.color||'#9aa7ff',42,300,7);
   }
+  window.handleStageBossDefeated=function handleStageBossDefeated(enemy){
+    const run=stageRuntime();if(!run||run.completed||!enemy||enemy.kind!=='stage-boss')return false;
+    if(run.bossId&&enemy.id!==run.bossId)return false;
+    beginStageVictory(enemy);return true;
+  };
   window.updateStageVictoryCinematic=function(dt){const v=state.stageVictory;if(state.mode!=='stageVictory'||!v)return;v.elapsed+=dt;if(!v.pulseA&&v.elapsed>=.48){v.pulseA=true;shockwave(v.x,v.y,'#9aa7ff',340,.85,7);spawnParticle(v.x,v.y,'#b7c5ff',24,260,6);state.camera.shake=Math.max(state.camera.shake,18);state.flash=Math.max(state.flash,.22);}if(!v.pulseB&&v.elapsed>=1.18){v.pulseB=true;shockwave(v.x,v.y,'#ffffff',470,1.05,5);state.camera.shake=Math.max(state.camera.shake,11);state.flash=Math.max(state.flash,.16);}if(v.elapsed>=v.duration)finalizeStageComplete();};
   window.drawStageVictoryCinematic=function(){const v=state.stageVictory;if(state.mode!=='stageVictory'||!v)return;const p=worldToScreen(v.x,v.y),progress=clamp(v.elapsed/v.duration,0,1),burst=clamp(v.elapsed/.85,0,1),fade=1-clamp((v.elapsed-2.25)/.60,0,1);ctx.save();ctx.globalCompositeOperation='lighter';ctx.translate(p.x,p.y);for(let i=0;i<14;i++){const a=i/14*TAU+v.elapsed*.34,inner=24+burst*25,outer=58+burst*(125+(i%4)*16);ctx.globalAlpha=(.62-progress*.30)*fade;ctx.strokeStyle=i%3===0?'#ffffff':i%2?'#91a6ff':'#c0a8ff';ctx.lineWidth=1.2+(i%3)*.8;ctx.beginPath();ctx.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);ctx.lineTo(Math.cos(a)*outer,Math.sin(a)*outer);ctx.stroke();}ctx.globalAlpha=Math.max(0,.9-progress*.45)*fade;const glow=ctx.createRadialGradient(0,0,0,0,0,120+burst*90);glow.addColorStop(0,'rgba(255,255,255,.95)');glow.addColorStop(.12,'rgba(190,210,255,.78)');glow.addColorStop(.42,'rgba(121,132,255,.22)');glow.addColorStop(1,'rgba(92,65,180,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(0,0,120+burst*90,0,TAU);ctx.fill();ctx.restore();ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';const reveal=clamp((v.elapsed-.70)/.50,0,1)*fade;ctx.globalAlpha=reveal;ctx.shadowBlur=28;ctx.shadowColor='#9aa7ff';ctx.fillStyle='#f4f7ff';ctx.font=`900 ${Math.round(clamp(vw*.04,28,54))}px "Black Han Sans",sans-serif`;ctx.fillText(v.elapsed<1.55?tr('stageClear.targetDown'):tr('stageClear.operationComplete'),vw/2,vh*.27);ctx.restore();};
   window.stackfallRegisterStageRuntime=registerStageRuntime;window.stackfallStageRuntimeRegistry=registry;window.stackfallSpawnStageEnemy=spawnStageEnemy;window.stackfallSpawnStageBurst=spawnStageBurst;window.stackfallBeginStageVictory=beginStageVictory;window.stackfallStageBalanceDiagnostics=()=>{const run=stageRuntime();return run?{stageId:run.stage?.id,family:environmentFamily(run.stage),encounterPlan:stageEncounterPlan(run.stage).map(entry=>({...entry})),encountersTriggered:{...(run.encountersTriggered||{})},activeEncounters:activeStageEncounterCount(),encounterConcurrency:stageEncounterConcurrency(run.stage),worldEventPlan:stageWorldEventPlan(run.stage).map(entry=>({...entry})),worldEventsTriggered:{...(run.worldEventsTriggered||{})},spawnBudget:{...(run.lastSpawnBudget||{})},bossTier:Number(run.stage?.order)%6===0?'constellation':'stage'}:null;};
