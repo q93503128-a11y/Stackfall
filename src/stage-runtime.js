@@ -189,7 +189,7 @@
   function stageBossActualBeam(x1,y1,x2,y2,width,damage,color,style='blaster',bend=0){
     if(state.entities.beams.length>=entityCap('beams'))state.entities.beams.shift();
     state.entities.beams.push({x1,y1,x2,y2,life:.30,max:.30,color,width:Math.max(4,width),stageBossAttack:style,bend});
-    stageBossLineHit(x1,y1,x2,y2,width,damage);shockwave(x1,y1,color,34+width*.9,.28,2.4);
+    if(damage>0)stageBossLineHit(x1,y1,x2,y2,width,damage);shockwave(x1,y1,color,34+width*.9,.28,2.4);
   }
   function stageBossBlaster(e,api,origin,target,damage,color,later,delay=520,width=18){
     if(!stageBossSignatureAlive(e,api))return;
