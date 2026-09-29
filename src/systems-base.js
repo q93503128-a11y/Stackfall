@@ -41,20 +41,37 @@ function makeEnemyRoom(kind){
 const EXPERIENCE_ANCHORS=[],EXPERIENCE_ANCHOR_D2=[];
 function experienceGemRadius(value,base=4){return Math.min(13.5,Math.max(base,3.7+Math.log2(1+Math.max(0,Number(value)||0))*1.05));}
 function mergeExperienceGem(x,y,value,baseRadius=4,vx=0,vy=0){
-  const gems=state.entities.gems,amount=Math.max(0,Number(value)||0);if(!amount)return null;
-  let anchor=null,best=Infinity;
-  for(const g of gems){
-    if(!g||g.life<=0)continue;const dx=g.x-x,dy=g.y-y,d2=dx*dx+dy*dy,mergeRadius=42+Math.min(54,(Number(g.r)||4)*4);
-    if(d2<=mergeRadius*mergeRadius&&d2<best){best=d2;anchor=g;}
+  const gems=state.entities.gems,amount=Math.max(0,Number(value)||0);if(!amount)return null,newPlayerD2=(x-player.x)**2+(y-player.y)**2;
+  let anchor=null,anchorIndex=-1,bestSpatial=Infinity,anchorPlayerD2=Infinity;
+  for(let i=0;i<gems.length;i++){
+    const g=gems[i];if(!g||g.life<=0)continue;const dx=g.x-x,dy=g.y-y,d2=dx*dx+dy*dy,mergeRadius=42+Math.min(54,(Number(g.r)||4)*4);
+    if(d2>mergeRadius*mergeRadius)continue;
+    const pd2=(g.x-player.x)**2+(g.y-player.y)**2;
+    if(pd2<anchorPlayerD2-1e-6||(Math.abs(pd2-anchorPlayerD2)<1e-6&&d2<bestSpatial)){anchor=g;anchorIndex=i;anchorPlayerD2=pd2;bestSpatial=d2;}
   }
   if(anchor){
-    const before=Math.max(0,Number(anchor.value)||0),total=before+amount,ratio=amount/Math.max(.001,total);
-    anchor.x=lerp(anchor.x,x,ratio*.42);anchor.y=lerp(anchor.y,y,ratio*.42);anchor.vx=lerp(Number(anchor.vx)||0,vx,ratio*.34);anchor.vy=lerp(Number(anchor.vy)||0,vy,ratio*.34);
-    anchor.value=total;anchor.compressedValue=(anchor.compressedValue||0)+amount;anchor.r=experienceGemRadius(total,Math.max(baseRadius,Number(anchor.r)||4));anchor.life=Math.max(Number(anchor.life)||0,35);anchor.pulse=(anchor.pulse||0)+.72;return anchor;
+    if(anchorPlayerD2<=newPlayerD2){
+      const before=Math.max(0,Number(anchor.value)||0),total=before+amount;
+      anchor.value=total;anchor.compressedValue=(anchor.compressedValue||0)+amount;anchor.r=experienceGemRadius(total,Math.max(baseRadius,Number(anchor.r)||4));anchor.life=Math.max(Number(anchor.life)||0,35);anchor.pulse=(anchor.pulse||0)+.72;
+      return anchor;
+    }
+    const inherited=Math.max(0,Number(anchor.value)||0),total=inherited+amount;
+    gems.splice(anchorIndex,1);
+    const gem={x,y,vx,vy,r:experienceGemRadius(total,Math.max(baseRadius,Number(anchor.r)||4)),value:total,life:35,pulse:(anchor.pulse||Math.random()*TAU)+.72,compressedValue:(anchor.compressedValue||0)+inherited};
+    gems.push(gem);return gem;
   }
   const gem={x,y,vx,vy,r:experienceGemRadius(amount,baseRadius),value:amount,life:35,pulse:Math.random()*TAU,compressedValue:0};gems.push(gem);return gem;
 }
-function compressExperience(){const gems=state.entities.gems,cap=entityCap('gems');if(!gems||gems.length<=cap)return;if(cap<=0){gems.length=0;return;}let total=0;for(let i=cap;i<gems.length;i++)total+=Number(gems[i]?.value)||0;const anchorLimit=Math.min(12,cap);EXPERIENCE_ANCHORS.length=0;EXPERIENCE_ANCHOR_D2.length=0;for(let i=0;i<cap;i++){const g=gems[i];if(!g)continue;const dx=g.x-player.x,dy=g.y-player.y,d2=dx*dx+dy*dy;let pos=EXPERIENCE_ANCHOR_D2.length;while(pos>0&&EXPERIENCE_ANCHOR_D2[pos-1]>d2)pos--;if(pos<anchorLimit){EXPERIENCE_ANCHORS.splice(pos,0,g);EXPERIENCE_ANCHOR_D2.splice(pos,0,d2);if(EXPERIENCE_ANCHORS.length>anchorLimit){EXPERIENCE_ANCHORS.pop();EXPERIENCE_ANCHOR_D2.pop();}}}gems.length=cap;if(!EXPERIENCE_ANCHORS.length)return;const share=total/EXPERIENCE_ANCHORS.length;for(const g of EXPERIENCE_ANCHORS){g.value=(Number(g.value)||0)+share;g.compressedValue=(g.compressedValue||0)+share;g.r=experienceGemRadius(g.value,g.r||4);g.pulse=(g.pulse||0)+1.2;}}
+function compressExperience(){
+  const gems=state.entities.gems,cap=entityCap('gems');if(!gems||gems.length<=cap)return;if(cap<=0){gems.length=0;return;}
+  const ranked=gems.filter(Boolean).sort((a,b)=>((a.x-player.x)**2+(a.y-player.y)**2)-((b.x-player.x)**2+(b.y-player.y)**2)),keep=ranked.slice(0,cap),overflow=ranked.slice(cap);
+  for(const far of overflow){
+    if(!keep.length)break;let anchor=keep[0],best=Infinity;
+    for(const near of keep){const dx=near.x-far.x,dy=near.y-far.y,d2=dx*dx+dy*dy;if(d2<best){best=d2;anchor=near;}}
+    const amount=Math.max(0,Number(far.value)||0);anchor.value=(Number(anchor.value)||0)+amount;anchor.compressedValue=(anchor.compressedValue||0)+amount;anchor.r=experienceGemRadius(anchor.value,Math.max(Number(anchor.r)||4,Number(far.r)||4));anchor.life=Math.max(Number(anchor.life)||0,Number(far.life)||0,35);anchor.pulse=(anchor.pulse||0)+.55;
+  }
+  gems.length=0;gems.push(...keep);
+}
 function createEliteTwin(enemy){
   if(!enemy||!['mirror','paradox'].includes(enemy.eliteForm))return null;
   const group=`twins-${enemy.id}`,ratio=enemy.eliteForm==='paradox'?.72:.68,baseHp=enemy.hp*ratio,baseXp=enemy.xp*.62,angle=Math.atan2(enemy.y-player.y,enemy.x-player.x),normal={x:-Math.sin(angle),y:Math.cos(angle)},gap=enemy.r*1.7;
