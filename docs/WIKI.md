@@ -128,7 +128,7 @@
 
 모든 각성은 기존 1~6중첩 성장과 특수능력 호환성을 유지한다. 다만 일반 무기는 각성 시 **기본 공격 자체가 각성 전용 공격으로 크게 바뀔 수 있으며**, 색상/장식만 바뀌는 것을 목표로 하지 않는다.
 
-현재 공통 각성 런타임에는 19종 정의, 6중첩/코어 검사, 붉은 월식 선택창, 거부 후 같은 레벨업의 일반 선택 복귀, 코어 소비와 각성 상태/표시가 연결되어 있다. 자동 레벨업을 켜도 각성은 자동 확정되지 않는다. **각성 코어는 런 내부 보스 성장 자원**이며 일반보스는 1개 확정, Stage 중간보스는 35% 확률로 1개, Endless 초월체는 2개를 지급한다. 스테이지 최종 초월체는 처치 즉시 런이 끝나므로 지급하지 않는다. 남은 코어는 런 종료 시 1개당 기본 Stardust 40으로 환전되고 Stardust 배율이 적용된다. **A1~A19 전 무기의 실제 전투 효과와 전용 외형 1차 구현이 완료**되었다. 마지막 6종은 창세 은하의 3회 주기 완성형 은하 수축, 천경 성역의 6면 완전 반사, 흑성 연화의 1.22초 잔류 꽃잎 영역과 폐화, 위상 성궤의 5배치 경로 주행, 성멸 포대의 장갑형 주탄두 및 3회 주기 집결→동시 돌입, 초공간 대관문의 3회로 대전송을 사용한다. 역나선 은하와 쌍면 반사처럼 후단 덮어쓰기로 빠져 있던 augment 런타임도 각성 전후 모두 다시 연결되어 있다.
+현재 공통 각성 런타임에는 19종 정의, 6중첩/코어 검사, 붉은 월식 선택창, 거부 후 같은 레벨업의 일반 선택 복귀, 코어 소비와 각성 상태/표시가 연결되어 있다. 자동 레벨업을 켜도 각성은 자동 확정되지 않는다. **각성 시스템은 Stage 6 최초 클리어 후 계정 진행도에 획득되며, 그 전에는 각성 코어가 드랍되지 않고 HUD에도 나타나지 않는다.** 해금 후에는 Stage 1을 포함한 모든 런에서 각성을 사용할 수 있다. 활성 상태에서는 일반보스 1개 확정, Stage 중간보스 35% 확률 1개, Endless 초월체 2개를 지급한다. 스테이지 최종 초월체는 처치 즉시 런이 끝나므로 지급하지 않는다. 남은 코어는 런 종료 시 1개당 기본 Stardust 40으로 환전되고 Stardust 배율이 적용된다. **A1~A19 전 무기의 실제 전투 효과와 전용 외형 1차 구현이 완료**되었다. 마지막 6종은 창세 은하의 3회 주기 완성형 은하 수축, 천경 성역의 6면 완전 반사, 흑성 연화의 1.22초 잔류 꽃잎 영역과 폐화, 위상 성궤의 5배치 경로 주행, 성멸 포대의 장갑형 주탄두 및 3회 주기 집결→동시 돌입, 초공간 대관문의 3회로 대전송을 사용한다. 역나선 은하와 쌍면 반사처럼 후단 덮어쓰기로 빠져 있던 augment 런타임도 각성 전후 모두 다시 연결되어 있다.
 
 전투 중 HUD 우측의 **×1 / ×2** 버튼으로 게임 속도를 바꿀 수 있다. 2배속은 전투 업데이트를 프레임당 2회 진행하며, 자동 레벨업을 사용하면 자동으로 고른 장비/패시브와 중첩 변화가 화면에 순서대로 표시된다.
 
@@ -291,7 +291,7 @@
 
 결과 화면의 피해 분석은 전체 DPS와 무기별 **1분 구간 DPS 추이**를 함께 제공한다. 전체 및 개별 무기 선은 각각 토글할 수 있다.
 
-The three current constellations remain **Shardway**, **Abyssal Bloom**, and **Silent Array**. The original 14-weapon roster is fully unlockable by Stage 10, then expands to 18 at Stage 11/13/15/17. The alternating Stage 12/14/16/18 first clears now unlock build-system depth instead of acting as currency-only gaps.
+The three current constellations remain **Shardway**, **Abyssal Bloom**, and **Silent Array**. The original 14-weapon roster is fully unlockable by Stage 10, then expands to 18 at Stage 11/13/15/17. **Current code has no direct weapon unlock at Stage 12/14/16/18.** Stage 12 and 18 have defined system rewards; Stage 14/16 are intentionally reopened reward slots pending a better progression reward.
 
 ### Post-roster weapons
 
@@ -299,7 +299,7 @@ The three current constellations remain **Shardway**, **Abyssal Bloom**, and **S
 - **Phase Minefield / 위상 기뢰군**: lays mines from movement distance or fallback time, supports chain fuses and tripwires, and gains a triangular constellation deployment at six stacks. Afterimage Mine projects a weaker phantom mine near a priority target.
 - **Interstellar Missile Pods / 성간 미사일 포드**: visible side pods eject missiles outward first, then ignite and curve toward priority targets. MIRV keeps the main warhead at 100% parent damage and adds two 34% side warheads.
 - **Orbital Gate / 궤도 문**: stationary installed gate networks alternate between enemy-side and cast-time-player-side placement. Pulses route through fixed gates; Photon Crossfeed can copy an allied projectile once from the next gate at 55% damage.
-- **Projection Core / 다중 투영 코어** compatibility is bounded: it adds primary seeds, mines, main missiles, or routed gate pulses. Secondary MIRV warheads, phantom mines, forced blooms, and gate copies do not recursively multiply.
+- **Projection Core / 다중 투영 코어** compatibility is bounded: before Stage 18 it remains a Nebula Vault-only reward capped at 2 stacks. Stage 18 first clear also adds it to the ordinary level-up pool and raises the cap to 3. It adds primary seeds, mines, main missiles, or routed gate pulses; secondary MIRV warheads, phantom mines, forced blooms, and gate copies do not recursively multiply.
 
 ### Galaxy map
 
@@ -318,15 +318,16 @@ Final Stage Apex는 공용 보스 풀과 별개다. 18종 모두 독립 기술 �
 ### 시스템 해금
 
 - Stage 1: 코어 성장.
-- Stage 2: 무기 각성.
 - Stage 3: 보스 특수능력. 이전 일반보스는 현재 무기/패시브 +1, 이후 일반보스는 특수능력 선택 보상.
-- Stage 6: Endless + Hard 난이도.
+- Stage 6: **무기 각성 + Endless + Hard 난이도**. 한 번 획득하면 낮은 Stage를 재플레이해도 그대로 사용할 수 있다.
+- Stage 6 전에는 각성 코어 자체가 드랍되지 않고 HUD에도 표시되지 않는다.
 - Stage 12: 일반 레벨업 4지선다.
-- Stage 14: 상급 패시브 I.
-- Stage 16: 상급 패시브 II.
-- Stage 18: 다중 투영 코어의 일반 레벨업 풀 진입.
+- Stage 14 / Stage 16: 무기 해금이 없는 미정 보상 슬롯. `런 시작 레벨 +3` 등 시작 성장 가속을 포함해 후속 설계한다.
+- Stage 18: 다중 투영 코어의 일반 레벨업 풀 진입 + 최대 중첩 2→3. 기존 성운 보관소 획득 경로는 유지한다.
+- 설정의 **해금 관리**에는 이미 획득한 시스템만 표시하며 각 항목을 개별적으로 끄고 다시 켤 수 있다. 획득하지 않은 기능을 강제로 켤 수는 없다.
 - 이벤트는 해금 대상으로 두지 않는다. Boss Rush는 추후 검토한다.
-- DEV 프로필은 시스템 잠금을 무시하고, 장착 슬롯 V/VI는 코어 성장 내부 확장 노드로 유지한다.
+- 현재 Stage 모드는 Endless의 성운 보관소/추락한 우주선/공허 균열 이벤트 런타임을 직접 사용하지 않는다. 이벤트 종류 확대와 Stage 배치는 후속 작업이다.
+- DEV 프로필은 획득 조건을 우회하고, 장착 슬롯 V/VI는 코어 성장 내부 확장 노드로 유지한다.
 
 ### 코어 성장 돌파
 
