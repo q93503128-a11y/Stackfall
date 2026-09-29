@@ -477,9 +477,18 @@ min(30%, 2.5% + 중첩 곡선 × 1.8% + 연쇄 보너스)
 
 ## 6. 맵 이벤트
 
+Endless의 현재 이벤트 풀은 8종이다.
+
 - 성운 보관소
 - 추락한 우주선
 - 공허 균열
+- **조난 신호**: 구조 캡슐 주변을 일정 시간 확보하며 적의 접근을 막는다.
+- **유성 광맥**: 이동하는 광맥 핵을 추적해 채굴 동기화를 채우고, 주변 낙하 위험을 피한다.
+- **포식성 성운**: 위험 성운 내부에서 적을 처치해 포식핵을 역포화한다.
+- **중계기 복구**: 서로 다른 위치의 중계 노드 3개를 순서대로 점유·복구한다.
+- **항성 폭풍의 눈**: 실시간으로 움직이는 안전지대를 따라가며 외부 낙뢰 구간을 버틴다.
+
+현상금 신호와 중력 난파장은 현재 이벤트 풀에 넣지 않는다.
 
 공통 규칙:
 
@@ -663,7 +672,7 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - **보스 위계**: Stage 1~18의 최종보스는 모두 **초월체(Apex) 카테고리**로 통합한다. 각 스테이지는 기존 고유 이름·외형·전용 시그니처 패턴을 유지하고 난이도/체력도 해당 작전의 길이에 맞춰 스케일한다. 다만 런 종료형 스테이지 초월체는 `kind:'stage-boss'`를 유지해 Endless 초월체의 전용 영역 전환·유산 보상 루프를 오작동시키지 않고, 의미상 분류는 `bossCategory:'apex'`로 통일한다.
 - **Stage 1~18 최종 초월체는 공용 공격 레이어를 사용하지 않는다.** 일반보스용 공통 팬/원형 탄막이나 Stage Apex 공용 블래스터·촉수·균열 함수를 붙이지 않고, 18개 보스가 각각 자기 전용 기술 함수를 가진다. S1 붕괴 셔터, S2 심장 흡인맥동, S3 프리즘 삼각 감옥, S4 과거 위치 시간절단, S5 쌍극 견인, S6 항로 수렴, S7 포식 이동, S8 굴곡 뿌리채찍, S9 이중 나선 배양탄, S10 거울 원점 교차사격, S11 수축 종자고, S12 개화핵 외피 개방, S13 무응답 스캔, S14 잡음 셀 오염, S15 다중송신 외부 채널, S16 널 비콘 등대 스윕, S17 프로토콜 새장+톱날, S18 전장 중심 재작성과 메인프레임 코어 노출을 사용한다. 플레이어 현재 위치 또는 실제 이동 경로를 직접 읽는 기술을 포함해 가만히 서 있는 것이 반복적인 안전 해법이 되지 않게 한다. 특히 S6/S12/S18은 각 성좌의 전투 문법을 종합하는 피날레다.
 - 스테이지 일반 적 압박은 진행도와 Stage 번호에 따라 상승하지만, 성능 단계와 화면 규모를 반영한 동시 적 spawn budget으로 상한을 둔다. 후반 난이도는 단순 적 개체 수 폭증보다 적 조합·기믹·중간보스·보스 패턴으로 올린다.
-- 경험치 결정은 엔티티 상한에 도달한 뒤에만 압축하지 않는다. 새 결정이 생길 때 가까운 기존 결정으로 XP 값을 즉시 합치고 값이 커질수록 결정 크기도 로그형으로 증가한다. XP 총량은 보존하며 기존 hard-cap 압축은 최후 안전장치로 남긴다.
+- 경험치 결정은 엔티티 상한에 도달한 뒤에만 압축하지 않는다. 새 결정이 가까운 기존 결정과 합쳐질 때 **플레이어에게 더 가까운 쪽 결정을 남기고 먼 쪽의 XP 값을 그쪽으로 이전**한다. hard-cap 압축도 플레이어 거리순으로 가까운 결정을 보존하고 먼 결정을 가까운 결정에 흡수한다. XP 총량은 보존하며 누적값이 클수록 결정 크기도 로그형으로 증가한다.
 - 정상 데스크톱 기준 spawn budget의 이론 상단은 Stage 1 약 **42체**, Stage 18 약 **67체**이며 실제 값은 각 스테이지 authored cap과의 최솟값이다. 콤팩트 화면에서는 약 **34체 → 53체**, 성능 Tier 1/2에서는 해당 상단을 다시 약 92%/80%로 낮춘다. 한 번의 생성 주기에서 추가되는 일반 적은 최대 2체로 제한한다.
 - 배경은 화면에 고정된 한 장처럼 보이지 않도록 별 레이어와 이동 표식에 월드 좌표 기반 다중 패럴랙스를 적용한다. 플레이어 이동량이 커질수록 가까운 레이어의 이동이 더 크게 보여 실제 항로를 전진하는 감각을 유지한다.
 - 실제 스테이지 전장에도 성좌별 월드 구조를 추가한다. Stage 1–6은 파손된 직선 항로/브레이스/허브 링, Stage 7–12는 월드 좌표에 고정된 뿌리·포낭·개화 구조, Stage 13–18은 릴레이 격자·노드·스캔 라인을 사용한다. 스테이지 번호에 따라 각도·밀도·구조 배치가 조금씩 달라지되 같은 성좌는 한 계열로 읽힌다. Endless는 이 구조물을 사용하지 않는다.
@@ -726,7 +735,7 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - **Shardway / 파편의 항로 (Stage 1–6)**: collapsed route infrastructure, shard hosts, ion shear, refraction, time distortion, magnetar pressure, then route convergence.
 - **Abyssal Bloom / 심연의 개화 (Stage 7–12)**: living stellar growth, spores, roots, sap vessels, seed spirals, reflection petals, husk pressure, then full biological convergence.
 - **Silent Array / 침묵 중계망 (Stage 13–18)**: dead relay megastructures, broken carriers, static, packet storms, sensor blind zones, sealed protocols, then network-wide silence collapse.
-- The original 14-item normal weapon roster is permanently unlockable by Stage 10. The roster then expands to 18 through Vacuum Bloom (11), Phase Minefield (13), Interstellar Missile Pods (15), and Orbital Gate (17). **Current code has no direct weapon unlock at Stage 12, 14, 16, or 18.** Stage 12 owns the four-way level-up unlock and Stage 18 owns the Multiplicity expansion; Stage 14 and 16 gameplay rewards are intentionally reopened for further design instead of being prematurely fixed.
+- The original 14-item normal weapon roster is permanently unlockable by Stage 10. The roster then expands to 18 through Vacuum Bloom (11), Phase Minefield (13), Interstellar Missile Pods (15), and Orbital Gate (17). **Current code has no direct weapon unlock at Stage 12, 14, 16, or 18.** Their system rewards are Stage 12 four-way choices, Stage 14 Advanced Start +3, Stage 16 Core Development III, and Stage 18 Multiplicity expansion.
 
 ### Post-Stage-10 weapons
 
@@ -844,7 +853,7 @@ These four weapons are implemented and connected to Stage 11/13/15/17 first-clea
 | 13 | Phase Minefield / 위상 기뢰군 | 구현 완료 |
 | 14 | **미정 보상 슬롯** | 무기 해금 없음. `런 시작 레벨 +3` 같은 시작 성장 가속을 포함해 후속 설계 |
 | 15 | Interstellar Missile Pods / 성간 미사일 포드 | 구현 완료 |
-| 16 | **미정 보상 슬롯** | 무기 해금 없음. Stage 14와 역할이 겹치지 않는 별도 영구 해금으로 후속 설계 |
+| 16 | 코어 성장 3차 돌파 | 생명 코어와 출력 증폭기만 Lv.12까지 확장하며 세 번째 돌파를 연다. |
 | 17 | Orbital Gate / 궤도 문 | 구현 완료 |
 | 18 | 다중 투영 프로토콜 | 성운 보관소 획득 경로를 유지하면서 일반 레벨업 풀 진입 + 최대 중첩 2→3 |
 Implementation status: all four reward keys are connected only after their definitions, stack text, combat runtime, render/audio treatment, augment definitions, multiplicity barriers, progression reconstruction, and regression contracts were added together.
@@ -855,18 +864,19 @@ Implementation status: all four reward keys are connected only after their defin
 - **Stage 3**: Boss Special Abilities / 보스 특수능력. 이 해금 전 일반보스는 특수능력 선택창 대신 현재 보유 무기 또는 패시브 +1 성장 보상을 준다.
 - **Stage 6**: **Weapon Awakening + Endless Expedition + Hard**. 각성은 Stage 6 최초 클리어로 계정 진행도에 영구 획득된다. 이후 Stage 1을 재플레이해도 각성 코어 드랍, 각성 HUD, 6중첩 각성 선택을 정상 사용할 수 있다.
 - **각성 해금 전**에는 각성 코어가 드랍되지 않고 전투 HUD에도 각성 코어 항목을 노출하지 않는다. 해금 기능을 설정에서 일시 비활성화한 경우에도 같은 규칙을 적용한다.
-- **Stage 12**: 4중 재구성 — 일반 레벨업 선택지 4개.
-- **Stage 14**: `선행 재구성 +3` — 이후 Stage/Endless를 포함한 모든 런에서 시작 직후 일반 레벨업 선택을 3회 연속 수행하고 Lv.4로 전투를 시작한다. 경험치나 전투 시간을 소모하지 않는다.
+- **Stage 12**: 4중 재구성 — 일반 레벨업 선택지 4개. 데스크톱에서는 보스 특수능력 4지선다와 동일하게 **4개를 한 행에 일렬 배치**하고 좁은 화면에서만 반응형 배치를 허용한다.
+- **Stage 14**: `선행 재구성 +3` — 이후 Stage/Endless를 포함한 모든 런에서 시작 직후 일반 레벨업 선택을 3회 연속 수행하고 Lv.4로 전투를 시작한다. 경험치나 전투 시간을 소모하지 않는다. 일시정지 메뉴의 `게임 다시 시작`과 게임오버 `다시 시작`도 클릭 시점의 최신 `resetGame()` 래퍼를 호출하므로 이 보너스를 동일하게 다시 적용한다.
 - **Stage 16**: `코어 성장 3차 돌파` — 생명 코어와 출력 증폭기에만 9~12레벨을 추가한다. 공격 주기·회수 자장·충격 격자·성진 회수기·장착 슬롯에는 3차 돌파를 추가하지 않는다.
 - **Stage 18**: 다중 투영 프로토콜 — 기존 성운 보관소 획득은 유지하고 일반 레벨업 풀에도 추가하며 최대 중첩을 2에서 3으로 늘린다.
-- **설정 > 해금 관리**에는 이미 획득한 기능만 나타난다. 각 기능을 개별적으로 끄고 다시 켤 수 있지만, 아직 획득하지 않은 기능을 강제로 활성화할 수는 없다.
+- **설정 > 해금 관리**는 기본 접힘 상태이며, 이미 획득한 **자동 적용형** 해금만 개별 ON/OFF할 수 있다. 현재 대상은 무기 각성, 보스 특수능력, 4중 재구성, 선행 재구성 +3, 다중 투영 프로토콜이다. 코어 성장, Endless, Hard, 코어 성장 3차 돌파처럼 별도 메뉴/선택 행동이 필요한 해금은 토글 목록에서 제외한다.
 - DEV 프로필(`?dev=1`)은 테스트 편의를 위해 획득 조건을 우회한다. 장착 슬롯 V/VI는 기존 Core Development 확장 노드로 유지한다.
 - Boss Rush는 추후 별도 모드로 검토하며 현재 구현하지 않는다.
-- 현재 Stage 모드는 `randomWorldEvents:false`이며 **성운 보관소 / 추락한 우주선 / 공허 균열의 Endless 이벤트 런타임을 아직 Stage에 직접 배치하지 않는다.** 이벤트 종류 확대와 Stage별 고정·반고정 배치는 별도 후속 패스로 진행한다.
+- 현재 Stage 모드는 `randomWorldEvents:false`이며 **8종 Endless 이벤트 런타임을 아직 Stage에 직접 배치하지 않는다.** Stage별 고정·반고정 이벤트 배치는 별도 후속 패스로 진행한다.
 
 ### Galaxy map
 
 - The main menu is a mode-selection hub. `GALACTIC OPERATIONS` opens the galaxy map, `ENDLESS` opens sortie preparation, and `CORE DEVELOPMENT` opens persistent upgrades; none starts combat accidentally. The upper-left local-pilot card is clickable and exposes detailed local-save stats without implying online-account sync.
+- 잠긴 `ENDLESS`와 `CORE DEVELOPMENT` 대형 카드는 어두운 금속색 **X자 사슬 + 중앙 자물쇠** 오버레이로 잠금을 명확히 표시한다. Galaxy Map의 잠긴 Stage/별자리 노드는 사슬/자물쇠를 사용하지 않고 기존처럼 회색 비활성 상태만 사용한다.
 - `src/stage-map.js` renders nodes from `STACKFALL_STAGE_CATALOG` and resolves availability/clear state through persistent meta progression.
 - Stage 1 is launchable while its status is `available` or `cleared`. Future `planned` or progression-locked stages remain inspectable but cannot launch.
 - The map and operation details are separated: luminous stellar points with separate number badges and constellation links stay on the map, while the detail panel carries game time, threat, unlock progress, boss, and launch state. Internal gimmick/event counts are not exposed as stage-detail stats.
