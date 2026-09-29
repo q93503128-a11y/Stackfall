@@ -173,7 +173,7 @@
   window.stackfallAwakeningState=()=>({cores:state.awakeningCores||0,awakened:{...(state.awakenedWeapons||{})},available:available()});
 
   function awakeningCoreDropAmount(enemy){
-    if(!enemy||enemy.dead!==true||enemy.kind==='stage-boss'||enemy.stageEncounterNoCore===true)return 0;
+    if(!enemy||enemy.dead!==true||enemy.kind==='stage-boss')return 0;
     if(enemy.kind==='apex')return 2;
     if(enemy.kind==='stage-mini')return enemy.noEliteReward===true?0:1;
     if(enemy.type==='boss'){
