@@ -794,7 +794,7 @@ These four weapons are implemented and connected to Stage 11/13/15/17 first-clea
 - Identity boundary: Orbital Gate is an **installed arena tool**, not another orbiting weapon. Its tactical cost is positional: a badly placed network can be left behind, while a well-placed network can dominate a boss or choke point for its full lifetime.
 
 #### Projectile-count compatibility — Multiplicity Core / 다중 투영 코어
-- The runtime already exposes **Multiplicity Core / 다중 투영 코어** as an event-only passive with **maximum 2 stacks**. The four post-roster weapons use the compatibility rules below.
+- **Multiplicity Core / 다중 투영 코어** has maximum 2 stacks. Before Stage 18 it is obtainable through its existing event reward path only; Stage 18 first clear unlocks it into the ordinary level-up pool as well. The four post-roster weapons use the compatibility rules below.
 - Each stack grants **+1 real attack body** to compatible equipment. "Attack body" is interpreted by weapon identity instead of blindly cloning every sub-projectile.
 - Extra projected attack bodies follow the weapon's existing target/placement intent. They must not randomly scatter to unrelated targets merely because Multiplicity is present.
 - Submunitions, reflected shots, chained hits, recursive copies, augment-generated children, and other secondary payloads are **not** independently multiplied unless explicitly stated below. This prevents exponential projectile growth.
