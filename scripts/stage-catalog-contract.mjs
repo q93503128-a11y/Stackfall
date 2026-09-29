@@ -3,7 +3,7 @@ const source=fs.readFileSync('src/stage-catalog.js','utf8'),core=fs.readFileSync
 const baseWeaponBlock=core.slice(core.indexOf('const WEAPONS={'),core.indexOf('const PASSIVES=')),knownWeapons=new Set();
 for(const match of baseWeaponBlock.matchAll(/^\s{2}([A-Za-z][A-Za-z0-9_-]*):\{name:/gm))knownWeapons.add(match[1]);
 for(const match of runtimeConfig.matchAll(/WEAPONS\.([A-Za-z][A-Za-z0-9_-]*)\s*=/g))knownWeapons.add(match[1]);
-const initialSource=(meta.match(/INITIAL_WEAPONS=Object\.freeze\(\[([^\]]*)\]\)/)||[])[1]||'',initialWeapons=new Set([...initialSource.matchAll(/'([^']+)'/g)].map(match=>match[1])),currencyKeys=new Set(['stardust','coreShard']),featureKeys=new Set(['core-development','awakening','special-ability','endless','hard','choice-4','advanced-passives-1','advanced-passives-2','multiplicity-protocol']);
+const initialSource=(meta.match(/INITIAL_WEAPONS=Object\.freeze\(\[([^\]]*)\]\)/)||[])[1]||'',initialWeapons=new Set([...initialSource.matchAll(/'([^']+)'/g)].map(match=>match[1])),currencyKeys=new Set(['stardust','coreShard']),featureKeys=new Set(['core-development','awakening','special-ability','endless','hard','choice-4','multiplicity-protocol']);
 const stages=[...(sandbox.window.STACKFALL_STAGE_CATALOG||[])],pages=[...(sandbox.window.STACKFALL_CONSTELLATIONS||[])],expectedDurations=[300,330,360,390,420,450,480,510,540,570,600,630,660,690,720,780,840,900],fail=[];
 const assert=(condition,message)=>{if(!condition)fail.push(message);};
 assert(stages.length>0,'stage catalog is empty');assert(pages.length>0,'constellation catalog is empty');
@@ -23,12 +23,10 @@ for(let i=0;i<stages.length;i++){
 for(const page of pages){const owned=stages.filter(stage=>stage.constellationId===page.id),coords=new Set();assert(owned.length>0,'constellation has no stages '+page.id);assert(owned.length===6,'authored constellation must contain six stages '+page.id);for(const stage of owned){const key=stage.node.x.toFixed(4)+','+stage.node.y.toFixed(4);assert(!coords.has(key),'duplicate node coordinate '+stage.id);coords.add(key);}if(page.order>1){const first=owned[0],previous=stages[first.order-2];assert(first.requirements?.previous===previous?.id,'constellation boundary must continue progression '+page.id);}}
 assert(new Set(stages.map(stage=>stage.durationSeconds)).size>=8,'campaign durations must not collapse back to one fixed boss time');
 assert(stages.find(row=>row.id==='stage-01')?.rewards?.some(reward=>reward.type==='feature'&&reward.key==='core-development'),'Stage 1 must unlock Core Development');
-assert(stages.find(row=>row.id==='stage-02')?.rewards?.some(reward=>reward.type==='feature'&&reward.key==='awakening'),'Stage 2 must unlock Weapon Awakening');
+assert(!stages.find(row=>row.id==='stage-02')?.rewards?.some(reward=>reward.type==='feature'&&reward.key==='awakening'),'Stage 2 must not unlock Weapon Awakening');
 assert(stages.find(row=>row.id==='stage-03')?.rewards?.some(reward=>reward.type==='feature'&&reward.key==='special-ability'),'Stage 3 must unlock Boss Special Abilities');
-assert(['endless','hard'].every(key=>stages.find(row=>row.id==='stage-06')?.rewards?.some(reward=>reward.type==='feature'&&reward.key===key)),'Stage 6 must unlock Endless and Hard');
+assert(['awakening','endless','hard'].every(key=>stages.find(row=>row.id==='stage-06')?.rewards?.some(reward=>reward.type==='feature'&&reward.key===key)),'Stage 6 must unlock Awakening, Endless, and Hard');
 assert(stages.find(row=>row.id==='stage-12')?.rewards?.some(reward=>reward.type==='feature'&&reward.key==='choice-4'),'Stage 12 must unlock four-way choices');
-assert(stages.find(row=>row.id==='stage-14')?.rewards?.some(reward=>reward.type==='feature'&&reward.key==='advanced-passives-1'),'Stage 14 must unlock Advanced Passives I');
-assert(stages.find(row=>row.id==='stage-16')?.rewards?.some(reward=>reward.type==='feature'&&reward.key==='advanced-passives-2'),'Stage 16 must unlock Advanced Passives II');
 assert(stages.find(row=>row.id==='stage-18')?.rewards?.some(reward=>reward.type==='feature'&&reward.key==='multiplicity-protocol'),'Stage 18 must unlock Multiplicity Protocol');
 const postRosterUnlocks=[['stage-11','vacuum'],['stage-13','mine'],['stage-15','missile'],['stage-17','gate']];
 for(const[stageId,key]of postRosterUnlocks){const stage=stages.find(row=>row.id===stageId);assert(stage?.rewards?.some(reward=>reward.type==='weapon'&&reward.key===key),'missing post-roster unlock '+key+' at '+stageId);}
