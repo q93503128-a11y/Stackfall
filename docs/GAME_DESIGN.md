@@ -443,7 +443,7 @@ min(30%, 2.5% + 중첩 곡선 × 1.8% + 연쇄 보너스)
 - 런타임은 19종 각성 정의, 6중첩/각성 여부 검사, 각성 코어 보유량 검사, 붉은 월식 선택창, “각성하지 않는다” 복귀, 코어 1개 소비, 각성 상태 기록, 짧은 변환 연출과 각성명/아이콘 표시를 담당한다.
 - 레벨업 자동 선택이 켜져 있어도 각성 화면은 건너뛰지 않으며 **각성은 자동 확정하지 않는다**.
 - “각성하지 않는다”를 고르면 같은 레벨업의 일반 선택 처리로 즉시 이어진다.
-- **각성 코어는 영구 재화가 아닌 런 내부 임시 자원**이다. 획득처는 보스 전투로 확정한다. 무한모드 일반 보스·공허 보스·기함급 보스와 스테이지 중간보스는 1개, 초월체는 2개를 지급한다. 스테이지 최종보스는 처치와 동시에 런이 종료되므로 각성 코어를 지급하지 않는다. 쌍둥이형 보스는 보상 중복을 막아 한 조우당 한 번만 지급한다. 코어 성장/프로필의 영구 재화 지갑에는 각성 코어를 표시하거나 저장하지 않는다.
+- **각성 코어는 영구 재화가 아닌 런 내부 임시 자원**이다. 일반보스·공허/기함급 보스는 기본 1개를 확정 지급하고, **Stage 중간보스는 35% 확률로 1개**를 지급한다. Endless 초월체는 기존 2개를 유지한다. 스테이지 최종 초월체는 처치와 동시에 런이 종료되므로 각성 코어를 지급하지 않는다. 쌍둥이형 보스는 한 조우당 한 번만 판정한다. 코어 성장/프로필 영구 지갑에는 각성 코어를 저장하지 않는다.
 - 런 종료 시 남은 각성 코어는 버리지 않고 **코어 1개당 기본 Stardust 40**으로 환전한다. 실제 지급량에는 해당 런의 Stardust 획득 배율(난이도 및 Salvage)이 적용된다. 사망, 스테이지 클리어, 중도 종료 모두 동일하며 환전 직후 코어는 0이 된다. 결과 화면에는 `CORE ×N → ✦ 지급량`을 별도로 표시한다.
 - 공통 상태/UX 계층에 이어 **A1~A19 전 무기의 실제 전투 메커닉과 전용 렌더링 1차 구현까지 완료**했다. 이후 작업은 전수 실플레이 검증·수치 조정·연출 다듬기 단계다.
 - **각성은 단순 외형 강화에 묶이지 않는다.** 일반 무기는 각성 시 기본 공격 패턴 자체를 각성 전용 패턴으로 교체할 수 있으며, 기존 1~6중첩 성장·특수능력·패시브 호환성은 유지한다. 색상/파티클만 바꾸고 실전 공격이 동일한 상태를 각성 완료로 취급하지 않는다.
@@ -453,7 +453,7 @@ min(30%, 2.5% + 중첩 곡선 × 1.8% + 연쇄 보너스)
 - A4 천궁 성채: 기존 보호막/Reflective Barrier 구조를 유지하면서 여러 장갑판을 상시 표시한다. 피격 방향의 판이 실제로 전개되고 큰 피해에는 반원형 결합벽을 표시한다. 보유 보호막이 0으로 깨지는 순간 1회의 성채 파괴 반격파를 발생시키며 그 반격파가 다시 보호막 파괴를 재귀 발생시키지 않는다.
 - A5 쌍성 붕괴: 6중첩의 원본 우물 2개를 한 쌍으로 묶어 청색/주홍 특이점으로 구분한다. 수명 종료 직전 한 번만 합체 연출과 최종 단일 붕괴를 추가한다. 기존 종말 붕괴는 각 우물에 그대로 남고, 다중 투영 우물은 별도 쌍성 합체 횟수를 만들지 않는다.
 - A6 종언 혜성창: 기존 혜성창 발사는 그대로 유지하고 비에코 원본 발동 **4회마다** 약 0.34초 동안 플레이어 전방에 특대창을 명확히 실체화/압축한 뒤 초고속 관통창을 추가 발사한다. 특대창은 사실상 전장을 끝까지 뚫는 높은 관통 수치를 사용하며, 혜성 편대·다중 투영은 이 주기를 추가로 올리지 않는다.
-- A7 월상 회귀: 모든 각성 부메랑에 외향 뒤 약 **0.48초의 큰 순환 궤도**를 추가한다. 초승달에서 순환 구간의 거의 보름달까지 차오르고, 귀환에서는 다시 얇은 달로 기운다. 첫 유효 귀환 타격에는 1회 달빛 파문을 추가하며 파문은 새 부메랑을 만들지 않는다.
+- A7 월상 회귀: 각성 부메랑은 외향 종료 시 조준한 적을 직접 한 번 절단한 뒤 약 **0.56초** 동안 표적 중심을 추적하는 월상 궤도에 들어간다. 궤도 반경은 수축→중심 관통→재확장되어 표적 옆만 도는 현상을 막는다. 초승달에서 보름달로 차오르고 귀환에서는 밝은 면이 반대로 넘어가며 다시 얇은 달로 기운다. 첫 유효 귀환 타격에는 1회 달빛 파문을 추가한다.
 - A8 성좌 왕관: 공유 표적 락과 1.0초 조준 계약을 그대로 사용한다. 동일 표적에서 집속이 최대 단계에 처음 도달하면 왕관 꼭짓점이 완성되고 약 **0.30초 정지 후** 표적 중심에 굵은 백색 광주를 1회 발사한다. 동일 집속 사이클에서는 다중 투영 프리즘 수가 늘어도 광주 횟수는 늘지 않는다. 잠긴 표적이 사망하면 왕관 파쇄 연출을 남긴다. **과열 성선**은 기존 최대 집속 처리에서 그대로 적용된다.
 - A9 영겁 시계: 각성 시계의 기본 1회전은 **7.2초 × hasteMult(), 최소 4.8초**다. 한 바퀴가 끝나면 일반 적 1.65초, 중간보스 1.05초, 일반/스테이지 보스 0.55초의 시간 봉쇄를 걸며 초월체는 면역이다. 범위 안 적 탄환은 약 **0.72초 동안 정상 속도의 5.5% 수준**으로 정지에 가깝게 감속한다. 동시에 모든 장비 재사용 대기시간을 **0.80 + 시간 고리 중첩×0.08초** 추가 전진시킨다. **시간 파쇄**는 이 봉쇄 상태를 그대로 읽는다.
 - A10 천뢰 회로: 이온 사슬에 맞고 살아 있는 적은 최대 7개의 발광 노드로 남으며 각 노드는 약 **2.65초** 유지된다. 서로 다른 활성 노드가 **5개 이상**이면 회로를 잠깐 정지시키고 약 **0.19초 후** 현재 가장 체력이 높은 핵심 노드에 천뢰를 낙하시켜 전체 노드를 동시 방전한 뒤 노드를 비운다. 천뢰 방전은 ion-burst라 새 노드를 만들지 않는다. 기존 **초전도 성좌망**의 약한 두 번째 사슬도 다시 실제 런타임에 연결되며 별도의 적 무리를 타격하고 각성 노드를 만들 수 있지만, 그 보조망 자체가 다시 보조망을 호출하지 않는다.
@@ -655,12 +655,14 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - Every authored stage has fixed milestone incidents plus a persistent environmental gimmick loop that accelerates toward the final boss.
 - 스테이지 환경 기믹은 보스 공격과 같은 텔레그래프 문법을 사용하지 않는다. Stage 1–6은 **파손된 항로 레일·브레이스·셔터**, Stage 7–12는 **뿌리·꽃잎·생체 격벽**, Stage 13–18은 **중계 회로·스캔 섹터·데이터 셔터**를 공통 시각 언어로 사용한다. 같은 별자리 안에서는 계열감을 유지하되 `environmentVariant`에 따라 회전·노드·배치가 달라진다.
 - 환경 기믹 예고는 별도의 작은 환경 경고 UI를 사용하고, 보스/중간보스의 대형 경고창을 재사용하지 않는다. 환경 기믹 충격도 보스용 백색 섬광·강한 화면 흔들림 대신 구조물 폐쇄/개화/스캔 종료에 가까운 약한 환경 반응으로 처리한다.
+- 환경 기믹의 피해·속도·경고시간은 **Stage 번호와 현재 진행도만으로 별도 스케일**한다. S1~3 초반은 기준 피해의 약 56%와 느린 속도/긴 경고에서 시작하고, 후반 Array는 진행 후반에 기준 피해를 넘어 최대 약 122%까지 상승할 수 있다. 이 보정은 환경 기믹 컨텍스트에만 적용되어 보스 공격에는 절대 적용되지 않는다.
 - **중간 전투 디렉터**: Stage 진행 중에는 중간보스와 일반 보스를 별자리 계열별 공용 풀에서 섞어 배치한다. Route는 중간보스 4종/일반보스 4종, Bloom은 4종/3종, Array는 5종/4종 풀을 사용한다. 같은 별자리 안에서 형태를 공유하되 Route는 항로 절단, Bloom은 생성·개화·붕괴, Array는 스캔·안전 채널 문법의 추가 공격층을 사용한다.
-- **밀도 곡선**: Stage 1~2는 중간보스 1 + 일반보스 1에서 시작하고, Stage 6은 3+2, Stage 12는 3+3, Stage 18은 4+3까지 상승한다. 앞선 보스를 아직 잡지 못했더라도 다음 예정 시점이 오면 같은 Stage 안에서 보스 전투가 겹칠 수 있다. 동시 서브보스 전투 상한은 Route 2, Bloom 3, Array 4이며 최종 초월체는 이 공용 풀과 별개다.
-- **성장 보상**: Stage 중간보스와 일반보스는 등장 수가 늘어난 만큼 실제 성장 자원도 정상 지급한다. 중간보스/일반보스 처치마다 각성 코어를 지급하며, 추가 보스를 넣었다는 이유로 XP나 각성 코어를 인위적으로 깎지 않는다. Mirror처럼 한 전투가 쌍둥이 개체로 구성되는 경우에는 기존 twin 보상 규칙대로 한 보스 전투당 한 번만 보상한다.
+- **밀도 곡선**: Stage 서브보스는 `중간보스 → 중간보스 → 일반보스`를 한 묶음으로 반복한다. S1~2는 1묶음(2+1), S6은 3묶음(6+3), S12는 5묶음(10+5), S18은 8묶음(16+8)까지 증가한다. 앞선 보스를 아직 잡지 못했더라도 동시 전투 상한 전에는 다음 예정 보스가 들어오며, 상한은 Route 3 / Bloom 4 / Array 5다. 최종 초월체는 이 공용 풀과 별개다.
+- **성장 보상**: Stage 중간보스와 일반보스는 추가된 전투 수만큼 정상 XP/성장 보상을 제공한다. 각성 코어는 **일반보스 확정 1개**, **중간보스 35% 확률 1개**다. Mirror처럼 한 전투가 쌍둥이 개체로 구성되는 경우에는 twin 보상 중복 방지 규칙을 유지한다.
 - **보스 위계**: Stage 1~18의 최종보스는 모두 **초월체(Apex) 카테고리**로 통합한다. 각 스테이지는 기존 고유 이름·외형·전용 시그니처 패턴을 유지하고 난이도/체력도 해당 작전의 길이에 맞춰 스케일한다. 다만 런 종료형 스테이지 초월체는 `kind:'stage-boss'`를 유지해 Endless 초월체의 전용 영역 전환·유산 보상 루프를 오작동시키지 않고, 의미상 분류는 `bossCategory:'apex'`로 통일한다.
-- **Stage 1~18 최종보스는 공통 탄막 템플릿만 반복하지 않는다.** 기존 기본 공격 루프 위에 각 보스별 독립 시그니처 세트피스를 추가한다. Route는 대각 항로 절단·성운 심장 동심파·프리즘 삼각 감옥·시계바늘 스윕·양극 포획·항로 수렴, Bloom은 꽃잎 봉쇄·혈관 레일·이중 나선·거울 원점 공격·종자 포위·개화 폐쇄, Array는 안전 채널 스캔·안전 셀 잡음격자·다중화 채널 전환·블라인드 팬 스윕·수축 사각 프로토콜·수축 다각형 침묵 봉쇄를 사용한다. 여기에 별도 manifested technique 층을 두어 예고 장판만 남지 않게 한다. 실제 외부 포대/블래스터가 광선을 발사하고, Bloom 계열은 굽어지는 뿌리·촉수형 에너지체가 전장에 뻗으며, 균열은 열린 지점에서 실제 투사체와 광축이 분출한다. Stage 18은 블래스터·촉수·균열을 복합 사용한다. 이 시그니처는 체력 페이즈가 오를수록 밀도/속도가 증가하며 Stage 6/12/18은 일반 스테이지보다 더 자주 사용한다.
+- **Stage 1~18 최종 초월체는 공용 공격 레이어를 사용하지 않는다.** 일반보스용 공통 팬/원형 탄막이나 Stage Apex 공용 블래스터·촉수·균열 함수를 붙이지 않고, 18개 보스가 각각 자기 전용 기술 함수를 가진다. S1 붕괴 셔터, S2 심장 흡인맥동, S3 프리즘 삼각 감옥, S4 과거 위치 시간절단, S5 쌍극 견인, S6 항로 수렴, S7 포식 이동, S8 굴곡 뿌리채찍, S9 이중 나선 배양탄, S10 거울 원점 교차사격, S11 수축 종자고, S12 개화핵 외피 개방, S13 무응답 스캔, S14 잡음 셀 오염, S15 다중송신 외부 채널, S16 널 비콘 등대 스윕, S17 프로토콜 새장+톱날, S18 전장 중심 재작성과 메인프레임 코어 노출을 사용한다. 플레이어 현재 위치 또는 실제 이동 경로를 직접 읽는 기술을 포함해 가만히 서 있는 것이 반복적인 안전 해법이 되지 않게 한다. 특히 S6/S12/S18은 각 성좌의 전투 문법을 종합하는 피날레다.
 - 스테이지 일반 적 압박은 진행도와 Stage 번호에 따라 상승하지만, 성능 단계와 화면 규모를 반영한 동시 적 spawn budget으로 상한을 둔다. 후반 난이도는 단순 적 개체 수 폭증보다 적 조합·기믹·중간보스·보스 패턴으로 올린다.
+- 경험치 결정은 엔티티 상한에 도달한 뒤에만 압축하지 않는다. 새 결정이 생길 때 가까운 기존 결정으로 XP 값을 즉시 합치고 값이 커질수록 결정 크기도 로그형으로 증가한다. XP 총량은 보존하며 기존 hard-cap 압축은 최후 안전장치로 남긴다.
 - 정상 데스크톱 기준 spawn budget의 이론 상단은 Stage 1 약 **42체**, Stage 18 약 **67체**이며 실제 값은 각 스테이지 authored cap과의 최솟값이다. 콤팩트 화면에서는 약 **34체 → 53체**, 성능 Tier 1/2에서는 해당 상단을 다시 약 92%/80%로 낮춘다. 한 번의 생성 주기에서 추가되는 일반 적은 최대 2체로 제한한다.
 - 배경은 화면에 고정된 한 장처럼 보이지 않도록 별 레이어와 이동 표식에 월드 좌표 기반 다중 패럴랙스를 적용한다. 플레이어 이동량이 커질수록 가까운 레이어의 이동이 더 크게 보여 실제 항로를 전진하는 감각을 유지한다.
 - 실제 스테이지 전장에도 성좌별 월드 구조를 추가한다. Stage 1–6은 파손된 직선 항로/브레이스/허브 링, Stage 7–12는 월드 좌표에 고정된 뿌리·포낭·개화 구조, Stage 13–18은 릴레이 격자·노드·스캔 라인을 사용한다. 스테이지 번호에 따라 각도·밀도·구조 배치가 조금씩 달라지되 같은 성좌는 한 계열로 읽힌다. Endless는 이 구조물을 사용하지 않는다.
@@ -689,28 +691,30 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 
 ### Stage sub-boss cadence
 
-| Stage | 중간보스 | 일반보스 | 진행도 배치 |
-|---|---:|---:|---|
-| 01 | 1 | 1 | M34% · B72% |
-| 02 | 1 | 1 | M30% · B66% |
-| 03 | 2 | 1 | M24% · M50% · B78% |
-| 04 | 2 | 1 | M22% · B47% · M70% |
-| 05 | 2 | 2 | M20% · B42% · M63% · B82% |
-| 06 | 3 | 2 | M17% · B34% · M50% · B66% · M80% |
-| 07 | 2 | 1 | M22% · B48% · M70% |
-| 08 | 2 | 2 | M20% · B40% · M60% · B79% |
-| 09 | 2 | 2 | M18% · B36% · M55% · B77% |
-| 10 | 3 | 2 | M16% · B33% · M49% · B66% · M81% |
-| 11 | 3 | 2 | M15% · B30% · M45% · B61% · M78% |
-| 12 | 3 | 3 | M13% · B26% · M38% · B51% · M64% · B79% |
-| 13 | 2 | 2 | M18% · B35% · M52% · B72% |
-| 14 | 3 | 2 | M15% · B31% · M45% · B61% · M77% |
-| 15 | 3 | 2 | M14% · B28% · M42% · B57% · M72% |
-| 16 | 3 | 3 | M12% · B24% · M36% · B49% · M62% · B78% |
-| 17 | 4 | 3 | M10% · B21% · M32% · B44% · M56% · B68% · M80% |
-| 18 | 4 | 3 | M9% · B19% · M30% · B42% · M54% · B66% · M79% |
+모든 Stage의 서브보스 순서는 **M → M → B**를 한 묶음으로 반복한다. M은 중간보스, B는 일반보스다. 각 묶음은 최종 초월체 등장 전 구간에 균등하게 분산된다.
 
-M은 중간보스, B는 일반보스다. 일정 시점에 앞선 서브보스가 아직 살아 있어도 다음 예정 전투는 지연하지 않는다. 동시에 유지할 수 있는 서브보스 전투는 Route 최대 2, Bloom 최대 3, Array 최대 4이며, 상한에 도달했을 때만 다음 예정 전투가 잠시 대기한다. 고정 wave/hazard 및 지속 기믹 루프는 그대로 별도 진행된다.
+| Stage | 묶음 수 | 중간보스 | 일반보스 | 합계 |
+|---|---:|---:|---:|---:|
+| 01 | 1 | 2 | 1 | 3 |
+| 02 | 1 | 2 | 1 | 3 |
+| 03 | 2 | 4 | 2 | 6 |
+| 04 | 2 | 4 | 2 | 6 |
+| 05 | 2 | 4 | 2 | 6 |
+| 06 | 3 | 6 | 3 | 9 |
+| 07 | 3 | 6 | 3 | 9 |
+| 08 | 3 | 6 | 3 | 9 |
+| 09 | 4 | 8 | 4 | 12 |
+| 10 | 4 | 8 | 4 | 12 |
+| 11 | 4 | 8 | 4 | 12 |
+| 12 | 5 | 10 | 5 | 15 |
+| 13 | 5 | 10 | 5 | 15 |
+| 14 | 5 | 10 | 5 | 15 |
+| 15 | 6 | 12 | 6 | 18 |
+| 16 | 6 | 12 | 6 | 18 |
+| 17 | 7 | 14 | 7 | 21 |
+| 18 | 8 | 16 | 8 | 24 |
+
+앞선 서브보스가 살아 있어도 다음 예정 전투는 동시 상한까지 진입한다. 동시 서브보스 전투 상한은 Route 3 / Bloom 4 / Array 5이며, 상한에 도달했을 때만 다음 예정 전투가 대기한다. 보스 HUD는 쌍둥이를 한 조우로 묶고 살아 있는 각 조우의 HP 바를 동시에 표시한다.
 
 난이도는 전투 수치뿐 아니라 **성진(Stardust) 획득량**에도 적용한다. 쉬움은 ×0.85, 보통은 ×1.00, 어려움은 ×1.30이다. 무기 해금과 Core Shard는 난이도 배율로 줄이거나 늘리지 않는다.
 
@@ -721,7 +725,7 @@ M은 중간보스, B는 일반보스다. 일정 시점에 앞선 서브보스가
 - **Shardway / 파편의 항로 (Stage 1–6)**: collapsed route infrastructure, shard hosts, ion shear, refraction, time distortion, magnetar pressure, then route convergence.
 - **Abyssal Bloom / 심연의 개화 (Stage 7–12)**: living stellar growth, spores, roots, sap vessels, seed spirals, reflection petals, husk pressure, then full biological convergence.
 - **Silent Array / 침묵 중계망 (Stage 13–18)**: dead relay megastructures, broken carriers, static, packet storms, sensor blind zones, sealed protocols, then network-wide silence collapse.
-- The original 14-item normal weapon roster is permanently unlockable by Stage 10. The roster then expands to 18 through Vacuum Bloom (11), Phase Minefield (13), Interstellar Missile Pods (15), and Orbital Gate (17); the alternating stages retain currency/Core-Shard emphasis.
+- The original 14-item normal weapon roster is permanently unlockable by Stage 10. The roster then expands to 18 through Vacuum Bloom (11), Phase Minefield (13), Interstellar Missile Pods (15), and Orbital Gate (17). Stages 12/14/16/18 are not currency-only gaps: they unlock four-way reconstruction, Advanced Passives I, Advanced Passives II, and the normal-pool Multiplicity Protocol.
 
 ### Post-Stage-10 weapons
 
@@ -832,26 +836,31 @@ These four weapons are implemented and connected to Stage 11/13/15/17 first-clea
 - Static contracts test the post-roster definitions, unlock positions, combat runtime, renderer, augment definitions, and Multiplicity export; runtime recursion barriers remain part of the weapon implementation contract.
 
 #### Unlock cadence
-| Stage | First-clear weapon reward | Why |
+| Stage | First-clear gameplay reward | Why |
 |---|---|---|
-| 11 | Vacuum Bloom / 진공 개화 | Fits the seed/husk death-chain ecology and immediately starts the post-Stage-10 roster expansion. |
-| 12 | — | Keep the constellation finale focused on Core Shards rather than stacking another weapon reward. |
-| 13 | Phase Minefield / 위상 기뢰군 | Dead Relay introduces route control and makes movement through the relay field mechanically meaningful. |
-| 14 | — | Currency/Core progression break. |
-| 15 | Interstellar Missile Pods / 성간 미사일 포드 | Packet Stormfront is the best technological fit for visible side-mounted guided salvos. |
-| 16 | — | Currency/Core progression break. |
-| 17 | Orbital Gate / 궤도 문 | Late Silent Array reward with the highest spatial/network complexity. |
-| 18 | — | Preserve the third constellation finale as a Core Shard payoff. |
+| 11 | Vacuum Bloom / 진공 개화 | Post-Stage-10 roster expansion begins with kill-fed area control. |
+| 12 | 4중 재구성 | 일반 레벨업 선택지를 3개에서 4개로 확장한다. |
+| 13 | Phase Minefield / 위상 기뢰군 | 이동 경로 자체를 공격 자원으로 만든다. |
+| 14 | 상급 패시브 I | 거성 사냥꾼·관통 렌즈·자가 복원·성운 통찰을 일반 성장 풀에 연다. |
+| 15 | Interstellar Missile Pods / 성간 미사일 포드 | 후반 기술계 원거리 무기 확장. |
+| 16 | 상급 패시브 II | 임계 과출력·광자 팽창·심우주 조준기와 고급 연쇄 패시브군을 연다. |
+| 17 | Orbital Gate / 궤도 문 | Silent Array의 공간/네트워크 복잡도를 무기로 전환한다. |
+| 18 | 다중 투영 프로토콜 | 이벤트 획득은 유지하면서 다중 투영 코어를 일반 레벨업 풀에도 연다. |
 
 Implementation status: all four reward keys are connected only after their definitions, stack text, combat runtime, render/audio treatment, augment definitions, multiplicity barriers, progression reconstruction, and regression contracts were added together.
 
 ### Campaign system unlocks
 
-- **Stage 1 최초 클리어**: Core Development / 코어 성장 해금. 첫 작전에서 얻은 Stardust/Core Shard를 다음 출격 전부터 영구 성장에 사용할 수 있다.
-- **Stage 2 최초 클리어**: Weapon Awakening / 무기 각성 해금. 해금 전에도 보스가 떨어뜨린 각성 코어는 런 내부에서 정상 누적되며, 시스템이 열린 뒤부터 6중첩 무기를 각성시킬 수 있다.
+- **Stage 1**: Core Development / 코어 성장.
+- **Stage 2**: Weapon Awakening / 무기 각성.
+- **Stage 3**: Boss Special Abilities / 보스 특수능력. 해금 전 일반보스는 중간보스처럼 현재 무기 또는 패시브 +1을 주고, 해금 후부터 특수 패시브/무기 augment 선택창을 연다.
+- **Stage 6**: Endless Expedition + Hard 난이도. 월드 이벤트 자체는 해금 대상으로 삼지 않으며 Endless가 열린 뒤 기존 이벤트 스케줄을 그대로 사용한다.
+- **Stage 12**: 4중 재구성 — 일반 레벨업 선택지 4개.
+- **Stage 14**: 상급 패시브 I.
+- **Stage 16**: 상급 패시브 II.
+- **Stage 18**: 다중 투영 프로토콜 — 기존 이벤트 획득 경로는 유지하면서 일반 레벨업 풀에도 다중 투영 코어를 추가한다.
 - DEV 프로필(`?dev=1`)은 테스트 편의를 위해 시스템 잠금을 무시한다.
-- 장착 슬롯 V/VI는 별도 Stage 해금이 아니라 기존 Core Development 확장 노드로 유지한다.
-- 다른 시스템을 추가로 잠글지는 별도 결정한다. 현재 Endless, 난이도 선택, 보스 특수능력 보상은 이 규칙만으로 새로 잠그지 않는다.
+- 장착 슬롯 V/VI는 기존 Core Development 확장 노드로 유지한다. Boss Rush는 추후 별도 모드로 검토하며 현재 구현하지 않는다.
 
 ### Galaxy map
 
