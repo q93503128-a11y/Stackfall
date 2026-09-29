@@ -21,6 +21,7 @@
   window.STACKFALL_ENDLESS_CONFIG=ENDLESS;
   window.stackfallSetRunSelection=(mode,stageId=null)=>{
     if(!validMode(mode)||!['menu','gameover','stageComplete'].includes(state.mode))return false;
+    if(mode===MODES.ENDLESS&&window.stackfallIsFeatureUnlocked?.('endless')===false)return false;
     const next=normalize(mode,stageId);
     if(mode===MODES.STAGE){
       if(next.mode!==MODES.STAGE)return false;
