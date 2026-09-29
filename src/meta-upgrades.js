@@ -183,11 +183,15 @@
   function closeNameEditor(){profileNameEditor?.classList.add('hidden');}
   function saveProfileName(){if(!profileNameInput)return;window.stackfallSetProfileName?.(profileNameInput.value);closeNameEditor();renderProfile();try{audio.pickup();}catch{}}
 
+  function coreDevelopmentUnlocked(){return window.stackfallIsFeatureUnlocked?.('core-development')!==false;}
+  function syncCoreDevelopmentEntry(){
+    if(!entry)return;const unlocked=coreDevelopmentUnlocked();entry.disabled=!unlocked;entry.classList.toggle('locked',!unlocked);entry.title=unlocked?'':'Stage 1 클리어 후 코어 성장 해금';
+  }
   function renderResultReward(){
     const root=document.querySelector('#resultCurrencyReward');if(!root)return;const reward=state.lastMetaReward||{stardust:0,coreShard:0},cashout=state.lastAwakeningCoreCashout||{cores:0,stardust:0};
     root.innerHTML=reward.stardust||reward.coreShard?'<span>'+tr('currency.earned')+'</span>'+(reward.stardust?'<b>✦ '+reward.stardust+'</b>':'')+(reward.coreShard?'<b>◆ '+reward.coreShard+'</b>':'')+(cashout.cores?'<em>CORE ×'+cashout.cores+' → ✦ '+cashout.stardust+'</em>':''):'';
   }
-  function renderUpgradeUi(){renderProfile();renderLinks();renderNodes();renderDetail();renderResetButton();}
+  function renderUpgradeUi(){syncCoreDevelopmentEntry();renderProfile();renderLinks();renderNodes();renderDetail();renderResetButton();}
   window.renderStackfallMetaUi=renderUpgradeUi;
 
   function buySelected(){
@@ -199,7 +203,7 @@
   }
   resetBtn?.addEventListener('click',resetAllUpgrades);
   function open(){
-    if(!screen)return;lastFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;screen.classList.remove('hidden');renderUpgradeUi();startCoreAnimation();closeBtn?.focus();try{audio.pickup();}catch{}
+    if(!screen||!coreDevelopmentUnlocked())return;lastFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;screen.classList.remove('hidden');renderUpgradeUi();startCoreAnimation();closeBtn?.focus();try{audio.pickup();}catch{}
   }
   function close(){
     if(!screen)return;screen.classList.add('hidden');stopCoreAnimation();if(lastFocus?.isConnected)lastFocus.focus();lastFocus=null;
@@ -236,5 +240,5 @@
   const baseApplyLanguage=applyLanguage;
   applyLanguage=function metaAwareLanguage(){baseApplyLanguage();renderUpgradeUi();};
 
-  renderProfile();renderResultReward();
+  syncCoreDevelopmentEntry();renderProfile();renderResultReward();
 })();
