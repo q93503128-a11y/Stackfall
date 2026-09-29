@@ -18,7 +18,13 @@ function updateProjectiles(dt){
   for(const p of state.entities.projectiles){
     if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y)||!Number.isFinite(p.life)){if(p)p.life=0;continue;}if(p.life<=0)continue;
     p.vx=Number.isFinite(p.vx)?p.vx:0;p.vy=Number.isFinite(p.vy)?p.vy:0;p.r=Number.isFinite(p.r)?Math.max(.5,p.r):3;p.damage=Number.isFinite(p.damage)?p.damage:0;p.source=String(p.source||'');
-    updateHomingProjectile(p,dt);p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.trailTick=(p.trailTick||0)-dt;
+    if(p.spiralMotion){
+      const lastX=p.x,lastY=p.y,originX=Number.isFinite(p.spiralOriginX)?p.spiralOriginX:p.originX,originY=Number.isFinite(p.spiralOriginY)?p.spiralOriginY:p.originY;
+      p.spiralAngle=(Number(p.spiralAngle)||0)+(Number(p.spiralAngularSpeed)||0)*dt;p.spiralRadius=Math.max(0,(Number(p.spiralRadius)||0)+(Number(p.spiralRadialSpeed)||0)*dt);
+      p.x=originX+Math.cos(p.spiralAngle)*p.spiralRadius;p.y=originY+Math.sin(p.spiralAngle)*p.spiralRadius;
+      if(dt>1e-5){p.vx=(p.x-lastX)/dt;p.vy=(p.y-lastY)/dt;}
+    }else{updateHomingProjectile(p,dt);p.x+=p.vx*dt;p.y+=p.vy*dt;}
+    p.life-=dt;p.trailTick=(p.trailTick||0)-dt;
     if(Number.isFinite(p.maxRange)){const ox=Number.isFinite(p.originX)?p.originX:player.x,oy=Number.isFinite(p.originY)?p.originY:player.y;if((p.x-ox)**2+(p.y-oy)**2>p.maxRange*p.maxRange)p.life=0;}
     if(p.life>0&&p.trailTick<=0&&['ember','echo-star','comet','echo-comet','core','core-echo','star-spark','wave','meteor-drone','echo-drone','drone-burst','spiral-bolt','echo-spiral','mirror-return','mirror-counter'].includes(p.source)){p.trailTick=compactDevice()?.055:p.source.includes('comet')?.024:.045;if(state.entities.particles.length<entityCap('particles')&&GAME_SETTINGS.hideProjectiles!==true)state.entities.particles.push({x:p.x-p.vx*.018,y:p.y-p.vy*.018,vx:rand(-12,12),vy:rand(-12,12),life:p.source.includes('comet')?.42:.25,max:p.source.includes('comet')?.42:.25,size:p.source.includes('comet')?rand(2,5):rand(1.2,3.2),color:p.color||COLORS.white,star:true});}
     const candidates=typeof performanceNearbyEnemies==='function'?performanceNearbyEnemies(p.x,p.y,p.r+150,collisionCandidates):state.entities.enemies;
