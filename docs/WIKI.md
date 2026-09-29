@@ -172,13 +172,13 @@ Endless에는 현재 8종 이벤트가 등장한다.
 ### Stage 첫 등장 순서
 
 - **S1** 성운 보관소
-- **S2** 조난 신호
 - **S3** 추락한 우주선
-- **S4** 유성 광맥
-- **S5** 포식성 성운
-- **S6** 중계기 복구
-- **S7** 항성 폭풍의 눈
-- **S8** 공허 균열
+- **S4** 조난 신호
+- **S5** 유성 광맥
+- **S7** 포식성 성운
+- **S9** 공허 균열
+- **S13** 중계기 복구
+- **S15** 항성 폭풍의 눈
 
 S1부터 같은 이벤트가 한 Stage 안에서 다시 등장할 수 있고, S9 이후에는 이전에 배운 이벤트들을 섞어 재사용한다. 후반 Stage는 작전 시간이 길기 때문에 이벤트 수도 점진적으로 늘어난다. 이벤트 표식은 Stage 정예 조우가 없는 구간에서 생성되고, 이벤트 진행 중에는 다음 정예 조우가 잠시 대기한다.
 
@@ -283,7 +283,7 @@ S1부터 같은 이벤트가 한 Stage 안에서 다시 등장할 수 있고, S9
 
 ## Run modes
 
-- `endless`: infinite mode with random world events, all enemy families, and recurring Apex encounters. 기본 적에 더해 75초부터 route, 240초부터 bloom, 420초부터 array 계열의 Stage 일반 적 변형이 순차적으로 섞이며, Stage 해금 여부와는 무관하다.
+- `endless`: infinite mode with one randomly selected eligible world-event signal at a time, all enemy families, and recurring Apex encounters. 기본 적에 더해 75초부터 route, 240초부터 bloom, 420초부터 array 계열의 Stage 일반 적 변형이 순차적으로 섞이며, Stage 해금 여부와는 무관하다.
 - `stage`: finite operations with authored enemy pools, milestone incidents, recurring environmental gimmicks, stage minibosses, and a stage final boss.
 - 최종보스 등장 시간은 Stage 1의 **5:00**에서 Stage 18의 **15:00**까지 증가한다. 시간에 도달하면 보스가 등장할 뿐이며, 실제 클리어는 보스를 처치해야 한다.
 - Stage 서브보스는 **중간보스 → 중간보스 → 일반보스** 3연전을 반복한다. S1~2는 2+1, S6은 6+3, S12는 10+5, S18은 16+8까지 증가한다. 동시 조우 상한은 Route 3 / Bloom 4 / Array 5다.
