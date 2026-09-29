@@ -39,28 +39,15 @@
     bloom:Object.freeze({mini:Object.freeze(['harvester','mirror','colossus','warden']),boss:Object.freeze(['seraph','leviathan','archivist'])}),
     array:Object.freeze({mini:Object.freeze(['executioner','warden','colossus','harvester','mirror']),boss:Object.freeze(['nullengine','tempest','pulsar','archivist'])})
   });
-  const STAGE_ENCOUNTER_SCHEDULES=Object.freeze({
-    1:Object.freeze([{kind:'mini',at:.34},{kind:'boss',at:.72}]),
-    2:Object.freeze([{kind:'mini',at:.30},{kind:'boss',at:.66}]),
-    3:Object.freeze([{kind:'mini',at:.24},{kind:'mini',at:.50},{kind:'boss',at:.78}]),
-    4:Object.freeze([{kind:'mini',at:.22},{kind:'boss',at:.47},{kind:'mini',at:.70}]),
-    5:Object.freeze([{kind:'mini',at:.20},{kind:'boss',at:.42},{kind:'mini',at:.63},{kind:'boss',at:.82}]),
-    6:Object.freeze([{kind:'mini',at:.17},{kind:'boss',at:.34},{kind:'mini',at:.50},{kind:'boss',at:.66},{kind:'mini',at:.80}]),
-    7:Object.freeze([{kind:'mini',at:.22},{kind:'boss',at:.48},{kind:'mini',at:.70}]),
-    8:Object.freeze([{kind:'mini',at:.20},{kind:'boss',at:.40},{kind:'mini',at:.60},{kind:'boss',at:.79}]),
-    9:Object.freeze([{kind:'mini',at:.18},{kind:'boss',at:.36},{kind:'mini',at:.55},{kind:'boss',at:.77}]),
-    10:Object.freeze([{kind:'mini',at:.16},{kind:'boss',at:.33},{kind:'mini',at:.49},{kind:'boss',at:.66},{kind:'mini',at:.81}]),
-    11:Object.freeze([{kind:'mini',at:.15},{kind:'boss',at:.30},{kind:'mini',at:.45},{kind:'boss',at:.61},{kind:'mini',at:.78}]),
-    12:Object.freeze([{kind:'mini',at:.13},{kind:'boss',at:.26},{kind:'mini',at:.38},{kind:'boss',at:.51},{kind:'mini',at:.64},{kind:'boss',at:.79}]),
-    13:Object.freeze([{kind:'mini',at:.18},{kind:'boss',at:.35},{kind:'mini',at:.52},{kind:'boss',at:.72}]),
-    14:Object.freeze([{kind:'mini',at:.15},{kind:'boss',at:.31},{kind:'mini',at:.45},{kind:'boss',at:.61},{kind:'mini',at:.77}]),
-    15:Object.freeze([{kind:'mini',at:.14},{kind:'boss',at:.28},{kind:'mini',at:.42},{kind:'boss',at:.57},{kind:'mini',at:.72}]),
-    16:Object.freeze([{kind:'mini',at:.12},{kind:'boss',at:.24},{kind:'mini',at:.36},{kind:'boss',at:.49},{kind:'mini',at:.62},{kind:'boss',at:.78}]),
-    17:Object.freeze([{kind:'mini',at:.10},{kind:'boss',at:.21},{kind:'mini',at:.32},{kind:'boss',at:.44},{kind:'mini',at:.56},{kind:'boss',at:.68},{kind:'mini',at:.80}]),
-    18:Object.freeze([{kind:'mini',at:.09},{kind:'boss',at:.19},{kind:'mini',at:.30},{kind:'boss',at:.42},{kind:'mini',at:.54},{kind:'boss',at:.66},{kind:'mini',at:.79}])
-  });
+  const STAGE_ENCOUNTER_CYCLES=Object.freeze([0,1,1,2,2,2,3,3,3,4,4,4,5,5,5,6,6,7,8]);
+  function buildStageEncounterSchedule(order){
+    const cycles=STAGE_ENCOUNTER_CYCLES[Math.max(1,Math.min(18,Math.floor(Number(order)||1)))]||1,total=cycles*3,start=order<=2?.22:order<=6?.15:order<=12?.11:.08,end=.89,out=[];
+    for(let index=0;index<total;index++)out.push(Object.freeze({kind:index%3===2?'boss':'mini',at:total===1?start:start+(end-start)*(index/(total-1))}));
+    return Object.freeze(out);
+  }
+  const STAGE_ENCOUNTER_SCHEDULES=Object.freeze(Object.fromEntries(Array.from({length:18},(_,i)=>[i+1,buildStageEncounterSchedule(i+1)])));
   function stageEncounterPlan(stage){return STAGE_ENCOUNTER_SCHEDULES[Math.max(1,Number(stage?.order)||1)]||STAGE_ENCOUNTER_SCHEDULES[1];}
-  function stageEncounterConcurrency(stage){const order=Math.max(1,Number(stage?.order)||1);return Math.min(4,2+Math.floor((order-1)/6));}
+  function stageEncounterConcurrency(stage){const order=Math.max(1,Number(stage?.order)||1);return Math.min(5,3+Math.floor((order-1)/6));}
   function activeStageEncounterCount(){
     const groups=new Set();
     for(const enemy of state.entities.enemies)if(enemy&&!enemy.dead&&enemy.stageEncounter===true)groups.add(enemy.twinGroup||enemy.id);
