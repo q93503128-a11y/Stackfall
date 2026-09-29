@@ -188,3 +188,6 @@
 .hub-mode-card.locked{cursor:not-allowed;filter:saturate(.38) brightness(.68)}
 .hub-mode-card.locked:hover{transform:none;border-color:rgba(175,195,255,.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 22px 55px rgba(0,0,0,.36)}
 .hub-mode-card.locked:after{content:"⛓  🔒";position:absolute;right:21px;top:18px;z-index:5;padding:7px 10px;border:1px solid rgba(176,184,207,.20);border-radius:999px;background:rgba(4,7,17,.78);color:#c6cada;font:800 14px/1 system-ui;letter-spacing:.02em;box-shadow:0 5px 16px rgba(0,0,0,.35)}
+
+.upgrade-node.tier-extension-locked{border-color:rgba(157,166,194,.14);box-shadow:0 8px 24px rgba(0,0,0,.24)}
+.upgrade-node.tier-extension-locked small{color:#9ba4bd}.upgrade-node.tier-extension-locked small::first-letter{color:#d5d9e6}
