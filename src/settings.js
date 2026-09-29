@@ -32,7 +32,8 @@ const settingsUi = {
   autoLevelChoice: document.querySelector('#autoLevelChoice'),
   hideProjectiles: document.querySelector('#hideProjectiles'),
   sparkles: document.querySelector('#sparkles'),
-  screenShake: document.querySelector('#screenShake')
+  screenShake: document.querySelector('#screenShake'),
+  unlockList: document.querySelector('#unlockManagementList')
 };
 
 const volumeKeys={volumeMaster:'master',volumeCombat:'combat',volumeUi:'ui',volumeAmbient:'ambient'};
@@ -65,6 +66,21 @@ function syncRange(input,key){
   input.value=String(value);
   const output=input.parentElement?.querySelector('output');if(output)output.value=`${value}%`;
 }
+function featureUnlockStage(key){
+  for(const stage of window.STACKFALL_STAGE_CATALOG||[])if((stage.rewards||[]).some(reward=>reward.type==='feature'&&reward.key===key))return stage;
+  return null;
+}
+function renderUnlockManagement(){
+  const root=settingsUi.unlockList;if(!root)return;root.innerHTML='';GAME_SETTINGS.unlocks=GAME_SETTINGS.unlocks&&typeof GAME_SETTINGS.unlocks==='object'?GAME_SETTINGS.unlocks:{};
+  const keys=Object.keys(window.STACKFALL_FEATURE_DEFS||{}).filter(key=>window.stackfallIsFeatureAcquired?.(key)===true);
+  if(!keys.length){const empty=document.createElement('div');empty.className='unlock-management-empty';empty.textContent=GAME_SETTINGS.language==='ko'?'아직 해금된 기능이 없습니다.':'No unlocked features yet.';root.appendChild(empty);return;}
+  for(const key of keys){
+    const row=document.createElement('label'),input=document.createElement('input'),copy=document.createElement('span'),name=document.createElement('strong'),meta=document.createElement('small'),toggle=document.createElement('i'),stage=featureUnlockStage(key);
+    row.className='unlock-feature-row';input.type='checkbox';input.checked=GAME_SETTINGS.unlocks[key]!==false;copy.className='unlock-feature-copy';name.textContent=window.stackfallFeatureName?.(key)||key;meta.textContent=stage?(GAME_SETTINGS.language==='ko'?'STAGE '+String(stage.order).padStart(2,'0')+' 해금':'Unlocked at Stage '+String(stage.order).padStart(2,'0')):'UNLOCKED';copy.append(name,meta);row.append(copy,input,toggle);
+    input.addEventListener('change',()=>{GAME_SETTINGS.unlocks[key]=input.checked;if(key==='hard'&&!input.checked&&state.selectedDifficulty==='hard')state.selectedDifficulty='normal';saveGameSettings();window.stackfallRefreshFeatureUi?.();renderUnlockManagement();try{audio.pickup();}catch{}});
+    root.appendChild(row);
+  }
+}
 function syncSettingsControls() {
   settingsUi.language.value=GAME_SETTINGS.language;
   settingsUi.master.checked=GAME_SETTINGS.audio.master!==false;
@@ -77,10 +93,11 @@ function syncSettingsControls() {
   settingsUi.hideProjectiles.checked=GAME_SETTINGS.hideProjectiles===true;
   settingsUi.sparkles.checked=GAME_SETTINGS.sparkles!==false;
   settingsUi.screenShake.checked=GAME_SETTINGS.screenShake!==false;
+  renderUnlockManagement();
 }
 
 let settingsReturnFocus=null;
-function openSettings(){settingsReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;if(typeof closeAbilityLedger==='function')closeAbilityLedger(true);syncSettingsControls();settingsUi.screen.classList.remove('hidden');settingsUi.closeX.focus();if(typeof syncAbilityLedgerVisibility==='function')syncAbilityLedgerVisibility();try{audio.init();}catch{}}
+function openSettings(){renderUnlockManagement();settingsReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;if(typeof closeAbilityLedger==='function')closeAbilityLedger(true);syncSettingsControls();settingsUi.screen.classList.remove('hidden');settingsUi.closeX.focus();if(typeof syncAbilityLedgerVisibility==='function')syncAbilityLedgerVisibility();try{audio.init();}catch{}}
 function closeSettings(){settingsUi.screen.classList.add('hidden');if(typeof syncAbilityLedgerVisibility==='function')syncAbilityLedgerVisibility();if(settingsReturnFocus?.isConnected)settingsReturnFocus.focus();settingsReturnFocus=null;}
 
 function updateAudioSetting(key,value){GAME_SETTINGS.audio[key]=value;saveGameSettings();if(key==='master'||key==='ambient')audio.syncAmbient();if(key==='ui'&&value)audio.pickup();}
