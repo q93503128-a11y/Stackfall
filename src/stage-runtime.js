@@ -34,23 +34,78 @@
     for(let i=0;i<count;i++){const a=i/Math.max(1,count)*TAU+Math.random()*.18,r=rand(radiusMin,radiusMax);spawnStageEnemy(stageId,variant,{x:player.x+Math.cos(a)*r,y:player.y+Math.sin(a)*r});}
   }
   function chooseVariant(pool){let roll=Math.random(),sum=0;for(const[variant,weight]of pool){sum+=weight;if(roll<=sum)return variant;}return pool.at(-1)?.[0]||null;}
-  function stageMinibossThresholds(stage){
-    return Number(stage?.order)%6===0?[.32,.62]:[.46];
+  const STAGE_ENCOUNTER_POOLS=Object.freeze({
+    route:Object.freeze({mini:Object.freeze(['knight','warden','executioner','colossus']),boss:Object.freeze(['eclipse','pulsar','heliarch','tempest'])}),
+    bloom:Object.freeze({mini:Object.freeze(['harvester','mirror','colossus','warden']),boss:Object.freeze(['seraph','leviathan','archivist'])}),
+    array:Object.freeze({mini:Object.freeze(['executioner','warden','colossus','harvester','mirror']),boss:Object.freeze(['nullengine','tempest','pulsar','archivist'])})
+  });
+  const STAGE_ENCOUNTER_SCHEDULES=Object.freeze({
+    1:Object.freeze([{kind:'mini',at:.34},{kind:'boss',at:.72}]),
+    2:Object.freeze([{kind:'mini',at:.30},{kind:'boss',at:.66}]),
+    3:Object.freeze([{kind:'mini',at:.24},{kind:'mini',at:.50},{kind:'boss',at:.78}]),
+    4:Object.freeze([{kind:'mini',at:.22},{kind:'boss',at:.47},{kind:'mini',at:.70}]),
+    5:Object.freeze([{kind:'mini',at:.20},{kind:'boss',at:.42},{kind:'mini',at:.63},{kind:'boss',at:.82}]),
+    6:Object.freeze([{kind:'mini',at:.17},{kind:'boss',at:.34},{kind:'mini',at:.50},{kind:'boss',at:.66},{kind:'mini',at:.80}]),
+    7:Object.freeze([{kind:'mini',at:.22},{kind:'boss',at:.48},{kind:'mini',at:.70}]),
+    8:Object.freeze([{kind:'mini',at:.20},{kind:'boss',at:.40},{kind:'mini',at:.60},{kind:'boss',at:.79}]),
+    9:Object.freeze([{kind:'mini',at:.18},{kind:'boss',at:.36},{kind:'mini',at:.55},{kind:'boss',at:.77}]),
+    10:Object.freeze([{kind:'mini',at:.16},{kind:'boss',at:.33},{kind:'mini',at:.49},{kind:'boss',at:.66},{kind:'mini',at:.81}]),
+    11:Object.freeze([{kind:'mini',at:.15},{kind:'boss',at:.30},{kind:'mini',at:.45},{kind:'boss',at:.61},{kind:'mini',at:.78}]),
+    12:Object.freeze([{kind:'mini',at:.13},{kind:'boss',at:.26},{kind:'mini',at:.38},{kind:'boss',at:.51},{kind:'mini',at:.64},{kind:'boss',at:.79}]),
+    13:Object.freeze([{kind:'mini',at:.18},{kind:'boss',at:.35},{kind:'mini',at:.52},{kind:'boss',at:.72}]),
+    14:Object.freeze([{kind:'mini',at:.15},{kind:'boss',at:.31},{kind:'mini',at:.45},{kind:'boss',at:.61},{kind:'mini',at:.77}]),
+    15:Object.freeze([{kind:'mini',at:.14},{kind:'boss',at:.28},{kind:'mini',at:.42},{kind:'boss',at:.57},{kind:'mini',at:.72}]),
+    16:Object.freeze([{kind:'mini',at:.12},{kind:'boss',at:.24},{kind:'mini',at:.36},{kind:'boss',at:.49},{kind:'mini',at:.62},{kind:'boss',at:.78}]),
+    17:Object.freeze([{kind:'mini',at:.10},{kind:'boss',at:.21},{kind:'mini',at:.32},{kind:'boss',at:.44},{kind:'mini',at:.56},{kind:'boss',at:.68},{kind:'mini',at:.80}]),
+    18:Object.freeze([{kind:'mini',at:.09},{kind:'boss',at:.19},{kind:'mini',at:.30},{kind:'boss',at:.42},{kind:'mini',at:.54},{kind:'boss',at:.66},{kind:'mini',at:.79}])
+  });
+  function stageEncounterPlan(stage){return STAGE_ENCOUNTER_SCHEDULES[Math.max(1,Number(stage?.order)||1)]||STAGE_ENCOUNTER_SCHEDULES[1];}
+  function stageEncounterConcurrency(stage){return Number(stage?.order)>=16?2:1;}
+  function stageEncounterCoreAllowance(stage){return Number(stage?.order)%6===0?2:1;}
+  function activeStageEncounterCount(){
+    const groups=new Set();
+    for(const enemy of state.entities.enemies)if(enemy&&!enemy.dead&&enemy.stageEncounter===true)groups.add(enemy.twinGroup||enemy.id);
+    return groups.size;
   }
-  function activeStageMiniboss(){
-    return state.entities.enemies.find(enemy=>enemy&&!enemy.dead&&enemy.type==='mini'&&enemy.kind==='stage-mini')||null;
+  function nextStageEncounterForm(run,kind){
+    const family=environmentFamily(run?.stage),pool=STAGE_ENCOUNTER_POOLS[family]?.[kind]||STAGE_ENCOUNTER_POOLS.route[kind];
+    run.encounterBags=run.encounterBags||{};const key=family+':'+kind;let bag=run.encounterBags[key];
+    if(!bag?.length){bag=[...pool];for(let i=bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]];}run.encounterBags[key]=bag;}
+    return bag.pop();
   }
-  function spawnStageMiniboss(index){
-    const run=stageRuntime();if(!run||run.bossSpawned||activeStageMiniboss())return null;
-    const enemy=spawnEnemy('mini');if(!enemy)return null;
-    const order=Math.max(1,Number(run.stage.order)||1),finale=order%6===0,hpScale=1+Math.min(.24,(order-1)*.010)+(finale?.08:0),damageScale=1+Math.min(.14,(order-1)*.006);
-    const members=enemy.twinGroup?state.entities.enemies.filter(member=>member&&!member.dead&&member.twinGroup===enemy.twinGroup):[enemy];
-    for(const member of members){
-      member.kind='stage-mini';member.eventKind=run.stage.id;member.stageMinibossIndex=index;member.controlImmune=false;
-      member.hp*=hpScale;member.maxHp=member.hp;member.damage*=damageScale;member.xp*=1.10;
+  function stageEncounterMembers(enemy){return enemy?.twinGroup?state.entities.enemies.filter(member=>member&&!member.dead&&member.twinGroup===enemy.twinGroup):enemy?[enemy]:[];}
+  function spawnStageEncounter(entry,index){
+    const run=stageRuntime();if(!run||run.bossSpawned||!entry||activeStageEncounterCount()>=stageEncounterConcurrency(run.stage))return null;
+    const kind=entry.kind==='boss'?'boss':'mini',form=nextStageEncounterForm(run,kind),enemy=window.stackfallSpawnEliteForm?.(kind,form)||spawnEnemy(kind);if(!enemy)return null;
+    const order=Math.max(1,Number(run.stage.order)||1),finale=order%6===0,progress=clamp(Number(entry.at)||0,0,1);
+    const hpScale=kind==='boss'?(.48+Math.min(.14,(order-1)*.007)+progress*.10+(finale?.05:0)):(.82+Math.min(.12,(order-1)*.006)+progress*.06+(finale?.04:0));
+    const damageScale=kind==='boss'?(.78+Math.min(.12,(order-1)*.006)+(finale?.04:0)):(.90+Math.min(.10,(order-1)*.005)+(finale?.03:0));
+    const allowance=stageEncounterCoreAllowance(run.stage),coreEligible=kind==='mini'&&(run.stageCoreRewarded||0)<allowance;if(coreEligible)run.stageCoreRewarded=(run.stageCoreRewarded||0)+1;
+    for(const member of stageEncounterMembers(enemy)){
+      member.kind=kind==='mini'?'stage-mini':'stage-boss-encounter';member.bossCategory=kind==='boss'?'boss':member.bossCategory;member.eventKind=run.stage.id;member.stageEncounter=true;member.stageEncounterType=kind;member.stageEncounterFamily=environmentFamily(run.stage);member.stageEncounterIndex=index;member.stageEncounterNoCore=!coreEligible;member.controlImmune=false;
+      if(!coreEligible)member.noEliteReward=true;member.hp*=hpScale;member.maxHp=member.hp;member.damage*=damageScale;member.xp*=kind==='boss'?.35:.82;member.stageEncounterSignatureCd=4.2+Math.random()*1.25;
     }
-    showBossNotice(enemy.name,finale?'CONSTELLATION GUARD':'STAGE MID-BOSS');
-    return enemy;
+    showBossNotice(enemy.name,kind==='boss'?'STAGE BOSS':finale?'CONSTELLATION GUARD':'STAGE MID-BOSS');return enemy;
+  }
+  function stageEncounterSignature(enemy,family,run){
+    if(!enemy||enemy.dead)return;const boss=enemy.stageEncounterType==='boss',ratio=enemy.hp/Math.max(1,enemy.maxHp),phase=ratio<.34?3:ratio<.67?2:1,damage=Math.max(4,enemy.damage*(boss?.31:.24)),cycle=(enemy.stageEncounterSignatureCycle=(enemy.stageEncounterSignatureCycle||0)+1),pred=typeof predictedPlayer==='function'?predictedPlayer(95+phase*22):{x:player.x,y:player.y};
+    if(family==='route'){
+      const horizontal=cycle%2===0,lanes=(boss?4:3)+Math.floor((phase-1)/2),safe=(cycle+phase)%lanes,spacing=boss?86:92,span=boss?430:360;
+      for(let i=0;i<lanes;i++){if(i===safe)continue;const off=(i-(lanes-1)/2)*spacing;if(horizontal)rawLine(pred.x-span,pred.y+off,pred.x+span,pred.y+off,14+phase*2,damage,'#9bb9ff',.92,'boss-line');else rawLine(pred.x+off,pred.y-span,pred.x+off,pred.y+span,14+phase*2,damage,'#9bb9ff',.92,'boss-line');}
+    }else if(family==='bloom'){
+      const petals=(boss?6:4)+phase,rr=112+phase*18;for(let i=0;i<petals;i++){const a=i/petals*TAU+cycle*.27,x=pred.x+Math.cos(a)*rr,y=pred.y+Math.sin(a)*rr;addCircle(x,y,32+phase*4,damage*.72,i%2?'#c987ff':'#79dcc6',.86+i*.025);}
+      if(boss)scheduleWeaponAction(520,()=>{if(run===stageRuntime()&&!enemy.dead)addCircle(pred.x,pred.y,62+phase*7,damage*1.08,'#efd9ff',.70);});
+    }else{
+      const horizontal=cycle%2===0,lanes=(boss?6:5)+Math.floor((phase-1)/2),safe=(cycle*2+phase)%lanes,spacing=boss?70:76,span=boss?455:390;
+      for(let i=0;i<lanes;i++){if(i===safe)continue;const off=(i-(lanes-1)/2)*spacing;if(horizontal)rawLine(pred.x-span,pred.y+off,pred.x+span,pred.y+off,15+phase*2,damage,i%2?'#72e5ee':'#c08fff',.88,'boss-line');else rawLine(pred.x+off,pred.y-span,pred.x+off,pred.y+span,15+phase*2,damage,i%2?'#72e5ee':'#c08fff',.88,'boss-line');}
+    }
+  }
+  function updateStageEncounterSignatures(run,dt){
+    for(const enemy of state.entities.enemies){if(!enemy||enemy.dead||enemy.stageEncounter!==true)continue;enemy.stageEncounterSignatureCd=(Number.isFinite(enemy.stageEncounterSignatureCd)?enemy.stageEncounterSignatureCd:5.2)-dt;if(enemy.stageEncounterSignatureCd>0)continue;const boss=enemy.stageEncounterType==='boss';enemy.stageEncounterSignatureCd=(boss?6.2:7.4)-Math.min(1.25,(run.stage?.order||1)*.045);stageEncounterSignature(enemy,enemy.stageEncounterFamily||environmentFamily(run.stage),run);}
+  }
+  function updateStageEncounters(run,progress){
+    const plan=stageEncounterPlan(run.stage);run.encountersTriggered=run.encountersTriggered||{};
+    for(let index=0;index<plan.length;index++){const entry=plan[index];if(progress<entry.at||run.encountersTriggered[index])continue;if(activeStageEncounterCount()>=stageEncounterConcurrency(run.stage))break;const spawned=spawnStageEncounter(entry,index);if(spawned)run.encountersTriggered[index]=true;break;}
   }
   function liveNonBossCount(){
     let active=0;for(const enemy of state.entities.enemies)if(enemy&&!enemy.dead&&enemy.kind!=='stage-boss')active++;return active;
@@ -101,9 +156,7 @@
     if(!run.bossSpawned&&state.time>=run.stage.boss.spawnAt)spawnStageBoss();
     if(run.bossSpawned)return;
     updateAmbientGimmick(run,def);
-    const progress=clamp(state.time/Math.max(1,run.stage.boss.spawnAt),0,1),thresholds=stageMinibossThresholds(run.stage);
-    run.minibossTriggered=run.minibossTriggered||{};
-    for(let index=0;index<thresholds.length;index++)if(progress>=thresholds[index]&&!run.minibossTriggered[index]&&!activeStageMiniboss()){const spawned=spawnStageMiniboss(index);if(spawned)run.minibossTriggered[index]=true;break;}
+    const progress=clamp(state.time/Math.max(1,run.stage.boss.spawnAt),0,1);updateStageEncounterSignatures(run,dt);updateStageEncounters(run,progress);
     const active=liveNonBossCount(),authoredTime=progress*600,base=def.spawnProfile?.(authoredTime,apiFor(run))||{cap:38,rate:1,count:1},spawn=stageSpawnBudget(run.stage,progress,base);
     run.lastSpawnBudget={...spawn,active,progress};
     state.spawnTimer-=dt;if(state.spawnTimer>0||active>=spawn.cap)return;state.spawnTimer=Math.max(.25,spawn.rate);
@@ -121,7 +174,7 @@
   }
   window.updateStageVictoryCinematic=function(dt){const v=state.stageVictory;if(state.mode!=='stageVictory'||!v)return;v.elapsed+=dt;if(!v.pulseA&&v.elapsed>=.48){v.pulseA=true;shockwave(v.x,v.y,'#9aa7ff',340,.85,7);spawnParticle(v.x,v.y,'#b7c5ff',24,260,6);state.camera.shake=Math.max(state.camera.shake,18);state.flash=Math.max(state.flash,.22);}if(!v.pulseB&&v.elapsed>=1.18){v.pulseB=true;shockwave(v.x,v.y,'#ffffff',470,1.05,5);state.camera.shake=Math.max(state.camera.shake,11);state.flash=Math.max(state.flash,.16);}if(v.elapsed>=v.duration)finalizeStageComplete();};
   window.drawStageVictoryCinematic=function(){const v=state.stageVictory;if(state.mode!=='stageVictory'||!v)return;const p=worldToScreen(v.x,v.y),progress=clamp(v.elapsed/v.duration,0,1),burst=clamp(v.elapsed/.85,0,1),fade=1-clamp((v.elapsed-2.25)/.60,0,1);ctx.save();ctx.globalCompositeOperation='lighter';ctx.translate(p.x,p.y);for(let i=0;i<14;i++){const a=i/14*TAU+v.elapsed*.34,inner=24+burst*25,outer=58+burst*(125+(i%4)*16);ctx.globalAlpha=(.62-progress*.30)*fade;ctx.strokeStyle=i%3===0?'#ffffff':i%2?'#91a6ff':'#c0a8ff';ctx.lineWidth=1.2+(i%3)*.8;ctx.beginPath();ctx.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);ctx.lineTo(Math.cos(a)*outer,Math.sin(a)*outer);ctx.stroke();}ctx.globalAlpha=Math.max(0,.9-progress*.45)*fade;const glow=ctx.createRadialGradient(0,0,0,0,0,120+burst*90);glow.addColorStop(0,'rgba(255,255,255,.95)');glow.addColorStop(.12,'rgba(190,210,255,.78)');glow.addColorStop(.42,'rgba(121,132,255,.22)');glow.addColorStop(1,'rgba(92,65,180,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(0,0,120+burst*90,0,TAU);ctx.fill();ctx.restore();ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';const reveal=clamp((v.elapsed-.70)/.50,0,1)*fade;ctx.globalAlpha=reveal;ctx.shadowBlur=28;ctx.shadowColor='#9aa7ff';ctx.fillStyle='#f4f7ff';ctx.font=`900 ${Math.round(clamp(vw*.04,28,54))}px "Black Han Sans",sans-serif`;ctx.fillText(v.elapsed<1.55?tr('stageClear.targetDown'):tr('stageClear.operationComplete'),vw/2,vh*.27);ctx.restore();};
-  window.stackfallRegisterStageRuntime=registerStageRuntime;window.stackfallStageRuntimeRegistry=registry;window.stackfallSpawnStageEnemy=spawnStageEnemy;window.stackfallSpawnStageBurst=spawnStageBurst;window.stackfallBeginStageVictory=beginStageVictory;window.stackfallStageBalanceDiagnostics=()=>{const run=stageRuntime();return run?{stageId:run.stage?.id,thresholds:stageMinibossThresholds(run.stage),minibossTriggered:{...(run.minibossTriggered||{})},spawnBudget:{...(run.lastSpawnBudget||{})},bossTier:Number(run.stage?.order)%6===0?'constellation':'stage'}:null;};
+  window.stackfallRegisterStageRuntime=registerStageRuntime;window.stackfallStageRuntimeRegistry=registry;window.stackfallSpawnStageEnemy=spawnStageEnemy;window.stackfallSpawnStageBurst=spawnStageBurst;window.stackfallBeginStageVictory=beginStageVictory;window.stackfallStageBalanceDiagnostics=()=>{const run=stageRuntime();return run?{stageId:run.stage?.id,family:environmentFamily(run.stage),encounterPlan:stageEncounterPlan(run.stage).map(entry=>({...entry})),encountersTriggered:{...(run.encountersTriggered||{})},activeEncounters:activeStageEncounterCount(),coreAllowance:stageEncounterCoreAllowance(run.stage),coreRewarded:run.stageCoreRewarded||0,spawnBudget:{...(run.lastSpawnBudget||{})},bossTier:Number(run.stage?.order)%6===0?'constellation':'stage'}:null;};
 
   function stageBossSignatureAlive(e,api){return!!(e&&!e.dead&&e.kind==='stage-boss'&&api?.isActive?.());}
   function stageBossSigLine(x1,y1,x2,y2,width,damage,color,life=.92){rawLine(x1,y1,x2,y2,width,damage,color,life,'boss-line');}
@@ -214,7 +267,7 @@
   window.stackfallEndlessFamilyDiagnostics=()=>{const pools=rebuildEndlessFamilyCache();return{thresholds:{route:75,bloom:240,array:420},counts:{route:pools.route.length,bloom:pools.bloom.length,array:pools.array.length},unlockGated:false};};
   const baseSpawning=updateSpawning;updateSpawning=function stageAwareSpawning(dt){if(isStage()){updateStage(dt);return;}baseSpawning(dt);};
   const baseMapEvents=window.updateMapEvents;if(typeof baseMapEvents==='function')window.updateMapEvents=function stageAwareMapEvents(dt){if(isStage())return;baseMapEvents(dt);};
-  const baseReset=resetGame;resetGame=function stageAwareReset(){const config=window.stackfallCurrentRunConfig?.();baseReset();clearStageUi();if(config?.mode!=='stage'){state.stageRun=null;return;}const stage=config.stage,def=stageDefinition(stage?.id);if(!stage||!def){state.stageRun=null;return;}state.stageRun={stage,eventsTriggered:{},minibossTriggered:{},bossSpawned:false,bossId:null,completed:false,completedAt:null,resultShown:false,lastSpawnBudget:null};state.nextApexAt=Infinity;state.mapEventActive=null;state.entities.mapEvents.length=0;state.entities.enemies.length=0;state.entities.enemyProjectiles.length=0;state.realmTheme=def.theme||('stage-'+String(stage.order).padStart(2,'0'));state.spawnTimer=def.initialSpawnTimer??.7;for(const variant of def.startingVariants||[])spawnStageEnemy(stage.id,variant);showBossNotice(localized(stage.title),'STAGE '+String(stage.order).padStart(2,'0'));updateObjective(state.stageRun);def.onStart?.(apiFor(state.stageRun));};
+  const baseReset=resetGame;resetGame=function stageAwareReset(){const config=window.stackfallCurrentRunConfig?.();baseReset();clearStageUi();if(config?.mode!=='stage'){state.stageRun=null;return;}const stage=config.stage,def=stageDefinition(stage?.id);if(!stage||!def){state.stageRun=null;return;}state.stageRun={stage,eventsTriggered:{},encountersTriggered:{},encounterBags:{},stageCoreRewarded:0,bossSpawned:false,bossId:null,completed:false,completedAt:null,resultShown:false,lastSpawnBudget:null};state.nextApexAt=Infinity;state.mapEventActive=null;state.entities.mapEvents.length=0;state.entities.enemies.length=0;state.entities.enemyProjectiles.length=0;state.realmTheme=def.theme||('stage-'+String(stage.order).padStart(2,'0'));state.spawnTimer=def.initialSpawnTimer??.7;for(const variant of def.startingVariants||[])spawnStageEnemy(stage.id,variant);showBossNotice(localized(stage.title),'STAGE '+String(stage.order).padStart(2,'0'));updateObjective(state.stageRun);def.onStart?.(apiFor(state.stageRun));};
   completeMap?.addEventListener('click',()=>{completeScreen.classList.add('hidden');showMainMenu();window.openStackfallGalaxyMap?.();});completeMenu?.addEventListener('click',()=>{completeScreen.classList.add('hidden');showMainMenu();});
 
   registerStageRuntime('stage-01',{
