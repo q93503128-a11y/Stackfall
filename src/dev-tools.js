@@ -285,10 +285,11 @@
   $('#devInfiniteCurrency').onclick=()=>{setInfiniteCurrency(window.stackfallDevInfiniteCurrency!==true);updateStatus();};
   $('#devDisable').onclick=()=>{try{localStorage.removeItem('stackfall.devMode');localStorage.removeItem('stackfall.devInfiniteCurrency');}catch{}window.stackfallDevInfiniteCurrency=false;const url=new URL(location.href);url.searchParams.delete('dev');location.replace(url.toString());};
   weapon.onchange=updateStatus;stage.onchange=updateStatus;
-  window.addEventListener('keydown',event=>{const target=event.target,typing=target instanceof HTMLInputElement||target instanceof HTMLTextAreaElement||target instanceof HTMLSelectElement||target?.isContentEditable;if(typing||event.code!=='Tab')return;event.preventDefault();event.stopImmediatePropagation();panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))refreshDevPanel();},true);
+  function toggleDevPanel(){panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))refreshDevPanel();return!panel.classList.contains('hidden');}
+  window.addEventListener('keydown',event=>{const target=event.target,typing=target instanceof HTMLInputElement||target instanceof HTMLTextAreaElement||target instanceof HTMLSelectElement||target?.isContentEditable;if(typing||event.code!=='Tab')return;event.preventDefault();event.stopImmediatePropagation();toggleDevPanel();},true);
   renderSlotEditor();updateStatus();window.renderStackfallMetaUi?.();
   window.stackfallDeveloperTest={
-    enabled:true,
+    enabled:true,togglePanel:toggleDevPanel,
     equipOnly,equipAll,assignSlot:assignDevSlot,setSlotLevel:setDevSlotLevel,setSlotAwakening:setDevSlotAwakening,setCoreLevel:setDevCoreLevel,setCoreAwakening:setDevCoreAwakening,setInfiniteCurrency,setInvincible,setLevelUpsDisabled,completeAllStages,startStage,startEndless,jumpStageBoss,giveCores,clearAwakenings,openSpecialReward,
     snapshot:()=>({run:window.stackfallCurrentRunConfig?.(),weaponSlots:[...(state.weaponSlots||[])],weaponStacks:{...(state.weaponStacks||{})},awakened:{...(state.awakenedWeapons||{})},cores:state.awakeningCores||0,infiniteCurrency:window.stackfallDevInfiniteCurrency===true,invincible:window.stackfallDevInvincible===true,disableLevelUps:window.stackfallDevDisableLevelUps===true,railCycle:player.awRailCycle||0,canonicalVisuals:window.stackfallCanonicalWeaponVisualDiagnostics?.()||null,renderer:window.stackfallRendererInfo?.()||null})
   };
