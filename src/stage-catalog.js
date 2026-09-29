@@ -110,7 +110,7 @@
       discoveries:{gimmicks:['noise-grid','carrier-break','whiteout-lanes'],weapons:[],events:['jammer-flight','relay-swarm','whiteout-lanes']},gimmick:{startAt:48,interval:34,waveEvery:4,accelerate:0.2},
        enemySet:[{id:'relay-mite',type:'fast',unlockAt:0},{id:'jammer-kite',type:'ranged',unlockAt:90},{id:'phase-drifter',type:'ranged',unlockAt:185},{id:'conduit-leech',type:'tank',unlockAt:295}],
       fixedEvents:[{id:'jammer-flight',at:145,kind:'wave',variant:'jammer-kite',count:8},{id:'noise-grid',at:275,kind:'hazard',variant:'noise-grid'},{id:'carrier-break',at:410,kind:'hazard',variant:'carrier-break'},{id:'relay-swarm',at:540,kind:'wave',variant:'relay-mite',count:12},{id:'whiteout-lanes',at:635,kind:'hazard',variant:'whiteout-lanes'},{id:'final-boss',at:690,kind:'boss',variant:'noise-harvester'}],
-      boss:{id:'noise-harvester',spawnAt:690,name:{ko:'잡음 수확기',en:'Noise Harvester'}},rewards:[{type:'currency',key:'stardust',amount:790},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
+      boss:{id:'noise-harvester',spawnAt:690,name:{ko:'잡음 수확기',en:'Noise Harvester'}},rewards:[{type:'feature',key:'start-level-3'},{type:'currency',key:'stardust',amount:790},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
     }),
     createStage({
       id:'stage-15',order:15,constellationId:'constellation-03',status:'available',title:{ko:'패킷 폭풍대',en:'Packet Stormfront'},description:{ko:'붕괴한 송신 묶음이 탄막처럼 쏟아지는 폭풍층. 패킷 창기병이 직선으로 돌진하고 다중 채널이 교차하며 전장을 빠르게 재배선한다.',en:'A storm layer where collapsed transmissions fall like barrages. Packet lancers charge through straight lanes as multiplex channels rapidly rewire the field.'},durationSeconds:720,estimatedMinutes:12,threat:15,node:{x:.43,y:.32},requirements:{previous:'stage-14'},
@@ -124,7 +124,7 @@
       discoveries:{gimmicks:['dead-zone','blind-cross','null-sweep'],weapons:[],events:['packet-procession','jammer-column','null-sweep']},gimmick:{startAt:50,interval:34,waveEvery:3,accelerate:0.23},
        enemySet:[{id:'packet-lancer',type:'fast',unlockAt:0},{id:'jammer-kite',type:'ranged',unlockAt:0},{id:'relay-mite',type:'fast',unlockAt:0},{id:'phase-drifter',type:'ranged',unlockAt:170},{id:'conduit-leech',type:'tank',unlockAt:275}],
       fixedEvents:[{id:'packet-procession',at:145,kind:'wave',variant:'packet-lancer',count:11},{id:'dead-zone',at:295,kind:'hazard',variant:'dead-zone'},{id:'blind-cross',at:440,kind:'hazard',variant:'blind-cross'},{id:'jammer-column',at:600,kind:'wave',variant:'jammer-kite',count:10},{id:'null-sweep',at:710,kind:'hazard',variant:'null-sweep'},{id:'final-boss',at:780,kind:'boss',variant:'null-beacon'}],
-      boss:{id:'null-beacon',spawnAt:780,name:{ko:'널 비콘',en:'Null Beacon'}},rewards:[{type:'currency',key:'stardust',amount:940},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
+      boss:{id:'null-beacon',spawnAt:780,name:{ko:'널 비콘',en:'Null Beacon'}},rewards:[{type:'feature',key:'core-development-iii'},{type:'currency',key:'stardust',amount:940},{type:'currency',key:'coreShard',amount:1,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
     }),
     createStage({
       id:'stage-17',order:17,constellationId:'constellation-03',status:'available',title:{ko:'암호 묘역',en:'Cipher Graveyard'},description:{ko:'폐기된 인증 구조물과 봉인된 프로토콜이 떠도는 묘역. 암호 수호체가 전진을 막고 패리티 포격과 봉쇄벽이 전장을 단계적으로 잠근다.',en:'A graveyard of discarded authentication structures and sealed protocols. Cipher wardens hold the line while parity barrages and locking walls close the arena in stages.'},durationSeconds:840,estimatedMinutes:14,threat:17,node:{x:.72,y:.67},requirements:{previous:'stage-16'},
@@ -141,5 +141,5 @@
       boss:{id:'silence-mainframe',spawnAt:900,name:{ko:'침묵 메인프레임',en:'Silence Mainframe'}},rewards:[{type:'feature',key:'multiplicity-protocol'},{type:'currency',key:'stardust',amount:1150},{type:'currency',key:'coreShard',amount:2,firstClearOnly:true}],challenges:[{id:'clear',type:'clear'}]
     })
   ]);
-  window.STACKFALL_STAGE_SCHEMA_VERSION=18;window.STACKFALL_CONSTELLATIONS=constellations;window.STACKFALL_STAGE_CATALOG=catalog;window.stackfallStageById=id=>catalog.find(stage=>stage.id===id)||null;window.stackfallConstellationById=id=>constellations.find(page=>page.id===id)||null;
+  window.STACKFALL_STAGE_SCHEMA_VERSION=19;window.STACKFALL_CONSTELLATIONS=constellations;window.STACKFALL_STAGE_CATALOG=catalog;window.stackfallStageById=id=>catalog.find(stage=>stage.id===id)||null;window.stackfallConstellationById=id=>constellations.find(page=>page.id===id)||null;
 })();
