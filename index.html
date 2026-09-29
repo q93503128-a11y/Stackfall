@@ -63,18 +63,37 @@
           <div><span data-i18n="profile.local">LOCAL PILOT</span><div class="profile-name-line"><h2 id="profileTitle">개척자</h2><button id="profileRenameBtn" class="profile-rename-btn" type="button" data-i18n-title="profile.rename" aria-label="Rename">✎</button></div><div id="profileNameEditor" class="profile-name-editor hidden"><input id="profileNameInput" type="text" maxlength="16" autocomplete="off" spellcheck="false" aria-label="Nickname"><button id="profileNameSaveBtn" type="button" data-i18n="profile.save">저장</button></div><p data-i18n="profile.localSave">이 진행도는 현재 기기에 저장됩니다.</p></div>
           <button id="profileCloseBtn" type="button" aria-label="Close">×</button>
         </div>
-        <div class="profile-stat-grid">
-          <div><span data-i18n="profile.clears">클리어</span><b id="profileDetailClears">0</b></div>
+        <div class="profile-stat-grid profile-primary-stats">
+          <div><span data-i18n="profile.progress">스테이지 진행도</span><b id="profileDetailClears">0 / 18</b></div>
+          <div><span data-i18n="profile.stageClears">누적 스테이지 클리어</span><b id="profileDetailStageClears">0</b></div>
           <div><span data-i18n="profile.runs">총 출격</span><b id="profileDetailRuns">0</b></div>
           <div><span data-i18n="profile.kills">누적 처치</span><b id="profileDetailKills">0</b></div>
-          <div><span data-i18n="profile.slots">장비 슬롯</span><b id="profileDetailSlots">4</b></div>
-          <div><span data-i18n="profile.weapons">해금 무기</span><b id="profileDetailWeapons">4</b></div>
-          <div><span data-i18n="profile.bosses">보스 처치</span><b id="profileDetailBosses">0</b></div>
+          <div><span data-i18n="profile.eliteKills">보스급 처치</span><b id="profileDetailBosses">0</b></div>
+          <div><span data-i18n="profile.weapons">해금 장비</span><b id="profileDetailWeapons">0 / 18</b></div>
         </div>
         <div class="profile-currency-grid">
           <div><i>✦</i><span data-i18n="currency.stardust">성진</span><b id="profileDetailStardust">0</b></div>
           <div><i>◆</i><span data-i18n="currency.coreShard">코어 조각</span><b id="profileDetailCoreShard">0</b></div>
         </div>
+        <details class="profile-details">
+          <summary><span data-i18n="profile.combatRecord">전투 기록</span><small data-i18n="profile.expand">세부 보기</small></summary>
+          <div class="profile-compact-grid profile-boss-grid">
+            <div><span data-i18n="profile.minibossKills">중간보스</span><b id="profileDetailMinibosses">0</b></div>
+            <div><span data-i18n="profile.bossKills">보스</span><b id="profileDetailRegularBosses">0</b></div>
+            <div class="apex"><span data-i18n="profile.apexKills">초월체</span><b id="profileDetailApexes">0</b></div>
+            <div><span data-i18n="profile.voidBossKills">균열 보스</span><b id="profileDetailVoidBosses">0</b></div>
+            <div><span data-i18n="profile.shipBossKills">우주선 보스</span><b id="profileDetailShipBosses">0</b></div>
+          </div>
+          <div class="profile-compact-grid profile-growth-grid">
+            <div><span data-i18n="profile.slots">장비 슬롯</span><b id="profileDetailSlots">4 / 6</b></div>
+            <div><span data-i18n="profile.growthLevels">코어 성장 레벨</span><b id="profileDetailGrowthLevels">0</b></div>
+            <div><span data-i18n="profile.growthNodes">성장 노드</span><b id="profileDetailGrowthNodes">0</b></div>
+          </div>
+        </details>
+        <details class="profile-details">
+          <summary><span data-i18n="profile.stageRecord">스테이지 클리어 기록</span><small data-i18n="profile.expand">세부 보기</small></summary>
+          <div id="profileStageClearGrid" class="profile-stage-clear-grid"></div>
+        </details>
       </div>
     </section>
     <section id="upgradeScreen" class="upgrade-screen hidden" aria-labelledby="upgradeTitle">
