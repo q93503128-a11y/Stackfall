@@ -201,5 +201,6 @@
 
   const baseUpdateHudForAwakening=updateHUD;
   updateHUD=function awakeningCoreAwareHud(){const result=baseUpdateHudForAwakening();syncAwakeningCoreHud();return result;};
+  window.stackfallSyncAwakeningCoreHud=syncAwakeningCoreHud;
   syncAwakeningCoreHud();renderLoadout();
 })();
