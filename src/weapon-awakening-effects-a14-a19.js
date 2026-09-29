@@ -29,11 +29,11 @@
       live=target&&!target.dead?target:spiralTarget(),toward=live?Math.atan2(live.y-oy,live.x-ox):player.angle,tangent=galaxyAngle+direction*Math.PI/2,
       blend=.30+step*.065,a=lerpAngle(tangent,toward,Math.min(.64,blend)),speed=(320+n*19+step*20)*(reverse?.96:1),extra=arm>=Math.max(0,arms-mult());
     spawnPlayerProjectile({
-      x:ox,y:oy,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:(4.4+n*.25)*size,
-      life:1.82,maxRange:weaponRange('spiral')*1.06,damage:(7+n*2.05)*(echoed?.62:1)*(reverse?.62:1),
+      x:ox,y:oy,vx:0,vy:0,r:(4.4+n*.25)*size,
+      life:Math.max(1.55,weaponRange('spiral')*1.06/Math.max(1,speed)),maxRange:weaponRange('spiral')*1.06,damage:(7+n*2.05)*(echoed?.62:1)*(reverse?.62:1),
       color:echoed?COLORS.pink:reverse?'#c8a9ff':'#e8b8ff',pierce:n>=5?1:0,
       source:echoed?'echo-spiral':reverse?'spiral-counter':extra?'spiral-multiplicity':'spiral-bolt',
-      homingTargetId:live?.id,homingReacquire:false,homingTurn:n>=3?1.28:.92,
+      spiralMotion:true,spiralOriginX:player.x,spiralOriginY:player.y,spiralAngle:galaxyAngle,spiralRadius:orbit,spiralRadialSpeed:speed,spiralAngularSpeed:direction*(2.75+arm*.06),
       multiplicityTargetId:live?.id||null,awGenesis:true
     });
   }
