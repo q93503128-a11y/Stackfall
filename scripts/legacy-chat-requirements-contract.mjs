@@ -29,7 +29,7 @@ const design=read('docs/GAME_DESIGN.md');
 const wiki=read('docs/WIKI.md');
 
 expect('player hit invulnerability remains 0.5 seconds',bosses.includes('player.invuln=.5')&&!bosses.includes('player.invuln=.9'));
-expect('Apex cadence remains eight minutes of game time',bossCatalog.includes('APEX_INTERVAL_SECONDS=480')&&core.includes('nextApexAt:480')&&core.includes('state.nextApexAt=480'));
+expect('Apex cadence is ten minutes of game time',bossCatalog.includes('APEX_INTERVAL_SECONDS=600')&&core.includes('nextApexAt:600')&&core.includes('state.nextApexAt=600'));
 expect('boss chain damage is registered once at the common damage sink',systemsBase.includes('registerStackfallBossChainDamage(enemy,inflicted,opts)')&&!endgame.includes('registerStackfallBossChainDamage(enemy,Math.min(hpBefore'));
 expect('initial weapon pool remains four weapons',meta.includes("INITIAL_WEAPONS=Object.freeze(['blade','ember','bulwark','gravity'])"));
 expect('auto level choice is saved in settings',settings.includes('GAME_SETTINGS.autoLevelChoice=saved.autoLevelChoice===true')&&settings.includes("updateDisplaySetting('autoLevelChoice'"));
@@ -51,9 +51,9 @@ expect('Prism flashes when attack begins rather than blinking during aim',prism.
 
 expect('normal Bulwark uses segmented armor instead of a single hex',read('src/canonical-weapon-visuals.js').includes('barrierSegmentPath')&&read('src/canonical-weapon-visuals.js').includes('canonicalDefenseBarrier'));
 expect('developer slot editor can explicitly refresh live slot state',read('src/dev-tools.js').includes('id="devRefreshSlots"')&&read('src/dev-tools.js').includes('const refreshDevPanel=')&&read('src/dev-tools.js').includes('data-slot-refresh'));
-expect('developer panel uses P toggle and keeps special reward launcher',read('src/dev-tools.js').includes("event.code!=='KeyP'")&&read('src/dev-tools.js').includes('id="devReward"')&&read('src/dev-tools.js').includes('function openSpecialReward()')&&read('src/dev-tools.js').includes('window.updateRewardQueue?.()'));
+expect('developer panel uses Tab toggle and keeps special reward launcher',read('src/dev-tools.js').includes("event.code!=='Tab'")&&read('src/dev-tools.js').includes('id="devReward"')&&read('src/dev-tools.js').includes('function openSpecialReward()')&&read('src/dev-tools.js').includes('window.updateRewardQueue?.()'));
 expect('developer panel exposes invincibility level-up lock and all-stage completion',read('src/dev-tools.js').includes('id="devInvincible"')&&read('src/dev-tools.js').includes('id="devNoLevel"')&&read('src/dev-tools.js').includes('id="devClearStages"')&&read('src/dev-tools.js').includes('function completeAllStages()'));
-expect('local profile nickname is free persistent and Stage 1 best-time tile is removed',read('src/meta-progression.js').includes('stackfallSetProfileName=setProfileName')&&read('src/meta-upgrades.js').includes('function saveProfileName()')&&read('index.html').includes('id="profileNameInput"')&&read('index.html').includes('id="profileDetailBosses"')&&!read('index.html').includes('profileDetailBest'));
+expect('local profile nickname and permanent-record details are persistent',read('src/meta-progression.js').includes('stackfallSetProfileName=setProfileName')&&read('src/meta-progression.js').includes('stackfallRecordBossDefeat=recordBossDefeat')&&read('src/meta-upgrades.js').includes('function saveProfileName()')&&read('index.html').includes('id="profileNameInput"')&&read('index.html').includes('id="profileDetailStageClears"')&&read('index.html').includes('id="profileStageClearGrid"')&&!read('index.html').includes('profileDetailBest'));
 expect('normal Comet Lance fires immediately',guidance.includes('fireComet=function rangedCometVolley')&&!guidance.includes('COMET_WINDUP_MS')&&!guidance.includes('stackfallAddCometWindup'));
 expect('Comet Multiplicity has no awakening windup',!endgame.includes('stackfallCometWindupDelayMs')&&!endgame.includes('stackfallAddCometWindup')&&endgame.includes('multiplicityComet'));
 expect('Final Comet owns the sole charge path',!gpu.includes('stackfallDrawCometWindups')&&awakening.includes("kind:'comet-charge'")&&awakening.includes('scheduleWeaponAction(340')&&awakening.includes('pierce:999'));
@@ -66,7 +66,7 @@ expect('difficulty continues to scale Stardust rewards but not unlock currency',
 expect('unused awakening cores cash out at run end',design.includes('남은 코어는 런 종료 시 **1개당 기본 Stardust 40**')||design.includes('1개당 기본 Stardust 40'));
 expect('shield capacity remains additive across independent sources',rewards.includes("registerShieldCapacitySource('trait-aegis'")&&rewards.includes("registerShieldCapacitySource('augment-bulwark'")&&design.includes('보호막 최대치 기여량을 **합산**'));
 expect('expanded Apex arena remains 540 desktop and 350 compact',endgame.includes("state.apexArena.r=compactDevice()?350:540"));
-expect('canonical design says eight-minute Apex cadence and not ten-minute cadence',design.includes('실제 게임 시간 8분(480초) 간격')&&!design.includes('초월체: 실제 게임 시간 10분 간격')&&!design.includes('10분·20분·30분'));
+expect('canonical design says ten-minute Apex cadence',design.includes('실제 게임 시간 10분(600초) 간격')&&design.includes('10분·20분·30분'));
 expect('recovered requirements are canonicalized in design',design.includes('기본 무기 시각·발동 계약')&&design.includes('공통 피격 무적시간은 **0.5초**'));
 
 if(fail.length){
