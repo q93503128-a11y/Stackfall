@@ -15,7 +15,7 @@
   if(PASSIVE_TEXT.overdrive){PASSIVE_TEXT.overdrive.ko=['임계 과출력','플레이어 체력이 45% 미만일 때 모든 피해 +14%.'];PASSIVE_TEXT.overdrive.en=['Critical Overdrive','All damage +14% while the player is below 45% health.'];}
 
   const baseRollChoices=rollChoices;
-  rollChoices=function balancedRollChoices(n){const rolled=baseRollChoices(Math.max(n,12)).filter(choice=>!(choice.kind==='passive'&&PASSIVES[choice.key]?.eventOnly));return rolled.slice(0,n);};
+  rollChoices=function balancedRollChoices(n){const rolled=baseRollChoices(Math.max(n,12)).filter(choice=>!(choice.kind==='passive'&&PASSIVES[choice.key]?.eventOnly&&window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')!==true)).filter(choice=>choice.kind!=='passive'||!window.stackfallIsPassiveChoiceUnlocked||window.stackfallIsPassiveChoiceUnlocked(choice.key));return rolled.slice(0,n);};
 
   const baseUpdatePlayer=updatePlayer;
   updatePlayer=function endgameBarrierPlayer(dt){baseUpdatePlayer(dt);if(state.weaponAugments?.bulwark){const n=Math.max(1,weaponCount('bulwark')),profile=bulwarkAugmentShieldProfile(n);player.augmentBarrierTimer=(player.augmentBarrierTimer??7.5)-dt;if(player.augmentBarrierTimer<=0){player.augmentBarrierTimer=profile.interval;if(rechargeShield(profile.periodicGain,profile.cap)>0)shockwave(player.x,player.y,'#9dffe2',72+n*3,.24,1.7);}}};
