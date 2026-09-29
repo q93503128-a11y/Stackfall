@@ -88,7 +88,7 @@ expect('ability detail layer',expansion.includes('ledger-detail-layer')&&expansi
 expect('passive detail TMI is not duplicated by endgame layer',expansion.includes('if(card.dataset.passiveKey)return;')&&!expansion.includes('현재 ${stat(card.dataset.passiveKey)}'));
 expect('typed boss HUD',combat.includes('bossHudType')&&combat.includes("'중간보스':'MINI-BOSS'")&&!expansion.includes('typedBossHud'));
 expect('compact desktop choice cards',styles.includes('grid-template-columns:72px minmax(0,1fr)')&&styles.includes('min-height:218px')&&!styles.includes('min-height:302px'));
-expect('apex interval eight game minutes',core.includes('nextApexAt:480')&&catalog.includes('const APEX_INTERVAL_SECONDS=480;'));
+expect('apex interval ten game minutes',core.includes('nextApexAt:600')&&catalog.includes('const APEX_INTERVAL_SECONDS=600;'));
 expect('automatic random rewards only stack owned items',rewards.includes('stat(key)>0&&stat(key)<PASSIVES[key].max')&&rewards.includes('weaponCount(key)>0&&weaponCount(key)<6')&&mapEvents.includes('stat(key)>0&&stat(key)<PASSIVES[key].max')&&mapEvents.includes('weaponCount(key)>0&&weaponCount(key)<6'));
 expect('random reward exhaustion falls back without unlocking',mapEvents.includes('function grantFallbackHull')&&mapEvents.includes('if(!entries.length)entries.push(grantFallbackHull())')&&rewards.includes("else{rechargeShield(18,18);desc='보호막 충전.';}"));
 expect('starship weapon reward has a survival-only fallback',mapEvents.includes('function grantWeaponFallback')&&mapEvents.includes('entries=[weapon||grantWeaponFallback()]')&&!mapEvents.includes('weapon?[weapon]:grantRandomPassives(2)'));
