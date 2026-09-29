@@ -1,7 +1,7 @@
 (()=>{
   const CATALOG=Object.freeze([
-    {id:'vitality',category:'SURVIVAL',icon:'♥',x:24,y:28,max:8,cost:[80,130,190,280,400,550,740,980],shards:[0,0,0,1,0,0,0,2],values:[0,4,8,12,20,24,28,32,44],name:'upgrade.vitality.name',desc:'upgrade.vitality.desc',effect:'upgrade.vitality.effect'},
-    {id:'output',category:'OFFENSE',icon:'▲',x:76,y:27,max:8,cost:[90,145,215,315,440,600,800,1050],shards:[0,0,0,1,0,0,0,2],values:[0,3,6,9,15,18,21,24,33],name:'upgrade.output.name',desc:'upgrade.output.desc',effect:'upgrade.output.effect'},
+    {id:'vitality',category:'SURVIVAL',icon:'♥',x:24,y:28,max:12,baseMax:8,tier3Feature:'core-development-iii',cost:[80,130,190,280,400,550,740,980,1450,1900,2500,3300],shards:[0,0,0,1,0,0,0,2,0,0,0,4],values:[0,4,8,12,20,24,28,32,44,48,52,56,72],name:'upgrade.vitality.name',desc:'upgrade.vitality.desc',effect:'upgrade.vitality.effect'},
+    {id:'output',category:'OFFENSE',icon:'▲',x:76,y:27,max:12,baseMax:8,tier3Feature:'core-development-iii',cost:[90,145,215,315,440,600,800,1050,1550,2050,2700,3500],shards:[0,0,0,1,0,0,0,2,0,0,0,4],values:[0,3,6,9,15,18,21,24,33,36,39,42,54],name:'upgrade.output.name',desc:'upgrade.output.desc',effect:'upgrade.output.effect'},
     {id:'cycle',category:'OFFENSE',icon:'»',x:87,y:51,max:6,cost:[120,190,300,450,650,900],shards:[0,0,1,0,0,2],values:[0,2,4,8,10,12,18],name:'upgrade.cycle.name',desc:'upgrade.cycle.desc',effect:'upgrade.cycle.effect'},
     {id:'magnet',category:'UTILITY',icon:'⊕',x:74,y:76,max:6,cost:[75,125,210,330,500,760],shards:[0,0,1,0,0,2],values:[0,12,24,48,60,72,108],name:'upgrade.magnet.name',desc:'upgrade.magnet.desc',effect:'upgrade.magnet.effect'},
     {id:'salvage',category:'UTILITY',icon:'✦',x:27,y:77,max:8,cost:[70,120,185,285,410,570,760,990],shards:[0,0,0,1,0,0,0,2],values:[0,8,16,24,40,48,56,64,88],name:'upgrade.salvage.name',desc:'upgrade.salvage.desc',effect:'upgrade.salvage.effect'},
@@ -11,8 +11,11 @@
   ]);
   const byId=id=>CATALOG.find(row=>row.id===id)||null;
   const level=id=>window.stackfallUpgradeLevel?.(id)||0;
-  const valueAt=(row,lv=level(row.id))=>{const values=row?.values||[0];return Number(values[Math.max(0,Math.min(row.max,Math.floor(Number(lv)||0)))])||0;};
-  const maxed=row=>level(row.id)>=row.max;
+  const tier3Enabled=row=>!row?.tier3Feature||window.stackfallIsFeatureUnlocked?.(row.tier3Feature)===true;
+  const availableMax=row=>tier3Enabled(row)?row.max:Math.min(row.max,Math.max(0,Number(row.baseMax)||row.max));
+  const effectiveLevel=row=>Math.min(availableMax(row),level(row.id));
+  const valueAt=(row,lv=level(row.id))=>{const values=row?.values||[0],cap=availableMax(row);return Number(values[Math.max(0,Math.min(cap,Math.floor(Number(lv)||0)))])||0;};
+  const maxed=row=>effectiveLevel(row)>=availableMax(row);
   const currency=key=>window.stackfallCurrency?.(key)||0;
   const fmt=(key,n)=>String(tr(key)).replace('{n}',String(n));
   const costAt=row=>({stardust:row.cost[Math.min(level(row.id),row.cost.length-1)]||0,coreShard:row.shards[Math.min(level(row.id),row.shards.length-1)]||0});
@@ -37,6 +40,7 @@
     baseResetGame();state.runCurrencyEarned={stardust:0,coreShard:0};
     const hpBonus=1+valueAt(byId('vitality'))*.01;
     if(hpBonus>1){player.maxHp=Math.max(1,Math.round(player.maxHp*hpBonus));player.hp=player.maxHp;updateHUD?.();}
+    if(window.stackfallIsFeatureUnlocked?.('start-level-3')===true)window.stackfallBeginStartLevelBonus?.(3);
   };
 
   function runStardustReward(){
@@ -87,7 +91,7 @@
   }
   function nextGainText(row,lv){
     if(row.id==='slot5'||row.id==='slot6')return'';
-    const gain=valueAt(row,Math.min(row.max,lv+1))-valueAt(row,lv);
+    const gain=valueAt(row,Math.min(availableMax(row),lv+1))-valueAt(row,lv);
     return row.id==='magnet'?'+'+gain:'+'+gain+'%';
   }
   function investedCost(){
@@ -145,20 +149,21 @@
     if(!nodeRoot)return;nodeRoot.innerHTML='';
     for(const row of CATALOG){
       const button=document.createElement('button'),lv=level(row.id),stateName=nodeState(row);
-      button.type='button';button.className='upgrade-node '+stateName+(selected===row.id?' selected':'');button.style.left=row.x+'%';button.style.top=row.y+'%';button.dataset.upgrade=row.id;
-      button.innerHTML='<i>'+row.icon+'</i><span>'+tr(row.name)+'</span><small>'+lv+'/'+row.max+'</small>';
+      const cap=availableMax(row),visibleLv=Math.min(cap,lv),extensionLocked=!!row.tier3Feature&&!tier3Enabled(row);
+      button.type='button';button.className='upgrade-node '+stateName+(extensionLocked?' tier-extension-locked':'')+(selected===row.id?' selected':'');button.style.left=row.x+'%';button.style.top=row.y+'%';button.dataset.upgrade=row.id;
+      button.innerHTML='<i>'+row.icon+'</i><span>'+tr(row.name)+'</span><small>'+visibleLv+'/'+cap+(extensionLocked&&visibleLv>=cap?' · 🔒Ⅲ':'')+'</small>';
       button.addEventListener('click',()=>{selected=row.id;renderUpgradeUi();});
       nodeRoot.appendChild(button);
     }
   }
   function renderDetail(){
-    const row=byId(selected)||CATALOG[0],lv=level(row.id),stateName=nodeState(row),cost=costAt(row);
-    detail.category.textContent=row.category;detail.name.textContent=tr(row.name);detail.desc.textContent=tr(row.desc);detail.level.textContent=lv+' / '+row.max;
-    const labels=effectLabels(),nextLv=Math.min(row.max,lv+1),breakthrough=!maxed(row)&&cost.coreShard>0;
+    const row=byId(selected)||CATALOG[0],storedLv=level(row.id),cap=availableMax(row),lv=Math.min(cap,storedLv),stateName=nodeState(row),cost=costAt(row),extensionLocked=!!row.tier3Feature&&!tier3Enabled(row);
+    detail.category.textContent=row.category;detail.name.textContent=tr(row.name);detail.desc.textContent=tr(row.desc);detail.level.textContent=lv+' / '+cap;
+    const labels=effectLabels(),nextLv=Math.min(cap,lv+1),breakthrough=!maxed(row)&&cost.coreShard>0,breakthroughIndex=breakthrough?row.shards.slice(0,nextLv).filter(value=>Number(value)>0).length:0,roman=['','I','II','III'][breakthroughIndex]||String(breakthroughIndex);
     if(maxed(row))detail.effect.innerHTML='<span class="upgrade-effect-current"><small>'+labels.current+'</small><b>'+effectText(row,lv)+'</b></span>';
-    else detail.effect.innerHTML='<span class="upgrade-effect-current"><small>'+labels.current+'</small><b>'+(lv>0?effectText(row,lv):'—')+'</b></span><span class="upgrade-effect-next"><small>'+labels.next+'</small><b>'+effectText(row,nextLv)+'</b><em>'+labels.gain+' '+nextGainText(row,lv)+'</em></span>'+(breakthrough?'<strong class="upgrade-breakthrough">◆ '+labels.breakthrough+'</strong>':'');
+    else detail.effect.innerHTML='<span class="upgrade-effect-current"><small>'+labels.current+'</small><b>'+(lv>0?effectText(row,lv):'—')+'</b></span><span class="upgrade-effect-next"><small>'+labels.next+'</small><b>'+effectText(row,nextLv)+'</b><em>'+labels.gain+' '+nextGainText(row,lv)+'</em></span>'+(breakthrough?'<strong class="upgrade-breakthrough">◆ '+labels.breakthrough+(roman?' '+roman:'')+'</strong>':'');
     detail.cost.innerHTML=maxed(row)?'<strong>'+tr('upgrade.maxed')+'</strong>':('<span><i>✦</i>'+cost.stardust+'</span>'+(cost.coreShard?'<span class="breakthrough-cost"><i>◆</i>'+cost.coreShard+'</span>':''));
-    detail.lock.textContent=!prereqMet(row)?fmt('upgrade.requires',tr(byId(row.requires)?.name||row.requires)):stateName==='poor'?tr('upgrade.insufficient'):'';
+    detail.lock.textContent=!prereqMet(row)?fmt('upgrade.requires',tr(byId(row.requires)?.name||row.requires)):extensionLocked&&lv>=cap?(GAME_SETTINGS.language==='ko'?'3차 돌파 · STAGE 16 클리어 후 해금':'BREAKTHROUGH III · CLEAR STAGE 16'):stateName==='poor'?tr('upgrade.insufficient'):'';
     buyBtn.disabled=maxed(row)||!prereqMet(row)||stateName==='poor';buyBtn.querySelector('span').textContent=maxed(row)?tr('upgrade.maxed'):tr('upgrade.buy');
   }
   function renderProfile(){
