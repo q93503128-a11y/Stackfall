@@ -70,6 +70,8 @@ function loop(now){
 }
 requestAnimationFrame(loop);
 window.addEventListener('keydown',e=>{
+  const devTab=e.code==='Tab'&&window.stackfallDeveloperTest?.enabled===true&&typeof window.stackfallDeveloperTest.togglePanel==='function';
+  if(devTab){const target=e.target,typing=target instanceof HTMLInputElement||target instanceof HTMLTextAreaElement||target instanceof HTMLSelectElement||target?.isContentEditable;if(!typing&&!e.repeat){e.preventDefault();e.stopImmediatePropagation();window.stackfallDeveloperTest.togglePanel();}return;}
   const ledgerKey=e.code==='Tab'||e.code==='KeyI';
   if(ledgerKey){
     const ledgerOpen=typeof isAbilityLedgerOpen==='function'&&isAbilityLedgerOpen(),settingsOpen=!document.querySelector('#settingsScreen')?.classList.contains('hidden'),canToggle=ledgerOpen||['playing','paused'].includes(state.mode)&&!settingsOpen;
