@@ -157,14 +157,14 @@
     if(key==='vitality')applyStackfallVitalityGrowth(1);
     if(key==='stellarLife')applyStackfallStellarLifeGrowth(1);
   }
-  function grantMinibossReward(){
+  function grantEliteGrowthReward(kickerText='중간보스 자동 보상'){
     const weapons=Object.keys(state.weaponStacks||{}).filter(key=>weaponCount(key)>0&&weaponCount(key)<6),passives=Object.keys(PASSIVES).filter(key=>stat(key)>0&&stat(key)<PASSIVES[key].max);
     const useWeapon=weapons.length&&(!passives.length||Math.random()<.45);
     let title='정예 전리품',desc='';
     if(useWeapon){const key=weapons[Math.floor(Math.random()*weapons.length)],next=weaponCount(key)+1;state.weaponStacks[key]=next;if(key!=='core'&&!state.weaponSlots.includes(key))state.weaponSlots.push(key);title=weaponText(key).name;desc=stackEffectText(key,next)?.desc||'장비 중첩 증가.';}
     else if(passives.length){const key=passives[Math.floor(Math.random()*passives.length)];applyMiniRewardPassive(key);title=passiveText(key).name;desc=passiveText(key).desc;}
     else{rechargeShield(18,18);desc='보호막 충전.';}
-    const kicker=document.querySelector('#resonanceKicker');if(kicker)kicker.textContent='중간보스 자동 보상';ui.resonanceTitle.textContent=title;ui.resonanceDesc.textContent=desc;showTimedResonance(5200);audio.pickup();renderLoadout();updateHUD();
+    const kicker=document.querySelector('#resonanceKicker');if(kicker)kicker.textContent=kickerText;ui.resonanceTitle.textContent=title;ui.resonanceDesc.textContent=desc;showTimedResonance(5200);audio.pickup();renderLoadout();updateHUD();
   }
 
   const rrKill=killEnemy;killEnemy=function(enemy,opts={}){
@@ -173,7 +173,13 @@
     if(state.bossTraits.harvest){const heal=elite?Math.ceil(player.maxHp*.25):1;player.hp=Math.min(player.maxHp,player.hp+heal);}
     if(state.bossTraits.singularity){state.rewardKills=(state.rewardKills||0)+1;if(state.rewardKills%15===0)state.entities.wells.push({x,y,r:138,life:3.4,max:3.4,strength:760,damage:22,tick:0,color:'#e65cff',kind:'trait-singularity',traitCollapse:true,distortionCd:0});}
     if(state.weaponAugments.chrono&&locked)areaDamage(x,y,72,16+weaponCount('chrono')*3,COLORS.chrono,'chrono-burst');
-    if(elite){const suppress=enemy?.kind==='apex'||enemy?.bossCategory==='apex'||enemy?.eventKind==='void'||enemy?.noEliteReward===true;if(suppress||enemy?.type==='mini')state.rewardQueue.splice(before);else if((state.rewardQueue?.length||0)===before)state.rewardQueue.push(enemy.type);if(!suppress&&enemy?.type==='mini')grantMinibossReward();}
+    if(elite){
+      const suppress=enemy?.kind==='apex'||enemy?.bossCategory==='apex'||enemy?.eventKind==='void'||enemy?.noEliteReward===true,specialUnlocked=window.stackfallIsFeatureUnlocked?.('special-ability')===true;
+      if(suppress){state.rewardQueue.splice(before);}
+      else if(enemy?.type==='mini'){state.rewardQueue.splice(before);grantEliteGrowthReward('중간보스 성장 보상');}
+      else if(!specialUnlocked){state.rewardQueue.splice(before);grantEliteGrowthReward('보스 성장 보상');}
+      else if((state.rewardQueue?.length||0)===before)state.rewardQueue.push(enemy.type);
+    }
   };
 
   const rrUpdateWeapons=updateWeapons;updateWeapons=function(dt){
