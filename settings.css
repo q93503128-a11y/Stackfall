@@ -57,7 +57,7 @@
   .primary-btn{min-height:52px}
 }
 .unlock-management{margin-top:18px;padding:14px;border:1px solid rgba(124,232,255,.12);border-radius:16px;background:rgba(7,12,29,.54)}
-.unlock-management-heading{padding:2px 4px 10px}.unlock-management-heading>span{display:block;color:#82e7ff;font-size:8px;font-weight:900;letter-spacing:.2em}.unlock-management-heading h3{margin:4px 0 3px;font:20px/1.1 "Black Han Sans",sans-serif}.unlock-management-heading p{margin:0;color:#8f9bb9;font-size:9px;line-height:1.5}
+.unlock-management-heading{position:relative;padding:2px 44px 10px 4px}.unlock-management-heading>span:first-child{display:block;color:#82e7ff;font-size:8px;font-weight:900;letter-spacing:.2em}.unlock-management-heading h3{margin:4px 0 3px;font:20px/1.1 "Black Han Sans",sans-serif;color:#eef6ff}.unlock-management-heading p{margin:0;color:#8f9bb9;font-size:9px;line-height:1.5}
 .unlock-management-list{display:grid;gap:6px}.unlock-management-empty{padding:13px 8px;color:#7d88a5;font-size:10px;text-align:center}
 .unlock-feature-row{min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 10px;border:1px solid rgba(255,255,255,.06);border-radius:12px;background:rgba(255,255,255,.025);cursor:pointer}
 .unlock-feature-copy{min-width:0}.unlock-feature-copy strong{display:block;color:#edf4ff;font-size:12px}.unlock-feature-copy small{display:block;margin-top:3px;color:#8190b0;font-size:8px;letter-spacing:.04em}
