@@ -153,5 +153,6 @@
   window.stackfallRecordBossDefeat=recordBossDefeat;
   window.stackfallStageStatus=stageStatus;
   window.stackfallRecordStageClear=recordStageClear;
+  window.stackfallRefreshFeatureUi=()=>{syncFeatureEntries();window.renderStackfallGalaxyMap?.();window.renderStackfallMetaUi?.();window.stackfallSyncAwakeningCoreHud?.();};
   syncFeatureEntries();save();
 })();
