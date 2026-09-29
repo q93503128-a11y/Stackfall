@@ -223,22 +223,22 @@ Object.assign(TEXT.fr,{
 });
 
 Object.assign(TEXT.ko,{
-  'profile.localSave':'이 진행도는 현재 기기에 저장됩니다.','profile.runs':'총 출격','profile.kills':'누적 처치','profile.slots':'장비 슬롯','profile.weapons':'해금 무기','profile.bosses':'보스 처치','profile.rename':'닉네임 변경','profile.save':'저장'
+  'profile.localSave':'이 진행도는 현재 기기에 저장됩니다.','profile.progress':'스테이지 진행도','profile.stageClears':'누적 스테이지 클리어','profile.runs':'총 출격','profile.kills':'누적 처치','profile.slots':'장비 슬롯','profile.weapons':'해금 장비','profile.eliteKills':'보스급 처치','profile.combatRecord':'전투 기록','profile.stageRecord':'스테이지 클리어 기록','profile.expand':'세부 보기','profile.minibossKills':'중간보스','profile.bossKills':'보스','profile.apexKills':'초월체','profile.voidBossKills':'균열 보스','profile.shipBossKills':'우주선 보스','profile.growthLevels':'코어 성장 레벨','profile.growthNodes':'성장 노드','profile.rename':'닉네임 변경','profile.save':'저장'
 });
 Object.assign(TEXT.en,{
-  'profile.localSave':'Progress is currently stored on this device.','profile.runs':'TOTAL RUNS','profile.kills':'TOTAL KILLS','profile.slots':'EQUIPMENT SLOTS','profile.weapons':'UNLOCKED WEAPONS','profile.bosses':'BOSSES DEFEATED','profile.rename':'RENAME','profile.save':'SAVE'
+  'profile.localSave':'Progress is currently stored on this device.','profile.progress':'STAGE PROGRESS','profile.stageClears':'TOTAL STAGE CLEARS','profile.runs':'TOTAL RUNS','profile.kills':'TOTAL KILLS','profile.slots':'EQUIPMENT SLOTS','profile.weapons':'UNLOCKED EQUIPMENT','profile.eliteKills':'ELITE DEFEATS','profile.combatRecord':'COMBAT RECORD','profile.stageRecord':'STAGE CLEAR RECORD','profile.expand':'DETAILS','profile.minibossKills':'MINI-BOSSES','profile.bossKills':'BOSSES','profile.apexKills':'APEXES','profile.voidBossKills':'RIFT BOSSES','profile.shipBossKills':'SHIP BOSSES','profile.growthLevels':'CORE GROWTH LEVELS','profile.growthNodes':'GROWTH NODES','profile.rename':'RENAME','profile.save':'SAVE'
 });
 Object.assign(TEXT.ja,{
-  'profile.localSave':'進行状況は現在この端末に保存されます。','profile.runs':'総出撃','profile.kills':'累計撃破','profile.slots':'装備スロット','profile.weapons':'解放武器','profile.bosses':'ボス撃破','profile.rename':'名前変更','profile.save':'保存'
+  'profile.localSave':'進行状況は現在この端末に保存されます。','profile.progress':'ステージ進行','profile.stageClears':'累計ステージクリア','profile.runs':'総出撃','profile.kills':'累計撃破','profile.slots':'装備スロット','profile.weapons':'解放装備','profile.eliteKills':'ボス級撃破','profile.combatRecord':'戦闘記録','profile.stageRecord':'ステージクリア記録','profile.expand':'詳細','profile.minibossKills':'中ボス','profile.bossKills':'ボス','profile.apexKills':'超越体','profile.voidBossKills':'亀裂ボス','profile.shipBossKills':'宇宙船ボス','profile.growthLevels':'コア成長レベル','profile.growthNodes':'成長ノード','profile.rename':'名前変更','profile.save':'保存'
 });
 Object.assign(TEXT['zh-CN'],{
-  'profile.localSave':'当前进度保存在此设备上。','profile.runs':'总出击','profile.kills':'累计击杀','profile.slots':'装备槽','profile.weapons':'已解锁武器','profile.bosses':'击败首领','profile.rename':'修改昵称','profile.save':'保存'
+  'profile.localSave':'当前进度保存在此设备上。','profile.progress':'关卡进度','profile.stageClears':'累计关卡通关','profile.runs':'总出击','profile.kills':'累计击杀','profile.slots':'装备槽','profile.weapons':'已解锁装备','profile.eliteKills':'首领级击杀','profile.combatRecord':'战斗记录','profile.stageRecord':'关卡通关记录','profile.expand':'详情','profile.minibossKills':'中型首领','profile.bossKills':'首领','profile.apexKills':'超越体','profile.voidBossKills':'裂隙首领','profile.shipBossKills':'飞船首领','profile.growthLevels':'核心成长等级','profile.growthNodes':'成长节点','profile.rename':'修改昵称','profile.save':'保存'
 });
 Object.assign(TEXT.es,{
-  'profile.localSave':'El progreso se guarda actualmente en este dispositivo.','profile.runs':'PARTIDAS','profile.kills':'BAJAS TOTALES','profile.slots':'RANURAS','profile.weapons':'ARMAS DESBLOQUEADAS','profile.bosses':'JEFES DERROTADOS','profile.rename':'CAMBIAR NOMBRE','profile.save':'GUARDAR'
+  'profile.localSave':'El progreso se guarda actualmente en este dispositivo.','profile.progress':'PROGRESO DE ETAPAS','profile.stageClears':'ETAPAS COMPLETADAS','profile.runs':'PARTIDAS','profile.kills':'BAJAS TOTALES','profile.slots':'RANURAS','profile.weapons':'EQUIPO DESBLOQUEADO','profile.eliteKills':'ÉLITES DERROTADOS','profile.combatRecord':'REGISTRO DE COMBATE','profile.stageRecord':'REGISTRO DE ETAPAS','profile.expand':'DETALLES','profile.minibossKills':'MINIJEFES','profile.bossKills':'JEFES','profile.apexKills':'ÁPICES','profile.voidBossKills':'JEFES DE GRIETA','profile.shipBossKills':'JEFES NAVE','profile.growthLevels':'NIVELES DE NÚCLEO','profile.growthNodes':'NODOS DE CRECIMIENTO','profile.rename':'CAMBIAR NOMBRE','profile.save':'GUARDAR'
 });
 Object.assign(TEXT.fr,{
-  'profile.localSave':'La progression est actuellement enregistrée sur cet appareil.','profile.runs':'SORTIES','profile.kills':'ÉLIMINATIONS','profile.slots':'EMPLACEMENTS','profile.weapons':'ARMES DÉBLOQUÉES','profile.bosses':'BOSS VAINCUS','profile.rename':'RENOMMER','profile.save':'ENREGISTRER'
+  'profile.localSave':'La progression est actuellement enregistrée sur cet appareil.','profile.progress':'PROGRESSION DES STAGES','profile.stageClears':'STAGES TERMINÉS','profile.runs':'SORTIES','profile.kills':'ÉLIMINATIONS','profile.slots':'EMPLACEMENTS','profile.weapons':'ÉQUIPEMENT DÉBLOQUÉ','profile.eliteKills':'ÉLITES VAINCUS','profile.combatRecord':'DOSSIER DE COMBAT','profile.stageRecord':'HISTORIQUE DES STAGES','profile.expand':'DÉTAILS','profile.minibossKills':'MINI-BOSS','profile.bossKills':'BOSS','profile.apexKills':'APEX','profile.voidBossKills':'BOSS DE FAILLE','profile.shipBossKills':'BOSS VAISSEAU','profile.growthLevels':'NIVEAUX DU NOYAU','profile.growthNodes':'NŒUDS DE CROISSANCE','profile.rename':'RENOMMER','profile.save':'ENREGISTRER'
 });
 
 Object.assign(TEXT.ko,{
