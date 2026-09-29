@@ -110,6 +110,7 @@
     showBossNotice(enemy.name,kind==='boss'?'STAGE BOSS':finale?'CONSTELLATION GUARD':'STAGE MID-BOSS');return enemy;
   }
   function updateStageEncounters(run,progress){
+    if(state.mapEventActive||state.entities.mapEvents?.length)return;
     const plan=stageEncounterPlan(run.stage);run.encountersTriggered=run.encountersTriggered||{};
     for(let index=0;index<plan.length;index++){const entry=plan[index];if(progress<entry.at||run.encountersTriggered[index])continue;if(activeStageEncounterCount()>=stageEncounterConcurrency(run.stage))break;const spawned=spawnStageEncounter(entry,index);if(spawned)run.encountersTriggered[index]=true;break;}
   }
@@ -164,6 +165,7 @@
       if(!boss||boss.dead)beginStageVictory(boss||run.bossSnapshot||{x:player.x,y:player.y,color:'#aeb9ff',kind:'stage-boss'});
       return;
     }
+    if(state.mapEventActive)return;
     const progress=clamp(state.time/Math.max(1,run.stage.boss.spawnAt),0,1);
     updateStageWorldEvents(run,progress);
     for(const event of run.stage.fixedEvents)if(state.time>=event.at&&!run.eventsTriggered[event.id])triggerStageEvent(event);
