@@ -39,11 +39,13 @@ expect('stage catalog carries discoveries and challenges',catalog.includes('disc
 expect('stage events remain fixed authored milestones',catalog.includes('fixedEvents:')&&catalog.includes("id:'final-boss'")&&catalog.includes("kind:'hazard'"));
 expect('crashed ship marker is consumed before encounter and cleared on entry',mapEvents.includes('marker.consumed=true;state.entities.mapEvents.length=0')&&mapEvents.includes('function startCrash(){hideOverlay();state.entities.mapEvents.length=0'));
 expect('world-event choices do not auto-timeout',mapEvents.includes('function armChoiceClock(')&&(mapEvents.match(/armChoiceClock\(/g)||[]).length===1);
-expect('Endless event cadence stays shortened and varied',mapEvents.includes("INTERVALS={vault:[54,74],crash:[82,112],void:[132,178]}")&&mapEvents.includes("FIRST={vault:38,crash:68,void:104}"));
+expect('Endless event cadence covers eight varied event families',mapEvents.includes("EVENT_CLOCK_KEYS=['vault','crash','void','distress','meteor','predator','relay','storm']")&&mapEvents.includes("FIRST={vault:38,distress:54,crash:72,meteor:90,void:110,predator:128,relay:150,storm:176}"));
 expect('Endless mixes authored stage enemy families by elapsed time without stage unlock gates',stageRuntime.includes("thresholds:{route:75,bloom:240,array:420}")&&stageRuntime.includes("unlockGated:false")&&stageRuntime.includes("enemy.endlessFamily=ref.family")&&!stageRuntime.includes("stackfallStageStatus?.(ref")&&design.includes('75초부터 파손 항로(route), 240초부터 심연 개화(bloom), 420초부터 침묵 중계망(array)')&&wiki.includes('75초부터 route, 240초부터 bloom, 420초부터 array'));
 expect('event detection is announced and upgrade notices remain readable',mapEvents.includes("showBossNotice(m.name,tx('eventDetected'))")&&mapEvents.includes('showTimedResonance(4900)'));
 expect('crashed ship pressure scales with elapsed time',mapEvents.includes('strength:1+Math.min(2.25,elapsed/430)')&&mapEvents.includes('isDreadnoughtCrashEvent'));
 expect('map events announce detection and keep offscreen guidance',mapEvents.includes("showBossNotice(m.name,tx('eventDetected'))")&&mapEvents.includes('edgePoint(dx,dy)'));
+expect('five added Endless events have distinct playable mechanics',['startDistress','updateMeteor','startPredator','updateRelay','startStorm'].every(name=>mapEvents.includes('function '+name))&&mapEvents.includes("type==='predator'")&&mapEvents.includes("type==='relay'")&&mapEvents.includes("type==='storm'"));
+expect('excluded bounty and gravity-wreck events are not scheduled',!mapEvents.includes("'bounty'")&&!mapEvents.includes("'gravity-wreck'"));
 expect('Void Rift exposes five boss forms',bossCatalog.includes("BOSS_POOLS={")&&bossCatalog.includes("void:['maw','oracle','weaver','grave','paradox']"));
 
 expect('Prism keeps 1 second non-damaging acquisition line',prism.includes('PRISM_ACQUISITION_SECONDS=1.0')&&prism.includes('syncPrismAimBeams')&&prism.includes('if(lock.windup>0)')&&prism.includes('return;}'));
