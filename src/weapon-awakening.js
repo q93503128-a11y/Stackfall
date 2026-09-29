@@ -175,6 +175,7 @@
   const AWAKENING_MINIBOSS_CORE_CHANCE=.35;
   function awakeningCoreDropAmount(enemy){
     if(!enemy||enemy.dead!==true||enemy.kind==='stage-boss')return 0;
+    if(enemy.twinGroup&&state.entities.enemies.some(other=>other!==enemy&&!other.dead&&other.twinGroup===enemy.twinGroup))return 0;
     if(enemy.kind==='apex')return 2;
     if(enemy.kind==='stage-mini')return enemy.noEliteReward===true?0:(Math.random()<AWAKENING_MINIBOSS_CORE_CHANCE?1:0);
     if(enemy.type==='boss'){
