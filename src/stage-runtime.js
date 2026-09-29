@@ -12,9 +12,16 @@
     if(stage?.constellationId==='constellation-03')return'array';
     return'route';
   }
+  function stageEnvironmentCombatScale(context){
+    const order=Math.max(1,Math.min(18,Number(context?.order)||1)),progress=clamp(Number(context?.progress)||0,0,1);
+    const start=order<=3?.56:order<=6?.70:order<=12?.82:.92,end=order<=3?.90:order<=6?1.00:order<=12?1.10:1.22;
+    const damage=start+(end-start)*Math.pow(progress,.78),speed=(order<=3?.86:order<=6?.92:order<=12?.98:1.04)+(order>=13?progress*.05:progress*.03),warning=order<=3?1.20-progress*.12:order<=6?1.10-progress*.08:order<=12?1.04-progress*.06:Math.max(.88,1.00-progress*.10);
+    return{damage,speed,warning};
+  }
+  window.stackfallStageEnvironmentCombatScale=stageEnvironmentCombatScale;
   function withStageEnvironment(event,api,action){
     const previous=state.stageEnvironmentTelegraphContext||null;
-    state.stageEnvironmentTelegraphContext={family:environmentFamily(api?.stage),stageId:api?.stage?.id||null,variant:event?.variant||'environment',ambient:!!event?.ambient};
+    state.stageEnvironmentTelegraphContext={family:environmentFamily(api?.stage),stageId:api?.stage?.id||null,variant:event?.variant||'environment',ambient:!!event?.ambient,order:Number(api?.stage?.order)||1,progress:clamp(Number(api?.progress)||0,0,1)};
     try{return action?.();}finally{state.stageEnvironmentTelegraphContext=previous;}
   }
   function clearStageUi(){objective?.classList.add('hidden');completeScreen?.classList.add('hidden');state.stageVictory=null;state.stageEnvironmentTelegraphContext=null;}
