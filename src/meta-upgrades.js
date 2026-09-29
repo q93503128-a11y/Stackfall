@@ -162,11 +162,19 @@
     buyBtn.disabled=maxed(row)||!prereqMet(row)||stateName==='poor';buyBtn.querySelector('span').textContent=maxed(row)?tr('upgrade.maxed'):tr('upgrade.buy');
   }
   function renderProfile(){
-    const m=window.stackfallMeta||{},clears=m.clearedStages?.length||0,totalStages=window.STACKFALL_STAGE_CATALOG?.length||18,dust=currency('stardust'),shards=currency('coreShard'),name=(String(m.profileName||'').trim()||tr('profile.name'));
+    const m=window.stackfallMeta||{},clears=m.clearedStages?.length||0,stages=[...(window.STACKFALL_STAGE_CATALOG||[])].sort((a,b)=>(a.order||0)-(b.order||0)),totalStages=stages.length||18,
+      stageCounts=m.stageClearCounts&&typeof m.stageClearCounts==='object'?m.stageClearCounts:{},totalStageClears=stages.reduce((sum,stage)=>sum+Math.max(0,Math.floor(Number(stageCounts[stage.id])||0)),0),
+      bossRecords={mini:0,boss:0,apex:0,void:0,crash:0,...(m.bossRecords||{})},bossTotal=['mini','boss','apex','void','crash'].reduce((sum,key)=>sum+Math.max(0,Math.floor(Number(bossRecords[key])||0)),0),
+      dust=currency('stardust'),shards=currency('coreShard'),name=(String(m.profileName||'').trim()||tr('profile.name')),
+      equipmentKeys=Object.keys(window.stackfallAwakeningDefs||WEAPONS||{}).filter(key=>key!=='core'&&WEAPONS?.[key]),unlockedEquipment=(m.unlockedWeapons||[]).filter(key=>key!=='core'&&WEAPONS?.[key]).length,
+      upgradeValues=Object.values(m.upgrades||{}).map(value=>Math.max(0,Math.floor(Number(value)||0))),growthLevels=upgradeValues.reduce((sum,value)=>sum+value,0),growthNodes=upgradeValues.filter(value=>value>0).length;
     const set=(id,value)=>{const el=document.querySelector(id);if(el)el.textContent=String(value);};
     set('#profileNameHub',name);set('#profileTitle',name);set('#profileClearCount',clears+' / '+totalStages);set('#profileStardust',dust);set('#profileCoreShard',shards);set('#upgradeStardust',dust);set('#upgradeCoreShard',shards);
-    set('#profileDetailClears',clears+' / '+totalStages);set('#profileDetailRuns',m.lifetime?.runs||0);set('#profileDetailKills',m.lifetime?.kills||0);set('#profileDetailBosses',m.lifetime?.bosses||0);
-    set('#profileDetailSlots',window.stackfallEquipmentSlotLimit?.()||4);set('#profileDetailWeapons',(m.unlockedWeapons?.length||0)+1);set('#profileDetailStardust',dust);set('#profileDetailCoreShard',shards);
+    set('#profileDetailClears',clears+' / '+totalStages);set('#profileDetailStageClears',totalStageClears);set('#profileDetailRuns',m.lifetime?.runs||0);set('#profileDetailKills',m.lifetime?.kills||0);set('#profileDetailBosses',bossTotal);
+    set('#profileDetailWeapons',unlockedEquipment+' / '+Math.max(unlockedEquipment,equipmentKeys.length));set('#profileDetailSlots',(window.stackfallEquipmentSlotLimit?.()||4)+' / 6');set('#profileDetailGrowthLevels',growthLevels);set('#profileDetailGrowthNodes',growthNodes);
+    set('#profileDetailMinibosses',bossRecords.mini||0);set('#profileDetailRegularBosses',bossRecords.boss||0);set('#profileDetailApexes',bossRecords.apex||0);set('#profileDetailVoidBosses',bossRecords.void||0);set('#profileDetailShipBosses',bossRecords.crash||0);
+    set('#profileDetailStardust',dust);set('#profileDetailCoreShard',shards);
+    const stageGrid=document.querySelector('#profileStageClearGrid');if(stageGrid){stageGrid.innerHTML=stages.map(stage=>{const count=Math.max(0,Math.floor(Number(stageCounts[stage.id])||0)),title=String(stage.title?.[GAME_SETTINGS.language]||stage.title?.ko||stage.title?.en||stage.id).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));return `<div class="profile-stage-clear-item${count?' cleared':''}" title="${title}"><span>S${String(stage.order||0).padStart(2,'0')}</span><small>${title}</small><b>×${count}</b></div>`;}).join('');}
     if(profileRenameBtn){profileRenameBtn.title=tr('profile.rename');profileRenameBtn.setAttribute('aria-label',tr('profile.rename'));}
   }
   function openNameEditor(){
