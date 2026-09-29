@@ -4,12 +4,13 @@
   const locale=()=>GAME_SETTINGS?.language||'ko';
   const ko=()=>locale()==='ko';
   const passiveStacks=key=>Math.max(0,Number(stat(key))||0);
-  const multishotStacks=()=>Math.min(2,passiveStacks('multiplicity'));window.stackfallMultiplicityStacks=multishotStacks;
+  const multiplicityMax=()=>window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')===true?3:2;
+  const multishotStacks=()=>Math.min(multiplicityMax(),passiveStacks('multiplicity'));window.stackfallMultiplicityStacks=multishotStacks;window.stackfallMultiplicityMax=multiplicityMax;
   const repeatedTargets=(primary,count,key)=>{const target=primary||nearestWeaponTarget(key);return Array.from({length:count},()=>target).filter(Boolean);};
   const lateSeconds=()=>Math.max(0,(state.time||0)-240);
   const threatLevel=()=>1+Math.floor((state.time||0)/60);
 
-  PASSIVES.multiplicity={name:'다중 투영 코어',icon:'✣',color:'#9fe8ff',max:2,eventOnly:true,desc:'일부 장비의 동시 공격 수 +1.'};
+  PASSIVES.multiplicity={name:'다중 투영 코어',icon:'✣',color:'#9fe8ff',max:3,eventOnly:true,desc:'일부 장비의 동시 공격 수 +1. 성운 보관소에서는 2중첩, 프로토콜 해금 후 최대 3중첩.'};
   PASSIVE_TEXT.multiplicity={ko:['다중 투영 코어','일부 장비의 동시 공격 수 +1.'],en:['Projection Core','Some equipment gains +1 simultaneous attack.'],ja:['投影コア','一部装備の同時攻撃数 +1。'],'zh-CN':['投影核心','部分装备的同时攻击数 +1。'],es:['Núcleo de Proyección','Algunos equipos obtienen +1 ataque simultáneo.'],fr:['Noyau de Projection','Certains équipements gagnent +1 attaque simultanée.']};
   if(WEAPONS.drone)WEAPONS.drone.desc='플레이어를 공전하며 한 표적에 화력을 집중하는 드론 편대.';
   if(PASSIVE_TEXT.overdrive){PASSIVE_TEXT.overdrive.ko=['임계 과출력','플레이어 체력이 45% 미만일 때 모든 피해 +14%.'];PASSIVE_TEXT.overdrive.en=['Critical Overdrive','All damage +14% while the player is below 45% health.'];}
