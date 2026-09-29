@@ -47,7 +47,7 @@
   function bladeOrbitSpeedMultiplier(){
     if(!awake('blade'))return 1;
     const phase=((state.time||0)*1.08)-Math.PI/2,wave=(Math.sin(phase)+1)*.5;
-    return .68+wave*1.62;
+    return 1+wave;
   }
   window.stackfallAwakenedBladeOrbitSpeedMultiplier=bladeOrbitSpeedMultiplier;
 
