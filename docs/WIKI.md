@@ -309,8 +309,15 @@ The main menu is a mode hub rather than a direct loadout/start screen. `GALACTIC
 
 ### Stage content identity
 
-Stage environments are authored as distinct places rather than Endless background recolors. Ordinary enemies may be reused across stages; new common enemies are introduced only when useful and can enter later pools. Stage 중간 전투는 별자리별 공용 중간보스/일반보스 풀을 사용하며, 같은 형태를 공유하더라도 Route는 항로 절단, Bloom은 개화·붕괴, Array는 스캔·채널 공격층으로 전투 문법을 구분한다. Stage 1~2는 중간보스 1 + 일반보스 1부터 시작해 후반으로 갈수록 빈도가 증가하고 Stage 18은 4 + 3까지 올라간다. 추가 전투로 각성 코어 경제가 부풀지 않도록 코어 지급 중간보스 수는 기존 공급량(일반 Stage 1회, 6/12/18 2회)을 유지한다. Final Stage Apex는 공용 보스 풀과 별개의 고유 보스다. Named minibosses/bosses require dedicated silhouettes and attack branches. Apex threats additionally require distinct signature attacks, set pieces, arena behavior, and persistent identity effects.
+Stage environments are authored as distinct places rather than Endless background recolors. Ordinary enemies may be reused across stages; new common enemies are introduced only when useful and can enter later pools. Stage 중간 전투는 별자리별 공용 중간보스/일반보스 풀을 사용하며, 같은 형태를 공유하더라도 Route는 항로 절단, Bloom은 개화·붕괴, Array는 스캔·채널 공격층으로 전투 문법을 구분한다. Stage 1~2는 중간보스 1 + 일반보스 1부터 시작해 후반으로 갈수록 빈도가 증가하고 Stage 18은 4 + 3까지 올라간다. 보스를 늘린 목적에는 성장량 증가도 포함되므로 중간보스/일반보스는 정상 XP와 각성 코어를 지급한다. 한 Stage 안의 동시 서브보스 전투는 Route 2, Bloom 3, Array 4까지 허용한다. Final Stage Apex는 공용 보스 풀과 별개의 고유 보스이며, 기존 텔레그래프 외에도 실제 블래스터 광선·촉수형 에너지체·균열 분출 같은 manifested attack을 사용한다. Named minibosses/bosses require dedicated silhouettes and attack branches. Apex threats additionally require distinct signature attacks, set pieces, arena behavior, and persistent identity effects.
 
+
+### 시스템 해금
+
+- Stage 1 최초 클리어: 코어 성장 해금.
+- Stage 2 최초 클리어: 무기 각성 해금.
+- DEV 프로필은 시스템 잠금을 무시한다.
+- 장착 슬롯 V/VI는 코어 성장 내부 확장 노드로 유지한다.
 
 ### 코어 성장 돌파
 
