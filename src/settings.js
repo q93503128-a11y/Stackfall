@@ -33,7 +33,9 @@ const settingsUi = {
   hideProjectiles: document.querySelector('#hideProjectiles'),
   sparkles: document.querySelector('#sparkles'),
   screenShake: document.querySelector('#screenShake'),
-  unlockList: document.querySelector('#unlockManagementList')
+  unlockList: document.querySelector('#unlockManagementList'),
+  unlockSection: document.querySelector('#unlockManagementSection'),
+  unlockToggle: document.querySelector('#unlockManagementToggle')
 };
 
 const volumeKeys={volumeMaster:'master',volumeCombat:'combat',volumeUi:'ui',volumeAmbient:'ambient'};
@@ -72,12 +74,12 @@ function featureUnlockStage(key){
 }
 function renderUnlockManagement(){
   const root=settingsUi.unlockList;if(!root)return;root.innerHTML='';GAME_SETTINGS.unlocks=GAME_SETTINGS.unlocks&&typeof GAME_SETTINGS.unlocks==='object'?GAME_SETTINGS.unlocks:{};
-  const keys=Object.keys(window.STACKFALL_FEATURE_DEFS||{}).filter(key=>window.stackfallIsFeatureAcquired?.(key)===true);
+  const toggleable=new Set(['awakening','special-ability','choice-4','start-level-3','multiplicity-protocol']),keys=Object.keys(window.STACKFALL_FEATURE_DEFS||{}).filter(key=>toggleable.has(key)&&window.stackfallIsFeatureAcquired?.(key)===true);
   if(!keys.length){const empty=document.createElement('div');empty.className='unlock-management-empty';empty.textContent=GAME_SETTINGS.language==='ko'?'아직 해금된 기능이 없습니다.':'No unlocked features yet.';root.appendChild(empty);return;}
   for(const key of keys){
     const row=document.createElement('label'),input=document.createElement('input'),copy=document.createElement('span'),name=document.createElement('strong'),meta=document.createElement('small'),toggle=document.createElement('i'),stage=featureUnlockStage(key);
     row.className='unlock-feature-row';input.type='checkbox';input.checked=GAME_SETTINGS.unlocks[key]!==false;copy.className='unlock-feature-copy';name.textContent=window.stackfallFeatureName?.(key)||key;meta.textContent=stage?(GAME_SETTINGS.language==='ko'?'STAGE '+String(stage.order).padStart(2,'0')+' 해금':'Unlocked at Stage '+String(stage.order).padStart(2,'0')):'UNLOCKED';copy.append(name,meta);row.append(copy,input,toggle);
-    input.addEventListener('change',()=>{GAME_SETTINGS.unlocks[key]=input.checked;if(key==='hard'&&!input.checked&&state.selectedDifficulty==='hard')state.selectedDifficulty='normal';saveGameSettings();window.stackfallRefreshFeatureUi?.();renderUnlockManagement();try{audio.pickup();}catch{}});
+    input.addEventListener('change',()=>{GAME_SETTINGS.unlocks[key]=input.checked;saveGameSettings();window.stackfallRefreshFeatureUi?.();renderUnlockManagement();try{audio.pickup();}catch{}});
     root.appendChild(row);
   }
 }
@@ -114,6 +116,7 @@ function updateDisplaySetting(key,value){
   if(GAME_SETTINGS.audio.ui)audio.pickup();
 }
 
+settingsUi.unlockToggle?.addEventListener('click',()=>{const collapsed=settingsUi.unlockSection?.classList.toggle('collapsed')??true;if(settingsUi.unlockList)settingsUi.unlockList.hidden=collapsed;settingsUi.unlockToggle?.setAttribute('aria-expanded',String(!collapsed));if(GAME_SETTINGS.audio.ui)audio.pickup();});
 settingsUi.menuButton.addEventListener('click',openSettings);
 settingsUi.pauseButton.addEventListener('click',openSettings);
 settingsUi.closeX.addEventListener('click',closeSettings);
