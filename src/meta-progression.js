@@ -5,6 +5,7 @@
   window.stackfallMetaStorageProfile=DEV_PROFILE?'developer':'player';
   const INITIAL_WEAPONS=Object.freeze(['blade','ember','bulwark','gravity']);
   const CURRENCY_KEYS=Object.freeze(['stardust','coreShard']);
+  const BOSS_RECORD_KEYS=Object.freeze(['mini','boss','apex','void','crash']);
   const sanitizeList=value=>Array.isArray(value)?[...new Set(value.filter(item=>typeof item==='string'))]:[];
   const sanitizeNumber=value=>Math.max(0,Math.floor(Number(value)||0));
   const sanitizeMap=value=>value&&typeof value==='object'&&!Array.isArray(value)?{...value}:{};
@@ -19,8 +20,13 @@
       for(const key of CURRENCY_KEYS)currencies[key]=sanitizeNumber(currencies[key]);
       const upgrades=sanitizeMap(saved.upgrades);
       for(const key of Object.keys(upgrades))upgrades[key]=sanitizeNumber(upgrades[key]);
+      const savedBossRecords=sanitizeMap(saved.bossRecords),bossRecords={mini:0,boss:0,apex:0,void:0,crash:0};
+      const hasBossBreakdown=BOSS_RECORD_KEYS.some(key=>Object.prototype.hasOwnProperty.call(savedBossRecords,key));
+      for(const key of BOSS_RECORD_KEYS)bossRecords[key]=sanitizeNumber(savedBossRecords[key]);
+      if(!hasBossBreakdown)bossRecords.apex=sanitizeNumber(saved.lifetime?.bosses);
+      const bossTotal=BOSS_RECORD_KEYS.reduce((sum,key)=>sum+bossRecords[key],0);
       return{
-        version:4,
+        version:5,
         profileName:sharedProfileName,
         unlockedWeapons:unlocked,
         clearedStages,
@@ -28,10 +34,11 @@
         stageClearCounts:sanitizeMap(saved.stageClearCounts),
         currencies,
         upgrades,
-        lifetime:{runs:sanitizeNumber(saved.lifetime?.runs),kills:sanitizeNumber(saved.lifetime?.kills),bosses:sanitizeNumber(saved.lifetime?.bosses)}
+        bossRecords,
+        lifetime:{runs:sanitizeNumber(saved.lifetime?.runs),kills:sanitizeNumber(saved.lifetime?.kills),bosses:bossTotal}
       };
     }catch{
-      return{version:4,profileName:'',unlockedWeapons:[...INITIAL_WEAPONS],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},lifetime:{runs:0,kills:0,bosses:0}};
+      return{version:5,profileName:'',unlockedWeapons:[...INITIAL_WEAPONS],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},bossRecords:{mini:0,boss:0,apex:0,void:0,crash:0},lifetime:{runs:0,kills:0,bosses:0}};
     }
   }
   const meta=load();
@@ -86,13 +93,28 @@
       meta.currencies.coreShard=currency('coreShard')+1;
       currencyReward.coreShard=(currencyReward.coreShard||0)+1;
     }
-    meta.lifetime.bosses=sanitizeNumber(meta.lifetime.bosses)+1;
     save();
     return{newWeapons,firstClear,best,bestTime:meta.bestStageTimes[stageId],clearCount,currency:currencyReward};
+  }
+  function bossRecordCategory(enemy){
+    if(!enemy)return null;
+    if(enemy.eventVariant==='dreadnought'||enemy.kind==='crash-boss')return'crash';
+    if(enemy.kind==='void'||enemy.eventKind==='void')return'void';
+    if(enemy.kind==='apex'||enemy.bossCategory==='apex')return'apex';
+    if(enemy.type==='mini')return'mini';
+    if(enemy.type==='boss')return'boss';
+    return null;
+  }
+  function recordBossDefeat(enemy){
+    const key=bossRecordCategory(enemy);if(!key)return null;
+    meta.bossRecords=meta.bossRecords&&typeof meta.bossRecords==='object'?meta.bossRecords:{mini:0,boss:0,apex:0,void:0,crash:0};
+    for(const recordKey of BOSS_RECORD_KEYS)meta.bossRecords[recordKey]=sanitizeNumber(meta.bossRecords[recordKey]);
+    meta.bossRecords[key]++;meta.lifetime.bosses=BOSS_RECORD_KEYS.reduce((sum,recordKey)=>sum+sanitizeNumber(meta.bossRecords[recordKey]),0);save();return key;
   }
   function recordRun(kills=0){meta.lifetime.runs=sanitizeNumber(meta.lifetime.runs)+1;meta.lifetime.kills=sanitizeNumber(meta.lifetime.kills)+sanitizeNumber(kills);save();}
   window.STACKFALL_INITIAL_WEAPONS=INITIAL_WEAPONS;
   window.STACKFALL_CURRENCY_KEYS=CURRENCY_KEYS;
+  window.STACKFALL_BOSS_RECORD_KEYS=BOSS_RECORD_KEYS;
   window.stackfallMeta=meta;
   window.stackfallSaveMeta=save;
   window.stackfallSetProfileName=setProfileName;
@@ -104,6 +126,7 @@
   window.stackfallUpgradeLevel=upgradeLevel;
   window.stackfallSetUpgradeLevel=setUpgradeLevel;
   window.stackfallRecordRun=recordRun;
+  window.stackfallRecordBossDefeat=recordBossDefeat;
   window.stackfallStageStatus=stageStatus;
   window.stackfallRecordStageClear=recordStageClear;
   save();
