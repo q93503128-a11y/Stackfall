@@ -101,6 +101,7 @@ function inferEnemyProjectileVisual(color,speed=0,r=5){
 }
 function spawnEnemyProjectile(x,y,a,speed,damage,color='#ff6ccf',r=6,life=5,visual=null){
   if(state.entities.enemyProjectiles.length>=entityCap('enemyProjectiles'))state.entities.enemyProjectiles.shift();
+  const environment=state.stageEnvironmentTelegraphContext||null,envScale=environment?window.stackfallStageEnvironmentCombatScale?.(environment):null;if(envScale){speed*=envScale.speed;damage*=envScale.damage;}
   const heading=Number.isFinite(a)?a:0,velocity=Number.isFinite(speed)?speed:0;
   const projectile={x,y,prevX:x,prevY:y,vx:Math.cos(heading)*velocity,vy:Math.sin(heading)*velocity,damage,color,r,life,maxLife:life,heading,phase:heading,age:0,visual:visual||inferEnemyProjectileVisual(color,velocity,r),visualSeed:Math.random()*TAU};
   state.entities.enemyProjectiles.push(projectile);return projectile;
