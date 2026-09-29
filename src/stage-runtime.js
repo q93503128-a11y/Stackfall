@@ -75,29 +75,9 @@
     const damageScale=kind==='boss'?(.78+Math.min(.12,(order-1)*.006)+(finale?.04:0)):(.90+Math.min(.10,(order-1)*.005)+(finale?.03:0));
     for(const member of stageEncounterMembers(enemy)){
       member.kind=kind==='mini'?'stage-mini':'stage-boss-encounter';member.bossCategory=kind==='boss'?'boss':member.bossCategory;member.eventKind=run.stage.id;member.stageEncounter=true;member.stageEncounterType=kind;member.stageEncounterFamily=environmentFamily(run.stage);member.stageEncounterIndex=index;member.controlImmune=false;
-      member.hp*=hpScale;member.maxHp=member.hp;member.damage*=damageScale;if(kind==='mini')member.xp*=1.10;member.stageEncounterSignatureCd=4.2+Math.random()*1.25;
+      member.hp*=hpScale;member.maxHp=member.hp;member.damage*=damageScale;if(kind==='mini')member.xp*=1.10;
     }
     showBossNotice(enemy.name,kind==='boss'?'STAGE BOSS':finale?'CONSTELLATION GUARD':'STAGE MID-BOSS');return enemy;
-  }
-  function stageEncounterSignature(enemy,family,run){
-    if(!enemy||enemy.dead)return;const boss=enemy.stageEncounterType==='boss',ratio=enemy.hp/Math.max(1,enemy.maxHp),phase=ratio<.34?3:ratio<.67?2:1,damage=Math.max(4,enemy.damage*(boss?.31:.24)),cycle=(enemy.stageEncounterSignatureCycle=(enemy.stageEncounterSignatureCycle||0)+1),pred=typeof predictedPlayer==='function'?predictedPlayer(95+phase*22):{x:player.x,y:player.y};
-    if(family==='route'){
-      const horizontal=cycle%2===0,lanes=(boss?4:3)+Math.floor((phase-1)/2),safe=(cycle+phase)%lanes,spacing=boss?86:92,span=boss?430:360;
-      for(let i=0;i<lanes;i++){if(i===safe)continue;const off=(i-(lanes-1)/2)*spacing;if(horizontal)rawLine(pred.x-span,pred.y+off,pred.x+span,pred.y+off,14+phase*2,damage,'#9bb9ff',.92,'boss-line');else rawLine(pred.x+off,pred.y-span,pred.x+off,pred.y+span,14+phase*2,damage,'#9bb9ff',.92,'boss-line');}
-    }else if(family==='bloom'){
-      const petals=(boss?6:4)+phase,rr=112+phase*18;for(let i=0;i<petals;i++){const a=i/petals*TAU+cycle*.27,x=pred.x+Math.cos(a)*rr,y=pred.y+Math.sin(a)*rr;addCircle(x,y,32+phase*4,damage*.72,i%2?'#c987ff':'#79dcc6',.86+i*.025);}
-      if(boss)scheduleWeaponAction(520,()=>{if(run===stageRuntime()&&!enemy.dead)addCircle(pred.x,pred.y,62+phase*7,damage*1.08,'#efd9ff',.70);});
-    }else{
-      const horizontal=cycle%2===0,lanes=(boss?6:5)+Math.floor((phase-1)/2),safe=(cycle*2+phase)%lanes,spacing=boss?70:76,span=boss?455:390;
-      for(let i=0;i<lanes;i++){if(i===safe)continue;const off=(i-(lanes-1)/2)*spacing;if(horizontal)rawLine(pred.x-span,pred.y+off,pred.x+span,pred.y+off,15+phase*2,damage,i%2?'#72e5ee':'#c08fff',.88,'boss-line');else rawLine(pred.x+off,pred.y-span,pred.x+off,pred.y+span,15+phase*2,damage,i%2?'#72e5ee':'#c08fff',.88,'boss-line');}
-    }
-  }
-  function updateStageEncounterSignatures(run,dt){
-    for(const enemy of state.entities.enemies){
-      if(!enemy||enemy.dead||enemy.stageEncounter!==true)continue;
-      if(enemy.twinGroup){const owner=state.entities.enemies.find(member=>member&&!member.dead&&member.stageEncounter===true&&member.twinGroup===enemy.twinGroup);if(owner!==enemy)continue;}
-      enemy.stageEncounterSignatureCd=(Number.isFinite(enemy.stageEncounterSignatureCd)?enemy.stageEncounterSignatureCd:5.2)-dt;if(enemy.stageEncounterSignatureCd>0)continue;const boss=enemy.stageEncounterType==='boss';enemy.stageEncounterSignatureCd=(boss?6.2:7.4)-Math.min(1.25,(run.stage?.order||1)*.045);stageEncounterSignature(enemy,enemy.stageEncounterFamily||environmentFamily(run.stage),run);
-    }
   }
   function updateStageEncounters(run,progress){
     const plan=stageEncounterPlan(run.stage);run.encountersTriggered=run.encountersTriggered||{};
@@ -152,7 +132,7 @@
     if(!run.bossSpawned&&state.time>=run.stage.boss.spawnAt)spawnStageBoss();
     if(run.bossSpawned)return;
     updateAmbientGimmick(run,def);
-    const progress=clamp(state.time/Math.max(1,run.stage.boss.spawnAt),0,1);updateStageEncounterSignatures(run,dt);updateStageEncounters(run,progress);
+    const progress=clamp(state.time/Math.max(1,run.stage.boss.spawnAt),0,1);updateStageEncounters(run,progress);
     const active=liveNonBossCount(),authoredTime=progress*600,base=def.spawnProfile?.(authoredTime,apiFor(run))||{cap:38,rate:1,count:1},spawn=stageSpawnBudget(run.stage,progress,base);
     run.lastSpawnBudget={...spawn,active,progress};
     state.spawnTimer-=dt;if(state.spawnTimer>0||active>=spawn.cap)return;state.spawnTimer=Math.max(.25,spawn.rate);
