@@ -23,7 +23,7 @@ function cumulativeApexFactor(cycle,base,step){let value=1;for(let i=0;i<cycle;i
 function apexEscalationForCycle(cycle){const c=Math.max(0,Math.floor(Number(cycle)||0));return{cycle:c,hp:cumulativeApexFactor(c,2.40,.34),damage:cumulativeApexFactor(c,1.58,.15),pattern:1+c*.30+c*c*.06,speed:1+c*.10+c*c*.018};}
 window.stackfallApexEscalationForCycle=apexEscalationForCycle;
 function configureElite(enemy,kind){
-  const category=kind==='mini'?'mini':kind==='void'?'void':kind==='apex'?'apex':'boss',form=category==='apex'&&state.pendingApexForm?state.pendingApexForm:bossBag(category),s=BOSS_STATS[form],t=state.time||0;
+  const category=kind==='mini'?'mini':kind==='void'?'void':kind==='apex'?'apex':'boss',forced=state.stackfallForcedEliteForm,forcedForm=forced?.category===category&&(BOSS_POOLS[category]||[]).includes(forced.form)?forced.form:null,form=forcedForm||(category==='apex'&&state.pendingApexForm?state.pendingApexForm:bossBag(category)),s=BOSS_STATS[form],t=state.time||0;
   enemy.eliteCategory=category;enemy.eliteForm=form;enemy.name=bossName(form);enemy.color=s.color;enemy.r*=s.r;enemy.hp*=s.hp;enemy.speed*=s.speed;enemy.damage*=s.damage;
   if(category==='void')enemy.eventKind='void';
   if(category==='apex'){
@@ -38,6 +38,11 @@ function configureElite(enemy,kind){
   }
   enemy.maxHp=enemy.hp;
 }
+window.stackfallSpawnEliteForm=function spawnEliteForm(kind,form){
+  const category=kind==='mini'?'mini':kind==='void'?'void':kind==='apex'?'apex':'boss',pool=BOSS_POOLS[category]||[];if(!pool.includes(form))return null;
+  const previous=state.stackfallForcedEliteForm;state.stackfallForcedEliteForm={category,form};
+  try{return spawnEnemy(kind);}finally{state.stackfallForcedEliteForm=previous;}
+};
 function enemyControlFactor(e){if(e?.kind==='apex'||e?.controlImmune)return 0;const radius=Math.max(10,e?.r||10);let f=clamp(22/radius,.18,1);if(e?.type==='tank')f*=.78;if(e?.type==='mini')f*=.52;if(e?.type==='boss')f*=.28;return clamp(f,.08,1);}
 function enemyProjectileVisualFor(e,pattern='ring'){
   const form=e?.apexForm||e?.eliteForm||'',event=String(e?.eventKind||'');
