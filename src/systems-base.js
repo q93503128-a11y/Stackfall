@@ -41,7 +41,8 @@ function makeEnemyRoom(kind){
 const EXPERIENCE_ANCHORS=[],EXPERIENCE_ANCHOR_D2=[];
 function experienceGemRadius(value,base=4){return Math.min(13.5,Math.max(base,3.7+Math.log2(1+Math.max(0,Number(value)||0))*1.05));}
 function mergeExperienceGem(x,y,value,baseRadius=4,vx=0,vy=0){
-  const gems=state.entities.gems,amount=Math.max(0,Number(value)||0);if(!amount)return null,newPlayerD2=(x-player.x)**2+(y-player.y)**2;
+  const gems=state.entities.gems,amount=Math.max(0,Number(value)||0);if(!amount)return null;
+  const newPlayerD2=(x-player.x)**2+(y-player.y)**2;
   let anchor=null,anchorIndex=-1,bestSpatial=Infinity,anchorPlayerD2=Infinity;
   for(let i=0;i<gems.length;i++){
     const g=gems[i];if(!g||g.life<=0)continue;const dx=g.x-x,dy=g.y-y,d2=dx*dx+dy*dy,mergeRadius=42+Math.min(54,(Number(g.r)||4)*4);
