@@ -14,7 +14,7 @@ const checks=[
  ['apex escalates cumulatively by appearance',catalog.includes('function cumulativeApexFactor')&&catalog.includes('function apexEscalationForCycle')&&catalog.includes('2.40,.34')&&catalog.includes('1.58,.15')&&catalog.includes('state.apexCount||0')],
  ['appearance escalation has no finite appearance cap',!catalog.includes('Math.min(10,cycle)')&&catalog.includes('for(let i=0;i<cycle;i++')&&catalog.includes('if(value>=1e120)return 1e120')],
  ['first apex has extreme fixed base strength',catalog.includes('enemy.hp*=7.60*escalation.hp')&&catalog.includes('enemy.damage*=2.15*escalation.damage')&&catalog.includes('enemy.skillCd*=.52/escalation.pattern')],
- ['phase transitions and variants',bosses.includes('function apexPhaseTransition')&&bosses.includes('function apexVariantAttack')&&bosses.includes('PHASE ${phase}')],
+ ['phase transitions and variants',bosses.includes('function apexPhaseTransition')&&bosses.includes('function apexVariantAttack')&&bosses.includes("showBossNotice(bossName(form)+' · PHASE '+phase")],
  ['tracking beam begins away from player',bosses.includes('aim+side*(.92+phase*.07)')&&bosses.includes('warmup:.90')],
  ['tracking beam visibly follows instead of snapping',bosses.includes("turnRate=beam.warmup>0?.48:.72")&&bosses.includes('angleToward(beam.angle,target,turnRate*dt)')],
  ['tracking beam render is throttled',bosses.includes('beam.visual-=dt')&&bosses.includes('beam.visual=stressed?.070:.040')],
