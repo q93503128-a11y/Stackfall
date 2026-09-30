@@ -345,19 +345,102 @@
       const sides=phase===3?8:6;for(let step=0;step<3;step++)later(step*300,()=>{const r=340-step*88,pts=Array.from({length:sides},(_,i)=>({x:pred.x+Math.cos(i*TAU/sides-Math.PI/2)*r,y:pred.y+Math.sin(i*TAU/sides-Math.PI/2)*r}));for(let i=0;i<sides;i++){const a=pts[i],b=pts[(i+1)%sides];stageBossSigLine(a.x,a.y,b.x,b.y,24+phase*2,damage*.90,i%3===0?'#e6c276':i%3===1?'#70e7ef':'#c79cff',.88);}});
       later(900,()=>{addCircle(pred.x,pred.y,86+phase*8,damage*1.18,'#f3ecff',.66);api.spawnBurst(phase===3?'cipher-warden':'packet-lancer',phase+2);});
     }
+  }
+  function stageBossUniqueTechnique(e,api){
+    const id=e.eventKind,phase=Math.max(1,Math.min(3,Number(e.stagePhase)||1)),damage=Math.max(5,e.damage*.40),cycle=(e.stageUniqueCycle=(e.stageUniqueCycle||0)+1),pred=typeof predictedPlayer==='function'?predictedPlayer(145+phase*30):{x:player.x,y:player.y};
+    const later=(ms,fn)=>scheduleWeaponAction(ms,()=>{if(stageBossSignatureAlive(e,api))fn();});
     STAGE_APEX_UNIQUE_TECHNIQUES[id]?.(e,api,phase,cycle,damage,pred,later);
   }
-  function updateStageBossSignatureLayer(enemy,dt,api){
-    if(!enemy||enemy.dead)return;
-    enemy.stageSignatureCd=(Number.isFinite(enemy.stageSignatureCd)?enemy.stageSignatureCd:3.2)-dt;
-    if(enemy.stageSignatureCd>0)return;
-    const order=Math.max(1,Number(api?.stage?.order)||Number(String(enemy.eventKind||'').slice(-2))||1),phase=Math.max(1,Math.min(3,Number(enemy.stagePhase)||1)),finale=order%6===0;
-    enemy.stageSignatureCd=Math.max(finale?4.6:5.8,(finale?6.0:7.4)-phase*.46);
-    stageBossSignature(enemy,api);
+  const STAGE_APEX_PHASE_CUTS=Object.freeze({
+    'stage-01':[.48],'stage-02':[.68,.32],'stage-03':[.52],'stage-04':[.68,.30],'stage-05':[.50],'stage-06':[.70,.35],
+    'stage-07':[.48],'stage-08':[.67,.30],'stage-09':[.50],'stage-10':[.68,.31],'stage-11':[.46],'stage-12':[.72,.38],
+    'stage-13':[.50],'stage-14':[.66,.30],'stage-15':[.48],'stage-16':[.65,.31],'stage-17':[.45],'stage-18':[.74,.42]
+  });
+  function stageBossPhase(e){
+    const cuts=STAGE_APEX_PHASE_CUTS[e.eventKind]||[.66,.33],ratio=e.hp/Math.max(1,e.maxHp);let phase=1;
+    for(const cut of cuts)if(ratio<=cut)phase++;
+    const previous=Math.max(1,Number(e.stagePhase)||1);e.stagePhase=Math.min(3,phase);
+    if(previous!==e.stagePhase){
+      e.stagePrimaryCd=.30;e.stageUniqueCd=1.25;e.stageTertiaryCd=2.30;e.stagePhaseChangedAt=state.time||0;
+      state.camera.shake=Math.max(state.camera.shake,7+e.stagePhase*2);state.flash=Math.max(state.flash,.08+e.stagePhase*.02);
+      shockwave(e.x,e.y,e.color||'#dbe4ff',118+e.stagePhase*28,.46,3+e.stagePhase);
+      if(e.eventKind==='stage-12')e.stageShellOpen=e.stagePhase>=2;
+      if(e.eventKind==='stage-18')e.stageCoreExposed=e.stagePhase>=2;
+    }
+    return e.stagePhase;
+  }
+  function stageBossTrackPlayer(e,dt){
+    e.stageHistoryTick=(e.stageHistoryTick||0)-dt;if(e.stageHistoryTick>0)return;
+    e.stageHistoryTick=.12;e.stagePlayerHistory=e.stagePlayerHistory||[];e.stagePlayerHistory.push({x:player.x,y:player.y});
+    if(e.stagePlayerHistory.length>40)e.stagePlayerHistory.shift();
+  }
+  function stageBossPast(e,steps=10){const h=e.stagePlayerHistory||[];return h[Math.max(0,h.length-1-steps)]||{x:player.x,y:player.y};}
+  function stageBossSetMotion(e,vx,vy){
+    const cap=Math.max(28,e.speed*1.55),m=Math.hypot(vx,vy);if(m>cap){vx=vx/m*cap;vy=vy/m*cap;}
+    e.stageMotionX=Number.isFinite(vx)?vx:0;e.stageMotionY=Number.isFinite(vy)?vy:0;
+  }
+  function stageBossMoveToward(e,x,y,scale=1){const dx=x-e.x,dy=y-e.y,d=Math.hypot(dx,dy)||1,v=e.speed*scale;stageBossSetMotion(e,dx/d*v,dy/d*v);}
+  function stageBossOrbit(e,x,y,rx,ry,rate=.18,scale=1){
+    const a=(state.time||0)*rate+(e.id%9)*.41,tx=x+Math.cos(a)*rx,ty=y+Math.sin(a)*ry,dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy)||1,v=Math.min(e.speed*scale,d*1.8);stageBossSetMotion(e,dx/d*v,dy/d*v);
+  }
+  const STAGE_APEX_MOTION=Object.freeze({
+    'stage-01':(e,p)=>stageBossMoveToward(e,p.x,p.y,p.phase===2?1.22:.78),
+    'stage-02':(e,p)=>stageBossOrbit(e,p.x,p.y,255-p.phase*16,155+p.phase*8,.18,p.phase===3?1.12:.92),
+    'stage-03':(e,p)=>{const a=(Math.floor((state.time||0)/2.4)%3)*TAU/3-Math.PI/2;stageBossMoveToward(e,p.x+Math.cos(a)*310,p.y+Math.sin(a)*205,1.02);},
+    'stage-04':(e,p)=>{const q=stageBossPast(e,12+p.phase*2);stageBossOrbit(e,q.x,q.y,230,145,-.13,1.0);},
+    'stage-05':(e,p)=>{const a=Math.atan2(p.y-e.y,p.x-e.x),s=(Math.floor((state.time||0)*.55)+e.id)%2?1:-1;stageBossMoveToward(e,p.x-Math.sin(a)*s*255,p.y+Math.cos(a)*s*255,p.phase===2?1.18:1.0);},
+    'stage-06':(e,p)=>{const q=stageBossPast(e,10),cx=(p.x+q.x)*.5,cy=(p.y+q.y)*.5;e.stageFinaleMode='route-convergence';stageBossOrbit(e,cx,cy,310-p.phase*34,185-p.phase*10,.15,p.phase===3?1.25:1.02);},
+    'stage-07':(e,p)=>stageBossMoveToward(e,p.x,p.y,p.phase===2?1.34:.94),
+    'stage-08':(e,p)=>stageBossOrbit(e,p.x,p.y,340,215,.10,p.phase===3?1.12:.90),
+    'stage-09':(e,p)=>{const r=245+Math.sin((state.time||0)*.72)*58;stageBossOrbit(e,p.x,p.y,r,r*.56,.25,p.phase===2?1.22:1.0);},
+    'stage-10':(e,p)=>stageBossMoveToward(e,2*p.x-e.x,2*p.y-e.y,p.phase===3?1.18:.96),
+    'stage-11':(e,p)=>stageBossOrbit(e,p.x,p.y,182,118,.075,.78),
+    'stage-12':(e,p)=>{e.stageShellOpen=p.phase>=2;if(p.phase===1)stageBossOrbit(e,p.x,p.y,295,190,.09,.80);else stageBossMoveToward(e,p.x,p.y,p.phase===3?1.28:1.02);},
+    'stage-13':(e,p)=>{const axis=(e.stageScanAxis||0)%2;stageBossMoveToward(e,p.x+(axis?0:315),p.y+(axis?315:0),.92);},
+    'stage-14':(e,p)=>stageBossMoveToward(e,p.x+Math.sin((state.time||0)*1.7+e.id)*220,p.y+Math.cos((state.time||0)*1.3+e.id)*150,1.02+p.phase*.08),
+    'stage-15':(e,p)=>{const a=(Math.floor((state.time||0)/2.3)+e.id)%4*TAU/4;stageBossMoveToward(e,p.x+Math.cos(a)*365,p.y+Math.sin(a)*250,1.08);},
+    'stage-16':(e,p)=>{e.stageBeaconAnchor=e.stageBeaconAnchor||{x:e.x,y:e.y};stageBossMoveToward(e,e.stageBeaconAnchor.x,e.stageBeaconAnchor.y,.70);},
+    'stage-17':(e,p)=>{const dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1,radial=(d-285)*1.35,tangent=e.speed*(p.phase===2?1.20:.94);stageBossSetMotion(e,dx/d*radial-dy/d*tangent,dy/d*radial+dx/d*tangent);},
+    'stage-18':(e,p)=>{e.stageCoreExposed=p.phase>=2;const c=e.stageRewriteCenter||(e.stageRewriteCenter={x:p.x,y:p.y});c.x=lerp(c.x,p.x+(p.phase>=2?Math.sin((state.time||0)*.7)*90:0),.035);c.y=lerp(c.y,p.y+(p.phase>=3?Math.cos((state.time||0)*.6)*72:0),.035);if(p.phase===1)stageBossOrbit(e,c.x,c.y,330,210,.08,.82);else stageBossMoveToward(e,c.x,c.y,p.phase===3?1.20:1.0);}
+  });
+  const STAGE_APEX_TERTIARY_TECHNIQUES=Object.freeze({
+    'stage-01':(e,api,p,c,d,q,l)=>{const a=Math.atan2(q.y-e.y,q.x-e.x)+Math.PI/4,dx=Math.cos(a),dy=Math.sin(a),nx=-dy,ny=dx;for(const off of[-135,135])stageBossSigLine(q.x-dx*360+nx*off,q.y-dy*360+ny*off,q.x+dx*360+nx*off,q.y+dy*360+ny*off,18+p,d*.64,'#d9e2ff',.94);l(620,()=>{const aim=Math.atan2(player.y-e.y,player.x-e.x);e.dash=.42;e.dashX=Math.cos(aim)*(360+p*45);e.dashY=Math.sin(aim)*(360+p*45);});},
+    'stage-02':(e,api,p,c,d,q,l)=>{const n=4+p;for(let i=0;i<n;i++){const a=i*TAU/n+(state.time||0)*.08,x=e.x+Math.cos(a)*(120+p*8),y=e.y+Math.sin(a)*(120+p*8);rawLine(x,y,q.x,q.y,5,0,i%2?'#8cecff':'#ff8fd8',.55,'boss-charge');l(550+i*55,()=>spawnEnemyProjectile(x,y,Math.atan2(player.y-y,player.x-x),235+p*16,d*.56,i%2?'#8cecff':'#ff8fd8',5,4.6,'seed-shell'));}},
+    'stage-03':(e,api,p,c,d,q,l)=>{const r=275,pts=Array.from({length:3},(_,i)=>{const a=-Math.PI/2+i*TAU/3+(state.time||0)*.06;return{x:q.x+Math.cos(a)*r,y:q.y+Math.sin(a)*r};});pts.forEach((v,i)=>l(i*110,()=>{const target=pts[(i+2)%3];stageBossActualBeam(v.x,v.y,target.x,target.y,15+p,d*.48,i%2?'#a8f4ff':'#dfb2ff','prism-reflect');spawnEnemyProjectile(v.x,v.y,Math.atan2(player.y-v.y,player.x-v.x),265,d*.44,'#ffffff',4.6,4.3,'needle');}));},
+    'stage-04':(e,api,p,c,d,q,l)=>{const past=stageBossPast(e,22+p*2),now={x:player.x,y:player.y};addCircle(past.x,past.y,46,0,'#8fffe0',.58);rawLine(past.x,past.y,now.x,now.y,7,0,'#a4bfff',.64,'boss-charge');l(620,()=>stageBossActualBeam(past.x,past.y,player.x,player.y,19+p,d*.82,'#8fffe0','rewind-scar'));},
+    'stage-05':(e,api,p,c,d,q,l)=>{const a=Math.atan2(q.y-e.y,q.x-e.x),nx=-Math.sin(a),ny=Math.cos(a),sep=175,left={x:q.x+nx*sep,y:q.y+ny*sep},right={x:q.x-nx*sep,y:q.y-ny*sep};addCircle(left.x,left.y,38,0,'#79f7ff',.58);addCircle(right.x,right.y,38,0,'#b9a8ff',.58);l(580,()=>{const target=c%2?left:right,dx=target.x-player.x,dy=target.y-player.y,dd=Math.hypot(dx,dy)||1;player.x+=dx/dd*(48+p*12);player.y+=dy/dd*(48+p*12);stageBossActualBeam(left.x,left.y,right.x,right.y,22+p,d*.76,'#e9ffff','polarity-swap');});},
+    'stage-06':(e,api,p,c,d,q,l)=>{const q0=stageBossPast(e,18),mid={x:(q0.x+q.x)*.5,y:(q0.y+q.y)*.5};rawLine(q0.x,q0.y,q.x,q.y,8,0,'#ffffff',.68,'boss-charge');l(670,()=>{stageBossActualBeam(q0.x,q0.y,q.x,q.y,21+p,d*.72,'#ffffff','route-fold');const dx=mid.x-player.x,dy=mid.y-player.y,dd=Math.hypot(dx,dy)||1;player.x+=dx/dd*(44+p*10);player.y+=dy/dd*(44+p*10);addCircle(mid.x,mid.y,64+p*8,d*.78,'#ffcf8a',.40);});},
+    'stage-07':(e,api,p,c,d,q,l)=>{addCircle(q.x,q.y,78+p*8,0,'#ff8ac8',.52);l(520,()=>{const a=Math.atan2(player.y-e.y,player.x-e.x);e.dash=.40;e.dashX=Math.cos(a)*(370+p*45);e.dashY=Math.sin(a)*(370+p*45);addCircle(player.x,player.y,50+p*5,d*.76,'#bd79ff',.36);});},
+    'stage-08':(e,api,p,c,d,q,l)=>{const past=stageBossPast(e,16),a=Math.atan2(q.y-past.y,q.x-past.x)+Math.PI/2,dx=Math.cos(a),dy=Math.sin(a);for(const off of[-95,0,95])stageBossSigLine(past.x-dx*360+Math.cos(a+Math.PI/2)*off,past.y-dy*360+Math.sin(a+Math.PI/2)*off,past.x+dx*360+Math.cos(a+Math.PI/2)*off,past.y+dy*360+Math.sin(a+Math.PI/2)*off,17+p,d*.57,'#ffd1df',.90);},
+    'stage-09':(e,api,p,c,d,q,l)=>{for(const side of[-1,1]){const a=(state.time||0)*.18+side*Math.PI/2,x=e.x+Math.cos(a)*165,y=e.y+Math.sin(a)*165;addCircle(x,y,28,0,side>0?'#79dcc6':'#d59cff',.48);l(480+(side>0?90:0),()=>{const aim=Math.atan2(player.y-y,player.x-x);for(const off of[-.16,0,.16])spawnEnemyProjectile(x,y,aim+off,240,d*.48,side>0?'#79dcc6':'#d59cff',5,4.8,'spiral');});}},
+    'stage-10':(e,api,p,c,d,q,l)=>{const mirror={x:2*player.x-e.x,y:2*player.y-e.y};rawLine(e.x,e.y,mirror.x,mirror.y,7,0,'#efd5ff',.58,'boss-mirror');l(570,()=>{const ox=e.x,oy=e.y;e.x=mirror.x;e.y=mirror.y;shockwave(ox,oy,'#8ee6d6',82,.32,3);shockwave(e.x,e.y,'#f4b3ff',100,.38,3.5);});},
+    'stage-11':(e,api,p,c,d,q,l)=>{for(const [i,a]of[0,1,2,3].map(i=>[i,i*TAU/4+Math.PI/4])){const x=q.x+Math.cos(a)*185,y=q.y+Math.sin(a)*185;addCircle(x,y,38+p*3,d*.52,'#e4b36c',.70+i*.08);l(620+i*80,()=>{const aim=Math.atan2(player.y-y,player.x-x);for(const off of[-.14,0,.14])spawnEnemyProjectile(x,y,aim+off,225+p*16,d*.43,'#f2cf8e',5,4.8,'seed-shell');});}},
+    'stage-12':(e,api,p,c,d,q,l)=>{const n=6+p*2;for(let i=0;i<n;i++){const a=i*TAU/n+(state.time||0)*.05,x=e.x+Math.cos(a)*(90+p*8),y=e.y+Math.sin(a)*(90+p*8);rawLine(x,y,x+Math.cos(a)*310,y+Math.sin(a)*310,7,0,i%3===0?'#f39aba':i%2?'#ca98ff':'#79d6c1',.60,'boss-bloom');l(600+i*35,()=>stageBossActualBeam(x,y,x+Math.cos(a)*310,y+Math.sin(a)*310,16+p,d*.48,i%3===0?'#f39aba':i%2?'#ca98ff':'#79d6c1','shell-rupture'));}if(p>=2)l(760,()=>{const aim=Math.atan2(player.y-e.y,player.x-e.x);e.dash=.34;e.dashX=Math.cos(aim)*(320+p*45);e.dashY=Math.sin(aim)*(320+p*45);});},
+    'stage-13':(e,api,p,c,d,q,l)=>{e.stageScanAxis=(e.stageScanAxis||0)+1;const h=e.stageScanAxis%2===0,lanes=6+p,safe=(c+p)%lanes;for(let i=0;i<lanes;i++){if(i===safe)continue;const off=(i-(lanes-1)/2)*70;if(h)stageBossSigLine(q.x-490,q.y+off,q.x+490,q.y+off,19+p,d*.60,'#6fe8f3',.94);else stageBossSigLine(q.x+off,q.y-490,q.x+off,q.y+490,19+p,d*.60,'#9a8cff',.94);}},
+    'stage-14':(e,api,p,c,d,q,l)=>{const spacing=116,start=(e.stageNoiseCell=(e.stageNoiseCell||0)+2)%9;for(let hop=0;hop<5+p;hop++)l(hop*125,()=>{const cell=(start+hop*(p+2))%9,col=cell%3,row=Math.floor(cell/3);addCircle(q.x+(col-1)*spacing,q.y+(row-1)*spacing,39+p*3,d*.54,hop%2?'#ef8de1':'#71e6f1',.48);});},
+    'stage-15':(e,api,p,c,d,q,l)=>{const origins=[[-360,-180],[360,-180],[-360,180],[360,180]];origins.forEach(([ox,oy],i)=>l(i*115,()=>{const x=q.x+ox,y=q.y+oy,aim=Math.atan2(player.y-y,player.x-x);addCircle(x,y,24,0,i%2?'#c39cff':'#70e8ef',.32);for(const off of[-.10,.10])spawnEnemyProjectile(x,y,aim+off,250+p*18,d*.49,i%2?'#c39cff':'#70e8ef',5,5,'packet');}));},
+    'stage-16':(e,api,p,c,d,q,l)=>{const a=Math.atan2(player.y-e.y,player.x-e.x)+Math.PI,anchor={x:q.x+Math.cos(a)*(280+p*22),y:q.y+Math.sin(a)*(280+p*22)};addCircle(anchor.x,anchor.y,58,0,'#d9f8ff',.62);l(610,()=>{e.stageBeaconAnchor=anchor;e.x=anchor.x;e.y=anchor.y;shockwave(e.x,e.y,'#d9f8ff',110,.38,4);});},
+    'stage-17':(e,api,p,c,d,q,l)=>{const gates=[[0,-1],[1,0],[0,1],[-1,0]],rr=250;gates.forEach(([gx,gy],i)=>{const x=q.x+gx*rr,y=q.y+gy*rr;addCircle(x,y,28,0,i%2?'#73ded0':'#e4bd72',.46);l(470+i*90,()=>spawnEnemyProjectile(x,y,Math.atan2(player.y-y,player.x-x),220+p*22,d*.60,i%2?'#73ded0':'#e4bd72',10,5,'saw'));});},
+    'stage-18':(e,api,p,c,d,q,l)=>{const center=e.stageRewriteCenter||q,rule=(e.stageRewriteRule=(e.stageRewriteRule||0)+1)%3,span=455;if(rule===0){for(const off of[-110,0,110])stageBossSigLine(center.x-span,center.y+off,center.x+span,center.y+off,20+p,d*.58,off?'#70e7ef':'#e6c276',.96);}else if(rule===1){for(const off of[-110,0,110])stageBossSigLine(center.x+off,center.y-span,center.x+off,center.y+span,20+p,d*.58,off?'#c79cff':'#70e7ef',.96);}else for(const a of[-Math.PI/4,Math.PI/4])stageBossSigLine(center.x-Math.cos(a)*span,center.y-Math.sin(a)*span,center.x+Math.cos(a)*span,center.y+Math.sin(a)*span,22+p,d*.62,a>0?'#c79cff':'#e6c276',1.02);}
+  });
+  function stageBossTertiaryTechnique(e,api){
+    const id=e.eventKind,phase=Math.max(1,Math.min(3,Number(e.stagePhase)||1)),damage=Math.max(5,e.damage*.40),cycle=(e.stageTertiaryCycle=(e.stageTertiaryCycle||0)+1),pred=typeof predictedPlayer==='function'?predictedPlayer(170+phase*34):{x:player.x,y:player.y};
+    const later=(ms,fn)=>scheduleWeaponAction(ms,()=>{if(stageBossSignatureAlive(e,api))fn();});
+    STAGE_APEX_TERTIARY_TECHNIQUES[id]?.(e,api,phase,cycle,damage,pred,later);
+  }
+  function updateStageBossCombat(enemy,dt,api){
+    if(!enemy||enemy.dead)return;stageBossTrackPlayer(enemy,dt);const phase=stageBossPhase(enemy),id=enemy.eventKind;
+    STAGE_APEX_MOTION[id]?.(enemy,{x:player.x,y:player.y,phase});
+    enemy.stagePrimaryCd=(Number.isFinite(enemy.stagePrimaryCd)?enemy.stagePrimaryCd:1.0)-dt;
+    enemy.stageUniqueCd=(Number.isFinite(enemy.stageUniqueCd)?enemy.stageUniqueCd:2.4)-dt;
+    enemy.stageTertiaryCd=(Number.isFinite(enemy.stageTertiaryCd)?enemy.stageTertiaryCd:4.0)-dt;
+    const finale=['stage-06','stage-12','stage-18'].includes(id);
+    if(enemy.stagePrimaryCd<=0){enemy.stagePrimaryCd=(finale?5.3:6.1)-phase*.24;stageBossSignature(enemy,api);}
+    if(enemy.stageUniqueCd<=0){enemy.stageUniqueCd=(finale?6.5:7.4)-phase*.28;stageBossUniqueTechnique(enemy,api);}
+    if(enemy.stageTertiaryCd<=0){enemy.stageTertiaryCd=(finale?7.7:8.8)-phase*.32;stageBossTertiaryTechnique(enemy,api);}
   }
   window.updateStageBossSkill=function(enemy,dt){
-    const def=stageDefinition(enemy?.eventKind);if(!def?.bossSkill)return;
-    const api=apiFor(stageRuntime()),result=def.bossSkill(enemy,dt,api);updateStageBossSignatureLayer(enemy,dt,api);return result;
+    const api=apiFor(stageRuntime());updateStageBossCombat(enemy,dt,api);
   };
   const ENDLESS_FAMILY_CACHE={registrySize:-1,route:[],bloom:[],array:[]};
   function rebuildEndlessFamilyCache(){
