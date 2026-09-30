@@ -93,7 +93,7 @@ function lineDistance(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1,l=dx*dx+dy*dy||
 function playBossImpactAudio(strength=1){if(typeof audio.enemyImpact==='function')audio.enemyImpact(strength);else audio.hit(true);}
 function triggerCircleImpact(t){
   if(t.impactStyle==='stage1-debris'){
-    shockwave(t.x,t.y,'#dce4ff',t.r*1.12,.34,4.2);shockwave(t.x,t.y,'#6f7fad',t.r*.72,.24,2.4);
+    audio.stageAttack?.('stage-01','debris-impact');shockwave(t.x,t.y,'#dce4ff',t.r*1.12,.34,4.2);shockwave(t.x,t.y,'#6f7fad',t.r*.72,.24,2.4);
     const shards=6;for(let i=0;i<shards;i++){const a=i/shards*TAU+(t.phase||0),speed=92+(i%3)*24;spawnEnemyProjectile(t.x+Math.cos(a)*8,t.y+Math.sin(a)*8,a,speed,0,i%2?'#8799c9':'#d7ddf5',7+(i%2)*2,.48+(i%3)*.08,'debris');}
     for(let i=0;i<4;i++){const a=i/4*TAU+(t.phase||0)*.35,len=t.r*(.72+(i%2)*.22);if(state.entities.beams.length<entityCap('beams'))state.entities.beams.push({x1:t.x,y1:t.y,x2:t.x+Math.cos(a)*len,y2:t.y+Math.sin(a)*len,life:.26,max:.26,color:i%2?'#aab8ed':'#e3e8ff',width:6,stageBossAttack:'fracture'});}
     spawnParticle(t.x,t.y,'#e8edff',10,175,4.4);state.camera.shake=Math.max(state.camera.shake,5.4);state.flash=Math.max(state.flash,.09);playBossImpactAudio(1.05);return;
