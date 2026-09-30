@@ -38,7 +38,7 @@ function draw(){
   if(performanceTier===0){ctx.fillStyle=cachedRenderVignette();ctx.fillRect(0,0,vw,vh);}else if(performanceTier===1){ctx.fillStyle='rgba(0,1,8,.08)';ctx.fillRect(0,0,vw,vh);}
   if(GAME_SETTINGS.sparkles!==false&&state.flash>=SCREEN_FLASH_VISIBLE_THRESHOLD){ctx.fillStyle=`rgba(225,242,255,${Math.min(.42,state.flash*.72)})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlay',drawRealmCinematicOverlay);
 }
-const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0,lastRenderAt=0;const TARGET_RENDER_INTERVAL=1000/60,runtimeUpdateMusic=typeof audio.updateMusic==='function'?audio.updateMusic.bind(audio):null;
+const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0,lastRenderAt=0,simulationAccumulator=0;const TARGET_RENDER_INTERVAL=1000/60,SIMULATION_STEP=1/60,MAX_SIMULATION_STEPS=5,runtimeUpdateMusic=typeof audio.updateMusic==='function'?audio.updateMusic.bind(audio):null;
 function loop(now){
   window.__stackfallRenderFrameSerial=(window.__stackfallRenderFrameSerial||0)+1;
   const frameDt=Math.min(.033,Math.max(0,(now-last)/1000));last=now;let shouldDraw=state.mode==='menu';
@@ -46,19 +46,21 @@ function loop(now){
     if(runtimeUpdateMusic)runRuntimeStage('updateMusic',runtimeUpdateMusic,frameDt);
     const gameplayFrame=state.mode==='playing';
     if(gameplayFrame){
-      const simulationSteps=state.gameSpeed===2?2:1;
-      for(let simulationStep=0;simulationStep<simulationSteps&&state.mode==='playing';simulationStep++){
-        let dt=frameDt;
-        if(state.hitStop>0){state.hitStop-=dt;dt=0;}
+      simulationAccumulator=Math.min(SIMULATION_STEP*MAX_SIMULATION_STEPS,simulationAccumulator+frameDt*(state.gameSpeed===2?2:1));
+      let simulationSteps=0;
+      while(simulationAccumulator>=SIMULATION_STEP&&simulationSteps<MAX_SIMULATION_STEPS&&state.mode==='playing'){
+        simulationAccumulator-=SIMULATION_STEP;simulationSteps++;
+        let dt=SIMULATION_STEP;
+        if(state.hitStop>0){state.hitStop=Math.max(0,state.hitStop-dt);dt=0;}
         state.time+=dt;state.comboTimer-=dt;if(state.comboTimer<=0)state.combo=0;
         runRuntimeStage('updatePendingActions',updatePendingActions,dt);runRuntimeStage('updatePlayer',updatePlayer,dt);runRuntimeStage('updateSpawning',updateSpawning,dt);if(typeof rebuildEnemyIndex==='function')runRuntimeStage('rebuildEnemyIndex',rebuildEnemyIndex);runRuntimeStage('updateWeapons',updateWeapons,dt);runRuntimeStage('updateEnemies',updateEnemies,dt);if(typeof stackfallEnsureStageVictory==='function')runRuntimeStage('ensureStageVictory',stackfallEnsureStageVictory);if(state.mode!=='playing')break;runRuntimeStage('updateProjectiles',updateProjectiles,dt);runRuntimeStage('updateBoomerangs',updateBoomerangs,dt);runRuntimeStage('updateEnemyProjectiles',updateEnemyProjectiles,dt);runRuntimeStage('updateTelegraphs',updateTelegraphs,dt);runRuntimeStage('updateWells',updateWells,dt);runRuntimeStage('updateGems',updateGems,dt);
         if(typeof updateMapEvents==='function'&&!state.apexActiveId&&!state.pendingApexForm&&!state.realmTransition)runRuntimeStage('updateMapEvents',updateMapEvents,dt);
         if(typeof updateRewardQueue==='function')runRuntimeStage('updateRewardQueue',updateRewardQueue);runRuntimeStage('updateEffects',updateEffects,dt);hudRefresh-=dt;if(hudRefresh<=0){hudRefresh=.08;runRuntimeStage('updateHUD',updateHUD);}
       }
       shouldDraw=true;
-    }else if(state.mode==='cinematic'){
+    }else if(state.mode==='cinematic'){simulationAccumulator=0;
       if(typeof updateRealmTransition==='function')runRuntimeStage('updateRealmTransition',updateRealmTransition,frameDt);runRuntimeStage('updateEffectsCinematic',updateEffects,frameDt*.35);shouldDraw=true;
-    }else if(state.mode==='stageVictory'){
+    }else if(state.mode==='stageVictory'){simulationAccumulator=0;
       if(typeof updateStageVictoryCinematic==='function')runRuntimeStage('updateStageVictoryCinematic',updateStageVictoryCinematic,frameDt);
       runRuntimeStage('updateEffectsStageVictory',updateEffects,frameDt*.72);shouldDraw=true;
     }
