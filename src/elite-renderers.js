@@ -27,7 +27,7 @@ function drawEliteShape(e){
   const f=e.eliteForm||e.apexForm||e.variant,t=e.phase,enraged=e.kind==='apex'&&e.apexPhase===2;
   ctx.save();ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;ctx.lineWidth=e.kind==='apex'?4:3;ctx.lineCap='round';ctx.lineJoin='round';
   if(f==='collapse-warden'){
-    const r=e.r,phase=e.stagePhase||1,now=state.time||0,ram=(e.stageRamWindupUntil||0)>now||(e.stageRamUntil||0)>now,open=phase>=2,phaseAge=Math.max(0,now-(e.stagePhaseChangedAt||now)),openEase=open?clamp(phaseAge/.72,0,1):0;
+    const r=e.r,phase=e.stagePhase||1,now=state.time||0,ram=(e.stageRamWindupUntil||0)>now||(e.stageRamUntil||0)>now,open=e.stageGateCoreOpen===true||phase>=2,phaseAge=Math.max(0,now-(e.stagePhaseChangedAt||now)),openEase=open?clamp(phaseAge/.72,0,1):0;
     if(ram&&Number.isFinite(e.stageRamAngle))ctx.rotate(e.stageRamAngle+Math.PI/2);else ctx.rotate(Math.sin(t*.12)*.025);
     ctx.fillStyle=e.hit?'#fff':'#070b18';ctx.strokeStyle=e.hit?'#fff':'#c8d3ff';ctx.lineWidth=3.2;ctx.lineCap='round';ctx.lineJoin='round';
     // Broken checkpoint frame: two incomplete counter-rotating structural rings.
