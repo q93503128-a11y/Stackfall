@@ -272,12 +272,12 @@
   function stageOneShutterClamp(e,api,phase,cycle,damage,pred){
     const arena=stageOneArena(api.run),lanes=phase>=2?5:4,safe=Math.abs(cycle+phase)%lanes,usable=arena.halfH*1.46,spacing=usable/Math.max(1,lanes-1),token=e.stageOneActionToken||0;
     const queue=(ms,fn)=>scheduleWeaponAction(ms,()=>{if(stageBossSignatureAlive(e,api)&&e.stageOneActionToken===token)fn();});
-    for(let lane=0;lane<lanes;lane++){if(lane===safe)continue;const y=arena.y-usable*.5+lane*spacing,x1=arena.x-arena.halfW+18,x2=arena.x+arena.halfW-18;rawLine(x1,y,x2,y,Math.max(10,spacing*.28),0,'#ffcf70',.82+lane*.035,'boss-charge');queue(790+lane*55,()=>stageBossActualBeam(x1,y,x2,y,Math.max(20,spacing*.34),damage*.70,'#aeb9ff','shutter'));}
+    for(let lane=0;lane<lanes;lane++){if(lane===safe)continue;const y=arena.y-usable*.5+lane*spacing,x1=arena.x-arena.halfW+18,x2=arena.x+arena.halfW-18;rawLine(x1,y,x2,y,Math.max(10,spacing*.28),0,'#ffcf70',.82+lane*.035,'stage1-warning-only');queue(790+lane*55,()=>stageBossActualBeam(x1,y,x2,y,Math.max(20,spacing*.34),damage*.70,'#aeb9ff','shutter'));}
     showBossNotice(GAME_SETTINGS.language==='ko'?'격벽 폐쇄':'BULKHEAD CLOSURE',GAME_SETTINGS.language==='ko'?'안전 통로 확보':'FIND THE OPEN LANE');
   }
   function stageOneBreachRam(e,api,phase,cycle,damage,pred){
     const arena=stageOneArena(api.run),tx=clamp(pred.x,arena.x-arena.halfW+54,arena.x+arena.halfW-54),ty=clamp(pred.y,arena.y-arena.halfH+54,arena.y+arena.halfH-54),aim=Math.atan2(ty-e.y,tx-e.x),length=Math.min(760,Math.hypot(arena.halfW*2,arena.halfH*2)),width=e.r*1.42,token=e.stageOneActionToken||0;
-    rawLine(e.x,e.y,e.x+Math.cos(aim)*length,e.y+Math.sin(aim)*length,width,0,'#ffcf70',1.02,'boss-charge');e.stageRamWindupUntil=(state.time||0)+1.02;e.stageRamAngle=aim;e.contactSafeUntil=Math.max(e.contactSafeUntil||0,(state.time||0)+.82);
+    rawLine(e.x,e.y,e.x+Math.cos(aim)*length,e.y+Math.sin(aim)*length,width,0,'#ffcf70',1.02,'stage1-warning-only');e.stageRamWindupUntil=(state.time||0)+1.02;e.stageRamAngle=aim;e.contactSafeUntil=Math.max(e.contactSafeUntil||0,(state.time||0)+.82);
     scheduleWeaponAction(980,()=>{if(!stageBossSignatureAlive(e,api)||e.stageOneActionToken!==token)return;const liveAim=Math.atan2(ty-e.y,tx-e.x);e.stageRamAngle=liveAim;e.stageRamUntil=(state.time||0)+.72;e.dash=.72;e.dashX=Math.cos(liveAim)*(610+phase*65);e.dashY=Math.sin(liveAim)*(610+phase*65);e.contactSafeUntil=state.time||0;shockwave(e.x,e.y,'#ffcf70',92,.32,4);spawnParticle(e.x,e.y,'#d7ddf5',12,190,4);audio.tone?.(70,.30,'sawtooth',.030,80);});
   }
   const STAGE_APEX_UNIQUE_TECHNIQUES=Object.freeze({
