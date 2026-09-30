@@ -30,11 +30,6 @@
       for(let wave=0;wave<waves;wave++)scheduleWeaponAction(wave*(deep?360:500),()=>{if(!api.isActive())return;const p=typeof predictedPlayer==='function'?predictedPlayer(110+wave*30):{x:player.x,y:player.y},axes=deep?3:2,base=.18+wave*(deep?.31:.24),half=deep?390:350,gap=deep?46:62;for(let i=0;i<axes;i++){const a=base+i/axes*Math.PI,dx=Math.cos(a),dy=Math.sin(a);rawLine(p.x-dx*half,p.y-dy*half,p.x-dx*gap,p.y-dy*gap,deep?22:18,damage*(deep?1.02:.86),i%2?'#9ab7ff':'#8fffe0',.91+wave*.05,'boss-line');rawLine(p.x+dx*gap,p.y+dy*gap,p.x+dx*half,p.y+dy*half,deep?22:18,damage*(deep?1.02:.86),i%2?'#9ab7ff':'#8fffe0',.91+wave*.05,'boss-line');}});
     },
     bossProfile:{form:'zero-hour-regulator',eventVariant:'stage04-regulator',nameKey:'stage04.boss',warningKey:'stage04.boss.warning',r:72,hp:1.92,speed:.76,damage:1.18,color:'#8fffe0',xp:2.25,skillCd:1.35,burstCd:3.8,pulseCd:5.9,spawnRadius:680,spawnShockwave:230},
-    bossSkill(e,dt,api){
-      if(!e||e.dead)return;const hp=e.hp/Math.max(1,e.maxHp),phase=hp<.28?3:hp<.62?2:1,k=[1,.78,.60][phase-1],damage=Math.max(6,e.damage*.44);e.stagePhase=phase;e.skillCd-=dt/k;e.burstCd-=dt/k;e.pulseCd-=dt/k;
-      if(e.skillCd<=0){e.skillCd=2.05;const aim=Math.atan2(player.y-e.y,player.x-e.x),shots=8+phase*3;for(let i=0;i<shots;i++){const a=aim+(i-(shots-1)/2)*(.078-phase*.005);spawnEnemyProjectile(e.x,e.y,a,215+phase*20,damage*.62,i%2?'#8fffe0':'#a6bfff',4.8,5,'chrono');}}
-      if(e.burstCd<=0){e.burstCd=4.45;const p=typeof predictedPlayer==='function'?predictedPlayer(145+phase*34):{x:player.x,y:player.y},hands=phase===3?3:2,half=330+phase*28,gap=Math.max(40,66-phase*7),base=e.phase*.055+.14;for(let i=0;i<hands;i++){const a=base+i/hands*Math.PI,dx=Math.cos(a),dy=Math.sin(a);rawLine(p.x-dx*half,p.y-dy*half,p.x-dx*gap,p.y-dy*gap,19+phase*2,damage*.98,i%2?'#9ab7ff':'#83ffe0',.94+i*.05,'boss-line');rawLine(p.x+dx*gap,p.y+dy*gap,p.x+dx*half,p.y+dy*half,19+phase*2,damage*.98,i%2?'#9ab7ff':'#83ffe0',.94+i*.05,'boss-line');}}
-      if(e.pulseCd<=0){e.pulseCd=6.55-phase*.46;if(typeof fireRingWithGaps==='function'){const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,22+phase*5,158+phase*16,damage*.72,'#b8fff0',e.phase*.09,aim,.25-phase*.02,4.7);}else fireRing(e,20+phase*4,158+phase*16,damage*.68,'#b8fff0',e.phase*.09,4.7);if(phase>=2)api.spawnBurst('phase-drifter',phase===3?4:2);}
-    }
+    bossSkill:null
   });
 })();
