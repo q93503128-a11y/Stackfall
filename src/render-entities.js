@@ -136,7 +136,8 @@ function drawGems(){const tier=typeof stackfallPerformanceTier==='function'?stac
 function drawBeamEffects(){
   for(const beam of state.entities.beams){
     if(!beam||beam.life<=0)continue;
-    const a=worldToScreen(beam.x1,beam.y1),b=worldToScreen(beam.x2,beam.y2),alpha=clamp(beam.life/Math.max(.001,beam.max||beam.life),0,1);
+    const a=worldToScreen(beam.x1,beam.y1),b=worldToScreen(beam.x2,beam.y2),alpha=clamp(beam.life/Math.max(.001,beam.max||beam.life),0,1),beamMargin=Math.max(80,(Number(beam.width)||8)*3);
+    if(Math.max(a.x,b.x)<-beamMargin||Math.min(a.x,b.x)>vw+beamMargin||Math.max(a.y,b.y)<-beamMargin||Math.min(a.y,b.y)>vh+beamMargin)continue;
     if(beam.terminus===true){
       const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len,nx=-uy,ny=ux,w=Math.max(42,Number(beam.width)||120),over=beam.overdrive===true,pulse=.90+.10*Math.sin((1-alpha)*Math.PI*3);
       ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=(.54+.42*alpha);ctx.shadowBlur=over?78:58;ctx.shadowColor=over?'#badaff':'#75d8ff';
@@ -183,7 +184,7 @@ function drawBeamEffects(){
     ctx.strokeStyle='#ffffff';ctx.globalAlpha=alpha*.78;ctx.lineWidth=Math.max(.7,beam.width*.32);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore();
   }
 }
-function drawForegroundEffects(){for(const s of state.entities.shockwaves){const sx=s.x-player.x+vw/2,sy=s.y-player.y+vh/2;ctx.globalAlpha=s.life/s.max;ctx.strokeStyle=s.color;ctx.lineWidth=s.width;ctx.beginPath();ctx.arc(sx,sy,s.r,0,TAU);ctx.stroke();}ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.textAlign='center';for(const t of state.entities.texts){const sx=t.x-player.x+vw/2,sy=t.y-player.y+vh/2;ctx.globalAlpha=clamp(t.life/t.max,0,1);ctx.fillStyle=t.color;ctx.font=`800 ${t.size}px IBM Plex Sans KR`;ctx.fillText(t.text,sx,sy);}ctx.globalAlpha=1;}
+function drawForegroundEffects(){for(const s of state.entities.shockwaves){const sx=s.x-player.x+vw/2,sy=s.y-player.y+vh/2,r=Math.max(0,Number(s.r)||0);if(sx+r<-24||sx-r>vw+24||sy+r<-24||sy-r>vh+24)continue;ctx.globalAlpha=s.life/s.max;ctx.strokeStyle=s.color;ctx.lineWidth=s.width;ctx.beginPath();ctx.arc(sx,sy,r,0,TAU);ctx.stroke();}ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.textAlign='center';for(const t of state.entities.texts){const sx=t.x-player.x+vw/2,sy=t.y-player.y+vh/2;if(sx<-140||sx>vw+140||sy<-80||sy>vh+80)continue;ctx.globalAlpha=clamp(t.life/t.max,0,1);ctx.fillStyle=t.color;ctx.font=`800 ${t.size}px IBM Plex Sans KR`;ctx.fillText(t.text,sx,sy);}ctx.globalAlpha=1;}
 
 const POST_ROSTER_RASTER_CACHE=new Map();
 function postRosterRaster(key,size,painter){return cachedRasterSurface(POST_ROSTER_RASTER_CACHE,key,size,painter,64);}
@@ -212,7 +213,7 @@ function drawPostRosterWeaponEntities(){
   if(weaponCount('missile')){const a=Number.isFinite(player.facingAngle)?player.facingAngle:-Math.PI/2,flash=clamp((player.missilePodFlash||0)/.24,0,1),image=missilePodRaster();for(const side of[-1,1]){const pa=a+side*Math.PI/2,sx=Math.cos(pa)*31+vw/2,sy=Math.sin(pa)*31+vh/2;ctx.save();ctx.translate(sx,sy);ctx.rotate(a);ctx.drawImage(image,-32,-32,64,64);if(flash>0){ctx.globalAlpha=flash;ctx.fillStyle='#fff1c9';ctx.beginPath();ctx.arc(side*3,0,4+flash*3,0,TAU);ctx.fill();}ctx.restore();}}
   const nets=state.entities.gateNetworks||[];for(const net of nets){if(!net||net.life<=0)continue;const alpha=clamp(Math.min(net.life,.45)/.45,.15,1),image=gateRaster(!!net.echoed);for(let i=0;i<net.gates.length;i++){const gate=net.gates[i],sx=gate.x-player.x+vw/2,sy=gate.y-player.y+vh/2;ctx.save();ctx.translate(sx,sy);ctx.rotate((i%2?1:-1)*t*.55);ctx.globalAlpha=alpha;ctx.drawImage(image,-48,-48,96,96);ctx.restore();}}
 }
-function drawAlliedEffects(){for(const p of state.entities.particles){const sx=p.x-player.x+vw/2,sy=p.y-player.y+vh/2;ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.shadowBlur=9;ctx.shadowColor=p.color;if(p.star){ctx.save();ctx.translate(sx,sy);drawStarPath(4,p.size*.25,p.size*.62,0);ctx.fill();ctx.restore();}else{ctx.beginPath();ctx.arc(sx,sy,p.size*.5,0,TAU);ctx.fill();}}ctx.shadowBlur=0;ctx.globalAlpha=1;drawPostRosterWeaponEntities();}
+function drawAlliedEffects(){for(const p of state.entities.particles){const sx=p.x-player.x+vw/2,sy=p.y-player.y+vh/2,size=Math.max(1,Number(p.size)||3);if(sx<-24-size||sx>vw+24+size||sy<-24-size||sy>vh+24+size)continue;ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.shadowBlur=9;ctx.shadowColor=p.color;if(p.star){ctx.save();ctx.translate(sx,sy);drawStarPath(4,size*.25,size*.62,0);ctx.fill();ctx.restore();}else{ctx.beginPath();ctx.arc(sx,sy,size*.5,0,TAU);ctx.fill();}}ctx.shadowBlur=0;ctx.globalAlpha=1;drawPostRosterWeaponEntities();}
 function drawEffects(includeParticles=true){drawForegroundEffects();if(includeParticles)drawAlliedEffects();}
 
 const WELL_RASTER_CACHE=new Map();
