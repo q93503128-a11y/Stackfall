@@ -9,6 +9,7 @@ const gpu=read('src/gpu-renderer.js');
 const render=read('src/render.js');
 const audio=read('src/runtime-config.js');
 const feature=read('src/feature-pack.js');
+const entities=read('src/render-entities.js');
 
 const checks=[
  ['experience gem merge defines newPlayerD2 before any positive-value comparison',systems.includes('if(!amount)return null;\n  const newPlayerD2=')&&!systems.includes('return null,newPlayerD2=')],
@@ -20,7 +21,8 @@ const checks=[
  ['object pressure alone cannot enter emergency rendering',!guard.includes('if(!emergencyResolution&&pressureScore()>proactiveLimit)applyEmergencyResolution(true)')&&guard.includes('pressureScore()>proactiveLimit&&frameMs>26')],
  ['GPU degraded cadence remains at least 30 FPS and does not use the old 24 FPS cap',gpu.includes('cap=emergency?30:tier===2?40:tier===1?50:60')&&!gpu.includes('?24:')],
  ['simulation is fixed at 60 Hz and 2x speed scales accumulated simulation time rather than RAF count',render.includes('SIMULATION_STEP=1/60')&&render.includes("simulationAccumulator+frameDt*(state.gameSpeed===2?2:1)")&&render.includes('while(simulationAccumulator>=SIMULATION_STEP')&&!render.includes('const simulationSteps=state.gameSpeed===2?2:1')],
- ['dense strong-hit and pickup accents are rate limited without disabling weapon audio',audio.includes('audio.lastStrongHitAt=0')&&audio.includes('now-this.lastStrongHitAt>=42')&&audio.includes('audio.lastPickupAt=0')&&audio.includes('now-this.lastPickupAt<28')]
+ ['dense strong-hit and pickup accents are rate limited without disabling weapon audio',audio.includes('audio.lastStrongHitAt=0')&&audio.includes('now-this.lastStrongHitAt>=42')&&audio.includes('audio.lastPickupAt=0')&&audio.includes('now-this.lastPickupAt<28')],
+ ['offscreen beams shockwaves text and allied particles are culled before Canvas draw work',entities.includes('beamMargin=Math.max(80')&&entities.includes('Math.max(a.x,b.x)<-beamMargin')&&entities.includes('sx+r<-24')&&entities.includes('sx<-140||sx>vw+140')&&entities.includes('sx<-24-size||sx>vw+24+size')]
 ];
 
 let failed=0;
