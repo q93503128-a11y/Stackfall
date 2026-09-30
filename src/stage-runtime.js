@@ -160,7 +160,7 @@
     for(const enemy of state.entities.enemies||[]){if(!enemy?.dead){enemy.dead=true;spawnParticle(enemy.x,enemy.y,enemy.color||'#8395d8',enemy.type==='boss'||enemy.type==='mini'?10:3,130,3);}}
     compactInPlace(state.entities.enemies,e=>e&&!e.dead);for(const key of['enemyProjectiles','telegraphs','beams','wells'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;
     const arena=stageOneArena(run);arena.x=player.x;arena.y=player.y;arena.phase=1;arena.locked=true;state.camera.shake=Math.max(state.camera.shake,8);state.flash=Math.max(state.flash,.08);
-    audio.tone?.(76,.42,'sawtooth',.030,46);audio.tone?.(52,.65,'triangle',.020,-8);
+    audio.stageAttack?.('stage-01','intro');
     startRealmTransition('stage-01-warden',{duration:3.05,owner:'stage-01-boss-entry',title:localized(run.stage.boss?.name)||'붕괴의 전초 수호자',subtitle:GAME_SETTINGS.language==='ko'?'항로 봉쇄 프로토콜 가동':'ROUTE LOCKDOWN PROTOCOL',onMidpoint:()=>{
       const current=stageRuntime();if(!current||current!==run)return;const boss=spawnStageBoss({suppressNotice:true});if(boss){boss.x=arena.x;boss.y=arena.y-arena.halfH*.60;boss.contactSafeUntil=(state.time||0)+1.35;shockwave(boss.x,boss.y,'#e9eeff',245,.78,6);spawnParticle(boss.x,boss.y,'#aeb9ff',28,220,5);audio.tone?.(94,.50,'sawtooth',.036,-30);}
     },onComplete:()=>{if(stageRuntime()===run){run.bossIntroPending=false;stabilizeRealmTheme?.('stage-01-warden');if(!run.bossSpawned)spawnStageBoss();}}});
@@ -272,18 +272,19 @@
     for(let i=0;i<shots;i++){const offset=(i-(shots-1)/2)*(phase>=2?58:66),tx=clamp(baseX+offset,arena.x-arena.halfW+48,arena.x+arena.halfW-48),ty=clamp(pred.y+(i%2?42:-30),arena.y-arena.halfH+54,arena.y+arena.halfH-54),r=32+(i%2)*5;
       stageOneDebrisTelegraph(tx,ty,r,damage*(.66+(i%2)*.08),i%2?'#8395d8':'#c2cbef',.74+i*.08);
     }
-    e.stageDebrisVolleyAt=state.time||0;audio.tone?.(142,.12,'square',.012,-32);
+    e.stageDebrisVolleyAt=state.time||0;audio.stageAttack?.('stage-01','debris-warn');
   }
   function stageOneShutterClamp(e,api,phase,cycle,damage,pred){
     const arena=stageOneArena(api.run),lanes=phase>=2?5:4,safe=Math.abs(cycle+phase)%lanes,usable=arena.halfH*1.46,spacing=usable/Math.max(1,lanes-1),token=e.stageOneActionToken||0;
     const queue=(ms,fn)=>scheduleWeaponAction(ms,()=>{if(stageBossSignatureAlive(e,api)&&e.stageOneActionToken===token)fn();});
-    for(let lane=0;lane<lanes;lane++){if(lane===safe)continue;const y=arena.y-usable*.5+lane*spacing,x1=arena.x-arena.halfW+18,x2=arena.x+arena.halfW-18;rawLine(x1,y,x2,y,Math.max(10,spacing*.28),0,'#ffcf70',.82+lane*.035,'stage1-warning-only');queue(790+lane*55,()=>stageBossActualBeam(x1,y,x2,y,Math.max(20,spacing*.34),damage*.70,'#aeb9ff','shutter'));}
+    audio.stageAttack?.('stage-01','shutter-warn');
+    for(let lane=0;lane<lanes;lane++){if(lane===safe)continue;const y=arena.y-usable*.5+lane*spacing,x1=arena.x-arena.halfW+18,x2=arena.x+arena.halfW-18;rawLine(x1,y,x2,y,Math.max(10,spacing*.28),0,'#ffcf70',.82+lane*.035,'stage1-warning-only');queue(790+lane*55,()=>{if(lane===0||lane===1)audio.stageAttack?.('stage-01','shutter-slam');stageBossActualBeam(x1,y,x2,y,Math.max(20,spacing*.34),damage*.70,'#aeb9ff','shutter');});}
     showBossNotice(GAME_SETTINGS.language==='ko'?'격벽 폐쇄':'BULKHEAD CLOSURE',GAME_SETTINGS.language==='ko'?'안전 통로 확보':'FIND THE OPEN LANE');
   }
   function stageOneBreachRam(e,api,phase,cycle,damage,pred){
     const arena=stageOneArena(api.run),tx=clamp(pred.x,arena.x-arena.halfW+54,arena.x+arena.halfW-54),ty=clamp(pred.y,arena.y-arena.halfH+54,arena.y+arena.halfH-54),aim=Math.atan2(ty-e.y,tx-e.x),length=Math.min(760,Math.hypot(arena.halfW*2,arena.halfH*2)),width=e.r*1.42,token=e.stageOneActionToken||0;
-    rawLine(e.x,e.y,e.x+Math.cos(aim)*length,e.y+Math.sin(aim)*length,width,0,'#ffcf70',1.02,'stage1-warning-only');e.stageRamWindupUntil=(state.time||0)+1.02;e.stageRamAngle=aim;e.contactSafeUntil=Math.max(e.contactSafeUntil||0,(state.time||0)+.82);
-    scheduleWeaponAction(980,()=>{if(!stageBossSignatureAlive(e,api)||e.stageOneActionToken!==token)return;const liveAim=Math.atan2(ty-e.y,tx-e.x);e.stageRamAngle=liveAim;e.stageRamUntil=(state.time||0)+.72;e.dash=.72;e.dashX=Math.cos(liveAim)*(610+phase*65);e.dashY=Math.sin(liveAim)*(610+phase*65);e.contactSafeUntil=state.time||0;shockwave(e.x,e.y,'#ffcf70',92,.32,4);spawnParticle(e.x,e.y,'#d7ddf5',12,190,4);audio.tone?.(70,.30,'sawtooth',.030,80);});
+    audio.stageAttack?.('stage-01','ram-charge');rawLine(e.x,e.y,e.x+Math.cos(aim)*length,e.y+Math.sin(aim)*length,width,0,'#ffcf70',1.02,'stage1-warning-only');e.stageRamWindupUntil=(state.time||0)+1.02;e.stageRamAngle=aim;e.contactSafeUntil=Math.max(e.contactSafeUntil||0,(state.time||0)+.82);
+    scheduleWeaponAction(980,()=>{if(!stageBossSignatureAlive(e,api)||e.stageOneActionToken!==token)return;const liveAim=Math.atan2(ty-e.y,tx-e.x);e.stageRamAngle=liveAim;e.stageRamUntil=(state.time||0)+.72;e.dash=.72;e.dashX=Math.cos(liveAim)*(610+phase*65);e.dashY=Math.sin(liveAim)*(610+phase*65);e.contactSafeUntil=state.time||0;audio.stageAttack?.('stage-01','ram-release');shockwave(e.x,e.y,'#ffcf70',92,.32,4);spawnParticle(e.x,e.y,'#d7ddf5',12,190,4);});
   }
   const STAGE_APEX_UNIQUE_TECHNIQUES=Object.freeze({
     'stage-01':(e,api,phase,cycle,d,pred,later)=>stageOneShutterClamp(e,api,phase,cycle,d,pred,later),
@@ -426,7 +427,7 @@
       e.stagePrimaryCd=.30;e.stageUniqueCd=1.25;e.stageTertiaryCd=2.30;e.stagePhaseChangedAt=state.time||0;
       state.camera.shake=Math.max(state.camera.shake,7+e.stagePhase*2);state.flash=Math.max(state.flash,.08+e.stagePhase*.02);
       shockwave(e.x,e.y,e.color||'#dbe4ff',118+e.stagePhase*28,.46,3+e.stagePhase);
-      if(e.eventKind==='stage-01'){const arena=stageOneArena();if(arena)arena.phase=e.stagePhase;e.stageGateCoreOpen=e.stagePhase>=2;e.stageOneActionToken=(e.stageOneActionToken||0)+1;e.attackLockUntil=(state.time||0)+1.12;e.stageOneAttackCd=1.35;e.stageRamWindupUntil=0;e.stageRamUntil=0;e.dash=0;e.dashX=0;e.dashY=0;stageBossSetMotion(e,0,0);showBossNotice(GAME_SETTINGS.language==='ko'?'전초 수호자 · 봉쇄 해제':'FRONTIER WARDEN · SEAL BROKEN',GAME_SETTINGS.language==='ko'?'노출된 관문핵':'GATE CORE EXPOSED');audio.tone?.(118,.52,'sawtooth',.036,120);spawnParticle(e.x,e.y,'#ffffff',20,210,5);}
+      if(e.eventKind==='stage-01'){const arena=stageOneArena();if(arena)arena.phase=e.stagePhase;e.stageGateCoreOpen=e.stagePhase>=2;e.stageOneActionToken=(e.stageOneActionToken||0)+1;e.attackLockUntil=(state.time||0)+1.12;e.stageOneAttackCd=1.35;e.stageRamWindupUntil=0;e.stageRamUntil=0;e.dash=0;e.dashX=0;e.dashY=0;stageBossSetMotion(e,0,0);showBossNotice(GAME_SETTINGS.language==='ko'?'전초 수호자 · 봉쇄 해제':'FRONTIER WARDEN · SEAL BROKEN',GAME_SETTINGS.language==='ko'?'노출된 관문핵':'GATE CORE EXPOSED');audio.stageAttack?.('stage-01','phase-open');spawnParticle(e.x,e.y,'#ffffff',20,210,5);}
       if(e.eventKind==='stage-12')e.stageShellOpen=e.stagePhase>=2;
       if(e.eventKind==='stage-18')e.stageCoreExposed=e.stagePhase>=2;
     }
