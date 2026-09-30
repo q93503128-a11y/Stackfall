@@ -225,14 +225,16 @@ function bossAntiIdleSkill(e,dt){
   else addCircle(x,y,52,d,e.color||'#ff72cb',1.08);
 }
 function chronophageSignature(e,d,arena,phase){
-  const history=e.apexPlayerHistory||[],now={x:player.x,y:player.y},pastA=history[Math.max(0,history.length-5)]||now,pastB=history[Math.max(0,history.length-10)]||pastA;
-  addCircle(now.x,now.y,48+phase*5,d*1.02,'#79ffe1',.92);addCircle(pastA.x,pastA.y,66+phase*4,d*.86,'#c6fff4',1.18);rawLine(pastB.x,pastB.y,now.x,now.y,21+phase*2,d*1.12,'#8fffe0',1.26,'boss-line');
-  scheduleWeaponAction(560,()=>{if(e.dead)return;const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,20+phase*2,205+phase*10,d*.70,'#e4fffb',-e.phase*.19,aim,.28,4.4);});
+  const history=e.apexPlayerHistory||[],now={x:player.x,y:player.y},p1=history[Math.max(0,history.length-4)]||now,p2=history[Math.max(0,history.length-8)]||p1,p3=history[Math.max(0,history.length-12)]||p2;
+  addCircle(p1.x,p1.y,46+phase*4,d*.62,'#c6fff4',.82);addCircle(p2.x,p2.y,54+phase*4,d*.54,'#79ffe1',1.02);
+  rawLine(p3.x,p3.y,p2.x,p2.y,17+phase*2,d*.72,'#79ffe1',.88,'boss-line');rawLine(p2.x,p2.y,p1.x,p1.y,18+phase*2,d*.82,'#8fffe0',1.02,'boss-line');rawLine(p1.x,p1.y,now.x,now.y,20+phase*2,d*.96,'#d9fff8',1.16,'boss-line');
+  if(phase>=3){const dx=now.x-p2.x,dy=now.y-p2.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;for(const side of[-1,1])rawLine(p2.x+nx*side*105,p2.y+ny*side*105,now.x+nx*side*105,now.y+ny*side*105,15+phase,d*.58,'#bffdf3',1.24,'boss-line');}
 }
 function starforgeSignature(e,d,arena,phase){
-  e.forgeSignaturePhase=(e.forgeSignaturePhase||0)+.73;const spokes=10+phase*2,safe=Math.floor(((e.forgeSignaturePhase%TAU)/TAU)*spokes);
-  for(let i=0;i<spokes;i++){const relative=(i-safe+spokes)%spokes;if(relative===0||relative===1)continue;const a=i*TAU/spokes+e.forgeSignaturePhase*.18;rawLine(arena.x,arena.y,arena.x+Math.cos(a)*arena.r*1.12,arena.y+Math.sin(a)*arena.r*1.12,20+phase*2,d*.84,i%3===0?'#fff1b0':'#ff9d42',1.12+i*.018,'boss-line');}
-  const origin={x:player.x,y:player.y};for(let i=0;i<3+phase;i++){const target=i===0?origin:predictedPlayer(55+i*34),a=i*2.399+e.phase*.05;addCircle(target.x+Math.cos(a)*(i?42:0),target.y+Math.sin(a)*(i?42:0),44+phase*4,d*(i===0?1.12:.74),'#ff7135',.86+i*.12);}
+  e.forgeSignaturePhase=(e.forgeSignaturePhase||0)+.73;const target=predictedPlayer(70+phase*34),span=arena.r*.86,gap=Math.max(92,162-phase*13),horizontal=Math.floor(e.forgeSignaturePhase)%2===0;
+  if(horizontal){for(const side of[-1,1])rawLine(arena.x-span,target.y+side*gap,arena.x+span,target.y+side*gap,21+phase*2,d*.78,side>0?'#fff1b0':'#ff9d42',.98,'boss-line');}
+  else{for(const side of[-1,1])rawLine(target.x+side*gap,arena.y-span,target.x+side*gap,arena.y+span,21+phase*2,d*.78,side>0?'#fff1b0':'#ff9d42',.98,'boss-line');}
+  for(let i=0;i<3+phase;i++){const p=i===0?target:predictedPlayer(55+i*34),a=i*2.399+e.phase*.05,r=i?44+phase*5:0;addCircle(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r,42+phase*4,d*(i===0?1.08:.68),i%2?'#ffd26f':'#ff7135',.78+i*.11);}
 }
 function constellationSignature(e,d,arena,phase){
   const count=7+phase*2,points=apexArenaPoints(count,arena.r*.68,e.phase*.035),jump=phase>=3?3:2;
@@ -241,20 +243,30 @@ function constellationSignature(e,d,arena,phase){
   scheduleWeaponAction(500,()=>{if(e.dead)return;for(let i=0;i<points.length;i+=2){const point=points[i],aim=Math.atan2(player.y-point.y,player.x-point.x);spawnEnemyProjectile(point.x,point.y,aim,185+phase*14,d*.58,i%4?'#9fb2ef':'#ffffff',4.2,6,'constellation');}});teleportConstellation(e,phase);
 }
 function apexBossSkill(e,dt){
-  e.apexElapsed=(e.apexElapsed||0)+dt;rememberApexPlayer(e,dt);const health=e.hp/Math.max(1,e.maxHp),healthPhase=health<.25?4:health<.50?3:health<.75?2:1,timePhase=e.apexElapsed>=240?4:e.apexElapsed>=180?3:e.apexElapsed>=105?2:1,phase=Math.max(healthPhase,timePhase),terminal=phase===4&&e.apexElapsed>=240,k=terminal?.42:[1,.86,.72,.58][phase-1];e.apexPhase=phase;e.timeLock=0;if((e.attackLockUntil||0)>state.time)return;e.skillCd-=dt/k;e.burstCd-=dt/k;e.pulseCd-=dt/k;e.signatureCd=(e.signatureCd??5.8)-dt/k;const d=Math.max(7,e.damage*.40),f=e.eliteForm,arena=state.apexArena||{x:player.x,y:player.y,r:460};
+  e.apexElapsed=(e.apexElapsed||0)+dt;rememberApexPlayer(e,dt);
+  const health=e.hp/Math.max(1,e.maxHp),healthPhase=health<.25?4:health<.50?3:health<.75?2:1,timePhase=e.apexElapsed>=240?4:e.apexElapsed>=180?3:e.apexElapsed>=105?2:1,phase=Math.max(healthPhase,timePhase),terminal=phase===4&&e.apexElapsed>=240,k=terminal?.42:[1,.86,.72,.58][phase-1];
+  e.apexPhase=phase;e.timeLock=0;if((e.attackLockUntil||0)>state.time)return;
+  e.skillCd-=dt/k;e.burstCd-=dt/k;e.pulseCd-=dt/k;e.signatureCd=(e.signatureCd??5.8)-dt/k;
+  const d=Math.max(7,e.damage*.40),f=e.eliteForm,arena=state.apexArena||{x:player.x,y:player.y,r:460};
   if(e.signatureCd<=0){e.signatureCd=Math.max(5.4,8.8-phase*.82);if(f==='chronophage')chronophageSignature(e,d,arena,phase);else if(f==='starforge')starforgeSignature(e,d,arena,phase);else constellationSignature(e,d,arena,phase);}
-  e.apexFrenzyCd=(e.apexFrenzyCd??1.35)-dt;if(terminal&&e.apexFrenzyCd<=0){e.apexFrenzyCd=.95;if(f==='chronophage'){const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,20,235,d*.62,'#d9fff8',e.phase*.27,aim,.27,4.4);}else if(f==='starforge'){addCircle(player.x,player.y,45,d*.74,'#ff8a42',.72);}else{const points=apexArenaPoints(6,arena.r*.58,e.phase*.04);for(const point of points){const a=Math.atan2(player.y-point.y,player.x-point.x);spawnEnemyProjectile(point.x,point.y,a,205,d*.54,'#b7c9ff',4.1,6,'constellation');}}}
+  e.apexFrenzyCd=(e.apexFrenzyCd??1.35)-dt;
+  if(terminal&&e.apexFrenzyCd<=0){
+    e.apexFrenzyCd=.95;
+    if(f==='chronophage'){const h=e.apexPlayerHistory||[],past=h[Math.max(0,h.length-7)]||{x:player.x,y:player.y};rawLine(past.x,past.y,player.x,player.y,17,d*.72,'#d9fff8',.72,'boss-line');}
+    else if(f==='starforge'){const p=predictedPlayer(70);addCircle(p.x,p.y,44,d*.76,'#ff7135',.68);}
+    else{const points=apexArenaPoints(6,arena.r*.58,e.phase*.04);for(const point of points){const a=Math.atan2(player.y-point.y,player.x-point.x);spawnEnemyProjectile(point.x,point.y,a,205,d*.54,'#b7c9ff',4.1,6,'constellation');}}
+  }
   if(f==='chronophage'){
-    if(e.skillCd<=0){e.skillCd=phase>=3?2.0:2.65;const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,22+phase*2,155+phase*12,d,'#79ffe1',e.phase*.16,aim,.22,5.1);fireRingWithGaps(e,16+phase*2,125+phase*8,d*.72,'#c6fff4',-e.phase*.12,aim+Math.PI/2,.29,4.4);}
-    if(e.burstCd<=0){e.burstCd=phase>=3?4.8:6.0;const hands=5+phase,base=e.phase*.06;for(let i=0;i<hands;i++)rawLine(arena.x,arena.y,arena.x+Math.cos(base+i*TAU/hands)*arena.r*1.14,arena.y+Math.sin(base+i*TAU/hands)*arena.r*1.14,22+phase*2,d*1.10,i%2?'#79ffe1':'#d9fff8',.82+i*.065,'boss-line');}
-    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.8:8.4;const a=Math.atan2(player.y-arena.y,player.x-arena.x),nx=-Math.sin(a),ny=Math.cos(a);for(const side of[-1,1])for(const band of[76,158])rawLine(arena.x+nx*band*side-Math.cos(a)*arena.r,arena.y+ny*band*side-Math.sin(a)*arena.r,arena.x+nx*band*side+Math.cos(a)*arena.r,arena.y+ny*band*side+Math.sin(a)*arena.r,18+phase*2,d*.94,'#8fffe0',1.06+band*.001,'boss-line');}
+    if(e.skillCd<=0){e.skillCd=phase>=3?2.1:2.75;const h=e.apexPlayerHistory||[],now={x:player.x,y:player.y},p1=h[Math.max(0,h.length-(3+phase))]||now,p2=h[Math.max(0,h.length-(7+phase))]||p1;rawLine(p2.x,p2.y,p1.x,p1.y,16+phase*2,d*.70,'#79ffe1',.82,'boss-line');rawLine(p1.x,p1.y,now.x,now.y,18+phase*2,d*.88,'#d9fff8',1.02,'boss-line');}
+    if(e.burstCd<=0){e.burstCd=phase>=3?4.9:6.1;const h=e.apexPlayerHistory||[],past=h[Math.max(0,h.length-7)]||{x:player.x,y:player.y},dx=player.x-past.x,dy=player.y-past.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len,nx=-uy,ny=ux;for(const side of[-1,1])for(const band of[76,154])rawLine(past.x+nx*side*band-ux*arena.r,past.y+ny*side*band-uy*arena.r,past.x+nx*side*band+ux*arena.r,past.y+ny*side*band+uy*arena.r,17+phase*2,d*.78,'#8fffe0',.96+band*.001,'boss-line');}
+    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.9:8.5;const h=e.apexPlayerHistory||[],marks=[h[Math.max(0,h.length-11)],h[Math.max(0,h.length-7)],h[Math.max(0,h.length-3)]].filter(Boolean);marks.forEach((p,i)=>addCircle(p.x,p.y,42+phase*4+i*7,d*(.48+i*.10),'#bffdf3',.72+i*.16));}
   }else if(f==='starforge'){
-    if(e.skillCd<=0){e.skillCd=phase>=3?2.2:2.9;const spokes=8+phase*2,base=e.phase*.055;for(let i=0;i<spokes;i++)addLine(e,base+i*TAU/spokes,arena.r*1.18,21+phase*2,d,i%3===0?'#fff1b0':'#ff9d42',.96+i*.022);}
-    if(e.burstCd<=0){e.burstCd=phase>=3?4.65:5.9;const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,26+phase*2,175+phase*10,d*.92,'#ffd26f',e.phase*.21,aim,.31,5.8);const current={x:player.x,y:player.y};addCircle(current.x,current.y,56+phase*4,d*1.16,'#ff7135',1.02);for(let i=0;i<4+phase;i++){const a=i/(4+phase)*TAU+e.phase*.08;addCircle(current.x+Math.cos(a)*(116+phase*6),current.y+Math.sin(a)*(116+phase*6),42+phase*3,d*.66,'#ff9d42',1.12+i*.055);}}
-    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.4:8.0;const points=apexArenaPoints(6+phase,arena.r*.72,e.phase*.045);for(let i=0;i<points.length;i++){const point=points[i],opposite=points[(i+Math.floor(points.length/2))%points.length];rawLine(point.x,point.y,opposite.x,opposite.y,20+phase*2,d*1.18,i%2?'#ffb04e':'#fff0a8',1.18+i*.035,'boss-line');}}
+    if(e.skillCd<=0){e.skillCd=phase>=3?2.25:2.95;const p=predictedPlayer(80+phase*28);for(let i=0;i<2+phase;i++){const a=i*2.399+e.phase*.05,r=i?58+phase*8:0;addCircle(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r,39+phase*4,d*(i?.58:.96),i%2?'#ffd26f':'#ff7135',.72+i*.10);}}
+    if(e.burstCd<=0){e.burstCd=phase>=3?4.75:5.95;const p=predictedPlayer(120),axis=(e.forgePressAxis=(e.forgePressAxis||0)+1)%2,span=arena.r*.84,gap=Math.max(82,142-phase*10);if(axis===0){for(const side of[-1,1])rawLine(arena.x-span,p.y+side*gap,arena.x+span,p.y+side*gap,22+phase,d*.86,side>0?'#fff1b0':'#ff9d42',1.02,'boss-line');}else{for(const side of[-1,1])rawLine(p.x+side*gap,arena.y-span,p.x+side*gap,arena.y+span,22+phase,d*.86,side>0?'#fff1b0':'#ff9d42',1.02,'boss-line');}}
+    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.5:8.1;const points=apexArenaPoints(4+phase,arena.r*.68,e.phase*.035);for(let i=0;i<points.length;i++){const point=points[i],target=predictedPlayer(55+i*24);addCircle(target.x+(point.x-arena.x)*.12,target.y+(point.y-arena.y)*.12,44+phase*4,d*.68,i%2?'#ff9d42':'#ffd26f',.82+i*.07);}}
   }else{
     if(e.skillCd<=0){e.skillCd=phase>=3?1.95:2.65;const nodes=apexArenaPoints(5+phase,arena.r*.55,e.phase*.04);for(const [index,point] of nodes.entries()){const base=Math.atan2(player.y-point.y,player.x-point.x);for(let j=-1;j<=1;j++)spawnEnemyProjectile(point.x,point.y,base+j*.11,145+phase*18,d*.64,index%2?'#f0f4ff':'#9fb2ef',4.3,7,'constellation');}}
-    if(e.burstCd<=0){e.burstCd=phase>=3?4.7:6.1;const points=apexArenaPoints(7+phase,arena.r*.50,-Math.PI/2+e.phase*.025),jump=phase>=3?3:2;for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+jump)%points.length];rawLine(a.x,a.y,b.x,b.y,17+phase*2,d*1.08,i%2?'#d8e2ff':'#8fa6e8',1.02+i*.038,'boss-line');}teleportConstellation(e,1);}
-    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.35:8.2;teleportConstellation(e,2);const half=170+phase*10,gap=Math.max(58,88-phase*7),x=player.x,y=player.y;rawLine(x-half,y-half,x-gap,y-half,18+phase,d*1.10,'#d8e2ff',1.02,'boss-line');rawLine(x+gap,y-half,x+half,y-half,18+phase,d*1.10,'#d8e2ff',1.02,'boss-line');rawLine(x-half,y+half,x-gap,y+half,18+phase,d*1.10,'#879be0',1.08,'boss-line');rawLine(x+gap,y+half,x+half,y+half,18+phase,d*1.10,'#879be0',1.08,'boss-line');rawLine(x-half,y-half,x-half,y+half,18+phase,d*1.10,'#aebfff',1.14,'boss-line');rawLine(x+half,y-half,x+half,y+half,18+phase,d*1.10,'#aebfff',1.14,'boss-line');rawLine(x-150,y+150,x+150,y-150,16+phase,d*.92,'#ffffff',1.22,'boss-line');}
+    if(e.burstCd<=0){e.burstCd=phase>=3?4.7:6.1;const points=apexArenaPoints(7+phase,arena.r*.50,-Math.PI/2+e.phase*.025),jump=phase>=3?3:2,open=(e.constellationOpenEdge=(e.constellationOpenEdge||0)+1)%points.length;for(let i=0;i<points.length;i++){if(i===open)continue;const a=points[i],b=points[(i+jump)%points.length];rawLine(a.x,a.y,b.x,b.y,17+phase*2,d*1.02,i%2?'#d8e2ff':'#8fa6e8',1.02+i*.038,'boss-line');}teleportConstellation(e,1);}
+    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.35:8.2;const points=apexArenaPoints(6+phase,arena.r*.62,e.phase*.03);for(let i=0;i<points.length;i+=2){const point=points[i],a=Math.atan2(player.y-point.y,player.x-point.x);spawnEnemyProjectile(point.x,point.y,a,185+phase*18,d*.58,'#dce6ff',4.2,6,'constellation');}if(phase>=2)teleportConstellation(e,2);}
   }
 }
