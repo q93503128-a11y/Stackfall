@@ -12,7 +12,7 @@ const checks=[
  ['Stage 6 has a dedicated convergence environment',runtime.includes("theme:'stage-06'")&&stageWorldRenderer(6,realm)&&space.includes('/^stage-\\d{2}$/')],
  ['Shardway Nexus has a dedicated boss silhouette',elite.includes("f==='shardway-nexus'")&&elite.includes('for(let arm=0;arm<6;arm++)')],
  ['Stage 6 boss uses the shared stage dispatcher',bosses.includes("enemy.kind==='stage-boss'&&typeof window.updateStageBossSkill==='function'")&&shared.includes('window.updateStageBossSkill=function')&&runtime.includes("eventVariant:'stage06-nexus'")],
- ['Stage 6 boss has multi-phase mixed route pressure',runtime.includes('hp<.25?3:hp<.58?2:1')&&runtime.includes("api.spawnBurst('glass-wing'")&&runtime.includes("Math.random()<.5?'phase-drifter':'conduit-leech'")],
+ ['Stage 6 boss is the authored three-phase Route convergence finale',runtime.includes('bossSkill:null')&&shared.includes("'stage-06':[.70,.35]")&&shared.includes("e.stageFinaleMode='route-convergence'")&&shared.includes("'route-fold'")],
  ['Stage 6 unlocks Supernova Coil and progression currency',catalog.includes("rewards:[{type:'weapon',key:'nova'}")&&catalog.includes("key:'stardust',amount:360")&&read('src/runtime-config.js').includes("WEAPONS.nova={name:'초신성 코일'")],
  ['Stage 6 adapter loads after Stage 5',index.indexOf('src/stage05-runtime.js')<index.indexOf('src/stage06-runtime.js')],
  ['all supported languages include Stage 6 combat copy',(lang.match(/'stage06\.boss'/g)||[]).length>=6&&(lang.match(/'stage06\.objective\.boss'/g)||[]).length>=6]
