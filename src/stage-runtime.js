@@ -167,9 +167,20 @@
     },onComplete:()=>{if(stageRuntime()===run){run.bossIntroPending=false;stabilizeRealmTheme?.('stage-01-warden');if(!run.bossSpawned)spawnStageBoss();}}});
     return true;
   }
+  function beginStageTwoBossIntro(event){
+    const run=stageRuntime();if(!run||run.stage?.id!=='stage-02'||run.bossSpawned||run.bossIntroPending||activeStageEncounterCount()>0)return false;
+    run.bossIntroPending=true;if(event?.id)run.eventsTriggered[event.id]=true;clearPendingCombatActions();clearRunUiActions?.();window.closeMapEventOverlays?.();state.mapEventActive=null;if(Array.isArray(state.entities.mapEvents))state.entities.mapEvents.length=0;
+    for(const enemy of state.entities.enemies||[]){if(!enemy?.dead){enemy.dead=true;spawnParticle(enemy.x,enemy.y,enemy.color||'#9acfff',enemy.type==='boss'||enemy.type==='mini'?10:3,115,3);}}
+    compactInPlace(state.entities.enemies,e=>e&&!e.dead);for(const key of['enemyProjectiles','telegraphs','beams','wells'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;
+    state.camera.shake=Math.max(state.camera.shake,5);state.flash=Math.max(state.flash,.06);
+    startRealmTransition('stage-02',{duration:2.75,owner:'stage-02-boss-entry',title:localized(run.stage.boss?.name)||'성운의 심장',subtitle:GAME_SETTINGS.language==='ko'?'이온 성운 응집':'ION NEBULA COALESCING',onMidpoint:()=>{
+      const current=stageRuntime();if(!current||current!==run)return;const boss=spawnStageBoss({suppressNotice:true});if(boss){boss.stageNebulaBeatUntil=(state.time||0)+1.2;boss.contactSafeUntil=(state.time||0)+1.0;shockwave(boss.x,boss.y,'#ff9bdc',215,.62,4.8);spawnParticle(boss.x,boss.y,'#9df4ff',24,175,4.5);}
+    },onComplete:()=>{if(stageRuntime()===run){run.bossIntroPending=false;stabilizeRealmTheme?.('stage-02');if(!run.bossSpawned)spawnStageBoss();}}});
+    return true;
+  }
   function triggerStageEvent(event){
     const run=stageRuntime(),def=stageDefinition();if(!run||!def||run.eventsTriggered[event.id])return;const api=apiFor(run);
-    if(event.kind==='boss'){if(run.stage.id==='stage-01'){beginStageOneBossIntro(event);return;}if(spawnStageBoss())run.eventsTriggered[event.id]=true;return;}
+    if(event.kind==='boss'){if(run.stage.id==='stage-01'){beginStageOneBossIntro(event);return;}if(run.stage.id==='stage-02'){beginStageTwoBossIntro(event);return;}if(spawnStageBoss())run.eventsTriggered[event.id]=true;return;}
     run.eventsTriggered[event.id]=true;
     if(event.kind==='wave'){const label=def.waveLabel?.(event,api);if(label)showBossNotice(label,tr(def.fixedEventKey));spawnStageBurst(run.stage.id,event.variant,event.count||4);return;}
     if(event.kind==='hazard'){withStageEnvironment(event,api,()=>def.hazard?.(event,api));return;}
