@@ -162,6 +162,10 @@ function drawBeamEffects(){
         ctx.globalAlpha=.96*alpha;ctx.fillStyle='#1a2443';ctx.strokeStyle='#c9d5ff';ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(a.x+nx*plate,a.y+ny*plate);ctx.lineTo(b.x+nx*plate,b.y+ny*plate);ctx.lineTo(b.x-nx*plate,b.y-ny*plate);ctx.lineTo(a.x-nx*plate,a.y-ny*plate);ctx.closePath();ctx.fill();ctx.stroke();
         for(let i=0;i<segments;i++){const q=(i+.5)/segments,cx=a.x+dx*q,cy=a.y+dy*q,hh=plate*.78;ctx.strokeStyle=i%2?'#7f91d5':'#e4e9ff';ctx.lineWidth=i%2?2.4:1.3;ctx.beginPath();ctx.moveTo(cx+nx*hh,cy+ny*hh);ctx.lineTo(cx-nx*hh,cy-ny*hh);ctx.stroke();}
         ctx.globalAlpha=.72*alpha;ctx.strokeStyle='#ffcf70';ctx.setLineDash([10,8]);ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(a.x+nx*plate*.58,a.y+ny*plate*.58);ctx.lineTo(b.x+nx*plate*.58,b.y+ny*plate*.58);ctx.stroke();ctx.setLineDash([]);
+      }else if(style==='fracture'){
+        const zig=6,amp=Math.min(18,w*.82);ctx.globalCompositeOperation='source-over';ctx.shadowBlur=10;ctx.shadowColor=beam.color;ctx.strokeStyle='#151c35';ctx.globalAlpha=.92*alpha;ctx.lineWidth=w*1.25;ctx.beginPath();ctx.moveTo(a.x,a.y);for(let i=1;i<=zig;i++){const q=i/zig,side=i===zig?0:(i%2?1:-1),x=a.x+dx*q+nx*amp*side,y=a.y+dy*q+ny*amp*side;ctx.lineTo(x,y);}ctx.stroke();
+        ctx.strokeStyle=beam.color;ctx.globalAlpha=.84*alpha;ctx.lineWidth=Math.max(2,w*.34);ctx.beginPath();ctx.moveTo(a.x,a.y);for(let i=1;i<=zig;i++){const q=i/zig,side=i===zig?0:(i%2?1:-1),x=a.x+dx*q+nx*amp*side,y=a.y+dy*q+ny*amp*side;ctx.lineTo(x,y);}ctx.stroke();
+        ctx.strokeStyle='#ffcf70';ctx.globalAlpha=.52*alpha;ctx.lineWidth=1.4;for(let i=1;i<zig;i+=2){const q=i/zig,x=a.x+dx*q,y=a.y+dy*q;ctx.beginPath();ctx.moveTo(x-nx*w*.55,y-ny*w*.55);ctx.lineTo(x+nx*w*.55,y+ny*w*.55);ctx.stroke();}
       }else if(style==='rift'){
         ctx.globalAlpha=.78*alpha;ctx.strokeStyle=beam.color;ctx.lineWidth=w*1.15;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
         ctx.strokeStyle='#ffffff';ctx.globalAlpha=.66*alpha;ctx.lineWidth=Math.max(1,w*.22);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
