@@ -53,7 +53,7 @@
   function applyEmergencyResolution(enabled){
     if(enabled===emergencyResolution)return;
     emergencyResolution=enabled;
-    // Pressure may reduce particle budgets and GPU tick rate, never world resolution.
+    // Emergency rendering follows measured frame debt, never object count alone and never world resolution.
     const scaleChanged=(Number(window.stackfallResolutionScale)||1)!==1;
     window.stackfallResolutionScale=1;
     if(scaleChanged)resize();
@@ -82,7 +82,7 @@
     performanceTier=slowDebt>=5.5?2:slowDebt>=2?1:0;
     syncResolution(seconds);
     const proactiveLimit=compactDevice()?140:180;
-    if(!emergencyResolution&&pressureScore()>proactiveLimit)applyEmergencyResolution(true);
+    if(pressureScore()>proactiveLimit&&frameMs>26)slowDebt=Math.min(12,slowDebt+seconds*.22);
   }
   function observeSimulationFrame(dt){
     const serial=Number(window.__stackfallRenderFrameSerial)||0;
