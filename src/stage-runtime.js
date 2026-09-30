@@ -289,7 +289,7 @@
   }
   function stageTwoLater(e,api,ms,fn){scheduleWeaponAction(ms,()=>{if(stageBossSignatureAlive(e,api))fn();});}
   function stageTwoLobeDischarge(e,api,phase,cycle,damage,pred,later=(ms,fn)=>stageTwoLater(e,api,ms,fn)){
-    const lobes=5,base=(e.phase||0)*.16+cycle*.31,radius=e.r*(.82+phase*.05);e.stageNebulaBeatUntil=(state.time||0)+1.05;e.stageNebulaDischargeCycle=cycle;
+    const lobes=5,base=(e.phase||0)*.16+cycle*.31,radius=e.r*(.82+phase*.05);e.stageNebulaBeatUntil=(state.time||0)+1.05;e.stageNebulaDischargeCycle=cycle;e.stageNebulaDischargeAngle=base;
     for(let i=0;i<lobes;i++)later(i*115,()=>{
       e.stageNebulaActiveLobe=i;e.stageNebulaBeatUntil=(state.time||0)+.34;const a=base+i*TAU/lobes,x=e.x+Math.cos(a)*radius,y=e.y+Math.sin(a)*radius,aim=Math.atan2(pred.y-y,pred.x-x),spread=phase>=3?.10:.075;
       const count=phase>=2?3:2;for(let shot=0;shot<count;shot++){const off=(shot-(count-1)/2)*spread;spawnEnemyProjectile(x,y,aim+off,178+phase*18,damage*(phase>=3?.49:.44),shot%2?'#ff8fd8':'#8cecff',7.2+phase*.65,5.4,'ion-globule');}
