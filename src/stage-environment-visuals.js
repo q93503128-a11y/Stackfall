@@ -62,6 +62,14 @@
     if(t.environmentFamily==='bloom')drawBloomZone(t,p,progress,pulse);else if(t.environmentFamily==='array')drawArrayZone(t,p,progress,pulse);else if(t.environmentVariant==='collapse-pulse')drawCollapseRouteZone(t,p,progress,pulse);else drawRouteZone(t,p,progress,pulse);
     ctx.restore();
   }
+  function drawStageTwoIonShear(t,p,progress){
+    const x2=p.x+Math.cos(t.a)*t.length,y2=p.y+Math.sin(t.a)*t.length,dx=Math.cos(t.a),dy=Math.sin(t.a),nx=-dy,ny=dx,deep=t.environmentVariant==='deep-shear',half=Math.max(deep?18:13,t.width*(deep?.90:.72)),now=performance.now(),flow=(now*.00022+(t.phase||0))%1;
+    ctx.globalCompositeOperation='lighter';ctx.lineCap='round';ctx.lineJoin='round';
+    const grad=ctx.createLinearGradient(p.x,p.y,x2,y2);grad.addColorStop(0,'rgba(90,230,255,.10)');grad.addColorStop(.42,deep?'rgba(255,113,220,.30)':'rgba(117,229,255,.26)');grad.addColorStop(.72,deep?'rgba(118,220,255,.26)':'rgba(255,129,218,.20)');grad.addColorStop(1,'rgba(133,111,255,.08)');
+    ctx.globalAlpha=.36+.24*progress;ctx.strokeStyle=grad;ctx.lineWidth=half*2.15;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.bezierCurveTo(lerp(p.x,x2,.32)+nx*half*.55,lerp(p.y,y2,.32)+ny*half*.55,lerp(p.x,x2,.68)-nx*half*.45,lerp(p.y,y2,.68)-ny*half*.45,x2,y2);ctx.stroke();
+    ctx.globalAlpha=.76;ctx.strokeStyle=deep?'rgba(255,226,250,.76)':'rgba(220,250,255,.72)';ctx.lineWidth=deep?3.4:2.3;ctx.beginPath();ctx.moveTo(p.x+nx*half*.10,p.y+ny*half*.10);ctx.bezierCurveTo(lerp(p.x,x2,.34)+nx*half*.36,lerp(p.y,y2,.34)+ny*half*.36,lerp(p.x,x2,.66)-nx*half*.30,lerp(p.y,y2,.66)-ny*half*.30,x2-nx*half*.08,y2-ny*half*.08);ctx.stroke();
+    const motes=deep?9:6;for(let i=0;i<motes;i++){const q=(flow+i/motes)%1,x=lerp(p.x,x2,q)+nx*Math.sin(q*Math.PI*2+i)*half*.46,y=lerp(p.y,y2,q)+ny*Math.sin(q*Math.PI*2+i)*half*.46;ctx.globalAlpha=.25+.45*progress;ctx.fillStyle=i%2?'#ff91d9':'#8cecff';ctx.beginPath();ctx.ellipse(x,y,deep?5:3.5,deep?2.1:1.6,t.a,0,TAU);ctx.fill();}
+  }
   function drawRouteLine(t,p,progress){
     const x2=p.x+Math.cos(t.a)*t.length,y2=p.y+Math.sin(t.a)*t.length,nx=-Math.sin(t.a),ny=Math.cos(t.a),half=Math.max(7,t.width*.62),steps=Math.max(3,Math.min(9,Math.round(t.length/85)));
     ctx.strokeStyle='rgba(119,223,255,.58)';ctx.lineWidth=1.4;ctx.setLineDash([22,13]);ctx.lineDashOffset=-performance.now()/55;for(const side of[-1,1]){ctx.beginPath();ctx.moveTo(p.x+nx*half*side,p.y+ny*half*side);ctx.lineTo(x2+nx*half*side,y2+ny*half*side);ctx.stroke();}
@@ -87,7 +95,7 @@
   }
   function drawEnvironmentLine(t){
     const p=worldToScreen(t.x,t.y),progress=1-clamp(t.life/Math.max(.001,t.max),0,1);ctx.save();ctx.globalAlpha=.9;ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowBlur=8;ctx.shadowColor=familyColor(t.environmentFamily);
-    if(t.environmentFamily==='bloom')drawBloomLine(t,p,progress);else if(t.environmentFamily==='array')drawArrayLine(t,p,progress);else if(t.environmentVariant==='collapse-pulse')drawCollapseRouteLine(t,p,progress);else drawRouteLine(t,p,progress);
+    if(t.environmentStageId==='stage-02'&&(t.environmentVariant==='ion-shear'||t.environmentVariant==='deep-shear'))drawStageTwoIonShear(t,p,progress);else if(t.environmentFamily==='bloom')drawBloomLine(t,p,progress);else if(t.environmentFamily==='array')drawArrayLine(t,p,progress);else if(t.environmentVariant==='collapse-pulse')drawCollapseRouteLine(t,p,progress);else drawRouteLine(t,p,progress);
     ctx.restore();
   }
   function drawEnvironmentTelegraphs(list){for(const t of list){if(!t||t.life<=-.28)continue;t.type==='circle'?drawEnvironmentZone(t):drawEnvironmentLine(t);}}
@@ -112,10 +120,10 @@
   const baseLineImpact=triggerLineImpact;
   triggerLineImpact=function stageEnvironmentLineImpact(t,x2,y2){
     if(t?.impactStyle!=='stage-env-line')return baseLineImpact(t,x2,y2);
-    const family=t.environmentFamily,color=familyColor(family),alt=familyColor(family,true),collapse=family==='route'&&t.environmentVariant==='collapse-pulse',steps=family==='array'?7:5,width=Math.max(3,t.width*(family==='bloom'?.62:.48));
-    if(state.entities.beams.length<entityCap('beams'))state.entities.beams.push({x1:t.x,y1:t.y,x2,y2,life:collapse?.28:.16,max:collapse?.28:.16,color:collapse?'#cbd5f4':color,width:collapse?Math.max(7,t.width*.58):width,...(collapse?{stageBossAttack:'fracture'}:{})});
-    for(let i=0;i<=steps;i++){const q=i/steps,x=lerp(t.x,x2,q),y=lerp(t.y,y2,q);if(i%2===0)shockwave(x,y,i%4?color:alt,family==='route'?18:24,.16,1.3);spawnParticle(x,y,i%2?color:alt,1,52,2.2);}
-    state.camera.shake=Math.max(state.camera.shake,clamp(1.2+(t.damage||0)*.03,1.2,3.8));state.flash=Math.max(state.flash,.025);audio.hit?.(false,'stage-environment');
+    const family=t.environmentFamily,color=familyColor(family),alt=familyColor(family,true),collapse=family==='route'&&t.environmentVariant==='collapse-pulse',ion=t.environmentStageId==='stage-02'&&(t.environmentVariant==='ion-shear'||t.environmentVariant==='deep-shear'),deep=t.environmentVariant==='deep-shear',steps=ion?(deep?9:7):family==='array'?7:5,width=Math.max(3,t.width*(ion?(deep?.82:.68):family==='bloom'?.62:.48));
+    if(state.entities.beams.length<entityCap('beams'))state.entities.beams.push({x1:t.x,y1:t.y,x2,y2,life:collapse?.28:ion?.26:.16,max:collapse?.28:ion?.26:.16,color:ion?(deep?'#ff82d9':'#86edff'):collapse?'#cbd5f4':color,width:ion?Math.max(9,t.width*(deep?.86:.72)):collapse?Math.max(7,t.width*.58):width,...(collapse?{stageBossAttack:'fracture'}:ion?{stageBossAttack:'ion-shear',bend:deep?1.35:.75}:{})});
+    for(let i=0;i<=steps;i++){const q=i/steps,x=lerp(t.x,x2,q),y=lerp(t.y,y2,q),pulseColor=ion?(i%2?'#ff91d9':'#8cecff'):(i%4?color:alt);if(i%2===0)shockwave(x,y,pulseColor,ion?(deep?31:24):family==='route'?18:24,ion?.20:.16,ion?1.8:1.3);spawnParticle(x,y,pulseColor,ion?2:1,ion?82:52,ion?3:2.2);}
+    state.camera.shake=Math.max(state.camera.shake,ion?clamp(2.1+(t.damage||0)*.045,2.1,5.2):clamp(1.2+(t.damage||0)*.03,1.2,3.8));state.flash=Math.max(state.flash,ion?.05:.025);audio.hit?.(ion,'stage-environment');
   };
 
   window.stackfallStageEnvironmentVisualDiagnostics=()=>({active:state.entities.telegraphs.filter(isEnvironment).length,families:[...new Set(state.entities.telegraphs.filter(isEnvironment).map(t=>t.environmentFamily))]});
