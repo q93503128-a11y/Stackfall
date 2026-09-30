@@ -13,7 +13,7 @@ const checks=[
  ['Nebula Wisp has a dedicated common-enemy silhouette',entities.includes("v==='nebula-wisp'")],
  ['Nebula Heart has a dedicated boss silhouette',elite.includes("f==='nebula-heart'")],
  ['Nebula Heart uses the shared stage-boss dispatcher',bosses.includes("enemy.kind==='stage-boss'&&typeof window.updateStageBossSkill==='function'")&&shared.includes('window.updateStageBossSkill=function')&&runtime.includes("eventVariant:'stage02-heart'")],
- ['Nebula Heart keeps multi-phase shears and wisp summons',runtime.includes('hp<.32?3:hp<.66?2:1')&&runtime.includes("api.spawnBurst('nebula-wisp'")&&runtime.includes('rawLine(p.x-dx*half')],
+ ['Nebula Heart uses authored phase motion and heart-lobe pressure',runtime.includes('bossSkill:null')&&shared.includes("'stage-02':[.68,.32]")&&shared.includes("'stage-02':(e,p)=>stageBossOrbit")&&shared.includes('lobes=5+phase')],
  ['Stage 2 defeat reuses the shared staged victory cinematic',shared.includes('window.handleStageBossDefeated=function')&&shared.includes('beginStageVictory(enemy)')],
  ['Stage 2 unlocks Nebula Boomerang and progression currency',catalog.includes("rewards:[{type:'weapon',key:'arc'}")&&catalog.includes("key:'stardust',amount:180")],
  ['Stage 2 adapter loads after the shared stage runtime',index.indexOf('src/stage-runtime.js')<index.indexOf('src/stage02-runtime.js')],
