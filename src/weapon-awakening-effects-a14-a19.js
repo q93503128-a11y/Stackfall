@@ -124,7 +124,8 @@
   fireReflector=function celestialMirrorReflector(n,echoed=false){
     const before=new Map();for(const p of state.entities.enemyProjectiles)if(p&&p.life>0)before.set(p.id,{x:p.x,y:p.y,a:Math.atan2(p.y-player.y,p.x-player.x)});
     baseFireReflector(n,echoed);
-    const reflected=[];for(const [id,snap] of before){const p=state.entities.enemyProjectiles.find(row=>row?.id===id);if(!p||p.life<=0)reflected.push(snap);}
+    const aliveAfter=new Set();for(const p of state.entities.enemyProjectiles)if(p&&p.life>0)aliveAfter.add(p.id);
+    const reflected=[];for(const [id,snap] of before)if(!aliveAfter.has(id))reflected.push(snap);
     if(state.weaponAugments?.mirror)for(const snap of reflected){const target=nearestEnemy(snap.x,snap.y,weaponRange('mirror')),a=target?Math.atan2(target.y-snap.y,target.x-snap.x):snap.a;mirrorTwinRays(snap,a,n,1);}
     if(!awake('mirror')||echoed)return;
     chargeMirrorFace(Number.isFinite(player.facingAngle)?player.facingAngle:0);
