@@ -65,5 +65,7 @@
 
 #unlockManagementToggle{position:relative;display:block;width:100%;padding-right:46px}
 #unlockManagementToggle .unlock-management-title{display:block!important;color:inherit!important;font-size:inherit!important;letter-spacing:normal!important}
-#unlockManagementToggle .unlock-management-title i{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:24px;height:24px;font-style:normal;font-size:18px;line-height:1;color:#83eaff;transition:transform .18s}
-#unlockManagementSection:not(.collapsed) #unlockManagementToggle .unlock-management-title i{transform:translateY(-50%) rotate(180deg)}
+#unlockManagementSection:not(.collapsed) 
+#unlockManagementToggle>.unlock-disclosure{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:26px;height:26px;margin:0;border-radius:8px;color:#83eaff;font-style:normal;font-size:19px;line-height:1;pointer-events:none;transition:transform .18s,background .18s}
+#unlockManagementToggle:hover>.unlock-disclosure{background:rgba(124,232,255,.07)}
+#unlockManagementSection:not(.collapsed) #unlockManagementToggle>.unlock-disclosure{transform:translateY(-50%) rotate(180deg)}
