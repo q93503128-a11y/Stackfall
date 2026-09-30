@@ -13,7 +13,7 @@ const checks=[
  ['Glasswing has a dedicated common-enemy silhouette',entities.includes("v==='glass-wing'")&&entities.includes("r*1.28")],
  ['Refracted Reliquary has a dedicated boss silhouette',elite.includes("f==='prism-reliquary'")&&elite.includes('for(let i=0;i<6;i++)')],
  ['Stage 3 boss uses the shared stage dispatcher',bosses.includes("enemy.kind==='stage-boss'&&typeof window.updateStageBossSkill==='function'")&&shared.includes('window.updateStageBossSkill=function')&&runtime.includes("eventVariant:'stage03-reliquary'")],
- ['Stage 3 boss has multi-phase lattice pressure and Glasswing summons',runtime.includes('hp<.30?3:hp<.64?2:1')&&runtime.includes("api.spawnBurst('glass-wing'")&&runtime.includes('rawLine(p.x-dx*half')],
+ ['Stage 3 boss uses authored prism phases and refraction',runtime.includes('bossSkill:null')&&shared.includes("'stage-03':[.52]")&&shared.includes("'stage-03':(e,p)=>{")&&shared.includes("'prism-reflect'")],
  ['Stage 3 unlocks Constellation Prism and first-clear currency',catalog.includes("rewards:[{type:'weapon',key:'prism'}")&&catalog.includes("key:'stardust',amount:220")&&catalog.includes("key:'coreShard',amount:1,firstClearOnly:true")],
  ['Stage 3 adapter is loaded after Stage 2',index.indexOf('src/stage02-runtime.js')<index.indexOf('src/stage03-runtime.js')],
  ['all supported languages include Stage 3 combat copy',(lang.match(/'stage03\.enemy\.glassWing'/g)||[]).length>=6&&(lang.match(/'stage03\.objective\.boss'/g)||[]).length>=6]
