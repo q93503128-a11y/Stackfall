@@ -31,7 +31,7 @@ function spaceNebulaSprite(index){const palette=SPACE_NEBULA_PALETTES[index]||SP
 function spacePlanetSprite(){return backgroundSprite('space-planet',256,256,(g,w,h)=>{const c=w/2,grad=g.createRadialGradient(c*.66,c*.65,2,c,c,c);grad.addColorStop(0,'rgba(171,188,255,.18)');grad.addColorStop(.48,'rgba(68,73,145,.10)');grad.addColorStop(1,'rgba(6,8,24,0)');g.fillStyle=grad;g.fillRect(0,0,w,h);});}
 function forgeRaySprite(length){const width=Math.max(24,Math.ceil(length-88));return backgroundSprite('forge-ray',width,18,(g,w,h)=>{const grad=g.createLinearGradient(7,0,w,0);grad.addColorStop(0,'rgba(255,225,125,.42)');grad.addColorStop(.3,'rgba(255,94,32,.19)');grad.addColorStop(1,'rgba(255,50,20,0)');g.fillStyle=grad;g.beginPath();g.moveTo(0,2);g.lineTo(w,h/2);g.lineTo(0,h-2);g.closePath();g.fill();});}
 const CONSTELLATION_POINT_X=new Float64Array(17),CONSTELLATION_POINT_Y=new Float64Array(17);
-const STAR_TILE_CACHE={key:'',tiles:[]};
+const STAR_TILE_CACHE=new Map(),STAR_TILE_CACHE_LIMIT=8;
 function makeStarTile(layer,palette,stride,layerIndex){
   const surface=typeof OffscreenCanvas==='function'?new OffscreenCanvas(layer.size,layer.size):document.createElement('canvas');
   surface.width=surface.height=layer.size;
@@ -46,9 +46,11 @@ function makeStarTile(layer,palette,stride,layerIndex){
 }
 function drawStars(palette=['#f6f8ff','#8fe9ff','#cdbfff'],density=1){
   const now=performance.now(),tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,tierStride=tier===2?3:tier===1?2:1,densityStride=Math.max(1,Math.round(1/Math.max(.08,density))),stride=Math.max(tierStride,densityStride),colors=Array.isArray(palette)?palette:['#f6f8ff','#8fe9ff','#cdbfff'],key=`${colors.slice(0,3).join('|')}|${stride}`;
-  if(STAR_TILE_CACHE.key!==key){STAR_TILE_CACHE.key=key;STAR_TILE_CACHE.tiles=STAR_LAYERS.map((layer,index)=>makeStarTile(layer,colors,stride,index));}
+  let tiles=STAR_TILE_CACHE.get(key);
+  if(!tiles){tiles=STAR_LAYERS.map((layer,index)=>makeStarTile(layer,colors,stride,index));STAR_TILE_CACHE.set(key,tiles);if(STAR_TILE_CACHE.size>STAR_TILE_CACHE_LIMIT){const oldest=STAR_TILE_CACHE.keys().next().value;STAR_TILE_CACHE.delete(oldest);}}
+  else{STAR_TILE_CACHE.delete(key);STAR_TILE_CACHE.set(key,tiles);}
   for(let li=0;li<STAR_LAYERS.length;li++){
-    const layer=STAR_LAYERS[li],tile=layer.size,ox=wrap(player.x*layer.parallax,tile),oy=wrap(player.y*layer.parallax,tile),surface=STAR_TILE_CACHE.tiles[li];
+    const layer=STAR_LAYERS[li],tile=layer.size,ox=wrap(player.x*layer.parallax,tile),oy=wrap(player.y*layer.parallax,tile),surface=tiles[li];
     let startX=-ox-100,startY=-oy-100;while(startX<=-tile)startX+=tile;while(startY<=-tile)startY+=tile;
     ctx.globalAlpha=.96+.04*Math.sin(now*.0008+li*1.7);
     for(let y=startY;y<vh+100;y+=tile)for(let x=startX;x<vw+100;x+=tile)ctx.drawImage(surface,Math.round(x),Math.round(y));
