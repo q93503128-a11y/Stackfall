@@ -55,25 +55,25 @@
   const STAGE_ENCOUNTER_SCHEDULES=Object.freeze(Object.fromEntries(Array.from({length:18},(_,i)=>[i+1,buildStageEncounterSchedule(i+1)])));
   function stageEncounterPlan(stage){return STAGE_ENCOUNTER_SCHEDULES[Math.max(1,Number(stage?.order)||1)]||STAGE_ENCOUNTER_SCHEDULES[1];}
   const STAGE_WORLD_EVENT_PLAN=Object.freeze({
-    // First appearances are deliberately staggered so each few stages adds a new world-event grammar.
-    1:Object.freeze([{at:.30,type:'vault'},{at:.68,type:'vault'}]),
-    2:Object.freeze([{at:.28,type:'vault'},{at:.66,type:'vault'}]),
-    3:Object.freeze([{at:.20,type:'vault'},{at:.49,type:'crash'},{at:.77,type:'vault'}]),
-    4:Object.freeze([{at:.22,type:'distress'},{at:.52,type:'vault'},{at:.78,type:'crash'}]),
-    5:Object.freeze([{at:.20,type:'meteor'},{at:.47,type:'distress'},{at:.73,type:'crash'}]),
-    6:Object.freeze([{at:.14,type:'vault'},{at:.34,type:'crash'},{at:.55,type:'distress'},{at:.76,type:'meteor'}]),
-    7:Object.freeze([{at:.18,type:'predator'},{at:.46,type:'vault'},{at:.73,type:'distress'}]),
-    8:Object.freeze([{at:.16,type:'predator'},{at:.38,type:'crash'},{at:.61,type:'meteor'},{at:.79,type:'vault'}]),
-    9:Object.freeze([{at:.18,type:'void'},{at:.40,type:'vault'},{at:.62,type:'crash'},{at:.80,type:'predator'}]),
-    10:Object.freeze([{at:.16,type:'distress'},{at:.37,type:'meteor'},{at:.58,type:'void'},{at:.78,type:'crash'}]),
-    11:Object.freeze([{at:.14,type:'predator'},{at:.34,type:'vault'},{at:.54,type:'meteor'},{at:.74,type:'void'}]),
-    12:Object.freeze([{at:.12,type:'crash'},{at:.29,type:'predator'},{at:.46,type:'vault'},{at:.63,type:'meteor'},{at:.80,type:'void'}]),
-    13:Object.freeze([{at:.16,type:'relay'},{at:.35,type:'vault'},{at:.55,type:'crash'},{at:.75,type:'void'}]),
-    14:Object.freeze([{at:.14,type:'relay'},{at:.31,type:'distress'},{at:.48,type:'meteor'},{at:.65,type:'predator'},{at:.81,type:'vault'}]),
-    15:Object.freeze([{at:.14,type:'storm'},{at:.30,type:'relay'},{at:.47,type:'crash'},{at:.63,type:'meteor'},{at:.79,type:'void'}]),
-    16:Object.freeze([{at:.12,type:'relay'},{at:.27,type:'storm'},{at:.42,type:'vault'},{at:.57,type:'predator'},{at:.73,type:'crash'}]),
-    17:Object.freeze([{at:.10,type:'storm'},{at:.24,type:'relay'},{at:.38,type:'meteor'},{at:.52,type:'distress'},{at:.67,type:'void'},{at:.81,type:'crash'}]),
-    18:Object.freeze([{at:.09,type:'vault'},{at:.21,type:'relay'},{at:.33,type:'storm'},{at:.45,type:'crash'},{at:.57,type:'predator'},{at:.69,type:'meteor'},{at:.82,type:'void'}])
+    // First appearances: S1 Vault, S3 Crash, S4 Distress, S6 Meteor, S8 Predator, S10 Void, S12 Relay, S14 Storm.
+    1:Object.freeze([{at:.34,type:'vault'},{at:.72,type:'vault'}]),
+    2:Object.freeze([{at:.26,type:'vault'},{at:.63,type:'vault'}]),
+    3:Object.freeze([{at:.20,type:'vault'},{at:.50,type:'crash'},{at:.78,type:'vault'}]),
+    4:Object.freeze([{at:.20,type:'distress'},{at:.49,type:'vault'},{at:.76,type:'crash'}]),
+    5:Object.freeze([{at:.18,type:'vault'},{at:.46,type:'distress'},{at:.74,type:'crash'}]),
+    6:Object.freeze([{at:.14,type:'meteor'},{at:.34,type:'vault'},{at:.55,type:'crash'},{at:.77,type:'distress'}]),
+    7:Object.freeze([{at:.16,type:'distress'},{at:.43,type:'meteor'},{at:.72,type:'vault'}]),
+    8:Object.freeze([{at:.14,type:'predator'},{at:.34,type:'crash'},{at:.56,type:'meteor'},{at:.78,type:'vault'}]),
+    9:Object.freeze([{at:.15,type:'predator'},{at:.37,type:'distress'},{at:.59,type:'crash'},{at:.80,type:'meteor'}]),
+    10:Object.freeze([{at:.13,type:'void'},{at:.33,type:'vault'},{at:.54,type:'predator'},{at:.76,type:'crash'}]),
+    11:Object.freeze([{at:.13,type:'meteor'},{at:.32,type:'void'},{at:.52,type:'distress'},{at:.74,type:'predator'}]),
+    12:Object.freeze([{at:.11,type:'relay'},{at:.28,type:'vault'},{at:.46,type:'crash'},{at:.64,type:'void'},{at:.81,type:'meteor'}]),
+    13:Object.freeze([{at:.12,type:'relay'},{at:.31,type:'predator'},{at:.51,type:'void'},{at:.73,type:'crash'}]),
+    14:Object.freeze([{at:.10,type:'storm'},{at:.27,type:'relay'},{at:.44,type:'distress'},{at:.62,type:'meteor'},{at:.80,type:'vault'}]),
+    15:Object.freeze([{at:.10,type:'storm'},{at:.25,type:'relay'},{at:.41,type:'crash'},{at:.58,type:'predator'},{at:.76,type:'void'}]),
+    16:Object.freeze([{at:.09,type:'relay'},{at:.23,type:'storm'},{at:.38,type:'vault'},{at:.54,type:'meteor'},{at:.70,type:'predator'},{at:.83,type:'crash'}]),
+    17:Object.freeze([{at:.08,type:'storm'},{at:.21,type:'relay'},{at:.34,type:'distress'},{at:.48,type:'meteor'},{at:.62,type:'void'},{at:.77,type:'crash'}]),
+    18:Object.freeze([{at:.07,type:'vault'},{at:.19,type:'relay'},{at:.31,type:'storm'},{at:.43,type:'crash'},{at:.55,type:'predator'},{at:.67,type:'meteor'},{at:.79,type:'void'}])
   });
   function stageWorldEventPlan(stage){return STAGE_WORLD_EVENT_PLAN[Math.max(1,Math.min(18,Number(stage?.order)||1))]||STAGE_WORLD_EVENT_PLAN[1];}
   function updateStageWorldEvents(run,progress){
