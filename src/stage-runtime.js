@@ -466,6 +466,34 @@
   window.stackfallEndlessFamilyDiagnostics=()=>{const pools=rebuildEndlessFamilyCache();return{thresholds:{route:75,bloom:240,array:420},counts:{route:pools.route.length,bloom:pools.bloom.length,array:pools.array.length},unlockGated:false};};
   const baseSpawning=updateSpawning;updateSpawning=function stageAwareSpawning(dt){if(isStage()){updateStage(dt);return;}baseSpawning(dt);};
   const baseReset=resetGame;resetGame=function stageAwareReset(){const config=window.stackfallCurrentRunConfig?.();baseReset();clearStageUi();if(config?.mode!=='stage'){state.stageRun=null;return;}const stage=config.stage,def=stageDefinition(stage?.id);if(!stage||!def){state.stageRun=null;return;}state.stageRun={stage,eventsTriggered:{},worldEventsTriggered:{},encountersTriggered:{},encounterBags:{},bossSpawned:false,bossId:null,bossSnapshot:null,completed:false,completedAt:null,resultShown:false,lastSpawnBudget:null,lastWorldEvent:null};state.nextApexAt=Infinity;state.mapEventActive=null;state.entities.mapEvents.length=0;state.entities.enemies.length=0;state.entities.enemyProjectiles.length=0;state.realmTheme=def.theme||('stage-'+String(stage.order).padStart(2,'0'));state.spawnTimer=def.initialSpawnTimer??.7;for(const variant of def.startingVariants||[])spawnStageEnemy(stage.id,variant);showBossNotice(localized(stage.title),'STAGE '+String(stage.order).padStart(2,'0'));updateObjective(state.stageRun);def.onStart?.(apiFor(state.stageRun));};
+
+  function resetStageBossStateForDeveloper(run){
+    if(!run)return;
+    run.bossSpawned=false;run.bossId=null;run.bossSnapshot=null;run.completed=false;run.completedAt=null;run.victoryStarted=false;run.resultShown=false;
+    const bossEvent=run.stage?.fixedEvents?.find(event=>event.kind==='boss');
+    if(bossEvent&&run.eventsTriggered)delete run.eventsTriggered[bossEvent.id];
+    state.stageVictory=null;
+  }
+  window.stackfallDevSpawnStageBossNow=function(stageId=null){
+    const requested=window.stackfallStageById?.(stageId)||window.stackfallCurrentRunConfig?.()?.stage;
+    if(!requested||!stageDefinition(requested.id))return{ok:false,reason:'stage-missing'};
+    const current=window.stackfallCurrentRunConfig?.(),sameStage=current?.mode==='stage'&&current.stage?.id===requested.id&&state.stageRun?.stage?.id===requested.id&&!state.stageRun?.completed;
+    if(!sameStage){state.runSelection={mode:'stage',stageId:requested.id};resetGame();}
+    const run=stageRuntime();
+    if(!run||run.stage?.id!==requested.id)return{ok:false,reason:'stage-runtime-missing'};
+    clearPendingCombatActions();clearRunUiActions?.();window.closeMapEventOverlays?.();
+    state.mapEventActive=null;if(Array.isArray(state.entities.mapEvents))state.entities.mapEvents.length=0;
+    for(const key of ['enemies','enemyProjectiles','projectiles','curves','wells','beams','particles','shockwaves','telegraphs','gems','texts','vacuumSeeds','phaseMines','guidedMissiles','gateNetworks']){
+      const list=state.entities[key];if(Array.isArray(list))list.length=0;
+    }
+    state.bossActiveId=null;state.apexActiveId=null;state.pendingApexForm=null;state.apexArena=null;
+    resetStageBossStateForDeveloper(run);
+    state.mode='playing';state.time=Math.max(0,Number(run.stage.boss?.spawnAt||run.stage.durationSeconds||60));state.spawnTimer=0;
+    ui.choice?.classList.add('hidden');ui.pauseScreen?.classList.add('hidden');ui.gameOver?.classList.add('hidden');document.querySelector('#worldEventScreen')?.classList.add('hidden');document.querySelector('#bossRewardScreen')?.classList.add('hidden');document.querySelector('#apexRewardScreen')?.classList.add('hidden');
+    const boss=spawnStageBoss();
+    if(!boss)return{ok:false,reason:'spawn-blocked',stageId:requested.id};
+    updateObjective(run);return{ok:true,stageId:requested.id,bossId:boss.id,form:boss.eliteForm||boss.variant||null};
+  };
   completeMap?.addEventListener('click',()=>{completeScreen.classList.add('hidden');showMainMenu();window.openStackfallGalaxyMap?.();});completeMenu?.addEventListener('click',()=>{completeScreen.classList.add('hidden');showMainMenu();});
 
   registerStageRuntime('stage-01',{
