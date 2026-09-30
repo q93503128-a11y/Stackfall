@@ -151,6 +151,7 @@
     };
     if(e.stageBossTier==='constellation'){e.hp*=1.18;e.damage*=1.06;e.skillCd*=.92;e.burstCd*=.92;e.pulseCd*=.92;}e.maxHp=e.hp;
     if(stage.id==='stage-01'){e.stageOneAttackCd=1.7;e.contactSafeUntil=(state.time||0)+1.2;e.stageGateCoreOpen=false;stabilizeRealmTheme?.('stage-01-warden');}
+    if(stage.id==='stage-02'){e.stageTwoAttackCd=1.55;e.stageNebulaBeatUntil=0;e.stageNebulaInhaleUntil=0;e.stageNebulaExhaleUntil=0;e.stageNebulaActiveLobe=-1;e.stageNebulaFlowDir=e.id%2?1:-1;}
     state.entities.enemies.push(e);state.bossActiveId=e.id;state.bossIndex++;run.bossSpawned=true;run.bossId=e.id;run.bossSnapshot={id:e.id,x:e.x,y:e.y,color:e.color,kind:'stage-boss'};
     if(!options.suppressNotice)showBossNotice(e.name,tr(profile.warningKey));audio.boss();shockwave(e.x,e.y,e.color,profile.spawnShockwave||195,.74,5);return e;
   }
@@ -286,11 +287,42 @@
     audio.stageAttack?.('stage-01','ram-charge');rawLine(e.x,e.y,e.x+Math.cos(aim)*length,e.y+Math.sin(aim)*length,width,0,'#ffcf70',1.02,'stage1-warning-only');e.stageRamWindupUntil=(state.time||0)+1.02;e.stageRamAngle=aim;e.contactSafeUntil=Math.max(e.contactSafeUntil||0,(state.time||0)+.82);
     scheduleWeaponAction(980,()=>{if(!stageBossSignatureAlive(e,api)||e.stageOneActionToken!==token)return;const liveAim=Math.atan2(ty-e.y,tx-e.x);e.stageRamAngle=liveAim;e.stageRamUntil=(state.time||0)+.72;e.dash=.72;e.dashX=Math.cos(liveAim)*(610+phase*65);e.dashY=Math.sin(liveAim)*(610+phase*65);e.contactSafeUntil=state.time||0;audio.stageAttack?.('stage-01','ram-release');shockwave(e.x,e.y,'#ffcf70',92,.32,4);spawnParticle(e.x,e.y,'#d7ddf5',12,190,4);});
   }
+  function stageTwoLater(e,api,ms,fn){scheduleWeaponAction(ms,()=>{if(stageBossSignatureAlive(e,api))fn();});}
+  function stageTwoLobeDischarge(e,api,phase,cycle,damage,pred,later=(ms,fn)=>stageTwoLater(e,api,ms,fn)){
+    const lobes=5,base=(e.phase||0)*.16+cycle*.31,radius=e.r*(.82+phase*.05);e.stageNebulaBeatUntil=(state.time||0)+1.05;e.stageNebulaDischargeCycle=cycle;
+    for(let i=0;i<lobes;i++)later(i*115,()=>{
+      e.stageNebulaActiveLobe=i;e.stageNebulaBeatUntil=(state.time||0)+.34;const a=base+i*TAU/lobes,x=e.x+Math.cos(a)*radius,y=e.y+Math.sin(a)*radius,aim=Math.atan2(pred.y-y,pred.x-x),spread=phase>=3?.10:.075;
+      const count=phase>=2?3:2;for(let shot=0;shot<count;shot++){const off=(shot-(count-1)/2)*spread;spawnEnemyProjectile(x,y,aim+off,178+phase*18,damage*(phase>=3?.49:.44),shot%2?'#ff8fd8':'#8cecff',7.2+phase*.65,5.4,'ion-globule');}
+      shockwave(x,y,i%2?'#ff9cdb':'#9aefff',32+phase*4,.18,1.4);
+    });
+    later(720,()=>{e.stageNebulaActiveLobe=-1;});
+  }
+  function stageTwoInhaleExhale(e,api,phase,cycle,damage,pred,later=(ms,fn)=>stageTwoLater(e,api,ms,fn)){
+    const now=state.time||0;e.stageNebulaInhaleUntil=now+.86;e.stageNebulaExhaleUntil=0;e.stageNebulaActiveLobe=-1;
+    for(let step=1;step<=6;step++)later(step*105,()=>{
+      const dx=e.x-player.x,dy=e.y-player.y,dist=Math.hypot(dx,dy)||1;if(dist>88&&dist<620){const pull=(9+phase*2.6)*(1-step*.035);player.x+=dx/dist*pull;player.y+=dy/dist*pull;}
+      if(step%2===0)shockwave(e.x,e.y,step===6?'#ffd8f3':'#8cecff',78+step*16,.14,1.2);
+    });
+    later(760,()=>{
+      e.stageNebulaInhaleUntil=0;e.stageNebulaExhaleUntil=(state.time||0)+.72;e.stageNebulaBeatUntil=(state.time||0)+.72;const aim=Math.atan2(player.y-e.y,player.x-e.x),streams=phase>=3?7:phase>=2?6:5;
+      for(let i=0;i<streams;i++){const side=i-(streams-1)/2,off=side*(phase>=3?.105:.12),speed=205+phase*20-Math.abs(side)*5;spawnEnemyProjectile(e.x,e.y,aim+off,speed,damage*(phase>=3?.58:.54),i%2?'#ff8fd8':'#8cecff',9+phase*.75,5.2,'ion-globule');}
+      shockwave(e.x,e.y,'#ffd8f3',178+phase*22,.34,3.4);spawnParticle(e.x,e.y,'#bdf8ff',12+phase*3,145,4.2);
+    });
+  }
+  function stageTwoCrossCurrent(e,api,phase,cycle,damage,pred,later=(ms,fn)=>stageTwoLater(e,api,ms,fn)){
+    const angle=-.30+Math.sin(cycle*.83)*.48,dx=Math.cos(angle),dy=Math.sin(angle),nx=-dy,ny=dx,lanes=phase>=3?6:5,span=420;
+    e.stageNebulaCurrentAngle=angle;e.stageNebulaCurrentUntil=(state.time||0)+1.25;
+    for(let i=0;i<lanes;i++)later(i*135,()=>{
+      const side=i-(lanes-1)/2,startX=pred.x-dx*span+nx*side*78,startY=pred.y-dy*span+ny*side*78,aim=angle+(i%2?-.035:.035),speed=185+phase*17+(i%3)*8;
+      spawnEnemyProjectile(startX,startY,aim,speed,damage*(phase>=3?.60:.53),i%2?'#ff91d9':'#8cecff',10+phase*.8,5.8,'ion-globule');
+      if(phase>=2&&i%2===0)spawnEnemyProjectile(startX-dx*54,startY-dy*54,aim+.018,speed*.92,damage*.34,'#d9c5ff',6.6,5.8,'ion-globule');
+      shockwave(startX,startY,i%2?'#ff91d9':'#8cecff',30,.15,1.2);
+    });
+  }
+
   const STAGE_APEX_UNIQUE_TECHNIQUES=Object.freeze({
     'stage-01':(e,api,phase,cycle,d,pred,later)=>stageOneShutterClamp(e,api,phase,cycle,d,pred,later),
-    'stage-02':(e,api,phase,cycle,d,pred,later)=>{
-      addCircle(e.x,e.y,118+phase*18,0,'#ff91dc',.58);later(580,()=>{const dx=e.x-player.x,dy=e.y-player.y,dist=Math.hypot(dx,dy)||1;if(dist<560){player.x+=dx/dist*(48+phase*13);player.y+=dy/dist*(48+phase*13);}shockwave(e.x,e.y,'#ffc0eb',210+phase*28,.42,4);const lobes=5+phase;for(let i=0;i<lobes;i++){const a=i*TAU/lobes+cycle*.19,x=e.x+Math.cos(a)*(112+phase*9),y=e.y+Math.sin(a)*(112+phase*9),aim=Math.atan2(player.y-y,player.x-x);spawnEnemyProjectile(x,y,aim,220+phase*18,d*.52,i%2?'#ffc0eb':'#8cecff',5,4.8,'seed-shell');}addCircle(player.x,player.y,62+phase*7,d*.92,'#ff75cb',.48);});
-    },
+    'stage-02':(e,api,phase,cycle,d,pred,later)=>stageTwoInhaleExhale(e,api,phase,cycle,d,pred,later),
     'stage-03':(e,api,phase,cycle,d,pred,later)=>{
       const rr=235+phase*18,pts=Array.from({length:3},(_,i)=>{const a=-Math.PI/2+i*TAU/3+cycle*.18;return{x:pred.x+Math.cos(a)*rr,y:pred.y+Math.sin(a)*rr};});
       for(let i=0;i<3;i++){const p=pts[i],q=pts[(i+1)%3];rawLine(p.x,p.y,q.x,q.y,7,0,i===1?'#a8f4ff':'#dfb2ff',.70+i*.08,'boss-charge');}
@@ -362,8 +394,7 @@
     if(id==='stage-01'){
       stageOneDebrisSalvo(e,api,phase,cycle,damage,pred,later);
     }else if(id==='stage-02'){
-      for(let ring=0;ring<3+phase;ring++)later(ring*165,()=>addCircle(pred.x,pred.y,68+ring*62,damage*(.58+ring*.06),'#ff91dc',.92+ring*.06));
-      later(310,()=>{const lobes=4+phase;for(let i=0;i<lobes;i++){const a=i*TAU/lobes+e.phase*.08,x=e.x+Math.cos(a)*(105+phase*8),y=e.y+Math.sin(a)*(105+phase*8),aim=Math.atan2(pred.y-y,pred.x-x);spawnEnemyProjectile(x,y,aim,205+phase*16,damage*.58,i%2?'#ffc0eb':'#8cecff',5,4.8,'seed-shell');}});
+      stageTwoLobeDischarge(e,api,phase,cycle,damage,pred,later);
     }else if(id==='stage-03'){
       const r=185+phase*18,pts=Array.from({length:3},(_,i)=>({x:pred.x+Math.cos(-Math.PI/2+i*TAU/3)*r,y:pred.y+Math.sin(-Math.PI/2+i*TAU/3)*r}));
       for(let i=0;i<3;i++){const a=pts[i],b=pts[(i+1)%3];stageBossSigLine(a.x,a.y,b.x,b.y,18+phase*2,damage*.78,i===1?'#a8f4ff':'#dfb2ff',1.08);}
@@ -428,6 +459,7 @@
       state.camera.shake=Math.max(state.camera.shake,7+e.stagePhase*2);state.flash=Math.max(state.flash,.08+e.stagePhase*.02);
       shockwave(e.x,e.y,e.color||'#dbe4ff',118+e.stagePhase*28,.46,3+e.stagePhase);
       if(e.eventKind==='stage-01'){const arena=stageOneArena();if(arena)arena.phase=e.stagePhase;e.stageGateCoreOpen=e.stagePhase>=2;e.stageOneActionToken=(e.stageOneActionToken||0)+1;e.attackLockUntil=(state.time||0)+1.12;e.stageOneAttackCd=1.35;e.stageRamWindupUntil=0;e.stageRamUntil=0;e.dash=0;e.dashX=0;e.dashY=0;stageBossSetMotion(e,0,0);showBossNotice(GAME_SETTINGS.language==='ko'?'전초 수호자 · 봉쇄 해제':'FRONTIER WARDEN · SEAL BROKEN',GAME_SETTINGS.language==='ko'?'노출된 관문핵':'GATE CORE EXPOSED');audio.stageAttack?.('stage-01','phase-open');spawnParticle(e.x,e.y,'#ffffff',20,210,5);}
+      if(e.eventKind==='stage-02'){e.stageNebulaCoreOpen=e.stagePhase>=2;e.stageNebulaBeatUntil=(state.time||0)+.72;e.stageNebulaFlowDir=(e.stageNebulaFlowDir||1)*-1;spawnParticle(e.x,e.y,e.stagePhase>=3?'#fff3cf':'#d9c5ff',14+e.stagePhase*4,175,4.5);}
       if(e.eventKind==='stage-12')e.stageShellOpen=e.stagePhase>=2;
       if(e.eventKind==='stage-18')e.stageCoreExposed=e.stagePhase>=2;
     }
@@ -449,7 +481,7 @@
   }
   const STAGE_APEX_MOTION=Object.freeze({
     'stage-01':(e,p)=>{const arena=stageOneArena();if(!arena)return stageBossMoveToward(e,p.x,p.y,.72);if((e.stageRamWindupUntil||0)>(state.time||0)||(e.stageRamUntil||0)>(state.time||0)||(e.attackLockUntil||0)>(state.time||0)){stageBossSetMotion(e,0,0);return;}const inset=arena.halfW*.58,tx=clamp(p.x,arena.x-inset,arena.x+inset),ty=arena.y-arena.halfH*(p.phase>=2?.25:.52);stageBossMoveToward(e,tx,ty,p.phase>=2?.92:.68);},
-    'stage-02':(e,p)=>stageBossOrbit(e,p.x,p.y,255-p.phase*16,155+p.phase*8,.18,p.phase===3?1.12:.92),
+    'stage-02':(e,p)=>{const dx=p.x-e.x,dy=p.y-e.y,dist=Math.hypot(dx,dy)||1,ux=dx/dist,uy=dy/dist,nx=-uy,ny=ux,target=292-p.phase*18,radial=(dist-target)*.72,t=(state.time||0),flow=(e.stageNebulaFlowDir||1)*e.speed*(.70+p.phase*.08)*(1+Math.sin(t*.48+e.id*.37)*.18),sway=Math.sin(t*.31+e.id*.19)*e.speed*.24;stageBossSetMotion(e,ux*radial+nx*(flow+sway),uy*radial+ny*(flow+sway));},
     'stage-03':(e,p)=>{const a=(Math.floor((state.time||0)/2.4)%3)*TAU/3-Math.PI/2;stageBossMoveToward(e,p.x+Math.cos(a)*310,p.y+Math.sin(a)*205,1.02);},
     'stage-04':(e,p)=>{const q=stageBossPast(e,12+p.phase*2);stageBossOrbit(e,q.x,q.y,230,145,-.13,1.0);},
     'stage-05':(e,p)=>{const a=Math.atan2(p.y-e.y,p.x-e.x),s=(Math.floor((state.time||0)*.55)+e.id)%2?1:-1;stageBossMoveToward(e,p.x-Math.sin(a)*s*255,p.y+Math.cos(a)*s*255,p.phase===2?1.18:1.0);},
@@ -469,7 +501,7 @@
   });
   const STAGE_APEX_TERTIARY_TECHNIQUES=Object.freeze({
     'stage-01':(e,api,p,c,d,q,l)=>stageOneBreachRam(e,api,p,c,d,q,l),
-    'stage-02':(e,api,p,c,d,q,l)=>{const n=4+p;for(let i=0;i<n;i++){const a=i*TAU/n+(state.time||0)*.08,x=e.x+Math.cos(a)*(120+p*8),y=e.y+Math.sin(a)*(120+p*8);rawLine(x,y,q.x,q.y,5,0,i%2?'#8cecff':'#ff8fd8',.55,'boss-charge');l(550+i*55,()=>spawnEnemyProjectile(x,y,Math.atan2(player.y-y,player.x-x),235+p*16,d*.56,i%2?'#8cecff':'#ff8fd8',5,4.6,'seed-shell'));}},
+    'stage-02':(e,api,p,c,d,q,l)=>stageTwoCrossCurrent(e,api,p,c,d,q,l),
     'stage-03':(e,api,p,c,d,q,l)=>{const r=275,pts=Array.from({length:3},(_,i)=>{const a=-Math.PI/2+i*TAU/3+(state.time||0)*.06;return{x:q.x+Math.cos(a)*r,y:q.y+Math.sin(a)*r};});pts.forEach((v,i)=>l(i*110,()=>{const target=pts[(i+2)%3];stageBossActualBeam(v.x,v.y,target.x,target.y,15+p,d*.48,i%2?'#a8f4ff':'#dfb2ff','prism-reflect');spawnEnemyProjectile(v.x,v.y,Math.atan2(player.y-v.y,player.x-v.x),265,d*.44,'#ffffff',4.6,4.3,'needle');}));},
     'stage-04':(e,api,p,c,d,q,l)=>{const past=stageBossPast(e,22+p*2),now={x:player.x,y:player.y};addCircle(past.x,past.y,46,0,'#8fffe0',.58);rawLine(past.x,past.y,now.x,now.y,7,0,'#a4bfff',.64,'boss-charge');l(620,()=>stageBossActualBeam(past.x,past.y,player.x,player.y,19+p,d*.82,'#8fffe0','rewind-scar'));},
     'stage-05':(e,api,p,c,d,q,l)=>{const a=Math.atan2(q.y-e.y,q.x-e.x),nx=-Math.sin(a),ny=Math.cos(a),sep=175,left={x:q.x+nx*sep,y:q.y+ny*sep},right={x:q.x-nx*sep,y:q.y-ny*sep};addCircle(left.x,left.y,38,0,'#79f7ff',.58);addCircle(right.x,right.y,38,0,'#b9a8ff',.58);l(580,()=>{const target=c%2?left:right,dx=target.x-player.x,dy=target.y-player.y,dd=Math.hypot(dx,dy)||1;player.x+=dx/dd*(48+p*12);player.y+=dy/dd*(48+p*12);stageBossActualBeam(left.x,left.y,right.x,right.y,22+p,d*.76,'#e9ffff','polarity-swap');});},
@@ -500,6 +532,11 @@
       enemy.stageOneAttackCd=(Number.isFinite(enemy.stageOneAttackCd)?enemy.stageOneAttackCd:1.8)-dt;if(enemy.stageOneAttackCd>0)return;
       const cycle=(enemy.stageOneAttackCycle=(enemy.stageOneAttackCycle||0)+1),slot=cycle%4;enemy.stageOneActionToken=(enemy.stageOneActionToken||0)+1;enemy.stageOneAttackCd=(phase>=2?3.05:3.55)+(slot===3?.35:0);
       if(slot===1||slot===0)stageBossSignature(enemy,api);else if(slot===2)stageBossUniqueTechnique(enemy,api);else stageBossTertiaryTechnique(enemy,api);return;
+    }
+    if(id==='stage-02'){
+      STAGE_APEX_MOTION[id]?.(enemy,{x:player.x,y:player.y,phase});enemy.stageTwoAttackCd=(Number.isFinite(enemy.stageTwoAttackCd)?enemy.stageTwoAttackCd:1.6)-dt;if(enemy.stageTwoAttackCd>0)return;
+      const cycle=(enemy.stageTwoAttackCycle=(enemy.stageTwoAttackCycle||0)+1),slot=cycle%3;enemy.stageTwoAttackCd=phase>=3?2.72:phase>=2?3.05:3.38;
+      if(slot===1)stageBossSignature(enemy,api);else if(slot===2)stageBossUniqueTechnique(enemy,api);else stageBossTertiaryTechnique(enemy,api);return;
     }
     STAGE_APEX_MOTION[id]?.(enemy,{x:player.x,y:player.y,phase});
     enemy.stagePrimaryCd=(Number.isFinite(enemy.stagePrimaryCd)?enemy.stagePrimaryCd:1.0)-dt;
