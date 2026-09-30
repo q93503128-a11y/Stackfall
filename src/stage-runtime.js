@@ -481,8 +481,8 @@
     if(!sameStage){state.runSelection={mode:'stage',stageId:requested.id};resetGame();}
     const run=stageRuntime();
     if(!run||run.stage?.id!==requested.id)return{ok:false,reason:'stage-runtime-missing'};
-    clearPendingCombatActions();clearRunUiActions?.();window.closeMapEventOverlays?.();
-    state.mapEventActive=null;if(Array.isArray(state.entities.mapEvents))state.entities.mapEvents.length=0;
+    clearPendingCombatActions();clearRunUiActions?.();window.closeMapEventOverlays?.();closeAbilityLedger?.(true);
+    state.mapEventActive=null;if(Array.isArray(state.entities.mapEvents))state.entities.mapEvents.length=0;if(Array.isArray(state.rewardQueue))state.rewardQueue.length=0;
     for(const key of ['enemies','enemyProjectiles','projectiles','curves','wells','beams','particles','shockwaves','telegraphs','gems','texts','vacuumSeeds','phaseMines','guidedMissiles','gateNetworks']){
       const list=state.entities[key];if(Array.isArray(list))list.length=0;
     }
