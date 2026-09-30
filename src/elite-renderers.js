@@ -27,10 +27,27 @@ function drawEliteShape(e){
   const f=e.eliteForm||e.apexForm||e.variant,t=e.phase,enraged=e.kind==='apex'&&e.apexPhase===2;
   ctx.save();ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;ctx.lineWidth=e.kind==='apex'?4:3;ctx.lineCap='round';ctx.lineJoin='round';
   if(f==='collapse-warden'){
-    const r=e.r,phase=e.stagePhase||1;ctx.rotate(t*.035);ctx.fillStyle=e.hit?'#fff':'#0b1028';ctx.strokeStyle=e.hit?'#fff':'#aeb9ff';ctx.lineWidth=4;
-    for(let ring=0;ring<3;ring++){ctx.save();ctx.rotate((ring%2?1:-1)*t*(.035+ring*.012));ctx.globalAlpha=.78-ring*.16;ctx.setLineDash(ring?[8+ring*3,7]:[]);ctx.beginPath();ctx.arc(0,0,r*(.72+ring*.34),0,TAU);ctx.stroke();ctx.restore();}ctx.setLineDash([]);ctx.globalAlpha=1;
-    for(let i=0;i<6;i++){ctx.save();ctx.rotate(i*TAU/6+t*.025);ctx.fillStyle=i%2?'#354177':'#6170b9';ctx.beginPath();ctx.moveTo(r*.26,-r*.18);ctx.lineTo(r*1.18,-r*.36);ctx.lineTo(r*1.48,0);ctx.lineTo(r*1.18,r*.36);ctx.lineTo(r*.26,r*.18);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
-    ctx.fillStyle='#080c1b';ctx.beginPath();ctx.arc(0,0,r*.58,0,TAU);ctx.fill();ctx.stroke();ctx.fillStyle=phase>=3?'#ffffff':phase===2?'#d9ddff':'#aab7ff';drawStarPath(6,r*.17,r*.42,t*.04);ctx.fill();ctx.strokeStyle='rgba(232,238,255,.78)';ctx.lineWidth=1.8;ctx.beginPath();ctx.moveTo(-r*.42,0);ctx.lineTo(r*.42,0);ctx.moveTo(0,-r*.42);ctx.lineTo(0,r*.42);ctx.stroke();
+    const r=e.r,phase=e.stagePhase||1,now=state.time||0,ram=(e.stageRamWindupUntil||0)>now||(e.stageRamUntil||0)>now,open=phase>=2,phaseAge=Math.max(0,now-(e.stagePhaseChangedAt||now)),openEase=open?clamp(phaseAge/.72,0,1):0;
+    if(ram&&Number.isFinite(e.stageRamAngle))ctx.rotate(e.stageRamAngle+Math.PI/2);else ctx.rotate(Math.sin(t*.12)*.025);
+    ctx.fillStyle=e.hit?'#fff':'#070b18';ctx.strokeStyle=e.hit?'#fff':'#c8d3ff';ctx.lineWidth=3.2;ctx.lineCap='round';ctx.lineJoin='round';
+    // Broken checkpoint frame: two incomplete counter-rotating structural rings.
+    for(let ring=0;ring<2;ring++){ctx.save();ctx.rotate((ring?1:-1)*t*(.018+ring*.007));ctx.globalAlpha=.58-ring*.12;ctx.lineWidth=ring?1.8:2.6;ctx.setLineDash(ring?[15,11]:[30,12]);ctx.beginPath();ctx.arc(0,0,r*(1.23+ring*.25),-.20,Math.PI*.78);ctx.stroke();ctx.beginPath();ctx.arc(0,0,r*(1.23+ring*.25),Math.PI*.96,Math.PI*1.74);ctx.stroke();ctx.restore();}ctx.setLineDash([]);ctx.globalAlpha=1;
+    // Six locking arms are physical hinged bulkheads, not radial light blades.
+    for(let i=0;i<6;i++){const base=i*TAU/6,hinge=(i%2?1:-1)*(openEase*.18),fold=ram?(i===0?-.18:i===3?.18:(i%2?-.10:.10)):0;ctx.save();ctx.rotate(base+hinge+fold);
+      ctx.fillStyle=e.hit?'#fff':i%2?'#26345f':'#354675';ctx.strokeStyle=e.hit?'#fff':'#9eafe9';ctx.lineWidth=2.2;
+      ctx.beginPath();ctx.moveTo(r*.42,-r*.18);ctx.lineTo(r*.82,-r*.27);ctx.lineTo(r*1.30,-r*.20);ctx.lineTo(r*1.53,-r*.07);ctx.lineTo(r*1.53,r*.07);ctx.lineTo(r*1.30,r*.20);ctx.lineTo(r*.82,r*.27);ctx.lineTo(r*.42,r*.18);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle='rgba(6,10,23,.92)';ctx.fillRect(r*.70,-r*.12,r*.50,r*.24);ctx.strokeStyle=i%2?'#7f92d4':'#a6b5e8';ctx.lineWidth=1.2;ctx.strokeRect(r*.70,-r*.12,r*.50,r*.24);
+      ctx.strokeStyle='#ffcf70';ctx.lineWidth=2.3;for(let mark=0;mark<3;mark++){const x=r*(.82+mark*.13);ctx.beginPath();ctx.moveTo(x,-r*.10);ctx.lineTo(x+r*.08,r*.10);ctx.stroke();}
+      ctx.fillStyle=i===1||i===4?'#ff6e78':'#d9e2ff';ctx.beginPath();ctx.arc(r*1.34,0,r*.035,0,TAU);ctx.fill();ctx.restore();
+    }
+    // Armoured gate housing and split seal.
+    ctx.fillStyle=e.hit?'#fff':'#0a1024';ctx.strokeStyle=e.hit?'#fff':'#d3dcff';ctx.lineWidth=3.5;ctx.beginPath();for(let i=0;i<8;i++){const a=i/8*TAU-Math.PI/8,rr=i%2?r*.69:r*.61,x=Math.cos(a)*rr,y=Math.sin(a)*rr;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fill();ctx.stroke();
+    const jawGap=r*(.08+.18*openEase);for(const side of[-1,1]){ctx.save();ctx.translate(side*jawGap,0);ctx.scale(side,1);ctx.fillStyle=e.hit?'#fff':'#17264c';ctx.strokeStyle='#adbcf2';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-r*.42);ctx.lineTo(r*.33,-r*.31);ctx.lineTo(r*.42,-r*.12);ctx.lineTo(r*.24,0);ctx.lineTo(r*.42,r*.12);ctx.lineTo(r*.33,r*.31);ctx.lineTo(0,r*.42);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
+    // Phase 2 exposes a deep luminous route-core rather than simply recolouring the star.
+    ctx.shadowBlur=open?30:13;ctx.shadowColor=open?'#f3f6ff':'#8ca0e8';ctx.fillStyle=open?'#f8fbff':'#7183c7';drawStarPath(6,r*(open?.12:.10),r*(open?.31:.22),t*.018);ctx.fill();ctx.shadowBlur=0;
+    ctx.strokeStyle=open?'rgba(255,255,255,.90)':'rgba(174,185,255,.58)';ctx.lineWidth=open?2.4:1.5;ctx.beginPath();ctx.arc(0,0,r*(open?.36:.28),0,TAU);ctx.stroke();
+    if(open){ctx.globalAlpha=.72;for(let i=0;i<6;i++){const a=i*TAU/6+t*.012;ctx.strokeStyle=i%2?'#ffffff':'#8fdcff';ctx.beginPath();ctx.moveTo(Math.cos(a)*r*.42,Math.sin(a)*r*.42);ctx.lineTo(Math.cos(a)*r*.61,Math.sin(a)*r*.61);ctx.stroke();}ctx.globalAlpha=1;}
+    if(ram){ctx.strokeStyle='rgba(255,207,112,.78)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-r*.40,r*.74);ctx.lineTo(-r*.20,r*1.18);ctx.moveTo(r*.40,r*.74);ctx.lineTo(r*.20,r*1.18);ctx.stroke();}
   }else if(f==='nebula-heart'){
     const r=e.r,phase=e.stagePhase||1;ctx.rotate(t*.018);ctx.lineWidth=3;
     for(let petal=0;petal<5;petal++){ctx.save();ctx.rotate(petal*TAU/5-t*.021);const pg=ctx.createRadialGradient(r*.42,0,2,r*.42,0,r*.92);pg.addColorStop(0,'rgba(255,236,252,.88)');pg.addColorStop(.28,petal%2?'rgba(255,123,209,.72)':'rgba(124,226,255,.70)');pg.addColorStop(1,'rgba(90,58,184,.06)');ctx.fillStyle=pg;ctx.strokeStyle=petal%2?'rgba(255,176,229,.74)':'rgba(150,239,255,.70)';ctx.beginPath();ctx.ellipse(r*.62,0,r*.78,r*.30,0,0,TAU);ctx.fill();ctx.stroke();ctx.restore();}
