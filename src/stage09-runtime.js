@@ -23,10 +23,6 @@
       for(let wave=0;wave<waves;wave++)scheduleWeaponAction(wave*(vortex?300:420),()=>{if(!api.isActive())return;const p=typeof predictedPlayer==='function'?predictedPlayer(140+wave*28):{x:player.x,y:player.y},arms=vortex?4:3,half=vortex?425:370,gap=vortex?42:60,base=wave*(vortex?.33:.25);for(let i=0;i<arms;i++){const a=base+i/arms*TAU,dx=Math.cos(a),dy=Math.sin(a),color=i%2?'#d59cff':'#7de0c7';rawLine(p.x-dx*half,p.y-dy*half,p.x-dx*gap,p.y-dy*gap,vortex?24:19,damage*(vortex?1.04:.86),color,.85+wave*.04,'boss-line');rawLine(p.x+dx*gap,p.y+dy*gap,p.x+dx*half,p.y+dy*half,vortex?24:19,damage*(vortex?1.04:.86),color,.85+wave*.04,'boss-line');}});
     },
     bossProfile:{form:'helix-nursery',eventVariant:'stage09-nursery',nameKey:'stage09.boss',warningKey:'stage09.boss.warning',r:83,hp:3.08,speed:.67,damage:1.37,color:'#d59cff',xp:3.1,skillCd:1.02,burstCd:3.00,pulseCd:4.75,spawnRadius:715,spawnShockwave:282},
-    bossSkill(e,dt,api){if(!e||e.dead)return;const hp=e.hp/Math.max(1,e.maxHp),phase=hp<.22?3:hp<.54?2:1,k=[1,.70,.50][phase-1],damage=Math.max(9,e.damage*.49);e.stagePhase=phase;e.skillCd-=dt/k;e.burstCd-=dt/k;e.pulseCd-=dt/k;
-      if(e.skillCd<=0){e.skillCd=1.64;const aim=Math.atan2(player.y-e.y,player.x-e.x),shots=12+phase*4;for(let i=0;i<shots;i++){const fan=(i-(shots-1)/2)*(.057-phase*.002);spawnEnemyProjectile(e.x,e.y,aim+fan,230+phase*23,damage*.63,i%2?'#d59cff':'#79dcc6',5.1,5,'spiral');}}
-      if(e.burstCd<=0){e.burstCd=3.52;const p=typeof predictedPlayer==='function'?predictedPlayer(170+phase*42):{x:player.x,y:player.y},arms=phase===3?5:phase===2?4:3,half=380+phase*30,gap=Math.max(34,60-phase*7),rot=e.phase*.040;for(let i=0;i<arms;i++){const a=rot+i/arms*TAU,dx=Math.cos(a),dy=Math.sin(a),color=i%2?'#d99cff':'#7cdfc7';rawLine(p.x-dx*half,p.y-dy*half,p.x-dx*gap,p.y-dy*gap,20+phase*2,damage*.98,color,.86+i*.03,'boss-line');}}
-      if(e.pulseCd<=0){e.pulseCd=5.25-phase*.38;if(typeof fireRingWithGaps==='function'){const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,30+phase*6,168+phase*18,damage*.75,'#e4c3ff',e.phase*.068,aim,.20-phase*.014,4.7);}else fireRing(e,27+phase*5,168+phase*18,damage*.71,'#e4c3ff',e.phase*.068,4.7);api.spawnBurst('spiral-pod',phase===3?5:3);}
-    }
+    bossSkill:null
   });
 })();
