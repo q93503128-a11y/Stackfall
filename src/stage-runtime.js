@@ -227,7 +227,7 @@
       later(760,()=>{const aim=Math.atan2(player.y-e.y,player.x-e.x);e.dash=.34;e.dashX=Math.cos(aim)*(310+phase*35);e.dashY=Math.sin(aim)*(310+phase*35);});
     },
     'stage-02':(e,api,phase,cycle,d,pred,later)=>{
-      addCircle(e.x,e.y,118+phase*18,0,'#ff91dc',.58);later(580,()=>{const dx=e.x-player.x,dy=e.y-player.y,dist=Math.hypot(dx,dy)||1;if(dist<560){player.x+=dx/dist*(48+phase*13);player.y+=dy/dist*(48+phase*13);}shockwave(e.x,e.y,'#ffc0eb',210+phase*28,.42,4);fireRing(e,16+phase*4,170+phase*12,d*.55,'#ffc0eb',cycle*.28,5);addCircle(player.x,player.y,62+phase*7,d*.92,'#ff75cb',.48);});
+      addCircle(e.x,e.y,118+phase*18,0,'#ff91dc',.58);later(580,()=>{const dx=e.x-player.x,dy=e.y-player.y,dist=Math.hypot(dx,dy)||1;if(dist<560){player.x+=dx/dist*(48+phase*13);player.y+=dy/dist*(48+phase*13);}shockwave(e.x,e.y,'#ffc0eb',210+phase*28,.42,4);const lobes=5+phase;for(let i=0;i<lobes;i++){const a=i*TAU/lobes+cycle*.19,x=e.x+Math.cos(a)*(112+phase*9),y=e.y+Math.sin(a)*(112+phase*9),aim=Math.atan2(player.y-y,player.x-x);spawnEnemyProjectile(x,y,aim,220+phase*18,d*.52,i%2?'#ffc0eb':'#8cecff',5,4.8,'seed-shell');}addCircle(player.x,player.y,62+phase*7,d*.92,'#ff75cb',.48);});
     },
     'stage-03':(e,api,phase,cycle,d,pred,later)=>{
       const rr=235+phase*18,pts=Array.from({length:3},(_,i)=>{const a=-Math.PI/2+i*TAU/3+cycle*.18;return{x:pred.x+Math.cos(a)*rr,y:pred.y+Math.sin(a)*rr};});
@@ -301,7 +301,7 @@
       const base=Math.atan2(player.y-e.y,player.x-e.x)+Math.PI/4,lanes=4+phase;for(let i=0;i<lanes;i++)later(i*95,()=>{const off=(i-(lanes-1)/2)*74,a=base+(cycle%2?0:.34),dx=Math.cos(a),dy=Math.sin(a),nx=-dy,ny=dx;stageBossSigLine(pred.x-dx*390+nx*off,pred.y-dy*390+ny*off,pred.x+dx*390+nx*off,pred.y+dy*390+ny*off,15+phase*2,damage*.66,'#aebaff',.86);});
     }else if(id==='stage-02'){
       for(let ring=0;ring<3+phase;ring++)later(ring*165,()=>addCircle(pred.x,pred.y,68+ring*62,damage*(.58+ring*.06),'#ff91dc',.92+ring*.06));
-      later(310,()=>fireRing(e,12+phase*4,142+phase*10,damage*.64,'#ffc0eb',e.phase*.12,5));
+      later(310,()=>{const lobes=4+phase;for(let i=0;i<lobes;i++){const a=i*TAU/lobes+e.phase*.08,x=e.x+Math.cos(a)*(105+phase*8),y=e.y+Math.sin(a)*(105+phase*8),aim=Math.atan2(pred.y-y,pred.x-x);spawnEnemyProjectile(x,y,aim,205+phase*16,damage*.58,i%2?'#ffc0eb':'#8cecff',5,4.8,'seed-shell');}});
     }else if(id==='stage-03'){
       const r=185+phase*18,pts=Array.from({length:3},(_,i)=>({x:pred.x+Math.cos(-Math.PI/2+i*TAU/3)*r,y:pred.y+Math.sin(-Math.PI/2+i*TAU/3)*r}));
       for(let i=0;i<3;i++){const a=pts[i],b=pts[(i+1)%3];stageBossSigLine(a.x,a.y,b.x,b.y,18+phase*2,damage*.78,i===1?'#a8f4ff':'#dfb2ff',1.08);}
@@ -335,7 +335,7 @@
       const horizontal=cycle%2===0,lanes=5+phase,safe=Math.floor((cycle+phase)%lanes),span=470;for(let i=0;i<lanes;i++){if(i===safe)continue;const off=(i-(lanes-1)/2)*72;if(horizontal)stageBossSigLine(pred.x-span,pred.y+off,pred.x+span,pred.y+off,20+phase*2,damage*.84,'#6fe8f3',1.02);else stageBossSigLine(pred.x+off,pred.y-span,pred.x+off,pred.y+span,20+phase*2,damage*.84,'#6fe8f3',1.02);}
     }else if(id==='stage-14'){
       const spacing=120,safe=(cycle*3+phase)%9;for(let i=0;i<9;i++){if(i===safe)continue;const col=i%3,row=Math.floor(i/3),x=pred.x+(col-1)*spacing,y=pred.y+(row-1)*spacing;addCircle(x,y,48+phase*4,damage*.78,i%2?'#ef8de1':'#71e6f1',.96+(i%3)*.05);}
-      later(620,()=>fireRing(e,16+phase*4,170+phase*10,damage*.52,'#ffd8f7',e.phase*.08,5));
+      later(620,()=>{const corners=[[-1,-1],[1,-1],[1,1],[-1,1]];for(const [index,pair]of corners.entries()){const x=pred.x+pair[0]*176,y=pred.y+pair[1]*176,aim=Math.atan2(player.y-y,player.x-x);for(const off of[-.11,.11])spawnEnemyProjectile(x,y,aim+off,235+phase*18,damage*.48,index%2?'#ef8de1':'#71e6f1',5,4.8,'packet');}});
     }else if(id==='stage-15'){
       const a0=Math.atan2(player.y-e.y,player.x-e.x);for(let step=0;step<3;step++)later(step*260,()=>{const a=a0+(step-1)*.32,dx=Math.cos(a),dy=Math.sin(a),nx=-dy,ny=dx;for(const off of[-105,0,105])stageBossSigLine(pred.x-dx*420+nx*off,pred.y-dy*420+ny*off,pred.x+dx*420+nx*off,pred.y+dy*420+ny*off,19+phase*2,damage*.76,step===1?'#c39cff':'#70e8ef',.80);});
     }else if(id==='stage-16'){
