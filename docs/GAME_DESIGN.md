@@ -862,6 +862,11 @@ These four weapons are implemented and connected to Stage 11/13/15/17 first-clea
 | 18 | 다중 투영 프로토콜 | 성운 보관소 획득 경로를 유지하면서 일반 레벨업 풀 진입 + 최대 중첩 2→3 |
 Implementation status: all four reward keys are connected only after their definitions, stack text, combat runtime, render/audio treatment, augment definitions, multiplicity barriers, progression reconstruction, and regression contracts were added together.
 
+### World-event cadence
+
+- **Endless event cadence uses independent per-type clocks plus a shared minimum gap.** 각 이벤트는 자기 재등장 쿨다운을 가지며, 여러 이벤트 시계가 동시에 만료되어도 한 번에 하나만 무작위 선택한다. 공통 최소 간격은 58초로 두어 이벤트가 2~3개 연달아 겹쳐 뜨지 않게 한다.
+- 신규 5종은 조난 신호, 유성 광맥, 포식성 성운, 중계기 복구, 항성 폭풍의 눈이다. 현상금 신호와 중력 난파장은 추가하지 않는다.
+
 ### Campaign system unlocks
 
 - **Stage 1**: Core Development / 코어 성장.
