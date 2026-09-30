@@ -192,6 +192,11 @@
   }
   function updateStage(dt){
     const run=stageRuntime(),def=stageDefinition();if(!run||!def||run.completed)return;updateObjective(run);
+    if(run.devBossPreview===true){
+      const bossAt=Math.max(0,Number(run.stage?.boss?.spawnAt||run.stage?.durationSeconds||60));
+      if((state.time||0)<bossAt)return;
+      run.devBossPreview=false;
+    }
     if(run.bossSpawned){
       const boss=state.entities.enemies.find(enemy=>enemy&&enemy.id===run.bossId);
       if(!boss||boss.dead)ensureStageVictory(boss||run.bossSnapshot||null);
@@ -552,11 +557,16 @@
     }
     state.bossActiveId=null;state.apexActiveId=null;state.pendingApexForm=null;state.apexArena=null;state.stageBossArena=null;
     resetStageBossStateForDeveloper(run);
-    state.mode='playing';state.time=Math.max(0,Number(run.stage.boss?.spawnAt||run.stage.durationSeconds||60));state.spawnTimer=0;
+    const bossAt=Math.max(0,Number(run.stage.boss?.spawnAt||run.stage.durationSeconds||60)),previewSeconds=5;
+    run.devBossPreview=true;run.devBossPreviewStartedAt=bossAt-previewSeconds;
+    run.eventsTriggered=run.eventsTriggered||{};
+    for(const event of run.stage.fixedEvents||[])if(event.kind!=='boss'&&Number(event.at)<=bossAt)run.eventsTriggered[event.id]=true;
+    run.worldEventsTriggered=run.worldEventsTriggered||{};for(let i=0;i<stageWorldEventPlan(run.stage).length;i++)run.worldEventsTriggered[i]=true;
+    run.encountersTriggered=run.encountersTriggered||{};for(let i=0;i<stageEncounterPlan(run.stage).length;i++)run.encountersTriggered[i]=true;
+    run.gimmickNextAt=Infinity;
+    state.mode='playing';state.time=Math.max(0,bossAt-previewSeconds);state.spawnTimer=Infinity;
     ui.choice?.classList.add('hidden');ui.pauseScreen?.classList.add('hidden');ui.gameOver?.classList.add('hidden');document.querySelector('#worldEventScreen')?.classList.add('hidden');document.querySelector('#bossRewardScreen')?.classList.add('hidden');document.querySelector('#apexRewardScreen')?.classList.add('hidden');
-    const boss=spawnStageBoss();
-    if(!boss)return{ok:false,reason:'spawn-blocked',stageId:requested.id};
-    updateObjective(run);return{ok:true,stageId:requested.id,bossId:boss.id,form:boss.eliteForm||boss.variant||null};
+    updateObjective(run);return{ok:true,stageId:requested.id,previewSeconds,bossAt,startAt:state.time};
   };
   completeMap?.addEventListener('click',()=>{completeScreen.classList.add('hidden');showMainMenu();window.openStackfallGalaxyMap?.();});completeMenu?.addEventListener('click',()=>{completeScreen.classList.add('hidden');showMainMenu();});
 
