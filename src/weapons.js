@@ -256,8 +256,20 @@ function gateSegmentHit(net,pulse){
     if(n>=6&&net.circuitCd<=0){net.circuitCd=1.15;areaDamage(net.x,net.y,92*size,damage*.72,'#cbd3ff','gate-circuit',{shake:false});}
   }
 }
+const gateCrossfeedCandidates=[];
 function updateGateCrossfeed(net,dt){
-  if(!state.weaponAugments?.gate)return;for(let i=0;i<net.gates.length;i++){const gate=net.gates[i];gate.copyCd=Math.max(0,(gate.copyCd||0)-dt);if(gate.copyCd>0)continue;for(const p of state.entities.projectiles){if(!p||p.life<=0||p.gateCopy||p.gateCrossfed||String(p.source||'').includes('multiplicity'))continue;if(Math.hypot(p.x-gate.x,p.y-gate.y)>28*weaponSizeMultiplier())continue;const next=net.gates[(i+1)%net.gates.length],target=nearestEnemy(next.x,next.y,weaponRange('gate'));if(!target)break;p.gateCrossfed=true;gate.copyCd=.55;const a=Math.atan2(target.y-next.y,target.x-next.x),speed=Math.max(360,Math.hypot(p.vx||0,p.vy||0));spawnPlayerProjectile({x:next.x,y:next.y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:Math.max(3,Number(p.r)||4),life:1.0,maxRange:weaponRange('gate'),damage:(Number(p.damage)||0)*.55,color:'#dce2ff',pierce:Math.max(0,Math.min(2,Number(p.pierce)||0)),playerVisual:p.playerVisual||p.source,...(p.awakeningChild?{awakeningChild:true}:{}),...(p.awGenesis?{awGenesis:true}:{}),source:'gate-crossfeed',gateCopy:true,homingTargetId:target.id,homingReacquire:false,homingTurn:2.2});break;}}
+  if(!state.weaponAugments?.gate)return;
+  for(const gate of net.gates)gate.copyCd=Math.max(0,(gate.copyCd||0)-dt);
+  net.crossfeedScanCd=(net.crossfeedScanCd||0)-dt;if(net.crossfeedScanCd>0)return;net.crossfeedScanCd=.055;
+  gateCrossfeedCandidates.length=0;
+  for(const p of state.entities.projectiles)if(p&&p.life>0&&!p.gateCopy&&!p.gateCrossfed&&!String(p.source||'').includes('multiplicity'))gateCrossfeedCandidates.push(p);
+  if(!gateCrossfeedCandidates.length)return;
+  const radius=28*weaponSizeMultiplier(),radius2=radius*radius;
+  for(let i=0;i<net.gates.length;i++){
+    const gate=net.gates[i];if(gate.copyCd>0)continue;
+    const next=net.gates[(i+1)%net.gates.length],target=nearestEnemy(next.x,next.y,weaponRange('gate'));if(!target)continue;
+    for(const p of gateCrossfeedCandidates){const dx=p.x-gate.x,dy=p.y-gate.y;if(dx*dx+dy*dy>radius2)continue;p.gateCrossfed=true;gate.copyCd=.55;const a=Math.atan2(target.y-next.y,target.x-next.x),speed=Math.max(360,Math.hypot(p.vx||0,p.vy||0));spawnPlayerProjectile({x:next.x,y:next.y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:Math.max(3,Number(p.r)||4),life:1.0,maxRange:weaponRange('gate'),damage:(Number(p.damage)||0)*.55,color:'#dce2ff',pierce:Math.max(0,Math.min(2,Number(p.pierce)||0)),playerVisual:p.playerVisual||p.source,...(p.awakeningChild?{awakeningChild:true}:{}),...(p.awGenesis?{awGenesis:true}:{}),source:'gate-crossfeed',gateCopy:true,homingTargetId:target.id,homingReacquire:false,homingTurn:2.2});break;}
+  }
 }
 function updateGateNetworks(dt){
   for(const net of state.entities.gateNetworks){if(!net||net.life<=0)continue;net.life-=dt;net.pulseCd-=dt;net.circuitCd=Math.max(0,net.circuitCd-dt);net.crossCd=Math.max(0,net.crossCd-dt);if(net.pulseCd<=0){net.pulseCd=1.65*hasteMult();spawnGatePulseSet(net);}for(const pulse of net.pulses){pulse.timer-=dt;if(pulse.timer<=0&&pulse.remaining>0){pulse.timer+=pulse.delay;gateSegmentHit(net,pulse);}}compactInPlace(net.pulses,keepGatePulse);updateGateCrossfeed(net,dt);}
