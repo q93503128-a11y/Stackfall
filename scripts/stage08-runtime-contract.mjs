@@ -13,7 +13,7 @@ const checks=[
  ['Rootlance has a dedicated common-enemy silhouette',entities.includes("v==='rootlance'")&&entities.includes("r*1.58")],
  ['Abyssal Rootcrown has a dedicated boss silhouette',elite.includes("f==='abyssal-rootcrown'")&&elite.includes('for(let root=0;root<7;root++)')],
  ['Stage 8 boss uses the shared stage dispatcher',bosses.includes("enemy.kind==='stage-boss'&&typeof window.updateStageBossSkill==='function'")&&shared.includes('window.updateStageBossSkill=function')&&runtime.includes("eventVariant:'stage08-rootcrown'")],
- ['Stage 8 boss has multi-phase vascular rails and late Rootlance summons',runtime.includes('hp<.23?3:hp<.55?2:1')&&runtime.includes("phase===3?'rootlance':'abyss-spore'")&&runtime.includes('rails=phase===3?5:phase===2?4:3')],
+ ['Stage 8 boss uses authored root orbit and recent-path bridge',runtime.includes('bossSkill:null')&&shared.includes("'stage-08':[.67,.30]")&&shared.includes("'stage-08':(e,p)=>stageBossOrbit")&&shared.includes('stageBossPast(e,16)')],
  ['Stage 8 unlocks Interstellar Rail and progression currency',catalog.includes("rewards:[{type:'weapon',key:'rail'}")&&catalog.includes("key:'stardust',amount:460")&&read('src/runtime-config.js').includes("WEAPONS.rail={name:'성간 레일'")],
  ['Stage 8 adapter loads after Stage 7',index.indexOf('src/stage07-runtime.js')<index.indexOf('src/stage08-runtime.js')],
  ['all supported languages include Stage 8 combat copy',(lang.match(/'stage08\.enemy\.rootlance'/g)||[]).length>=6&&(lang.match(/'stage08\.objective\.boss'/g)||[]).length>=6]
