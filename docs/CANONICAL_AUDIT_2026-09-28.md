@@ -104,6 +104,17 @@
 - Stage 최종보스 처치 콜백을 `handleStageBossDefeated`에 직접 연결해 처치 즉시 `stageVictory`로 전환한다. 기존 다음 프레임 감지는 이중 안전망으로 남는다.
 - Stage 이벤트 표식은 이미 진행 중인 최종보스/비-Stage 정예 이벤트와 겹치지 않게 생성한다. 기존 Stage 서브보스가 살아 있더라도 표식 자체는 미리 나타날 수 있고, 표식이 떠 있는 동안 다음 Stage 정예 조우는 보류된다. 표식 수명은 작가 배치형일 때 150초로 늘려 현재 정예를 정리한 뒤 이벤트에 진입할 시간을 확보한다. 한 Stage에 여러 이벤트를 배치하며 후반으로 갈수록 배치 수가 증가한다.
 - Stage 최종 초월체의 공용 manifested 공격층은 폐기했다. `STAGE_APEX_UNIQUE_TECHNIQUES`에 Stage 01~18 전용 함수 18개를 두며 `stageBossManifestedTechnique`, 공용 blaster/tentacle/rift attack helper는 존재하지 않는다. 정지 플레이어 안전지대를 줄이기 위해 현재 위치·과거 위치·실제 이동축을 직접 읽는 전용 기술을 분산했다.
+
+### 2026-09-30 Stage/Endless Apex 후속 감사
+
+- Stage 01~18의 각 정의에 남아 있던 레거시 공용 `bossSkill` 회전(조준 fan → 축/교차선 → ring/소환)을 제거했다. Stage 정의에는 `bossSkill:null`만 남고 실제 전투는 중앙 Stage Apex 디렉터가 담당한다.
+- 중앙 디렉터에는 **18/18 Stage별 페이즈 컷, 18/18 전용 이동, 18/18 3차 고유 기술**이 존재한다. 1차 시그니처와 기존 `STAGE_APEX_UNIQUE_TECHNIQUES`도 별도 타이머로 실행되어 한 기술 묶음에 동시에 겹쳐 발동하지 않는다.
+- Stage 런타임의 `fireRing`/공용 원형 탄막 호출은 0개다. S2 심장 계열은 로브 원점 집중사격으로, S14 잡음 계열은 셀/외부 packet 사격으로 교체했다.
+- `bosses.js`는 `kind:'stage-boss'`의 `stageMotionX/Y`를 실제 이동에 반영한다. S1~S18이 더 이상 전부 플레이어를 향한 동일 직선 추격을 하지 않는다.
+- S6은 현재/과거 항로를 접는 route convergence, S12는 `stageShellOpen`과 함께 외피 공전→노출 핵 추격으로 변화, S18은 `stageCoreExposed`와 이동하는 rewrite center를 사용한다. 해당 두 상태 플래그는 `elite-renderers.js`의 실루엣 변화와 연결되어 있다.
+- Endless의 Chronophage/Starforge/Last Constellation도 phase transition·variant·기본 rotation을 재교정했다. Chronophage는 과거 위치 사슬, Starforge는 운석/용광로 압착/조석 핵, Last Constellation은 개방 간선이 있는 노드망/전령/순간이동을 중심으로 분리했다.
+- Stage 최종 초월체 처치의 즉시 `handleStageBossDefeated` 경로와 update 기반 `beginStageVictory` fallback은 유지한다. 이번 패스는 이 승리 경로를 제거하거나 대체하지 않는다.
+
 - 성좌 최종 Stage 보스는 일반 Stage 보스보다 HP +18%, 피해 +6%, 주요 주기 약간 단축.
 
 코드상 압박 증가는 급격한 단일 점프보다 점진적으로 구성되어 있다. 다만 **플레이어의 실제 성장 속도·무기 운·난이도 선택까지 포함한 공정성은 정적 코드만으로 확정할 수 없으며 실플레이 표본이 필요하다.**
