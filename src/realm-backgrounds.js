@@ -31,7 +31,7 @@ function spaceNebulaSprite(index){const palette=SPACE_NEBULA_PALETTES[index]||SP
 function spacePlanetSprite(){return backgroundSprite('space-planet',256,256,(g,w,h)=>{const c=w/2,grad=g.createRadialGradient(c*.66,c*.65,2,c,c,c);grad.addColorStop(0,'rgba(171,188,255,.18)');grad.addColorStop(.48,'rgba(68,73,145,.10)');grad.addColorStop(1,'rgba(6,8,24,0)');g.fillStyle=grad;g.fillRect(0,0,w,h);});}
 function forgeRaySprite(length){const width=Math.max(24,Math.ceil(length-88));return backgroundSprite('forge-ray',width,18,(g,w,h)=>{const grad=g.createLinearGradient(7,0,w,0);grad.addColorStop(0,'rgba(255,225,125,.42)');grad.addColorStop(.3,'rgba(255,94,32,.19)');grad.addColorStop(1,'rgba(255,50,20,0)');g.fillStyle=grad;g.beginPath();g.moveTo(0,2);g.lineTo(w,h/2);g.lineTo(0,h-2);g.closePath();g.fill();});}
 const CONSTELLATION_POINT_X=new Float64Array(17),CONSTELLATION_POINT_Y=new Float64Array(17);
-const STAR_TILE_CACHE=new Map(),STAR_TILE_CACHE_LIMIT=8;
+const STAR_TILE_CACHE=new Map(),STAR_TILE_CACHE_LIMIT=4;
 function makeStarTile(layer,palette,stride,layerIndex){
   const surface=typeof OffscreenCanvas==='function'?new OffscreenCanvas(layer.size,layer.size):document.createElement('canvas');
   surface.width=surface.height=layer.size;
