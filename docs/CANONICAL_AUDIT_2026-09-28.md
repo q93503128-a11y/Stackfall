@@ -114,6 +114,7 @@
 - S6은 현재/과거 항로를 접는 route convergence, S12는 `stageShellOpen`과 함께 외피 공전→노출 핵 추격으로 변화, S18은 `stageCoreExposed`와 이동하는 rewrite center를 사용한다. 해당 두 상태 플래그는 `elite-renderers.js`의 실루엣 변화와 연결되어 있다.
 - Endless의 Chronophage/Starforge/Last Constellation도 phase transition·variant·기본 rotation을 재교정했다. Chronophage는 과거 위치 사슬, Starforge는 운석/용광로 압착/조석 핵, Last Constellation은 개방 간선이 있는 노드망/전령/순간이동을 중심으로 분리했다.
 - Stage 최종 초월체 처치의 즉시 `handleStageBossDefeated` 경로와 update 기반 `beginStageVictory` fallback은 유지한다. 이번 패스는 이 승리 경로를 제거하거나 대체하지 않는다.
+- 2026-09-30 종료 시 `scripts/build-fingerprint.mjs`의 현재 규칙과 동일하게 index에서 추출한 **72개 배포 자산**을 LF 정규화 후 개별 SHA-256 → manifest SHA-256으로 재계산했다. 현재 배포 fingerprint는 `sha256-ea50e6a066317c4febeee24b423085a5815a167e5af97df8943e7b94dde706c5`이며 `src/build-info.js`에 반영했다.
 
 - 성좌 최종 Stage 보스는 일반 Stage 보스보다 HP +18%, 피해 +6%, 주요 주기 약간 단축.
 
