@@ -209,6 +209,7 @@
   function stageBossSignatureAlive(e,api){return!!(e&&!e.dead&&e.kind==='stage-boss'&&api?.isActive?.());}
   function stageBossSigLine(x1,y1,x2,y2,width,damage,color,life=.92){rawLine(x1,y1,x2,y2,width,damage,color,life,'boss-line');}
   function stageBossLineHit(x1,y1,x2,y2,width,damage){
+    if(player.invuln>0)return false;
     const dx=x2-x1,dy=y2-y1,len2=dx*dx+dy*dy;if(len2<=.001)return false;
     const t=clamp(((player.x-x1)*dx+(player.y-y1)*dy)/len2,0,1),px=x1+dx*t,py=y1+dy*t;
     if(Math.hypot(player.x-px,player.y-py)>Math.max(4,width*.5)+player.r)return false;
