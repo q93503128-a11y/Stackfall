@@ -277,8 +277,8 @@
   function stageOneShutterClamp(e,api,phase,cycle,damage,pred){
     const arena=stageOneArena(api.run),lanes=phase>=2?5:4,safe=Math.abs(cycle+phase)%lanes,usable=arena.halfH*1.46,spacing=usable/Math.max(1,lanes-1),token=e.stageOneActionToken||0;
     const queue=(ms,fn)=>scheduleWeaponAction(ms,()=>{if(stageBossSignatureAlive(e,api)&&e.stageOneActionToken===token)fn();});
-    audio.stageAttack?.('stage-01','shutter-warn');
-    for(let lane=0;lane<lanes;lane++){if(lane===safe)continue;const y=arena.y-usable*.5+lane*spacing,x1=arena.x-arena.halfW+18,x2=arena.x+arena.halfW-18;rawLine(x1,y,x2,y,Math.max(10,spacing*.28),0,'#ffcf70',.82+lane*.035,'stage1-warning-only');queue(790+lane*55,()=>{if(lane===0||lane===1)audio.stageAttack?.('stage-01','shutter-slam');stageBossActualBeam(x1,y,x2,y,Math.max(20,spacing*.34),damage*.70,'#aeb9ff','shutter');});}
+    audio.stageAttack?.('stage-01','shutter-warn');queue(790,()=>audio.stageAttack?.('stage-01','shutter-slam'));
+    for(let lane=0;lane<lanes;lane++){if(lane===safe)continue;const y=arena.y-usable*.5+lane*spacing,x1=arena.x-arena.halfW+18,x2=arena.x+arena.halfW-18;rawLine(x1,y,x2,y,Math.max(10,spacing*.28),0,'#ffcf70',.82+lane*.035,'stage1-warning-only');queue(790+lane*55,()=>stageBossActualBeam(x1,y,x2,y,Math.max(20,spacing*.34),damage*.70,'#aeb9ff','shutter'));}
     showBossNotice(GAME_SETTINGS.language==='ko'?'격벽 폐쇄':'BULKHEAD CLOSURE',GAME_SETTINGS.language==='ko'?'안전 통로 확보':'FIND THE OPEN LANE');
   }
   function stageOneBreachRam(e,api,phase,cycle,damage,pred){
