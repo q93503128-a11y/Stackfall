@@ -155,7 +155,7 @@
     if(!options.suppressNotice)showBossNotice(e.name,tr(profile.warningKey));audio.boss();shockwave(e.x,e.y,e.color,profile.spawnShockwave||195,.74,5);return e;
   }
   function beginStageOneBossIntro(event){
-    const run=stageRuntime();if(!run||run.stage?.id!=='stage-01'||run.bossSpawned||run.bossIntroPending)return false;
+    const run=stageRuntime();if(!run||run.stage?.id!=='stage-01'||run.bossSpawned||run.bossIntroPending||activeStageEncounterCount()>0)return false;
     run.bossIntroPending=true;if(event?.id)run.eventsTriggered[event.id]=true;clearPendingCombatActions();clearRunUiActions?.();window.closeMapEventOverlays?.();state.mapEventActive=null;if(Array.isArray(state.entities.mapEvents))state.entities.mapEvents.length=0;
     for(const enemy of state.entities.enemies||[]){if(!enemy?.dead){enemy.dead=true;spawnParticle(enemy.x,enemy.y,enemy.color||'#8395d8',enemy.type==='boss'||enemy.type==='mini'?10:3,130,3);}}
     compactInPlace(state.entities.enemies,e=>e&&!e.dead);for(const key of['enemyProjectiles','telegraphs','beams','wells'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;
@@ -202,7 +202,10 @@
     updateStageWorldEvents(run,progress);
     for(const event of run.stage.fixedEvents)if(state.time>=event.at&&!run.eventsTriggered[event.id])triggerStageEvent(event);
     if(run.bossIntroPending||state.mode==='cinematic')return;
-    if(!run.bossSpawned&&state.time>=run.stage.boss.spawnAt){if(run.stage.id==='stage-01')beginStageOneBossIntro(run.stage.fixedEvents.find(event=>event.kind==='boss'));else spawnStageBoss();}
+    if(!run.bossSpawned&&state.time>=run.stage.boss.spawnAt){
+      if(run.stage.id==='stage-01'){beginStageOneBossIntro(run.stage.fixedEvents.find(event=>event.kind==='boss'));return;}
+      spawnStageBoss();
+    }
     if(run.bossSpawned)return;
     updateAmbientGimmick(run,def);
     updateStageEncounters(run,progress);
@@ -266,15 +269,16 @@
     }
     e.stageDebrisVolleyAt=state.time||0;audio.tone?.(142,.12,'square',.012,-32);
   }
-  function stageOneShutterClamp(e,api,phase,cycle,damage,pred,later=(ms,fn)=>stageOneLater(e,api,ms,fn)){
-    const arena=stageOneArena(api.run),lanes=phase>=2?5:4,safe=Math.abs(cycle+phase)%lanes,usable=arena.halfH*1.46,spacing=usable/Math.max(1,lanes-1);
-    for(let lane=0;lane<lanes;lane++){if(lane===safe)continue;const y=arena.y-usable*.5+lane*spacing,x1=arena.x-arena.halfW+18,x2=arena.x+arena.halfW-18;rawLine(x1,y,x2,y,Math.max(10,spacing*.28),0,'#ffcf70',.82+lane*.035,'boss-charge');later(790+lane*55,()=>stageBossActualBeam(x1,y,x2,y,Math.max(20,spacing*.34),damage*.70,'#aeb9ff','shutter'));}
+  function stageOneShutterClamp(e,api,phase,cycle,damage,pred){
+    const arena=stageOneArena(api.run),lanes=phase>=2?5:4,safe=Math.abs(cycle+phase)%lanes,usable=arena.halfH*1.46,spacing=usable/Math.max(1,lanes-1),token=e.stageOneActionToken||0;
+    const queue=(ms,fn)=>scheduleWeaponAction(ms,()=>{if(stageBossSignatureAlive(e,api)&&e.stageOneActionToken===token)fn();});
+    for(let lane=0;lane<lanes;lane++){if(lane===safe)continue;const y=arena.y-usable*.5+lane*spacing,x1=arena.x-arena.halfW+18,x2=arena.x+arena.halfW-18;rawLine(x1,y,x2,y,Math.max(10,spacing*.28),0,'#ffcf70',.82+lane*.035,'boss-charge');queue(790+lane*55,()=>stageBossActualBeam(x1,y,x2,y,Math.max(20,spacing*.34),damage*.70,'#aeb9ff','shutter'));}
     showBossNotice(GAME_SETTINGS.language==='ko'?'격벽 폐쇄':'BULKHEAD CLOSURE',GAME_SETTINGS.language==='ko'?'안전 통로 확보':'FIND THE OPEN LANE');
   }
-  function stageOneBreachRam(e,api,phase,cycle,damage,pred,later=(ms,fn)=>stageOneLater(e,api,ms,fn)){
-    const arena=stageOneArena(api.run),tx=clamp(pred.x,arena.x-arena.halfW+54,arena.x+arena.halfW-54),ty=clamp(pred.y,arena.y-arena.halfH+54,arena.y+arena.halfH-54),aim=Math.atan2(ty-e.y,tx-e.x),length=Math.min(760,Math.hypot(arena.halfW*2,arena.halfH*2)),width=e.r*1.42;
+  function stageOneBreachRam(e,api,phase,cycle,damage,pred){
+    const arena=stageOneArena(api.run),tx=clamp(pred.x,arena.x-arena.halfW+54,arena.x+arena.halfW-54),ty=clamp(pred.y,arena.y-arena.halfH+54,arena.y+arena.halfH-54),aim=Math.atan2(ty-e.y,tx-e.x),length=Math.min(760,Math.hypot(arena.halfW*2,arena.halfH*2)),width=e.r*1.42,token=e.stageOneActionToken||0;
     rawLine(e.x,e.y,e.x+Math.cos(aim)*length,e.y+Math.sin(aim)*length,width,0,'#ffcf70',1.02,'boss-charge');e.stageRamWindupUntil=(state.time||0)+1.02;e.stageRamAngle=aim;e.contactSafeUntil=Math.max(e.contactSafeUntil||0,(state.time||0)+.82);
-    later(980,()=>{const liveAim=Math.atan2(ty-e.y,tx-e.x);e.stageRamAngle=liveAim;e.stageRamUntil=(state.time||0)+.72;e.dash=.72;e.dashX=Math.cos(liveAim)*(610+phase*65);e.dashY=Math.sin(liveAim)*(610+phase*65);e.contactSafeUntil=state.time||0;shockwave(e.x,e.y,'#ffcf70',92,.32,4);spawnParticle(e.x,e.y,'#d7ddf5',12,190,4);audio.tone?.(70,.30,'sawtooth',.030,80);});
+    scheduleWeaponAction(980,()=>{if(!stageBossSignatureAlive(e,api)||e.stageOneActionToken!==token)return;const liveAim=Math.atan2(ty-e.y,tx-e.x);e.stageRamAngle=liveAim;e.stageRamUntil=(state.time||0)+.72;e.dash=.72;e.dashX=Math.cos(liveAim)*(610+phase*65);e.dashY=Math.sin(liveAim)*(610+phase*65);e.contactSafeUntil=state.time||0;shockwave(e.x,e.y,'#ffcf70',92,.32,4);spawnParticle(e.x,e.y,'#d7ddf5',12,190,4);audio.tone?.(70,.30,'sawtooth',.030,80);});
   }
   const STAGE_APEX_UNIQUE_TECHNIQUES=Object.freeze({
     'stage-01':(e,api,phase,cycle,d,pred,later)=>stageOneShutterClamp(e,api,phase,cycle,d,pred,later),
@@ -417,7 +421,7 @@
       e.stagePrimaryCd=.30;e.stageUniqueCd=1.25;e.stageTertiaryCd=2.30;e.stagePhaseChangedAt=state.time||0;
       state.camera.shake=Math.max(state.camera.shake,7+e.stagePhase*2);state.flash=Math.max(state.flash,.08+e.stagePhase*.02);
       shockwave(e.x,e.y,e.color||'#dbe4ff',118+e.stagePhase*28,.46,3+e.stagePhase);
-      if(e.eventKind==='stage-01'){const arena=stageOneArena();if(arena)arena.phase=e.stagePhase;e.stageGateCoreOpen=e.stagePhase>=2;e.attackLockUntil=(state.time||0)+1.12;e.stageOneAttackCd=1.35;e.stageRamWindupUntil=0;e.stageRamUntil=0;stageBossSetMotion(e,0,0);showBossNotice(GAME_SETTINGS.language==='ko'?'전초 수호자 · 봉쇄 해제':'FRONTIER WARDEN · SEAL BROKEN',GAME_SETTINGS.language==='ko'?'노출된 관문핵':'GATE CORE EXPOSED');audio.tone?.(118,.52,'sawtooth',.036,120);spawnParticle(e.x,e.y,'#ffffff',20,210,5);}
+      if(e.eventKind==='stage-01'){const arena=stageOneArena();if(arena)arena.phase=e.stagePhase;e.stageGateCoreOpen=e.stagePhase>=2;e.stageOneActionToken=(e.stageOneActionToken||0)+1;e.attackLockUntil=(state.time||0)+1.12;e.stageOneAttackCd=1.35;e.stageRamWindupUntil=0;e.stageRamUntil=0;e.dash=0;e.dashX=0;e.dashY=0;stageBossSetMotion(e,0,0);showBossNotice(GAME_SETTINGS.language==='ko'?'전초 수호자 · 봉쇄 해제':'FRONTIER WARDEN · SEAL BROKEN',GAME_SETTINGS.language==='ko'?'노출된 관문핵':'GATE CORE EXPOSED');audio.tone?.(118,.52,'sawtooth',.036,120);spawnParticle(e.x,e.y,'#ffffff',20,210,5);}
       if(e.eventKind==='stage-12')e.stageShellOpen=e.stagePhase>=2;
       if(e.eventKind==='stage-18')e.stageCoreExposed=e.stagePhase>=2;
     }
@@ -488,7 +492,7 @@
       clampStageOnePlayer();STAGE_APEX_MOTION[id]?.(enemy,{x:player.x,y:player.y,phase});const now=state.time||0;
       if((enemy.attackLockUntil||0)>now||(enemy.stageRamWindupUntil||0)>now||(enemy.stageRamUntil||0)>now)return;
       enemy.stageOneAttackCd=(Number.isFinite(enemy.stageOneAttackCd)?enemy.stageOneAttackCd:1.8)-dt;if(enemy.stageOneAttackCd>0)return;
-      const cycle=(enemy.stageOneAttackCycle=(enemy.stageOneAttackCycle||0)+1),slot=cycle%4;enemy.stageOneAttackCd=(phase>=2?3.05:3.55)+(slot===3?.35:0);
+      const cycle=(enemy.stageOneAttackCycle=(enemy.stageOneAttackCycle||0)+1),slot=cycle%4;enemy.stageOneActionToken=(enemy.stageOneActionToken||0)+1;enemy.stageOneAttackCd=(phase>=2?3.05:3.55)+(slot===3?.35:0);
       if(slot===1||slot===0)stageBossSignature(enemy,api);else if(slot===2)stageBossUniqueTechnique(enemy,api);else stageBossTertiaryTechnique(enemy,api);return;
     }
     STAGE_APEX_MOTION[id]?.(enemy,{x:player.x,y:player.y,phase});
