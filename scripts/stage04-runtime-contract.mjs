@@ -13,7 +13,7 @@ const checks=[
  ['Phase Drifter has a dedicated common-enemy silhouette',entities.includes("v==='phase-drifter'")&&entities.includes("g.setLineDash(ring?[5,5]:[])")],
  ['Zero-Hour Regulator has a dedicated boss silhouette',elite.includes("f==='zero-hour-regulator'")&&elite.includes("phase>=3?'#ffffff'")],
  ['Stage 4 boss uses the shared stage dispatcher',bosses.includes("enemy.kind==='stage-boss'&&typeof window.updateStageBossSkill==='function'")&&shared.includes('window.updateStageBossSkill=function')&&runtime.includes("eventVariant:'stage04-regulator'")],
- ['Stage 4 boss has multi-phase clock-hand pressure and Phase Drifter summons',runtime.includes('hp<.28?3:hp<.62?2:1')&&runtime.includes("api.spawnBurst('phase-drifter'")&&runtime.includes('hands=phase===3?3:2')],
+ ['Stage 4 boss uses authored history orbit and rewind scars',runtime.includes('bossSkill:null')&&shared.includes("'stage-04':[.68,.30]")&&shared.includes('stageBossPast(e,12+p.phase*2)')&&shared.includes("'rewind-scar'")],
  ['Stage 4 unlocks Chrono Ring and progression currency',catalog.includes("rewards:[{type:'weapon',key:'chrono'}")&&catalog.includes("key:'stardust',amount:260")&&catalog.includes("key:'coreShard',amount:1,firstClearOnly:true")],
  ['Stage 4 adapter is loaded after Stage 3',index.indexOf('src/stage03-runtime.js')<index.indexOf('src/stage04-runtime.js')],
  ['all supported languages include Stage 4 combat copy',(lang.match(/'stage04\.enemy\.phaseDrifter'/g)||[]).length>=6&&(lang.match(/'stage04\.objective\.boss'/g)||[]).length>=6]
