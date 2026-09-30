@@ -256,12 +256,15 @@
     const dx=x-e.x,dy=y-e.y,d=Math.hypot(dx,dy)||1,time=Math.max(.28,duration),speed=Math.min(maxSpeed,d/time);e.dash=time;e.dashX=dx/d*speed;e.dashY=dy/d*speed;e.contactSafeUntil=Math.max(e.contactSafeUntil||0,(state.time||0)+.16);shockwave(e.x,e.y,e.color||'#cbd5ff',72,.26,2.2);return true;
   }
   function stageOneLater(e,api,ms,fn){scheduleWeaponAction(ms,()=>{if(stageBossSignatureAlive(e,api))fn();});}
+  function stageOneDebrisTelegraph(x,y,r,damage,color,life){
+    if(state.entities.telegraphs.length>=entityCap('telegraphs'))state.entities.telegraphs.shift();state.entities.telegraphs.push({type:'circle',x,y,r,life,max:life,damage,color,impactStyle:'stage1-debris',phase:Math.random()*TAU});
+  }
   function stageOneDebrisSalvo(e,api,phase,cycle,damage,pred,later=(ms,fn)=>stageOneLater(e,api,ms,fn)){
     const arena=stageOneArena(api.run),shots=phase>=2?5:4,spread=Math.min(210,arena?.halfW*.62||190),baseX=clamp(pred.x,arena.x-spread,arena.x+spread);
-    for(let i=0;i<shots;i++){const offset=(i-(shots-1)/2)*(phase>=2?58:66),tx=clamp(baseX+offset,arena.x-arena.halfW+48,arena.x+arena.halfW-48),ty=clamp(pred.y+(i%2?42:-30),arena.y-arena.halfH+54,arena.y+arena.halfH-54);
-      addCircle(tx,ty,30+(i%2)*5,0,i%2?'#8395d8':'#c2cbef',.72+i*.06);
-      later(620+i*75,()=>{const ox=e.x+(i-(shots-1)/2)*e.r*.28,oy=e.y+e.r*.28,aim=Math.atan2(ty-oy,tx-ox);spawnEnemyProjectile(ox,oy,aim,195+phase*22,damage*(.62+(i%2)*.08),i%2?'#8799c9':'#d7ddf5',9+(i%2)*1.5,4.2,'debris');spawnParticle(ox,oy,'#e4e9ff',3,82,3);});
+    for(let i=0;i<shots;i++){const offset=(i-(shots-1)/2)*(phase>=2?58:66),tx=clamp(baseX+offset,arena.x-arena.halfW+48,arena.x+arena.halfW-48),ty=clamp(pred.y+(i%2?42:-30),arena.y-arena.halfH+54,arena.y+arena.halfH-54),r=32+(i%2)*5;
+      stageOneDebrisTelegraph(tx,ty,r,damage*(.66+(i%2)*.08),i%2?'#8395d8':'#c2cbef',.74+i*.08);
     }
+    e.stageDebrisVolleyAt=state.time||0;audio.tone?.(142,.12,'square',.012,-32);
   }
   function stageOneShutterClamp(e,api,phase,cycle,damage,pred,later=(ms,fn)=>stageOneLater(e,api,ms,fn)){
     const arena=stageOneArena(api.run),lanes=phase>=2?5:4,safe=Math.abs(cycle+phase)%lanes,usable=arena.halfH*1.46,spacing=usable/Math.max(1,lanes-1);
