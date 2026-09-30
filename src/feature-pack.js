@@ -34,13 +34,13 @@ dealDamage=function dealDamageWithDistinctBursts(enemy,amount,opts={}){
     const splash=amount*(.16+stacks*.018);
     shockwave(x,y,source==='echo-star'?COLORS.pink:'#ff789b',radius,.20,2.2);
     spawnParticle(x,y,source==='echo-star'?COLORS.pink:'#ff9aba',4+Math.min(5,stacks),105,3.2);
-    forEachNearbyEnemyCandidate(x,y,radius+96,other=>{if(other===enemy||other.dead)return;if((other.x-x)**2+(other.y-y)**2<(other.r+radius)**2)sf2BaseDealDamage(other,splash,{color:'#ff9aba',source:'ember-burst',canCrit:false});});
+    forEachNearbyEnemyCandidate(x,y,radius+128,other=>{if(other===enemy||other.dead)return;if((other.x-x)**2+(other.y-y)**2<(other.r+radius)**2)sf2BaseDealDamage(other,splash,{color:'#ff9aba',source:'ember-burst',canCrit:false});});
   }
   if((source==='core'||source==='core-echo')&&weaponCount('core')>=4){
     const stacks=weaponCount('core');
     const radius=22+stacks*3;
     shockwave(x,y,source==='core-echo'?COLORS.pink:'#d7f8ff',radius,.16,1.6);
-    forEachNearbyEnemyCandidate(x,y,radius+96,other=>{if(other===enemy||other.dead)return;if((other.x-x)**2+(other.y-y)**2<(other.r+radius)**2)sf2BaseDealDamage(other,amount*(.12+stacks*.012),{color:'#d7f8ff',source:'core-burst',canCrit:false});});
+    forEachNearbyEnemyCandidate(x,y,radius+128,other=>{if(other===enemy||other.dead)return;if((other.x-x)**2+(other.y-y)**2<(other.r+radius)**2)sf2BaseDealDamage(other,amount*(.12+stacks*.012),{color:'#d7f8ff',source:'core-burst',canCrit:false});});
   }
   if(sf2EchoBladeGuard||enemy.dead||state.mode!=='playing'||source!=='blade'||!stat('echo')||(player.echoBladeCd||0)>0)return;
   const chance=Math.min(.36,.045+stat('echo')*.038);if(Math.random()>=chance)return;
