@@ -12,7 +12,13 @@
     poolAt(time){if(time<120)return[['shardling',.58],['dart',.42]];if(time<240)return[['shardling',.40],['dart',.30],['nebula-wisp',.30]];if(time<420)return[['shardling',.29],['dart',.25],['nebula-wisp',.28],['bombardier',.18]];return[['shardling',.22],['dart',.22],['nebula-wisp',.26],['bombardier',.18],['bulwark',.12]];},
     spawnProfile(time){return{cap:time>=420?52:time>=240?44:38,rate:Math.max(.50,1.24-time*.00125),count:time>=420?2:time>=270&&Math.random()<.40?2:1};},
     waveLabel(event){return event.variant==='nebula-wisp'?tr('stage02.event.bloom'):tr('stage01.event.bombardment');},
-    hazard(event,api){const deep=event.variant==='deep-shear';showBossNotice(deep?tr('stage02.event.deep'):tr('stage02.event.shear'),tr('stage02.event.warning'));const waves=deep?5:3,damage=9+Math.min(11,state.level*.30);for(let wave=0;wave<waves;wave++)scheduleWeaponAction(wave*(deep?430:520),()=>{if(!api.isActive())return;const p=typeof predictedPlayer==='function'?predictedPlayer(90+wave*28):{x:player.x,y:player.y},a=(wave%2?.58:-.58)+(deep?wave*.16:wave*.10),dx=Math.cos(a),dy=Math.sin(a),nx=-dy,ny=dx,half=330,gap=deep?54:68,offset=(wave-(waves-1)/2)*(deep?36:42),cx=p.x+nx*offset,cy=p.y+ny*offset;rawLine(cx-dx*half,cy-dy*half,cx-dx*gap,cy-dy*gap,16+(deep?4:0),damage*(deep?1.02:.86),deep?'#ff7bd5':'#78e5ff',.96+wave*.05,'boss-line');rawLine(cx+dx*gap,cy+dy*gap,cx+dx*half,cy+dy*half,16+(deep?4:0),damage*(deep?1.02:.86),deep?'#ff7bd5':'#78e5ff',.96+wave*.05,'boss-line');if(deep&&wave%2===0)addCircle(p.x,p.y,62+wave*5,damage*.72,'#d59cff',.92);});},
+    hazard(event,api){
+      const deep=event.variant==='deep-shear';showBossNotice(deep?tr('stage02.event.deep'):tr('stage02.event.shear'),tr('stage02.event.warning'));const waves=deep?4:3,damage=9+Math.min(11,state.level*.30);
+      for(let wave=0;wave<waves;wave++)scheduleWeaponAction(wave*(deep?500:610),()=>{
+        if(!api.isActive())return;const p=typeof predictedPlayer==='function'?predictedPlayer(82+wave*24):{x:player.x,y:player.y},a=(wave%2?-.48:.36)+(deep?wave*.14:wave*.09),dx=Math.cos(a),dy=Math.sin(a),nx=-dy,ny=dx,half=410,offsets=deep?[-104,104]:[wave===1?58:-34],width=deep?24:19;
+        for(const offset of offsets){const cx=p.x+nx*offset,cy=p.y+ny*offset;rawLine(cx-dx*half,cy-dy*half,cx+dx*half,cy+dy*half,width,damage*(deep?.86:.78),deep?'#ff7bd5':'#78e5ff',1.08+wave*.06,'ion-shear');}
+      });
+    },
     bossProfile:{form:'nebula-heart',eventVariant:'stage02-heart',nameKey:'stage02.boss',warningKey:'stage02.boss.warning',r:64,hp:1.52,speed:.82,damage:1.08,color:'#ff8fd8',xp:1.95,skillCd:1.55,burstCd:4.4,pulseCd:6.7,spawnRadius:660,spawnShockwave:205},
     bossSkill:null
   });
