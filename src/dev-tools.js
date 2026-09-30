@@ -234,7 +234,7 @@
     <select id="devStage">${stageOptions}</select>
     <div class="dev-grid">
       <button id="devStageStart" class="accent">선택 Stage 시작</button>
-      <button id="devBossNow">Stage 보스 즉시</button>
+      <button id="devBossNow">Stage 보스 5초 전</button>
       <button id="devEndless">Endless 시작</button>
       <button id="devClearEnemies">적/투사체 정리</button>
       <button id="devHeal">체력·보호막 회복</button>
@@ -283,7 +283,7 @@
   $('#devAll6').onclick=()=>{equipAll(6,false);updateStatus();};
   $('#devAllAwake').onclick=()=>{equipAll(6,true);updateStatus();};
   $('#devStageStart').onclick=()=>{const ok=startStage(stage.value);setDevAction(ok?`${stageName(window.stackfallStageById?.(stage.value))} 시작`:'Stage 시작 실패',ok);};
-  $('#devBossNow').onclick=()=>{const result=jumpStageBoss(stage.value),target=window.stackfallStageById?.(stage.value);setDevAction(result?.ok?`${stageName(target)} 초월체 즉시 소환`:`초월체 소환 실패 · ${result?.reason||'unknown'}`,result?.ok===true);};
+  $('#devBossNow').onclick=()=>{const result=jumpStageBoss(stage.value),target=window.stackfallStageById?.(stage.value);setDevAction(result?.ok?`${stageName(target)} 초월체 등장 5초 전부터 시작`:`초월체 진입 실패 · ${result?.reason||'unknown'}`,result?.ok===true);};
   $('#devEndless').onclick=()=>{const ok=startEndless();setDevAction('Endless 시작',ok);};
   $('#devClearEnemies').onclick=()=>{const ok=clearCombatEntities();setDevAction('전투 개체/투사체 정리',ok);};
   $('#devHeal').onclick=()=>{fullHeal();setDevAction('체력·보호막 회복',true);};
