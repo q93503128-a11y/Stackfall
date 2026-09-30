@@ -8,29 +8,41 @@ function bossSkill(enemy,dt){
 function apexPhaseTransition(e,phase){
   const form=e.apexForm||e.eliteForm,arena=state.apexArena||{x:player.x,y:player.y,r:460},d=Math.max(9,e.damage*(.27+phase*.025)),color=form==='chronophage'?'#79ffe1':form==='starforge'?'#ffb04e':'#b7c9ff';
   e.attackLockUntil=Math.max(e.attackLockUntil||0,(state.time||0)+.38);e.contactSafeUntil=Math.max(e.contactSafeUntil||0,(state.time||0)+.48);state.camera.shake=Math.max(state.camera.shake,7+phase*2);state.flash=Math.max(state.flash,.08+phase*.025);shockwave(e.x,e.y,color,115+phase*42,.44+phase*.05,3+phase);
-  showBossNotice(`${bossName(form)} · PHASE ${phase}`,'APEX THREAT');
+  showBossNotice(bossName(form)+' · PHASE '+phase,'APEX THREAT');
   if(form==='chronophage'){
-    const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,18+phase*4,178+phase*18,d*.70,'#d9fff8',e.phase*.21,aim,.30-phase*.025,4.6);
-    const history=e.apexPlayerHistory||[],past=history[Math.max(0,history.length-8)]||{x:player.x,y:player.y};rawLine(past.x,past.y,player.x,player.y,18+phase*3,d,'#79ffe1',1.06,'boss-line');
-    if(phase>=3){for(let i=0;i<4+phase;i++){const a=i/(4+phase)*TAU+e.phase*.04;rawLine(arena.x,arena.y,arena.x+Math.cos(a)*arena.r*1.12,arena.y+Math.sin(a)*arena.r*1.12,18+phase*2,d*.82,i%2?'#79ffe1':'#d9fff8',.92+i*.04,'boss-line');}}
+    const history=e.apexPlayerHistory||[],now={x:player.x,y:player.y},marks=[history[Math.max(0,history.length-12)]||now,history[Math.max(0,history.length-8)]||now,history[Math.max(0,history.length-4)]||now,now];
+    for(let i=0;i<marks.length-1;i++){const a=marks[i],b=marks[i+1];rawLine(a.x,a.y,b.x,b.y,16+phase*2,d*(.72+i*.08),i%2?'#d9fff8':'#79ffe1',.74+i*.14,'boss-line');}
+    if(phase>=2&&!e.chronoPursuit)startChronoPursuit(e,phase,d*.86);
+    if(phase===4)marks.forEach((p,i)=>addCircle(p.x,p.y,36+i*7,d*(.48+i*.08),'#bffdf3',.70+i*.12));
   }else if(form==='starforge'){
-    const target=predictedPlayer(45+phase*38);addCircle(target.x,target.y,52+phase*8,d*1.12,'#ff7135',.86);for(let i=0;i<3+phase;i++){const a=i/(3+phase)*TAU+e.phase*.05;addCircle(target.x+Math.cos(a)*(92+phase*12),target.y+Math.sin(a)*(92+phase*12),36+phase*4,d*.66,'#ffd26f',.96+i*.055);}
-    if(phase>=3){for(let i=0;i<8+phase*2;i++)addLine(e,e.phase*.04+i*TAU/(8+phase*2),arena.r*1.18,18+phase*2,d*.86,i%3?'#ff9d42':'#fff1b0',.92+i*.018);}
-    if(phase===4)placeMines(e,9,'#ff7135',d*.72);
+    const target=predictedPlayer(80+phase*34),meteors=3+phase;
+    for(let i=0;i<meteors;i++){const a=i*2.399+e.phase*.05,r=i?54+phase*8:0;addCircle(target.x+Math.cos(a)*r,target.y+Math.sin(a)*r,40+phase*5,d*(i? .68:1.12),i%2?'#ffd26f':'#ff7135',.72+i*.10);}
+    if(phase>=2&&!e.forgeTidalCore)startForgeTidalCore(e,phase,d*.82);
+    if(phase===4){const span=arena.r*.82,gap=105;for(const side of[-1,1]){rawLine(arena.x-span,player.y+side*gap,arena.x+span,player.y+side*gap,22,d*.82,side>0?'#fff1b0':'#ff9d42',.94,'boss-line');}}
   }else{
-    const points=apexArenaPoints(6+phase*2,arena.r*.58,e.phase*.03),jump=phase>=3?3:2;for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+jump)%points.length];rawLine(a.x,a.y,b.x,b.y,15+phase*2,d*.82,i%2?'#d8e2ff':'#879be0',1.0+i*.025,'boss-line');}
-    for(let i=0;i<points.length;i+=2){const point=points[i],a=Math.atan2(player.y-point.y,player.x-point.x);spawnEnemyProjectile(point.x,point.y,a,170+phase*20,d*.55,'#dce6ff',4.2,6,'constellation');}
-    if(phase>=3)teleportConstellation(e,phase,.58);
+    const points=apexArenaPoints(6+phase*2,arena.r*.58,e.phase*.03),jump=phase>=3?3:2;
+    for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+jump)%points.length];rawLine(a.x,a.y,b.x,b.y,15+phase*2,d*.76,i%2?'#d8e2ff':'#879be0',.88+i*.025,'boss-line');}
+    for(let i=0;i<points.length;i+=2){const point=points[i],a=Math.atan2(player.y-point.y,player.x-point.x);spawnEnemyProjectile(point.x,point.y,a,175+phase*20,d*.52,'#dce6ff',4.2,6,'constellation');}
+    if(phase>=2)summonConstellationHeralds(e,phase);if(phase>=3)teleportConstellation(e,phase,.58);
   }
 }
 function apexVariantAttack(e,phase){
   const form=e.apexForm||e.eliteForm,arena=state.apexArena||{x:player.x,y:player.y,r:460},d=Math.max(8,e.damage*(.25+phase*.022));
   if(form==='chronophage'){
-    const history=e.apexPlayerHistory||[],now={x:player.x,y:player.y},pastA=history[Math.max(0,history.length-(4+phase))]||now,pastB=history[Math.max(0,history.length-(8+phase*2))]||pastA;addCircle(now.x,now.y,42+phase*5,d*.88,'#79ffe1',.78);addCircle(pastA.x,pastA.y,54+phase*6,d*.72,'#c6fff4',1.02);rawLine(pastB.x,pastB.y,now.x,now.y,17+phase*2,d*.94,'#8fffe0',1.10,'boss-line');if(phase>=3){const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,16+phase*3,210+phase*12,d*.60,'#e4fffb',-e.phase*.23,aim,.24,4.2);}
+    const history=e.apexPlayerHistory||[],now={x:player.x,y:player.y},pastA=history[Math.max(0,history.length-(4+phase))]||now,pastB=history[Math.max(0,history.length-(8+phase*2))]||pastA,pastC=history[Math.max(0,history.length-(11+phase*2))]||pastB;
+    addCircle(pastA.x,pastA.y,46+phase*5,d*.60,'#c6fff4',.82);rawLine(pastC.x,pastC.y,pastB.x,pastB.y,16+phase*2,d*.72,'#79ffe1',.88,'boss-line');rawLine(pastB.x,pastB.y,now.x,now.y,18+phase*2,d*.92,'#8fffe0',1.06,'boss-line');
+    if(phase>=3){const dx=now.x-pastA.x,dy=now.y-pastA.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;for(const side of[-1,1])rawLine(pastA.x+nx*side*92,pastA.y+ny*side*92,now.x+nx*side*92,now.y+ny*side*92,15+phase,d*.64,'#d9fff8',1.14,'boss-line');}
   }else if(form==='starforge'){
-    const p=predictedPlayer(80+phase*32);for(let i=0;i<2+phase;i++){const a=i*2.399+e.phase*.04;addCircle(p.x+Math.cos(a)*(i?48+phase*5:0),p.y+Math.sin(a)*(i?48+phase*5:0),38+phase*4,d*(i?.58:1.0),'#ff8a42',.72+i*.10);}if(phase>=2){const aim=Math.atan2(player.y-e.y,player.x-e.x);fireRingWithGaps(e,20+phase*3,185+phase*12,d*.62,'#ffd26f',e.phase*.19,aim,.28,5.0);}if(phase===4){const span=arena.r*.76,gap=92;for(const offset of[-gap,gap]){rawLine(arena.x-span,player.y+offset,arena.x+span,player.y+offset,22,d*.86,'#fff1b0',.98,'boss-line');rawLine(player.x+offset,arena.y-span,player.x+offset,arena.y+span,22,d*.86,'#ff9d42',1.06,'boss-line');}}
+    const p=predictedPlayer(90+phase*30),axis=(e.forgePressAxis=(e.forgePressAxis||0)+1)%2,span=arena.r*.84,gap=Math.max(76,142-phase*12);
+    if(axis===0){for(const side of[-1,1])rawLine(arena.x-span,p.y+side*gap,arena.x+span,p.y+side*gap,21+phase*2,d*.78,side>0?'#fff1b0':'#ff9d42',.92,'boss-line');}
+    else{for(const side of[-1,1])rawLine(p.x+side*gap,arena.y-span,p.x+side*gap,arena.y+span,21+phase*2,d*.78,side>0?'#fff1b0':'#ff9d42',.92,'boss-line');}
+    for(let i=0;i<2+phase;i++){const a=i*2.399+e.phase*.04,r=i?62+phase*7:0;addCircle(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r,38+phase*4,d*(i?.56:.92),'#ff7135',.72+i*.10);}
+    if(phase===4&&!e.forgeTidalCore)startForgeTidalCore(e,phase,d*.78);
   }else{
-    const points=apexArenaPoints(5+phase*2,arena.r*.50,-e.phase*.025);for(const [index,point]of points.entries()){const base=Math.atan2(player.y-point.y,player.x-point.x),shots=phase>=3?3:2;for(let j=0;j<shots;j++){const spread=(j-(shots-1)/2)*.13;spawnEnemyProjectile(point.x,point.y,base+spread,165+phase*18,d*.50,index%2?'#f0f4ff':'#9fb2ef',4.0,6,'constellation');}}if(phase>=2){const half=135+phase*18,x=player.x,y=player.y;rawLine(x-half,y-half,x+half,y-half,16+phase,d*.82,'#d8e2ff',.92,'boss-line');rawLine(x-half,y+half,x+half,y+half,16+phase,d*.82,'#879be0',1.00,'boss-line');rawLine(x-half,y-half,x-half,y+half,16+phase,d*.82,'#aebfff',1.08,'boss-line');rawLine(x+half,y-half,x+half,y+half,16+phase,d*.82,'#aebfff',1.16,'boss-line');}if(phase===4)teleportConstellation(e,4,.50);
+    const points=apexArenaPoints(5+phase*2,arena.r*.52,-e.phase*.025),jump=phase>=3?3:2;
+    for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+jump)%points.length];if((i+e.constellationSetpieceCycle)%3===0)continue;rawLine(a.x,a.y,b.x,b.y,16+phase*2,d*.76,i%2?'#f0f4ff':'#879be0',.94+i*.02,'boss-line');}
+    for(let i=0;i<points.length;i+=2){const point=points[i],base=Math.atan2(player.y-point.y,player.x-point.x);for(const spread of[-.10,.10])spawnEnemyProjectile(point.x,point.y,base+spread,170+phase*20,d*.48,'#dce6ff',4.1,6,'constellation');}
+    if(phase>=2)teleportConstellation(e,phase,.50);
   }
 }
 function angleToward(current,target,maxStep){const delta=Math.atan2(Math.sin(target-current),Math.cos(target-current));return current+clamp(delta,-maxStep,maxStep);}
