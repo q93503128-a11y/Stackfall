@@ -37,9 +37,17 @@
   const syncUi=()=>{try{renderLoadout?.();}catch{}try{updateHUD?.();}catch{}try{window.renderStackfallGalaxyMap?.();}catch{}try{window.renderStackfallMetaUi?.();}catch{}try{refreshSlotEditor();}catch{}};
   const clearCombatEntities=()=>{
     resetAwakeningTransients();
+    window.closeMapEventOverlays?.();state.mapEventActive=null;
+    const run=state.stageRun,bossWasActive=!!run?.bossSpawned,bossAt=Number(run?.stage?.boss?.spawnAt||run?.stage?.durationSeconds||0);
     const entities=state.entities||{};
     for(const value of Object.values(entities))if(Array.isArray(value))value.length=0;
-    state.bossActiveId=null;state.apexActiveId=null;state.pendingApexForm=null;
+    state.bossActiveId=null;state.apexActiveId=null;state.pendingApexForm=null;state.apexArena=null;state.stageVictory=null;
+    if(run&&bossWasActive){
+      run.bossSpawned=false;run.bossId=null;run.bossSnapshot=null;run.completed=false;run.completedAt=null;run.victoryStarted=false;run.resultShown=false;
+      const bossEvent=run.stage?.fixedEvents?.find(event=>event.kind==='boss');if(bossEvent&&run.eventsTriggered)delete run.eventsTriggered[bossEvent.id];
+      if(bossAt>0)state.time=Math.min(state.time||0,Math.max(0,bossAt-8));
+    }
+    ui.bossBar?.classList.add('hidden');syncUi();return true;
   };
   const resetAwakeningTransients=()=>{
     // DEV loadout changes are a new combat sample, including delayed casts and
@@ -141,15 +149,15 @@
     syncUi();
   }
   function startStage(stageId){
-    const stage=window.stackfallStageById?.(stageId);if(!stage)return;
-    state.runSelection={mode:'stage',stageId:stage.id};
-    resetGame();
-    syncUi();
+    const stage=window.stackfallStageById?.(stageId);if(!stage)return false;
+    state.runSelection={mode:'stage',stageId:stage.id};resetGame();syncUi();return true;
   }
-  function startEndless(){state.runSelection={mode:'endless',stageId:null};resetGame();syncUi();}
-  function jumpStageBoss(){
-    const cfg=window.stackfallCurrentRunConfig?.();if(cfg?.mode!=='stage'||!cfg.stage)return;
-    state.time=Math.max(state.time||0,Number(cfg.stage.boss?.spawnAt||cfg.stage.durationSeconds||60)+.05);state.spawnTimer=0;
+  function startEndless(){state.runSelection={mode:'endless',stageId:null};resetGame();syncUi();return true;}
+  function jumpStageBoss(stageId=null){
+    const target=window.stackfallStageById?.(stageId)||window.stackfallCurrentRunConfig?.()?.stage;
+    if(!target)return{ok:false,reason:'stage-missing'};
+    if(typeof window.stackfallDevSpawnStageBossNow!=='function')return{ok:false,reason:'runtime-helper-missing',stageId:target.id};
+    const result=window.stackfallDevSpawnStageBossNow(target.id);syncUi();return result||{ok:false,reason:'unknown',stageId:target.id};
   }
   function fullHeal(){player.hp=player.maxHp;player.shield=Math.max(player.shield||0,typeof shieldCapacity==='function'?shieldCapacity():0);player.invuln=Math.max(player.invuln||0,2);syncUi();}
   function setInvincible(on){window.stackfallDevInvincible=on===true;if(window.stackfallDevInvincible){player.hp=player.maxHp;player.invuln=Math.max(Number(player.invuln)||0,1);}syncUi();}
@@ -244,6 +252,8 @@
 
   const toggle=document.createElement('button');toggle.id='stackfallDevToggle';toggle.type='button';toggle.textContent='DEV';document.body.appendChild(toggle);
   const $=sel=>panel.querySelector(sel),weapon=$('#devWeapon'),stage=$('#devStage'),status=$('#devStatus'),slotEditor=$('#devWeaponSlots'),currencyButton=$('#devInfiniteCurrency'),invincibleButton=$('#devInvincible'),noLevelButton=$('#devNoLevel');
+  let devActionMessage='준비됨';
+  const setDevAction=(message,ok=true)=>{devActionMessage=`${ok?'✓':'✕'} ${message}`;updateStatus();};
   function renderSlotEditor(){
     if(!slotEditor)return;
     const config=currentSlotConfig(),core=currentCoreConfig(),options=equipmentWeapons().map(key=>`<option value="${key}">${weaponName(key)}</option>`).join(''),levels=Array.from({length:6},(_,i)=>i+1);
@@ -261,7 +271,7 @@
     }
   }
   refreshSlotEditor=renderSlotEditor;
-  const updateStatus=()=>{const cfg=window.stackfallCurrentRunConfig?.(),key=weapon.value,currency=window.stackfallDevInfiniteCurrency===true?'∞':'일반';if(currencyButton)currencyButton.textContent=`재화 무한 ${window.stackfallDevInfiniteCurrency===true?'ON':'OFF'}`;if(invincibleButton)invincibleButton.textContent=`무적 ${window.stackfallDevInvincible===true?'ON':'OFF'}`;if(noLevelButton)noLevelButton.textContent=`레벨업 불가 ${window.stackfallDevDisableLevelUps===true?'ON':'OFF'}`;const railCycle=key==='rail'?` · 레일 주기 ${Number(player.awRailCycle||0)%4}/4`:'';status.textContent=`RUN ${cfg?.mode||state.mode} · ${cfg?.stage?.id||'-'} · 장비 ${Math.min(DEV_SLOT_COUNT,state.weaponSlots?.length||0)}/${DEV_SLOT_COUNT} · ${weaponName(key)} ${weaponCount(key)||0}중첩 · 각성 ${state.awakenedWeapons?.[key]?'ON':'OFF'} · 무적 ${window.stackfallDevInvincible?'ON':'OFF'} · 레벨업 ${window.stackfallDevDisableLevelUps?'잠금':'정상'} · 재화 ${currency}${railCycle}`;};
+  const updateStatus=()=>{const cfg=window.stackfallCurrentRunConfig?.(),key=weapon.value,currency=window.stackfallDevInfiniteCurrency===true?'∞':'일반';if(currencyButton)currencyButton.textContent=`재화 무한 ${window.stackfallDevInfiniteCurrency===true?'ON':'OFF'}`;if(invincibleButton)invincibleButton.textContent=`무적 ${window.stackfallDevInvincible===true?'ON':'OFF'}`;if(noLevelButton)noLevelButton.textContent=`레벨업 불가 ${window.stackfallDevDisableLevelUps===true?'ON':'OFF'}`;const railCycle=key==='rail'?` · 레일 주기 ${Number(player.awRailCycle||0)%4}/4`:'';status.textContent=`RUN ${cfg?.mode||state.mode} · ${cfg?.stage?.id||'-'} · 장비 ${Math.min(DEV_SLOT_COUNT,state.weaponSlots?.length||0)}/${DEV_SLOT_COUNT} · ${weaponName(key)} ${weaponCount(key)||0}중첩 · 각성 ${state.awakenedWeapons?.[key]?'ON':'OFF'} · 무적 ${window.stackfallDevInvincible?'ON':'OFF'} · 레벨업 ${window.stackfallDevDisableLevelUps?'잠금':'정상'} · 재화 ${currency}${railCycle} · ${devActionMessage}`;};
   const refreshDevPanel=()=>{renderSlotEditor();updateStatus();};
   toggle.onclick=()=>{panel.classList.toggle('hidden');if(!panel.classList.contains('hidden'))refreshDevPanel();};
   $('#devRefreshSlots').onclick=refreshDevPanel;
@@ -272,16 +282,16 @@
   $('#devAll1').onclick=()=>{equipAll(1,false);updateStatus();};
   $('#devAll6').onclick=()=>{equipAll(6,false);updateStatus();};
   $('#devAllAwake').onclick=()=>{equipAll(6,true);updateStatus();};
-  $('#devStageStart').onclick=()=>{startStage(stage.value);updateStatus();};
-  $('#devBossNow').onclick=()=>{jumpStageBoss();updateStatus();};
-  $('#devEndless').onclick=()=>{startEndless();updateStatus();};
-  $('#devClearEnemies').onclick=()=>{clearCombatEntities();updateStatus();};
-  $('#devHeal').onclick=()=>{fullHeal();updateStatus();};
+  $('#devStageStart').onclick=()=>{const ok=startStage(stage.value);setDevAction(ok?`${stageName(window.stackfallStageById?.(stage.value))} 시작`:'Stage 시작 실패',ok);};
+  $('#devBossNow').onclick=()=>{const result=jumpStageBoss(stage.value),target=window.stackfallStageById?.(stage.value);setDevAction(result?.ok?`${stageName(target)} 초월체 즉시 소환`:`초월체 소환 실패 · ${result?.reason||'unknown'}`,result?.ok===true);};
+  $('#devEndless').onclick=()=>{const ok=startEndless();setDevAction('Endless 시작',ok);};
+  $('#devClearEnemies').onclick=()=>{const ok=clearCombatEntities();setDevAction('전투 개체/투사체 정리',ok);};
+  $('#devHeal').onclick=()=>{fullHeal();setDevAction('체력·보호막 회복',true);};
   $('#devInvincible').onclick=()=>{setInvincible(window.stackfallDevInvincible!==true);updateStatus();};
   $('#devNoLevel').onclick=()=>{setLevelUpsDisabled(window.stackfallDevDisableLevelUps!==true);updateStatus();};
   $('#devClearStages').onclick=()=>{completeAllStages();updateStatus();};
   $('#devCores').onclick=()=>{giveCores();updateStatus();};
-  $('#devReward').onclick=()=>{openSpecialReward();updateStatus();};
+  $('#devReward').onclick=()=>{const ok=openSpecialReward();setDevAction(ok?'특수능력 보상창 열기':'특수능력 보상창 실패 · 플레이 중에만 가능',ok);};
   $('#devInfiniteCurrency').onclick=()=>{setInfiniteCurrency(window.stackfallDevInfiniteCurrency!==true);updateStatus();};
   $('#devDisable').onclick=()=>{try{localStorage.removeItem('stackfall.devMode');localStorage.removeItem('stackfall.devInfiniteCurrency');}catch{}window.stackfallDevInfiniteCurrency=false;const url=new URL(location.href);url.searchParams.delete('dev');location.replace(url.toString());};
   weapon.onchange=updateStatus;stage.onchange=updateStatus;
