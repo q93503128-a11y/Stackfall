@@ -80,6 +80,7 @@ audio.boss=function(){[52,78,117,175].forEach((f,i)=>scheduleUiAction(i*135,()=>
 audio.apexIntro=function apexIntro(form){const root=form==='starforge'?46:form==='chronophage'?39:43;this.playChannel('combat',root,1.35,'sawtooth',.082,16,0);scheduleUiAction(420,()=>this.playChannel('combat',root*1.5,.92,'triangle',.055,-12,-.24));scheduleUiAction(920,()=>this.playChannel('combat',root*3,.68,'sine',.030,-root,.24));scheduleUiAction(1650,()=>this.enemyImpact(1.65));};
 audio.stageAttack=function stageAttack(stageId,attack){
   if(!this.allowed('combat'))return;const key=stageId+':'+attack,now=performance.now(),minGap=attack.includes('impact')?95:160,last=this.stageAttackLastAt.get(key)||0;if(now-last<minGap)return;this.stageAttackLastAt.set(key,now);
+  const voice=window.stackfallStageProduction?.(stageId)?.voice;if(voice){const phase=attack==='phase',down=attack==='defeat',root=voice.root*(phase?.75:down?.5:1),duration=down?1.5:phase?.7:voice.duration;this.playChannel('combat',root,duration,voice.type,.032,down?-root*.7:voice.sweep,-.18,{filterHz:voice.filter});this.playChannel('combat',root*voice.overtone,duration*.48,'triangle',.013,-root*.24,.22,{filterHz:voice.filter*1.5});return;}
   if(stageId==='stage-02'){
     const root=attack==='drain'?44:attack==='coalesce'?49:attack==='inhale'?73.42:attack==='split'?98:attack==='arrhythmia'?69.3:123.47;
     this.playChannel('combat',root,attack==='coalesce'||attack==='drain'?1.25:attack==='inhale'?.80:.24,'sine',.050,attack==='drain'?-20:attack==='exhale'?root*.8:-root*.22,-.18,{filterHz:1100});

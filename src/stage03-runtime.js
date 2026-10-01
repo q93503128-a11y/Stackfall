@@ -26,7 +26,7 @@
     spawnProfile(time){return{cap:time>=440?56:time>=300?48:40,rate:Math.max(.46,1.16-time*.00118),count:time>=440?2:time>=260&&Math.random()<.46?2:1};},
     waveLabel(event){return event.variant==='glass-wing'?tr('stage03.event.swarm'):tr('stage03.event.procession');},
     hazard(event,api){glassIncident(event,api);},
-    production:{actions:['crystal-fall','refraction','lid-cleave'],music:'reliquary',explorationMusic:'necropolis',subtitle:'봉인된 별의 장례 · A STAR ENTOMBED',entryDuration:3.4,victoryDuration:3.9,environment:run=>StageCraft.env(run),initialize:StageCraft.initialize,shapes:glassShapes,drawBody:glassBody,drawWorld:glassWorld,drawEntry:glassEntry,drawVictory:glassVictory,combat:glassCombat},
+    production:{voice:{root:523.25,type:'triangle',duration:.18,sweep:-130,filter:3900,overtone:1.498},actions:['crystal-fall','refraction','lid-cleave'],music:'reliquary',explorationMusic:'necropolis',subtitle:'봉인된 별의 장례 · A STAR ENTOMBED',entryDuration:3.4,victoryDuration:3.9,environment:run=>StageCraft.env(run),initialize:StageCraft.initialize,shapes:glassShapes,drawBody:glassBody,drawWorld:glassWorld,drawEntry:glassEntry,drawVictory:glassVictory,combat:glassCombat,defeat:e=>audio.stageAttack?.(e.eventKind,'defeat')},
     bossProfile:{form:'prism-reliquary',eventVariant:'stage03-reliquary',nameKey:'stage03.boss',warningKey:'stage03.boss.warning',r:70,hp:1.72,speed:.78,damage:1.14,color:'#c9b3ff',xp:2.1,skillCd:1.45,burstCd:4.0,pulseCd:6.2,spawnRadius:670,spawnShockwave:220},
     bossSkill:null
   });
