@@ -40,10 +40,9 @@ function drawStageEnemyBody(g,e){
     g.fillStyle='#0b2830';g.beginPath();g.arc(0,0,r*.60,0,TAU);g.fill();g.stroke();g.strokeStyle='#dfffff';g.lineWidth=1.4;for(let i=0;i<3;i++){const a=i/3*TAU+(e.phase||0)*.08;g.beginPath();g.moveTo(Math.cos(a)*r*.20,Math.sin(a)*r*.20);g.quadraticCurveTo(Math.cos(a+.45)*r*.56,Math.sin(a+.45)*r*.56,Math.cos(a)*r*.92,Math.sin(a)*r*.92);g.stroke();}g.fillStyle='#f3ffff';g.beginPath();g.arc(0,0,r*.17*pulse,0,TAU);g.fill();
   }
   else if(v==='abyss-spore'){
-    const face=Math.atan2(player.y-e.y,player.x-e.x);g.rotate(face);const pulse=.88+.12*Math.sin((e.phase||0)*1.4);g.strokeStyle=e.hit?'#fff':'#b878ff';g.fillStyle=e.hit?'#fff':'#10091f';g.lineWidth=1.9;
-    for(let petal=0;petal<5;petal++){g.save();g.rotate(petal*TAU/5+(e.phase||0)*.025);g.fillStyle=petal%2?'rgba(112,224,201,.32)':'rgba(184,120,255,.38)';g.beginPath();g.moveTo(r*.18,0);g.quadraticCurveTo(r*.82,-r*.34,r*1.22,0);g.quadraticCurveTo(r*.78,r*.36,r*.18,0);g.fill();g.stroke();g.restore();}
-    g.fillStyle='#06060f';g.beginPath();g.arc(0,0,r*.48,0,TAU);g.fill();g.stroke();g.fillStyle='#e9d8ff';g.beginPath();g.arc(r*.04,0,r*.13*pulse,0,TAU);g.fill();
-    for(const side of[-1,1]){g.strokeStyle=side>0?'rgba(112,224,201,.62)':'rgba(184,120,255,.62)';g.beginPath();g.moveTo(-r*.22,side*r*.18);g.quadraticCurveTo(-r*.88,side*r*.56,-r*1.38,side*r*.22);g.stroke();}
+    const face=Math.atan2(player.y-e.y,player.x-e.x);g.rotate(face);const pulse=.88+.12*Math.sin((e.phase||0)*1.4),husk=g.createLinearGradient(-r,-r,r,r);husk.addColorStop(0,'#739c91');husk.addColorStop(.5,'#273341');husk.addColorStop(1,'#83668d');g.strokeStyle=e.hit?'#fff':'#a899b7';g.fillStyle=e.hit?'#fff':husk;g.lineWidth=1.7;
+    g.beginPath();g.moveTo(r*.81,0);g.bezierCurveTo(r*.68,-r*.52,-r*.25,-r*.87,-r*.64,-r*.39);g.bezierCurveTo(-r*.89,r*.18,-r*.22,r*.76,r*.22,r*.53);g.quadraticCurveTo(r*.6,r*.30,r*.81,0);g.fill();g.stroke();
+    for(const side of[-1,1]){g.strokeStyle=side>0?'#799d8b':'#897299';g.lineWidth=2;g.beginPath();g.moveTo(-r*.28,side*r*.22);g.quadraticCurveTo(-r*.56,side*r*.63,-r*.74,side*r*.61);g.stroke();}g.strokeStyle='#dfbbd6';g.lineWidth=2.3*pulse;g.beginPath();g.moveTo(r*.43,-r*.18);g.quadraticCurveTo(r*.21,r*.03,r*.35,r*.23);g.stroke();
   }
   else if(v==='rootlance'){
     g.rotate(Math.atan2(player.y-e.y,player.x-e.x));const pulse=.90+.10*Math.sin((e.phase||0)*1.7);g.strokeStyle=e.hit?'#fff':'#ff7fa8';g.fillStyle=e.hit?'#fff':'#170914';g.lineWidth=2;

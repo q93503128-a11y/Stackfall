@@ -10,10 +10,10 @@ const results=[];
 try{
   for(const config of[{name:'desktop-gpu',width:1440,height:900,gpu:true},{name:'desktop-fallback',width:1440,height:900,gpu:false},{name:'mobile-fallback',width:390,height:844,gpu:false}]){
     const context=await browser.newContext({viewport:{width:config.width,height:config.height}}),page=await context.newPage(),errors=[];
-    page.on('pageerror',e=>errors.push(e.message));
+    page.on('pageerror',e=>{errors.push(e.message);writeFileSync(resolve(output,config.name+'-page-errors.json'),JSON.stringify(errors,null,2));});
     if(!config.gpu)await page.route(/pixi/i,r=>r.abort());
     await page.goto('http://127.0.0.1:8000/?dev=1&build-check=production',{waitUntil:'networkidle'});
-    await page.waitForFunction(()=>window.stackfallDeveloperTest?.enabled===true);
+    await page.waitForFunction(()=>window.stackfallDeveloperTest?.enabled===true&&typeof window.stackfallRendererInfo==='function');
     const initial=await page.evaluate(id=>{
       GAME_SETTINGS.audio.master=false;window.__stackfallLoopGeneration++;state.stagePhysicalObjects=[{stageId:'previous-run',dead:false}];stackfallDeveloperTest.startStage(id);stackfallDeveloperTest.setLevelUpsDisabled(true);stackfallDeveloperTest.setInvincible(true);
       if(state.realmTransition)updateRealmTransition(state.realmTransition.duration);state.time=20;updateSpawning(0);updateHUD();state.mode='paused';draw();

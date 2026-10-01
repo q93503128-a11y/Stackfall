@@ -228,7 +228,7 @@
     if(!boss){objective.classList.add('hidden');return;}const def=stageDefinition(run.stage.id);objective.textContent=tr(def?.objectiveKey||'stage01.objective.boss');objective.classList.remove('hidden');
   }
   function updateAmbientGimmick(run,def){
-    const gimmick=run.stage.gimmick;if(!gimmick||run.bossSpawned)return;
+    const gimmick=run.stage.gimmick;if(!gimmick||run.bossSpawned||run.productionEnvironment?.quiet)return;
     if(!Number.isFinite(run.gimmickNextAt))run.gimmickNextAt=Math.max(1,Number(gimmick.startAt)||45);
     if(state.time<run.gimmickNextAt)return;
     const api=apiFor(run),progress=api.progress,cycle=(run.gimmickCycle||0)+1,hazards=run.stage.fixedEvents.filter(event=>event.kind==='hazard'),waves=run.stage.fixedEvents.filter(event=>event.kind==='wave');
