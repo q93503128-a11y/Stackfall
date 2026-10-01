@@ -181,13 +181,15 @@
     if(e.stageBossTier==='constellation'){e.hp*=1.18;e.damage*=1.06;e.skillCd*=.92;e.burstCd*=.92;e.pulseCd*=.92;}e.maxHp=e.hp;
     if(stage.id==='stage-01'){e.stageBodyScale=compactDevice()?.67:1;e.stageBodyAngle=0;e.stageBodyShapes=[];stageOneBodyShapes(e);e.stageOneAttackCd=1.7;e.contactSafeUntil=(state.time||0)+1.2;e.stageGateCoreOpen=false;stabilizeRealmTheme?.('stage-01-warden');}
     if(stage.id==='stage-02'){e.x=player.x+18;e.y=player.y-Math.min(vh*.26,230);e.stageTwoAttackCd=1.55;e.stageNebulaBeatUntil=0;e.stageNebulaInhaleUntil=0;e.stageNebulaExhaleUntil=0;e.stageNebulaActiveLobe=-1;e.stageNebulaFlowDir=e.id%2?1:-1;}
-    def.production?.initialize?.(e,apiFor(run));state.entities.enemies.push(e);state.bossActiveId=e.id;state.bossIndex++;run.bossSpawned=true;run.bossId=e.id;run.bossSnapshot={id:e.id,x:e.x,y:e.y,color:e.color,kind:'stage-boss'};
+    def.production?.initialize?.(e,apiFor(run));if(def.production){const shapes=def.production.shapes(e),points=shapes.flatMap(s=>s.points||[]);run.bodyQueryPadding=Math.max(155,...points.map(p=>Math.hypot(p.x-e.x,p.y-e.y)+100));}state.entities.enemies.push(e);state.bossActiveId=e.id;state.bossIndex++;run.bossSpawned=true;run.bossId=e.id;run.bossSnapshot={id:e.id,x:e.x,y:e.y,color:e.color,kind:'stage-boss'};
     if(!options.suppressNotice)showBossNotice(e.name,tr(profile.warningKey));audio.boss();if(!def.production&&!['stage-01','stage-02'].includes(stage.id))shockwave(e.x,e.y,e.color,profile.spawnShockwave||195,.74,5);return e;
   }
   function beginProductionBossIntro(event){
     const run=stageRuntime(),production=stageDefinition()?.production;if(!production||!run||run.bossSpawned||run.bossIntroPending||activeStageEncounterCount()>0)return false;
     run.bossIntroPending=true;ui.bossNotice.classList.add('hidden');document.querySelector('.stage-environment-notice')?.classList.remove('show');if(event?.id)run.eventsTriggered[event.id]=true;clearStagePhysicalObjects();clearPendingCombatActions();clearRunUiActions?.();window.closeMapEventOverlays?.();state.mapEventActive=null;state.entities.mapEvents.length=0;
+    for(const enemy of state.entities.enemies)enemy.dead=true;state.entities.enemies.length=0;for(const key of['enemyProjectiles','telegraphs','beams','wells'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;
     run.productionEntry=StageCraft.entryPoint(production);
+    audio.stageAttack?.(run.stage.id,'intro');
     startRealmTransition(run.stage.id,{duration:production.entryDuration||3.2,owner:run.stage.id+'-boss-entry',title:localized(run.stage.boss.name),subtitle:production.subtitle,onComplete:()=>{if(stageRuntime()!==run)return;run.bossIntroPending=false;spawnStageBoss({suppressNotice:true});}});return true;
   }
   window.stackfallStageProduction=id=>stageDefinition(id)?.production;

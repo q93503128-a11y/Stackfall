@@ -100,7 +100,7 @@
     }
   }
   function forEachNearbyEnemy(x,y,range,visit){
-    if(state.stageRun?.bossSpawned)range+=155;
+    if(state.stageRun?.bossSpawned)range+=Math.max(155,state.stageRun.bodyQueryPadding||0);
     const cx=Math.floor(x/CELL),cy=Math.floor(y/CELL),reach=Math.max(1,Math.ceil(range/CELL));
     for(let yy=cy-reach;yy<=cy+reach;yy++)for(let xx=cx-reach;xx<=cx+reach;xx++){
       const bucket=grid.get(gridKey(xx,yy));if(!bucket)continue;
@@ -108,7 +108,7 @@
     }
   }
   function collectNearbyInto(x,y,range,out){
-    if(state.stageRun?.bossSpawned)range+=155;
+    if(state.stageRun?.bossSpawned)range+=Math.max(155,state.stageRun.bodyQueryPadding||0);
     out.length=0;const cx=Math.floor(x/CELL),cy=Math.floor(y/CELL),reach=Math.max(1,Math.ceil(range/CELL));
     for(let yy=cy-reach;yy<=cy+reach;yy++)for(let xx=cx-reach;xx<=cx+reach;xx++){const bucket=grid.get(gridKey(xx,yy));if(!bucket)continue;for(let i=0;i<bucket.length;i++)out.push(bucket[i]);}
     return out;
@@ -294,7 +294,7 @@
       const source=String(p.source||'');p.source=source;const cometTrail=source.includes('comet'),trailSource=cometTrail||['ember','echo-star','core','core-echo','star-spark','wave','meteor-drone','echo-drone','drone-burst','spiral-bolt','echo-spiral','mirror-return','mirror-counter'].includes(source);
       if(p.life>0&&p.trailTick<=0&&trailSource&&state.entities.particles.length<particleCap&&!heavyFrame&&GAME_SETTINGS.hideProjectiles!==true){p.trailTick=compactDevice()?.09:cometTrail?.052:.075;state.entities.particles.push({x:p.x-p.vx*.018,y:p.y-p.vy*.018,vx:rand(-10,10),vy:rand(-10,10),life:cometTrail?.26:.16,max:cometTrail?.26:.16,size:cometTrail?rand(1.8,3.2):rand(.9,2),color:p.color||COLORS.white,star:true});}
       if(p.life>0&&p.trailDamage){p.trailDamageCd=(p.trailDamageCd||0)-dt;while(p.trailDamageCd<=0){p.trailDamageCd+=.24;const rr=24+weaponCount('comet')*2,candidates=collectNearbyInto(p.x,p.y,rr+76,projectileTrailBuffer);for(let i=0;i<candidates.length;i++){const e=candidates[i];if(e&&!e.dead&&enemyCircleOverlap(e,p.x,p.y,rr))dealDamage(e,2.6+weaponCount('comet')*.85,{color:COLORS.comet,source:'comet-trail',canCrit:false});}}}
-      if(p.life>0){const candidates=collectNearbyInto(p.x,p.y,p.r+86,projectileCollisionBuffer);for(let candidateIndex=0;candidateIndex<candidates.length&&p.life>0;candidateIndex++){const e=candidates[candidateIndex];
+      if(p.life>0){const sweptBoss=state.stageRun?.bossSpawned===true,candidates=collectNearbyInto(sweptBoss?(projectilePreviousX+p.x)*.5:p.x,sweptBoss?(projectilePreviousY+p.y)*.5:p.y,p.r+86+(sweptBoss?Math.hypot(p.x-projectilePreviousX,p.y-projectilePreviousY)*.5:0),projectileCollisionBuffer);for(let candidateIndex=0;candidateIndex<candidates.length&&p.life>0;candidateIndex++){const e=candidates[candidateIndex];
         if(!e||e.dead||p.hitIds?.has(e.id))continue;
         if(e.stageBodyShapes?enemySegmentOverlap(e,projectilePreviousX,projectilePreviousY,p.x,p.y,p.r):enemyCircleOverlap(e,p.x,p.y,p.r)){
           dealDamage(e,p.damage,{color:p.color,source});if(!p.hitIds)p.hitIds=new Set();p.hitIds.add(e.id);
