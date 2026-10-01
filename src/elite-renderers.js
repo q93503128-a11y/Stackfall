@@ -54,6 +54,7 @@ function drawNebulaHeartBody(e){
     ctx.globalAlpha=.58*bodyAlpha;ctx.strokeStyle=phase>=3?'#fff0ad':'#a8f5ff';ctx.lineWidth=1.4;for(let vein=0;vein<3+phase;vein++){const a=-1.15+vein*(2.3/(2+phase));ctx.beginPath();ctx.moveTo(Math.cos(a)*r*.18,Math.sin(a)*r*.22);ctx.quadraticCurveTo(Math.cos(a+.38)*r*.48,Math.sin(a+.38)*r*.48,Math.cos(a-.10)*r*.72,Math.sin(a-.10)*r*.72);ctx.stroke();}ctx.globalAlpha=1;ctx.restore();
 }
 function drawEliteShape(e){
+  if(e.kind==='stage-boss'&&window.stackfallStageProduction?.(e.eventKind)){window.stackfallStageProduction(e.eventKind).drawBody(e);return;}
   const f=e.eliteForm||e.apexForm||e.variant,t=e.phase,enraged=e.kind==='apex'&&e.apexPhase===2;
   ctx.save();ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;ctx.lineWidth=e.kind==='apex'?4:3;ctx.lineCap='round';ctx.lineJoin='round';
   if(f==='collapse-warden'){drawCollapseWardenBody(e);

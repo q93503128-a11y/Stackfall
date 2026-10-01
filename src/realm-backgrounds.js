@@ -248,6 +248,7 @@ function drawStageTwoNebulaField(tier){
   ctx.restore();
 }
 function drawStageConstellationField(theme){
+  const production=window.stackfallStageProduction?.(theme);if(production){production.drawWorld();return;}
   const match=String(theme||'').match(/^stage-(\d{2})$/);if(!match)return;
   const order=Math.max(1,Math.min(18,Number(match[1])||1)),family=order<=6?'route':order<=12?'bloom':'array',tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,t=performance.now()/1000;
   if(order===1){drawStageOneFrontierField(tier);return;}

@@ -14,7 +14,8 @@ export function stageHazardsWork(order,expected){
   const draw=(...values)=>{if(values.some(value=>typeof value==='number'&&!Number.isFinite(value)))throw new Error(`${id}: non-finite geometry`);draws++;};
   const context={window:{stackfallRegisterStageRuntime:(key,value)=>{if(key===id)adapter=value;}},state:{level:6,time:100},player:{x:37,y:23},TAU:Math.PI*2,Math,
     tr:key=>key,showBossNotice:()=>{},scheduleWeaponAction:(delay,fn)=>fn(),predictedPlayer:()=>({x:37,y:23}),rawLine:draw,addCircle:draw,spawnEnemyProjectile:draw,fireRing:draw,fireRingWithGaps:draw,
-    addStagePhysicalObject:o=>draw(...Object.values(o)),compactDevice:()=>false,stackfallStageEnvironmentCombatScale:()=>({damage:1}),rand:(a,b)=>(a+b)/2,choose:values=>values[0],clamp:(n,a,b)=>Math.min(b,Math.max(a,n))};
+    addStagePhysicalObject:o=>draw(...Object.values(o)),compactDevice:()=>false,stackfallStageEnvironmentCombatScale:()=>({damage:1}),rand:(a,b)=>(a+b)/2,choose:values=>values[0],clamp:(n,a,b)=>Math.min(b,Math.max(a,n)),lerp:(a,b,t)=>a+(b-a)*t};
+  vm.runInNewContext(fs.readFileSync('src/stage-craft.js','utf8')+';globalThis.StageCraft=StageCraft;',context);
   vm.runInNewContext(fs.readFileSync(`src/stage${String(order).padStart(2,'0')}-runtime.js`,'utf8'),context);
   return expected.every(variant=>{
     const event=stage.fixedEvents.find(e=>e.kind==='hazard'&&e.variant===variant);

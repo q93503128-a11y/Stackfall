@@ -20,7 +20,7 @@ try{
       return{renderer:stackfallRendererInfo(),time:state.time};
     },id);
     await page.screenshot({path:resolve(output,config.name+'-early.png')});
-    await page.evaluate(()=>{state.mode='playing';state.time=260;updateSpawning(0);updateHUD();state.mode='paused';draw();});
+    await page.evaluate(()=>{state.mode='playing';state.time=state.stageRun.stage.boss.spawnAt*.84;updateSpawning(0);updateHUD();state.mode='paused';draw();});
     await page.screenshot({path:resolve(output,config.name+'-late.png')});
     let hazard=null;
     if(order===2){hazard=await page.evaluate(id=>{state.mode='playing';clearStagePhysicalObjects();clearPendingCombatActions();stackfallStageRuntimeRegistry.get(id).hazard({variant:'ion-shear'},{run:state.stageRun,progress:.5,isActive:()=>true});for(let i=0;i<74;i++){state.time+=1/60;updatePendingActions(1/60);updateStagePhysicalObjects(1/60);}const objects=stagePhysicalObjects();draw();return{count:objects.length,active:objects.some(o=>o.kind==='ion-front'&&o.active),bounded:objects.length<=STAGE_PHYSICAL_LIMIT};},id);await page.screenshot({path:resolve(output,config.name+'-ion-front.png')});}
@@ -46,10 +46,11 @@ try{
       const kinds=new Set(),actions=new Set();let maxObjects=0,maxTravel=0;
       for(let i=0;i<2400;i++){
         const dt=1/60;state.time+=dt;player.stagePreviousX=player.x;player.stagePreviousY=player.y;updatePendingActions(dt);updateSpawning(dt);const ox=boss.x,oy=boss.y;updateEnemies(dt);maxTravel=Math.max(maxTravel,Math.hypot(boss.x-ox,boss.y-oy));updateTelegraphs(dt);updateEnemyProjectiles(dt);updateEffects(dt);maxObjects=Math.max(maxObjects,stagePhysicalObjects().length);for(const o of stagePhysicalObjects())kinds.add(o.kind);if(boss.stageAction)actions.add(boss.stageAction);
-        if(i===1200)boss.hp=boss.maxHp*.47;if(order===2&&i===1800)boss.hp=boss.maxHp*.25;
+        if(i===1200)boss.hp=boss.maxHp*.47;if(order>=2&&i===1800)boss.hp=boss.maxHp*.25;
       }
       check(maxObjects<=STAGE_PHYSICAL_LIMIT,'bounded physical objects');check(maxTravel<40,'visible movement without coordinate jumps');if(order===1){check(boss.stagePhase===2&&boss.stageGateCoreOpen,'48 percent opens body and phase');for(const kind of['salvage','bulkhead','girder'])check(kinds.has(kind),'director executes '+kind);check(actions.has('ram'),'director executes body ram');}
       if(order===2){check(boss.visualR===64&&boss.r===92&&boss.contactR===64,'visual hit and contact radii stay separate');check(boss.stagePhase===3&&boss.stageNebulaCoreOpen,'two structural phase transitions');for(const action of['lobe','inhale','exhale','current'])check(actions.has(action),'director executes '+action);check(state.stageRun.nebula.depth===1,'seekable deep trench environment');if(vw<760)check(Math.abs(boss.x-player.x)+92<vw*.5,'entire mobile boss stays in view');}
+      if(order>=3){const production=stackfallStageProduction(boss.eventKind);check(boss.stageProduction,'authored anatomy owner');check(boss.stagePhase>=2,'structural phase transition');check(state.stageRun.productionEnvironment.progress===1,'seekable final environment');for(const action of production.actions)check(actions.has(action),'director executes '+action);const shapes=stackfallStageBodyShapes(boss);check(shapes.length>0&&shapes.every(s=>s.kind==='polygon'&&s.points.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y))),'finite authored body geometry');const point=shapes[0].points[0];check(enemyCircleOverlap(boss,point.x,point.y,2),'visible outer anatomy takes hits');check(enemySegmentOverlap(boss,point.x-300,point.y,point.x+300,point.y,3),'fast weapon segment hits anatomy');}
       updateHUD();state.mode='paused';draw();
       return{checks,kinds:[...kinds],actions:[...actions],maxObjects,maxTravel,boss:{x:boss.x,y:boss.y,phase:boss.stagePhase},runtime:stackfallRuntimeDiagnostics()};
     },order);

@@ -17,3 +17,7 @@ assert(context.enemyCircleOverlap(ordinary,20,0,5));assert(!context.enemyCircleO
 const multipart={x:0,y:0,r:155,stageBodyShapes:[jaw]};
 assert(!context.enemyCircleOverlap(multipart,0,65,2));assert(context.enemySegmentOverlap(multipart,-280,65,140,65,3));
 console.log('PASS 12 actual stage geometry regressions: outer parts, empty gaps, rotation, swept collision, ordinary enemy compatibility');
+
+const coffin={kind:"polygon",points:[{x:-30,y:-90},{x:40,y:-60},{x:35,y:75},{x:-25,y:100}]};
+assert(context.stageShapeCircleHit(coffin,0,0,1));assert(!context.stageShapeCircleHit(coffin,70,0,2));assert(context.stageShapeSegmentHit(coffin,-300,0,300,0,3));assert(!context.stageShapeSegmentHit(coffin,-300,120,300,120,3));
+console.log("PASS 4 polygon regressions: filled anatomy, no enclosing phantom circle, swept hit and miss");

@@ -100,7 +100,7 @@
     }
   }
   function forEachNearbyEnemy(x,y,range,visit){
-    if(state.stageRun?.stage?.id==='stage-01'&&state.stageRun.bossSpawned)range+=155;
+    if(state.stageRun?.bossSpawned)range+=155;
     const cx=Math.floor(x/CELL),cy=Math.floor(y/CELL),reach=Math.max(1,Math.ceil(range/CELL));
     for(let yy=cy-reach;yy<=cy+reach;yy++)for(let xx=cx-reach;xx<=cx+reach;xx++){
       const bucket=grid.get(gridKey(xx,yy));if(!bucket)continue;
@@ -108,7 +108,7 @@
     }
   }
   function collectNearbyInto(x,y,range,out){
-    if(state.stageRun?.stage?.id==='stage-01'&&state.stageRun.bossSpawned)range+=155;
+    if(state.stageRun?.bossSpawned)range+=155;
     out.length=0;const cx=Math.floor(x/CELL),cy=Math.floor(y/CELL),reach=Math.max(1,Math.ceil(range/CELL));
     for(let yy=cy-reach;yy<=cy+reach;yy++)for(let xx=cx-reach;xx<=cx+reach;xx++){const bucket=grid.get(gridKey(xx,yy));if(!bucket)continue;for(let i=0;i<bucket.length;i++)out.push(bucket[i]);}
     return out;
@@ -248,7 +248,7 @@
     for(const e of state.entities.enemies){
       if(!e||e.dead)continue;const sx=e.x-player.x+vw/2,sy=e.y-player.y+vh/2,elite=e.type==='mini'||e.type==='boss';
       if(sx<-180||sx>vw+180||sy<-180||sy>vh+180)continue;
-      if(elite){ctx.save();ctx.translate(sx,sy);const pulse=e.eventKind==='stage-01'?1:1+Math.sin(e.phase)*.05;ctx.scale(pulse,pulse);ctx.shadowBlur=e.kind==='apex'?58:e.type==='boss'?44:30;ctx.shadowColor=e.color;ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;drawEliteShape(e);ctx.restore();}
+      if(elite){ctx.save();ctx.translate(sx,sy);const pulse=e.stageProduction||e.eventKind==='stage-01'?1:1+Math.sin(e.phase)*.05;ctx.scale(pulse,pulse);ctx.shadowBlur=e.kind==='apex'?58:e.type==='boss'?44:30;ctx.shadowColor=e.color;ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;drawEliteShape(e);ctx.restore();}
       else{
         const entry=enemySprite(e),directionalStage=!!(e.stageVariant&&typeof DIRECTIONAL_STAGE_VARIANTS!=='undefined'&&DIRECTIONAL_STAGE_VARIANTS.has(e.stageVariant)),angle=directionalStage||e.type==='fast'||e.type==='ranged'||e.type==='tank'&&e.eventKind==='crash'?Math.atan2(player.y-e.y,player.x-e.x):e.type==='tank'?(e.phase||0)*.035:0;drawSpriteRotated(entry,roundPixel(sx),roundPixel(sy),angle);
       }

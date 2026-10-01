@@ -2,12 +2,14 @@
 // Rendering, weapon hits and player contact use the same simulation-owned shapes.
 const STAGE_PHYSICAL_LIMIT=6;
 function stageShapeCircleHit(s,x,y,r=0){
+  if(s.kind==='polygon'){let inside=false;const v=s.points;for(let i=0,j=v.length-1;i<v.length;j=i++){const a=v[i],b=v[j];if(segmentDistance(x,y,a.x,a.y,b.x,b.y)<=r)return true;if((a.y>y)!==(b.y>y)&&x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x)inside=!inside;}return inside;}
   if(s.kind==='circle')return Math.hypot(x-s.x,y-s.y)<=s.r+r;
   const c=Math.cos(s.a||0),n=Math.sin(s.a||0),dx=x-s.x,dy=y-s.y;
   const qx=Math.max(0,Math.abs(dx*c+dy*n)-s.hw),qy=Math.max(0,Math.abs(-dx*n+dy*c)-s.hh);
   return qx*qx+qy*qy<=r*r;
 }
 function stageShapeSegmentHit(s,x1,y1,x2,y2,r=0){
+  if(s.kind==='polygon'){if(stageShapeCircleHit(s,x1,y1,r)||stageShapeCircleHit(s,x2,y2,r))return true;const v=s.points;for(let i=0;i<v.length;i++){const a=v[i],b=v[(i+1)%v.length],dx=x2-x1,dy=y2-y1,ex=b.x-a.x,ey=b.y-a.y,cross=dx*ey-dy*ex;if(Math.abs(cross)>1e-8){const t=((a.x-x1)*ey-(a.y-y1)*ex)/cross,u=((a.x-x1)*dy-(a.y-y1)*dx)/cross;if(t>=0&&t<=1&&u>=0&&u<=1)return true;}if(segmentDistance(a.x,a.y,x1,y1,x2,y2)<=r||segmentDistance(b.x,b.y,x1,y1,x2,y2)<=r)return true;}return false;}
   if(s.kind==='circle')return segmentDistance(s.x,s.y,x1,y1,x2,y2)<=s.r+r;
   const c=Math.cos(s.a||0),n=Math.sin(s.a||0),ax=(x1-s.x)*c+(y1-s.y)*n,ay=-(x1-s.x)*n+(y1-s.y)*c,bx=(x2-s.x)*c+(y2-s.y)*n,by=-(x2-s.x)*n+(y2-s.y)*c;
   let lo=0,hi=1;const dx=bx-ax,dy=by-ay;
@@ -42,7 +44,8 @@ function updateStagePhysicalObjects(dt){
   for(const o of list){if(o.stageId!==state.stageRun.stage.id){o.dead=true;continue;}o.age+=dt;
     if(o.ownerId&&!state.entities.enemies.some(e=>e.id===o.ownerId&&!e.dead)){o.dead=true;continue;}
     o.active=false;o.solid=false;const prevX=o.x,prevY=o.y,prevA=o.a||0;
-    if(o.kind==='falling-deck'||o.kind==='salvage'){
+    if(typeof o.update==='function'){o.update(dt);
+    }else if(o.kind==='falling-deck'||o.kind==='salvage'){
       const t=clamp((o.age-o.warn)/o.travel,0,1);o.x=lerp(o.fromX,o.toX,t);o.y=lerp(o.fromY,o.toY,t);o.height=(1-t)*(o.kind==='salvage'?150:80);o.a=o.angle+(1-t)*.35;
       if(o.age>=o.warn+o.travel){o.solid=true;if(!o.hit){o.hit=true;stagePhysicalImpact(o);if(stageShapeCircleHit(o,player.x,player.y,player.r)&&player.invuln<=0)hurtPlayer(o.damage,'stage-structure-impact');}}
     }else if(o.kind==='bulkhead'){
@@ -65,4 +68,4 @@ function updateStagePhysicalObjects(dt){
   compactInPlace(list,o=>o&&!o.dead);
 }
 function stagePhysicalImpact(o){audio.stageAttack?.(o.stageId,o.kind==='bulkhead'?'shutter-slam':'debris-impact');spawnParticle(o.x,o.y,'#d9e1ed',7,115,3);state.camera.shake=Math.max(state.camera.shake,o.ownerId?12:3);}
-function drawStagePhysicalObjects(){if(!state.stageRun||!['playing','cinematic','paused','choice'].includes(state.mode))return;window.stackfallDrawStagePhysicalWarnings?.();for(const o of stagePhysicalObjects())if(!o.dead)window.stackfallDrawStagePhysicalObject?.(o);}
+function drawStagePhysicalObjects(){if(!state.stageRun||!['playing','cinematic','paused','choice'].includes(state.mode))return;window.stackfallDrawStagePhysicalWarnings?.();for(const o of stagePhysicalObjects())if(!o.dead){if(typeof o.draw==='function')o.draw();else window.stackfallDrawStagePhysicalObject?.(o);}}
