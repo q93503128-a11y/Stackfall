@@ -40,6 +40,6 @@ assert(renderRuntime.includes('drawPostRosterWeaponEntities'),'post-roster rende
 assert(weaponsRuntime.includes("damage:m.baseDamage*.34")&&weaponsRuntime.includes("source=m.micro?'missile-mirv':'missile';areaDamage(m.x,m.y,radius,m.damage*terminal"),'MIRV must preserve main missile damage and add 34% side warheads');
 assert(weaponsRuntime.includes("if(m.split||m.micro||!state.weaponAugments?.missile)return"),'MIRV children must not split recursively');
 assert(weaponsRuntime.includes("extra=net.echoed?0:postRosterMultiplicity(),count=base+extra"),'Multiplicity must add gate pulses rather than gates');
-assert(weaponsRuntime.includes("p.gateCopy||p.gateCrossfed||String(p.source||'').includes('multiplicity')"),'gate crossfeed recursion barrier missing');
+assert(weaponsRuntime.includes("!p.gateCopy&&!p.gateCrossfed&&!String(p.source||'').includes('multiplicity')"),'gate crossfeed recursion barrier missing');
 assert(weaponsRuntime.includes("if(state.weaponAugments?.mine&&!mine.phantom)"),'phantom mine recursion barrier missing');
 assert(weaponsRuntime.includes('let nearest=null,best=Infinity')&&weaponsRuntime.includes('if(nearest){nearest.charge'),'one kill must feed only one vacuum seed');for(const message of fail)console.error('FAIL',message);console.log(`Checked ${stages.length} stages across ${pages.length} constellations; failures=${fail.length}`);if(fail.length)process.exit(1);
