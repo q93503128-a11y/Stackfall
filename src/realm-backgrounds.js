@@ -217,7 +217,9 @@ function stageTwoNebulaSprite(index){
   });
 }
 function drawStageTwoNebulaField(tier){
+  const n=state.stageRun?.nebula||{},cleared=n.discharged?clamp((state.stageVictory?.elapsed||0)/2,0,1):0,depth=n.depth||0;
   const wx=player.x||0,wy=player.y||0,cell=720,margin=720,minX=Math.floor((wx-vw*.5-margin)/cell),maxX=Math.floor((wx+vw*.5+margin)/cell),minY=Math.floor((wy-vh*.5-margin)/cell),maxY=Math.floor((wy+vh*.5+margin)/cell);
+  ctx.save();ctx.globalCompositeOperation='lighter';for(const cloud of[{x:-210,y:-75,i:1,s:2.1},{x:370,y:245,i:2,s:1.9}]){const p=worldToScreen(cloud.x,cloud.y);ctx.globalAlpha=(.48+(n.pressure||0)*.14)*(1-cleared*.85);ctx.drawImage(stageTwoNebulaSprite(cloud.i),p.x-235*cloud.s,p.y-235*cloud.s,470*cloud.s,470*cloud.s);}ctx.restore();
   ctx.save();ctx.globalCompositeOperation='lighter';
   for(let cy=minY;cy<=maxY;cy++)for(let cx=minX;cx<=maxX;cx++){
     const density=stageWorldHash(cx,cy,9);if(density<.13)continue;const count=tier===2?1:(density>.74?2:1);
@@ -225,9 +227,13 @@ function drawStageTwoNebulaField(tier){
       const jx=stageWorldHash(cx,cy,21+n*7),jy=stageWorldHash(cx,cy,37+n*11),scale=.82+stageWorldHash(cx,cy,53+n*13)*1.18,stretch=.62+stageWorldHash(cx,cy,71+n*17)*1.02,rot=(stageWorldHash(cx,cy,89+n*19)-.5)*2.2,index=Math.floor(stageWorldHash(cx,cy,107+n*23)*4);
       const worldX=cx*cell+(jx-.5)*cell*.92+cell*.5,worldY=cy*cell+(jy-.5)*cell*.92+cell*.5,sx=worldX-wx+vw*.5,sy=worldY-wy+vh*.5,size=470*scale;
       if(sx+size<-80||sx-size>vw+80||sy+size<-80||sy-size>vh+80)continue;
-      ctx.save();ctx.translate(sx,sy);ctx.rotate(rot);ctx.scale(scale,stretch);ctx.globalAlpha=tier===2?.34:.50;ctx.drawImage(stageTwoNebulaSprite(index),-235,-235,470,470);ctx.restore();
+      ctx.save();ctx.translate(sx,sy);ctx.rotate(rot);ctx.scale(scale,stretch);ctx.globalAlpha=(tier===2?.34:.50)*(1-cleared*.72)*(1+depth*.22);ctx.drawImage(stageTwoNebulaSprite(index),-235,-235,470,470);ctx.restore();
     }
   }
+  ctx.restore();
+  // The trench has continuous, unequal banks; no rectangular terrain repetition.
+  ctx.save();ctx.lineJoin='round';for(const side of[-1,1]){const ox=vw*.5-wx*.16+side*(vw*.40+depth*45),bend=side*(60+Math.sin(wy*.001)*35);ctx.fillStyle=side<0?'rgba(5,21,43,.76)':'rgba(34,10,44,.68)';ctx.beginPath();ctx.moveTo(ox,-80);ctx.bezierCurveTo(ox+bend,vh*.18,ox-bend*.8,vh*.60,ox+side*55,vh+80);ctx.lineTo(side<0?-100:vw+100,vh+80);ctx.lineTo(side<0?-100:vw+100,-80);ctx.closePath();ctx.fill();ctx.strokeStyle=side<0?'rgba(73,177,198,.23)':'rgba(199,94,164,.21)';ctx.lineWidth=18+depth*14;ctx.stroke();}
+  if(n.heartbeat>0&&!state.stageRun?.bossSpawned&&!state.stageRun?.bossIntroPending){const beat=Math.pow(Math.max(0,Math.sin((state.time||0)*2.8)),7)*n.heartbeat,p=worldToScreen(18,-220);ctx.globalAlpha=.08+beat*.25;ctx.translate(p.x,p.y);ctx.scale(.65,.65);drawNebulaHeartBody({x:0,y:0,r:92,visualR:64,stagePhase:1,phase:state.time||0});}
   ctx.restore();
   const coarse=1180,cx0=Math.floor(wx/coarse),cy0=Math.floor(wy/coarse),t=performance.now()/1000;
   ctx.save();ctx.lineCap='round';ctx.globalCompositeOperation='lighter';
@@ -237,7 +243,7 @@ function drawStageTwoNebulaField(tier){
     if(sx<-len||sx>vw+len||sy<-len||sy>vh+len)continue;
     const x1=sx-dx*len*.5,y1=sy-dy*len*.5,x2=sx+dx*len*.5,y2=sy+dy*len*.5,mx=(x1+x2)*.5+nx*bend,my=(y1+y2)*.5+ny*bend,color=stageWorldHash(gx,gy,241)>.5?'rgba(113,235,255,.17)':'rgba(255,123,218,.15)';
     ctx.globalAlpha=tier===2?.34:.54;ctx.strokeStyle=color;ctx.lineWidth=tier===2?13:20;ctx.beginPath();ctx.moveTo(x1,y1);ctx.quadraticCurveTo(mx,my,x2,y2);ctx.stroke();
-    ctx.globalAlpha=tier===2?.22:.36;ctx.strokeStyle='rgba(228,247,255,.34)';ctx.lineWidth=tier===2?1.1:1.6;ctx.setLineDash([34,24]);ctx.lineDashOffset=-(t*14+stageWorldHash(gx,gy,251)*90);ctx.beginPath();ctx.moveTo(x1,y1);ctx.quadraticCurveTo(mx,my,x2,y2);ctx.stroke();ctx.setLineDash([]);
+    ctx.globalAlpha=tier===2?.22:.36;ctx.strokeStyle='rgba(228,247,255,.34)';ctx.lineWidth=tier===2?1.1:1.6;ctx.setLineDash([34,24]);ctx.lineDashOffset=-(t*(14+(n.arterial||0)*22)+stageWorldHash(gx,gy,251)*90);ctx.beginPath();ctx.moveTo(x1,y1);ctx.quadraticCurveTo(mx,my,x2,y2);ctx.stroke();ctx.setLineDash([]);
   }
   ctx.restore();
 }

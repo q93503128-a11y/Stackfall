@@ -12,11 +12,12 @@
     poolAt(time){if(time<120)return[['shardling',.58],['dart',.42]];if(time<240)return[['shardling',.40],['dart',.30],['nebula-wisp',.30]];if(time<420)return[['shardling',.29],['dart',.25],['nebula-wisp',.28],['bombardier',.18]];return[['shardling',.22],['dart',.22],['nebula-wisp',.26],['bombardier',.18],['bulwark',.12]];},
     spawnProfile(time){return{cap:time>=420?52:time>=240?44:38,rate:Math.max(.50,1.24-time*.00125),count:time>=420?2:time>=270&&Math.random()<.40?2:1};},
     waveLabel(event){return event.variant==='nebula-wisp'?tr('stage02.event.bloom'):tr('stage01.event.bombardment');},
+    onStart(api){clearStagePhysicalObjects();api.run.nebula={pressure:0,depth:0,arterial:0,heartbeat:0};},
     hazard(event,api){
-      const deep=event.variant==='deep-shear';showBossNotice(deep?tr('stage02.event.deep'):tr('stage02.event.shear'),tr('stage02.event.warning'));const waves=deep?4:3,damage=9+Math.min(11,state.level*.30);
+      const deep=event.variant==='deep-shear';showBossNotice(deep?tr('stage02.event.deep'):tr('stage02.event.shear'),tr('stage02.event.warning'));const waves=deep?4:3,damage=9+Math.min(11,state.level*.30),origin={x:player.x,y:player.y};
       for(let wave=0;wave<waves;wave++)scheduleWeaponAction(wave*(deep?500:610),()=>{
-        if(!api.isActive())return;const p=typeof predictedPlayer==='function'?predictedPlayer(82+wave*24):{x:player.x,y:player.y},a=(wave%2?-.48:.36)+(deep?wave*.14:wave*.09),dx=Math.cos(a),dy=Math.sin(a),nx=-dy,ny=dx,half=410,offsets=deep?[-104,104]:[wave===1?58:-34],width=deep?24:19;
-        for(const offset of offsets){const cx=p.x+nx*offset,cy=p.y+ny*offset;rawLine(cx-dx*half,cy-dy*half,cx+dx*half,cy+dy*half,width,damage*(deep?.86:.78),deep?'#ff7bd5':'#78e5ff',1.08+wave*.06,'ion-shear');}
+        if(!api.isActive()||api.run.bossIntroPending||api.run.bossSpawned)return;const a=(wave%2?-.48:.36)+(deep?wave*.14:wave*.09),dx=Math.cos(a),dy=Math.sin(a),nx=-dy,ny=dx,cx=origin.x+nx*(wave-1)*44,cy=origin.y+ny*(wave-1)*44;
+        addStagePhysicalObject({kind:'ion-front',x:cx-nx*135,y:cy-ny*135,fromX:cx-nx*135,fromY:cy-ny*135,toX:cx+nx*135,toY:cy+ny*135,hw:compactDevice()?250:410,hh:deep?17:13,angle:a,a,warn:1.08,travel:.88,hold:0,damage:damage*(deep?.86:.78)*stackfallStageEnvironmentCombatScale({order:2,progress:api.progress}).damage,deep});
       });
     },
     bossProfile:{form:'nebula-heart',eventVariant:'stage02-heart',nameKey:'stage02.boss',warningKey:'stage02.boss.warning',r:64,hitRadius:92,contactRadius:64,hp:1.52,speed:.82,damage:1.08,color:'#ff8fd8',xp:1.95,skillCd:1.55,burstCd:4.4,pulseCd:6.7,spawnRadius:660,spawnShockwave:205},

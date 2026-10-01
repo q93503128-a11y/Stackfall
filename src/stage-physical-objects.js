@@ -48,6 +48,7 @@ function updateStagePhysicalObjects(dt){
     }else if(o.kind==='bulkhead'){
       const close=clamp((o.age-o.warn)/o.travel,0,1),open=clamp((o.age-o.warn-o.travel-o.hold)/.45,0,1),t=close*(1-open);o.x=lerp(o.fromX,o.toX,t);o.y=o.toY;o.a=o.angle;o.active=o.age>=o.warn&&close<1;o.solid=o.age>=o.warn&&open<1;
       if(close===1&&!o.hit){o.hit=true;stagePhysicalImpact(o);}
+    }else if(o.kind==='ion-front'){const t=clamp((o.age-o.warn)/o.travel,0,1);o.x=lerp(o.fromX,o.toX,t);o.y=lerp(o.fromY,o.toY,t);o.a=o.angle;o.active=o.age>=o.warn&&t<1;
     }else if(o.kind==='girder'){
       const t=clamp((o.age-o.warn)/o.travel,0,1),a=o.angle+t*o.sweep;o.a=a;o.x=o.pivotX+Math.cos(a)*o.length*.5;o.y=o.pivotY+Math.sin(a)*o.length*.5;o.active=o.age>=o.warn&&t<1;
       if(t===1&&!o.hit){o.hit=true;stagePhysicalImpact(o);}

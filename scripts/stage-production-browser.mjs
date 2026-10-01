@@ -22,6 +22,8 @@ try{
     await page.screenshot({path:resolve(output,config.name+'-early.png')});
     await page.evaluate(()=>{state.mode='playing';state.time=260;updateSpawning(0);updateHUD();state.mode='paused';draw();});
     await page.screenshot({path:resolve(output,config.name+'-late.png')});
+    let hazard=null;
+    if(order===2){hazard=await page.evaluate(id=>{state.mode='playing';clearStagePhysicalObjects();clearPendingCombatActions();stackfallStageRuntimeRegistry.get(id).hazard({variant:'ion-shear'},{run:state.stageRun,progress:.5,isActive:()=>true});for(let i=0;i<74;i++){state.time+=1/60;updatePendingActions(1/60);updateStagePhysicalObjects(1/60);}const objects=stagePhysicalObjects();draw();return{count:objects.length,active:objects.some(o=>o.kind==='ion-front'&&o.active),bounded:objects.length<=STAGE_PHYSICAL_LIMIT};},id);await page.screenshot({path:resolve(output,config.name+'-ion-front.png')});}
     const preview=await page.evaluate(id=>{
       const result=stackfallDeveloperTest.jumpStageBoss(id),start=state.time;
       for(let i=0;i<299;i++){state.time=start+(i+1)/60;updatePlayer(1/60);updateSpawning(1/60);}
@@ -44,19 +46,20 @@ try{
       const kinds=new Set(),actions=new Set();let maxObjects=0,maxTravel=0;
       for(let i=0;i<2400;i++){
         const dt=1/60;state.time+=dt;player.stagePreviousX=player.x;player.stagePreviousY=player.y;updatePendingActions(dt);updateSpawning(dt);const ox=boss.x,oy=boss.y;updateEnemies(dt);maxTravel=Math.max(maxTravel,Math.hypot(boss.x-ox,boss.y-oy));updateTelegraphs(dt);updateEnemyProjectiles(dt);updateEffects(dt);maxObjects=Math.max(maxObjects,stagePhysicalObjects().length);for(const o of stagePhysicalObjects())kinds.add(o.kind);if(boss.stageAction)actions.add(boss.stageAction);
-        if(i===1200)boss.hp=boss.maxHp*.47;
+        if(i===1200)boss.hp=boss.maxHp*.47;if(order===2&&i===1800)boss.hp=boss.maxHp*.25;
       }
       check(maxObjects<=STAGE_PHYSICAL_LIMIT,'bounded physical objects');check(maxTravel<40,'visible movement without coordinate jumps');if(order===1){check(boss.stagePhase===2&&boss.stageGateCoreOpen,'48 percent opens body and phase');for(const kind of['salvage','bulkhead','girder'])check(kinds.has(kind),'director executes '+kind);check(actions.has('ram'),'director executes body ram');}
+      if(order===2){check(boss.visualR===64&&boss.r===92&&boss.contactR===64,'visual hit and contact radii stay separate');check(boss.stagePhase===3&&boss.stageNebulaCoreOpen,'two structural phase transitions');for(const action of['lobe','inhale','exhale','current'])check(actions.has(action),'director executes '+action);check(state.stageRun.nebula.depth===1,'seekable deep trench environment');if(vw<760)check(Math.abs(boss.x-player.x)+92<vw*.5,'entire mobile boss stays in view');}
       updateHUD();state.mode='paused';draw();
       return{checks,kinds:[...kinds],actions:[...actions],maxObjects,maxTravel,boss:{x:boss.x,y:boss.y,phase:boss.stagePhase},runtime:stackfallRuntimeDiagnostics()};
     },order);
     await page.screenshot({path:resolve(output,config.name+'-phase2.png')});
     const victory=await page.evaluate(()=>{const boss=state.entities.enemies.find(e=>e.kind==='stage-boss');state.mode='playing';dealDamage(boss,boss.hp*10,{source:'core',canCrit:false});const start=state.mode;updateStageVictoryCinematic(1.4);let victoryDraws=0;const authoredDraw=drawStageVictoryCinematic;drawStageVictoryCinematic=()=>{victoryDraws++;authoredDraw();};draw();drawStageVictoryCinematic=authoredDraw;return{start,victoryDraws,bossBar:{classes:ui.bossBar.className,display:getComputedStyle(ui.bossBar).display,multiDisplay:getComputedStyle(document.querySelector('#multiBossBars')).display},duration:state.stageVictory?.duration,runtime:stackfallRuntimeDiagnostics()};});
     await page.screenshot({path:resolve(output,config.name+'-victory.png')});
-    const complete=await page.evaluate(()=>{updateStageVictoryCinematic(10);return{mode:state.mode,errors:stackfallRuntimeDiagnostics().errors};});
+    const complete=await page.evaluate(()=>{updateStageVictoryCinematic(10);return{mode:state.mode,musicScene:audio.musicSceneForState(),errors:stackfallRuntimeDiagnostics().errors};});
     const rendererMatches=config.gpu?initial.renderer.status==='active':initial.renderer.fallback===true;
-    const ok=rendererMatches&&preview.before.mode==='playing'&&!preview.before.boss&&preview.before.enemies===0&&preview.before.objects===0&&preview.trigger.mode==='cinematic'&&combat.checks?.every(c=>c.ok)&&victory.start==='stageVictory'&&victory.victoryDraws===1&&victory.bossBar.display==='none'&&victory.bossBar.multiDisplay==='none'&&complete.mode==='stageComplete'&&complete.errors.length===0&&errors.length===0;
-    results.push({name:config.name,ok,initial,preview,combat,victory,complete,errors});
+    const ok=(!hazard||hazard.active&&hazard.bounded)&&rendererMatches&&preview.before.mode==='playing'&&!preview.before.boss&&preview.before.enemies===0&&preview.before.objects===0&&preview.trigger.mode==='cinematic'&&combat.checks?.every(c=>c.ok)&&victory.start==='stageVictory'&&victory.victoryDraws===1&&victory.bossBar.display==='none'&&victory.bossBar.multiDisplay==='none'&&complete.mode==='stageComplete'&&complete.musicScene===null&&complete.errors.length===0&&errors.length===0;
+    results.push({name:config.name,ok,initial,hazard,preview,combat,victory,complete,errors});
     await context.close();
   }
 }finally{await browser.close();}

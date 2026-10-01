@@ -130,7 +130,7 @@
     if(!app||contextLost||rendererState!=='active'){hideUnused(hostileSprites,0);return;}
     const list=state.entities.enemyProjectiles||[];let used=0;
     for(let i=0;i<list.length;i++){
-      const p=list[i];if(!p||p.life<=0||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;
+      const p=list[i];if(p?.visual==='ion-globule')continue;if(!p||p.life<=0||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;
       const x=p.x-player.x+vw/2,y=p.y-player.y+vh/2;if(x<-64||x>vw+64||y<-64||y>vh+64)continue;
       const r=Math.max(2.4,Math.min(13,Number(p.r)||4)),sprite=ensureSprite(hostileSprites,used++,hostileLayer,hostileTexture||PIXI.Texture.WHITE);
       sprite.visible=true;sprite.x=Math.round(x);sprite.y=Math.round(y);sprite.rotation=Math.atan2(p.vy||0,p.vx||0);sprite.tint=parseColor(p.color,0xff6c91);sprite.alpha=.96;sprite.width=r*5.0;sprite.height=r*2.65;
@@ -312,7 +312,8 @@
     if(activeGpuProjectiles()||!sparklesEnabled()){if(typeof drawPostRosterWeaponEntities==='function')drawPostRosterWeaponEntities();return;}
     return canvasDrawAlliedEffects();
   };
-  drawEnemyProjectiles=function hybridEnemyProjectileDraw(){if(activeGpuProjectiles())return;return canvasDrawEnemyProjectiles();};
+  const AUTHORED_HOSTILE_BUFFER=[];
+  drawEnemyProjectiles=function hybridEnemyProjectileDraw(){if(!activeGpuProjectiles())return canvasDrawEnemyProjectiles();const original=state.entities.enemyProjectiles;AUTHORED_HOSTILE_BUFFER.length=0;for(const p of original)if(p?.visual==='ion-globule')AUTHORED_HOSTILE_BUFFER.push(p);state.entities.enemyProjectiles=AUTHORED_HOSTILE_BUFFER;try{return canvasDrawEnemyProjectiles();}finally{state.entities.enemyProjectiles=original;}};
   if(canvasDrawBeamEffects)drawBeamEffects=function hybridBeamDraw(){return canvasDrawBeamEffects();};
   if(canvasDrawStars){
     drawStars=function sparkleAwareStars(palette=['#f6f8ff','#8fe9ff','#cdbfff'],density=1){
