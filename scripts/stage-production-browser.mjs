@@ -43,6 +43,7 @@ try{
         const shapes=stackfallStageBodyShapes(boss),jaw=shapes[1];check(enemyCircleOverlap(boss,jaw.x,jaw.y,2),'outer jaw receives weapon hits');check(!enemyCircleOverlap(boss,boss.x,boss.y+75*(boss.stageBodyScale||1),2),'open gate has no phantom hitbox');
         const hp=boss.hp;state.entities.projectiles.push({x:jaw.x-180,y:jaw.y,vx:24000,vy:0,r:3,damage:20,life:1,pierce:0,source:'core'});updateProjectiles(1/60);check(boss.hp<hp,'swept fast weapon hits outer jaw');
       }
+      stackfallSetGameSpeed(2);check(state.gameSpeed===2,'x2 control preserves fixed simulation steps');
       const kinds=new Set(),actions=new Set();let maxObjects=0,maxTravel=0;
       for(let i=0;i<2400;i++){
         const dt=1/60;state.time+=dt;player.stagePreviousX=player.x;player.stagePreviousY=player.y;updatePendingActions(dt);updateSpawning(dt);const ox=boss.x,oy=boss.y;updateEnemies(dt);maxTravel=Math.max(maxTravel,Math.hypot(boss.x-ox,boss.y-oy));updateTelegraphs(dt);updateEnemyProjectiles(dt);updateEffects(dt);maxObjects=Math.max(maxObjects,stagePhysicalObjects().length);for(const o of stagePhysicalObjects())kinds.add(o.kind);if(boss.stageAction)actions.add(boss.stageAction);
@@ -55,6 +56,7 @@ try{
       return{checks,kinds:[...kinds],actions:[...actions],maxObjects,maxTravel,boss:{x:boss.x,y:boss.y,phase:boss.stagePhase},runtime:stackfallRuntimeDiagnostics()};
     },order);
     await page.screenshot({path:resolve(output,config.name+'-phase2.png')});
+    if(order>=3){for(let action=0;action<3;action++){await page.evaluate(action=>{const boss=state.entities.enemies.find(e=>e.kind==='stage-boss');state.mode='playing';clearStagePhysicalObjects();clearPendingCombatActions();boss.cycle=action+2;boss.attackCd=0;for(let i=0;i<96;i++){state.time+=1/60;updatePendingActions(1/60);updateEnemies(1/60);updateStagePhysicalObjects(1/60);}ui.bossNotice.classList.add('hidden');updateHUD();state.mode='paused';draw();},action);await page.screenshot({path:resolve(output,config.name+'-attack-'+action+'.png')});}}
     const victory=await page.evaluate(()=>{const boss=state.entities.enemies.find(e=>e.kind==='stage-boss');state.mode='playing';dealDamage(boss,boss.hp*10,{source:'core',canCrit:false});const start=state.mode;updateStageVictoryCinematic(1.4);let victoryDraws=0;const authoredDraw=drawStageVictoryCinematic;drawStageVictoryCinematic=()=>{victoryDraws++;authoredDraw();};draw();drawStageVictoryCinematic=authoredDraw;return{start,victoryDraws,bossBar:{classes:ui.bossBar.className,display:getComputedStyle(ui.bossBar).display,multiDisplay:getComputedStyle(document.querySelector('#multiBossBars')).display},duration:state.stageVictory?.duration,runtime:stackfallRuntimeDiagnostics()};});
     await page.screenshot({path:resolve(output,config.name+'-victory.png')});
     const complete=await page.evaluate(()=>{updateStageVictoryCinematic(10);return{mode:state.mode,musicScene:audio.musicSceneForState(),errors:stackfallRuntimeDiagnostics().errors};});

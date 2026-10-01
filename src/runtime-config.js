@@ -50,6 +50,8 @@ damageReduction=function damageReductionWithStacks(){const armor=stat('armor')*.
 function audioVolume(channel){const volumes=GAME_SETTINGS.audio?.volume||{};const shape=value=>{const v=Math.max(0,Math.min(1,Number(value)||0));return v<=0?0:Math.pow(v,.58);};return shape(volumes.master??.90)*shape(volumes[channel]??(channel==='ambient'?.58:.86));}
 const rawAudioInit=audio.init.bind(audio);
 const MUSIC_SCENES={
+  stasis:{bed:[36.71,55,73.42,110],roots:[73.42,73.42,55,82.41,73.42,49],lead:[293.66,220,329.63,196],pulseMs:1900,filter:820,noise:95,drive:.43},
+  escapement:{bed:[36.71,55,73.42,110],roots:[73.42,110,73.42,55,98,65.4,82.41],lead:[293.66,440,220,329.63,196],pulseMs:720,filter:1450,noise:210,drive:.88},
   necropolis:{bed:[43.65,65.4,87.31,130.81],roots:[65.4,73.42,87.31,65.4,58.27,77.78],lead:[523.25,349.23,466.16,392,261.63],pulseMs:1720,filter:2850,noise:110,drive:.46},
   reliquary:{bed:[32.7,49,65.4,98],roots:[65.4,87.31,77.78,49,73.42],lead:[523.25,622.25,392,466.16,349.23],pulseMs:950,filter:3100,noise:190,drive:.90},
   trench:{bed:[32.70,49,65.40,98],roots:[49,49,58.27,49,43.65,49,65.40,58.27],lead:[196,146.83,174.61,130.81,196,164.81],pulseMs:1540,filter:1250,noise:240,drive:.58},

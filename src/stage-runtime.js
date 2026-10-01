@@ -186,7 +186,7 @@
   }
   function beginProductionBossIntro(event){
     const run=stageRuntime(),production=stageDefinition()?.production;if(!production||!run||run.bossSpawned||run.bossIntroPending||activeStageEncounterCount()>0)return false;
-    run.bossIntroPending=true;if(event?.id)run.eventsTriggered[event.id]=true;clearStagePhysicalObjects();clearPendingCombatActions();clearRunUiActions?.();window.closeMapEventOverlays?.();state.mapEventActive=null;state.entities.mapEvents.length=0;
+    run.bossIntroPending=true;ui.bossNotice.classList.add('hidden');document.querySelector('.stage-environment-notice')?.classList.remove('show');if(event?.id)run.eventsTriggered[event.id]=true;clearStagePhysicalObjects();clearPendingCombatActions();clearRunUiActions?.();window.closeMapEventOverlays?.();state.mapEventActive=null;state.entities.mapEvents.length=0;
     run.productionEntry={x:player.x,y:player.y-Math.min(vh*.24,205)};
     startRealmTransition(run.stage.id,{duration:production.entryDuration||3.2,owner:run.stage.id+'-boss-entry',title:localized(run.stage.boss.name),subtitle:production.subtitle,onComplete:()=>{if(stageRuntime()!==run)return;run.bossIntroPending=false;spawnStageBoss({suppressNotice:true});}});return true;
   }

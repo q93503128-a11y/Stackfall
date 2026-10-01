@@ -59,6 +59,7 @@ function updateStagePhysicalObjects(dt){
     if(o.active&&player.invuln<=0){
       // Relative swept motion, plus intermediate rotating shapes for the heavy girder.
       let hit=stageShapeSegmentHit(o,px+(o.x-prevX),py+(o.y-prevY),player.x,player.y,player.r);
+      if(typeof o.sweepShapes==='function')for(const s of o.sweepShapes(dt)){if(hit)break;hit=stageShapeSegmentHit(s,px,py,player.x,player.y,player.r);}
       if(o.kind==='girder'){for(let i=0;!hit&&i<3;i++){const a=lerp(prevA,o.a,i/2),s={...o,a,x:o.pivotX+Math.cos(a)*o.length*.5,y:o.pivotY+Math.sin(a)*o.length*.5};hit=stageShapeCircleHit(s,player.x,player.y,player.r);}}
       if(hit)hurtPlayer(o.damage,'stage-moving-structure');
     }
