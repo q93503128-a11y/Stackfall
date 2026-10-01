@@ -187,7 +187,7 @@
   function beginProductionBossIntro(event){
     const run=stageRuntime(),production=stageDefinition()?.production;if(!production||!run||run.bossSpawned||run.bossIntroPending||activeStageEncounterCount()>0)return false;
     run.bossIntroPending=true;ui.bossNotice.classList.add('hidden');document.querySelector('.stage-environment-notice')?.classList.remove('show');if(event?.id)run.eventsTriggered[event.id]=true;clearStagePhysicalObjects();clearPendingCombatActions();clearRunUiActions?.();window.closeMapEventOverlays?.();state.mapEventActive=null;state.entities.mapEvents.length=0;
-    run.productionEntry={x:player.x,y:player.y-Math.min(vh*.24,205)};
+    run.productionEntry=StageCraft.entryPoint(production);
     startRealmTransition(run.stage.id,{duration:production.entryDuration||3.2,owner:run.stage.id+'-boss-entry',title:localized(run.stage.boss.name),subtitle:production.subtitle,onComplete:()=>{if(stageRuntime()!==run)return;run.bossIntroPending=false;spawnStageBoss({suppressNotice:true});}});return true;
   }
   window.stackfallStageProduction=id=>stageDefinition(id)?.production;
@@ -281,7 +281,7 @@
     const production=stageDefinition()?.production;run.completed=true;run.completedAt=state.time;run.victoryStarted=true;production.environment?.(run,0);
     state.stageVictory={stageId:run.stage.id,x:enemy.x,y:enemy.y,elapsed:0,duration:production.victoryDuration||3.6,production:true,body:{...enemy,dead:false,hit:0}};
     state.mode='stageVictory';clearPendingCombatActions();clearRunUiActions?.();state.bossActiveId=null;if(state.stageBossArena)state.stageBossArena.locked=false;
-    for(const key of['enemyProjectiles','telegraphs','beams','wells','guidedMissiles','gateNetworks'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;
+    for(const key of['enemyProjectiles','telegraphs','beams','wells','guidedMissiles','gateNetworks','texts'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;
     for(const e of state.entities.enemies)e.dead=true;updateHUD?.();ui.bossNotice.classList.add('hidden');document.querySelector('.stage-environment-notice')?.classList.remove('show');state.camera.shake=6;state.flash=0;production.defeat?.(enemy,run);
   }
   function beginStageOneVictory(run,enemy){
@@ -297,7 +297,7 @@
   }
   function beginStageTwoVictory(run,enemy){
     run.completed=true;run.completedAt=state.time;run.victoryStarted=true;updateStageTwoNebula(run);state.stageVictory={stageId:'stage-02',x:enemy.x,y:enemy.y,elapsed:0,duration:3.6,body:{...enemy,dead:false,hit:0,stageNebulaInhaleUntil:0,stageNebulaExhaleUntil:0,stageNebulaLobeWarnUntil:0,stageNebulaActiveLobe:-1}};
-    state.mode='stageVictory';clearPendingCombatActions();clearRunUiActions?.();state.bossActiveId=null;for(const key of['enemyProjectiles','telegraphs','beams','wells','guidedMissiles','gateNetworks'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;for(const e of state.entities.enemies)e.dead=true;updateHUD?.();ui.bossNotice.classList.add('hidden');document.querySelector('.stage-environment-notice')?.classList.remove('show');state.camera.shake=7;state.flash=0;audio.stageAttack?.('stage-02','drain');
+    state.mode='stageVictory';clearPendingCombatActions();clearRunUiActions?.();state.bossActiveId=null;for(const key of['enemyProjectiles','telegraphs','beams','wells','guidedMissiles','gateNetworks','texts'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;for(const e of state.entities.enemies)e.dead=true;updateHUD?.();ui.bossNotice.classList.add('hidden');document.querySelector('.stage-environment-notice')?.classList.remove('show');state.camera.shake=7;state.flash=0;audio.stageAttack?.('stage-02','drain');
   }
   function drawStageTwoVictory(v){
     const q=clamp(v.elapsed/2.65,0,1),p=worldToScreen(v.x,v.y);ctx.save();ctx.translate(p.x,p.y);v.body.stageNebulaDissolve=q;drawNebulaHeartBody(v.body);ctx.restore();
@@ -661,7 +661,7 @@
   };
   window.stackfallEndlessFamilyDiagnostics=()=>{const pools=rebuildEndlessFamilyCache();return{thresholds:{route:75,bloom:240,array:420},counts:{route:pools.route.length,bloom:pools.bloom.length,array:pools.array.length},unlockGated:false};};
   const baseSpawning=updateSpawning;updateSpawning=function stageAwareSpawning(dt){if(isStage()){updateStage(dt);return;}baseSpawning(dt);};
-  const baseReset=resetGame;resetGame=function stageAwareReset(){const config=window.stackfallCurrentRunConfig?.();baseReset();clearStageUi();state.stageBossArena=null;if(config?.mode!=='stage'){state.stageRun=null;return;}const stage=config.stage,def=stageDefinition(stage?.id);if(!stage||!def){state.stageRun=null;return;}state.stageRun={stage,eventsTriggered:{},worldEventsTriggered:{},encountersTriggered:{},encounterBags:{},bossSpawned:false,bossId:null,bossSnapshot:null,completed:false,completedAt:null,resultShown:false,lastSpawnBudget:null,lastWorldEvent:null};state.nextApexAt=Infinity;state.mapEventActive=null;state.entities.mapEvents.length=0;state.entities.enemies.length=0;state.entities.enemyProjectiles.length=0;state.realmTheme=def.theme||('stage-'+String(stage.order).padStart(2,'0'));state.spawnTimer=def.initialSpawnTimer??.7;for(const variant of def.startingVariants||[])spawnStageEnemy(stage.id,variant);showBossNotice(localized(stage.title),'STAGE '+String(stage.order).padStart(2,'0'));updateObjective(state.stageRun);def.onStart?.(apiFor(state.stageRun));};
+  const baseReset=resetGame;resetGame=function stageAwareReset(){const config=window.stackfallCurrentRunConfig?.();baseReset();clearStagePhysicalObjects();clearStageUi();state.stageBossArena=null;if(config?.mode!=='stage'){state.stageRun=null;return;}const stage=config.stage,def=stageDefinition(stage?.id);if(!stage||!def){state.stageRun=null;return;}state.stageRun={stage,eventsTriggered:{},worldEventsTriggered:{},encountersTriggered:{},encounterBags:{},bossSpawned:false,bossId:null,bossSnapshot:null,completed:false,completedAt:null,resultShown:false,lastSpawnBudget:null,lastWorldEvent:null};state.nextApexAt=Infinity;state.mapEventActive=null;state.entities.mapEvents.length=0;state.entities.enemies.length=0;state.entities.enemyProjectiles.length=0;state.realmTheme=def.theme||('stage-'+String(stage.order).padStart(2,'0'));state.spawnTimer=def.initialSpawnTimer??.7;for(const variant of def.startingVariants||[])spawnStageEnemy(stage.id,variant);showBossNotice(localized(stage.title),'STAGE '+String(stage.order).padStart(2,'0'));updateObjective(state.stageRun);def.onStart?.(apiFor(state.stageRun));};
 
   function resetStageBossStateForDeveloper(run){
     if(!run)return;

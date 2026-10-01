@@ -11,9 +11,9 @@ const checks=[
  ['Stage 5 remains a registered adapter without shared wrapper overrides',runtime.includes("stackfallRegisterStageRuntime('stage-05'")&&!runtime.includes('updateSpawning=function')&&!runtime.includes('resetGame=function')],
  ['Stage 5 has a dedicated magnetar environment',runtime.includes("theme:'stage-05'")&&stageWorldRenderer(5,realm)&&space.includes('/^stage-\\d{2}$/')],
  ['Conduit Leech has a dedicated common-enemy silhouette',entities.includes("v==='conduit-leech'")&&entities.includes('for(let seg=0;seg<6;seg++)')],
- ['Dipole Crown has a dedicated boss silhouette',elite.includes("f==='dipole-crown'")&&elite.includes('for(let arc=0;arc<3+phase;arc++)')],
+ ['Dipole Crown has a dedicated boss silhouette',runtime.includes('shapes:magnetShapes')&&runtime.includes('NORTH=')&&runtime.includes('SOUTH=')&&elite.includes('stackfallStageProduction')],
  ['Stage 5 boss uses the shared stage dispatcher',bosses.includes("enemy.kind==='stage-boss'&&typeof window.updateStageBossSkill==='function'")&&shared.includes('window.updateStageBossSkill=function')&&runtime.includes("eventVariant:'stage05-crown'")],
- ['Stage 5 boss uses authored polarity movement and pole swap',runtime.includes('bossSkill:null')&&shared.includes("'stage-05':[.50]")&&shared.includes("'polarity-swap'")&&shared.includes('s*255')],
+ ['Stage 5 boss uses authored polarity movement and pole swap',runtime.includes('StageCraft.phase(e,[.58],api)')&&runtime.includes('player.x+=dx/d*f')&&runtime.includes('magnetized-iron')&&runtime.includes('branched-induction')],
  ['Stage 5 unlocks Ion Chain and progression currency',catalog.includes("rewards:[{type:'weapon',key:'ion'}")&&catalog.includes("key:'stardust',amount:300")&&catalog.includes("key:'coreShard',amount:1,firstClearOnly:true")&&read('src/runtime-config.js').includes("WEAPONS.ion={name:'이온 사슬'")],
  ['Stage 5 adapter is loaded after Stage 4',index.indexOf('src/stage04-runtime.js')<index.indexOf('src/stage05-runtime.js')],
  ['all supported languages include Stage 5 combat copy',(lang.match(/'stage05\.enemy\.conduitLeech'/g)||[]).length>=6&&(lang.match(/'stage05\.objective\.boss'/g)||[]).length>=6]
