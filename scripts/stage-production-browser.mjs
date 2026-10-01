@@ -51,11 +51,11 @@ try{
       return{checks,kinds:[...kinds],actions:[...actions],maxObjects,maxTravel,boss:{x:boss.x,y:boss.y,phase:boss.stagePhase},runtime:stackfallRuntimeDiagnostics()};
     },order);
     await page.screenshot({path:resolve(output,config.name+'-phase2.png')});
-    const victory=await page.evaluate(()=>{const boss=state.entities.enemies.find(e=>e.kind==='stage-boss');state.mode='playing';dealDamage(boss,boss.hp*10,{source:'core',canCrit:false});const start=state.mode;updateStageVictoryCinematic(1.4);let victoryDraws=0;const authoredDraw=drawStageVictoryCinematic;drawStageVictoryCinematic=()=>{victoryDraws++;authoredDraw();};draw();drawStageVictoryCinematic=authoredDraw;return{start,victoryDraws,duration:state.stageVictory?.duration,runtime:stackfallRuntimeDiagnostics()};});
+    const victory=await page.evaluate(()=>{const boss=state.entities.enemies.find(e=>e.kind==='stage-boss');state.mode='playing';dealDamage(boss,boss.hp*10,{source:'core',canCrit:false});const start=state.mode;updateStageVictoryCinematic(1.4);let victoryDraws=0;const authoredDraw=drawStageVictoryCinematic;drawStageVictoryCinematic=()=>{victoryDraws++;authoredDraw();};draw();drawStageVictoryCinematic=authoredDraw;return{start,victoryDraws,bossBar:{classes:ui.bossBar.className,display:getComputedStyle(ui.bossBar).display,multiDisplay:getComputedStyle(document.querySelector('#multiBossBars')).display},duration:state.stageVictory?.duration,runtime:stackfallRuntimeDiagnostics()};});
     await page.screenshot({path:resolve(output,config.name+'-victory.png')});
     const complete=await page.evaluate(()=>{updateStageVictoryCinematic(10);return{mode:state.mode,errors:stackfallRuntimeDiagnostics().errors};});
     const rendererMatches=config.gpu?initial.renderer.status==='active':initial.renderer.fallback===true;
-    const ok=rendererMatches&&preview.before.mode==='playing'&&!preview.before.boss&&preview.before.enemies===0&&preview.before.objects===0&&preview.trigger.mode==='cinematic'&&combat.checks?.every(c=>c.ok)&&victory.start==='stageVictory'&&victory.victoryDraws===1&&complete.mode==='stageComplete'&&complete.errors.length===0&&errors.length===0;
+    const ok=rendererMatches&&preview.before.mode==='playing'&&!preview.before.boss&&preview.before.enemies===0&&preview.before.objects===0&&preview.trigger.mode==='cinematic'&&combat.checks?.every(c=>c.ok)&&victory.start==='stageVictory'&&victory.victoryDraws===1&&victory.bossBar.display==='none'&&victory.bossBar.multiDisplay==='none'&&complete.mode==='stageComplete'&&complete.errors.length===0&&errors.length===0;
     results.push({name:config.name,ok,initial,preview,combat,victory,complete,errors});
     await context.close();
   }

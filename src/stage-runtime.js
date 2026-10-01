@@ -183,7 +183,7 @@
   }
   function beginStageOneBossIntro(event){
     const run=stageRuntime();if(!run||run.stage?.id!=='stage-01'||run.bossSpawned||run.bossIntroPending||activeStageEncounterCount()>0)return false;
-    run.bossIntroPending=true;if(run.stage.id==='stage-01')clearStagePhysicalObjects();if(event?.id)run.eventsTriggered[event.id]=true;clearPendingCombatActions();clearRunUiActions?.();window.closeMapEventOverlays?.();state.mapEventActive=null;if(Array.isArray(state.entities.mapEvents))state.entities.mapEvents.length=0;
+    run.bossIntroPending=true;document.querySelector('.stage-environment-notice')?.classList.remove('show');if(run.stage.id==='stage-01')clearStagePhysicalObjects();if(event?.id)run.eventsTriggered[event.id]=true;clearPendingCombatActions();clearRunUiActions?.();window.closeMapEventOverlays?.();state.mapEventActive=null;if(Array.isArray(state.entities.mapEvents))state.entities.mapEvents.length=0;
     for(const enemy of state.entities.enemies||[]){if(!enemy?.dead){enemy.dead=true;spawnParticle(enemy.x,enemy.y,enemy.color||'#8395d8',enemy.type==='boss'||enemy.type==='mini'?10:3,130,3);}}
     compactInPlace(state.entities.enemies,e=>e&&!e.dead);for(const key of['enemyProjectiles','telegraphs','beams','wells'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;
     const arena=stageOneArena(run);arena.x=player.x;arena.y=player.y;arena.phase=1;arena.locked=true;state.camera.shake=Math.max(state.camera.shake,8);state.flash=Math.max(state.flash,.08);
@@ -271,7 +271,7 @@
     run.completed=true;run.completedAt=state.time;run.victoryStarted=true;state.stageVictory={stageId:'stage-01',x:enemy.x,y:enemy.y,color:enemy.color,elapsed:0,duration:3.4,body:{...enemy,stageBodyShapes:[],dead:false,hit:0}};if(state.stageBossArena)state.stageBossArena.locked=false;
     state.mode='stageVictory';clearPendingCombatActions();clearRunUiActions?.();state.bossActiveId=null;ui.bossBar.classList.add('hidden');document.querySelector('#bossBarExtras')?.replaceChildren();ui.bossNotice.classList.add('hidden');document.querySelector('.stage-environment-notice')?.classList.remove('show');
     for(const key of['enemyProjectiles','telegraphs','beams','vacuumSeeds','phaseMines','guidedMissiles','gateNetworks'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;
-    for(const other of state.entities.enemies)other.dead=true;state.camera.shake=14;state.flash=0;audio.stageAttack?.('stage-01','defeat');
+    for(const other of state.entities.enemies)other.dead=true;updateHUD?.();state.camera.shake=14;state.flash=0;audio.stageAttack?.('stage-01','defeat');
   }
   function drawStageOneVictory(v){
     const age=v.elapsed,p=worldToScreen(v.x,v.y),body=v.body;ctx.save();ctx.translate(p.x,p.y);ctx.translate(Math.min(35,age*15),Math.min(42,age*20));ctx.rotate(Math.min(.22,age*.10));ctx.globalAlpha=1;body.stageGateCoreOpen=false;drawCollapseWardenBody(body);
