@@ -19,7 +19,7 @@
         for(const offset of offsets){const cx=p.x+nx*offset,cy=p.y+ny*offset;rawLine(cx-dx*half,cy-dy*half,cx+dx*half,cy+dy*half,width,damage*(deep?.86:.78),deep?'#ff7bd5':'#78e5ff',1.08+wave*.06,'ion-shear');}
       });
     },
-    bossProfile:{form:'nebula-heart',eventVariant:'stage02-heart',nameKey:'stage02.boss',warningKey:'stage02.boss.warning',r:64,hp:1.52,speed:.82,damage:1.08,color:'#ff8fd8',xp:1.95,skillCd:1.55,burstCd:4.4,pulseCd:6.7,spawnRadius:660,spawnShockwave:205},
+    bossProfile:{form:'nebula-heart',eventVariant:'stage02-heart',nameKey:'stage02.boss',warningKey:'stage02.boss.warning',r:64,hitRadius:92,contactRadius:64,hp:1.52,speed:.82,damage:1.08,color:'#ff8fd8',xp:1.95,skillCd:1.55,burstCd:4.4,pulseCd:6.7,spawnRadius:660,spawnShockwave:205},
     bossSkill:null
   });
 })();
