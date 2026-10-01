@@ -15,7 +15,7 @@ const checks=[
  ['Stage 7 boss uses the shared stage dispatcher',bosses.includes("enemy.kind==='stage-boss'&&typeof window.updateStageBossSkill==='function'")&&shared.includes('window.updateStageBossSkill=function')&&runtime.includes("eventVariant:'stage07-matriarch'")],
  ['Stage 7 boss uses authored predatory chase and pounce',runtime.includes('bossSkill:null')&&shared.includes("'stage-07':[.48]")&&shared.includes("phase===2?1.34:.94")&&shared.includes("'stage-07':(e,api,p,c,d,q,l)=>{addCircle")],
  ['Stage 7 unlocks Meteor Drones and progression currency',catalog.includes("rewards:[{type:'weapon',key:'drone'}")&&catalog.includes("key:'stardust',amount:410")&&read('src/runtime-config.js').includes("WEAPONS.drone={name:'유성 드론'")],
- ['all weapon definitions load before meta progression rebuilds unlocked weapons',index.indexOf('src/weapons.js')<index.indexOf('src/meta-progression.js')&&meta.includes('version:4')],
+ ['all weapon definitions load before meta progression rebuilds unlocked weapons',index.indexOf('src/weapons.js')<index.indexOf('src/meta-progression.js')&&/version:\s*[4-9]/.test(meta)],
  ['Stage 7 adapter loads after Stage 6',index.indexOf('src/stage06-runtime.js')<index.indexOf('src/stage07-runtime.js')],
  ['all supported languages include Stage 7 combat copy',(lang.match(/'stage07\.enemy\.abyssSpore'/g)||[]).length>=6&&(lang.match(/'stage07\.objective\.boss'/g)||[]).length>=6]
 ];

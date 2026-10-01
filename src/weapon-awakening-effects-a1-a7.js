@@ -196,7 +196,7 @@
   function lunarHit(p,source,multiplier=1){
     forEachNearbyEnemyCandidate(p.x,p.y,p.r+92,e=>{
       if(e.dead||p.hitIds.has(e.id))return;
-      if(segmentDistance(e.x,e.y,p.lastX,p.lastY,p.x,p.y)<e.r+p.r){
+      if(enemySegmentOverlap(e,p.lastX,p.lastY,p.x,p.y,p.r)){
         p.hitIds.add(e.id);dealDamage(e,p.damage*multiplier,{color:p.color,source});
         if(state.weaponAugments?.arc&&source==='arc')p.damage*=1.035;
         if(source==='arc-return'&&!p.awMoonRippleDone){
@@ -243,7 +243,7 @@
       if(d2<(player.r+13)**2||p.returnLife>1.45)p.dead=true;
     }
     pushHistory();p.trailCd-=dt;
-    if(p.trailDamage&&p.trailCd<=0){p.trailCd=.20;const rr=21+p.stacks*2;forEachNearbyEnemyCandidate(p.x,p.y,rr+72,e=>{if(!e.dead&&(e.x-p.x)**2+(e.y-p.y)**2<(e.r+rr)**2)dealDamage(e,2.8+p.stacks,{color:p.color,source:'arc-trail',canCrit:false});});}
+    if(p.trailDamage&&p.trailCd<=0){p.trailCd=.20;const rr=21+p.stacks*2;forEachNearbyEnemyCandidate(p.x,p.y,rr+72,e=>{if(!e.dead&&enemyCircleOverlap(e,p.x,p.y,rr))dealDamage(e,2.8+p.stacks,{color:p.color,source:'arc-trail',canCrit:false});});}
   }
   const LUNAR_UPDATE_BUFFER=[],NORMAL_CURVE_UPDATE_BUFFER=[],LUNAR_RENDER_BUFFER=[],NORMAL_CURVE_RENDER_BUFFER=[];
   updateBoomerangs=function lunarReturnUpdate(dt){

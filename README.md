@@ -381,3 +381,10 @@ The main menu is a mode hub: `GALACTIC OPERATIONS`, `ENDLESS`, and `CORE DEVELOP
 
 
 2026-09 정합성 감사의 함수 소유권, 수정 내역과 검증 범위는 [감사 보고서](docs/AWAKENING_RENDER_AUDIT.md)를 참고하세요.
+
+
+### Stage 1 production remake — 2026-10-01
+
+붕괴 전초구역은 연속 항로와 지터링된 검문 구조, 시간에 따른 전력 복귀·파열·관문 접근을 사용한다. 낙하 데크와 비대칭 역 U자 전초 수호자는 실제 물체이며, 외장과 공격/접촉 판정이 같은 회전 사각형을 공유한다. 열린 중앙 공간에는 판정이 없다. 잔해 회수 포격·엇갈린 셔터·파손 거더·가속 돌파를 순차 실행하며 48%에서 장갑이 열리고 하역장이 15% 확장된다. 격파는 핵 소등과 관문 해제로 끝난다. 탐험 frontier / 최종전 warden 음악을 구분한다. 5:00 등장, 적·사건·보상·해금은 기존 기획을 유지한다. 개발 보스 버튼은 4:55부터 정상 등장씬으로 진행하며 과거 사건을 재실행하지 않는다.
+
+실제 Chromium GPU·Canvas·390×844 모바일에서 등장, 4종 동작, 48% 전환, 격파/보상 결과, 고속 탄환의 외장 적중과 중앙 공백을 검사한다. `scripts/stage-production-browser.mjs --stage=1`의 이미지·JSON은 로컬 `test-results/production-stage-01`에 생성된다.

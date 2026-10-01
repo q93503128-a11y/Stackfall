@@ -29,7 +29,7 @@ function draw(){
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.setLineDash([]);
   runDrawStage('drawBackground',drawBackground);
   ctx.save();ctx.translate(state.camera.shakeX,state.camera.shakeY);
-  runDrawStage('drawWells',drawWells);runDrawStage('drawGems',drawGems);
+  runDrawStage('drawWells',drawWells);runDrawStage('drawGems',drawGems);runDrawStage('drawStagePhysicalObjects',drawStagePhysicalObjects);
   if(typeof drawForegroundCombat==='function'){if(GAME_SETTINGS.hideProjectiles!==true){runDrawStage('drawProjectiles',drawProjectiles);runDrawStage('drawBoomerangs',drawBoomerangs);}runDrawStage('drawAlliedEffects',drawAlliedEffects);ctx.restore();runRuntimeStage('drawForegroundCombat',drawForegroundCombat);return;}
   runDrawStage('drawTelegraphs',drawTelegraphs);if(typeof drawMapEvents==='function')runDrawStage('drawMapEvents',drawMapEvents);runDrawStage('drawEnemies',drawEnemies);if(GAME_SETTINGS.hideProjectiles!==true){runDrawStage('drawProjectiles',drawProjectiles);runDrawStage('drawBoomerangs',drawBoomerangs);}if(typeof drawBeamEffects==='function')runDrawStage('drawBeamEffects',drawBeamEffects);runDrawStage('drawEnemyProjectiles',drawEnemyProjectiles);if(state.mode!=='menu'){runDrawStage('drawMagnetField',drawMagnetField);runDrawStage('drawChronoField',drawChronoField);runDrawStage('drawPlayer',drawPlayer);}runDrawStage('drawEffects',drawEffects);ctx.restore();
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.setLineDash([]);if(typeof drawStageVictoryCinematic==='function'&&state.mode==='stageVictory')runDrawStage('drawStageVictoryCinematic',drawStageVictoryCinematic);

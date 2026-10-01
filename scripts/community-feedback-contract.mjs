@@ -26,8 +26,8 @@ expect('crash arena remains visible without duplicate ship beacon',darkCosmic.in
 expect('apex arena remains visible',buildAudit.includes("typeof drawApexArena==='function'")&&buildAudit.includes('drawApexArena()'));
 expect('manual aim is optional persistent and visibly guided',targeting.includes('id="manualAim"')&&targeting.includes('GAME_SETTINGS.manualAim')&&targeting.includes('saveGameSettings()')&&settings.includes('GAME_SETTINGS.manualAim=saved.manualAim===true')&&targeting.includes('drawPlayerWithManualAim')&&targeting.includes('cursorD2+d2*.002'));
 expect('magnet stacks accelerate pickup',targeting.includes('pullSpeed=1+magnetStacks*.22')&&wiki.includes('더 빠르게 끌려온다'));
-expect('projection core copy is effect-only',endgame.includes("desc:'일부 장비의 동시 공격 수 +1.'")&&!endgame.includes('추가 공격체는 원본과 같은 적을 노린다')&&!buildAudit.includes('sanitizeWorldEventCopy')&&!buildAudit.includes('현재 복제 확률')&&!buildAudit.includes('추가 흡인 속도'));
-expect('projection core supports two stacks',endgame.includes('max:2,eventOnly:true')&&endgame.includes("Math.min(2,passiveStacks('multiplicity'))"));
+expect('projection core copy is effect-only',endgame.includes("ko:['다중 투영 코어','일부 장비의 동시 공격 수 +1.']")&&!endgame.includes('추가 공격체는 원본과 같은 적을 노린다')&&!buildAudit.includes('sanitizeWorldEventCopy')&&!buildAudit.includes('현재 복제 확률')&&!buildAudit.includes('추가 흡인 속도'));
+expect('projection core caps two before Stage 18 and three after the protocol',endgame.includes('max:3,eventOnly:true')&&endgame.includes("multiplicity-protocol')===true?3:2")&&endgame.includes("Math.min(multiplicityMax(),passiveStacks('multiplicity'))"));
 expect('most multi-body attacks still focus one target',endgame.includes('homingTargetId:target.id')&&!endgame.includes('const multiplicityTargets='));
 expect('ion chain remains the multi-target exception',read('src/weapons.js').includes('function fireIonChain')&&wiki.includes('이온 사슬만은 여러 적을 이어 공격'));
 expect('boomerang chooses the farthest enemy',targeting.includes("if(key==='arc')return farthestWeaponTarget")&&wiki.includes('사거리 안에서 가장 먼 적'));
@@ -53,7 +53,7 @@ expect('community per-run state resets cleanly',community.includes('resetCommuni
 expect('offense outlier scaling is explicit and bounded',community.includes("clampScale(n,[1,1,1,1,.84,.78,.68])")&&community.includes("clampScale(n,[1,1,.95,.92,.88,.82,.68])")&&community.includes("clampScale(n,[1,1,1,1,.96,.92,.78])"));
 expect('apex tracking beam sweeps instead of snapping',bosses.includes('aim+side*(.92+phase*.07)')&&bosses.includes('angleToward(beam.angle,target,turnRate*dt)')&&wiki.includes('즉시 꽂히는 레이저가 아니다'));
 expect('continuous beam object churn is bounded',bosses.includes('beam.visual=stressed?.070:.040')&&bosses.includes('sweep.visual=stressed?.075:.045')&&bosses.includes('network.visual=stressed?.085:.050'));
-expect('vault remains available during elite combat',targeting.includes('vaultDuringEliteEncounters')&&wiki.includes('보스나 중간보스가 살아 있어도'));
+expect('vault remains available during elite combat',targeting.includes('vaultDuringEliteEncounters')&&wiki.includes('Stage 서브보스가 살아 있어도 표식이 먼저 나타날 수 있다'));
 expect('player core projectile is visually distinct',endgame.includes("projectile.color='#35f4ff'")&&endgame.includes("projectile.playerVisual='core'")&&endgame.includes("color:'#86fbff'"));
 expect('shorter player hit grace',endgame.includes('shorterHitInvulnerability')&&endgame.includes('Math.min(player.invuln,.5)'));
 expect('larger and spaced apex arena',endgame.includes('expandedApexEncounter')&&endgame.includes('compactDevice()?350:540')&&endgame.includes("options?.owner!=='apex-entry'")&&endgame.includes('minDistance=arena.r*.54'));

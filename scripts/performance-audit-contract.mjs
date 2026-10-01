@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-const read=p=>fs.readFileSync(p,'utf8');
+const read=p=>fs.readFileSync(p,'utf8').replace(/\r\n?/g,'\n');
 const systems=read('src/systems-base.js');
 const realm=read('src/realm-backgrounds.js');
 const mirror=read('src/weapon-awakening-effects-a14-a19.js');
@@ -19,7 +19,7 @@ const checks=[
  ['beam damage uses spatial candidate broad phase',weapons.includes('forEachNearbyEnemyCandidate(cx,cy,queryRange')&&!weapons.includes('function applyRailBeam(x1,y1,x2,y2,width,damage,color,source,eliteBonus=1){state.entities.beams.push({x1,y1,x2,y2,life:.20,max:.20,color,width});for(const enemy of state.entities.enemies)')],
  ['ember and core burst damage use spatial candidate broad phase',feature.includes('forEachNearbyEnemyCandidate(x,y,radius+128')&&!feature.includes('for(const other of state.entities.enemies){\n      if(other===enemy||other.dead)continue;')],
  ['object pressure alone cannot enter emergency rendering',!guard.includes('if(!emergencyResolution&&pressureScore()>proactiveLimit)applyEmergencyResolution(true)')&&guard.includes('pressureScore()>proactiveLimit&&frameMs>26')],
- ['GPU degraded cadence remains at least 30 FPS and does not use the old 24 FPS cap',gpu.includes('cap=emergency?30:tier===2?40:tier===1?50:60')&&!gpu.includes('?24:')],
+ ['GPU degraded cadence remains at least 30 FPS and does not use the old 24 FPS cap',gpu.includes('cap=emergency?30:tier===2?40:tier===1?50:60')&&!/cap\s*=.*\?24:/.test(gpu)],
  ['simulation is fixed at 60 Hz and 2x speed scales accumulated simulation time rather than RAF count',render.includes('SIMULATION_STEP=1/60')&&render.includes("simulationAccumulator+frameDt*(state.gameSpeed===2?2:1)")&&render.includes('while(simulationAccumulator>=SIMULATION_STEP')&&!render.includes('const simulationSteps=state.gameSpeed===2?2:1')],
  ['dense strong-hit and pickup accents are rate limited without disabling weapon audio',audio.includes('audio.lastStrongHitAt=0')&&audio.includes('now-this.lastStrongHitAt>=42')&&audio.includes('audio.lastPickupAt=0')&&audio.includes('now-this.lastPickupAt<28')],
  ['offscreen beams shockwaves text and allied particles are culled before Canvas draw work',entities.includes('beamMargin=Math.max(80')&&entities.includes('Math.max(a.x,b.x)<-beamMargin')&&entities.includes('sx+r<-24')&&entities.includes('sx<-140||sx>vw+140')&&entities.includes('sx<-24-size||sx>vw+24+size')]

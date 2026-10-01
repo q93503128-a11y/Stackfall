@@ -242,7 +242,7 @@
       const dx=target.x-m.x,dy=target.y-m.y,d=Math.hypot(dx,dy)||1,desired=Math.atan2(dy,dx),current=Math.atan2(m.vy,m.vx),angle=missileTurn(current,desired,7.2*dt),speed=lerp(Math.hypot(m.vx,m.vy),560*postRosterMissileSpeed(),clamp(dt*7.2,0,1));
       m.vx=Math.cos(angle)*speed;m.vy=Math.sin(angle)*speed;m.x+=m.vx*dt;m.y+=m.vy*dt;m.terminal=true;
       if(state.weaponAugments?.missile&&d<118)splitMirvMissile(m,target);
-      if(d<target.r+m.r+7)explodeGuidedMissile(m,target);
+      if(enemySegmentOverlap(target,m.x-m.vx*dt,m.y-m.vy*dt,m.x,m.y,m.r+7))explodeGuidedMissile(m,target);
     }
   }
   const baseUpdateGuidedMissiles=updateGuidedMissiles;

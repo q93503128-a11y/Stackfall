@@ -269,7 +269,7 @@
   function damageAwakenedRailPulse(x1,y1,x2,y2,width,damage,eliteBonus=1){
     for(const enemy of state.entities.enemies){
       if(!enemy||enemy.dead)continue;
-      if(segmentDistance(enemy.x,enemy.y,x1,y1,x2,y2)<enemy.r+width*.78){
+      if(enemySegmentOverlap(enemy,x1,y1,x2,y2,width*.78)){
         const elite=enemy.type==='boss'||enemy.type==='mini';
         dealDamage(enemy,damage*(elite?eliteBonus:1),{color:'#ffffff',source:'rail'});
       }

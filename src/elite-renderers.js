@@ -23,31 +23,28 @@ function drawLastConstellationApex(e,t,enraged){
   for(let i=0;i<pts.length;i++){const p=pts[i],size=p.scale+(i%3===0?2:0);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4+t*(i%2?.025:-.019));ctx.shadowBlur=22;ctx.shadowColor='#b7c9ff';ctx.fillStyle=i%3===0?'#ffffff':'#aebfff';ctx.fillRect(-size,-size,size*2,size*2);ctx.restore();}
   ctx.fillStyle='#01020a';ctx.strokeStyle='#edf2ff';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(-r*.12,0,r*.68,r*.44,-.42,0,TAU);ctx.fill();ctx.stroke();ctx.beginPath();ctx.arc(-r*.14,0,r*.18,0,TAU);ctx.fillStyle='#b7c9ff';ctx.fill();ctx.strokeStyle='rgba(237,242,255,.7)';ctx.beginPath();ctx.moveTo(r*.26,-r*.36);ctx.lineTo(r*.92,-r*.72);ctx.moveTo(r*.22,r*.34);ctx.lineTo(r*.82,r*.78);ctx.stroke();ctx.restore();
 }
+function drawCollapseWardenBody(e){
+  const shapes=window.stackfallStageBodyShapes?.(e)||[],open=e.stageGateCoreOpen===true,now=state.time||0,age=Math.max(0,now-(e.stageActionAt||0)),opening=open?clamp((now-(e.stageGateOpenedAt??-10))/.9,0,1):0;
+  ctx.save();ctx.shadowBlur=0;ctx.lineJoin='bevel';
+  for(const s of shapes){ctx.save();ctx.translate(s.x-e.x,s.y-e.y);ctx.rotate(s.a);const w=s.hw*2,h=s.hh*2;
+    if(s.part===3){const g=ctx.createLinearGradient(0,-s.hh,0,s.hh);g.addColorStop(0,open?'#effdff':'#8fa4b6');g.addColorStop(.35,open?'#87e9ed':'#36536b');g.addColorStop(1,'#122938');ctx.fillStyle=g;ctx.fillRect(-s.hw,-s.hh,w,h);ctx.strokeStyle=open?'#dcffff':'#647f94';ctx.lineWidth=2;ctx.strokeRect(-s.hw,-s.hh,w,h);ctx.fillStyle='#101923';ctx.fillRect(-s.hw*.17,-s.hh,s.hw*.34,h);ctx.restore();continue;}
+    const g=ctx.createLinearGradient(-s.hw,-s.hh,s.hw,s.hh);g.addColorStop(0,e.hit?'#e9f8ff':'#647c8a');g.addColorStop(.22,e.hit?'#ffffff':'#314451');g.addColorStop(1,'#111c28');ctx.fillStyle=g;ctx.fillRect(-s.hw,-s.hh,w,h);ctx.strokeStyle=e.hit?'#fff':'#b7c9d1';ctx.lineWidth=2;ctx.strokeRect(-s.hw,-s.hh,w,h);
+    ctx.fillStyle='#101922';ctx.fillRect(-s.hw+7,-s.hh+9,w-14,h-18);ctx.strokeStyle='#526875';ctx.lineWidth=1.2;ctx.strokeRect(-s.hw+7,-s.hh+9,w-14,h-18);
+    ctx.fillStyle='#354c58';ctx.fillRect(-s.hw+11,-s.hh+12,Math.max(6,w*.22),h-24);ctx.fillStyle='#c28c44';ctx.fillRect(s.hw-9,-s.hh+8,4,h-16);
+    const n=s.part===0?4:3;for(let i=0;i<n;i++){const y=-s.hh+19+i*(h-38)/Math.max(1,n-1);ctx.strokeStyle='#8296a0';ctx.beginPath();ctx.moveTo(-s.hw+8,y);ctx.lineTo(s.hw-8,y+3);ctx.stroke();ctx.fillStyle='#d1b176';ctx.fillRect(-s.hw+4,y-2,3,4);}
+    if(open&&s.part===2){ctx.strokeStyle='#08121a';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(-s.hw, -s.hh*.42);ctx.lineTo(s.hw*.18,-s.hh*.15);ctx.lineTo(-s.hw*.1,s.hh*.2);ctx.lineTo(s.hw,s.hh*.3);ctx.stroke();}
+    ctx.restore();
+  }
+  // Hydraulic links are attached structural elements, never orbiting decorations.
+  const a=e.stageBodyAngle||0,k=e.stageBodyScale||1;ctx.rotate(a);ctx.scale(k,k);ctx.strokeStyle='#81959e';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(-64,-49);ctx.lineTo(-92-18*opening,-38);ctx.moveTo(55,-47);ctx.lineTo(85+15*opening,-19);ctx.stroke();
+  ctx.strokeStyle='#233744';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-64,-49);ctx.lineTo(-92-18*opening,-38);ctx.moveTo(55,-47);ctx.lineTo(85+15*opening,-19);ctx.stroke();
+  if(e.stageAction==='ram'&&age<1.15){ctx.fillStyle='#e3af62';ctx.globalAlpha=.35+.6*clamp(age/1.15,0,1);ctx.fillRect(-61,-88,107,4);}
+  ctx.restore();
+}
 function drawEliteShape(e){
   const f=e.eliteForm||e.apexForm||e.variant,t=e.phase,enraged=e.kind==='apex'&&e.apexPhase===2;
   ctx.save();ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;ctx.lineWidth=e.kind==='apex'?4:3;ctx.lineCap='round';ctx.lineJoin='round';
-  if(f==='collapse-warden'){
-    const r=e.r,phase=e.stagePhase||1,now=state.time||0,ram=(e.stageRamWindupUntil||0)>now||(e.stageRamUntil||0)>now,open=e.stageGateCoreOpen===true||phase>=2,phaseAge=Math.max(0,now-(e.stagePhaseChangedAt||now)),openEase=open?clamp(phaseAge/.72,0,1):0;
-    if(ram&&Number.isFinite(e.stageRamAngle))ctx.rotate(e.stageRamAngle+Math.PI/2);else ctx.rotate(Math.sin(t*.12)*.025);
-    ctx.fillStyle=e.hit?'#fff':'#070b18';ctx.strokeStyle=e.hit?'#fff':'#c8d3ff';ctx.lineWidth=3.2;ctx.lineCap='round';ctx.lineJoin='round';
-    // Broken checkpoint frame: two incomplete counter-rotating structural rings.
-    for(let ring=0;ring<2;ring++){ctx.save();ctx.rotate((ring?1:-1)*t*(.018+ring*.007));ctx.globalAlpha=.58-ring*.12;ctx.lineWidth=ring?1.8:2.6;ctx.setLineDash(ring?[15,11]:[30,12]);ctx.beginPath();ctx.arc(0,0,r*(1.23+ring*.25),-.20,Math.PI*.78);ctx.stroke();ctx.beginPath();ctx.arc(0,0,r*(1.23+ring*.25),Math.PI*.96,Math.PI*1.74);ctx.stroke();ctx.restore();}ctx.setLineDash([]);ctx.globalAlpha=1;
-    // Six locking arms are physical hinged bulkheads, not radial light blades.
-    for(let i=0;i<6;i++){const base=i*TAU/6,hinge=(i%2?1:-1)*(openEase*.18),fold=ram?(i===0?-.18:i===3?.18:(i%2?-.10:.10)):0;ctx.save();ctx.rotate(base+hinge+fold);
-      ctx.fillStyle=e.hit?'#fff':i%2?'#26345f':'#354675';ctx.strokeStyle=e.hit?'#fff':'#9eafe9';ctx.lineWidth=2.2;
-      ctx.beginPath();ctx.moveTo(r*.42,-r*.18);ctx.lineTo(r*.82,-r*.27);ctx.lineTo(r*1.30,-r*.20);ctx.lineTo(r*1.53,-r*.07);ctx.lineTo(r*1.53,r*.07);ctx.lineTo(r*1.30,r*.20);ctx.lineTo(r*.82,r*.27);ctx.lineTo(r*.42,r*.18);ctx.closePath();ctx.fill();ctx.stroke();
-      ctx.fillStyle='rgba(6,10,23,.92)';ctx.fillRect(r*.70,-r*.12,r*.50,r*.24);ctx.strokeStyle=i%2?'#7f92d4':'#a6b5e8';ctx.lineWidth=1.2;ctx.strokeRect(r*.70,-r*.12,r*.50,r*.24);
-      ctx.strokeStyle='#ffcf70';ctx.lineWidth=2.3;for(let mark=0;mark<3;mark++){const x=r*(.82+mark*.13);ctx.beginPath();ctx.moveTo(x,-r*.10);ctx.lineTo(x+r*.08,r*.10);ctx.stroke();}
-      ctx.fillStyle=i===1||i===4?'#ff6e78':'#d9e2ff';ctx.beginPath();ctx.arc(r*1.34,0,r*.035,0,TAU);ctx.fill();ctx.restore();
-    }
-    // Armoured gate housing and split seal.
-    ctx.fillStyle=e.hit?'#fff':'#0a1024';ctx.strokeStyle=e.hit?'#fff':'#d3dcff';ctx.lineWidth=3.5;ctx.beginPath();for(let i=0;i<8;i++){const a=i/8*TAU-Math.PI/8,rr=i%2?r*.69:r*.61,x=Math.cos(a)*rr,y=Math.sin(a)*rr;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fill();ctx.stroke();
-    const jawGap=r*(.08+.18*openEase);for(const side of[-1,1]){ctx.save();ctx.translate(side*jawGap,0);ctx.scale(side,1);ctx.fillStyle=e.hit?'#fff':'#17264c';ctx.strokeStyle='#adbcf2';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-r*.42);ctx.lineTo(r*.33,-r*.31);ctx.lineTo(r*.42,-r*.12);ctx.lineTo(r*.24,0);ctx.lineTo(r*.42,r*.12);ctx.lineTo(r*.33,r*.31);ctx.lineTo(0,r*.42);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
-    // Phase 2 exposes a deep luminous route-core rather than simply recolouring the star.
-    ctx.shadowBlur=open?30:13;ctx.shadowColor=open?'#f3f6ff':'#8ca0e8';ctx.fillStyle=open?'#f8fbff':'#7183c7';drawStarPath(6,r*(open?.12:.10),r*(open?.31:.22),t*.018);ctx.fill();ctx.shadowBlur=0;
-    ctx.strokeStyle=open?'rgba(255,255,255,.90)':'rgba(174,185,255,.58)';ctx.lineWidth=open?2.4:1.5;ctx.beginPath();ctx.arc(0,0,r*(open?.36:.28),0,TAU);ctx.stroke();
-    if(open){ctx.globalAlpha=.72;for(let i=0;i<6;i++){const a=i*TAU/6+t*.012;ctx.strokeStyle=i%2?'#ffffff':'#8fdcff';ctx.beginPath();ctx.moveTo(Math.cos(a)*r*.42,Math.sin(a)*r*.42);ctx.lineTo(Math.cos(a)*r*.61,Math.sin(a)*r*.61);ctx.stroke();}ctx.globalAlpha=1;}
-    if(ram){ctx.strokeStyle='rgba(255,207,112,.78)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-r*.40,r*.74);ctx.lineTo(-r*.20,r*1.18);ctx.moveTo(r*.40,r*.74);ctx.lineTo(r*.20,r*1.18);ctx.stroke();}
+  if(f==='collapse-warden'){drawCollapseWardenBody(e);
   }else if(f==='nebula-heart'){
     const r=Number.isFinite(e.visualR)?e.visualR:e.r,phase=e.stagePhase||1,now=state.time||0,inhale=(e.stageNebulaInhaleUntil||0)>now,exhale=(e.stageNebulaExhaleUntil||0)>now,beating=(e.stageNebulaBeatUntil||0)>now,beat=(beating?.86+.14*Math.sin(t*13):.94+.06*Math.sin(t*2.6)),contract=inhale?.80:exhale?1.13:1,coreOpen=e.stageNebulaCoreOpen||phase>=2,active=Number(e.stageNebulaActiveLobe);
     ctx.save();ctx.rotate(Math.sin(t*.21)*.08);ctx.scale(contract,contract*(.96+.04*Math.sin(t*.73)));ctx.lineCap='round';ctx.lineJoin='round';

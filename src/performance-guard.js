@@ -100,6 +100,7 @@
     }
   }
   function forEachNearbyEnemy(x,y,range,visit){
+    if(state.stageRun?.stage?.id==='stage-01'&&state.stageRun.bossSpawned)range+=155;
     const cx=Math.floor(x/CELL),cy=Math.floor(y/CELL),reach=Math.max(1,Math.ceil(range/CELL));
     for(let yy=cy-reach;yy<=cy+reach;yy++)for(let xx=cx-reach;xx<=cx+reach;xx++){
       const bucket=grid.get(gridKey(xx,yy));if(!bucket)continue;
@@ -107,6 +108,7 @@
     }
   }
   function collectNearbyInto(x,y,range,out){
+    if(state.stageRun?.stage?.id==='stage-01'&&state.stageRun.bossSpawned)range+=155;
     out.length=0;const cx=Math.floor(x/CELL),cy=Math.floor(y/CELL),reach=Math.max(1,Math.ceil(range/CELL));
     for(let yy=cy-reach;yy<=cy+reach;yy++)for(let xx=cx-reach;xx<=cx+reach;xx++){const bucket=grid.get(gridKey(xx,yy));if(!bucket)continue;for(let i=0;i<bucket.length;i++)out.push(bucket[i]);}
     return out;
@@ -246,7 +248,7 @@
     for(const e of state.entities.enemies){
       if(!e||e.dead)continue;const sx=e.x-player.x+vw/2,sy=e.y-player.y+vh/2,elite=e.type==='mini'||e.type==='boss';
       if(sx<-180||sx>vw+180||sy<-180||sy>vh+180)continue;
-      if(elite){ctx.save();ctx.translate(sx,sy);const pulse=1+Math.sin(e.phase)*.05;ctx.scale(pulse,pulse);ctx.shadowBlur=e.kind==='apex'?58:e.type==='boss'?44:30;ctx.shadowColor=e.color;ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;drawEliteShape(e);ctx.restore();}
+      if(elite){ctx.save();ctx.translate(sx,sy);const pulse=e.eventKind==='stage-01'?1:1+Math.sin(e.phase)*.05;ctx.scale(pulse,pulse);ctx.shadowBlur=e.kind==='apex'?58:e.type==='boss'?44:30;ctx.shadowColor=e.color;ctx.strokeStyle=e.hit?'#fff':e.color;ctx.fillStyle=e.hit?'#fff':e.color;drawEliteShape(e);ctx.restore();}
       else{
         const entry=enemySprite(e),directionalStage=!!(e.stageVariant&&typeof DIRECTIONAL_STAGE_VARIANTS!=='undefined'&&DIRECTIONAL_STAGE_VARIANTS.has(e.stageVariant)),angle=directionalStage||e.type==='fast'||e.type==='ranged'||e.type==='tank'&&e.eventKind==='crash'?Math.atan2(player.y-e.y,player.x-e.x):e.type==='tank'?(e.phase||0)*.035:0;drawSpriteRotated(entry,roundPixel(sx),roundPixel(sy),angle);
       }
@@ -279,6 +281,7 @@
       const p=state.entities.projectiles[index];
       if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y)||!Number.isFinite(p.life)){if(p)p.life=0;continue;}
       if(p.life<=0)continue;
+      const projectilePreviousX=p.x,projectilePreviousY=p.y;
       p.vx=Number.isFinite(p.vx)?p.vx:0;p.vy=Number.isFinite(p.vy)?p.vy:0;p.r=Number.isFinite(p.r)?Math.max(.5,p.r):3;p.damage=Number.isFinite(p.damage)?p.damage:0;
       if(p.spiralMotion){
         const lastX=p.x,lastY=p.y,originX=Number.isFinite(p.spiralOriginX)?p.spiralOriginX:(Number.isFinite(p.originX)?p.originX:player.x),originY=Number.isFinite(p.spiralOriginY)?p.spiralOriginY:(Number.isFinite(p.originY)?p.originY:player.y);
@@ -290,10 +293,10 @@
       if(Number.isFinite(p.maxRange)){const ox=Number.isFinite(p.originX)?p.originX:player.x,oy=Number.isFinite(p.originY)?p.originY:player.y;if((p.x-ox)**2+(p.y-oy)**2>p.maxRange*p.maxRange)p.life=0;}
       const source=String(p.source||'');p.source=source;const cometTrail=source.includes('comet'),trailSource=cometTrail||['ember','echo-star','core','core-echo','star-spark','wave','meteor-drone','echo-drone','drone-burst','spiral-bolt','echo-spiral','mirror-return','mirror-counter'].includes(source);
       if(p.life>0&&p.trailTick<=0&&trailSource&&state.entities.particles.length<particleCap&&!heavyFrame&&GAME_SETTINGS.hideProjectiles!==true){p.trailTick=compactDevice()?.09:cometTrail?.052:.075;state.entities.particles.push({x:p.x-p.vx*.018,y:p.y-p.vy*.018,vx:rand(-10,10),vy:rand(-10,10),life:cometTrail?.26:.16,max:cometTrail?.26:.16,size:cometTrail?rand(1.8,3.2):rand(.9,2),color:p.color||COLORS.white,star:true});}
-      if(p.life>0&&p.trailDamage){p.trailDamageCd=(p.trailDamageCd||0)-dt;while(p.trailDamageCd<=0){p.trailDamageCd+=.24;const rr=24+weaponCount('comet')*2,candidates=collectNearbyInto(p.x,p.y,rr+76,projectileTrailBuffer);for(let i=0;i<candidates.length;i++){const e=candidates[i];if(e&&!e.dead&&(e.x-p.x)**2+(e.y-p.y)**2<(e.r+rr)**2)dealDamage(e,2.6+weaponCount('comet')*.85,{color:COLORS.comet,source:'comet-trail',canCrit:false});}}}
+      if(p.life>0&&p.trailDamage){p.trailDamageCd=(p.trailDamageCd||0)-dt;while(p.trailDamageCd<=0){p.trailDamageCd+=.24;const rr=24+weaponCount('comet')*2,candidates=collectNearbyInto(p.x,p.y,rr+76,projectileTrailBuffer);for(let i=0;i<candidates.length;i++){const e=candidates[i];if(e&&!e.dead&&enemyCircleOverlap(e,p.x,p.y,rr))dealDamage(e,2.6+weaponCount('comet')*.85,{color:COLORS.comet,source:'comet-trail',canCrit:false});}}}
       if(p.life>0){const candidates=collectNearbyInto(p.x,p.y,p.r+86,projectileCollisionBuffer);for(let candidateIndex=0;candidateIndex<candidates.length&&p.life>0;candidateIndex++){const e=candidates[candidateIndex];
         if(!e||e.dead||p.hitIds?.has(e.id))continue;
-        if((e.x-p.x)**2+(e.y-p.y)**2<(e.r+p.r)**2){
+        if(e.stageBodyShapes?enemySegmentOverlap(e,projectilePreviousX,projectilePreviousY,p.x,p.y,p.r):enemyCircleOverlap(e,p.x,p.y,p.r)){
           dealDamage(e,p.damage,{color:p.color,source});if(!p.hitIds)p.hitIds=new Set();p.hitIds.add(e.id);
           if(p.split&&(p.splitCount||0)<2){p.splitCount=(p.splitCount||0)+1;for(let i=0;i<3;i++){const a=Math.atan2(p.vy,p.vx)+(i-1)*.58;spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*350,vy:Math.sin(a)*350,r:3.1,life:.58,maxRange:210,damage:p.damage*.30,color:'#ffb3d0',pierce:0,source:'star-spark'});}}
           if(p.fragment&&(p.fragmentCount||0)<2){p.fragmentCount=(p.fragmentCount||0)+1;for(let i=0;i<4;i++){const a=i/4*TAU+Math.atan2(p.vy,p.vx);spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*285,vy:Math.sin(a)*285,r:3.4,life:.60,maxRange:190,damage:p.damage*.22,color:'#d9fbff',pierce:0,source:'comet-fragment'});}}
@@ -312,7 +315,7 @@
     if(!grid.size)rebuildEnemyGrid();const list=state.entities.wells;
     for(let i=0;i<list.length;i++){
       const w=list[i];if(!w||!normalizeWell(w)){if(w)w.life=0;continue;}w.life-=dt;w.tick-=dt;
-      if(w.damage>0&&w.tick<=0){w.tick=.30;const rr=w.r*.42,candidates=collectNearbyInto(w.x,w.y,rr+78,wellHitBuffer);for(let candidateIndex=0;candidateIndex<candidates.length;candidateIndex++){const e=candidates[candidateIndex];if(e&&!e.dead&&(e.x-w.x)**2+(e.y-w.y)**2<(rr+e.r)**2)dealDamage(e,w.damage,{color:w.color,source:'well',canCrit:false});}}
+      if(w.damage>0&&w.tick<=0){w.tick=.30;const rr=w.r*.42,candidates=collectNearbyInto(w.x,w.y,rr+78,wellHitBuffer);for(let candidateIndex=0;candidateIndex<candidates.length;candidateIndex++){const e=candidates[candidateIndex];if(e&&!e.dead&&enemyCircleOverlap(e,w.x,w.y,rr))dealDamage(e,w.damage,{color:w.color,source:'well',canCrit:false});}}
     }
     compactInPlace(list,keepLiveWell);
   };

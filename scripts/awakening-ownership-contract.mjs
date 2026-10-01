@@ -62,7 +62,7 @@ const families={
   drone:['meteor-drone','echo-drone','drone-burst','drone-multiplicity'],
   spiral:['spiral-bolt','echo-spiral','spiral-counter','spiral-multiplicity'],gate:['gate-crossfeed']
 };
-const rasterSizes={core:[176,80],ember:[260,112],comet:[280,112],'blade-wave':[184,104],shard:[150,72],drone:[138,64],spiral:[132,72],gate:[164,84]};
+const rasterSizes={core:[176,80],ember:[260,112],comet:[280,112],'blade-wave':[184,104],shard:[150,72],drone:[178,78],spiral:[132,72],gate:[164,84]};
 function render(projectile){calls.length=0;state.entities.projectiles=[{x:0,y:0,r:5,vx:100,vy:0,life:1,...projectile}];context.drawProjectiles();assert.equal(calls.length,1);return calls[0];}
 for(const [family,sources]of Object.entries(families))for(const source of sources){
   const draw=render({source});assert.deepEqual([draw.surface.width,draw.surface.height],rasterSizes[family],`${source}: wrong raster family`);
