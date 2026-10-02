@@ -50,6 +50,8 @@ damageReduction=function damageReductionWithStacks(){const armor=stat('armor')*.
 function audioVolume(channel){const volumes=GAME_SETTINGS.audio?.volume||{};const shape=value=>{const v=Math.max(0,Math.min(1,Number(value)||0));return v<=0?0:Math.pow(v,.58);};return shape(volumes.master??.90)*shape(volumes[channel]??(channel==='ambient'?.58:.86));}
 const rawAudioInit=audio.init.bind(audio);
 const MUSIC_SCENES={
+  staticnarrows:{bed:[34.65,51.91,69.3,103.83],roots:[69.3,77.78,51.91,69.3,92.5],lead:[277.18,311.13,207.65,369.99],pulseMs:1280,filter:1550,noise:760,drive:.57,leadType:'sawtooth',leadEvery:3,leadLength:.22},
+  harvester:{bed:[34.65,51.91,69.3,103.83],roots:[138.59,77.78,103.83,69.3,155.56,92.5,69.3],lead:[554.37,311.13,415.3,277.18,622.25,369.99,207.65],pulseMs:540,filter:2900,noise:970,drive:1.1,leadType:'sawtooth',leadEvery:1,leadLength:.17},
   deadrelay:{bed:[36.71,73.42,110,146.83],roots:[73.42,110,82.41,73.42],lead:[587.33,440,659.25,493.88],pulseMs:1940,filter:1200,noise:95,drive:.42,leadType:'square',leadEvery:4,leadLength:.13},
   deadband:{bed:[36.71,73.42,110,146.83],roots:[146.83,110,164.81,73.42,146.83,98],lead:[587.33,440,659.25,293.66,587.33,392],pulseMs:890,filter:2500,noise:150,drive:.95,leadType:'square',leadEvery:2,leadLength:.11},
   gestation:{bed:[36.71,55,73.42,110],roots:[73.42,55,82.41,73.42,98],lead:[220,293.66,329.63,246.94],pulseMs:1730,filter:980,noise:370,drive:.54,leadType:'sine',leadEvery:3,leadLength:1.2},
