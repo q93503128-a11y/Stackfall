@@ -58,9 +58,9 @@ function drawStageEnemyBody(g,e){
     g.strokeStyle='#d6c7ab';g.lineWidth=2;g.beginPath();g.moveTo(-r*.25,-r*.60);g.bezierCurveTo(r*.46,-r*.07,-r*.45,r*.12,r*.27,r*.55);g.stroke();
   }
   else if(v==='husk-warden'){
-    const pulse=.90+.10*Math.sin((e.phase||0)*.9);g.rotate((e.phase||0)*.018);g.strokeStyle=e.hit?'#fff':'#e4b36c';g.fillStyle=e.hit?'#fff':'#1a1209';g.lineWidth=2.4;
-    for(let plate=0;plate<6;plate++){g.save();g.rotate(plate*TAU/6);g.fillStyle=plate%2?'rgba(201,151,255,.18)':'rgba(228,179,108,.28)';g.beginPath();g.moveTo(r*.28,-r*.26);g.lineTo(r*1.18,-r*.40);g.lineTo(r*1.46,0);g.lineTo(r*1.18,r*.40);g.lineTo(r*.28,r*.26);g.closePath();g.fill();g.stroke();g.restore();}
-    g.fillStyle='#0c0a08';g.beginPath();g.arc(0,0,r*.68,0,TAU);g.fill();g.stroke();g.strokeStyle='#9fd8c8';for(let seam=0;seam<3;seam++){const a=seam*TAU/3;g.beginPath();g.moveTo(Math.cos(a)*r*.18,Math.sin(a)*r*.18);g.lineTo(Math.cos(a)*r*.58,Math.sin(a)*r*.58);g.stroke();}g.fillStyle='#fff2d2';g.beginPath();g.arc(0,0,r*.12*pulse,0,TAU);g.fill();
+    g.rotate(Math.sin((e.phase||0)*.5)*.10);const shell=g.createLinearGradient(-r,-r,r,r);shell.addColorStop(0,'#c5ae7f');shell.addColorStop(.44,'#56614d');shell.addColorStop(1,'#66545b');g.strokeStyle=e.hit?'#fff':'#cdb99c';g.fillStyle=e.hit?'#fff':shell;g.lineWidth=2;
+    g.beginPath();g.moveTo(-r*.86,-r*.12);g.lineTo(-r*.60,-r*.58);g.lineTo(r*.45,-r*.67);g.lineTo(r*.85,-r*.19);g.lineTo(r*.68,r*.44);g.lineTo(-r*.52,r*.63);g.lineTo(-r*.85,r*.18);g.closePath();g.fill();g.stroke();
+    for(let plate=0;plate<3;plate++){const x=(-.43+plate*.43)*r;g.strokeStyle='#362e29';g.lineWidth=3;g.beginPath();g.moveTo(x-r*.10,-r*.45);g.quadraticCurveTo(x+r*.21,-r*.04,x,r*.48);g.stroke();}g.strokeStyle='#cdb99c';g.lineWidth=2;for(const side of[-1,1]){g.beginPath();g.moveTo(side*r*.54,r*.34);g.lineTo(side*r*.69,r*.63);g.lineTo(side*r*.49,r*.69);g.stroke();}
   }
   else if(v==='relay-mite'){
     const pulse=.88+.12*Math.sin((e.phase||0)*1.7);g.rotate((e.phase||0)*.05);g.strokeStyle=e.hit?'#fff':'#6de8f4';g.fillStyle=e.hit?'#fff':'#07151c';g.lineWidth=2;
