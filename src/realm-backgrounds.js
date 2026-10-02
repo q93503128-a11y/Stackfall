@@ -287,12 +287,14 @@ const STAGE_WORLD_FRAME_CACHE=new Map();
 function drawProductionWorldFrame(theme,production){
   const key=`${theme}:${vw}x${vh}@${dpr}`,now=performance.now(),boss=state.entities.enemies.find(e=>e.kind==='stage-boss'&&!e.dead),signature=`${state.runSerial}:${state.stageRun?.bossSpawned}:${state.stageRun?.completed}:${boss?.stagePhase}:${state.mode}`;
   let entry=STAGE_WORLD_FRAME_CACHE.get(key);
-  if(!entry){const surface=typeof OffscreenCanvas==='function'?new OffscreenCanvas(Math.ceil(vw*dpr),Math.ceil(vh*dpr)):document.createElement('canvas');surface.width=Math.ceil(vw*dpr);surface.height=Math.ceil(vh*dpr);entry={surface,g:surface.getContext('2d',{alpha:false}),at:-Infinity,x:NaN,y:NaN,time:NaN,signature:null};if(STAGE_WORLD_FRAME_CACHE.size>=3)STAGE_WORLD_FRAME_CACHE.delete(STAGE_WORLD_FRAME_CACHE.keys().next().value);STAGE_WORLD_FRAME_CACHE.set(key,entry);}
+  if(!entry){const surface=typeof OffscreenCanvas==='function'?new OffscreenCanvas(Math.ceil(vw*dpr),Math.ceil(vh*dpr)):document.createElement('canvas');surface.width=Math.ceil(vw*dpr);surface.height=Math.ceil(vh*dpr);entry={surface,g:surface.getContext('2d',{alpha:true}),at:-Infinity,x:NaN,y:NaN,time:NaN,signature:null};if(STAGE_WORLD_FRAME_CACHE.size>=3)STAGE_WORLD_FRAME_CACHE.delete(STAGE_WORLD_FRAME_CACHE.keys().next().value);STAGE_WORLD_FRAME_CACHE.set(key,entry);}
   const staticWorld=production.worldStatic?.()===true,moved=Math.hypot(player.x-entry.x,player.y-entry.y);
   if(((!staticWorld||moved>.1)&&now-entry.at>=1000/20)||moved>96||Math.abs(state.time-entry.time)>2||entry.signature!==signature){
-    const oldCtx=ctx;try{ctx=entry.g;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.setLineDash([]);drawThemeRaw(theme);production.drawWorld();entry.at=now;entry.x=player.x;entry.y=player.y;entry.time=state.time;entry.signature=signature;}finally{ctx=oldCtx;}
+    const oldCtx=ctx;try{ctx=entry.g;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.setLineDash([]);ctx.clearRect(0,0,vw,vh);production.drawWorld();entry.at=now;entry.x=player.x;entry.y=player.y;entry.time=state.time;entry.signature=signature;}finally{ctx=oldCtx;}
   }
-  ctx.drawImage(entry.surface,0,0,entry.surface.width,entry.surface.height,0,0,vw,vh);
+  drawThemeRaw(theme);
+  const dx=Number.isFinite(entry.x)?entry.x-player.x:0,dy=Number.isFinite(entry.y)?entry.y-player.y:0;
+  ctx.drawImage(entry.surface,0,0,entry.surface.width,entry.surface.height,dx,dy,vw,vh);
 }
 const THEME_FRAME_CACHE=new Map(),THEME_FRAME_INTERVAL=1000/30;
 function themeFrameEntry(theme){
@@ -303,7 +305,7 @@ function refreshThemeFrame(entry,theme,now){
   const oldCtx=ctx;try{ctx=entry.bufferCtx;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.setLineDash([]);ctx.clearRect(0,0,vw,vh);drawThemeRaw(theme);entry.lastAt=now;entry.playerX=player.x||0;entry.playerY=player.y||0;}finally{ctx=oldCtx;}
 }
 function drawTheme(theme){
-  const production=window.stackfallStageProduction?.(theme);if(production){drawProductionWorldFrame(theme,production);drawTraversalParallax(theme);drawMotionStreaks(theme);return;}
+  const production=window.stackfallStageProduction?.(theme);if(production){drawProductionWorldFrame(theme,production);drawMotionStreaks(theme);return;}
   const now=performance.now(),entry=themeFrameEntry(theme),moved=Math.hypot((player.x||0)-entry.playerX,(player.y||0)-entry.playerY),urgent=!Number.isFinite(entry.playerX)||moved>Math.max(18,(player.speed||248)*.08);
   if(urgent||now-entry.lastAt>=THEME_FRAME_INTERVAL)refreshThemeFrame(entry,theme,now);
   ctx.drawImage(entry.surface,0,0,entry.surface.width,entry.surface.height,0,0,vw,vh);
