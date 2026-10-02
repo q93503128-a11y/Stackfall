@@ -50,6 +50,8 @@ damageReduction=function damageReductionWithStacks(){const armor=stat('armor')*.
 function audioVolume(channel){const volumes=GAME_SETTINGS.audio?.volume||{};const shape=value=>{const v=Math.max(0,Math.min(1,Number(value)||0));return v<=0?0:Math.pow(v,.58);};return shape(volumes.master??.90)*shape(volumes[channel]??(channel==='ambient'?.58:.86));}
 const rawAudioInit=audio.init.bind(audio);
 const MUSIC_SCENES={
+  gestation:{bed:[36.71,55,73.42,110],roots:[73.42,55,82.41,73.42,98],lead:[220,293.66,329.63,246.94],pulseMs:1730,filter:980,noise:370,drive:.54,leadType:'sine',leadEvery:3,leadLength:1.2},
+  bloomheart:{bed:[36.71,55,73.42,110],roots:[73.42,110,82.41,146.83,98,73.42,164.81,110,55],lead:[293.66,440,329.63,587.33,392,293.66,659.25,440,220],pulseMs:620,filter:1950,noise:470,drive:1.18,leadType:'sine',leadEvery:1,leadLength:.95},
   seedhusk:{bed:[29.14,43.65,58.27,87.31],roots:[58.27,43.65,65.4,58.27],lead:[174.61,233.08,261.63,196],pulseMs:1680,filter:820,noise:410,drive:.54,leadType:'triangle',leadEvery:3,leadLength:.39},
   custodian:{bed:[29.14,43.65,58.27,87.31],roots:[58.27,87.31,58.27,65.4,116.54,43.65],lead:[174.61,261.63,233.08,196,349.23,174.61],pulseMs:820,filter:1250,noise:570,drive:1.12,leadType:'square',leadEvery:1,leadLength:.23},
   blackglass:{bed:[46.25,65.4,92.5,138.59],roots:[92.5,65.4,138.59,98],lead:[369.99,523.25,554.37,392],pulseMs:1570,filter:1750,noise:90,drive:.50,leadType:'sine',leadEvery:3,leadLength:1.10},
