@@ -20,7 +20,7 @@
       awPrismTargetId:null,awPrismTargetX:0,awPrismTargetY:0,
       awChronoPhase:0,awChronoSeverFlash:0,
       awIonCircuitCd:0,awIonDischargePending:false,
-      awNovaCharge:0,awDroneFleetCycle:0,awRailCycle:0
+      awNovaCharge:0,awDroneFleetCycle:0,awDroneVolleyFlash:0,awRailCycle:0
     });
   }
   window.stackfallResetAwakeningSecondSetCombat=resetSecondAwakeningState;

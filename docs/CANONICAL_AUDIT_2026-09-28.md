@@ -1,3 +1,5 @@
+> 이 문서는 2026-09-28 상태의 감사 기록이다. Stage 1~18 연출/기믹의 현재 정본은 2026-10-02의 GAME_DESIGN.md 및 STAGE_PRODUCTION_REMAKE.md를 따른다.
+
 # Stackfall 현재 정본 정밀 감사 — 2026-09-28
 
 감사 기준 `main` HEAD: `140c749c4afc5af4c811a96ed47eb0e9631612db`

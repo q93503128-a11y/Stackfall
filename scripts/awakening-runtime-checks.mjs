@@ -11,7 +11,7 @@ export function awakeningRuntimeChecks(){
   const galleryCtx=gallery.getContext('2d');galleryCtx.fillStyle='#050914';galleryCtx.fillRect(0,0,gallery.width,gallery.height);
   window.stackfallAuditGallery=gallery;
   const arrays=['awakeningFx','awakeningFxSecond','awakeningFxThird','awIonNodes','awLotusFields','awStarrailNodes'];
-  const playerAwState=()=>Object.fromEntries(Object.entries(player).filter(([key])=>/^aw[A-Z]/.test(key)));
+  const playerAwState=()=>Object.fromEntries(Object.entries(player).filter(([key])=>/^aw[A-Z]/.test(key)).sort(([a],[b])=>a.localeCompare(b)));
   dev.equipOnly('blade',1,false);dev.assignSlot(1,'comet');dev.setSlotLevel(1,4);
   check(state.weaponSlots[0]==='blade'&&state.weaponSlots[1]==='comet'&&weaponCount('blade')===1&&weaponCount('comet')===4,'DEV per-slot weapon/stack edit failed');
   dev.setSlotAwakening(1,true);
@@ -34,10 +34,10 @@ export function awakeningRuntimeChecks(){
     const t=state.entities.enemies[0];
     switch(key){
       case'core':for(let i=0;i<4;i++)spawnCoreShot(t);break;
-      case'blade':player.awBladeCd=.001;updateWeapons(.01);break;
+      case'blade':updateWeapons(.01);break;
       case'ember':for(let i=0;i<12;i++)dealDamage(t,1,{source:'ember'});fireEmber(t,n);break;
       case'bulwark':player.shield=1;hurtPlayer(40);break;
-      case'gravity':createGravityWells(n);for(const w of state.entities.wells)w.life=.2;updateWells(.01);break;
+      case'gravity':createGravityWells(n);for(const w of state.entities.wells)w.life=.17;updateWells(.01);break;
       case'comet':for(let i=0;i<4;i++)fireComet(t,n);break;
       case'arc':fireBoomerang(t,n);updateBoomerangs(.01);break;
       case'prism':updateFocusedPrisms(.01,n);state.time+=2;player.prismSharedLock.heat=3;updateFocusedPrisms(.01,n);break;
@@ -54,8 +54,9 @@ export function awakeningRuntimeChecks(){
       case'gate':deployOrbitalGate(n);{const net=state.entities.gateNetworks.at(-1);spawnGatePulseSet(net);for(let i=0;i<net.gates.length*3;i++){state.time+=.2;gateSegmentHit(net,net.pulses[0]);}}break;
     }
   }
-  const signature={core:'stellar-volley',blade:'blade-align',ember:'starline-flash',bulwark:'bastion-break',gravity:'binary-merge',comet:'comet-charge',prism:'prism-crown-charge',chrono:'chrono-sever',ion:'ion-circuit-freeze',nova:'hypernova-charge',drone:'fleet-form',rail:'rail-assemble',spiral:'genesis-form',mirror:'mirror-sanctuary',mine:'starrail-run',missile:'arsenal-open',gate:'hypergate-charge'};
+  const signature={core:'stellar-volley',ember:'starline-flash',bulwark:'bastion-break',gravity:'binary-merge',comet:'comet-charge',prism:'prism-crown-charge',chrono:'chrono-sever',ion:'ion-circuit-freeze',nova:'hypernova-charge',drone:'fleet-form',rail:'rail-overdrive-charge',spiral:'genesis-form',mirror:'mirror-sanctuary',mine:'starrail-run',missile:'arsenal-open',gate:'hypergate-charge'};
   function hasSignature(key){
+    if(key==='blade'){const at=state.time;state.time=0;const slow=window.stackfallAwakenedBladeOrbitSpeedMultiplier?.();state.time=Math.PI/1.08;const fast=window.stackfallAwakenedBladeOrbitSpeedMultiplier?.();state.time=at;return slow===1&&fast>1.99;}
     if(key==='arc')return state.entities.curves.some(p=>p.awLunar);
     if(key==='vacuum')return state.entities.awLotusFields.length>0;
     return arrays.slice(0,3).some(k=>state.entities[k].some(e=>e.kind===signature[key]));

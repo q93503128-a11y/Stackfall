@@ -281,6 +281,19 @@ function drawThemeRaw(theme){
   if(stageMatch){drawStageWorldBackdrop(Math.max(1,Math.min(18,Number(stageMatch[1])||1)));return;}
   if(theme==='stage-01-warden')drawStageOneWardenBackdrop();else if(theme==='void')drawVoidBackground();else if(theme==='apex-chrono')drawChronoApex();else if(theme==='apex-forge')drawForgeApex();else if(theme==='apex-constellation')drawConstellationApex();else drawSpaceBackground();
 }
+// Authored stage terrain is retained at full resolution. Rasterize its expensive
+// gradients and clipped materials at 20 Hz; combat bodies and hitboxes stay live.
+const STAGE_WORLD_FRAME_CACHE=new Map();
+function drawProductionWorldFrame(theme,production){
+  const key=`${theme}:${vw}x${vh}@${dpr}`,now=performance.now(),boss=state.entities.enemies.find(e=>e.kind==='stage-boss'&&!e.dead),signature=`${state.runSerial}:${state.stageRun?.bossSpawned}:${state.stageRun?.completed}:${boss?.stagePhase}:${state.mode}`;
+  let entry=STAGE_WORLD_FRAME_CACHE.get(key);
+  if(!entry){const surface=typeof OffscreenCanvas==='function'?new OffscreenCanvas(Math.ceil(vw*dpr),Math.ceil(vh*dpr)):document.createElement('canvas');surface.width=Math.ceil(vw*dpr);surface.height=Math.ceil(vh*dpr);entry={surface,g:surface.getContext('2d',{alpha:false}),at:-Infinity,x:NaN,y:NaN,time:NaN,signature:null};if(STAGE_WORLD_FRAME_CACHE.size>=3)STAGE_WORLD_FRAME_CACHE.delete(STAGE_WORLD_FRAME_CACHE.keys().next().value);STAGE_WORLD_FRAME_CACHE.set(key,entry);}
+  const staticWorld=production.worldStatic?.()===true,moved=Math.hypot(player.x-entry.x,player.y-entry.y);
+  if(((!staticWorld||moved>.1)&&now-entry.at>=1000/20)||moved>96||Math.abs(state.time-entry.time)>2||entry.signature!==signature){
+    const oldCtx=ctx;try{ctx=entry.g;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.setLineDash([]);drawThemeRaw(theme);production.drawWorld();entry.at=now;entry.x=player.x;entry.y=player.y;entry.time=state.time;entry.signature=signature;}finally{ctx=oldCtx;}
+  }
+  ctx.drawImage(entry.surface,0,0,entry.surface.width,entry.surface.height,0,0,vw,vh);
+}
 const THEME_FRAME_CACHE=new Map(),THEME_FRAME_INTERVAL=1000/30;
 function themeFrameEntry(theme){
   const key=`${theme}:${Math.round(vw)}x${Math.round(vh)}@${dpr.toFixed(3)}`;let entry=THEME_FRAME_CACHE.get(key);if(entry)return entry;
@@ -290,6 +303,7 @@ function refreshThemeFrame(entry,theme,now){
   const oldCtx=ctx;try{ctx=entry.bufferCtx;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.setLineDash([]);ctx.clearRect(0,0,vw,vh);drawThemeRaw(theme);entry.lastAt=now;entry.playerX=player.x||0;entry.playerY=player.y||0;}finally{ctx=oldCtx;}
 }
 function drawTheme(theme){
+  const production=window.stackfallStageProduction?.(theme);if(production){drawProductionWorldFrame(theme,production);drawTraversalParallax(theme);drawMotionStreaks(theme);return;}
   const now=performance.now(),entry=themeFrameEntry(theme),moved=Math.hypot((player.x||0)-entry.playerX,(player.y||0)-entry.playerY),urgent=!Number.isFinite(entry.playerX)||moved>Math.max(18,(player.speed||248)*.08);
   if(urgent||now-entry.lastAt>=THEME_FRAME_INTERVAL)refreshThemeFrame(entry,theme,now);
   ctx.drawImage(entry.surface,0,0,entry.surface.width,entry.surface.height,0,0,vw,vh);
@@ -298,5 +312,5 @@ function drawTheme(theme){
   else if(theme==='stage-01-warden'){drawStageConstellationField('stage-01');drawStageOneWardenArena();}
   drawTraversalParallax(theme==='stage-01-warden'?'stage-01':theme);drawMotionStreaks(theme==='stage-01-warden'?'stage-01':theme);
 }
-window.stackfallBackgroundCacheInfo=()=>({entries:THEME_FRAME_CACHE.size,intervalMs:THEME_FRAME_INTERVAL,keys:[...THEME_FRAME_CACHE.keys()]});
+window.stackfallBackgroundCacheInfo=()=>({productionEntries:STAGE_WORLD_FRAME_CACHE.size,productionIntervalMs:50,entries:THEME_FRAME_CACHE.size,intervalMs:THEME_FRAME_INTERVAL,keys:[...THEME_FRAME_CACHE.keys()]});
 

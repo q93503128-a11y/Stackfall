@@ -38,10 +38,11 @@ function draw(){
   if(performanceTier===0){ctx.fillStyle=cachedRenderVignette();ctx.fillRect(0,0,vw,vh);}else if(performanceTier===1){ctx.fillStyle='rgba(0,1,8,.08)';ctx.fillRect(0,0,vw,vh);}
   if(GAME_SETTINGS.sparkles!==false&&state.flash>=SCREEN_FLASH_VISIBLE_THRESHOLD){ctx.fillStyle=`rgba(225,242,255,${Math.min(.42,state.flash*.72)})`;ctx.fillRect(0,0,vw,vh);}if(typeof drawRealmCinematicOverlay==='function')runDrawStage('drawRealmCinematicOverlay',drawRealmCinematicOverlay);
 }
-const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0,lastRenderAt=0,simulationAccumulator=0;const TARGET_RENDER_INTERVAL=1000/60,SIMULATION_STEP=1/60,MAX_SIMULATION_STEPS=5,runtimeUpdateMusic=typeof audio.updateMusic==='function'?audio.updateMusic.bind(audio):null;
+const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0,lastRenderAt=0,simulationAccumulator=0;const TARGET_RENDER_INTERVAL=1000/60,SIMULATION_STEP=1/60,MAX_SIMULATION_STEPS=8,runtimeUpdateMusic=typeof audio.updateMusic==='function'?audio.updateMusic.bind(audio):null;
 function loop(now){
   window.__stackfallRenderFrameSerial=(window.__stackfallRenderFrameSerial||0)+1;
-  const frameDt=Math.min(.033,Math.max(0,(now-last)/1000));last=now;let shouldDraw=state.mode==='menu';
+  // The accumulator bounds catch-up work; retain elapsed time across a missed render frame.
+  const frameDt=Math.min(.1,Math.max(0,(now-last)/1000));last=now;let shouldDraw=state.mode==='menu';
   try{
     if(runtimeUpdateMusic)runRuntimeStage('updateMusic',runtimeUpdateMusic,frameDt);
     const gameplayFrame=state.mode==='playing';

@@ -12,6 +12,11 @@ const feature=read('src/feature-pack.js');
 const entities=read('src/render-entities.js');
 
 const checks=[
+ ['missed render frames retain elapsed time with bounded 60 Hz catch-up',render.includes('frameDt=Math.min(.1,')&&render.includes('MAX_SIMULATION_STEPS=8')&&render.includes('dt=SIMULATION_STEP')],
+ ['cached elite path uses one raster glow before live authored geometry',guard.includes('drawCachedEnemyGlow(ctx,')&&guard.includes('ctx.shadowBlur=0;ctx.shadowColor=e.color;')],
+ ['authored terrain cache is opaque bounded and invalidates on camera or stage changes',realm.includes('STAGE_WORLD_FRAME_CACHE.size>=3')&&realm.includes("getContext('2d',{alpha:false})")&&realm.includes('entry.signature!==signature')&&realm.includes('drawThemeRaw(theme);production.drawWorld()')],
+ ['material cache retains full-resolution authored materials within 64 MiB',read('src/stage-craft.js').includes('stageMaterialRasterBytes+entry.bytes>64*1024*1024')&&read('src/stage-craft.js').includes('dpr*scale')],
+
  ['experience gem merge defines newPlayerD2 before any positive-value comparison',systems.includes('if(!amount)return null;\n  const newPlayerD2=')&&!systems.includes('return null,newPlayerD2=')],
  ['star tiles use bounded palette/stride keyed cache instead of one thrashing slot',realm.includes('const STAR_TILE_CACHE=new Map(),STAR_TILE_CACHE_LIMIT=4')&&realm.includes('STAR_TILE_CACHE.get(key)')&&realm.includes('STAR_TILE_CACHE.delete(oldest)')&&!realm.includes('STAR_TILE_CACHE.key!==key')],
  ['mirror reflection identifies removed hostile projectiles in linear passes',mirror.includes('const aliveAfter=new Set()')&&mirror.includes('aliveAfter.add(p.id)')&&mirror.includes('if(!aliveAfter.has(id))reflected.push(snap)')&&!mirror.includes("state.entities.enemyProjectiles.find(row=>row?.id===id)")],

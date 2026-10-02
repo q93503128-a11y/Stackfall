@@ -2,6 +2,7 @@ import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const dev=read('src/dev-tools.js'),stage=read('src/stage-runtime.js');
 const checks=[
+  ['developer preview cancels startup choices before their microtask',stage.includes('state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;')],
   ['Stage boss button targets the selected Stage',dev.includes("jumpStageBoss(stage.value)")&&dev.includes("stackfallDevSpawnStageBossNow(target.id)")],
   ['Stage boss button starts five seconds before the authored boss trigger',dev.includes('Stage 보스 5초 전')&&stage.includes('previewSeconds=5')&&stage.includes('state.time=Math.max(0,bossAt-previewSeconds)')],
   ['developer Stage boss preview uses the normal authored trigger instead of direct spawning',stage.includes('window.stackfallDevSpawnStageBossNow=function')&&stage.includes('run.devBossPreview=true')&&!stage.includes('const boss=spawnStageBoss();\n    if(!boss)return{ok:false,reason:\'spawn-blocked\'')],

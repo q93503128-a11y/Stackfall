@@ -686,6 +686,8 @@
     }
     state.bossActiveId=null;state.apexActiveId=null;state.pendingApexForm=null;state.apexArena=null;state.stageBossArena=null;
     resetStageBossStateForDeveloper(run);
+    // A boss preview cancels pending startup choices before their microtask runs.
+    state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;if(ui.choiceCards)ui.choiceCards.innerHTML='';
     const bossAt=Math.max(0,Number(run.stage.boss?.spawnAt||run.stage.durationSeconds||60)),previewSeconds=5;
     run.devBossPreview=true;run.devBossPreviewStartedAt=bossAt-previewSeconds;
     run.eventsTriggered=run.eventsTriggered||{};
