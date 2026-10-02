@@ -50,6 +50,8 @@ damageReduction=function damageReductionWithStacks(){const armor=stat('armor')*.
 function audioVolume(channel){const volumes=GAME_SETTINGS.audio?.volume||{};const shape=value=>{const v=Math.max(0,Math.min(1,Number(value)||0));return v<=0?0:Math.pow(v,.58);};return shape(volumes.master??.90)*shape(volumes[channel]??(channel==='ambient'?.58:.86));}
 const rawAudioInit=audio.init.bind(audio);
 const MUSIC_SCENES={
+  lastaddress:{bed:[15.44,30.87,46.25,61.74],roots:[30.87,46.25,41.2,30.87,36.71],lead:[123.47,185,164.81,146.83],pulseMs:2430,filter:780,noise:110,drive:.39,leadType:'triangle',leadEvery:4,leadLength:1.55},
+  mainframe:{bed:[15.44,30.87,46.25,61.74],roots:[61.74,92.5,82.41,73.42,61.74,110,98,73.42,46.25,55,61.74],lead:[246.94,370,329.63,293.66,246.94,440,392,293.66],pulseMs:510,filter:2200,noise:280,drive:1.22,leadType:'sawtooth',leadEvery:1,leadLength:.39},
   cipherkeep:{bed:[27.5,41.2,55,110],roots:[55,82.41,73.42,55,65.4],lead:[220,329.63,293.66,261.63],pulseMs:1510,filter:1050,noise:190,drive:.53,leadType:'square',leadEvery:3,leadLength:.31},
   custody:{bed:[27.5,41.2,55,110],roots:[110,82.41,73.42,55,130.81,98],lead:[440,329.63,293.66,220,523.25,392],pulseMs:680,filter:1900,noise:270,drive:1.13,leadType:'square',leadEvery:1,leadLength:.27},
   blindsector:{bed:[21.83,43.65,65.4,87.31],roots:[43.65,41.2,43.65,65.4],lead:[174.61,164.81,261.63,174.61],pulseMs:2180,filter:740,noise:70,drive:.38,leadType:'sine',leadEvery:4,leadLength:1.4},
