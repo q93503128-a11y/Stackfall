@@ -47,7 +47,7 @@ function drawStageEnemyBody(g,e){
   else if(v==='rootlance'){
     g.rotate(Math.atan2(player.y-e.y,player.x-e.x));const pulse=.90+.10*Math.sin((e.phase||0)*1.7);g.strokeStyle=e.hit?'#fff':'#ff7fa8';g.fillStyle=e.hit?'#fff':'#170914';g.lineWidth=2;
     const tail=g.createLinearGradient(-r*2.2,0,r*.4,0);tail.addColorStop(0,'rgba(255,127,168,0)');tail.addColorStop(1,'rgba(255,127,168,.38)');g.fillStyle=tail;g.beginPath();g.moveTo(-r*2.2,-r*.12);g.lineTo(r*.1,-r*.25);g.lineTo(r*.1,r*.25);g.lineTo(-r*2.2,r*.12);g.fill();
-    g.fillStyle='#170914';g.beginPath();g.moveTo(r*1.58,0);g.lineTo(r*.18,-r*.34);g.lineTo(-r*.72,-r*.58);g.lineTo(-r*.40,0);g.lineTo(-r*.72,r*.58);g.lineTo(r*.18,r*.34);g.closePath();g.fill();g.stroke();
+    g.fillStyle='#170914';g.beginPath();g.moveTo(r*.97,0);g.lineTo(r*.18,-r*.34);g.lineTo(-r*.72,-r*.58);g.lineTo(-r*.40,0);g.lineTo(-r*.72,r*.58);g.lineTo(r*.18,r*.34);g.closePath();g.fill();g.stroke();
     for(const side of[-1,1]){g.strokeStyle=side>0?'#ff9cba':'#82d8c1';g.beginPath();g.moveTo(-r*.18,side*r*.24);g.lineTo(-r*.92,side*r*.78);g.stroke();}
     g.fillStyle='#fce3ec';g.beginPath();g.arc(r*.24,0,r*.13*pulse,0,TAU);g.fill();
   }
