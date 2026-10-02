@@ -71,8 +71,8 @@ function drawStageEnemyBody(g,e){
     g.beginPath();g.moveTo(-r*.81,-r*.38);g.lineTo(-r*.29,-r*.83);g.lineTo(r*.10,-r*.48);g.lineTo(r*.68,-r*.61);g.lineTo(r*.87,-r*.02);g.lineTo(r*.40,r*.37);g.lineTo(r*.02,r*.79);g.lineTo(-r*.49,r*.46);g.lineTo(-r*.79,r*.13);g.closePath();g.fill();g.stroke();g.strokeStyle='#a6d4db';g.lineWidth=2;g.beginPath();g.moveTo(-r*.58,-r*.18);g.lineTo(-r*.12,-r*.40);g.lineTo(r*.31,-r*.13);g.lineTo(r*.61,-r*.24);g.stroke();g.strokeStyle='#1b293c';g.lineWidth=3;g.beginPath();g.moveTo(-r*.43,r*.12);g.lineTo(-r*.02,-r*.05);g.lineTo(r*.35,r*.14);g.stroke();
   }
   else if(v==='packet-lancer'){
-    const aim=Math.atan2(player.y-e.y,player.x-e.x);g.rotate(aim);g.strokeStyle=e.hit?'#fff':'#86a9ff';g.fillStyle=e.hit?'#fff':'#071025';g.lineWidth=2.2;
-    g.beginPath();g.moveTo(r*1.65,0);g.lineTo(r*.35,-r*.34);g.lineTo(-r*.85,-r*.48);g.lineTo(-r*.55,0);g.lineTo(-r*.85,r*.48);g.lineTo(r*.35,r*.34);g.closePath();g.fill();g.stroke();g.strokeStyle='#6fe8ef';for(const side of[-1,1]){g.beginPath();g.moveTo(-r*.42,side*r*.18);g.lineTo(-r*1.25,side*r*.62);g.stroke();}g.fillStyle='#eef5ff';g.fillRect(r*.24,-2,r*.48,4);
+    g.rotate(Math.atan2(player.y-e.y,player.x-e.x));g.strokeStyle=e.hit?'#fff':'#a7bbef';const data=g.createLinearGradient(-r,-r,r,r);data.addColorStop(0,'#52658b');data.addColorStop(.4,'#182847');data.addColorStop(1,'#a2bbde');g.fillStyle=e.hit?'#fff':data;g.lineWidth=2;
+    g.beginPath();g.moveTo(r*.94,-r*.08);g.lineTo(r*.27,-r*.39);g.lineTo(-r*.66,-r*.57);g.lineTo(-r*.78,-r*.03);g.lineTo(-r*.43,r*.61);g.lineTo(r*.29,r*.38);g.closePath();g.fill();g.stroke();g.strokeStyle='#90dbdf';g.lineWidth=3;g.beginPath();g.moveTo(-r*.47,-r*.18);g.lineTo(r*.55,-r*.08);g.stroke();g.strokeStyle='#263e65';g.lineWidth=2;g.beginPath();g.moveTo(-r*.33,r*.11);g.lineTo(-r*.14,r*.37);g.lineTo(r*.35,r*.21);g.stroke();
   }
   else if(v==='cipher-warden'){
     const pulse=.91+.09*Math.sin((e.phase||0)*.8);g.rotate((e.phase||0)*.012);g.strokeStyle=e.hit?'#fff':'#e4bd72';g.fillStyle=e.hit?'#fff':'#141007';g.lineWidth=2.4;
