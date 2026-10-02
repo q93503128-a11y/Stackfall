@@ -1,5 +1,7 @@
 # Stage production remake ledger
 
+> Status note (2026-10-02): this ledger records the structural remake baseline and regression ownership. It does **not** mean all 18 stages are visually approved. Final boss art direction and choreography are manual-review items. Stage 6, 12 and 18 are the three deliberate high-spectacle constellation finales; the other stages prioritize clarity, identity and polish without forcing equal cinematic density.
+
 기획 정본: GAME_DESIGN.md. 완료한 Stage만 아래에 기록한다. 다음 Stage의 구현은 앞 Stage의 검증·main commit·remote HEAD 확인 이후에 시작한다.
 
 | Stage | 공간 / 랜드마크 | 기믹 / 진행 변화 | 몸체 / 이동 | 대표 공격 | 페이즈 / 격파 |

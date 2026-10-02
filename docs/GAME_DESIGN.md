@@ -8,7 +8,7 @@
 - 현재 코드/문서 정합성 조사 결과는 `docs/CANONICAL_AUDIT_2026-09-28.md`에 기록한다.
 - 승인된 무기·각성·스테이지 디자인은 버그 수정 명목으로 임의 재디자인하지 않는다. 변경이 필요한 경우 기존 의도와 충돌 여부를 먼저 확인한다.
 
-마지막 동기화: 2026-09-30
+마지막 동기화: 2026-10-02
 
 이 문서는 STACKFALL의 실제 게임 규칙, 밸런스 기준, 소유권과 회귀 방지 조건을 정리한 공식 기준 문서다. `README.md`, 이 문서, `WIKI.md`를 함께 관리한다. 현재 코드와 충돌하는 과거 문서·채팅 요약·주석은 기준으로 사용하지 않는다.
 
@@ -793,6 +793,16 @@ S1~S18은 Stage별 설계·구현·실제 브라우저 검증을 마친 producti
 - **Abyssal Bloom / 심연의 개화 (Stage 7–12)**: living stellar growth, spores, roots, sap vessels, seed spirals, reflection petals, husk pressure, then full biological convergence.
 - **Silent Array / 침묵 중계망 (Stage 13–18)**: dead relay megastructures, broken carriers, static, packet storms, sensor blind zones, sealed protocols, then network-wide silence collapse.
 - The original 14-item normal weapon roster is permanently unlockable by Stage 10. The roster then expands to 18 through Vacuum Bloom (11), Phase Minefield (13), Interstellar Missile Pods (15), and Orbital Gate (17). **Current code has no direct weapon unlock at Stage 12, 14, 16, or 18.** Their system rewards are Stage 12 four-way choices, Stage 14 Advanced Start +3, Stage 16 Core Development III, and Stage 18 Multiplicity expansion.
+
+### Stage visual production priority
+
+- **Stage 6 / 12 / 18 are the constellation spectacle anchors.** These three finales receive the highest environment, boss-animation, phase-transition, entrance and defeat-production budget.
+- Stage 1–5 / 7–11 / 13–17 still require distinct silhouettes, readable mechanics and coherent worlds, but they are not required to compete with the constellation finales in raw spectacle. Do not inflate every stage with equal amounts of particles, moving parts or cinematic events.
+- Boss appearance, animation language, entrance choreography, phase spectacle and defeat choreography are **manual art-direction review points**. Bulk remakes may repair bugs, collision, performance, world anchoring and readability, but must not treat a mechanically distinct polygon body as final visual approval.
+- Authored terrain and near-field structures are world-space objects. They move 1:1 against the camera. Parallax is reserved for distant decorative layers; near-world structures must not drift with or partially follow the player.
+- Production stages do not receive the generic traversal-marker overlay. Camera motion may use restrained motion streaks, but decorative screen-space clutter must not compete with actual landmarks or hazards.
+- Stage-boss visibility assistance uses an axis-neutral soft leash rather than different horizontal/vertical viewport snap forces. A boss may briefly approach or cross a screen edge if its authored motion requires it; it must not visibly rubber-band faster on one axis.
+- The current Stage 1–18 production-remake pass is a **mechanical/structural baseline, not blanket final visual approval**. Visual acceptance is determined by live play review.
 
 ### Post-Stage-10 weapons
 
