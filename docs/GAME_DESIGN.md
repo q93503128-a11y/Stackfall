@@ -677,7 +677,7 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 
 #### Stage Apex 전투 문법 정본 (2026-09-30)
 
-Stage 최종 초월체는 공용 fan/교차선/ring 공격 회전을 사용하지 않는다. S1~2의 전용 디렉터는 stage-runtime.js에 있고, production 리메이크 완료 구간 S3~16은 해당 stageXX-runtime.js의 production 정의가 배경·몸체·이동·공격·페이즈·등장·격파를 소유한다. S17~18은 각 Stage 전용 레거시 디렉터를 리메이크 순서에 따라 이전한다. 공용 stage-runtime.js는 등록·리셋·정상 트리거·보상/완료 생명주기를 소유하고 StageCraft/물리 geometry는 예약 토큰·샘플 다각형·swept 등 primitive만 공유한다.
+Stage 최종 초월체는 공용 fan/교차선/ring 공격 회전을 사용하지 않는다. S1~2의 전용 디렉터는 stage-runtime.js에 있고, production 리메이크 완료 구간 S3~17은 해당 stageXX-runtime.js의 production 정의가 배경·몸체·이동·공격·페이즈·등장·격파를 소유한다. S18은 각 Stage 전용 레거시 디렉터를 리메이크 순서에 따라 이전한다. 공용 stage-runtime.js는 등록·리셋·정상 트리거·보상/완료 생명주기를 소유하고 StageCraft/물리 geometry는 예약 토큰·샘플 다각형·swept 등 primitive만 공유한다.
 
 | Stage | 페이즈 | 이동/공간 사용 | 전투 축 |
 | --- | --- | --- | --- |
@@ -697,7 +697,7 @@ Stage 최종 초월체는 공용 fan/교차선/ring 공격 회전을 사용하�
 | S14 Noise Harvester | 3 | 표본 협로 사이 측방 이동·다른 위상 배플 진동 / 상쇄 순간 통로 | 잔류 셀 연쇄 성장·반대 위상 상쇄·3회 정지 포일; 66% 배플 분리·31% 흡입 전단 풀림 |
 | S15 Multiplex Engine | 2 | 활성 송신 채널에 따른 반동·제동·고정 전송 위치 변경 / 영역 없음 | 3독립 채널·2반쪽 연속 분기·3실제 포트 압출; 49% 포트 분리 |
 | S16 Null Beacon | 3 | 긴 고정 대기→같은 몸체/경로 예고→연속 재고정 이동 | 넓은 광학 면 회전·빈 절개 공백 판·전체 비콘 재고정; 70% 후드 개방·29% 렌즈 분리 |
-| S17 Protocol Custodian | 2 | 플레이어를 둘러싼 새장 외곽 선회 | 수축 protocol cage, 톱날 통로, gate 톱날+본체 charge |
+| S17 Protocol Custodian | 2 | 비대칭 금고 머리·긴 키 몸통·왕복 톱, 두 잠금 지점 이동/래치 대기 | 두 곡선 키 블록 / 최근 이동 방향을 닫고 반대 출구를 남기는 실제 5벽 새장 / 같은 몸체 톱의 연속 밀기·복귀, 54% 보호판 이탈 유지 |
 | S18 Silence Mainframe | 3 | rewrite center에 고정/수렴, P2부터 core 노출 | 전장 다각형 재작성, 좌표 규칙 교체, mainframe network+core collapse; Array/Stage 캠페인 피날레 |
 
 S6/S12/S18은 단순히 앞 Stage 공격을 복사해 나열하지 않는다. S6은 **현재 경로와 과거 경로를 한 항로로 접고 수렴시키는 규칙**, S12는 **외피가 열리면서 이동 방식과 공격 원점이 외피에서 본체로 바뀌는 규칙**, S18은 **전장 중심과 유효 좌표축 자체를 계속 재정의하는 규칙**으로 앞 성좌의 개념을 재조합한다. S12의 stageShellOpen, S18의 stageCoreExposed는 렌더 실루엣과 실제 페이즈 행동에 동시에 연결된다.
