@@ -9,6 +9,11 @@ const checks=[
  ['Stage 10 deliberately reuses the living-nebula roster',!catalog.includes("stage10.enemy.")&&['rootlance','spiral-pod','abyss-spore'].every(x=>runtime.includes(x))],
  ['Stage 10 owns mirror petal echo bloom and reflection cage',stageHazardsWork(10,['mirror-petal','echo-bloom','reflection-cage'])],
  ['Stage 10 has dedicated environment and boss',stageWorldRenderer(10,realm)&&elite.includes("f==='mirrorpetal-halo'")],
+ ['Stage 10 owns asymmetrical folded-glass anatomy and persistent structural phases',runtime.includes('shapes:mirrorShapes')&&runtime.includes('StageCraft.phase(e,[.70,.32],api)')&&runtime.includes('e.mantleOpenedAt==null')],
+ ['Stage 10 uses real bounce turning path replay and body transit sweeps',runtime.includes('mirrorPetalPose')&&runtime.includes('mirrorEchoPose')&&runtime.includes('mirror-body-transit')&&runtime.includes('sweepShapes')&&!runtime.includes('rawLine(')&&!runtime.includes('addCircle(')],
+ ['Stage 10 owns world reflections quiet progression and authored music',runtime.includes('ctx.clip()')&&runtime.includes('env.quiet=state.time>=540')&&runtime.includes("music:'mirrorpetal'")&&read('src/runtime-config.js').includes('blackglass:{')],
+ ['Stage 10 retains the first full void event after Stage 9 precursor',read('src/stage-runtime.js').includes("10:Object.freeze([{at:.13,type:'void'}")&&read('src/stage09-runtime.js').includes('first full void event stays in S10')],
+ ['Stage 10 owns matching revealing entry and delayed reflection defeat',runtime.includes('drawEntry:mirrorEntry')&&runtime.includes('drawVictory:mirrorVictory')&&runtime.includes('entryDuration:4.2')&&runtime.includes('victoryDuration:4.8')],
  ['Stage 10 unlocks Reflective Constellation',catalog.includes("rewards:[{type:'weapon',key:'mirror'}")&&read('src/runtime-config.js').includes("WEAPONS.mirror={name:'반사 성좌'")],
  ['Stage 10 adapter loads after Stage 9',index.indexOf('src/stage09-runtime.js')<index.indexOf('src/stage10-runtime.js')],
  ['Stage 10 copy exists in six languages',(lang.match(/'stage10\.boss'/g)||[]).length>=6&&(lang.match(/'stage10\.objective\.boss'/g)||[]).length>=6]

@@ -50,6 +50,8 @@ damageReduction=function damageReductionWithStacks(){const armor=stat('armor')*.
 function audioVolume(channel){const volumes=GAME_SETTINGS.audio?.volume||{};const shape=value=>{const v=Math.max(0,Math.min(1,Number(value)||0));return v<=0?0:Math.pow(v,.58);};return shape(volumes.master??.90)*shape(volumes[channel]??(channel==='ambient'?.58:.86));}
 const rawAudioInit=audio.init.bind(audio);
 const MUSIC_SCENES={
+  blackglass:{bed:[46.25,65.4,92.5,138.59],roots:[92.5,65.4,138.59,98],lead:[369.99,523.25,554.37,392],pulseMs:1570,filter:1750,noise:90,drive:.50,leadType:'sine',leadEvery:3,leadLength:1.10},
+  mirrorpetal:{bed:[46.25,65.4,92.5,138.59],roots:[92.5,138.59,98,130.81,92.5,65.4],lead:[369.99,523.25,554.37,392,739.99,587.33],pulseMs:630,filter:2800,noise:130,drive:1.02,leadType:'sine',leadEvery:1,leadLength:.76},
   seedbed:{bed:[36.71,55,82.41,110],roots:[73.42,82.41,110,98,73.42],lead:[293.66,440,329.63,392],pulseMs:1450,filter:1400,noise:170,drive:.51,leadType:'triangle',leadEvery:3,leadLength:.23},
   nursery:{bed:[36.71,55,82.41,110],roots:[73.42,110,82.41,98,146.83,82.41,110],lead:[293.66,440,329.63,392,587.33,493.88,440],pulseMs:410,filter:2550,noise:190,drive:1.06,leadType:'triangle',leadEvery:1,leadLength:.16},
   bloodwell:{bed:[27.5,36.71,55,73.42],roots:[36.71,41.2,49,36.71,32.7],lead:[146.83,164.81,196,130.81],pulseMs:1660,filter:780,noise:620,drive:.49,leadLength:.80},
