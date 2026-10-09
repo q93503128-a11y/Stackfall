@@ -24,21 +24,16 @@ function drawLastConstellationApex(e,t,enraged){
   ctx.fillStyle='#01020a';ctx.strokeStyle='#edf2ff';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(-r*.12,0,r*.68,r*.44,-.42,0,TAU);ctx.fill();ctx.stroke();ctx.beginPath();ctx.arc(-r*.14,0,r*.18,0,TAU);ctx.fillStyle='#b7c9ff';ctx.fill();ctx.strokeStyle='rgba(237,242,255,.7)';ctx.beginPath();ctx.moveTo(r*.26,-r*.36);ctx.lineTo(r*.92,-r*.72);ctx.moveTo(r*.22,r*.34);ctx.lineTo(r*.82,r*.78);ctx.stroke();ctx.restore();
 }
 function drawCollapseWardenBody(e){
-  const shapes=window.stackfallStageBodyShapes?.(e)||[],open=e.stageGateCoreOpen===true,now=state.time||0,age=Math.max(0,now-(e.stageActionAt||0)),opening=open?clamp((now-(e.stageGateOpenedAt??-10))/.9,0,1):0;
-  ctx.save();ctx.shadowBlur=0;ctx.lineJoin='bevel';
-  for(const s of shapes){ctx.save();ctx.translate(s.x-e.x,s.y-e.y);ctx.rotate(s.a);const w=s.hw*2,h=s.hh*2;
-    if(s.part===3){const g=ctx.createLinearGradient(0,-s.hh,0,s.hh);g.addColorStop(0,open?'#effdff':'#8fa4b6');g.addColorStop(.35,open?'#87e9ed':'#36536b');g.addColorStop(1,'#122938');ctx.fillStyle=g;ctx.fillRect(-s.hw,-s.hh,w,h);ctx.strokeStyle=open?'#dcffff':'#647f94';ctx.lineWidth=2;ctx.strokeRect(-s.hw,-s.hh,w,h);ctx.fillStyle='#101923';ctx.fillRect(-s.hw*.17,-s.hh,s.hw*.34,h);ctx.restore();continue;}
-    const g=ctx.createLinearGradient(-s.hw,-s.hh,s.hw,s.hh);g.addColorStop(0,e.hit?'#e9f8ff':'#647c8a');g.addColorStop(.22,e.hit?'#ffffff':'#314451');g.addColorStop(1,'#111c28');ctx.fillStyle=g;ctx.fillRect(-s.hw,-s.hh,w,h);ctx.strokeStyle=e.hit?'#fff':'#b7c9d1';ctx.lineWidth=2;ctx.strokeRect(-s.hw,-s.hh,w,h);
-    ctx.fillStyle='#101922';ctx.fillRect(-s.hw+7,-s.hh+9,w-14,h-18);ctx.strokeStyle='#526875';ctx.lineWidth=1.2;ctx.strokeRect(-s.hw+7,-s.hh+9,w-14,h-18);
-    ctx.fillStyle='#354c58';ctx.fillRect(-s.hw+11,-s.hh+12,Math.max(6,w*.22),h-24);ctx.fillStyle='#c28c44';ctx.fillRect(s.hw-9,-s.hh+8,4,h-16);
-    const n=s.part===0?4:3;for(let i=0;i<n;i++){const y=-s.hh+19+i*(h-38)/Math.max(1,n-1);ctx.strokeStyle='#8296a0';ctx.beginPath();ctx.moveTo(-s.hw+8,y);ctx.lineTo(s.hw-8,y+3);ctx.stroke();ctx.fillStyle='#d1b176';ctx.fillRect(-s.hw+4,y-2,3,4);}
-    if(open&&s.part===2){ctx.strokeStyle='#08121a';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(-s.hw, -s.hh*.42);ctx.lineTo(s.hw*.18,-s.hh*.15);ctx.lineTo(-s.hw*.1,s.hh*.2);ctx.lineTo(s.hw,s.hh*.3);ctx.stroke();}
+  const shapes=window.stackfallStageBodyShapes?.(e)||[],keys=['warden-chest','warden-clamp','warden-salvage','warden-core'];
+  ctx.save();ctx.shadowBlur=0;
+  // Rear reactor, hydraulics, then chest. The same four authored poses own hits.
+  for(const s of [...shapes].sort((a,b)=>[3,4,5,1,2,0].indexOf(a.part)-[3,4,5,1,2,0].indexOf(b.part))){ctx.save();ctx.translate(s.x-e.x,s.y-e.y);ctx.rotate(s.a);
+    if(e.stageDefeatAge!=null&&s.part===3)ctx.globalAlpha*=Math.max(.18,1-e.stageDefeatAge*.85);
+    if(s.part>=4){if(e.stageDefeatAge!=null)ctx.globalAlpha*=1-frontierEase(e.stageDefeatAge/.45);const g=ctx.createLinearGradient(0,-s.hh,0,s.hh);g.addColorStop(0,'#171e23');g.addColorStop(.3,'#829096');g.addColorStop(.52,'#46515a');g.addColorStop(1,'#1c232b');ctx.fillStyle=g;ctx.fillRect(-s.hw,-s.hh,s.hw*2,s.hh*2);ctx.fillStyle='#b1a782';ctx.fillRect(-s.hw+3,-s.hh+2,5,s.hh*2-4);ctx.fillStyle='#161e26';ctx.fillRect(s.hw-8,-s.hh,7,s.hh*2);ctx.restore();continue;}
+    frontierSprite(keys[s.part],-s.hw,-s.hh,s.hw*2,s.hh*2);
+    if(e.hit){ctx.globalCompositeOperation='screen';ctx.globalAlpha*=.15;frontierSprite(keys[s.part],-s.hw,-s.hh,s.hw*2,s.hh*2);}
     ctx.restore();
   }
-  // Hydraulic links are attached structural elements, never orbiting decorations.
-  const a=e.stageBodyAngle||0,k=e.stageBodyScale||1;ctx.rotate(a);ctx.scale(k,k);ctx.strokeStyle='#81959e';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(-64,-49);ctx.lineTo(-92-18*opening,-38);ctx.moveTo(55,-47);ctx.lineTo(85+15*opening,-19);ctx.stroke();
-  ctx.strokeStyle='#233744';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-64,-49);ctx.lineTo(-92-18*opening,-38);ctx.moveTo(55,-47);ctx.lineTo(85+15*opening,-19);ctx.stroke();
-  if(e.stageAction==='ram'&&age<1.15){ctx.fillStyle='#e3af62';ctx.globalAlpha=.35+.6*clamp(age/1.15,0,1);ctx.fillRect(-61,-88,107,4);}
   ctx.restore();
 }
 const STAGE_TWO_VEIN_ANGLES=[-2.72,-2.10,-3.08,1.18,.50];

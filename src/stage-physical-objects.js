@@ -46,14 +46,14 @@ function updateStagePhysicalObjects(dt){
     o.active=false;o.solid=false;const prevX=o.x,prevY=o.y,prevA=o.a||0;
     if(typeof o.update==='function'){o.update(dt);
     }else if(o.kind==='falling-deck'||o.kind==='salvage'){
-      const t=clamp((o.age-o.warn)/o.travel,0,1);o.x=lerp(o.fromX,o.toX,t);o.y=lerp(o.fromY,o.toY,t);o.height=(1-t)*(o.kind==='salvage'?150:80);o.a=o.angle+(1-t)*.35;
+      const raw=clamp((o.age-o.warn)/o.travel,0,1),t=o.stageId==='stage-01'?raw*raw:raw;o.x=lerp(o.fromX,o.toX,t);o.y=lerp(o.fromY,o.toY,t);o.height=(1-t)*(o.kind==='salvage'?150:80);if(o.stageId==='stage-01')o.height=o.kind==='salvage'?(o.age<o.warn?clamp(o.age/o.warn,0,1)*20:20*(1-raw)+Math.sin(Math.PI*raw)*95):Math.sin(Math.PI*raw)*30;o.a=o.angle+(o.stageId==='stage-01'&&o.kind==='falling-deck'?Math.sin(Math.PI*raw)*.20:(1-t)*.35);
       if(o.age>=o.warn+o.travel){o.solid=true;if(!o.hit){o.hit=true;stagePhysicalImpact(o);if(stageShapeCircleHit(o,player.x,player.y,player.r)&&player.invuln<=0)hurtPlayer(o.damage,'stage-structure-impact');}}
     }else if(o.kind==='bulkhead'){
-      const close=clamp((o.age-o.warn)/o.travel,0,1),open=clamp((o.age-o.warn-o.travel-o.hold)/.45,0,1),t=close*(1-open);o.x=lerp(o.fromX,o.toX,t);o.y=o.toY;o.a=o.angle;o.active=o.age>=o.warn&&close<1;o.solid=o.age>=o.warn&&open<1;
+      const raw=clamp((o.age-o.warn)/o.travel,0,1),close=o.stageId==='stage-01'?raw*raw*raw:raw,open=clamp((o.age-o.warn-o.travel-o.hold)/.45,0,1),t=close*(1-open),shift=o.passageShift?clamp((o.age-o.warn-o.travel-.3)/.65,0,1)*(1-open):0;o.x=lerp(o.fromX,o.toX,t)+(o.passageShift||0)*shift;o.y=o.toY;o.a=o.angle;o.active=o.age>=o.warn&&(close<1||shift>0&&shift<1);o.solid=o.age>=o.warn&&open<1;
       if(close===1&&!o.hit){o.hit=true;stagePhysicalImpact(o);}
     }else if(o.kind==='ion-front'){const t=clamp((o.age-o.warn)/o.travel,0,1);o.x=lerp(o.fromX,o.toX,t);o.y=lerp(o.fromY,o.toY,t);o.a=o.angle;o.active=o.age>=o.warn&&t<1;
     }else if(o.kind==='girder'){
-      const t=clamp((o.age-o.warn)/o.travel,0,1),a=o.angle+t*o.sweep;o.a=a;o.x=o.pivotX+Math.cos(a)*o.length*.5;o.y=o.pivotY+Math.sin(a)*o.length*.5;o.active=o.age>=o.warn&&t<1;
+      const raw=clamp((o.age-o.warn)/o.travel,0,1),t=o.stageId==='stage-01'?raw*raw*(3-2*raw):raw,a=o.angle+t*o.sweep;o.a=a;o.x=o.pivotX+Math.cos(a)*o.length*.5;o.y=o.pivotY+Math.sin(a)*o.length*.5;o.active=o.age>=o.warn&&t<1;
       if(t===1&&!o.hit){o.hit=true;stagePhysicalImpact(o);}
     }
     if(o.active&&player.invuln<=0){
@@ -68,5 +68,5 @@ function updateStagePhysicalObjects(dt){
   }
   compactInPlace(list,o=>o&&!o.dead);
 }
-function stagePhysicalImpact(o){audio.stageAttack?.(o.stageId,o.kind==='bulkhead'?'shutter-slam':'debris-impact');spawnParticle(o.x,o.y,'#d9e1ed',7,115,3);state.camera.shake=Math.max(state.camera.shake,o.ownerId?12:3);}
+function stagePhysicalImpact(o){o.impactAt=o.age;audio.stageAttack?.(o.stageId,o.kind==='bulkhead'?'shutter-slam':'debris-impact');spawnParticle(o.x,o.y,'#d9e1ed',7,115,3);const distance=Math.hypot(o.x-player.x,o.y-player.y),local=clamp(1-distance/700,.1,1);state.camera.shake=Math.max(state.camera.shake,o.stageId==='stage-01'?(o.ownerId?7:3)*local:(o.ownerId?12:5));if(o.stageId==='stage-01'&&o.ownerId)state.hitStop=Math.max(state.hitStop||0,.035);}
 function drawStagePhysicalObjects(){if(!state.stageRun||!['playing','cinematic','paused','choice'].includes(state.mode))return;window.stackfallDrawStagePhysicalWarnings?.();for(const o of stagePhysicalObjects())if(!o.dead){if(typeof o.draw==='function')o.draw();else window.stackfallDrawStagePhysicalObject?.(o);}}

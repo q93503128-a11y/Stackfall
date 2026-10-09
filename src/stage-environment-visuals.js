@@ -138,6 +138,7 @@
     }
   };
   window.stackfallDrawStagePhysicalObject=function(o){
+    if(o.stageId==='stage-01'){drawFrontierHardware(o);return;}
     if(o.stageId==='stage-02'&&o.kind==='ion-front'){
       const p=worldToScreen(o.x,o.y),warn=o.age<o.warn,age=Math.max(0,o.age-o.warn),color=o.deep?'#f987db':'#81e9f5';if(p.x<-o.hw-200||p.x>vw+o.hw+200||p.y<-o.hw-200||p.y>vh+o.hw+200)return;
       ctx.save();ctx.translate(p.x,p.y);ctx.rotate(o.a);ctx.strokeStyle=color;ctx.lineWidth=1.5;
@@ -145,21 +146,7 @@
       else if(o.active){const g=ctx.createLinearGradient(0,-o.hh,0,o.hh);g.addColorStop(0,'rgba(37,86,122,0)');g.addColorStop(.35,color);g.addColorStop(.52,o.deep?'#884a9f':'#367f95');g.addColorStop(.70,color);g.addColorStop(1,'rgba(52,67,118,0)');ctx.globalAlpha=.72;ctx.fillStyle=g;ctx.beginPath();for(let i=0;i<=18;i++){const x=-o.hw+i*o.hw/9,y=-o.hh+2+Math.sin(i*1.7-age*11)*2;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}for(let i=18;i>=0;i--){const x=-o.hw+i*o.hw/9,y=o.hh-2+Math.sin(i*1.6-age*9)*2;ctx.lineTo(x,y);}ctx.closePath();ctx.fill();ctx.globalAlpha=.65;ctx.strokeStyle='#b2e6e7';ctx.lineWidth=1;for(let j=0;j<7;j++){const x=-o.hw+(j+.5)*o.hw*2/7+Math.sin(age*4+j)*13,y=Math.sin(j*2+age*8)*o.hh*.38;ctx.fillStyle=j%2?'#769faf':'#96c6ca';ctx.beginPath();ctx.ellipse(x,y,12+j%3*3,3+j%2,0,0,TAU);ctx.fill();}ctx.beginPath();for(let i=0;i<=12;i++){const x=-o.hw+i*o.hw/6,y=Math.sin(i*1.4-age*9)*o.hh*.30;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();}
       ctx.restore();return;
     }
-    if(o.stageId!=='stage-01')return;
-    const warn=o.age<o.warn,p=worldToScreen(o.x,o.y),target=worldToScreen(o.toX??o.x,o.toY??o.y),q=clamp(o.age/o.warn,0,1);
-    ctx.save();ctx.lineJoin='bevel';
-    if(warn){ctx.save();ctx.translate(target.x,target.y);ctx.rotate(o.angle);ctx.globalAlpha=.08+.08*q;ctx.fillStyle='#d1a260';ctx.fillRect(-o.hw,-o.hh,o.hw*2,o.hh*2);ctx.globalAlpha=.55;ctx.strokeStyle='#e2b773';ctx.lineWidth=1.5;ctx.setLineDash([9,6]);ctx.strokeRect(-o.hw-3,-o.hh-3,o.hw*2+6,o.hh*2+6);ctx.setLineDash([]);ctx.restore();
-      if(o.kind==='girder'){const pivot=worldToScreen(o.pivotX,o.pivotY);ctx.save();ctx.translate(pivot.x,pivot.y);ctx.globalAlpha=.38;ctx.strokeStyle='#d8aa64';ctx.setLineDash([12,9]);ctx.beginPath();ctx.arc(0,0,o.length+o.hh,o.angle,o.angle+o.sweep);ctx.stroke();ctx.setLineDash([]);ctx.restore();}
-      if(o.kind==='bulkhead'){const start=worldToScreen(o.fromX,o.toY);ctx.globalAlpha=.35;ctx.strokeStyle='#d5a867';ctx.setLineDash([8,6]);ctx.beginPath();ctx.moveTo(start.x,start.y);ctx.lineTo(target.x,target.y);ctx.stroke();ctx.setLineDash([]);}
-    }
-    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(o.a||0);ctx.globalAlpha=.20;ctx.fillStyle='#000';ctx.fillRect(-o.hw+7,-o.hh+12,o.hw*2,o.hh*2);ctx.restore();
-    ctx.translate(p.x,p.y-(o.height||0));ctx.rotate(o.a||0);ctx.globalAlpha=1;
-    const g=ctx.createLinearGradient(-o.hw,-o.hh,o.hw,o.hh);g.addColorStop(0,'#778c95');g.addColorStop(.18,'#3b515e');g.addColorStop(1,'#152532');ctx.fillStyle=g;ctx.fillRect(-o.hw,-o.hh,o.hw*2,o.hh*2);ctx.strokeStyle='#b5c4c8';ctx.lineWidth=2;ctx.strokeRect(-o.hw,-o.hh,o.hw*2,o.hh*2);
-    ctx.fillStyle='#0e1c26';ctx.fillRect(-o.hw+6,-o.hh+7,o.hw*2-12,o.hh*2-14);
-    if(o.kind==='girder'){ctx.strokeStyle='#6b8390';ctx.lineWidth=3;for(let i=0;i<4;i++){const x=-o.hw+8+i*(o.hw*2-16)/4;ctx.beginPath();ctx.moveTo(x,-o.hh+6);ctx.lineTo(x+(o.hw*2-16)/4,o.hh-6);ctx.stroke();}}
-    else{ctx.fillStyle='#425b68';ctx.fillRect(-o.hw+10,-o.hh+10,Math.max(4,o.hw*.55),Math.max(4,o.hh*2-20));ctx.strokeStyle='#bb945d';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-o.hw+8,o.hh-5);ctx.lineTo(o.hw-8,o.hh-5);ctx.stroke();}
-    if(o.hit){ctx.strokeStyle='#020b13';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-o.hw*.75,-o.hh);ctx.lineTo(-o.hw*.15,o.hh*.2);ctx.lineTo(o.hw*.2,-o.hh*.4);ctx.lineTo(o.hw*.6,o.hh);ctx.stroke();}
-    ctx.restore();
+
   };
   window.stackfallStageEnvironmentVisualDiagnostics=()=>({active:state.entities.telegraphs.filter(isEnvironment).length,families:[...new Set(state.entities.telegraphs.filter(isEnvironment).map(t=>t.environmentFamily))]});
 })();

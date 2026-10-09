@@ -171,30 +171,30 @@ function stageFieldTile(order,tier){const key=`${order}:${tier}`;let tile=STAGE_
 const FRONTIER_LANDMARK_CACHE=new Map();
 function frontierStructureSprite(kind){
   let image=FRONTIER_LANDMARK_CACHE.get(kind);if(image)return image;
-  const surface=typeof OffscreenCanvas==='function'?new OffscreenCanvas(420,340):document.createElement('canvas');surface.width=420;surface.height=340;const g=surface.getContext('2d');
-  g.translate(210,170);g.fillStyle='#14202c';g.strokeStyle='#556773';g.lineWidth=2;
-  if(kind===0){for(const side of[-1,1]){g.fillRect(side*115-24,-122,48,244);g.strokeRect(side*115-24,-122,48,244);}g.fillRect(-139,-130,278,36);g.strokeRect(-139,-130,278,36);g.fillStyle='#aa8051';g.fillRect(-126,-99,12,54);g.fillRect(114,59,12,54);}
-  else if(kind===1){g.beginPath();g.moveTo(-162,-48);g.lineTo(-38,-89);g.lineTo(105,-64);g.lineTo(164,22);g.lineTo(58,65);g.lineTo(-123,57);g.closePath();g.fill();g.stroke();g.fillStyle='#263d49';g.fillRect(-75,-43,146,45);g.strokeStyle='#8a6a47';g.beginPath();g.moveTo(-148,-29);g.lineTo(-80,4);g.moveTo(49,28);g.lineTo(98,48);g.stroke();}
-  else{g.fillRect(-150,-18,300,36);g.strokeRect(-150,-18,300,36);for(let i=0;i<4;i++){g.strokeStyle='#3b515e';g.beginPath();g.moveTo(-124+i*70,-14);g.lineTo(-76+i*70,14);g.stroke();}g.fillRect(-142,18,30,91);g.fillRect(111,-109,30,91);}
-  FRONTIER_LANDMARK_CACHE.set(kind,surface);return surface;
+  image=FRONTIER_ART[kind===0?'gate':kind===1?'deck':'girder'];if(image?.complete&&image.naturalWidth)FRONTIER_LANDMARK_CACHE.set(kind,image);return image;
 }
 function drawStageOneFrontierField(tier){
   const f=state.stageRun?.frontier||{},wx=player.x||0,wy=player.y||0,angle=-.19,c=Math.cos(angle),n=Math.sin(angle),across=-wx*n+wy*c,along=wx*c+wy*n;
   ctx.save();ctx.translate(vw*.5,vh*.5);ctx.rotate(angle);
   // Continuous kilometre-scale route strips cross hash cells without seams.
-  for(const lane of[-1,1]){const y=lane*240-across;ctx.fillStyle='#101d29';ctx.fillRect(-vw-vh,y-52,(vw+vh)*2,104);ctx.strokeStyle='#455d6c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-vw-vh,y-52);ctx.lineTo(vw+vh,y-52);ctx.moveTo(-vw-vh,y+52);ctx.lineTo(vw+vh,y+52);ctx.stroke();
-    const base=Math.floor(along/630);for(let k=base-3;k<=base+3;k++){const x=k*630-along,j=(stageWorldHash(k,lane,13)-.5)*100,breakage=stageWorldHash(k,lane,23);ctx.fillStyle='#637582';ctx.fillRect(x+j-48,y-37,96,3);ctx.fillStyle=f.fracture>.3&&breakage>.4?'#030b12':'#b79055';ctx.fillRect(x+j-26,y+26,52,7);if(f.fracture>.3&&breakage>.4){ctx.fillStyle='#030b12';ctx.fillRect(x+j-42,y-52,84,104);ctx.strokeStyle='#687983';ctx.beginPath();ctx.moveTo(x+j-42,y-52);ctx.lineTo(x+j-22,y-4);ctx.lineTo(x+j-42,y+52);ctx.stroke();}}
+  for(const lane of[-1,1]){const y=lane*240-across;ctx.fillStyle='#0d1720';ctx.fillRect(-vw-vh,y-50,(vw+vh)*2,100);
+    const base=Math.floor(along/630);for(let k=base-3;k<=base+3;k++){const x=k*630-along,breakage=stageWorldHash(k,lane,23),incident=f.incident?.until>state.time&&f.incident.cell===k&&f.incident.lane===lane,broken=f.fracture>.3&&breakage>.6;
+      ctx.globalAlpha=.40;frontierSprite('deck',x-315,y-46,630,92);ctx.globalAlpha=1;
+      if(broken||incident){ctx.fillStyle='#06101b';ctx.beginPath();ctx.moveTo(x-112,y-46);ctx.lineTo(x-98,y-31);ctx.lineTo(x-121,y-15);ctx.lineTo(x-105,y+5);ctx.lineTo(x-119,y+28);ctx.lineTo(x-102,y+46);ctx.lineTo(x+109,y+46);ctx.lineTo(x+94,y+26);ctx.lineTo(x+118,y+7);ctx.lineTo(x+101,y-12);ctx.lineTo(x+124,y-32);ctx.lineTo(x+110,y-46);ctx.closePath();ctx.fill();ctx.globalAlpha=.5;frontierSprite('girder',x-127,y+36,254,23);ctx.globalAlpha=1;}
+    }
   }
   ctx.restore();
   // The launch approach has a recognizable ruined checkpoint before the sparse field.
-  for(const mark of[{x:-285,y:-105,kind:0,scale:1.15,rot:-.19},{x:410,y:245,kind:1,scale:.82,rot:.35}]){const p=worldToScreen(mark.x,mark.y);if(p.x<-350||p.x>vw+350||p.y<-300||p.y>vh+300)continue;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(mark.rot);ctx.scale(mark.scale,mark.scale);ctx.globalAlpha=.86;ctx.drawImage(frontierStructureSprite(mark.kind),-210,-170);ctx.restore();}
+  for(const mark of[{x:-340,y:-205,kind:0,scale:1.15,rot:-.19},{x:430,y:360,kind:1,scale:.82,rot:.35}]){const p=worldToScreen(mark.x,mark.y);if(p.x<-350||p.x>vw+350||p.y<-300||p.y>vh+300)continue;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(mark.rot);ctx.scale(mark.scale,mark.scale);ctx.globalAlpha=.48;const image=frontierStructureSprite(mark.kind);if(image?.complete&&image.naturalWidth)ctx.drawImage(image,-235,-46,470,92);ctx.restore();}
   const cell=1120,minX=Math.floor((wx-vw*.5-380)/cell),maxX=Math.floor((wx+vw*.5+380)/cell),minY=Math.floor((wy-vh*.5-340)/cell),maxY=Math.floor((wy+vh*.5+340)/cell);
-  for(let gy=minY;gy<=maxY;gy++)for(let gx=minX;gx<=maxX;gx++){const h=stageWorldHash(gx,gy,81);if(h<.24)continue;const x=gx*cell+cell*(.15+stageWorldHash(gx,gy,83)*.70),y=gy*cell+cell*(.13+stageWorldHash(gx,gy,89)*.74),p=worldToScreen(x,y),kind=Math.floor(h*3),scale=.75+stageWorldHash(gx,gy,97)*.95,rot=(stageWorldHash(gx,gy,101)-.5)*1.4;
-    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(rot);ctx.scale(scale,scale);ctx.globalAlpha=.72;ctx.drawImage(frontierStructureSprite(kind),-210,-170);ctx.restore();
-    if(f.power>0&&kind===0){ctx.save();ctx.globalAlpha=f.power*.7;ctx.fillStyle=f.lockdown>.6?'#d8a052':'#77b9c4';ctx.fillRect(p.x-4,p.y-92*scale,8,5);ctx.restore();}
+  for(let gy=minY;gy<=maxY;gy++)for(let gx=minX;gx<=maxX;gx++){const h=stageWorldHash(gx,gy,81);if(h<.65)continue;const x=gx*cell+cell*(.15+stageWorldHash(gx,gy,83)*.70),y=gy*cell+cell*(.13+stageWorldHash(gx,gy,89)*.74),p=worldToScreen(x,y),kind=h>.85?1:2,scale=.75+stageWorldHash(gx,gy,97)*.65,rot=(stageWorldHash(gx,gy,101)-.5)*1.4;
+    if(p.x<-400||p.x>vw+400||p.y<-150||p.y>vh+150)continue;
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(rot);ctx.scale(scale,scale);ctx.globalAlpha=.32;const image=frontierStructureSprite(kind);if(image?.complete&&image.naturalWidth)ctx.drawImage(image,-245,-38,490,76);ctx.restore();
   }
   if(!state.stageRun?.bossSpawned&&!state.stageRun?.bossIntroPending){
-    const approach=f.gateApproach||0;ctx.save();ctx.translate(vw*.5+Math.sin((state.time||0)*.015)*28,vh*(.15+.11*approach));ctx.scale(.32+.24*approach,.32+.24*approach);ctx.globalAlpha=.24+.46*approach;drawCollapseWardenBody({x:0,y:0,eventKind:'stage-01',stageBodyScale:1,stageBodyAngle:0,stageGateCoreOpen:false});ctx.restore();
+    // Only this remote facility layer parallaxes. No miniature guardian floats
+    // above the pilot; its silhouette is introduced during powered entry.
+    const approach=f.gateApproach||0,w=Math.min(1050,vw*.78)*(1+approach*.16),x=vw*.5-w*.5-wx*.025,y=vh*.15-wy*.025;ctx.save();ctx.globalAlpha=.12+.22*approach;frontierSprite('gate',x,y,w,w*.198);ctx.restore();
   }
 }
 function stageWorldHash(x,y,salt=0){
@@ -270,7 +270,7 @@ function drawStageOneWardenArena(){
   ctx.save();ctx.translate(p.x,p.y);const points=[[-hw+cut,-hh],[hw-cut,-hh],[hw,-hh+cut],[hw,hh-cut],[hw-cut,hh],[-hw+cut,hh],[-hw,hh-cut],[-hw,-hh+cut]];
   ctx.fillStyle='#07121c';ctx.globalAlpha=.72;ctx.beginPath();for(let i=0;i<points.length;i++){const q=points[i];i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]);}ctx.closePath();ctx.fill();ctx.globalAlpha=1;
   for(let i=0;i<points.length;i++){const q=points[i],r=points[(i+1)%points.length],dx=r[0]-q[0],dy=r[1]-q[1],len=Math.hypot(dx,dy),a=Math.atan2(dy,dx),opening=i===3?release*130:release*35;
-    ctx.save();ctx.translate((q[0]+r[0])*.5,(q[1]+r[1])*.5+Math.sign((q[1]+r[1])||1)*opening);ctx.rotate(a);ctx.fillStyle='#293d49';ctx.strokeStyle='#7a8c93';ctx.lineWidth=2;ctx.fillRect(-len*.5,-13,len,26);ctx.strokeRect(-len*.5,-13,len,26);ctx.fillStyle='#b28b55';for(let k=0;k<Math.floor(len/100);k++)ctx.fillRect(-len*.5+38+k*100,-9,17,4);ctx.restore();
+    ctx.save();ctx.translate((q[0]+r[0])*.5,(q[1]+r[1])*.5+Math.sign((q[1]+r[1])||1)*opening);ctx.rotate(a);ctx.globalAlpha=.60;if(i===4){for(const side of[-1,1])frontierSprite('bulkhead',side*len*.25-len*.25+side*release*len*.36,-19,len*.5,38);}else frontierSprite('girder',-len*.5,-16,len,32);ctx.restore();
   }
   ctx.globalAlpha=.30+.55*release;ctx.fillStyle=release?'#77c9d0':'#78848a';for(let i=0;i<4;i++){const y=-hh*.55+i*hh*.35;ctx.beginPath();ctx.moveTo(-9,y-15);ctx.lineTo(8,y);ctx.lineTo(-9,y+15);ctx.lineTo(-3,y);ctx.closePath();ctx.fill();}
   if(release>0){ctx.globalAlpha=release*.5;const g=ctx.createLinearGradient(0,-hh,0,hh);g.addColorStop(0,'rgba(99,202,211,0)');g.addColorStop(1,'rgba(99,202,211,.27)');ctx.fillStyle=g;ctx.fillRect(-90,-hh,180,hh*2);}

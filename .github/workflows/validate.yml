@@ -24,6 +24,8 @@ jobs:
             echo "Checking $file"
             node --check "$file"
           done < <(find src -type f -name '*.js' -print0 | sort -z)
+      - name: Check Stage 1 production art and geometry
+        run: node scripts/stage1-art-contract.mjs
       - name: Check polish contract
         run: node scripts/polish-contract-check.mjs
       - name: Check meta upgrade contract

@@ -222,3 +222,10 @@
 .unlock-management.collapsed{padding-bottom:10px}
 .unlock-management-list[hidden]{display:none!important}
 
+
+/* Stage 1 phase signal stays below the boss HUD and clear of the body. */
+.boss-notice.frontier-notice{top:23%;width:min(360px,80vw);padding:7px 12px;filter:none;border-color:rgba(188,158,106,.3);background:linear-gradient(90deg,transparent,rgba(9,18,27,.85),transparent);animation:frontierSignal 2.6s ease both}
+.boss-notice.frontier-notice strong{font:800 16px/1.2 "IBM Plex Sans KR",sans-serif;text-shadow:none;letter-spacing:0}
+.boss-notice.frontier-notice span{color:#c7a779;letter-spacing:.08em;font-size:9px}
+@keyframes frontierSignal{0%,100%{opacity:0}15%,70%{opacity:1}}
+@media(max-width:759px){.boss-notice.frontier-notice{top:25%;}.boss-notice.frontier-notice strong{font-size:13px}}

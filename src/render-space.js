@@ -20,8 +20,8 @@ function drawBackground(){const tr=state.realmTransition;if(!tr){drawTheme(norma
 function tweenNoise(i){return Math.sin(i*12.9898)*.035;}
 function drawTransitionSignature(tr,p,fade){if(window.stackfallStageProduction?.(tr.to)&&tr.owner===tr.to+'-boss-entry'){window.stackfallStageProduction(tr.to).drawEntry(tr,p);return;}const x=vw/2,y=vh*.42,t=tr.elapsed,color=transitionColor(tr.to);ctx.save();ctx.translate(x,y);ctx.globalAlpha=fade;ctx.strokeStyle=color;ctx.fillStyle=color;ctx.shadowBlur=24;ctx.shadowColor=color;
   if(tr.to==='stage-01-warden'){
-    ctx.restore();ctx.save();const arena=state.stageBossArena,point=arena?worldToScreen(arena.x,arena.y-arena.halfH*.60):{x:vw*.5,y:vh*.28},ease=p*p*(3-2*p),scale=lerp(.56,compactDevice()?.67:1,ease);
-    ctx.translate(lerp(vw*.5,point.x,ease),lerp(vh*.26,point.y,ease));ctx.scale(scale,scale);ctx.globalAlpha=1;drawCollapseWardenBody({x:0,y:0,eventKind:'stage-01',stageBodyScale:1,stageBodyAngle:0,stageGateCoreOpen:false});
+    ctx.restore();ctx.save();const arena=state.stageBossArena,point=arena?worldToScreen(arena.x,stackfallStageOneEntryY(arena)):{x:vw*.5,y:vh*.28},ease=p*p*(3-2*p),scale=lerp(.56,compactDevice()?.67:1,ease);
+    ctx.translate(lerp(vw*.5,point.x,ease),lerp(vh*.26,point.y,ease));ctx.scale(scale,scale);ctx.globalAlpha=frontierEase(p/.24);drawCollapseWardenBody({x:0,y:0,eventKind:'stage-01',stageBodyScale:1,stageBodyAngle:0,stageGateCoreOpen:false,stageEntryProgress:p});
   }
   else if(tr.to==='stage-02'&&tr.owner==='stage-02-boss-entry'){
     ctx.restore();ctx.save();const n=state.stageRun?.nebula||{},point=worldToScreen(n.entryX??player.x+18,n.entryY??player.y-Math.min(vh*.26,230)),gather=clamp((p-.08)/.72,0,1);ctx.translate(point.x,point.y);

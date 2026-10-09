@@ -2,11 +2,11 @@
 
 > Status note (2026-10-02): this ledger records the structural remake baseline and regression ownership. It does **not** mean all 18 stages are visually approved. Final boss art direction and choreography are manual-review items. Stage 6, 12 and 18 are the three deliberate high-spectacle constellation finales; the other stages prioritize clarity, identity and polish without forcing equal cinematic density.
 
-기획 정본: GAME_DESIGN.md. 완료한 Stage만 아래에 기록한다. 다음 Stage의 구현은 앞 Stage의 검증·main commit·remote HEAD 확인 이후에 시작한다.
+기획 정본: GAME_DESIGN.md. 완료한 Stage만 아래에 기록한다. 2026-10-09 Stage 1 vertical slice를 새 품질 기준으로 삼는다. Stage 2~18의 기존 구조는 보존하며, 사용자 Stage 1 실플레이 승인 전 다음 Stage production redesign은 시작하지 않는다.
 
 | Stage | 공간 / 랜드마크 | 기믹 / 진행 변화 | 몸체 / 이동 | 대표 공격 | 페이즈 / 격파 |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 연속 파손 항로, 불규칙 검문소와 인양 잔해 | 전력 복귀→항로판 하강→봉쇄 준비→먼 관문 접근 | 비대칭 역 U 관문, 상단 레일 추적과 하중 가속·제동 | 잔해 3개 사출 / 연결 통로 셔터 / 거더 휘두르기 / 본체 돌파 | 48% 장갑 파열·통로 15% 확장 / 핵 소등·관문 주저앉음·이온 출구 |
+| 1 | 월드 고정 대형 항로·검문소·파손 지지대 | 부착 갑판 분리→실물 우회 장애물→두 조각 봉쇄 | 티타늄 쐐기 흉부·유압 팔·반응로, 관절 다각형·교대 레일 이동 | 인양 잔해 / 통로 교환 격벽 / 지지대 회수 / 방향 고정 돌파 | 48% 외장 개방·통로 15% 확장·이동 틈 / 반응로 소등·팔 탈락·봉쇄문 후퇴 |
 | 2 | 중첩 성운·연속 굴곡 양안·먼 심실 | 압력→심층→동맥 가속→맥박 / 실제 이온막 횡류 | 비대칭 두 심실·불규칙 유맥 / 관성 해류 표류 | 점등 후 순차 방전 / 흡기·분출 / 횡류 액적 | 68% 심실 분리·32% 편심맥 / 배액·해구 투명화 |
 | 3 | 불규칙 수직 묘표·각인 성묘·결정층 | 노출→각인 점등→균열→석관 부상 / 실제 결정 강하 | 길쭉한 비대칭 다각 석관 / 독립 묘표 사이 관성 제동 | 결정 강하 / 굴절 분열 / 뚜껑 절단 | 52% 뚜껑 분리 / 층별 박리·침강·각인 소등 |
 | 4 | 단절 시간 철로·정지 이스케이프먼트 | 제동→역틱→시간 복구 / 정지·재개 톱니 | 비대칭 수평 기구와 추 / 수평 왕복 제동·과거 경로 역행 | 실제 진자추 / 멎는 톱니 / 과거 인장 역행 | 68/30% 추·고정추 분리 / 축 정지·추 낙하·시간 해방 |

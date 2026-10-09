@@ -135,17 +135,22 @@
     const t=state.time||0,n=run.nebula||(run.nebula={});n.pressure=clamp((t-65)/120,0,1);n.depth=clamp((t-185)/110,0,1);n.arterial=clamp((t-250)/70,0,1);n.heartbeat=clamp((t-275)/55,0,1);n.discharged=run.completed===true;
   }
   function stageOneBodyShapes(e){
-    const open=e.stageGateCoreOpen===true,opening=open?clamp(((state.time||0)-(e.stageGateOpenedAt??-10))/.9,0,1):0,scale=e.stageBodyScale||1,a=e.stageBodyAngle||0,c=Math.cos(a),n=Math.sin(a),parts=e.stageBodyShapes?.length===4?e.stageBodyShapes:(e.stageBodyShapes=Array.from({length:4},()=>({})));
-    const defs=[[-12,-70,82,25],[-92-18*opening,4,29,79],[85+15*opening,22,25,61],[0,-15,23,29]];
-    for(let i=0;i<defs.length;i++){const [x,y,hw,hh]=defs[i],s=parts[i];s.kind='box';s.x=e.x+(x*c-y*n)*scale;s.y=e.y+(x*n+y*c)*scale;s.hw=hw*scale;s.hh=hh*scale;s.a=a;s.part=i;}
+    const scale=e.stageBodyScale||1,a=e.stageBodyAngle||0,c=Math.cos(a),n=Math.sin(a),parts=e.stageBodyShapes?.length===6?e.stageBodyShapes:(e.stageBodyShapes=Array.from({length:6},()=>({})));
+    const defs=stageOneArtPose(e),contours=[[-.98,-.48,-.53,-1,.53,-1,.98,-.48,.92,.28,.48,.82,0,1,-.48,.82,-.92,.28],[-.74,-1,.7,-1,1,-.65,.78,.16,.9,.65,.52,1,-.55,1,-.95,.65,-.67,-.32],[-.62,-1,.7,-1,1,-.62,.78,.30,.92,.7,.36,1,-.65,.89,-.95,.5,-.7,-.3],[-.65,-1,.65,-1,1,-.76,1,.8,.64,1,-.64,1,-1,.8,-1,-.76]];
+    for(let i=0;i<defs.length;i++){const [x,y,hw,hh,angle]=defs[i],s=parts[i];s.kind='polygon';s.x=e.x+(x*c-y*n)*scale;s.y=e.y+(x*n+y*c)*scale;s.hw=hw*scale;s.hh=hh*scale;s.a=a+angle;s.part=i;const ca=Math.cos(s.a),sa=Math.sin(s.a),v=contours[i];s.points=s.points||[];s.points.length=v.length/2;for(let j=0;j<v.length;j+=2){const p=s.points[j/2]||(s.points[j/2]={});p.x=s.x+v[j]*s.hw*ca-v[j+1]*s.hh*sa;p.y=s.y+v[j]*s.hw*sa+v[j+1]*s.hh*ca;}}
+    for(let side=0;side<2;side++){const arm=defs[side+1],chest=defs[0],sign=side?1:-1,ax=chest[0]+sign*57,ay=chest[1]+25,bx=arm[0]+Math.sin(arm[4])*47,by=arm[1]-Math.cos(arm[4])*47,dx=bx-ax,dy=by-ay,s=parts[side+4],angle=Math.atan2(dy,dx)+a;Object.assign(s,{kind:'polygon',part:side+4,x:e.x+((ax+bx)*c-(ay+by)*n)*scale*.5,y:e.y+((ax+bx)*n+(ay+by)*c)*scale*.5,hw:Math.hypot(dx,dy)*scale*.5+5*scale,hh:10*scale,a:angle});const ca=Math.cos(angle),sa=Math.sin(angle);s.points=s.points||[];for(let j=0;j<4;j++){const u=j===0||j===3?-s.hw:s.hw,v=j<2?-s.hh:s.hh,p=s.points[j]||(s.points[j]={});p.x=s.x+u*ca-v*sa;p.y=s.y+u*sa+v*ca;}}
     return parts;
   }
   window.stackfallStageBodyShapes=e=>stageDefinition(e.eventKind)?.production?.shapes?.(e)||(e.eventKind==='stage-01'?stageOneBodyShapes(e):e.stageBodyShapes);
   function stageOneDeckCollapse(event,api){
     const run=api.run;if(!run||run.frontier?.quiet||activeStageEncounterCount()>0&&event.ambient)return;
     const count=api.progress>.65?2:1,angle=-.19,damage=(8+api.progress*5)*stageEnvironmentCombatScale({order:1,progress:api.progress}).damage;
-    for(let i=0;i<count;i++){const x=player.x+(i?136:-86),y=player.y+70+i*85;
-      addStagePhysicalObject({kind:'falling-deck',fromX:x-55,fromY:y-45,toX:x,toY:y,x,y,hw:90+i*22,hh:32,angle,a:angle,warn:1.1+i*.32,travel:.45,hold:1.6,damage});
+    // Select an attached route panel in world coordinates once. It never trails
+    // the pilot; a visible gap remains on the parent route during the incident.
+    const c=Math.cos(angle),n=Math.sin(angle),along=player.x*c+player.y*n,across=-player.x*n+player.y*c,lane=across<0?-1:1,cell=Math.round(along/630),f=run.frontier;
+    f.incident={cell,lane,until:state.time+6.6,count};
+    for(let i=0;i<count;i++){const sx=(cell*630+i*215)*c-lane*240*n,sy=(cell*630+i*215)*n+lane*240*c,x=sx+n*(lane*110),y=sy-c*(lane*110);
+      addStagePhysicalObject({kind:'falling-deck',fromX:sx,fromY:sy,toX:x,toY:y,x:sx,y:sy,hw:118,hh:25,angle,a:angle,warn:1.3+i*.35,travel:.48,hold:4.2,damage});
     }
     showBossNotice(tr('stage01.event.collapse'),tr('stage01.event.warning'));
   }
@@ -155,6 +160,8 @@
     const existing=state.stageBossArena;if(existing?.stageId==='stage-01'){existing.halfW=halfW;existing.halfH=halfH;return existing;}
     return state.stageBossArena={stageId:'stage-01',x:player.x,y:player.y,halfW,halfH,phase:1,locked:true,createdAt:state.time||0};
   }
+  function stageOneEntryY(arena){return Math.max(arena.y-arena.halfH*.48,arena.y+190-vh*.5+87*(compactDevice()?.67:1));}
+  window.stackfallStageOneEntryY=stageOneEntryY;
   function clampStageOnePlayer(){
     const arena=state.stageBossArena;if(!arena||arena.stageId!=='stage-01')return;
     const margin=player.r+12,hw=Math.max(105,arena.halfW*(1+.15*(arena.phase>=2?clamp(((state.time||0)-(arena.phaseOpenedAt??-10))/1.2,0,1):0))-margin),hh=Math.max(135,arena.halfH-margin);
@@ -166,8 +173,8 @@
     const arena=state.stageBossArena;if(!enemy||enemy.eventKind!=='stage-01'||arena?.stageId!=='stage-01')return;
     const hw=Math.max(90,arena.halfW*(1+.15*(arena.phase>=2?clamp(((state.time||0)-(arena.phaseOpenedAt??-10))/1.2,0,1):0))-enemy.visualR*.76),hh=Math.max(120,arena.halfH-enemy.visualR*.66);
     const beforeX=enemy.x,beforeY=enemy.y;
-    enemy.x=clamp(enemy.x,arena.x-hw,arena.x+hw);enemy.y=clamp(enemy.y,arena.y-hh,arena.y+hh);
-    if((beforeX!==enemy.x||beforeY!==enemy.y)&&(enemy.stageRamUntil||0)>state.time){enemy.stageRamUntil=0;enemy.dash=0;enemy.dashX=enemy.dashY=0;enemy.attackLockUntil=state.time+.9;audio.stageAttack?.('stage-01','ram-impact');state.camera.shake=Math.max(state.camera.shake,16);spawnParticle(enemy.x,enemy.y,'#d7dee9',12,170,4);}
+    enemy.x=clamp(enemy.x,arena.x-hw,arena.x+hw);const points=stageOneBodyShapes(enemy).flatMap(s=>s.points),top=Math.min(...points.map(p=>p.y-enemy.y)),bottom=Math.max(...points.map(p=>p.y-enemy.y)),minY=Math.max(arena.y-hh,arena.y+190-vh*.5-top),maxY=Math.min(arena.y+hh,arena.y+vh*.5-110-bottom);enemy.y=clamp(enemy.y,minY,Math.max(minY,maxY));
+    if((beforeX!==enemy.x||beforeY!==enemy.y)&&(enemy.stageRamUntil||0)>state.time){enemy.stageRamUntil=0;enemy.stageRamImpactDone=true;enemy.stageRamRecoilAt=state.time;enemy.dash=0;enemy.dashX=enemy.dashY=0;enemy.attackLockUntil=state.time+.9;audio.stageAttack?.('stage-01','ram-impact');state.camera.shake=Math.max(state.camera.shake,7);state.hitStop=Math.max(state.hitStop||0,.045);spawnParticle(enemy.x,enemy.y,'#d7dee9',8,140,3);}
     stageOneBodyShapes(enemy);
   };
   function spawnStageBoss(options={}){
@@ -175,7 +182,7 @@
     const profile=typeof def.bossProfile==='function'?def.bossProfile(run):def.bossProfile;if(!profile)return null;
     const cfg=enemyConfig('boss'),stage=run.stage,angle=profile.angle??-Math.PI/2,radius=Math.min(Math.max(vw,vh)*.50,profile.spawnRadius||660),arena=stage.id==='stage-01'?stageOneArena(run):null,e={
       id:state.nextId++,type:'boss',kind:'stage-boss',bossCategory:'apex',stageBossTier:Number(stage.order)%6===0?'constellation':'stage',variant:profile.form,eliteForm:profile.form,eventKind:stage.id,eventVariant:profile.eventVariant,name:localized(stage.boss?.name)||tr(profile.nameKey),
-      x:arena?arena.x:player.x+Math.cos(angle)*radius,y:arena?arena.y-arena.halfH*.60:player.y+Math.sin(angle)*radius,r:profile.hitRadius??profile.r,visualR:profile.r,contactR:profile.contactRadius??profile.r,hp:cfg.hp*profile.hp,maxHp:0,speed:cfg.speed*profile.speed,damage:cfg.damage*profile.damage,color:profile.color,xp:cfg.xp*profile.xp,
+      x:arena?arena.x:player.x+Math.cos(angle)*radius,y:arena?stageOneEntryY(arena):player.y+Math.sin(angle)*radius,r:profile.hitRadius??profile.r,visualR:profile.r,contactR:profile.contactRadius??profile.r,hp:cfg.hp*profile.hp,maxHp:0,speed:cfg.speed*profile.speed,damage:cfg.damage*profile.damage,color:profile.color,xp:cfg.xp*profile.xp,
       hit:0,dead:false,phase:Math.random()*TAU,skillCd:profile.skillCd,burstCd:profile.burstCd,pulseCd:profile.pulseCd,rangedCd:999,strafeDir:1,dash:0,dashX:0,dashY:0,stagePhase:1,controlImmune:true
     };
     if(e.stageBossTier==='constellation'){e.hp*=1.18;e.damage*=1.06;e.skillCd*=.92;e.burstCd*=.92;e.pulseCd*=.92;}e.maxHp=e.hp;
@@ -290,11 +297,10 @@
     run.completed=true;run.completedAt=state.time;run.victoryStarted=true;state.stageVictory={stageId:'stage-01',x:enemy.x,y:enemy.y,color:enemy.color,elapsed:0,duration:3.4,body:{...enemy,stageBodyShapes:[],dead:false,hit:0}};if(state.stageBossArena)state.stageBossArena.locked=false;
     state.mode='stageVictory';clearPendingCombatActions();clearRunUiActions?.();state.bossActiveId=null;ui.bossBar.classList.add('hidden');document.querySelector('#bossBarExtras')?.replaceChildren();ui.bossNotice.classList.add('hidden');document.querySelector('.stage-environment-notice')?.classList.remove('show');
     for(const key of['enemyProjectiles','telegraphs','beams','vacuumSeeds','phaseMines','guidedMissiles','gateNetworks'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;
-    for(const other of state.entities.enemies)other.dead=true;updateHUD?.();state.camera.shake=14;state.flash=0;audio.stageAttack?.('stage-01','defeat');
+    for(const other of state.entities.enemies)other.dead=true;updateHUD?.();state.camera.shake=6;state.flash=0;audio.stageAttack?.('stage-01','defeat');
   }
   function drawStageOneVictory(v){
-    const age=v.elapsed,p=worldToScreen(v.x,v.y),body=v.body;ctx.save();ctx.translate(p.x,p.y);ctx.translate(Math.min(35,age*15),Math.min(42,age*20));ctx.rotate(Math.min(.22,age*.10));ctx.globalAlpha=1;body.stageGateCoreOpen=false;drawCollapseWardenBody(body);
-    ctx.fillStyle='#07121c';ctx.globalAlpha=clamp(age/.65,0,1);const scale=body.stageBodyScale||1;ctx.fillRect(-23*scale,-44*scale,46*scale,58*scale);ctx.restore();
+    const age=v.elapsed,p=worldToScreen(v.x,v.y),body=v.body;ctx.save();ctx.translate(p.x,p.y);ctx.translate(frontierEase(age/1.5)*24,frontierEase(age/1.8)*28);ctx.rotate(frontierEase(age/1.8)*.16);ctx.globalAlpha=1;body.stageDefeatAge=age;body.stageAction='';body.stageGateCoreOpen=true;drawCollapseWardenBody(body);ctx.restore();
     if(age>.7){ctx.save();ctx.globalAlpha=clamp((age-.7)/.8,0,1);ctx.textAlign='center';ctx.fillStyle='#dbe9ea';ctx.font='800 24px "IBM Plex Sans KR",sans-serif';ctx.fillText(age<1.8?tr('stageClear.targetDown'):tr('stageClear.operationComplete'),vw*.5,vh*.22);ctx.restore();}
   }
   function beginStageTwoVictory(run,enemy){
@@ -344,17 +350,17 @@
     e.stageAction='salvage';e.stageActionAt=state.time;e.attackLockUntil=state.time+2.9;
     for(let i=0;i<3;i++){
       const x=clamp(pred.x+(i-1)*104*scale,arena.x-arena.halfW+60,arena.x+arena.halfW-60),y=clamp(pred.y+(i%2?60:-32),arena.y-arena.halfH+80,arena.y+arena.halfH-60);
-      addStagePhysicalObject({kind:'salvage',ownerId:e.id,fromX:e.x-85*scale,fromY:e.y+30,toX:x,toY:y,x:e.x-85*scale,y:e.y+30,hw:(i===1?43:31)*scale,hh:(i===2?38:22)*scale,angle:i*.52-.27,a:0,warn:.9+i*.18,travel:.56,hold:.75,damage:damage*.85,variant:i});
+      addStagePhysicalObject({kind:'salvage',ownerId:e.id,fromX:e.x-85*scale,fromY:e.y+30,toX:x,toY:y,x:e.x-85*scale,y:e.y+30,hw:(i===1?65:48)*scale,hh:13*scale,angle:i*.52-.27,a:0,warn:.9+i*.18,travel:.56,hold:2.05,damage:damage*.85,variant:i});
     }
     audio.stageAttack?.('stage-01','debris-warn');
   }
   function stageOneShutterClamp(e,api,phase,cycle,damage,pred){
-    const arena=stageOneArena(api.run),gap=Math.max(100,player.r*2+80),width=arena.halfW*.72;
+    const arena=stageOneArena(api.run),gap=Math.max(112,player.r*2+86),width=arena.halfW*.72,shift=phase>=2?(cycle%2?1:-1)*Math.min(65,arena.halfW*.2):0;
     e.stageAction='bulkhead';e.stageActionAt=state.time;e.attackLockUntil=state.time+3.35;
     // Two staggered plates leave a connected central passage, including mobile.
     for(const side of[-1,1]){
-      const y=arena.y+side*85,toX=arena.x+side*(gap*.5+width*.5);
-      addStagePhysicalObject({kind:'bulkhead',ownerId:e.id,fromX:arena.x+side*(arena.halfW+width*.5),fromY:y,toX,toY:y,x:arena.x+side*(arena.halfW+width*.5),y,hw:width*.5,hh:27,angle:0,a:0,warn:.9,travel:.65,hold:1.2,damage:damage*.82});
+      const y=arena.y+side*85,toX=arena.x+side*(gap*.5+width*.5)+shift;
+      addStagePhysicalObject({kind:'bulkhead',ownerId:e.id,fromX:arena.x+side*(arena.halfW+width*.5),fromY:y,toX,toY:y,x:arena.x+side*(arena.halfW+width*.5),y,hw:width*.5,hh:27,angle:0,a:0,warn:1.05,travel:.48,hold:1.2,damage:damage*.82,passageShift:phase>=2?-shift*1.4:0});
     }
     audio.stageAttack?.('stage-01','shutter-warn');
   }
@@ -366,7 +372,7 @@
   }
   function stageOneBreachRam(e,api,phase,cycle,damage,pred){
     const arena=stageOneArena(api.run),tx=clamp(pred.x,arena.x-arena.halfW+65,arena.x+arena.halfW-65),ty=clamp(pred.y,arena.y-arena.halfH+65,arena.y+arena.halfH-65),aim=Math.atan2(ty-e.y,tx-e.x),token=e.stageOneActionToken||0;
-    e.stageAction='ram';e.stageActionAt=state.time;e.stageRamAngle=aim;e.stageRamWindupUntil=state.time+1.15;e.contactSafeUntil=state.time+1.15;
+    e.stageAction='ram';e.stageActionAt=state.time;e.stageRamAngle=aim;e.stageRamWindupUntil=state.time+1.15;e.contactSafeUntil=state.time+1.15;e.attackLockUntil=state.time+2.75;e.stageRamImpactDone=false;
     const distance=(phase>=2?780:680)*.72*2/Math.PI;
     e.stageRamPath={x1:e.x,y1:e.y,x2:clamp(e.x+Math.cos(aim)*distance,arena.x-arena.halfW+84,arena.x+arena.halfW-84),y2:clamp(e.y+Math.sin(aim)*distance,arena.y-arena.halfH+73,arena.y+arena.halfH-73),width:280*(e.stageBodyScale||1)};
     audio.stageAttack?.('stage-01','ram-charge');
@@ -541,9 +547,8 @@
     const previous=Math.max(1,Number(e.stagePhase)||1);e.stagePhase=Math.min(3,phase);
     if(previous!==e.stagePhase){
       e.stagePrimaryCd=.30;e.stageUniqueCd=1.25;e.stageTertiaryCd=2.30;e.stagePhaseChangedAt=state.time||0;
-      state.camera.shake=Math.max(state.camera.shake,7+e.stagePhase*2);state.flash=Math.max(state.flash,.08+e.stagePhase*.02);
-      shockwave(e.x,e.y,e.color||'#dbe4ff',118+e.stagePhase*28,.46,3+e.stagePhase);
-      if(e.eventKind==='stage-01'){clearStagePhysicalObjects();const arena=stageOneArena();if(arena){arena.phase=e.stagePhase;arena.phaseOpenedAt=state.time;}e.stageGateCoreOpen=e.stagePhase>=2;e.stageGateOpenedAt=state.time;e.stageOneActionToken=(e.stageOneActionToken||0)+1;e.attackLockUntil=(state.time||0)+1.6;e.stageOneAttackCd=1.35;e.stageRamWindupUntil=0;e.stageRamUntil=0;e.dash=0;e.dashX=0;e.dashY=0;stageBossSetMotion(e,0,0);showBossNotice(GAME_SETTINGS.language==='ko'?'전초 수호자 · 봉쇄 해제':'FRONTIER WARDEN · SEAL BROKEN',GAME_SETTINGS.language==='ko'?'노출된 관문핵':'GATE CORE EXPOSED');audio.stageAttack?.('stage-01','phase-open');spawnParticle(e.x,e.y,'#ffffff',20,210,5);}
+      if(e.eventKind==='stage-01'){state.camera.shake=Math.max(state.camera.shake,4);}else{state.camera.shake=Math.max(state.camera.shake,7+e.stagePhase*2);state.flash=Math.max(state.flash,.08+e.stagePhase*.02);shockwave(e.x,e.y,e.color||'#dbe4ff',118+e.stagePhase*28,.46,3+e.stagePhase);}
+      if(e.eventKind==='stage-01'){clearStagePhysicalObjects();const arena=stageOneArena();if(arena){arena.phase=e.stagePhase;arena.phaseOpenedAt=state.time;}e.stageGateCoreOpen=e.stagePhase>=2;e.stageGateOpenedAt=state.time;e.stageOneActionToken=(e.stageOneActionToken||0)+1;e.attackLockUntil=(state.time||0)+1.6;e.stageOneAttackCd=1.35;e.stageRamWindupUntil=0;e.stageRamUntil=0;e.dash=0;e.dashX=0;e.dashY=0;stageBossSetMotion(e,0,0);showBossNotice(GAME_SETTINGS.language==='ko'?'전초 수호자 · 봉쇄 해제':'FRONTIER WARDEN · SEAL BROKEN',GAME_SETTINGS.language==='ko'?'노출된 관문핵':'GATE CORE EXPOSED');ui.bossNotice.classList.add('frontier-notice');audio.stageAttack?.('stage-01','phase-open');spawnParticle(e.x,e.y,'#c3b6a1',8,115,3);}
       if(e.eventKind==='stage-02'){e.stageTwoActionToken=(e.stageTwoActionToken||0)+1;e.stageTwoAttackCd=1.7;e.stageNebulaInhaleUntil=0;e.stageNebulaExhaleUntil=0;e.stageNebulaLobeWarnUntil=0;e.stageNebulaCurrentUntil=0;e.contactSafeUntil=state.time+.75;audio.stageAttack?.('stage-02',e.stagePhase===2?'split':'arrhythmia');e.stageNebulaCoreOpen=e.stagePhase>=2;e.stageNebulaBeatUntil=(state.time||0)+.72;e.stageNebulaFlowDir=(e.stageNebulaFlowDir||1)*-1;spawnParticle(e.x,e.y,e.stagePhase>=3?'#fff3cf':'#d9c5ff',14+e.stagePhase*4,175,4.5);}
       if(e.eventKind==='stage-12')e.stageShellOpen=e.stagePhase>=2;
       if(e.eventKind==='stage-18')e.stageCoreExposed=e.stagePhase>=2;
@@ -567,9 +572,11 @@
   const STAGE_APEX_MOTION=Object.freeze({
     'stage-01':(e,p)=>{const arena=stageOneArena();if(!arena)return;const now=state.time||0;
       if((e.stageRamUntil||0)>now){const progress=clamp((now-e.stageRamStart)/.72,0,1),speed=(p.phase>=2?780:680)*Math.sin(Math.PI*progress);e.stageMotionX=Math.cos(e.stageRamAngle)*speed;e.stageMotionY=Math.sin(e.stageRamAngle)*speed;e.stageBodyAngle=e.stageRamAngle-Math.PI/2;return;}
-      if((e.stageRamWindupUntil||0)>now){stageBossSetMotion(e,0,0);const desired=e.stageRamAngle-Math.PI/2,delta=Math.atan2(Math.sin(desired-(e.stageBodyAngle||0)),Math.cos(desired-(e.stageBodyAngle||0)));e.stageBodyAngle=(e.stageBodyAngle||0)+clamp(delta,-.035,.035);return;}
-      if((e.attackLockUntil||0)>now){stageBossSetMotion(e,0,0);return;}
-      const targetX=clamp(p.x,arena.x-arena.halfW*.60,arena.x+arena.halfW*.60),targetY=arena.y-arena.halfH*(p.phase>=2?.20:.50),dx=targetX-e.x,dy=targetY-e.y,d=Math.hypot(dx,dy)||1,speed=Math.min(p.phase>=2?86:64,d*1.6),blend=1-Math.exp(-1/60*2.8);
+      const dt=e.stageOneMotionDt||1/60;
+      if((e.stageRamWindupUntil||0)>now){const pull=1-frontierEase((now-e.stageActionAt)/.55);stageBossSetMotion(e,-Math.cos(e.stageRamAngle)*18*pull,-Math.sin(e.stageRamAngle)*18*pull);const desired=e.stageRamAngle-Math.PI/2,delta=Math.atan2(Math.sin(desired-(e.stageBodyAngle||0)),Math.cos(desired-(e.stageBodyAngle||0)));e.stageBodyAngle=(e.stageBodyAngle||0)+clamp(delta,-2.1*dt,2.1*dt);return;}
+      if(e.stageAction==='ram'&&e.stageRamStart&&!e.stageRamImpactDone&&now>=e.stageRamStart+.72){e.stageRamImpactDone=true;e.stageRamRecoilAt=now;audio.stageAttack?.('stage-01','ram-impact');spawnParticle(e.x,e.y,'#c0bbb0',6,95,3);state.camera.shake=Math.max(state.camera.shake,4);state.hitStop=Math.max(state.hitStop||0,.035);}
+      if((e.attackLockUntil||0)>now){const recoil=e.stageAction==='ram'&&e.stageRamRecoilAt?Math.max(0,1-(now-e.stageRamRecoilAt)/.34):0,brake=1-Math.exp(-dt*12);stageBossSetMotion(e,lerp(e.stageMotionX||0,-Math.cos(e.stageRamAngle||0)*45*recoil,brake),lerp(e.stageMotionY||0,-Math.sin(e.stageRamAngle||0)*45*recoil,brake));return;}
+      const rail=(e.stageOneAttackCycle||0)%2?1:-1,targetX=arena.x+rail*arena.halfW*.40,targetY=arena.y-arena.halfH*(p.phase>=2?.24:.43),dx=targetX-e.x,dy=targetY-e.y,d=Math.hypot(dx,dy)||1,speed=Math.min(p.phase>=2?86:64,d*1.6),blend=1-Math.exp(-(e.stageOneMotionDt||1/60)*2.8);
       e.stageMotionX=lerp(e.stageMotionX||0,dx/d*speed,blend);e.stageMotionY=lerp(e.stageMotionY||0,dy/d*speed,blend);e.stageBodyAngle=lerp(e.stageBodyAngle||0,0,.05);
     },
     'stage-02':(e,p)=>{const dx=p.x-e.x,dy=p.y-e.y,dist=Math.hypot(dx,dy)||1,ux=dx/dist,uy=dy/dist,nx=-uy,ny=ux,target=292-p.phase*18,radial=(dist-target)*.72,t=(state.time||0),flow=(e.stageNebulaFlowDir||1)*e.speed*(.70+p.phase*.08)*(1+Math.sin(t*.48+e.id*.37)*.18),sway=Math.sin(t*.31+e.id*.19)*e.speed*.24;const damp=1-Math.exp(-2.5/60),mx=ux*radial+nx*(flow+sway),my=uy*radial+ny*(flow+sway),edge=compactDevice()?Math.max(50,vw*.5-130):vw*.38,correction=Math.max(0,Math.abs(e.x-p.x)-edge)*6,vertical=compactDevice()?Math.max(135,vh*.5-210):vh*.40,yCorrection=Math.max(0,Math.abs(e.y-p.y)-vertical)*6;stageBossSetMotion(e,lerp(e.stageMotionX||0,mx-Math.sign(e.x-p.x)*correction,damp),lerp(e.stageMotionY||0,my-Math.sign(e.y-p.y)*yCorrection,damp));},
@@ -618,7 +625,7 @@
   function updateStageBossCombat(enemy,dt,api){
     if(!enemy||enemy.dead)return;if(api.definition?.production){api.definition.production.combat(enemy,dt,api);return;}stageBossTrackPlayer(enemy,dt);const phase=stageBossPhase(enemy),id=enemy.eventKind;
     if(id==='stage-01'){
-      clampStageOnePlayer();STAGE_APEX_MOTION[id]?.(enemy,{x:player.x,y:player.y,phase});const now=state.time||0;
+      enemy.stageOneMotionDt=dt;clampStageOnePlayer();STAGE_APEX_MOTION[id]?.(enemy,{x:player.x,y:player.y,phase});const now=state.time||0;
       if((enemy.attackLockUntil||0)>now||(enemy.stageRamWindupUntil||0)>now||(enemy.stageRamUntil||0)>now)return;
       enemy.stageOneAttackCd=(Number.isFinite(enemy.stageOneAttackCd)?enemy.stageOneAttackCd:1.8)-dt;if(enemy.stageOneAttackCd>0)return;
       const cycle=(enemy.stageOneAttackCycle=(enemy.stageOneAttackCycle||0)+1),slot=cycle%4;enemy.stageOneActionToken=(enemy.stageOneActionToken||0)+1;enemy.stageOneAttackCd=(phase>=2?3.05:3.55)+(slot===3?.35:0);
