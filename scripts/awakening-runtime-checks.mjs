@@ -197,7 +197,9 @@ export function awakeningRuntimeChecks(){
     const translations=[],points=[],original=ctx.drawImage,screen=worldToScreen,worldPoint=StageCraft.worldPoint;
     ctx.drawImage=function(img,...args){translations.push(args);};
     worldToScreen=function(x,y){const p=screen(x,y);points.push({wx:x,wy:y,f:1,...p});return p;};
-    StageCraft.worldPoint=function(x,y,f=1){const p=worldPoint(x,y,f);points.push({wx:x,wy:y,f,...p});return p;};
+    // worldPoint is a full world projection. Legacy third arguments in adapters
+    // are ignored by its two-argument implementation; parallaxPoint is separate.
+    StageCraft.worldPoint=function(x,y,...args){const p=worldPoint(x,y,...args);points.push({wx:x,wy:y,f:1,...p});return p;};
     const theme=`stage-${String(order).padStart(2,'0')}`;let a,b,pa,pb;
     try{player.x=0;player.y=0;drawStageConstellationField(theme);a=translations.splice(0);pa=points.splice(0);player.x=37;player.y=23;drawStageConstellationField(theme);b=translations.splice(0);pb=points.splice(0);}finally{ctx.drawImage=original;worldToScreen=screen;StageCraft.worldPoint=worldPoint;}
     const projected=pa.some(x=>pb.some(y=>x.wx===y.wx&&x.wy===y.wy&&x.f===y.f&&Math.abs(y.x-x.x+37*x.f)<.01&&Math.abs(y.y-x.y+23*x.f)<.01));

@@ -54,6 +54,8 @@ Collapse Warden은 고장 난 검역 인양 기계다. 쐐기 흉부의 티타�
 
 기존 shared browser의 desktop GPU / desktop Canvas / mobile Canvas도 PASS: 정확한 300초 진입, 4:55 clean seek, outer arm의 초고속 실제 탄환 판정, x2 고정 simulation, 네 공격 실행, 좌표 점프 방지, 최대 물체 6개, 구조 페이즈, 실제 boss damage→승리→결과, 단일 승리 foreground, runtime/resource errors 0. 추가 fixture는 세계 고정 incident, 실제 움직이는 구조물의 피해와 밀림, 관절 변화, 모바일 bounds를 확인한다.
 
+첫 hosted live smoke는 Stage 3~18 world anchor 검사 16개에서 실패했다. 기존 검사 wrapper가 `StageCraft.worldPoint`에 남아 있던 세 번째 인자를 parallax 배율로 간주했지만, 실제 구현은 두 인자로 월드 좌표를 그대로 투영한다. wrapper를 실제 full-world 투영에 맞췄으며 해당 Stage runtime은 수정하지 않았다. 수정 후 전체 local live smoke는 PASS: GPU/context 복구 3회, 차단된 Pixi의 의도된 Canvas fallback, 18개 Stage의 이동 기준점과 정상 보스 진입, awakening isolation을 확인했다. 의도적으로 차단한 CDN 경고/요청 실패는 허용된 fallback 증거이며 실제 오류와 구분한다. [전체 smoke 결과](stage1-evidence/full-smoke-results.json)를 보존한다.
+
 원본 자산 8개: 568,608바이트 WebP / 5,404,772바이트 decoded RGBA. 자산은 한 번만 로드하고 주변 구조만 그리며 텍스처를 프레임마다 만들지 않는다. 원본 생성 지시와 crop manifest는 [assets/stage1](../assets/stage1/README.md)에 기록했다. 90회 draw 호출의 CPU 제출 p95는 마지막 측정에서 GPU desktop 0.4ms / small 0.4ms / Canvas desktop 0.5ms / mobile 0.6ms였다. 이것은 FPS·GPU 완료 시간·실제 휴대폰 장기 성능 측정이 아니다.
 
 ## 사용자 실플레이 평가
