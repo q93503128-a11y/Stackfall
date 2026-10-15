@@ -40,4 +40,14 @@
   };
   window.stackfallIsEndlessRun=()=>window.stackfallCurrentRunConfig().mode===MODES.ENDLESS;
   window.stackfallIsStageRun=()=>window.stackfallCurrentRunConfig().mode===MODES.STAGE;
+
+  // Stage 1 vertical-slice rework is isolated in its own late-binding script.
+  // The script retries its hooks until stage-runtime.js is available, so this
+  // loader can stay here without changing the established index load order.
+  if(typeof document!=='undefined'&&!document.querySelector('script[data-stage01-rework-v2]')){
+    const script=document.createElement('script');
+    script.src='src/stage01-rework-v2.js';
+    script.dataset.stage01ReworkV2='true';
+    document.head.appendChild(script);
+  }
 })();
