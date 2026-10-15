@@ -1,208 +1,84 @@
 // Stage 1 / 폐쇄선 production art.
-// Runtime ids retain the old "warden-*" compatibility keys until the Stage 1
-// combat migration is complete, but every surface below belongs to the reboot.
+// Legacy runtime ids remain compatibility scaffolding while the Stage 1 combat
+// migration is in progress. The visible language is the 폐쇄선 reboot.
 const STAGE1_ART_KEYS=['warden-chest','warden-clamp','warden-salvage','warden-core','bulkhead','girder','deck','gate'];
 
 function stageOneSvg(key){
   const defs=`<defs>
-    <linearGradient id="steel" x1="0" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#77838a"/><stop offset=".18" stop-color="#3a474e"/><stop offset=".55" stop-color="#202a31"/><stop offset=".82" stop-color="#10181e"/><stop offset="1" stop-color="#080e13"/></linearGradient>
-    <linearGradient id="steel2" x1="0" y1="0" x2="1" y2=".2"><stop offset="0" stop-color="#151e24"/><stop offset=".28" stop-color="#4e5a60"/><stop offset=".52" stop-color="#1e282e"/><stop offset="1" stop-color="#090f14"/></linearGradient>
-    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aab1ad"/><stop offset=".18" stop-color="#5d686a"/><stop offset="1" stop-color="#151b1e"/></linearGradient>
-    <linearGradient id="paint" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b56b2d"/><stop offset=".35" stop-color="#744221"/><stop offset=".7" stop-color="#3c291d"/><stop offset="1" stop-color="#1a1915"/></linearGradient>
-    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#31565c"/><stop offset=".45" stop-color="#bcebf1"/><stop offset=".62" stop-color="#5db5bd"/><stop offset="1" stop-color="#17383c"/></linearGradient>
-    <radialGradient id="core"><stop offset="0" stop-color="#efffff"/><stop offset=".18" stop-color="#9de8e9"/><stop offset=".52" stop-color="#347d82"/><stop offset=".78" stop-color="#14373c"/><stop offset="1" stop-color="#071316"/></radialGradient>
-    <pattern id="rib" width="28" height="28" patternUnits="userSpaceOnUse"><rect width="28" height="28" fill="#172127"/><rect width="9" height="28" fill="#232e34"/><rect x="10" width="2" height="28" fill="#0a1014"/></pattern>
-    <pattern id="hazard" width="34" height="34" patternUnits="userSpaceOnUse" patternTransform="rotate(32)"><rect width="17" height="34" fill="#b66d2c"/><rect x="17" width="17" height="34" fill="#161719"/></pattern>
-    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000" flood-opacity=".72"/></filter>
-    <filter id="grit" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence baseFrequency=".7" numOctaves="2" seed="17" result="n"/><feColorMatrix in="n" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .22 0" result="noise"/><feBlend in="SourceGraphic" in2="noise" mode="multiply"/></filter>
-    <filter id="soft"><feGaussianBlur stdDeviation="5"/></filter>
+    <linearGradient id="steel" x1="0" y1="0" x2=".9" y2="1"><stop offset="0" stop-color="#8a9698"/><stop offset=".16" stop-color="#465158"/><stop offset=".49" stop-color="#252f34"/><stop offset=".78" stop-color="#10171b"/><stop offset="1" stop-color="#070b0e"/></linearGradient>
+    <linearGradient id="steel2" x1="0" y1=".1" x2="1" y2=".8"><stop offset="0" stop-color="#121a1f"/><stop offset=".28" stop-color="#5a6567"/><stop offset=".46" stop-color="#242d31"/><stop offset="1" stop-color="#090e11"/></linearGradient>
+    <linearGradient id="paint" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c47a32"/><stop offset=".32" stop-color="#7b4724"/><stop offset=".72" stop-color="#38271d"/><stop offset="1" stop-color="#171615"/></linearGradient>
+    <linearGradient id="cyan" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#173438"/><stop offset=".45" stop-color="#d8ffff"/><stop offset=".62" stop-color="#6ac7cd"/><stop offset="1" stop-color="#163539"/></linearGradient>
+    <radialGradient id="core"><stop offset="0" stop-color="#f2ffff"/><stop offset=".16" stop-color="#a8f1ee"/><stop offset=".46" stop-color="#3a8888"/><stop offset=".75" stop-color="#153a3d"/><stop offset="1" stop-color="#071214"/></radialGradient>
+    <pattern id="rib" width="30" height="30" patternUnits="userSpaceOnUse"><rect width="30" height="30" fill="#11191d"/><rect width="9" height="30" fill="#263137"/><rect x="10" width="3" height="30" fill="#070b0e"/><rect x="25" width="2" height="30" fill="#3d494c" opacity=".45"/></pattern>
+    <pattern id="hazard" width="34" height="34" patternUnits="userSpaceOnUse" patternTransform="rotate(32)"><rect width="17" height="34" fill="#be742f"/><rect x="17" width="17" height="34" fill="#171819"/></pattern>
+    <filter id="shadow" x="-35%" y="-35%" width="170%" height="190%"><feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#000" flood-opacity=".78"/></filter>
   </defs>`;
-  const bolts=(xs,ys)=>xs.map(x=>ys.map(y=>`<circle cx="${x}" cy="${y}" r="3.6" fill="#a2aaa8"/><circle cx="${x+1}" cy="${y+1}" r="1.4" fill="#293236"/>`).join('')).join('');
-  const shell=(body)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" preserveAspectRatio="none">${defs}${body}</svg>`;
-  if(key==='deck')return shell(`
-    <g filter="url(#shadow)"><rect x="4" y="30" width="504" height="196" rx="13" fill="#070d11"/>
-    <rect x="12" y="38" width="488" height="180" rx="9" fill="url(#steel)"/>
-    <rect x="26" y="54" width="460" height="148" rx="4" fill="url(#rib)" opacity=".82"/>
-    <rect x="26" y="91" width="460" height="74" fill="#111b20"/>
-    <rect x="26" y="98" width="460" height="4" fill="#7a8583" opacity=".55"/><rect x="26" y="154" width="460" height="3" fill="#05090b"/>
-    <path d="M42 128H470" stroke="#d48b3d" stroke-width="5" stroke-dasharray="54 24" opacity=".72"/>
-    <rect x="26" y="54" width="42" height="148" fill="url(#hazard)" opacity=".42"/><rect x="444" y="54" width="42" height="148" fill="url(#hazard)" opacity=".32"/>
-    <path d="M92 64H421M91 190H422" stroke="#aeb5b2" stroke-width="2" opacity=".22"/>
-    <g fill="#0a1014">${[118,170,222,274,326,378].map(x=>`<rect x="${x}" y="61" width="23" height="14" rx="2"/><rect x="${x}" y="181" width="23" height="14" rx="2"/>`).join('')}</g>
-    ${bolts([78,434],[60,196])}</g>`);
-  if(key==='girder')return shell(`
-    <g filter="url(#shadow)"><path d="M8 94L504 48V164L8 210Z" fill="#090f13"/>
-    <path d="M14 98L498 56V154L14 202Z" fill="url(#steel2)"/>
-    <path d="M24 112L486 72M24 187L486 137" stroke="url(#edge)" stroke-width="13"/>
-    ${[55,125,195,265,335,405,475].map((x,i)=>`<path d="M${x} ${i%2?106:178}L${x+42} ${i%2?172:92}" stroke="#303b40" stroke-width="12"/><circle cx="${x+21}" cy="135" r="5" fill="#8d9693"/>`).join('')}
-    <path d="M18 101L492 60" stroke="#c5cbc7" stroke-width="2" opacity=".3"/></g>`);
-  if(key==='bulkhead')return shell(`
-    <g filter="url(#shadow)"><path d="M20 24H466L500 58V211L466 236H20L6 218V42Z" fill="#070b0e"/>
-    <path d="M28 34H455L488 64V201L455 225H28L17 211V48Z" fill="url(#steel)"/>
-    <path d="M60 52H193L218 76V185L190 208H60Z" fill="#121b20"/><path d="M452 52H319L294 76V185L322 208H452Z" fill="#11191e"/>
-    <path d="M215 43H297V217H215Z" fill="url(#rib)"/><rect x="229" y="52" width="54" height="156" fill="#0b1115"/>
-    <rect x="40" y="39" width="38" height="181" fill="url(#hazard)" opacity=".78"/><rect x="434" y="39" width="38" height="181" fill="url(#hazard)" opacity=".48"/>
-    <path d="M82 72H185M82 188H185M327 72H430M327 188H430" stroke="#85908f" stroke-width="3" opacity=".45"/>
-    <g fill="#8cc9c8">${[90,121,152].map(x=>`<rect x="${x}" y="82" width="18" height="5" rx="2"/>`).join('')}</g>
-    ${bolts([34,205,307,478],[50,205])}</g>`);
-  if(key==='gate')return shell(`
-    <g filter="url(#shadow)"><path d="M8 232V37L52 13H151L181 43H331L363 13H462L504 37V232H414V84H98V232Z" fill="#05090c"/>
-    <path d="M18 228V43L58 24H144L171 55H341L370 24H455L494 43V228H430V75H82V228Z" fill="url(#steel)"/>
-    <path d="M82 75H430V106H82Z" fill="#10181d"/><rect x="102" y="82" width="308" height="10" fill="url(#hazard)" opacity=".62"/>
-    <path d="M101 108V228H146V108M366 108V228H411V108" fill="url(#steel2)"/>
-    <path d="M147 108H365V228H147Z" fill="#02070a"/>
-    <path d="M159 120H353" stroke="#123035" stroke-width="7" opacity=".68"/>
-    <g fill="#80cbd0"><rect x="46" y="54" width="12" height="24" rx="4"/><rect x="454" y="54" width="12" height="24" rx="4"/></g>
-    <g fill="#be6b31">${[122,178,334,390].map(x=>`<rect x="${x}" y="35" width="24" height="7" rx="2"/>`).join('')}</g>
-    ${bolts([36,76,436,476],[64,202])}</g>`);
-  if(key==='warden-chest')return shell(`
-    <g filter="url(#shadow)"><path d="M30 102L82 43L187 20L378 31L475 86L495 154L446 210L298 235L121 219L43 177Z" fill="#070b0e"/>
-    <path d="M42 105L89 54L191 31L370 42L461 92L480 151L436 198L296 221L129 207L56 169Z" fill="url(#steel)"/>
-    <path d="M78 116L126 75L214 57L376 66L437 105L450 151L413 176L291 194L151 183L93 156Z" fill="#111a1f"/>
-    <path d="M112 101L191 75L322 80L391 105L375 151L297 168L183 158L125 142Z" fill="url(#steel2)"/>
-    <path d="M188 83L315 88L341 113L322 153L211 153L171 132Z" fill="#080f13"/>
-    <rect x="219" y="94" width="84" height="48" rx="5" fill="url(#rib)"/><path d="M247 91V145" stroke="#97a6a2" stroke-width="3" opacity=".35"/>
-    <path d="M65 132L93 111V171L61 158Z" fill="url(#paint)"/><path d="M415 99L462 119V154L415 177Z" fill="#2c3436"/>
-    <path d="M120 177L395 187" stroke="#05080a" stroke-width="10"/><path d="M136 180L371 189" stroke="#8e9691" stroke-width="2" opacity=".22"/>
-    ${bolts([96,145,351,416],[92,174])}</g>`);
-  if(key==='warden-clamp')return shell(`
-    <g filter="url(#shadow)"><path d="M96 12H349L478 74L501 129L451 171L369 171L304 237H81L23 194L13 112Z" fill="#070b0d"/>
-    <path d="M104 25H340L463 82L484 123L441 157H357L294 221H89L39 186L28 114Z" fill="url(#steel)"/>
-    <path d="M65 96H279L333 127L276 153H57L42 126Z" fill="#11191d"/><path d="M75 106H265L294 126L263 142H72Z" fill="url(#rib)"/>
-    <path d="M306 51H401L454 85L421 110H327L285 84Z" fill="url(#paint)"/>
-    <path d="M325 171L281 217H165L201 174Z" fill="#070c10"/>
-    <rect x="107" y="52" width="118" height="18" rx="8" fill="#0b1013"/><rect x="119" y="57" width="92" height="8" rx="4" fill="url(#cyan)"/>
-    <circle cx="353" cy="86" r="20" fill="#0b1114"/><circle cx="353" cy="86" r="12" fill="#7a8583"/>
-    ${bolts([52,94,423,466],[111,146])}</g>`);
-  if(key==='warden-salvage')return shell(`
-    <g filter="url(#shadow)"><path d="M53 28H377L474 74L497 150L441 218H110L26 170L16 83Z" fill="#060a0d"/>
-    <path d="M65 40H365L459 84L481 145L431 203H116L42 163L31 91Z" fill="url(#steel2)"/>
-    <circle cx="260" cy="123" r="77" fill="#080e12"/><circle cx="260" cy="123" r="62" fill="#263138"/><circle cx="260" cy="123" r="48" fill="url(#steel)"/>
-    <circle cx="260" cy="123" r="30" fill="#0a1013"/><circle cx="260" cy="123" r="12" fill="#9aa39f"/>
-    <path d="M260 59V187M196 123H324" stroke="#0a1013" stroke-width="9" opacity=".8"/>
-    <path d="M344 84H432L460 105V146L425 165H344Z" fill="url(#paint)"/>
-    <path d="M74 75H157V166H74Z" fill="url(#rib)"/><path d="M96 61V181" stroke="#a6b0ac" stroke-width="3" opacity=".28"/>
-    <path d="M260 123C351 122 382 171 456 184" fill="none" stroke="#070b0d" stroke-width="11"/><path d="M260 123C351 122 382 171 456 184" fill="none" stroke="#7b8480" stroke-width="3"/>
-    ${bolts([51,82,431,463],[75,179])}</g>`);
-  if(key==='warden-core')return shell(`
-    <g filter="url(#shadow)"><path d="M75 26H386L474 86V183L402 232H99L32 174V79Z" fill="#050a0d"/>
-    <path d="M87 41H374L458 94V173L393 216H108L49 164V88Z" fill="url(#steel)"/>
-    <path d="M128 64H342L409 103V160L351 196H139L91 155V104Z" fill="#091215"/>
-    <ellipse cx="253" cy="129" rx="111" ry="73" fill="url(#core)" opacity=".94"/>
-    <ellipse cx="253" cy="129" rx="72" ry="47" fill="#0a2226"/><ellipse cx="253" cy="129" rx="42" ry="28" fill="#b7f1ef"/>
-    <path d="M119 75L151 105M387 83L351 109M121 185L153 158M388 178L351 151" stroke="#869491" stroke-width="14"/>
-    <rect x="100" y="112" width="31" height="34" fill="url(#hazard)" opacity=".7"/><rect x="377" y="112" width="31" height="34" fill="url(#hazard)" opacity=".45"/>
-    ${bolts([83,426],[86,178])}</g>`);
-  return shell(`<rect width="512" height="256" fill="#222"/>`);
+  const bolts=(xs,ys)=>xs.map(x=>ys.map(y=>`<circle cx="${x}" cy="${y}" r="3.8" fill="#929b99"/><circle cx="${x+1}" cy="${y+1}" r="1.4" fill="#1c2529"/>`).join('')).join('');
+  const shell=body=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" preserveAspectRatio="none">${defs}${body}</svg>`;
+  if(key==='deck')return shell(`<g filter="url(#shadow)"><rect x="2" y="18" width="508" height="220" rx="14" fill="#05090c"/><rect x="11" y="28" width="490" height="200" rx="10" fill="url(#steel)"/><rect x="25" y="45" width="462" height="166" rx="5" fill="url(#rib)"/><rect x="25" y="86" width="462" height="84" fill="#0d1519"/><path d="M35 128H477" stroke="#ce8538" stroke-width="6" stroke-dasharray="62 28" opacity=".78"/><path d="M28 96H484M28 162H484" stroke="#899391" stroke-width="2" opacity=".26"/><rect x="25" y="45" width="38" height="166" fill="url(#hazard)" opacity=".38"/><rect x="449" y="45" width="38" height="166" fill="url(#hazard)" opacity=".26"/>${bolts([75,437],[52,204])}</g>`);
+  if(key==='girder')return shell(`<g filter="url(#shadow)"><path d="M6 88L506 42V172L6 218Z" fill="#05090b"/><path d="M14 96L498 52V161L14 207Z" fill="url(#steel2)"/><path d="M23 109L487 66M23 193L487 150" stroke="#6c7777" stroke-width="13"/>${[48,119,190,261,332,403,474].map((x,i)=>`<path d="M${x} ${i%2?104:183}L${x+47} ${i%2?178:93}" stroke="#263136" stroke-width="12"/><circle cx="${x+23}" cy="136" r="5" fill="#929b98"/>`).join('')}<path d="M21 104L491 60" stroke="#c5cbc7" stroke-width="2" opacity=".24"/></g>`);
+  if(key==='bulkhead')return shell(`<g filter="url(#shadow)"><path d="M12 18H466L505 57V211L465 240H15L4 224V37Z" fill="#05090b"/><path d="M25 32H453L489 65V201L453 226H25L17 212V48Z" fill="url(#steel)"/><path d="M56 50H193L218 76V184L189 207H56Z" fill="#0d1519"/><path d="M456 50H319L294 76V184L323 207H456Z" fill="#0d1519"/><path d="M213 40H299V218H213Z" fill="url(#rib)"/><rect x="226" y="49" width="60" height="160" fill="#070d10"/><rect x="37" y="36" width="39" height="184" fill="url(#hazard)" opacity=".8"/><rect x="436" y="36" width="39" height="184" fill="url(#hazard)" opacity=".48"/><path d="M81 70H186M81 188H186M326 70H431M326 188H431" stroke="#86918e" stroke-width="3" opacity=".4"/>${bolts([31,204,308,480],[48,206])}</g>`);
+  if(key==='gate')return shell(`<g filter="url(#shadow)"><path d="M7 238V37L51 10H153L185 43H327L361 10H461L505 37V238H410V91H103V238Z" fill="#04080a"/><path d="M18 230V45L60 24H143L174 56H338L369 24H452L494 45V230H427V76H85V230Z" fill="url(#steel)"/><path d="M85 76H427V112H85Z" fill="#0b1216"/><rect x="106" y="85" width="300" height="10" fill="url(#hazard)" opacity=".64"/><path d="M101 112V230H149V112M363 112V230H411V112" fill="url(#steel2)"/><path d="M150 112H362V230H150Z" fill="#020608"/><g fill="#75c2c6"><rect x="44" y="55" width="13" height="26" rx="4"/><rect x="455" y="55" width="13" height="26" rx="4"/></g>${bolts([36,77,435,476],[66,200])}</g>`);
+  if(key==='warden-chest')return shell(`<g filter="url(#shadow)"><path d="M19 102L66 47L161 18L390 30L480 84L504 151L455 211L306 238L109 222L35 180Z" fill="#04080b"/><path d="M33 105L76 58L168 31L382 43L465 92L488 149L444 198L304 222L117 208L49 171Z" fill="url(#steel)"/><path d="M73 115L120 78L212 55L389 68L447 105L458 149L420 177L292 196L145 181L90 153Z" fill="#10191d"/><path d="M104 100L192 72L329 79L401 104L383 153L296 173L170 158L117 139Z" fill="url(#steel2)"/><path d="M180 82L325 87L353 113L331 155L199 155L157 130Z" fill="#060c0f"/><rect x="217" y="94" width="93" height="49" rx="5" fill="url(#rib)"/><path d="M62 129L93 105V173L57 158Z" fill="url(#paint)"/><path d="M414 96L468 119V155L414 181Z" fill="#343c3d"/><path d="M107 180L411 191" stroke="#05080a" stroke-width="12"/>${bolts([88,136,365,432],[92,177])}</g>`);
+  if(key==='warden-clamp')return shell(`<g filter="url(#shadow)"><path d="M83 8H348L482 70L505 129L452 177L374 177L301 242H72L18 200L8 110Z" fill="#04080a"/><path d="M95 24H339L464 81L487 123L441 160H359L291 224H83L36 188L25 115Z" fill="url(#steel)"/><path d="M56 94H281L337 128L278 155H51L38 126Z" fill="#0d1519"/><path d="M68 105H263L299 126L263 143H67Z" fill="url(#rib)"/><path d="M305 48H405L458 83L424 111H326L283 82Z" fill="url(#paint)"/><path d="M322 176L280 219H157L196 172Z" fill="#050a0d"/><rect x="105" y="49" width="126" height="20" rx="9" fill="#070c0e"/><rect x="118" y="55" width="100" height="8" rx="4" fill="url(#cyan)"/><circle cx="355" cy="84" r="22" fill="#081013"/><circle cx="355" cy="84" r="13" fill="#7c8683"/>${bolts([50,91,428,469],[108,150])}</g>`);
+  if(key==='warden-salvage')return shell(`<g filter="url(#shadow)"><path d="M45 25H378L478 72L503 153L444 222H102L20 171L12 78Z" fill="#04080a"/><path d="M60 40H364L461 84L485 146L432 204H113L39 163L29 89Z" fill="url(#steel2)"/><circle cx="262" cy="122" r="80" fill="#070d10"/><circle cx="262" cy="122" r="65" fill="#293438"/><circle cx="262" cy="122" r="49" fill="url(#steel)"/><circle cx="262" cy="122" r="29" fill="#071013"/><circle cx="262" cy="122" r="12" fill="#919b98"/><path d="M262 57V187M197 122H327" stroke="#070c0e" stroke-width="10"/><path d="M347 82H435L465 105V147L426 168H347Z" fill="url(#paint)"/><path d="M72 73H159V169H72Z" fill="url(#rib)"/><path d="M262 122C348 123 389 171 462 187" fill="none" stroke="#060a0c" stroke-width="13"/><path d="M262 122C348 123 389 171 462 187" fill="none" stroke="#7c8581" stroke-width="3"/>${bolts([48,80,434,468],[75,181])}</g>`);
+  if(key==='warden-core')return shell(`<g filter="url(#shadow)"><path d="M70 22H391L480 85V185L407 236H94L27 175V75Z" fill="#04080a"/><path d="M84 39H377L462 94V174L397 218H105L47 163V87Z" fill="url(#steel)"/><path d="M124 62H346L414 103V161L354 198H136L89 155V102Z" fill="#071114"/><ellipse cx="255" cy="129" rx="111" ry="72" fill="url(#core)"/><ellipse cx="255" cy="129" rx="69" ry="45" fill="#092125"/><ellipse cx="255" cy="129" rx="39" ry="26" fill="#c5f5f1"/><path d="M116 73L151 104M392 81L354 109M118 187L153 158M393 181L354 151" stroke="#87928f" stroke-width="14"/><rect x="95" y="111" width="32" height="35" fill="url(#hazard)" opacity=".7"/><rect x="383" y="111" width="32" height="35" fill="url(#hazard)" opacity=".45"/>${bolts([80,432],[84,180])}</g>`);
+  return shell(`<rect width="512" height="256" fill="#20282c"/>`);
 }
-const FRONTIER_ART=Object.freeze(Object.fromEntries(STAGE1_ART_KEYS.map(key=>{
-  const image=new Image();
-  image.decoding='async';
-  image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(stageOneSvg(key));
-  return[key,image];
-})));
 
-function frontierSprite(key,x,y,w,h,g=ctx){
-  const image=FRONTIER_ART[key];
-  if(!image?.complete||!image.naturalWidth)return false;
-  g.drawImage(image,x,y,w,h);
-  return true;
-}
+const FRONTIER_ART=Object.freeze(Object.fromEntries(STAGE1_ART_KEYS.map(key=>{
+  const image=new Image();image.decoding='async';image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(stageOneSvg(key));return[key,image];
+})));
+function frontierSprite(key,x,y,w,h,g=ctx){const image=FRONTIER_ART[key];if(!image?.complete||!image.naturalWidth)return false;g.drawImage(image,x,y,w,h);return true;}
 function frontierEase(t){t=clamp(t,0,1);return t*t*(3-2*t);}
-function frontierKick(age,start,amount){const t=age-start;return t<0?0:amount*Math.sin(t*18)*Math.exp(-t*5.3);}
+function frontierKick(age,start,amount){const t=age-start;return t<0?0:amount*Math.sin(t*18)*Math.exp(-t*5.2);}
 
 function stageOneArtPose(e){
-  const now=state.time||0,age=Math.max(0,now-(e.stageActionAt??-10));
-  const open=e.stageGateCoreOpen?frontierEase((now-(e.stageGateOpenedAt??-10))/.82):0;
-  // Compatibility geometry, redesigned as a low rail-bound enforcement machine:
-  // carriage, left clamp, right winch, exposed power unit.
-  const parts=[
-    [0,-18-open*14,94,46,-.015],
-    [-106-open*24,31,32,58,-.13-open*.04],
-    [101+open*22,22,31,51,.11+open*.05],
-    [12,31+open*9,25,31,.02]
-  ];
-  const wind=frontierEase(age/.78),release=1-frontierEase((age-1.55)/.92);
-  if(e.stageAction==='salvage'){
-    const q=wind*release;
-    parts[2][0]-=9*q;parts[2][1]-=35*q;parts[2][4]+=.34*q;
-    parts[1][1]+=13*q;parts[1][4]-=.10*q;
-    parts[0][0]-=6*q;parts[0][1]+=frontierKick(age,.78,5);
-  }
-  if(e.stageAction==='bulkhead'){
-    const q=frontierEase(age/.72)*(1-frontierEase((age-2.08)/.78));
-    parts[1][0]+=22*q;parts[2][0]-=25*q;parts[1][1]-=17*q;parts[2][1]-=13*q;
-    parts[1][4]+=.16*q;parts[2][4]-=.14*q;parts[0][1]+=frontierKick(age,1.28,6);
-  }
-  if(e.stageAction==='ram'){
-    const load=frontierEase(age/.92)*(1-frontierEase((age-1.78)/.58));
-    parts[0][1]+=11*load;parts[1][0]+=23*load;parts[2][0]-=19*load;
-    parts[1][1]-=28*load;parts[2][1]-=24*load;parts[1][4]+=.22*load;parts[2][4]-=.18*load;
-    parts[0][1]+=frontierKick(age,1.72,8);
-  }
-  if(e.stageAction==='girder'){
-    const q=frontierEase(age/.84)*(1-frontierEase((age-1.62)/.72));
-    parts[1][0]-=9*q;parts[2][1]-=37*q;parts[2][4]-=.46*q;parts[0][0]+=frontierKick(age,1.52,6);
-  }
-  if(e.stageEntryProgress!=null){
-    const q=1-frontierEase((e.stageEntryProgress-.12)/.82);
-    parts[0][1]-=32*q;parts[1][0]-=76*q;parts[2][0]+=85*q;parts[1][1]-=42*q;parts[2][1]-=28*q;
-  }
-  if(e.stageDefeatAge!=null){
-    const q=frontierEase(e.stageDefeatAge/1.35);
-    parts[1][0]-=54*q;parts[1][1]+=72*q;parts[1][4]-=.62*q;
-    parts[2][0]+=66*q;parts[2][1]+=61*q;parts[2][4]+=.74*q;
-    parts[3][1]+=24*q;parts[0][1]+=15*q;
-  }
+  const now=state.time||0,age=Math.max(0,now-(e.stageActionAt??-10)),open=e.stageGateCoreOpen?frontierEase((now-(e.stageGateOpenedAt??-10))/.82):0;
+  const parts=[[0,-19-open*14,124,58,-.012],[-143-open*31,31,42,78,-.13-open*.035],[140+open*28,22,44,69,.11+open*.045],[9,22+open*5,28,27,.015]];
+  const wind=frontierEase(age/.82),release=1-frontierEase((age-1.62)/.9);
+  if(e.stageAction==='salvage'){const q=wind*release;parts[2][0]-=15*q;parts[2][1]-=43*q;parts[2][4]+=.42*q;parts[1][1]+=16*q;parts[1][4]-=.12*q;parts[0][0]-=8*q;parts[0][1]+=frontierKick(age,.82,7);}
+  if(e.stageAction==='bulkhead'){const q=frontierEase(age/.74)*(1-frontierEase((age-2.08)/.78));parts[1][0]+=30*q;parts[2][0]-=33*q;parts[1][1]-=23*q;parts[2][1]-=19*q;parts[1][4]+=.19*q;parts[2][4]-=.17*q;parts[0][1]+=frontierKick(age,1.28,8);}
+  if(e.stageAction==='ram'){const load=frontierEase(age/.94)*(1-frontierEase((age-1.82)/.6));parts[0][1]+=15*load;parts[1][0]+=30*load;parts[2][0]-=27*load;parts[1][1]-=35*load;parts[2][1]-=31*load;parts[1][4]+=.25*load;parts[2][4]-=.22*load;parts[0][1]+=frontierKick(age,1.74,10);}
+  if(e.stageAction==='girder'){const q=frontierEase(age/.84)*(1-frontierEase((age-1.64)/.74));parts[1][0]-=13*q;parts[2][1]-=45*q;parts[2][4]-=.52*q;parts[0][0]+=frontierKick(age,1.54,8);}
+  if(e.stageEntryProgress!=null){const q=1-frontierEase((e.stageEntryProgress-.10)/.84);parts[0][1]-=46*q;parts[1][0]-=112*q;parts[2][0]+=118*q;parts[1][1]-=58*q;parts[2][1]-=43*q;}
+  if(e.stageDefeatAge!=null){const q=frontierEase(e.stageDefeatAge/1.35);parts[1][0]-=75*q;parts[1][1]+=84*q;parts[1][4]-=.70*q;parts[2][0]+=83*q;parts[2][1]+=72*q;parts[2][4]+=.82*q;parts[3][1]+=25*q;parts[0][1]+=19*q;}
   return parts;
 }
 window.stackfallStageOneArtPose=stageOneArtPose;
-window.stackfallStageOneArtInfo=()=>({
-  loaded:Object.entries(FRONTIER_ART).filter(([,image])=>image.complete&&image.naturalWidth).map(([key])=>key),
-  textureCount:8,
-  source:'procedural-lockline-v2'
-});
+window.stackfallStageOneArtInfo=()=>({loaded:Object.entries(FRONTIER_ART).filter(([,image])=>image.complete&&image.naturalWidth).map(([key])=>key),textureCount:8,source:'procedural-lockline-v3',rebootVisualReady:window.stackfallStageOneRebootVisualReady===true});
 
 function drawFrontierHardware(o){
-  const key=o.kind==='bulkhead'?'bulkhead':o.kind==='girder'?'girder':'deck';
-  const p=worldToScreen(o.x,o.y),target=worldToScreen(o.toX??o.x,o.toY??o.y),warn=o.age<o.warn;
-  if(Math.max(Math.abs(p.x-vw/2),Math.abs(target.x-vw/2))>vw/2+650&&Math.max(Math.abs(p.y-vh/2),Math.abs(target.y-vh/2))>vh/2+650)return;
+  const key=o.kind==='bulkhead'?'bulkhead':o.kind==='girder'?'girder':'deck',p=worldToScreen(o.x,o.y),target=worldToScreen(o.toX??o.x,o.toY??o.y),warn=o.age<o.warn;
+  if(Math.max(Math.abs(p.x-vw/2),Math.abs(target.x-vw/2))>vw/2+700&&Math.max(Math.abs(p.y-vh/2),Math.abs(target.y-vh/2))>vh/2+700)return;
   ctx.save();ctx.shadowBlur=0;
-  if(warn){
-    // Telegraphs are restrained floor projections; the attack is the filled hardware.
-    ctx.save();ctx.translate(target.x,target.y);ctx.rotate(o.angle||0);
-    ctx.fillStyle='rgba(213,132,57,.10)';ctx.fillRect(-o.hw,-o.hh,o.hw*2,o.hh*2);
-    ctx.strokeStyle='rgba(245,188,111,.64)';ctx.lineWidth=1.4;ctx.setLineDash([10,8]);
-    ctx.strokeRect(-o.hw-3,-o.hh-3,o.hw*2+6,o.hh*2+6);ctx.setLineDash([]);ctx.restore();
-    if(o.kind==='girder'){
-      const pivot=worldToScreen(o.pivotX,o.pivotY);ctx.save();ctx.translate(pivot.x,pivot.y);
-      ctx.globalAlpha=.28;ctx.strokeStyle='#efbd79';ctx.setLineDash([10,10]);ctx.lineWidth=1.3;
-      ctx.beginPath();ctx.arc(0,0,o.length+o.hh,o.angle,o.angle+o.sweep);ctx.stroke();ctx.restore();
-    }
-    if(o.kind==='bulkhead'){
-      ctx.save();ctx.globalAlpha=.24;ctx.strokeStyle='#efbd79';ctx.setLineDash([10,9]);ctx.lineWidth=1.2;
-      const a=worldToScreen(o.fromX,o.toY);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(target.x,target.y);ctx.stroke();ctx.restore();
-    }
-  }
-  if(o.kind==='bulkhead'&&o.passageShift&&o.age<o.warn+o.travel+.95){
-    const destination=worldToScreen(o.toX+o.passageShift,o.toY);ctx.save();
-    ctx.globalAlpha=.26;ctx.strokeStyle='#f0bb73';ctx.setLineDash([7,9]);ctx.lineWidth=1.2;
-    ctx.strokeRect(destination.x-o.hw,destination.y-o.hh,o.hw*2,o.hh*2);
-    ctx.beginPath();ctx.moveTo(target.x,target.y);ctx.lineTo(destination.x,destination.y);ctx.stroke();ctx.restore();
-  }
-  // Contact shadow makes heavy structures sit in the world rather than float.
-  ctx.save();ctx.translate(p.x+7,p.y+14);ctx.rotate(o.a||0);ctx.globalAlpha=.44;ctx.fillStyle='#000';
-  ctx.fillRect(-o.hw,-o.hh,o.hw*2,o.hh*2);ctx.restore();
-  ctx.translate(p.x,p.y-(o.height||0));ctx.rotate(o.a||0);
-  frontierSprite(key,-o.hw,-o.hh,o.hw*2,o.hh*2);
-  if(o.impactAt!=null){
-    const t=o.age-o.impactAt;
-    if(t<.25){
-      ctx.globalAlpha=(1-t/.25)*.34;ctx.fillStyle='#f3c88e';
-      ctx.fillRect(-o.hw,-o.hh,o.hw*2,Math.max(3,o.hh*.09));
-      ctx.globalAlpha=(1-t/.25)*.18;ctx.fillStyle='#fff1d5';
-      ctx.fillRect(-o.hw*.72,-o.hh+3,o.hw*1.44,2);
-    }
-  }
-  ctx.restore();
+  if(warn){ctx.save();ctx.translate(target.x,target.y);ctx.rotate(o.angle||0);ctx.fillStyle='rgba(205,126,52,.09)';ctx.fillRect(-o.hw,-o.hh,o.hw*2,o.hh*2);ctx.strokeStyle='rgba(239,179,102,.62)';ctx.lineWidth=1.4;ctx.setLineDash([10,8]);ctx.strokeRect(-o.hw-4,-o.hh-4,o.hw*2+8,o.hh*2+8);ctx.restore();if(o.kind==='girder'){const pivot=worldToScreen(o.pivotX,o.pivotY);ctx.save();ctx.translate(pivot.x,pivot.y);ctx.globalAlpha=.28;ctx.strokeStyle='#e9b26d';ctx.setLineDash([10,10]);ctx.lineWidth=1.3;ctx.beginPath();ctx.arc(0,0,o.length+o.hh,o.angle,o.angle+o.sweep);ctx.stroke();ctx.restore();}}
+  if(o.kind==='bulkhead'){const from=worldToScreen(o.fromX??o.x,o.fromY??o.y);ctx.save();ctx.globalAlpha=.56;ctx.strokeStyle='#11191d';ctx.lineWidth=Math.max(14,o.hh*1.05);ctx.beginPath();ctx.moveTo(from.x,from.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.globalAlpha=.45;ctx.strokeStyle='#6b7674';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(from.x,from.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore();}
+  ctx.save();ctx.translate(p.x+7,p.y+15);ctx.rotate(o.a||0);ctx.globalAlpha=.46;ctx.fillStyle='#000';ctx.fillRect(-o.hw,-o.hh,o.hw*2,o.hh*2);ctx.restore();ctx.translate(p.x,p.y-(o.height||0));ctx.rotate(o.a||0);frontierSprite(key,-o.hw,-o.hh,o.hw*2,o.hh*2);if(o.impactAt!=null){const t=o.age-o.impactAt;if(t<.24){ctx.globalAlpha=(1-t/.24)*.34;ctx.fillStyle='#f0bd7e';ctx.fillRect(-o.hw,-o.hh,o.hw*2,Math.max(3,o.hh*.09));}}ctx.restore();
 }
+
+function drawStageOneLocklineWorld(tier){
+  const f=state.stageRun?.frontier||{},wx=player.x||0,wy=player.y||0,angle=-.17,c=Math.cos(angle),s=Math.sin(angle),along=wx*c+wy*s,across=-wx*s+wy*c,compact=vw<760,routeW=compact?330:430,extent=vw+vh+900,routeY=-across;
+  ctx.save();ctx.translate(vw*.5,vh*.5);ctx.rotate(angle);ctx.fillStyle='#060b0e';ctx.fillRect(-extent,routeY-routeW*.55,extent*2,routeW*1.10);ctx.fillStyle='#10191d';ctx.fillRect(-extent,routeY-routeW*.48,extent*2,routeW*.96);
+  const base=Math.floor(along/520);
+  for(let k=base-4;k<=base+4;k++){const x=k*520-along,breakage=stageWorldHash(k,0,23),incident=f.incident?.until>state.time&&f.incident.cell===k;ctx.globalAlpha=.72;frontierSprite('deck',x-266,routeY-routeW*.46,532,routeW*.92);ctx.globalAlpha=1;if((k&1)===0){ctx.fillStyle='rgba(2,6,8,.72)';ctx.fillRect(x-78,routeY-routeW*.10,156,routeW*.20);ctx.strokeStyle='rgba(119,132,130,.22)';ctx.lineWidth=2;ctx.strokeRect(x-78,routeY-routeW*.10,156,routeW*.20);}if((f.fracture>.28&&breakage>.70)||incident){ctx.fillStyle='#020609';ctx.beginPath();ctx.moveTo(x-96,routeY-routeW*.48);ctx.lineTo(x-68,routeY-routeW*.16);ctx.lineTo(x-88,routeY+routeW*.06);ctx.lineTo(x-52,routeY+routeW*.48);ctx.lineTo(x+112,routeY+routeW*.48);ctx.lineTo(x+71,routeY+routeW*.12);ctx.lineTo(x+100,routeY-routeW*.15);ctx.lineTo(x+74,routeY-routeW*.48);ctx.closePath();ctx.fill();ctx.globalAlpha=.92;frontierSprite('girder',x-132,routeY+routeW*.32,264,32);ctx.globalAlpha=1;}}
+  for(const side of[-1,1]){const edge=routeY+side*routeW*.53;ctx.globalAlpha=.84;for(let k=base-3;k<=base+3;k++){const x=k*680-along;frontierSprite('girder',x-340,edge-18,680,36);}ctx.globalAlpha=1;}
+  const checkpointBase=Math.floor(along/1680);for(let q=checkpointBase-1;q<=checkpointBase+1;q++){const x=q*1680+430-along;if(x<-900||x>900)continue;ctx.save();ctx.translate(x,routeY);ctx.rotate(Math.PI/2);ctx.globalAlpha=.82;frontierSprite('gate',-routeW*.50,-routeW*.12,routeW,routeW*.24);ctx.restore();}ctx.restore();
+  const cell=1500,minX=Math.floor((wx-vw*.5-600)/cell),maxX=Math.floor((wx+vw*.5+600)/cell),minY=Math.floor((wy-vh*.5-600)/cell),maxY=Math.floor((wy+vh*.5+600)/cell);for(let gy=minY;gy<=maxY;gy++)for(let gx=minX;gx<=maxX;gx++){const h=stageWorldHash(gx,gy,81);if(h<.76)continue;const x=gx*cell+cell*(.25+stageWorldHash(gx,gy,83)*.5),y=gy*cell+cell*(.22+stageWorldHash(gx,gy,89)*.56),p=worldToScreen(x,y);if(p.x<-500||p.x>vw+500||p.y<-400||p.y>vh+400)continue;ctx.save();ctx.translate(p.x,p.y);ctx.rotate((stageWorldHash(gx,gy,101)-.5)*.7);ctx.globalAlpha=.48;frontierSprite(h>.9?'gate':'girder',-300,-42,600,84);ctx.restore();}
+  if(!state.stageRun?.bossSpawned&&!state.stageRun?.bossIntroPending){const approach=f.gateApproach||0,w=Math.min(1180,vw*.82)*(1+approach*.12),x=vw*.5-w*.5-wx*.018,y=vh*.075-wy*.014;ctx.save();ctx.globalAlpha=.11+.18*approach;frontierSprite('gate',x,y,w,w*.22);ctx.restore();}
+}
+
+function drawStageOneLocklineArena(){
+  const arena=state.stageBossArena;if(!arena||arena.stageId!=='stage-01')return;const p=worldToScreen(arena.x,arena.y),v=state.stageVictory,release=arena.locked===false?clamp((v?.elapsed||0)/2.4,0,1):0,phaseGrow=arena.phase>=2?clamp(((state.time||0)-(arena.phaseOpenedAt??-10))/1.2,0,1):0,hw=arena.halfW*(1+.15*phaseGrow),hh=arena.halfH;ctx.save();ctx.translate(p.x,p.y);const vignette=ctx.createRadialGradient(0,0,Math.min(hw,hh)*.18,0,0,Math.max(hw,hh));vignette.addColorStop(0,'rgba(7,14,18,.02)');vignette.addColorStop(1,'rgba(0,3,5,.42)');ctx.fillStyle=vignette;ctx.fillRect(-hw,-hh,hw*2,hh*2);ctx.globalAlpha=.93;frontierSprite('girder',-hw,-hh-19,hw*2,38);frontierSprite('girder',-hw,hh-19-release*125,hw*2,38);ctx.save();ctx.translate(-hw+17,0);ctx.rotate(Math.PI/2);frontierSprite('girder',-hh,-17,hh*2,34);ctx.restore();ctx.save();ctx.translate(hw-17,0);ctx.rotate(Math.PI/2);frontierSprite('girder',-hh,-17,hh*2,34);ctx.restore();for(const sx of[-1,1])for(const sy of[-1,1]){ctx.save();ctx.translate(sx*(hw-44),sy*(hh-38));ctx.scale(.38,.38);frontierSprite('bulkhead',-110,-58,220,116);ctx.restore();}if(release>0){ctx.globalAlpha=.30*release;const g=ctx.createLinearGradient(0,-hh,0,hh);g.addColorStop(0,'rgba(66,180,190,0)');g.addColorStop(1,'rgba(83,205,211,.28)');ctx.fillStyle=g;ctx.fillRect(-115,-hh,230,hh*2);ctx.fillStyle='rgba(181,246,246,.55)';for(let i=0;i<4;i++){const y=-hh*.45+i*hh*.30;ctx.beginPath();ctx.moveTo(-10,y-16);ctx.lineTo(10,y);ctx.lineTo(-10,y+16);ctx.closePath();ctx.fill();}}ctx.restore();
+}
+
+function drawStageOneLocklineBoss(e){
+  const shapes=window.stackfallStageBodyShapes?.(e)||[];if(!shapes.length)return;const byPart=new Map(shapes.map(s=>[s.part,s])),chest=byPart.get(0),left=byPart.get(1),right=byPart.get(2),core=byPart.get(3);ctx.save();ctx.shadowBlur=0;if(chest){ctx.save();ctx.translate(chest.x-e.x,chest.y-e.y+chest.hh*.60);ctx.rotate(chest.a);const grad=ctx.createLinearGradient(-chest.hw,0,chest.hw,0);grad.addColorStop(0,'#10171b');grad.addColorStop(.48,'#5c6768');grad.addColorStop(1,'#0b1114');ctx.fillStyle=grad;ctx.fillRect(-chest.hw*1.18,-10,chest.hw*2.36,20);ctx.fillStyle='#05090b';ctx.fillRect(-chest.hw*.72,-16,chest.hw*1.44,8);ctx.restore();}
+  const piston=(a,b)=>{if(!a||!b)return;const ax=a.x-e.x,ay=a.y-e.y,bx=b.x-e.x,by=b.y-e.y,ang=Math.atan2(by-ay,bx-ax),len=Math.hypot(bx-ax,by-ay);ctx.save();ctx.translate(ax,ay);ctx.rotate(ang);ctx.strokeStyle='#05090b';ctx.lineWidth=14;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(len,0);ctx.stroke();ctx.strokeStyle='#75807d';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(5,0);ctx.lineTo(len-8,0);ctx.stroke();ctx.strokeStyle='#b47031';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(len*.58,-4);ctx.lineTo(len*.82,-4);ctx.stroke();ctx.restore();};piston(chest,left);piston(chest,right);if(chest&&core){ctx.save();ctx.strokeStyle='rgba(20,27,28,.95)';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(chest.x-e.x-chest.hw*.35,chest.y-e.y+chest.hh*.55);ctx.bezierCurveTo(-45,65,-22,78,core.x-e.x-8,core.y-e.y);ctx.moveTo(chest.x-e.x+chest.hw*.32,chest.y-e.y+chest.hh*.55);ctx.bezierCurveTo(48,65,24,78,core.x-e.x+8,core.y-e.y);ctx.stroke();ctx.restore();}
+  const keys=['warden-chest','warden-clamp','warden-salvage','warden-core'];for(const s of [...shapes].sort((a,b)=>a.part===0?1:b.part===0?-1:a.part-b.part)){ctx.save();ctx.translate(s.x-e.x,s.y-e.y);ctx.rotate(s.a);if(e.stageDefeatAge!=null&&s.part===3)ctx.globalAlpha*=Math.max(.12,1-e.stageDefeatAge*.9);if(s.part>=4){ctx.fillStyle='#2d3739';ctx.fillRect(-s.hw,-s.hh,s.hw*2,s.hh*2);}else frontierSprite(keys[s.part],-s.hw,-s.hh,s.hw*2,s.hh*2);if(e.hit&&s.part<4){ctx.globalCompositeOperation='screen';ctx.globalAlpha=.13;frontierSprite(keys[s.part],-s.hw,-s.hh,s.hw*2,s.hh*2);}ctx.restore();}
+  if(e.stageGateCoreOpen&&chest){const t=state.time||0;ctx.save();ctx.translate(chest.x-e.x,chest.y-e.y);for(const side of[-1,1]){ctx.fillStyle='rgba(139,231,229,.42)';ctx.fillRect(side*44-13,39+Math.sin(t*3+side)*2,26,4);ctx.fillStyle='rgba(185,247,244,.18)';ctx.fillRect(side*44-7,44,14,18);}ctx.restore();}ctx.restore();
+}
+
+function installStageOneRebootVisuals(){try{if(typeof drawStageOneFrontierField==='function')drawStageOneFrontierField=drawStageOneLocklineWorld;if(typeof drawStageOneWardenArena==='function')drawStageOneWardenArena=drawStageOneLocklineArena;if(typeof drawCollapseWardenBody==='function')drawCollapseWardenBody=drawStageOneLocklineBoss;window.stackfallStageOneRebootVisualReady=true;}catch(error){console.error('[stage01 reboot visuals]',error);}}
+setTimeout(installStageOneRebootVisuals,0);
