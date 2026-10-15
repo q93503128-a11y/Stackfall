@@ -41,11 +41,16 @@
   window.stackfallIsEndlessRun=()=>window.stackfallCurrentRunConfig().mode===MODES.ENDLESS;
   window.stackfallIsStageRun=()=>window.stackfallCurrentRunConfig().mode===MODES.STAGE;
 
-  // Stage 1 vertical-slice rework is isolated in its own late-binding script.
-  // Load it after the page load handlers from the legacy Stage 1 art/runtime have
-  // finished, so the v2 visual hooks remain the final hooks instead of being
-  // overwritten by the compatibility installer.
   if(typeof document!=='undefined'){
+    // Apply the rebooted world/stage names before the player can open a stage run.
+    if(!document.querySelector('script[data-world-reboot-metadata]')){
+      const metadata=document.createElement('script');
+      metadata.src='src/stage-world-reboot-metadata.js';
+      metadata.dataset.worldRebootMetadata='true';
+      document.head.appendChild(metadata);
+    }
+    // Stage 1 vertical-slice rework is isolated in its own late-binding script.
+    // Load after legacy page-load installers so these hooks remain authoritative.
     const loadStageOneV2=()=>{
       if(document.querySelector('script[data-stage01-rework-v2]'))return;
       const script=document.createElement('script');
