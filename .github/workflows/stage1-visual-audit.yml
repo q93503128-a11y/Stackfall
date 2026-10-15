@@ -50,8 +50,10 @@ jobs:
         env:
           STACKFALL_PLAYWRIGHT: playwright
         run: |
+          mkdir -p test-results/stage1-vertical-slice
           export STACKFALL_CHROME="$(node -e "const {chromium}=require('playwright');process.stdout.write(chromium.executablePath())")"
-          node scripts/stage1-vertical-slice-browser.mjs
+          set -o pipefail
+          node scripts/stage1-vertical-slice-browser.mjs 2>&1 | tee test-results/stage1-vertical-slice/runner.log
 
       - name: Record expected public build fingerprint
         if: always()
