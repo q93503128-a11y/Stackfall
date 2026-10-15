@@ -1,23 +1,25 @@
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
-import {readFileSync,readdirSync,writeFileSync} from 'node:fs';
+import {existsSync,readFileSync,readdirSync,writeFileSync} from 'node:fs';
 import {dirname,join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const ownPath=fileURLToPath(import.meta.url);
 export const BUILD_INFO_PATH='src/build-info.js';
 export const REQUIRED_PUBLIC_ASSETS=['googlea1b39620fd8849c7.html'];
+export const DYNAMIC_PUBLIC_ASSETS=['src/stage01-rework-v2.js'];
 const TEXT_ASSET_PATTERN=/\.(?:css|html|js|json|svg|webmanifest)$/i;
 const CONTRACTS=['polish-contract-check.mjs','meta-upgrade-contract.mjs','level-choice-contract.mjs','stage-catalog-contract.mjs','stage01-runtime-contract.mjs','stage1-art-contract.mjs','stage-geometry-contract.mjs','stage-craft-contract.mjs','stage02-runtime-contract.mjs','stage03-runtime-contract.mjs','stage04-runtime-contract.mjs','stage05-runtime-contract.mjs','stage06-runtime-contract.mjs','stage07-runtime-contract.mjs','stage08-runtime-contract.mjs','stage09-runtime-contract.mjs','stage10-runtime-contract.mjs','stage11-runtime-contract.mjs','stage12-runtime-contract.mjs','stage13-runtime-contract.mjs','stage14-runtime-contract.mjs','stage15-runtime-contract.mjs','stage16-runtime-contract.mjs','stage17-runtime-contract.mjs','stage18-runtime-contract.mjs','sortie-prep-contract.mjs','boss-identity-contract.mjs','stage-map-contract.mjs','run-mode-contract.mjs','void-boss-contract.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','community-feedback-contract.mjs','stage-balance-performance-contract.mjs','damage-results-contract.mjs','dev-tools-contract.mjs','performance-audit-contract.mjs','legacy-chat-requirements-contract.mjs','awakening-first-set-contract.mjs','awakening-second-set-contract.mjs','awakening-final-set-contract.mjs'];
 const OWNERSHIP_GROUPS=['health','regen-runtime','regen-docs','hard','prism','targeting','docs','ci'];
 function sha256(buffer){return createHash('sha256').update(buffer).digest('hex');}
-function localAssets(index){
+function localAssets(index,projectRoot){
   const paths=['index.html',...REQUIRED_PUBLIC_ASSETS];
   for(const match of index.matchAll(/(?:src|href)=["']([^"']+)["']/g)){
     const value=match[1].split(/[?#]/,1)[0];
     if(!value||value===BUILD_INFO_PATH||/^(?:https?:|data:)/i.test(value)||value.startsWith('//'))continue;
     if(!paths.includes(value))paths.push(value);
   }
+  for(const path of DYNAMIC_PUBLIC_ASSETS)if(existsSync(resolve(projectRoot,path))&&!paths.includes(path))paths.push(path);
   return paths.sort();
 }
 function sourceJavaScriptFiles(projectRoot){
@@ -32,7 +34,7 @@ export function validateBuildSources(projectRoot){
 }
 export function computeBuildFingerprint(projectRoot){
   const index=readFileSync(resolve(projectRoot,'index.html'),'utf8');
-  const assets=localAssets(index);
+  const assets=localAssets(index,projectRoot);
   const manifest=assets.map(path=>{
     const source=readFileSync(resolve(projectRoot,path));
     const bytes=TEXT_ASSET_PATTERN.test(path)?Buffer.from(source.toString('utf8').replace(/\r\n?/g,'\n')):source;
