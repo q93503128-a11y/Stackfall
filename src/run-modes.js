@@ -42,12 +42,18 @@
   window.stackfallIsStageRun=()=>window.stackfallCurrentRunConfig().mode===MODES.STAGE;
 
   // Stage 1 vertical-slice rework is isolated in its own late-binding script.
-  // The script retries its hooks until stage-runtime.js is available, so this
-  // loader can stay here without changing the established index load order.
-  if(typeof document!=='undefined'&&!document.querySelector('script[data-stage01-rework-v2]')){
-    const script=document.createElement('script');
-    script.src='src/stage01-rework-v2.js';
-    script.dataset.stage01ReworkV2='true';
-    document.head.appendChild(script);
+  // Load it after the page load handlers from the legacy Stage 1 art/runtime have
+  // finished, so the v2 visual hooks remain the final hooks instead of being
+  // overwritten by the compatibility installer.
+  if(typeof document!=='undefined'){
+    const loadStageOneV2=()=>{
+      if(document.querySelector('script[data-stage01-rework-v2]'))return;
+      const script=document.createElement('script');
+      script.src='src/stage01-rework-v2.js';
+      script.dataset.stage01ReworkV2='true';
+      document.head.appendChild(script);
+    };
+    if(document.readyState==='complete')setTimeout(loadStageOneV2,0);
+    else window.addEventListener('load',()=>setTimeout(loadStageOneV2,0),{once:true});
   }
 })();
