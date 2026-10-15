@@ -82,3 +82,4 @@ function drawStageOneLocklineBoss(e){
 
 function installStageOneRebootVisuals(){try{if(typeof drawStageOneFrontierField==='function')drawStageOneFrontierField=drawStageOneLocklineWorld;if(typeof drawStageOneWardenArena==='function')drawStageOneWardenArena=drawStageOneLocklineArena;if(typeof drawCollapseWardenBody==='function')drawCollapseWardenBody=drawStageOneLocklineBoss;window.stackfallStageOneRebootVisualReady=true;}catch(error){console.error('[stage01 reboot visuals]',error);}}
 setTimeout(installStageOneRebootVisuals,0);
+if(typeof window.addEventListener==='function')window.addEventListener('load',installStageOneRebootVisuals,{once:true});
