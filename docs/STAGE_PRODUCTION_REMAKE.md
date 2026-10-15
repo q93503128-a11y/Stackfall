@@ -7,6 +7,9 @@
 새 Stage 세계/명칭/연결 구조와 초월체 리셋 정본:
 - `docs/STAGE_WORLD_REBOOT_2026-10-15.md`
 
+Stage 1 `폐쇄선` 상세 재설계:
+- `docs/STAGE01_REBOOT_DESIGN_2026-10-15.md`
+
 시스템·밸런스·보상·진행 규칙 정본:
 - `docs/GAME_DESIGN.md`
 
