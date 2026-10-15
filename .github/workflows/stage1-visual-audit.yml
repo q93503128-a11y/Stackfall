@@ -1,6 +1,6 @@
 name: Stage 1 visual audit
 
-# Re-run marker: screenshot-driven rupture and arena-weight polish validation.
+# Screenshot-driven Stage 1 vertical-slice validation.
 on:
   workflow_dispatch:
   push:
@@ -13,6 +13,7 @@ on:
       - 'src/stage-runtime.js'
       - 'src/stage-catalog.js'
       - 'scripts/stage1-vertical-slice-browser.mjs'
+      - 'scripts/build-fingerprint.mjs'
       - '.github/workflows/stage1-visual-audit.yml'
 
 permissions:
@@ -51,6 +52,12 @@ jobs:
         run: |
           export STACKFALL_CHROME="$(node -e "const {chromium}=require('playwright');process.stdout.write(chromium.executablePath())")"
           node scripts/stage1-vertical-slice-browser.mjs
+
+      - name: Record expected public build fingerprint
+        if: always()
+        run: |
+          mkdir -p test-results/stage1-vertical-slice
+          node --input-type=module -e "import {writeFileSync} from 'node:fs';import {computeBuildFingerprint} from './scripts/build-fingerprint.mjs';writeFileSync('test-results/stage1-vertical-slice/expected-build.json',JSON.stringify(computeBuildFingerprint(process.cwd()),null,2));"
 
       - name: Upload Stage 1 captures
         if: always()
