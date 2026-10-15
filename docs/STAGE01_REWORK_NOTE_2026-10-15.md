@@ -2,6 +2,12 @@
 
 Stage 1 is being used as the production vertical slice for the 18-stage rebuild.
 
+Current runtime presentation:
+
+- Stage: `폐쇄선 / Lockline`
+- Stage 1 apex display name: `K-03 폐쇄기 / Lockframe K-03`
+- Legacy ids such as `collapse-warden` and `warden-*` remain compatibility-only implementation ids and are not visual/world canon.
+
 Current rework goals:
 
 - Remove the route-proximity frame spike caused by repeatedly drawing large route SVG surfaces near the player.
@@ -21,4 +27,18 @@ Stage 1 v2 combat grammar:
 
 Phase 2 changes the traffic-control rules instead of only increasing speed. The switchyard attack enters the sequence, safe lanes become less accommodating, cargo paths cross more aggressively, and the arena opens slightly as the damaged lockline loses control.
 
-Implementation is isolated to `src/stage01-rework-v2.js` and late-bound so Stage 2+ behavior remains untouched.
+## Browser audit result
+
+Focused Stage 1 v2 desktop GPU and mobile Canvas audits passed with zero runtime errors.
+
+Route-proximity draw samples after the corridor rebuild:
+
+- Desktop GPU, near primary corridor: p50 about 0.4 ms, p95 about 1.4 ms, observed max about 8.1 ms.
+- Desktop GPU, between corridors: p95 about 2.5 ms.
+- Mobile Canvas, near primary corridor: p50 about 0.3 ms, p95 about 0.8 ms, observed max about 3.3 ms.
+- Mobile Canvas, between corridors: p95 about 0.8 ms.
+- Authored Stage 1 corridor sprite budget during the focused sample stayed at 4 desktop / 3 mobile draws.
+
+These are focused Stage 1 background draw samples, not whole-run FPS guarantees.
+
+Implementation is isolated to `src/stage01-rework-v2.js`; rebooted runtime names are applied by `src/stage-world-reboot-metadata.js`. Stage 2+ combat behavior remains untouched until its own rebuild pass.
