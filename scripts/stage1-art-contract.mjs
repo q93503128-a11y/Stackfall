@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-const context={Math,window:{},Image:class{},state:{time:10},clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),player:{x:0,y:0,r:12},segmentDistance:(x,y,ax,ay,bx,by)=>{const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1)));return Math.hypot(x-ax-dx*t,y-ay-dy*t);}};
+const context={Math,window:{},Image:class{},state:{time:10},clamp:(x,a,b)=>Math.max(a,Math.min(b,x)),player:{x:0,y:0,r:12},setTimeout:fn=>{fn();return 0;},segmentDistance:(x,y,ax,ay,bx,by)=>{const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1)));return Math.hypot(x-ax-dx*t,y-ay-dy*t);}};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync('src/stage-physical-objects.js','utf8')+fs.readFileSync('src/stage01-production-art.js','utf8'),context);
 const runtime=fs.readFileSync('src/stage-runtime.js','utf8'),start=runtime.indexOf('  function stageOneBodyShapes(e)'),end=runtime.indexOf('  window.stackfallStageBodyShapes=',start);
