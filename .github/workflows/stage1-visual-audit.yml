@@ -1,0 +1,62 @@
+name: Stage 1 visual audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stage01-production-art.js'
+      - 'src/realm-backgrounds.js'
+      - 'src/elite-renderers.js'
+      - 'src/stage-runtime.js'
+      - 'src/stage-catalog.js'
+      - 'scripts/stage1-vertical-slice-browser.mjs'
+      - '.github/workflows/stage1-visual-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  visual-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install browser harness
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local Stackfall server
+        run: |
+          python3 -m http.server 8000 > /tmp/stackfall-http.log 2>&1 &
+          echo $! > /tmp/stackfall-http.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8000/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/stackfall-http.log
+          exit 1
+
+      - name: Capture Stage 1 visual suite
+        env:
+          STACKFALL_PLAYWRIGHT: playwright
+        run: |
+          export STACKFALL_CHROME="$(node -e "const {chromium}=require('playwright');process.stdout.write(chromium.executablePath())")"
+          node scripts/stage1-vertical-slice-browser.mjs
+
+      - name: Upload Stage 1 captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage1-visual-audit
+          path: |
+            test-results/stage1-vertical-slice/**
+            /tmp/stackfall-http.log
+          if-no-files-found: warn
+          retention-days: 7
