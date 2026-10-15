@@ -1,0 +1,55 @@
+name: Stage 1 final visual polish once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/stage1-final-polish-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  polish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply screenshot-driven Stage 1 polish
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('src/stage01-production-art.js')
+          s=p.read_text(encoding='utf-8')
+
+          rupture_old="ctx.fillStyle='#020609';ctx.beginPath();ctx.moveTo(x-96,routeY-routeW*.48);ctx.lineTo(x-68,routeY-routeW*.16);ctx.lineTo(x-88,routeY+routeW*.06);ctx.lineTo(x-52,routeY+routeW*.48);ctx.lineTo(x+112,routeY+routeW*.48);ctx.lineTo(x+71,routeY+routeW*.12);ctx.lineTo(x+100,routeY-routeW*.15);ctx.lineTo(x+74,routeY-routeW*.48);ctx.closePath();ctx.fill();ctx.globalAlpha=.92;"
+          rupture_new="ctx.beginPath();ctx.moveTo(x-96,routeY-routeW*.48);ctx.lineTo(x-68,routeY-routeW*.16);ctx.lineTo(x-88,routeY+routeW*.06);ctx.lineTo(x-52,routeY+routeW*.48);ctx.lineTo(x+112,routeY+routeW*.48);ctx.lineTo(x+71,routeY+routeW*.12);ctx.lineTo(x+100,routeY-routeW*.15);ctx.lineTo(x+74,routeY-routeW*.48);ctx.closePath();ctx.fillStyle='#020609';ctx.fill();ctx.strokeStyle='rgba(67,38,26,.78)';ctx.lineWidth=11;ctx.lineJoin='bevel';ctx.stroke();ctx.strokeStyle='rgba(172,157,132,.58)';ctx.lineWidth=3.2;ctx.stroke();ctx.globalAlpha=.92;"
+          if s.count(rupture_old)!=1:
+              raise SystemExit(f'rupture anchor mismatch: {s.count(rupture_old)}')
+          s=s.replace(rupture_old,rupture_new)
+
+          replacements={
+            "ctx.globalAlpha=.48;frontierSprite(h>.9?'gate':'girder',-300,-42,600,84);":"ctx.globalAlpha=.39;frontierSprite(h>.9?'gate':'girder',-300,-42,600,84);",
+            "vignette.addColorStop(1,'rgba(0,3,5,.42)')":"vignette.addColorStop(1,'rgba(0,3,5,.30)')",
+            "ctx.globalAlpha=.93;frontierSprite('girder',-hw,-hh-19,hw*2,38);":"ctx.globalAlpha=.78;frontierSprite('girder',-hw,-hh-19,hw*2,38);",
+            "ctx.scale(.38,.38);frontierSprite('bulkhead',-110,-58,220,116);":"ctx.scale(.31,.31);frontierSprite('bulkhead',-110,-58,220,116);",
+          }
+          for old,new in replacements.items():
+              count=s.count(old)
+              if count!=1:
+                  raise SystemExit(f'visual anchor mismatch ({old[:44]}): {count}')
+              s=s.replace(old,new)
+          p.write_text(s,encoding='utf-8')
+      - name: Syntax and focused contract
+        run: |
+          node --check src/stage01-production-art.js
+          node scripts/stage1-art-contract.mjs
+      - name: Commit polish and remove one-shot workflow
+        run: |
+          rm .github/workflows/stage1-final-polish-once.yml
+          git config user.name "stackfall-stage1-bot"
+          git config user.email "stackfall-stage1-bot@users.noreply.github.com"
+          git add src/stage01-production-art.js .github/workflows/stage1-final-polish-once.yml
+          git commit -m "polish(stage1): clarify ruptures and reduce arena cage weight"
+          git push origin HEAD:main
