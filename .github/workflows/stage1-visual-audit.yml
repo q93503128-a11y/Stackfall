@@ -1,6 +1,6 @@
 name: Stage 1 visual audit
 
-# Re-run marker: late Stage 1 visual installation validation.
+# Re-run marker: screenshot-driven rupture and arena-weight polish validation.
 on:
   workflow_dispatch:
   push:
