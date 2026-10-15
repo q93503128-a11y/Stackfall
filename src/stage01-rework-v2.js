@@ -1,6 +1,6 @@
 // Stage 1 / 폐쇄선 vertical-slice rework v2.
 // Purpose: sparse multi-corridor environment + distinct transport-control boss patterns.
-// Loaded dynamically by stage01-production-art.js so Stage 2+ remain untouched.
+// Loaded after the legacy runtime so Stage 2+ remain untouched.
 (()=>{
   if(window.__stackfallStageOneReworkV2Loaded)return;
   window.__stackfallStageOneReworkV2Loaded=true;
@@ -86,10 +86,10 @@
     return f;
   }
   function drawConnector(angle,worldAlong,fromOffset,toOffset,alpha=.55){
-    const c=Math.cos(angle),s=Math.sin(angle),wx=player.x||0,wy=player.y||0,along=wx*c+wy*s;
-    const u=worldAlong-along;
-    const p1={x:vw*.5+u*c-fromOffset*s,y:vh*.5+u*s+fromOffset*c};
-    const p2={x:vw*.5+u*c-toOffset*s,y:vh*.5+u*s+toOffset*c};
+    const c=Math.cos(angle),s=Math.sin(angle),wx=player.x||0,wy=player.y||0,along=wx*c+wy*s,across=-wx*s+wy*c;
+    const u=worldAlong-along,v1=fromOffset-across,v2=toOffset-across;
+    const p1={x:vw*.5+u*c-v1*s,y:vh*.5+u*s+v1*c};
+    const p2={x:vw*.5+u*c-v2*s,y:vh*.5+u*s+v2*c};
     if((p1.x<-300&&p2.x<-300)||(p1.x>vw+300&&p2.x>vw+300)||(p1.y<-300&&p2.y<-300)||(p1.y>vh+300&&p2.y>vh+300))return;
     line(p1.x,p1.y,p2.x,p2.y,10,'#0b1114',alpha);
     line(p1.x,p1.y,p2.x,p2.y,2,'#657476',alpha*.72,[16,13]);
@@ -130,13 +130,6 @@
       if(typeof frontierSprite==='function'){S1.spriteBudget++;frontierSprite(hash(gx,gy,99)>.82?'gate':'girder',-210,-28,420,56);}
       ctx.restore();debrisDrawn++;
     }
-    // Final checkpoint is suggested in the distance; it never follows the player as a near-field prop.
-    if(!state.stageRun?.bossSpawned&&!state.stageRun?.bossIntroPending){
-      const approach=f.gateApproach||0,w=Math.min(900,vw*.68)*(1+approach*.08);
-      ctx.save();ctx.globalAlpha=.06+.12*approach;
-      if(typeof frontierSprite==='function'){S1.spriteBudget++;frontierSprite('gate',vw*.5-w*.5,vh*.09,w,w*.20);}
-      ctx.restore();
-    }
     if(started){
       const ms=performance.now()-started;S1.lastWorldDrawMs=ms;S1.maxWorldDrawMs=Math.max(S1.maxWorldDrawMs,ms);S1.worldDrawSamples++;
     }
@@ -145,7 +138,7 @@
     const a=arena01();if(!a)return;
     const p=typeof worldToScreen==='function'?worldToScreen(a.x,a.y):{x:vw*.5,y:vh*.5};
     const phase=a.phase||1,expand=phase>=2?ease(((state.time||0)-(a.phaseOpenedAt||0))/1.1):0,hw=a.halfW*(1+.12*expand),hh=a.halfH;
-    const boss=boss01(),v=boss?.stageOneV2||{},safe=Number.isInteger(v.safeLane)?v.safeLane:null,lanes=[-.48,0,.48];
+    const boss=boss01(),v=boss?.stageOneV2||{},safe=Number.isInteger(v.safeLane)&&Number(v.safeLaneUntil||0)>now()?v.safeLane:null,lanes=[-.48,0,.48];
     ctx.save();ctx.translate(p.x,p.y);
     // Open bay: lane hints carry the arena, not a heavy rectangular cage.
     for(let i=0;i<lanes.length;i++){
@@ -191,7 +184,7 @@
     const t=now();
     if((e.stageRamUntil||0)>t){
       const dur=Math.max(.1,(e.stageRamUntil-e.stageRamStart)),q=clamp01((t-e.stageRamStart)/dur),speed=(phase>=2?720:640)*Math.sin(Math.PI*q);
-      setMotion(e,Math.cos(e.stageRamAngle)*speed,Math.sin(e.stageRamAngle)*speed);e.stageBodyAngle=e.stageRamAngle-Math.PI/2;return;
+      e.stageMotionX=Math.cos(e.stageRamAngle)*speed;e.stageMotionY=Math.sin(e.stageRamAngle)*speed;e.stageBodyAngle=e.stageRamAngle-Math.PI/2;return;
     }
     if((e.stageRamWindupUntil||0)>t){
       const q=1-clamp01((t-(e.stageActionAt||t))/.9);setMotion(e,-Math.cos(e.stageRamAngle)*34*q,-Math.sin(e.stageRamAngle)*34*q);
@@ -210,9 +203,9 @@
   function laneClosure(e,phase,cycle){
     const a=arena01(),v=e.stageOneV2,lanes=[-.48,0,.48],playerLane=Math.abs(player.y-(a.y+lanes[0]*a.halfH))<Math.abs(player.y-a.y)?0:Math.abs(player.y-(a.y+lanes[2]*a.halfH))<Math.abs(player.y-a.y)?2:1;
     // Do not always spare the player's current lane: first teach, then force anticipation.
-    const safe=phase===1?(cycle%3):(playerLane+(cycle%2?1:2))%3;v.safeLane=safe;e.stageAction='bulkhead';e.stageActionAt=now();e.attackLockUntil=now()+2.8;
+    const safe=phase===1?(cycle%3):(playerLane+(cycle%2?1:2))%3;v.safeLane=safe;v.safeLaneUntil=now()+2.45;e.stageAction='bulkhead';e.stageActionAt=now();e.attackLockUntil=now()+2.8;
     for(let i=0;i<3;i++)if(i!==safe){
-      const y=a.y+lanes[i]*a.halfH,fromSide=((cycle+i)&1)?1:-1,hw=a.halfW*.78;
+      const y=a.y+lanes[i]*a.halfH,fromSide=((cycle+i)&1)?1:-1,hw=a.halfW*.94;
       addPhysical({kind:'bulkhead',ownerId:e.id,fromX:a.x+fromSide*(a.halfW+hw+90),fromY:y,toX:a.x,toY:y,x:a.x+fromSide*(a.halfW+hw+90),y,hw,hh:25,angle:0,a:0,warn:1.05+(i*.08),travel:.44,hold:.82,damage:e.damage*.30});
     }
     audio?.stageAttack?.('stage-01','shutter-warn');
@@ -238,7 +231,7 @@
   }
   function switchyardReroute(e,phase,cycle){
     const a=arena01(),v=e.stageOneV2,side=cycle%2?1:-1,pivotX=a.x-side*a.halfW*.16,pivotY=a.y+(cycle%3-1)*a.halfH*.18,len=Math.min(300,a.halfW*.92);
-    e.stageAction='girder';e.stageActionAt=now();e.attackLockUntil=now()+2.75;v.safeLane=side>0?0:2;v.anchor=side>0?0:2;
+    e.stageAction='girder';e.stageActionAt=now();e.attackLockUntil=now()+2.75;v.safeLane=side>0?0:2;v.safeLaneUntil=now()+2.35;v.anchor=side>0?0:2;
     const base=side>0?-.88:Math.PI+.88;
     for(let i=0;i<2;i++)addPhysical({kind:'girder',ownerId:e.id,pivotX,pivotY:pivotY+(i?86:-86),length:len,x:pivotX+Math.cos(base)*len*.5,y:pivotY+(i?86:-86)+Math.sin(base)*len*.5,hw:len*.5,hh:18,angle:base,a:base,sweep:side*(phase>=2?1.18:.92)*(i?1:-1),warn:.92+i*.10,travel:.68,hold:.32,damage:e.damage*.36});
     audio?.stageAttack?.('stage-01','girder-warn');
@@ -247,13 +240,8 @@
     const a=arena01(),v=e.stageOneV2,px=player.x,py=player.y,dx=px-e.x,dy=py-e.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d,max=phase>=2?Math.min(640,a.halfW*1.22):Math.min(540,a.halfW*1.05);
     const x2=Math.max(a.x-a.halfW+80,Math.min(a.x+a.halfW-80,e.x+ux*max)),y2=Math.max(a.y-a.halfH+72,Math.min(a.y+a.halfH-72,e.y+uy*max));
     e.stageAction='ram';e.stageActionAt=now();e.stageRamAngle=Math.atan2(y2-e.y,x2-e.x);e.stageRamWindupUntil=now()+1.18;e.contactSafeUntil=now()+1.18;e.attackLockUntil=now()+2.55;
-    v.ram={x1:e.x,y1:e.y,x2,y2,warnUntil:now()+1.18};v.safeLane=null;
-    audio?.stageAttack?.('stage-01','ram-charge');
-    const token=++v.token;
-    setTimeout(()=>{
-      if(e.dead||e.eventKind!=='stage-01'||e.stageOneV2?.token!==token)return;
-      e.stageRamWindupUntil=0;e.stageRamStart=now();e.stageRamUntil=now()+(phase>=2?.64:.72);e.contactSafeUntil=now();v.ram.warnUntil=0;audio?.stageAttack?.('stage-01','ram-release');
-    },1180);
+    v.ram={x1:e.x,y1:e.y,x2,y2,warnUntil:now()+1.18,releaseAt:now()+1.18,released:false,phase};v.safeLane=null;
+    ++v.token;audio?.stageAttack?.('stage-01','ram-charge');
   }
   function attack01(e,phase){
     const v=e.stageOneV2||(e.stageOneV2={anchor:1,attackIndex:0,nextAttackAt:now()+1.2,token:0});
@@ -271,6 +259,9 @@
     const a=arena01();if(!a)return;
     const v=e.stageOneV2||(e.stageOneV2={anchor:1,attackIndex:0,nextAttackAt:now()+1.35,token:0,safeLane:null});
     const phase=phase01(e);
+    if(v.ram&&!v.ram.released&&now()>=v.ram.releaseAt){
+      v.ram.released=true;v.ram.warnUntil=0;e.stageRamWindupUntil=0;e.stageRamStart=now();e.stageRamUntil=now()+(v.ram.phase>=2?.64:.72);e.contactSafeUntil=now();audio?.stageAttack?.('stage-01','ram-release');
+    }
     // Keep the actual body in the authored bay; no rubber-band player tracking.
     move01(e,dt,phase);
     if((e.stageRamUntil||0)&&now()>=e.stageRamUntil){
