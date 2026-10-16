@@ -44,6 +44,7 @@ function galleryExpression(kind,cfg){
     GAME_SETTINGS.audio.master=false;
     state.runSelection={mode:'endless',stageId:null};
     resetGame();
+    state.mode='playing';
     window.stackfallDevInvincible=true;
     state.xp=0;state.xpNeed=1e30;state.spawnTimer=1e9;state.encounterTimer=1e9;
     state.weaponSlots=[];state.weaponStacks={};state.awakenedWeapons={};player.coreCd=1e9;player.invuln=1e9;
@@ -53,7 +54,7 @@ function galleryExpression(kind,cfg){
     const overlay=document.createElement('div');overlay.id='stackfallBossGalleryOverlay';overlay.style.cssText='position:fixed;inset:0;z-index:900;pointer-events:none;font-family:IBM Plex Sans KR,sans-serif;color:#eef7ff;text-shadow:0 2px 8px #000,0 0 14px #000';document.body.appendChild(overlay);
     const title=document.createElement('div');title.textContent=${JSON.stringify(cfg.title)};title.style.cssText='position:absolute;left:0;right:0;top:24px;text-align:center;font-size:29px;font-weight:900;letter-spacing:.08em';overlay.appendChild(title);
     const forms=${JSON.stringify(cfg.forms)},cols=${cfg.cols},rows=Math.ceil(forms.length/${cfg.cols});
-    const xPad=${kind==='boss'?235:kind==='mini'?300:330},yTop=${kind==='apex'?285:285},yBottom=${kind==='apex'?285:760};
+    const xPad=${kind==='boss'?235:kind==='mini'?300:330},yTop=${kind==='apex'?360:285},yBottom=${kind==='apex'?360:760};
     const xs=Array.from({length:cols},(_,i)=>cols===1?960:xPad+i*((1920-xPad*2)/(cols-1)));
     const ys=Array.from({length:rows},(_,i)=>rows===1?yTop:yTop+i*((yBottom-yTop)/(rows-1)));
     const spawned=[];
@@ -62,10 +63,12 @@ function galleryExpression(kind,cfg){
       const col=index%cols,row=Math.floor(index/cols),sx=xs[col],sy=ys[row];
       e.x=player.x+(sx-vw/2);e.y=player.y+(sy-vh/2);e.speed=0;e.damage=0;e.hp=e.maxHp=Math.max(e.maxHp||1,1e30);e.r*=${cfg.scale};e.skillCd=e.burstCd=e.pulseCd=e.signatureCd=e.apexVariantCd=e.apexSetpieceCd=1e9;e.attackLockUntil=1e12;e.contactSafeUntil=1e12;e.dead=false;e.hit=0;
       spawned.push({form,name:bossDisplayName(e),sx,sy,r:e.r});
-      const label=document.createElement('div');label.textContent=bossDisplayName(e);label.style.cssText='position:absolute;transform:translate(-50%,0);text-align:center;font-size:18px;font-weight:900;white-space:nowrap;color:#f4f8ff;background:rgba(3,7,19,.64);border:1px solid rgba(170,205,255,.20);border-radius:10px;padding:5px 10px;backdrop-filter:blur(4px)';label.style.left=sx+'px';label.style.top=(sy+Math.max(58,e.r*1.25))+'px';overlay.appendChild(label);
+      const label=document.createElement('div');label.textContent=bossDisplayName(e);label.style.cssText='position:absolute;transform:translate(-50%,0);text-align:center;font-size:18px;font-weight:900;white-space:nowrap;color:#f4f8ff;background:rgba(3,7,19,.64);border:1px solid rgba(170,205,255,.20);border-radius:10px;padding:5px 10px;backdrop-filter:blur(4px)';label.style.left=sx+'px';label.style.top=(sy+Math.max(70,e.r*1.42))+'px';overlay.appendChild(label);
     });
     const dev=document.getElementById('stackfallDevPanel');if(dev)dev.classList.add('hidden');const toggle=document.getElementById('stackfallDevToggle');if(toggle)toggle.style.display='none';
-    for(const id of ['pauseOverlay','levelup','gameover','bossReward'])document.getElementById(id)?.classList.add('hidden');
+    for(const id of ['choiceScreen','pauseScreen','gameOverScreen','bossRewardScreen','settingsScreen','stageCompleteScreen','sortiePrepScreen','galaxyMapScreen','menu'])document.getElementById(id)?.classList.add('hidden');
+    document.getElementById('hud')?.classList.add('hidden');
+    document.getElementById('bossNotice')?.classList.add('hidden');
     return spawned;
   })()`;
 }
@@ -74,7 +77,6 @@ let cdp=null;
 try{
   const target=await endpoint(`/json/new?${encodeURIComponent('about:blank')}`,{method:'PUT'});cdp=new Cdp(target.webSocketDebuggerUrl);await cdp.ready;
   await Promise.all([cdp.send('Page.enable'),cdp.send('Runtime.enable')]);
-  const loaded=new Promise(ok=>{const h=e=>{if(e.method==='Page.loadEventFired')ok();};});
   await cdp.send('Page.navigate',{url:'https://stackfall.pages.dev/?dev=1&boss-gallery=1'});
   await sleep(5500);
   await waitFor(cdp,"typeof window.stackfallSpawnEliteForm==='function' && typeof resetGame==='function' && typeof bossDisplayName==='function'");
