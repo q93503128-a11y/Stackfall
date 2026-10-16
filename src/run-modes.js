@@ -49,13 +49,26 @@
       metadata.dataset.worldRebootMetadata='true';
       document.head.appendChild(metadata);
     }
-    // Stage 1 vertical-slice rework is isolated in its own late-binding script.
-    // Load after legacy page-load installers so these hooks remain authoritative.
+    // Stage 1 remains layered: v2 owns combat/environment, v3 owns motion-art presentation.
+    // Both load after legacy page-load installers so these hooks remain authoritative.
+    const loadStageOneV3=()=>{
+      if(document.querySelector('script[data-stage01-rework-v3]'))return;
+      const script=document.createElement('script');
+      script.src='src/stage01-rework-v3.js';
+      script.dataset.stage01ReworkV3='true';
+      document.head.appendChild(script);
+    };
     const loadStageOneV2=()=>{
-      if(document.querySelector('script[data-stage01-rework-v2]'))return;
+      const existing=document.querySelector('script[data-stage01-rework-v2]');
+      if(existing){
+        if(window.__stackfallStageOneReworkV2Loaded)setTimeout(loadStageOneV3,0);
+        else existing.addEventListener('load',()=>setTimeout(loadStageOneV3,0),{once:true});
+        return;
+      }
       const script=document.createElement('script');
       script.src='src/stage01-rework-v2.js';
       script.dataset.stage01ReworkV2='true';
+      script.addEventListener('load',()=>setTimeout(loadStageOneV3,0),{once:true});
       document.head.appendChild(script);
     };
     if(document.readyState==='complete')setTimeout(loadStageOneV2,0);
