@@ -1,6 +1,6 @@
 (()=>{
   const MODES=Object.freeze({ENDLESS:'endless',STAGE:'stage'});
-  const ACTIVE_STAGE_RUNTIMES=Object.freeze([]);
+  const ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01']);
   const ENDLESS=Object.freeze({
     mode:MODES.ENDLESS,
     finite:false,
@@ -53,8 +53,12 @@
     window.stackfallStageStatus=gatedStatus;
     window.renderStackfallGalaxyMap?.();
   };
+  const loadStageOneRemodel=()=>{
+    if(typeof document==='undefined'||document.querySelector('script[data-stackfall-stage01-remodel]'))return;
+    const script=document.createElement('script');script.src='src/stage01-remodel.js';script.dataset.stackfallStage01Remodel='true';document.head.appendChild(script);
+  };
   if(typeof document!=='undefined'){
-    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installStageStatusGate,{once:true});
-    else installStageStatusGate();
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installStageStatusGate();loadStageOneRemodel();},{once:true});
+    else{installStageStatusGate();loadStageOneRemodel();}
   }
 })();

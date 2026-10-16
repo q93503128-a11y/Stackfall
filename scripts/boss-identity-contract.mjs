@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const exists=p=>fs.existsSync(p);
-const catalog=read('src/boss-catalog.js'),patterns=read('src/boss-patterns.js'),renderers=read('src/elite-renderers.js'),bosses=read('src/bosses.js'),stage=read('src/stage-runtime.js'),modes=read('src/run-modes.js'),index=read('index.html');
+const catalog=read('src/boss-catalog.js'),patterns=read('src/boss-patterns.js'),renderers=read('src/elite-renderers.js'),bosses=read('src/bosses.js'),stage=read('src/stage-runtime.js'),remodel=read('src/stage01-remodel.js'),modes=read('src/run-modes.js'),index=read('index.html');
 const regular=['eclipse','seraph','pulsar','leviathan','archivist','heliarch','tempest','nullengine'];
 const mini=['knight','warden','executioner','colossus','harvester','mirror'];
 const voids=['maw','oracle','weaver','grave','paradox'];
@@ -21,9 +21,10 @@ const checks=[
  ['Apex forms have separate signature attacks',['chronophageSignature','starforgeSignature','constellationSignature'].every(name=>patterns.includes('function '+name))],
  ['Apex forms have separate set-piece behavior',['startChronoPursuit','startForgeTidalCore','startConstellationSweep'].every(name=>bosses.includes('function '+name)&&bosses.includes(name+'(e,phase,d)'))],
  ['Apex forms have separate silhouette renderers',['drawChronophageApex','drawStarforgeApex','drawLastConstellationApex'].every(name=>renderers.includes('function '+name))],
- ['discarded Stage 1 implementation and metadata are absent',removedStageOne.every(path=>!exists(path))],
- ['all authored Stage runtimes are disabled for the redesign reset',modes.includes('ACTIVE_STAGE_RUNTIMES=Object.freeze([])')&&modes.includes("stage&&!hasStageRuntime(stage.id)?'planned':baseStatus(stage)")],
- ['run-mode loader has no discarded Stage 1 hooks',!modes.includes('stage01-')&&!modes.includes('stage-world-reboot-metadata')],
+ ['discarded Stage 1 implementation and metadata stay absent',removedStageOne.every(path=>!exists(path))],
+ ['Stage 1 alone is active after the redesign reset',modes.includes("ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01'])")&&modes.includes("stage&&!hasStageRuntime(stage.id)?'planned':baseStatus(stage)")],
+ ['new Stage 1 remodel reuses canonical boss language instead of the discarded closure design',remodel.includes("form:'eclipse'")&&remodel.includes("enemy.eliteForm='eclipse'")&&remodel.includes('drawEliteShape(enemy)')&&!remodel.includes("form:'closure'")&&!remodel.includes('stage01-closure')],
+ ['run-mode loader has no discarded Stage 1 hooks',!modes.includes('stage01-closure')&&!modes.includes('stage-world-reboot-metadata')],
  ['rejected Stage 2-18 runtime adapters stay removed',retiredStageAdapters.every(path=>!exists(path))],
  ['rejected layered Stage 1 production files stay removed',retiredStageOneLayers.every(path=>!exists(path))],
  ['HTML no longer loads rejected stage production layers',retiredStageAdapters.concat(retiredStageOneLayers,removedStageOne).every(path=>!index.includes(path))],
