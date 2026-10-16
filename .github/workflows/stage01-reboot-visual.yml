@@ -35,6 +35,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends fonts-noto-cjk
           fc-cache -f
+          echo '0.0.0.0 fonts.googleapis.com fonts.gstatic.com' | sudo tee -a /etc/hosts
       - name: Capture Stage 1 final frames
         env:
           STACKFALL_CHROME: /usr/bin/google-chrome
