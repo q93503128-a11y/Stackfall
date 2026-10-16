@@ -58,6 +58,12 @@
     else installStageStatusGate();
   }
 
+  // Stage 1's base realm renderer used to borrow sprites from the rejected
+  // production-art layer. Keep the base renderer callable while that art is
+  // intentionally absent; the next approved Stage 1 art pass will own visuals.
+  if(!window.FRONTIER_ART)window.FRONTIER_ART=Object.freeze({});
+  if(typeof window.frontierSprite!=='function')window.frontierSprite=()=>false;
+
   if(typeof document!=='undefined'&&!document.querySelector('script[data-world-reboot-metadata]')){
     const metadata=document.createElement('script');
     metadata.src='src/stage-world-reboot-metadata.js';
