@@ -5,6 +5,7 @@ const checks=[
  ['stage catalog loads after core and before run modes',index.indexOf('src/core.js')<index.indexOf('src/stage-catalog.js')&&index.indexOf('src/stage-catalog.js')<index.indexOf('src/run-modes.js')],
  ['meta progression loads after runtime weapon definitions',index.indexOf('src/runtime-config.js')<index.indexOf('src/meta-progression.js')&&index.indexOf('src/weapons.js')<index.indexOf('src/meta-progression.js')],
  ['default run selection falls back to Endless',modes.includes("return{mode:MODES.ENDLESS,stageId:null}")&&modes.includes('state.runSelection=normalize')],
+ ['only approved Stage 1 runtime can enter Stage mode during the rebuild',modes.includes("ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01'])")&&modes.includes('stage&&hasStageRuntime(stage.id)')&&modes.includes("stage&&!hasStageRuntime(stage.id)?'planned':baseStatus(stage)")],
  ['main menu Endless choice opens preparation instead of starting immediately',render.includes("openStackfallSortiePrep?.('endless'")&&!render.includes("ui.start.onclick=()=>{window.stackfallSetRunSelection?.('endless');audio.init();resetGame();}")],
  ['sortie launch is the shared point that starts gameplay',sortie.includes('audio.init();resetGame()')&&sortie.includes('stackfallSetRunSelection?.(mode,stageId)')],
  ['Endless remains non-finite with random events and all enemy families',modes.includes('finite:false')&&modes.includes('randomWorldEvents:true')&&modes.includes('allEnemyFamilies:true')],
