@@ -1,0 +1,15 @@
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+const root=resolve(process.cwd());
+const read=p=>readFileSync(resolve(root,p),'utf8');
+const fail=m=>{throw new Error(`[stage1-infrastructure-v6] ${m}`);};
+const has=(s,t,l)=>{if(!s.includes(t))fail(`${l}: missing ${t}`);};
+const v6=read('src/stage01-rework-v6.js'),modes=read('src/run-modes.js'),build=read('scripts/build-fingerprint.mjs'),browser=read('scripts/stage1-v3-browser.mjs');
+for(const t of ['lockline-v6-blockade-gantry','drawBlockadeGantry','drawHeader','drawTower','drawCradle','drawFloorAnchors','attachment01','stackfallStageOneInfrastructureV6'])has(v6,t,'v6 presentation');
+for(const t of ["phase==='ram-ignite'","phase==='ram-commit'","phase==='ram-recover'"])has(v6,t,'gantry detach states');
+has(modes,'src/stage01-rework-v6.js','runtime loader');
+has(modes,'data-stage01-rework-v6','runtime loader');
+has(browser,'stackfallStageOneInfrastructureV6','browser gantry audit');
+has(build,'src/stage01-rework-v6.js','build fingerprint');
+has(build,'stage1-infrastructure-v6-contract.mjs','contract registry');
+console.log('stage1 infrastructure v6 contract: PASS');
