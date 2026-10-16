@@ -1,10 +1,13 @@
-name: Stage 1 reboot visual audit
+name: Stage 1 visual audit
 
 on:
   push:
     branches: [main]
     paths:
       - 'src/stage01-visual-reboot.js'
+      - 'src/stage01-complete.js'
+      - 'src/stage01-closure-art.js'
+      - 'src/stage01-audio-polish.js'
       - 'src/stage-world-reboot-metadata.js'
       - 'src/run-modes.js'
       - 'src/stage-runtime.js'
@@ -27,7 +30,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Capture Stage 1 reboot frames
+      - name: Install Korean capture fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          fc-cache -f
+      - name: Capture Stage 1 final frames
         env:
           STACKFALL_CHROME: /usr/bin/google-chrome
         run: node scripts/stage01-reboot-visual.mjs
@@ -35,6 +43,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage01-reboot-visual
+          name: stage01-final-visual
           path: test-results/stage01-reboot
           if-no-files-found: error
