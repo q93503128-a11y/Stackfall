@@ -55,6 +55,48 @@
     ctx.restore();
   }
 
+  function softenShockwaves(from,{radius=180,life=.44,width=3}={}){
+    const list=state.entities.shockwaves||[];
+    for(let i=Math.max(0,from);i<list.length;i++){
+      const wave=list[i];if(!wave)continue;
+      wave.maxR=Math.min(Number(wave.maxR)||radius,radius);wave.life=Math.min(Number(wave.life)||life,life);wave.max=Math.min(Number(wave.max)||life,life);wave.width=Math.min(Number(wave.width)||width,width);
+    }
+  }
+
+  function drawOrbitWarden(enemy){
+    const r=64,phase=Math.max(1,Number(enemy.stagePhase)||1),t=(state.time||0)*(enemy.stage01OrbitDir||1),hit=Number(enemy.hit)||0;
+    ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+
+    // Preserve the original Stackfall eclipse language: a compact dark-purple
+    // core, clean magenta orbital loops, then only a few cyan route satellites.
+    ctx.save();ctx.rotate(t*.18);
+    ctx.strokeStyle=hit?'rgba(255,255,255,.95)':'rgba(220,82,214,.78)';ctx.lineWidth=2.2;
+    ctx.beginPath();ctx.ellipse(0,0,r*1.62,r*.55,.16,0,TAU);ctx.stroke();
+    ctx.rotate(-.88);ctx.globalAlpha=.72;ctx.beginPath();ctx.ellipse(0,0,r*1.43,r*.46,-.08,0,TAU);ctx.stroke();ctx.restore();
+
+    if(phase>=2){
+      ctx.save();ctx.rotate(-t*.10+.34);ctx.strokeStyle=phase===3?'rgba(105,224,242,.62)':'rgba(175,137,244,.52)';ctx.lineWidth=1.35;ctx.setLineDash([9,11]);ctx.beginPath();ctx.arc(0,0,r*(phase===3?1.90:1.78),-.22,Math.PI*1.47);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+    }
+
+    const satelliteCount=phase+1,orbitR=r*(phase===3?1.82:1.72);
+    for(let i=0;i<satelliteCount;i++){
+      const a=t*(.52+phase*.04)+i/satelliteCount*TAU,x=Math.cos(a)*orbitR,y=Math.sin(a)*orbitR*.72;
+      ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/4);ctx.fillStyle=i%2?'#aa8ce9':'#79dce9';ctx.globalAlpha=.88;ctx.fillRect(-4,-4,8,8);ctx.globalAlpha=.34;ctx.strokeStyle='#eafcff';ctx.lineWidth=1;ctx.strokeRect(-6,-6,12,12);ctx.restore();
+    }
+
+    if(phase===3){
+      ctx.save();ctx.rotate(t*.13);ctx.strokeStyle='rgba(111,224,239,.42)';ctx.lineWidth=1.4;
+      for(let i=0;i<4;i++){const a=i*Math.PI/2+.18;ctx.beginPath();ctx.arc(0,0,r*2.02,a,a+.34);ctx.stroke();}
+      ctx.restore();
+    }
+
+    const glow=ctx.createRadialGradient(-r*.18,-r*.22,r*.06,0,0,r*1.22);glow.addColorStop(0,hit?'rgba(255,255,255,.38)':'rgba(205,111,255,.30)');glow.addColorStop(.58,'rgba(120,47,183,.11)');glow.addColorStop(1,'rgba(80,25,120,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(0,0,r*1.22,0,TAU);ctx.fill();
+    const sphere=ctx.createRadialGradient(-r*.28,-r*.30,r*.08,-r*.02,-r*.02,r);sphere.addColorStop(0,hit?'#ffffff':'#d180ff');sphere.addColorStop(.24,hit?'#eadfff':'#a64de3');sphere.addColorStop(.67,'#5d178a');sphere.addColorStop(1,'#160d25');ctx.fillStyle=sphere;ctx.beginPath();ctx.arc(0,0,r*.72,0,TAU);ctx.fill();
+    ctx.strokeStyle=hit?'#ffffff':'rgba(226,133,255,.78)';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(0,0,r*.72,0,TAU);ctx.stroke();
+    ctx.fillStyle='rgba(255,236,255,.70)';ctx.beginPath();ctx.arc(-r*.18,-r*.20,r*.07,0,TAU);ctx.fill();
+    ctx.restore();
+  }
+
   const baseConstellationField=drawStageConstellationField;
   drawStageConstellationField=function polishedStageConstellationField(theme){baseConstellationField(theme);if(theme===STAGE_ID)drawRouteSweepWarning();};
 
@@ -63,14 +105,17 @@
     const baseProduction=runtime.production;
     const production=Object.freeze({...baseProduction,
       initialize(enemy){
-        baseProduction?.initialize?.(enemy);enemy.color='#9a55d6';enemy.r=78;enemy.visualR=78;enemy.hitRadius=80;enemy.contactRadius=50;
+        const start=state.entities.shockwaves?.length||0;baseProduction?.initialize?.(enemy);softenShockwaves(start,{radius:165,life:.42,width:3});
+        enemy.color='#9a55d6';enemy.r=64;enemy.visualR=64;enemy.hitRadius=68;enemy.contactRadius=42;
       },
-      drawBody(enemy){
-        const prior=enemy.color;enemy.color=enemy.hit?'#ffffff':'#9a55d6';ctx.save();ctx.scale(.94,.94);baseProduction?.drawBody?.(enemy);ctx.restore();enemy.color=prior;
+      combat(enemy,dt){
+        const before=enemy.stagePhase,start=state.entities.shockwaves?.length||0;baseProduction?.combat?.(enemy,dt);
+        if(enemy.stagePhase!==before)softenShockwaves(start,{radius:185,life:.40,width:2.5});
       },
+      drawBody(enemy){drawOrbitWarden(enemy);},
       defeat(enemy){enemy.color='#9a55d6';baseProduction?.defeat?.(enemy);}
     });
-    const bossProfile=Object.freeze({...runtime.bossProfile,r:78,hitRadius:80,contactRadius:50,color:'#9a55d6',spawnShockwave:176});
+    const bossProfile=Object.freeze({...runtime.bossProfile,r:64,hitRadius:68,contactRadius:42,color:'#9a55d6',spawnShockwave:150});
     window.stackfallStageRuntimeRegistry.set(STAGE_ID,Object.freeze({...runtime,hazard:polishedRouteSweep,bossProfile,production}));
   }
 })();
