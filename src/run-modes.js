@@ -84,4 +84,14 @@
     metadata.dataset.worldRebootMetadata='true';
     document.head.appendChild(metadata);
   }
+
+  // Load the Stage 1 reboot only after all synchronous runtime/render scripts exist.
+  const loadStageOneReboot=()=>{
+    if(typeof document==='undefined'||document.querySelector('script[data-stage01-visual-reboot]'))return;
+    const script=document.createElement('script');script.src='src/stage01-visual-reboot.js';script.dataset.stage01VisualReboot='true';document.body.appendChild(script);
+  };
+  if(typeof window!=='undefined'){
+    if(document.readyState==='complete')loadStageOneReboot();
+    else window.addEventListener('load',loadStageOneReboot,{once:true});
+  }
 })();
