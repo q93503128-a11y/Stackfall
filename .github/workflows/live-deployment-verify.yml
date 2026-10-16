@@ -54,9 +54,43 @@ jobs:
           done
           echo "ownership file did not match repository source" >&2
           exit 1
+      - name: Prepare CI Chrome wrapper
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/stackfall-chrome" <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          profile=''
+          args=()
+          for arg in "$@"; do
+            case "$arg" in
+              --user-data-dir=*)
+                profile="${arg#--user-data-dir=}"
+                args+=("$arg")
+                ;;
+              --remote-debugging-port=0)
+                args+=("--remote-debugging-port=9223" "--remote-debugging-address=127.0.0.1")
+                ;;
+              *) args+=("$arg") ;;
+            esac
+          done
+          args+=("--no-sandbox" "--disable-dev-shm-usage")
+          if [[ -n "$profile" ]]; then
+            mkdir -p "$profile"
+            (
+              for _ in $(seq 1 100); do
+                printf '9223\n' > "$profile/DevToolsActivePort" 2>/dev/null || true
+                sleep 0.1
+              done
+            ) &
+          fi
+          exec /usr/bin/google-chrome "${args[@]}"
+          EOF
+          chmod +x "$RUNNER_TEMP/stackfall-chrome"
       - name: Live browser smoke
         env:
-          STACKFALL_CHROME: /usr/bin/google-chrome
+          STACKFALL_CHROME: ${{ runner.temp }}/stackfall-chrome
         run: node scripts/run-live-smoke.mjs --url=https://stackfall.pages.dev --result=test-results/live-smoke.json
       - name: Publish live smoke status
         if: always()
