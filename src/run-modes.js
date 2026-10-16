@@ -53,9 +53,19 @@
     window.stackfallStageStatus=gatedStatus;
     window.renderStackfallGalaxyMap?.();
   };
+  const loadStageOneWorld=()=>{
+    if(typeof document==='undefined'||document.querySelector('script[data-stackfall-stage01-world]'))return;
+    const world=document.createElement('script');world.src='src/stage01-world.js';world.dataset.stackfallStage01World='true';document.head.appendChild(world);
+  };
   const loadStageOnePolish=()=>{
-    if(typeof document==='undefined'||document.querySelector('script[data-stackfall-stage01-polish]'))return;
-    const polish=document.createElement('script');polish.src='src/stage01-polish.js';polish.dataset.stackfallStage01Polish='true';document.head.appendChild(polish);
+    if(typeof document==='undefined')return;
+    const existing=document.querySelector('script[data-stackfall-stage01-polish]');
+    if(existing){
+      if(window.stackfallStageRuntimeRegistry?.get('stage-01')?.bossProfile?.r===64)loadStageOneWorld();
+      else existing.addEventListener('load',loadStageOneWorld,{once:true});
+      return;
+    }
+    const polish=document.createElement('script');polish.src='src/stage01-polish.js';polish.dataset.stackfallStage01Polish='true';polish.addEventListener('load',loadStageOneWorld,{once:true});document.head.appendChild(polish);
   };
   const loadStageOneRemodel=()=>{
     if(typeof document==='undefined')return;
