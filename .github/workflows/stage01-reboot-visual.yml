@@ -1,0 +1,40 @@
+name: Stage 1 reboot visual audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/stage01-visual-reboot.js'
+      - 'src/stage-world-reboot-metadata.js'
+      - 'src/run-modes.js'
+      - 'src/stage-runtime.js'
+      - 'src/stage-physical-objects.js'
+      - 'src/elite-renderers.js'
+      - 'src/render*.js'
+      - 'scripts/stage01-reboot-visual.mjs'
+      - '.github/workflows/stage01-reboot-visual.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture Stage 1 reboot frames
+        env:
+          STACKFALL_CHROME: /usr/bin/google-chrome
+        run: node scripts/stage01-reboot-visual.mjs
+      - name: Upload Stage 1 frames
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage01-reboot-visual
+          path: test-results/stage01-reboot
+          if-no-files-found: error
