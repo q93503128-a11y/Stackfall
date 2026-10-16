@@ -20,7 +20,7 @@ async function waitFor(expression,timeout=12000){const at=Date.now();while(Date.
 async function shot(name){await evaluate('draw()');const {data}=await cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});const path=resolve(out,name+'.png');writeFileSync(path,Buffer.from(data,'base64'));return path;}
 async function setViewport(width,height){await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});}
 async function bossState(){return evaluate('window.stackfallStage01BossState?.()||null');}
-async function stepBoss(frames=1){return evaluate(`(()=>{const boss=state.entities.enemies.find(e=>e.kind==='stage-boss'&&e.eventKind==='stage-01'&&!e.dead);if(!boss)return null;for(let i=0;i<${frames};i++){state.time+=1/60;window.updateStageBossSkill(boss,1/60);updatePendingActions(1/60);updateEffects?.(1/60);}draw();return window.stackfallStage01BossState();})()`);}
+async function stepBoss(frames=1){return evaluate(`(()=>{const boss=state.entities.enemies.find(e=>e.kind==='stage-boss'&&e.eventKind==='stage-01'&&!e.dead);if(!boss)return null;for(let i=0;i<${frames};i++){state.time+=1/60;window.updateStageBossSkill(boss,1/60);updatePendingActions(1/60);updateEffects?.(1/60);}return window.stackfallStage01BossState();})()`);}
 async function reachMotion(motion,max=150){let s=null;for(let i=0;i<max;i++){s=await stepBoss(1);if(s?.motion===motion)return s;}return s;}
 async function forceAttack(type,phase=1){return evaluate(`(()=>{const b=state.entities.enemies.find(e=>e.kind==='stage-boss'&&e.eventKind==='stage-01'&&!e.dead);if(!b)return false;b.stagePhase=${phase};b.stage01Morph=null;b.stage01Action=null;b.stage01Ram=null;b.stage01Cooldown=99;b.x=0;b.y=-270;player.x=0;player.y=0;return stackfallStage01ForceAttack('${type}');})()`);}
 const report={ok:false,failures:[],frames:[],desktop:{},mobile:{}};const check=(ok,message)=>{if(!ok)report.failures.push(message);};
@@ -57,5 +57,5 @@ try{
   const mobileRuntime=await evaluate('stackfallRuntimeDiagnostics()');check(mobileRuntime?.errorCount===0,'mobile capture produced runtime errors');report.mobile.runtime=mobileRuntime;
 
   const diag=await evaluate('stackfallStage01CompleteDiagnostics()');check(diag?.attacks?.join(',')==='ram,shutter,orbit,breakline','authored attack roster mismatch');check(diag?.phaseRules==='silhouette+movement+pattern','phase 2 contract mismatch');report.desktop.finalDiagnostics=diag;report.ok=report.failures.length===0;
-}catch(error){report.failures.push(error.stack||error.message);report.ok=false;}finally{writeFileSync(resolve(out,'report.json'),JSON.stringify(report,null,2));try{ws.close();}catch{}try{browser.kill('SIGTERM');}catch{}server.close();}
-console.log(JSON.stringify(report,null,2));if(!report.ok)process.exitCode=1;
+}catch(error){report.failures.push(error.stack||error.message);report.ok=false;}finally{writeFileSync(resolve(out,'report.json'),JSON.stringify(report,null,2));try{ws.close();}catch{}try{browser.kill('SIGKILL');browser.unref();}catch{}try{server.closeAllConnections?.();}catch{}server.close();}
+console.log(JSON.stringify(report,null,2));process.exit(report.ok?0:1);
