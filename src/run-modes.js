@@ -65,15 +65,21 @@
     document.head.appendChild(metadata);
   }
 
-  const loadStageOneComplete=()=>{
-    if(typeof document==='undefined'||document.querySelector('script[data-stage01-complete]'))return;
-    const complete=document.createElement('script');complete.src='src/stage01-complete.js';complete.dataset.stage01Complete='true';document.body.appendChild(complete);
+  const loadStageOneArt=()=>{
+    if(typeof document==='undefined'||window.__stackfallStage01ClosureArtLoaded||document.querySelector('script[data-stage01-closure-art]'))return;
+    const art=document.createElement('script');art.src='src/stage01-closure-art.js';art.dataset.stage01ClosureArt='true';document.body.appendChild(art);
   };
-  // Load the compatibility reboot first, then let the complete Stage 1 pass own the final visuals/combat.
+  const loadStageOneComplete=()=>{
+    if(typeof document==='undefined')return;
+    const existing=document.querySelector('script[data-stage01-complete]');
+    if(existing){if(window.__stackfallStage01CompleteLoaded)loadStageOneArt();else existing.addEventListener('load',loadStageOneArt,{once:true});return;}
+    const complete=document.createElement('script');complete.src='src/stage01-complete.js';complete.dataset.stage01Complete='true';complete.addEventListener('load',loadStageOneArt,{once:true});document.body.appendChild(complete);
+  };
+  // The small reboot shim retains compatibility while Stage 1 combat and final art own the live experience.
   const loadStageOneReboot=()=>{
     if(typeof document==='undefined')return;
     const existing=document.querySelector('script[data-stage01-visual-reboot]');
-    if(existing){if(window.__stackfallStage01CompleteLoaded) return; if(existing.dataset.loaded==='true')loadStageOneComplete();else existing.addEventListener('load',loadStageOneComplete,{once:true});return;}
+    if(existing){if(window.__stackfallStage01CompleteLoaded)loadStageOneArt();else if(existing.dataset.loaded==='true')loadStageOneComplete();else existing.addEventListener('load',loadStageOneComplete,{once:true});return;}
     const script=document.createElement('script');script.src='src/stage01-visual-reboot.js';script.dataset.stage01VisualReboot='true';script.addEventListener('load',()=>{script.dataset.loaded='true';loadStageOneComplete();},{once:true});document.body.appendChild(script);
   };
   if(typeof window!=='undefined'){
