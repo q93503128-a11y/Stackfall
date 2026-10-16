@@ -8,11 +8,14 @@ on:
     paths:
       - 'src/stage01-production-art.js'
       - 'src/stage01-rework-v2.js'
+      - 'src/stage01-rework-v3.js'
       - 'src/realm-backgrounds.js'
       - 'src/elite-renderers.js'
       - 'src/stage-runtime.js'
       - 'src/stage-catalog.js'
+      - 'src/run-modes.js'
       - 'scripts/stage1-v2-browser.mjs'
+      - 'scripts/stage1-v3-browser.mjs'
       - 'scripts/build-fingerprint.mjs'
       - '.github/workflows/stage1-visual-audit.yml'
 
@@ -50,16 +53,16 @@ jobs:
         env:
           STACKFALL_PLAYWRIGHT: playwright
         run: |
-          mkdir -p test-results/stage1-v2
+          mkdir -p test-results/stage1-v3
           export STACKFALL_CHROME="$(node -e "const {chromium}=require('playwright');process.stdout.write(chromium.executablePath())")"
           set -o pipefail
-          node scripts/stage1-v2-browser.mjs 2>&1 | tee test-results/stage1-v2/runner.log
+          node scripts/stage1-v3-browser.mjs 2>&1 | tee test-results/stage1-v3/runner.log
 
       - name: Record expected public build fingerprint
         if: always()
         run: |
-          mkdir -p test-results/stage1-v2
-          node --input-type=module -e "import {writeFileSync} from 'node:fs';import {computeBuildFingerprint} from './scripts/build-fingerprint.mjs';writeFileSync('test-results/stage1-v2/expected-build.json',JSON.stringify(computeBuildFingerprint(process.cwd()),null,2));"
+          mkdir -p test-results/stage1-v3
+          node --input-type=module -e "import {writeFileSync} from 'node:fs';import {computeBuildFingerprint} from './scripts/build-fingerprint.mjs';writeFileSync('test-results/stage1-v3/expected-build.json',JSON.stringify(computeBuildFingerprint(process.cwd()),null,2));"
 
       - name: Upload Stage 1 captures
         if: always()
@@ -67,7 +70,7 @@ jobs:
         with:
           name: stage1-visual-audit
           path: |
-            test-results/stage1-v2/**
+            test-results/stage1-v3/**
             /tmp/stackfall-http.log
           if-no-files-found: warn
           retention-days: 7
