@@ -1,4 +1,4 @@
-// Runtime-facing names for the 2026-10-15 stage world reboot.
+// Runtime-facing names for the stage world reboot.
 // Boss ids remain compatibility ids until each stage receives its production rebuild.
 (()=>{
   if(window.__stackfallWorldRebootMetadataApplied)return;
@@ -29,8 +29,8 @@
     'stage-18':{ko:'원점',en:'Origin'}
   };
   const stageOneDescription={
-    ko:'꺼진 항법 비콘 사이로 세 갈래 수송 회랑이 교차한다. 멈춘 줄 알았던 차단 설비가 아직 움직인다.',
-    en:'Three transport corridors cross between dead navigation beacons. The lockline machinery is not as dormant as it looks.'
+    ko:'끊어진 항로의 잔광이 허공에 이어진 첫 경계. 사라진 줄 알았던 폐쇄 신호가 다시 움직이기 시작한다.',
+    en:'The first boundary of a broken route, where its afterglow still hangs in space and a dormant closure signal begins to move again.'
   };
   if(Array.isArray(window.STACKFALL_CONSTELLATIONS)){
     const rows=window.STACKFALL_CONSTELLATIONS.map(row=>Object.freeze({...row,title:Object.freeze({...row.title,...(constellationNames[row.id]||{})})}));
@@ -44,7 +44,7 @@
       const patch={...row,title:Object.freeze({...row.title,...title})};
       if(row.id==='stage-01'){
         patch.description=Object.freeze(stageOneDescription);
-        patch.boss=Object.freeze({...row.boss,name:Object.freeze({ko:'K-03 폐쇄기',en:'Lockframe K-03'})});
+        patch.boss=Object.freeze({...row.boss,name:Object.freeze({ko:'폐쇄체',en:'Closure'} )});
       }
       return Object.freeze(patch);
     });
