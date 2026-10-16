@@ -14,7 +14,9 @@ jobs:
         with:
           node-version: '22'
       - name: Capture final Stage 1 live review
-        run: node scripts/capture-stage01-review.mjs
+        run: |
+          node scripts/capture-stage01-review.mjs
+          node -e "const r=require('./test-results/stage01-review/report.json'); if(r.diagnostics?.errorCount){console.error(JSON.stringify(r.diagnostics,null,2)); process.exit(1)}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
