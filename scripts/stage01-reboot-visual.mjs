@@ -18,7 +18,14 @@ let seq=0;const pending=new Map();ws.addEventListener('message',event=>{const ms
 function cdp(method,params={}){const id=++seq;return new Promise((resolve,reject)=>{pending.set(id,{resolve,reject});ws.send(JSON.stringify({id,method,params}));});}
 async function evaluate(expression){const result=await cdp('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(result.exceptionDetails)throw new Error(result.exceptionDetails.text||'evaluation failed');return result.result?.value;}
 async function waitFor(expression,timeout=10000){const at=Date.now();while(Date.now()-at<timeout){try{if(await evaluate(expression))return true;}catch{}await sleep(100);}throw new Error('waitFor failed: '+expression);}
-async function shot(name){await evaluate('draw()');const {data}=await cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});const path=resolve(out,name+'.png');writeFileSync(path,Buffer.from(data,'base64'));return path;}
+const REVIEW_FRAMES=new Set(['desktop-00-early','desktop-10-brace','desktop-55-dash-mid','desktop-90-phase2','mobile-10-boss']);
+async function emitReviewFrame(name){
+  if(!REVIEW_FRAMES.has(name))return;
+  const metrics=await evaluate('({w:innerWidth,h:innerHeight})'),scale=metrics?.w<600?.45:.30;
+  const {data}=await cdp('Page.captureScreenshot',{format:'jpeg',quality:46,captureBeyondViewport:false,clip:{x:0,y:0,width:metrics.w,height:metrics.h,scale}});
+  console.log(`STACKFALL_REVIEW_B64 ${name} ${data}`);
+}
+async function shot(name){await evaluate('draw()');const {data}=await cdp('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});const path=resolve(out,name+'.png');writeFileSync(path,Buffer.from(data,'base64'));await emitReviewFrame(name);return path;}
 async function setViewport(width,height){await cdp('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<600});}
 async function stepBoss(frames){return evaluate(`(()=>{const boss=state.entities.enemies.find(e=>e.kind==='stage-boss'&&e.eventKind==='stage-01');if(!boss)return null;for(let i=0;i<${frames};i++){state.time+=1/60;window.updateStageBossSkill(boss,1/60);updatePendingActions(1/60);}draw();return{mode:boss.stage01Ram?.mode||'idle',progress:boss.stage01Ram?.progress||0,x:boss.x,y:boss.y,phase:boss.stagePhase};})()`);}
 
@@ -32,7 +39,7 @@ try{
   const bossSetup=await evaluate(`(()=>{state.mode='playing';const preview=stackfallDeveloperTest.jumpStageBoss('stage-01');state.time=preview.bossAt;updateSpawning(1/60);if(state.realmTransition)updateRealmTransition(state.realmTransition.duration);const boss=state.entities.enemies.find(e=>e.kind==='stage-boss'&&e.eventKind==='stage-01');if(!boss)return{error:'boss missing'};boss.stage01Cooldown=0;boss.hp=boss.maxHp;player.x=0;player.y=0;window.updateStageBossSkill(boss,1/60);state.mode='paused';draw();return{mode:boss.stage01Ram?.mode,shapes:window.stackfallStageBodyShapes(boss).length,diag:stackfallStage01RebootDiagnostics()};})()`);
   check(!bossSetup?.error,'boss missing after preview');check(bossSetup?.shapes===3,'new boss collision shapes not installed');check(bossSetup?.mode==='brace','ram did not start in brace');report.frames.push({name:'brace',state:bossSetup,path:await shot('desktop-10-brace')});
 
-  stateLoop: for(const targetMode of['compress','charge','dash','impact','recover']){
+  for(const targetMode of['compress','charge','dash','impact','recover']){
     let state=null;for(let batch=0;batch<90;batch++){state=await stepBoss(1);if(state?.mode===targetMode)break;}check(state?.mode===targetMode,'motion never reached '+targetMode);report.frames.push({name:targetMode,state,path:await shot('desktop-'+String(20+report.frames.length*10).padStart(2,'0')+'-'+targetMode)});
     if(targetMode==='dash'){state=await stepBoss(8);report.frames.push({name:'dash-mid',state,path:await shot('desktop-55-dash-mid')});}
   }
