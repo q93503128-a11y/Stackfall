@@ -1,4 +1,5 @@
 // Runtime-facing names for the stage world reboot.
+// Stage 1 is the only active authored stage; its current visual/combat identity is owned by stage01-visual-reboot.js. Stages 2-18 stay planned until rebuilt.
 (()=>{
   if(window.__stackfallWorldRebootMetadataApplied)return;
   window.__stackfallWorldRebootMetadataApplied=true;
