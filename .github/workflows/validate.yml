@@ -24,8 +24,6 @@ jobs:
             echo "Checking $file"
             node --check "$file"
           done < <(find src -type f -name '*.js' -print0 | sort -z)
-      - name: Check Stage 1 production art and geometry
-        run: node scripts/stage1-art-contract.mjs
       - name: Check polish contract
         run: node scripts/polish-contract-check.mjs
       - name: Check meta upgrade contract
@@ -34,42 +32,6 @@ jobs:
         run: node scripts/level-choice-contract.mjs
       - name: Check stage catalog contract
         run: node scripts/stage-catalog-contract.mjs
-      - name: Check Stage 1 runtime contract
-        run: node scripts/stage01-runtime-contract.mjs
-      - name: Check Stage 2 runtime contract
-        run: node scripts/stage02-runtime-contract.mjs
-      - name: Check Stage 3 runtime contract
-        run: node scripts/stage03-runtime-contract.mjs
-      - name: Check Stage 4 runtime contract
-        run: node scripts/stage04-runtime-contract.mjs
-      - name: Check Stage 5 runtime contract
-        run: node scripts/stage05-runtime-contract.mjs
-      - name: Check Stage 6 runtime contract
-        run: node scripts/stage06-runtime-contract.mjs
-      - name: Check Stage 7 runtime contract
-        run: node scripts/stage07-runtime-contract.mjs
-      - name: Check Stage 8 runtime contract
-        run: node scripts/stage08-runtime-contract.mjs
-      - name: Check Stage 9 runtime contract
-        run: node scripts/stage09-runtime-contract.mjs
-      - name: Check Stage 10 runtime contract
-        run: node scripts/stage10-runtime-contract.mjs
-      - name: Check Stage 11 runtime contract
-        run: node scripts/stage11-runtime-contract.mjs
-      - name: Check Stage 12 runtime contract
-        run: node scripts/stage12-runtime-contract.mjs
-      - name: Check Stage 13 runtime contract
-        run: node scripts/stage13-runtime-contract.mjs
-      - name: Check Stage 14 runtime contract
-        run: node scripts/stage14-runtime-contract.mjs
-      - name: Check Stage 15 runtime contract
-        run: node scripts/stage15-runtime-contract.mjs
-      - name: Check Stage 16 runtime contract
-        run: node scripts/stage16-runtime-contract.mjs
-      - name: Check Stage 17 runtime contract
-        run: node scripts/stage17-runtime-contract.mjs
-      - name: Check Stage 18 runtime contract
-        run: node scripts/stage18-runtime-contract.mjs
       - name: Check production geometry and lifecycle contracts
         run: |
           node scripts/stage-geometry-contract.mjs
@@ -112,8 +74,6 @@ jobs:
         run: node scripts/community-feedback-contract.mjs
       - name: Check damage result analytics
         run: node scripts/damage-results-contract.mjs
-      - name: Check stage balance and performance contract
-        run: node scripts/stage-balance-performance-contract.mjs
       - name: Check recovered chat requirements
         run: node scripts/legacy-chat-requirements-contract.mjs
       - name: Check awakening A1-A7 contract

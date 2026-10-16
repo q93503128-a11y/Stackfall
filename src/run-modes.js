@@ -41,77 +41,10 @@
   window.stackfallIsEndlessRun=()=>window.stackfallCurrentRunConfig().mode===MODES.ENDLESS;
   window.stackfallIsStageRun=()=>window.stackfallCurrentRunConfig().mode===MODES.STAGE;
 
-  if(typeof document!=='undefined'){
-    // Apply the rebooted world/stage names before the player can open a stage run.
-    if(!document.querySelector('script[data-world-reboot-metadata]')){
-      const metadata=document.createElement('script');
-      metadata.src='src/stage-world-reboot-metadata.js';
-      metadata.dataset.worldRebootMetadata='true';
-      document.head.appendChild(metadata);
-    }
-    // Stage 1 is layered: v2 owns combat/environment, v3 owns motion/material state,
-    // v4 corrects ram body language, v5 replaces the visible boss with the production
-    // silhouette, and v6 binds that body to a fixed world-space blockade gantry.
-    const loadStageOneV6=()=>{
-      if(document.querySelector('script[data-stage01-rework-v6]'))return;
-      const script=document.createElement('script');
-      script.src='src/stage01-rework-v6.js';
-      script.dataset.stage01ReworkV6='true';
-      document.head.appendChild(script);
-    };
-    const loadStageOneV5=()=>{
-      const existing=document.querySelector('script[data-stage01-rework-v5]');
-      if(existing){
-        if(window.__stackfallStageOneReworkV5Loaded)setTimeout(loadStageOneV6,0);
-        else existing.addEventListener('load',()=>setTimeout(loadStageOneV6,0),{once:true});
-        return;
-      }
-      const script=document.createElement('script');
-      script.src='src/stage01-rework-v5.js';
-      script.dataset.stage01ReworkV5='true';
-      script.addEventListener('load',()=>setTimeout(loadStageOneV6,0),{once:true});
-      document.head.appendChild(script);
-    };
-    const loadStageOneV4=()=>{
-      const existing=document.querySelector('script[data-stage01-rework-v4]');
-      if(existing){
-        if(window.__stackfallStageOneReworkV4Loaded)setTimeout(loadStageOneV5,0);
-        else existing.addEventListener('load',()=>setTimeout(loadStageOneV5,0),{once:true});
-        return;
-      }
-      const script=document.createElement('script');
-      script.src='src/stage01-rework-v4.js';
-      script.dataset.stage01ReworkV4='true';
-      script.addEventListener('load',()=>setTimeout(loadStageOneV5,0),{once:true});
-      document.head.appendChild(script);
-    };
-    const loadStageOneV3=()=>{
-      const existing=document.querySelector('script[data-stage01-rework-v3]');
-      if(existing){
-        if(window.__stackfallStageOneReworkV3Loaded)setTimeout(loadStageOneV4,0);
-        else existing.addEventListener('load',()=>setTimeout(loadStageOneV4,0),{once:true});
-        return;
-      }
-      const script=document.createElement('script');
-      script.src='src/stage01-rework-v3.js';
-      script.dataset.stage01ReworkV3='true';
-      script.addEventListener('load',()=>setTimeout(loadStageOneV4,0),{once:true});
-      document.head.appendChild(script);
-    };
-    const loadStageOneV2=()=>{
-      const existing=document.querySelector('script[data-stage01-rework-v2]');
-      if(existing){
-        if(window.__stackfallStageOneReworkV2Loaded)setTimeout(loadStageOneV3,0);
-        else existing.addEventListener('load',()=>setTimeout(loadStageOneV3,0),{once:true});
-        return;
-      }
-      const script=document.createElement('script');
-      script.src='src/stage01-rework-v2.js';
-      script.dataset.stage01ReworkV2='true';
-      script.addEventListener('load',()=>setTimeout(loadStageOneV3,0),{once:true});
-      document.head.appendChild(script);
-    };
-    if(document.readyState==='complete')setTimeout(loadStageOneV2,0);
-    else window.addEventListener('load',()=>setTimeout(loadStageOneV2,0),{once:true});
+  if(typeof document!=='undefined'&&!document.querySelector('script[data-world-reboot-metadata]')){
+    const metadata=document.createElement('script');
+    metadata.src='src/stage-world-reboot-metadata.js';
+    metadata.dataset.worldRebootMetadata='true';
+    document.head.appendChild(metadata);
   }
 })();
