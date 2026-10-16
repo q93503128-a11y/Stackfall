@@ -1,5 +1,6 @@
 (()=>{
   const MODES=Object.freeze({ENDLESS:'endless',STAGE:'stage'});
+  const ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01']);
   const ENDLESS=Object.freeze({
     mode:MODES.ENDLESS,
     finite:false,
@@ -9,16 +10,19 @@
   });
   const validMode=mode=>mode===MODES.ENDLESS||mode===MODES.STAGE;
   const stageById=id=>typeof window.stackfallStageById==='function'?window.stackfallStageById(id):null;
+  const hasStageRuntime=id=>ACTIVE_STAGE_RUNTIMES.includes(String(id||''));
   const normalize=(mode,stageId=null)=>{
     if(mode===MODES.STAGE){
       const stage=stageById(stageId);
-      if(stage)return{mode:MODES.STAGE,stageId:stage.id};
+      if(stage&&hasStageRuntime(stage.id))return{mode:MODES.STAGE,stageId:stage.id};
     }
     return{mode:MODES.ENDLESS,stageId:null};
   };
   state.runSelection=normalize(state.runSelection?.mode,state.runSelection?.stageId);
   window.STACKFALL_RUN_MODES=MODES;
+  window.STACKFALL_ACTIVE_STAGE_RUNTIMES=ACTIVE_STAGE_RUNTIMES;
   window.STACKFALL_ENDLESS_CONFIG=ENDLESS;
+  window.stackfallHasStageRuntime=hasStageRuntime;
   window.stackfallSetRunSelection=(mode,stageId=null)=>{
     if(!validMode(mode)||!['menu','gameover','stageComplete'].includes(state.mode))return false;
     if(mode===MODES.ENDLESS&&window.stackfallIsFeatureUnlocked?.('endless')===false)return false;
@@ -40,6 +44,19 @@
   };
   window.stackfallIsEndlessRun=()=>window.stackfallCurrentRunConfig().mode===MODES.ENDLESS;
   window.stackfallIsStageRun=()=>window.stackfallCurrentRunConfig().mode===MODES.STAGE;
+
+  const installStageStatusGate=()=>{
+    const baseStatus=window.stackfallStageStatus;
+    if(typeof baseStatus!=='function'||baseStatus.__stackfallRuntimeGate===true)return;
+    const gatedStatus=stage=>stage&&!hasStageRuntime(stage.id)?'planned':baseStatus(stage);
+    gatedStatus.__stackfallRuntimeGate=true;
+    window.stackfallStageStatus=gatedStatus;
+    window.renderStackfallGalaxyMap?.();
+  };
+  if(typeof document!=='undefined'){
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installStageStatusGate,{once:true});
+    else installStageStatusGate();
+  }
 
   if(typeof document!=='undefined'&&!document.querySelector('script[data-world-reboot-metadata]')){
     const metadata=document.createElement('script');
