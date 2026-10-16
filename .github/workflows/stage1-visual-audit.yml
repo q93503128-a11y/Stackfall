@@ -9,6 +9,7 @@ on:
       - 'src/stage01-production-art.js'
       - 'src/stage01-rework-v2.js'
       - 'src/stage01-rework-v3.js'
+      - 'src/stage01-rework-v4.js'
       - 'src/realm-backgrounds.js'
       - 'src/elite-renderers.js'
       - 'src/stage-runtime.js'
