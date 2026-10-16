@@ -50,13 +50,26 @@
       document.head.appendChild(metadata);
     }
     // Stage 1 is layered: v2 owns combat/environment, v3 owns motion/material state,
-    // v4 corrects ram body language, and v5 replaces the visible boss with the
-    // production-mass silhouette while preserving the established collision runtime.
+    // v4 corrects ram body language, v5 replaces the visible boss with the production
+    // silhouette, and v6 binds that body to a fixed world-space blockade gantry.
+    const loadStageOneV6=()=>{
+      if(document.querySelector('script[data-stage01-rework-v6]'))return;
+      const script=document.createElement('script');
+      script.src='src/stage01-rework-v6.js';
+      script.dataset.stage01ReworkV6='true';
+      document.head.appendChild(script);
+    };
     const loadStageOneV5=()=>{
-      if(document.querySelector('script[data-stage01-rework-v5]'))return;
+      const existing=document.querySelector('script[data-stage01-rework-v5]');
+      if(existing){
+        if(window.__stackfallStageOneReworkV5Loaded)setTimeout(loadStageOneV6,0);
+        else existing.addEventListener('load',()=>setTimeout(loadStageOneV6,0),{once:true});
+        return;
+      }
       const script=document.createElement('script');
       script.src='src/stage01-rework-v5.js';
       script.dataset.stage01ReworkV5='true';
+      script.addEventListener('load',()=>setTimeout(loadStageOneV6,0),{once:true});
       document.head.appendChild(script);
     };
     const loadStageOneV4=()=>{
