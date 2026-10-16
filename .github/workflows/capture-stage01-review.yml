@@ -13,11 +13,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Capture Stage 1 live review
+      - name: Capture polished Stage 1 live review
         run: node scripts/capture-stage01-review.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: stage01-visual-review
+          name: stage01-visual-review-polished
           path: test-results/stage01-review
           if-no-files-found: error
