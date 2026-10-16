@@ -11,6 +11,7 @@ on:
       - 'src/stage01-rework-v3.js'
       - 'src/stage01-rework-v4.js'
       - 'src/stage01-rework-v5.js'
+      - 'src/stage01-rework-v6.js'
       - 'src/realm-backgrounds.js'
       - 'src/elite-renderers.js'
       - 'src/stage-runtime.js'
@@ -19,6 +20,7 @@ on:
       - 'scripts/stage1-v2-browser.mjs'
       - 'scripts/stage1-v3-browser.mjs'
       - 'scripts/stage1-motion-v5-contract.mjs'
+      - 'scripts/stage1-infrastructure-v6-contract.mjs'
       - 'scripts/build-fingerprint.mjs'
       - '.github/workflows/stage1-visual-audit.yml'
 
