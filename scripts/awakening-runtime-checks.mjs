@@ -191,22 +191,24 @@ export function awakeningRuntimeChecks(){
   player.hp=1;document.querySelector('#devHeal').click();check(player.hp===player.maxHp,'DEV heal failed');
   scheduleWeaponAction(100,()=>spawnPlayerProjectile({x:0,y:0,vx:0,vy:0,life:1,source:'comet'}));
   document.querySelector('#devClearEnemies').click();drain();check(Object.values(state.entities).every(list=>!Array.isArray(list)||list.length===0)&&state.pendingActions.length===0,'DEV Clear left entities or delayed attacks');
-  const stages=[];
-  for(let order=1;order<=18;order++){
-    dev.startStage(`stage-${String(order).padStart(2,'0')}`);state.mode='paused';
+  const stages=[],activeStages=[...(window.STACKFALL_ACTIVE_STAGE_RUNTIMES||['stage-01'])];
+  check(activeStages.length>0,'active Stage runtime list is empty');
+  for(const theme of activeStages){
+    const order=Math.max(1,Number(String(theme).split('-').at(-1))||1),started=dev.startStage(theme);
+    check(started&&state.stageRun?.stage?.id===theme,`${theme} DEV stage start failed`);if(!started||!state.stageRun)continue;
+    state.mode='paused';
     const translations=[],points=[],original=ctx.drawImage,screen=worldToScreen,worldPoint=StageCraft.worldPoint;
     ctx.drawImage=function(img,...args){translations.push(args);};
     worldToScreen=function(x,y){const p=screen(x,y);points.push({wx:x,wy:y,f:1,...p});return p;};
-    // worldPoint is a full world projection. Legacy third arguments in adapters
-    // are ignored by its two-argument implementation; parallaxPoint is separate.
     StageCraft.worldPoint=function(x,y,...args){const p=worldPoint(x,y,...args);points.push({wx:x,wy:y,f:1,...p});return p;};
-    const theme=`stage-${String(order).padStart(2,'0')}`;let a,b,pa,pb;
+    let a,b,pa,pb;
     try{player.x=0;player.y=0;drawStageConstellationField(theme);a=translations.splice(0);pa=points.splice(0);player.x=37;player.y=23;drawStageConstellationField(theme);b=translations.splice(0);pb=points.splice(0);}finally{ctx.drawImage=original;worldToScreen=screen;StageCraft.worldPoint=worldPoint;}
     const projected=pa.some(x=>pb.some(y=>x.wx===y.wx&&x.wy===y.wy&&x.f===y.f&&Math.abs(y.x-x.x+37*x.f)<.01&&Math.abs(y.y-x.y+23*x.f)<.01));
     const raster=a.length>0&&b.length>0&&Math.abs(((b[0][0]-a[0][0]+1400)%1400)-1363)<=1&&Math.abs(((b[0][1]-a[0][1]+1000)%1000)-977)<=1,moved=projected||raster;
     check(moved,`${theme} world anchor did not follow player movement`);
-    state.mode='playing';const preview=dev.jumpStageBoss();for(let i=0;i<299;i++){state.time=preview.startAt+(i+1)/60;updateSpawning(1/60);}
-    check(!state.stageRun.bossSpawned&&state.entities.enemies.length===0,`${theme} DEV preview spawned combat before five seconds`);
+    state.mode='playing';const preview=dev.jumpStageBoss();check(preview?.ok===true,`${theme} DEV boss preview failed`);if(!preview?.ok)continue;
+    for(let i=0;i<299;i++){state.time=preview.startAt+(i+1)/60;updateSpawning(1/60);}
+    check(state.stageRun?.bossSpawned===false&&state.entities.enemies.length===0,`${theme} DEV preview spawned combat before five seconds`);
     state.time=preview.bossAt;updateSpawning(1/60);if(state.realmTransition)updateRealmTransition(state.realmTransition.duration);
     const boss=state.entities.enemies.filter(e=>e.kind==='stage-boss'&&!e.dead).length===1;check(boss,`${theme} normal five-second trigger did not finish entry`);stages.push({order,moved,boss});
   }
