@@ -11,18 +11,18 @@ try{
     const context=await browser.newContext({viewport:{width:cfg.width,height:cfg.height}}),page=await context.newPage(),errors=[];
     page.on('pageerror',e=>errors.push(e.message));
     if(!cfg.gpu)await page.route(/pixi/i,r=>r.abort());
-    await page.goto('http://127.0.0.1:8000/?dev=1&stage1-v5=1',{waitUntil:'networkidle'});
-    await page.waitForFunction(()=>typeof stackfallStageOneReworkDiagnostics==='function'&&stackfallStageOneReworkDiagnostics().installed===true&&typeof stackfallStageOneMotionV3==='function'&&stackfallStageOneMotionV3().installed===true&&typeof stackfallStageOneMotionV4==='function'&&stackfallStageOneMotionV4().installed===true&&typeof stackfallStageOneMotionV5==='function'&&stackfallStageOneMotionV5().installed===true,{timeout:12000});
-    // v3/v4 retry their late bindings for several seconds. Let those windows expire,
-    // then require v5 to be the stable outermost visual renderer before capturing evidence.
-    await page.waitForTimeout(4200);
-    await page.waitForFunction(()=>window.drawCollapseWardenBody?.name==='drawBossV5'&&window.drawStageOneWardenArena?.name==='drawArenaV5'&&stackfallStageOneMotionV5().installed===true,{timeout:6000});
+    await page.goto('http://127.0.0.1:8000/?dev=1&stage1-v6=1',{waitUntil:'networkidle'});
+    await page.waitForFunction(()=>typeof stackfallStageOneReworkDiagnostics==='function'&&stackfallStageOneReworkDiagnostics().installed===true&&typeof stackfallStageOneMotionV3==='function'&&stackfallStageOneMotionV3().installed===true&&typeof stackfallStageOneMotionV4==='function'&&stackfallStageOneMotionV4().installed===true&&typeof stackfallStageOneMotionV5==='function'&&stackfallStageOneMotionV5().installed===true&&typeof stackfallStageOneInfrastructureV6==='function',{timeout:12000});
+    // v3-v5 all have late-binding retry windows. Wait past v5's window, then require
+    // v6 to be the stable outer arena while v5 remains the boss body renderer.
+    await page.waitForTimeout(6800);
+    await page.waitForFunction(()=>window.drawCollapseWardenBody?.name==='drawBossV5'&&window.drawStageOneWardenArena?.name==='drawArenaV6'&&stackfallStageOneMotionV5().installed===true&&stackfallStageOneInfrastructureV6().installed===true,{timeout:7000});
     await page.evaluate(()=>{GAME_SETTINGS.audio.master=false;GAME_SETTINGS.autoLevelChoice=true;stackfallDeveloperTest.setInvincible(true);stackfallDeveloperTest.setLevelUpsDisabled(true);});
     const shot=async name=>{await page.evaluate(()=>{ui.bossNotice?.classList.add('hidden');updateHUD();draw();});await page.screenshot({path:resolve(out,`${cfg.name}-${name}.png`)});};
     await page.evaluate(()=>{stackfallDeveloperTest.jumpStageBoss('stage-01');ui.bossNotice?.classList.add('hidden');});await shot('boss-minus5');
     await page.evaluate(()=>{state.time=300;updateSpawning(1/60);if(state.realmTransition)updateRealmTransition(10);ui.bossNotice?.classList.add('hidden');state.mode='paused';});
     await shot('boss-idle');
-    const idlePerf=await page.evaluate(()=>{const a=[];for(let i=0;i<90;i++){const t=performance.now();draw();a.push(performance.now()-t);}a.sort((x,y)=>x-y);return{p50:a[45],p95:a[85],max:a.at(-1),v3:stackfallStageOneMotionV3(),v4:stackfallStageOneMotionV4(),v5:stackfallStageOneMotionV5()};});
+    const idlePerf=await page.evaluate(()=>{const a=[];for(let i=0;i<90;i++){const t=performance.now();draw();a.push(performance.now()-t);}a.sort((x,y)=>x-y);return{p50:a[45],p95:a[85],max:a.at(-1),v3:stackfallStageOneMotionV3(),v4:stackfallStageOneMotionV4(),v5:stackfallStageOneMotionV5(),v6:stackfallStageOneInfrastructureV6()};});
     const start=await page.evaluate(()=>{
       clearStagePhysicalObjects();clearPendingCombatActions();
       const e=state.entities.enemies.find(x=>x.kind==='stage-boss'&&x.eventKind==='stage-01');if(!e)throw new Error('stage1 boss missing');
@@ -30,7 +30,7 @@ try{
       e.attackLockUntil=0;e.stageRamWindupUntil=0;e.stageRamUntil=0;e.stageRamRecoilAt=-999;e.stageAction='';e.stageMotionX=0;e.stageMotionY=0;e.stageBodyAngle=0;
       e.stageOneV2={anchor:1,attackIndex:3,nextAttackAt:state.time,token:0,safeLane:null,safeLaneUntil:0};
       e.x=a.x;e.y=a.y-a.halfH*.35;player.x=a.x;player.y=a.y;state.mode='paused';updateStageBossSkill(e,1/60);e.stageOneV2.nextAttackAt=state.time+999;
-      return{combat:stackfallStageOneReworkDiagnostics(),motion:stackfallStageOneMotionV3(),v4:stackfallStageOneMotionV4(),v5:stackfallStageOneMotionV5(),time:state.time};
+      return{combat:stackfallStageOneReworkDiagnostics(),motion:stackfallStageOneMotionV3(),v4:stackfallStageOneMotionV4(),v5:stackfallStageOneMotionV5(),v6:stackfallStageOneInfrastructureV6(),time:state.time};
     });
     if(start.combat.activePattern!=='ram')throw new Error(`ram fixture: expected ram, got ${start.combat.activePattern}`);
     const samples=[],times=[.08,.32,.72,1.06,1.28,1.55,1.94,2.18,2.48],labels=['lock','compress','pullback','ignite','commit-a','commit-b','impact','recoil','recover'];let elapsed=0;
@@ -40,10 +40,10 @@ try{
         for(let i=0;i<Math.max(1,Math.round(dt*60));i++){
           const x=e.x,y=e.y;state.time+=1/60;updateEnemies(1/60);updateEffects(1/60);maxStep=Math.max(maxStep,Math.hypot(e.x-x,e.y-y));
         }
-        draw();return{maxStep,x:e.x,y:e.y,time:state.time,objects:stagePhysicalObjects().length,motion:stackfallStageOneMotionV3(),v4:stackfallStageOneMotionV4(),v5:stackfallStageOneMotionV5(),combat:stackfallStageOneReworkDiagnostics()};
+        draw();return{maxStep,x:e.x,y:e.y,time:state.time,objects:stagePhysicalObjects().length,motion:stackfallStageOneMotionV3(),v4:stackfallStageOneMotionV4(),v5:stackfallStageOneMotionV5(),v6:stackfallStageOneInfrastructureV6(),combat:stackfallStageOneReworkDiagnostics()};
       },at-elapsed);elapsed=at;samples.push({at,label:labels[i],...sample});await shot(`ram-${String(i+1).padStart(2,'0')}-${labels[i]}`);
     }
-    // A separate phase-2 still verifies that damage is structural/asymmetric rather than a palette swap.
+    // A separate phase-2 still verifies both boss and fixed gantry damage are structural/asymmetric.
     await page.evaluate(()=>{
       const e=state.entities.enemies.find(x=>x.kind==='stage-boss'&&x.eventKind==='stage-01');
       e.stagePhase=2;state.stageBossArena.phase=2;e.stageAction='';e.stageRamWindupUntil=0;e.stageRamUntil=0;e.stageRamRecoilAt=-999;e.stageOneV2.ram=null;state.time+=1;draw();
@@ -51,11 +51,12 @@ try{
     await shot('boss-phase2-damaged');
     const expected=['ram-lock','ram-compress','ram-pullback','ram-ignite','ram-commit','ram-commit','ram-recoil','ram-recoil','ram-recover'];
     const phases=samples.map(s=>s.motion.phase),phaseOk=expected.every((x,i)=>phases[i]===x);
-    const runtime=await page.evaluate(()=>({motion:stackfallStageOneMotionV3(),v4:stackfallStageOneMotionV4(),v5:stackfallStageOneMotionV5(),runtime:stackfallRuntimeDiagnostics(),renderer:stackfallRendererInfo(),outer:{boss:window.drawCollapseWardenBody?.name,arena:window.drawStageOneWardenArena?.name}}));
-    const ok=errors.length===0&&runtime.runtime.errorCount===0&&phaseOk&&runtime.v4.installed===true&&runtime.v5.installed===true&&runtime.outer.boss==='drawBossV5'&&runtime.outer.arena==='drawArenaV5'&&samples.every(s=>s.objects<=6)&&runtime.motion.maxDrawMs<20&&runtime.v4.maxDrawMs<20&&runtime.v5.maxDrawMs<20;
-    all.push({cfg,ok,errors,idlePerf,start,samples,expected,phaseOk,runtime});await context.close();
+    const attachOk=samples[0].v6.attachment>.9&&samples[2].v6.attachment>.9&&samples[4].v6.attachment===0&&samples[5].v6.attachment===0&&samples[8].v6.attachment>.35;
+    const runtime=await page.evaluate(()=>({motion:stackfallStageOneMotionV3(),v4:stackfallStageOneMotionV4(),v5:stackfallStageOneMotionV5(),v6:stackfallStageOneInfrastructureV6(),runtime:stackfallRuntimeDiagnostics(),renderer:stackfallRendererInfo(),outer:{boss:window.drawCollapseWardenBody?.name,arena:window.drawStageOneWardenArena?.name}}));
+    const ok=errors.length===0&&runtime.runtime.errorCount===0&&phaseOk&&attachOk&&runtime.v4.installed===true&&runtime.v5.installed===true&&runtime.v6.installed===true&&runtime.outer.boss==='drawBossV5'&&runtime.outer.arena==='drawArenaV6'&&samples.every(s=>s.objects<=6)&&runtime.motion.maxDrawMs<20&&runtime.v4.maxDrawMs<20&&runtime.v5.maxDrawMs<20&&runtime.v6.maxDrawMs<20;
+    all.push({cfg,ok,errors,idlePerf,start,samples,expected,phaseOk,attachOk,runtime});await context.close();
   }
 }finally{await browser.close();}
 writeFileSync(resolve(out,'results.json'),JSON.stringify({ok:all.every(x=>x.ok),results:all},null,2));
-for(const r of all)console.log(r.ok?'PASS':'FAIL',r.cfg.name,JSON.stringify({errors:r.errors,idlePerf:r.idlePerf,phaseOk:r.phaseOk,phases:r.samples.map(s=>s.motion.phase),times:r.samples.map(s=>+s.time.toFixed(3)),v3MaxDrawMs:r.runtime.motion.maxDrawMs,v4MaxDrawMs:r.runtime.v4.maxDrawMs,v5MaxDrawMs:r.runtime.v5.maxDrawMs,outer:r.runtime.outer}));
+for(const r of all)console.log(r.ok?'PASS':'FAIL',r.cfg.name,JSON.stringify({errors:r.errors,idlePerf:r.idlePerf,phaseOk:r.phaseOk,attachOk:r.attachOk,attachments:r.samples.map(s=>s.v6.attachment),phases:r.samples.map(s=>s.motion.phase),times:r.samples.map(s=>+s.time.toFixed(3)),v3MaxDrawMs:r.runtime.motion.maxDrawMs,v4MaxDrawMs:r.runtime.v4.maxDrawMs,v5MaxDrawMs:r.runtime.v5.maxDrawMs,v6MaxDrawMs:r.runtime.v6.maxDrawMs,outer:r.runtime.outer}));
 if(!all.every(x=>x.ok))process.exitCode=1;
