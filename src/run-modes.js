@@ -53,9 +53,15 @@
     window.stackfallStageStatus=gatedStatus;
     window.renderStackfallGalaxyMap?.();
   };
+  const loadStageOnePolish=()=>{
+    if(typeof document==='undefined'||document.querySelector('script[data-stackfall-stage01-polish]'))return;
+    const polish=document.createElement('script');polish.src='src/stage01-polish.js';polish.dataset.stackfallStage01Polish='true';document.head.appendChild(polish);
+  };
   const loadStageOneRemodel=()=>{
-    if(typeof document==='undefined'||document.querySelector('script[data-stackfall-stage01-remodel]'))return;
-    const script=document.createElement('script');script.src='src/stage01-remodel.js';script.dataset.stackfallStage01Remodel='true';document.head.appendChild(script);
+    if(typeof document==='undefined')return;
+    const existing=document.querySelector('script[data-stackfall-stage01-remodel]');
+    if(existing){if(window.stackfallStageRuntimeRegistry?.get('stage-01'))loadStageOnePolish();else existing.addEventListener('load',loadStageOnePolish,{once:true});return;}
+    const script=document.createElement('script');script.src='src/stage01-remodel.js';script.dataset.stackfallStage01Remodel='true';script.addEventListener('load',loadStageOnePolish,{once:true});document.head.appendChild(script);
   };
   if(typeof document!=='undefined'){
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installStageStatusGate();loadStageOneRemodel();},{once:true});
