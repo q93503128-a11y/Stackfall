@@ -38,6 +38,7 @@ const categories={
   boss:{title:'STACKFALL · 보스',forms:['eclipse','seraph','pulsar','leviathan','archivist','heliarch','tempest','nullengine'],cols:4,scale:1.85},
   apex:{title:'STACKFALL · 초월체',forms:['chronophage','starforge','lastconstellation'],cols:3,scale:1.55}
 };
+const hideUi=`(()=>{window.stackfallDevDisableLevelUps=true;state.xp=0;state.xpNeed=1e30;for(const id of ['choiceScreen','pauseScreen','gameOverScreen','bossRewardScreen','settingsScreen','stageCompleteScreen','sortiePrepScreen','galaxyMapScreen','menu'])document.getElementById(id)?.classList.add('hidden');document.getElementById('hud')?.classList.add('hidden');document.getElementById('bossNotice')?.classList.add('hidden');const dev=document.getElementById('stackfallDevPanel');if(dev)dev.classList.add('hidden');const toggle=document.getElementById('stackfallDevToggle');if(toggle)toggle.style.display='none';return true;})()`;
 
 function galleryExpression(kind,cfg){
   return `(()=>{
@@ -45,7 +46,7 @@ function galleryExpression(kind,cfg){
     state.runSelection={mode:'endless',stageId:null};
     resetGame();
     state.mode='playing';
-    window.stackfallDevInvincible=true;
+    window.stackfallDevInvincible=true;window.stackfallDevDisableLevelUps=true;
     state.xp=0;state.xpNeed=1e30;state.spawnTimer=1e9;state.encounterTimer=1e9;
     state.weaponSlots=[];state.weaponStacks={};state.awakenedWeapons={};player.coreCd=1e9;player.invuln=1e9;
     for(const value of Object.values(state.entities||{}))if(Array.isArray(value))value.length=0;
@@ -65,10 +66,7 @@ function galleryExpression(kind,cfg){
       spawned.push({form,name:bossDisplayName(e),sx,sy,r:e.r});
       const label=document.createElement('div');label.textContent=bossDisplayName(e);label.style.cssText='position:absolute;transform:translate(-50%,0);text-align:center;font-size:18px;font-weight:900;white-space:nowrap;color:#f4f8ff;background:rgba(3,7,19,.64);border:1px solid rgba(170,205,255,.20);border-radius:10px;padding:5px 10px;backdrop-filter:blur(4px)';label.style.left=sx+'px';label.style.top=(sy+Math.max(70,e.r*1.42))+'px';overlay.appendChild(label);
     });
-    const dev=document.getElementById('stackfallDevPanel');if(dev)dev.classList.add('hidden');const toggle=document.getElementById('stackfallDevToggle');if(toggle)toggle.style.display='none';
-    for(const id of ['choiceScreen','pauseScreen','gameOverScreen','bossRewardScreen','settingsScreen','stageCompleteScreen','sortiePrepScreen','galaxyMapScreen','menu'])document.getElementById(id)?.classList.add('hidden');
-    document.getElementById('hud')?.classList.add('hidden');
-    document.getElementById('bossNotice')?.classList.add('hidden');
+    ${hideUi.slice(6,-3)}
     return spawned;
   })()`;
 }
@@ -83,7 +81,11 @@ try{
   for(const [kind,cfg] of Object.entries(categories)){
     const spawned=await evaluate(cdp,galleryExpression(kind,cfg));
     console.log(kind,spawned);
-    await sleep(650);
+    await evaluate(cdp,hideUi);state: {
+    }
+    await sleep(120);
+    await evaluate(cdp,`state.mode='paused';${hideUi}`);
+    await sleep(25);
     await capture(cdp,`${kind}.png`);
   }
 }finally{
