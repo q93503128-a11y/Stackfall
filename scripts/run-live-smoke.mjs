@@ -26,10 +26,10 @@ if(cleanupWarnings.length){
 
 const modes=readFileSync(join(root,'src','run-modes.js'),'utf8');
 const noActiveStages=modes.includes('ACTIVE_STAGE_RUNTIMES=Object.freeze([])');
-const stageRedesignPattern=/^\[awakening-isolation\] stage-\d+ /;
-const stageRedesignWarnings=noActiveStages?substantiveFailures.filter(message=>stageRedesignPattern.test(message)):[];
+const inactiveStageAssertion=message=>message==='[awakening-isolation] active Stage runtime list is empty'||/^\[awakening-isolation\] stage-\d+ /.test(message);
+const stageRedesignWarnings=noActiveStages?substantiveFailures.filter(inactiveStageAssertion):[];
 if(stageRedesignWarnings.length){
-  substantiveFailures=substantiveFailures.filter(message=>!stageRedesignPattern.test(message));
+  substantiveFailures=substantiveFailures.filter(message=>!inactiveStageAssertion(message));
   result.stageRedesignWarnings=stageRedesignWarnings;
   console.warn(`[Stackfall smoke] ${stageRedesignWarnings.length} inactive-stage assertion(s) were separated while all Stage runtimes are intentionally disabled.`);
 }
