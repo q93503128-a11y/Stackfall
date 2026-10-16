@@ -65,10 +65,16 @@
     document.head.appendChild(metadata);
   }
 
-  // Load the Stage 1 reboot only after all synchronous runtime/render scripts exist.
+  const loadStageOneComplete=()=>{
+    if(typeof document==='undefined'||document.querySelector('script[data-stage01-complete]'))return;
+    const complete=document.createElement('script');complete.src='src/stage01-complete.js';complete.dataset.stage01Complete='true';document.body.appendChild(complete);
+  };
+  // Load the compatibility reboot first, then let the complete Stage 1 pass own the final visuals/combat.
   const loadStageOneReboot=()=>{
-    if(typeof document==='undefined'||document.querySelector('script[data-stage01-visual-reboot]'))return;
-    const script=document.createElement('script');script.src='src/stage01-visual-reboot.js';script.dataset.stage01VisualReboot='true';document.body.appendChild(script);
+    if(typeof document==='undefined')return;
+    const existing=document.querySelector('script[data-stage01-visual-reboot]');
+    if(existing){if(window.__stackfallStage01CompleteLoaded) return; if(existing.dataset.loaded==='true')loadStageOneComplete();else existing.addEventListener('load',loadStageOneComplete,{once:true});return;}
+    const script=document.createElement('script');script.src='src/stage01-visual-reboot.js';script.dataset.stage01VisualReboot='true';script.addEventListener('load',()=>{script.dataset.loaded='true';loadStageOneComplete();},{once:true});document.body.appendChild(script);
   };
   if(typeof window!=='undefined'){
     if(document.readyState==='complete')loadStageOneReboot();
