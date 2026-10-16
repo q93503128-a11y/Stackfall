@@ -1,6 +1,6 @@
 (()=>{
   const MODES=Object.freeze({ENDLESS:'endless',STAGE:'stage'});
-  const ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01']);
+  const ACTIVE_STAGE_RUNTIMES=Object.freeze([]);
   const ENDLESS=Object.freeze({
     mode:MODES.ENDLESS,
     finite:false,
@@ -56,39 +56,5 @@
   if(typeof document!=='undefined'){
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installStageStatusGate,{once:true});
     else installStageStatusGate();
-  }
-
-  if(typeof document!=='undefined'&&!document.querySelector('script[data-world-reboot-metadata]')){
-    const metadata=document.createElement('script');
-    metadata.src='src/stage-world-reboot-metadata.js';
-    metadata.dataset.worldRebootMetadata='true';
-    document.head.appendChild(metadata);
-  }
-
-  const loadStageOneAudio=()=>{
-    if(typeof document==='undefined'||window.__stackfallStage01AudioPolishLoaded||document.querySelector('script[data-stage01-audio-polish]'))return;
-    const sound=document.createElement('script');sound.src='src/stage01-audio-polish.js';sound.dataset.stage01AudioPolish='true';document.body.appendChild(sound);
-  };
-  const loadStageOneArt=()=>{
-    if(typeof document==='undefined')return;
-    const existing=document.querySelector('script[data-stage01-closure-art]');
-    if(existing){if(window.__stackfallStage01ClosureArtLoaded)loadStageOneAudio();else existing.addEventListener('load',loadStageOneAudio,{once:true});return;}
-    const art=document.createElement('script');art.src='src/stage01-closure-art.js';art.dataset.stage01ClosureArt='true';art.addEventListener('load',loadStageOneAudio,{once:true});document.body.appendChild(art);
-  };
-  const loadStageOneComplete=()=>{
-    if(typeof document==='undefined')return;
-    const existing=document.querySelector('script[data-stage01-complete]');
-    if(existing){if(window.__stackfallStage01CompleteLoaded)loadStageOneArt();else existing.addEventListener('load',loadStageOneArt,{once:true});return;}
-    const complete=document.createElement('script');complete.src='src/stage01-complete.js';complete.dataset.stage01Complete='true';complete.addEventListener('load',loadStageOneArt,{once:true});document.body.appendChild(complete);
-  };
-  const loadStageOneReboot=()=>{
-    if(typeof document==='undefined')return;
-    const existing=document.querySelector('script[data-stage01-visual-reboot]');
-    if(existing){if(window.__stackfallStage01CompleteLoaded)loadStageOneArt();else if(existing.dataset.loaded==='true')loadStageOneComplete();else existing.addEventListener('load',loadStageOneComplete,{once:true});return;}
-    const script=document.createElement('script');script.src='src/stage01-visual-reboot.js';script.dataset.stage01VisualReboot='true';script.addEventListener('load',()=>{script.dataset.loaded='true';loadStageOneComplete();},{once:true});document.body.appendChild(script);
-  };
-  if(typeof window!=='undefined'){
-    if(document.readyState==='complete')loadStageOneReboot();
-    else window.addEventListener('load',loadStageOneReboot,{once:true});
   }
 })();

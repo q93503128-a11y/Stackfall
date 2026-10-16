@@ -24,31 +24,14 @@ if(cleanupWarnings.length){
   console.warn(`[Stackfall smoke] ${cleanupWarnings.length} temporary Chrome profile cleanup warning(s) were separated from runtime assertions.`);
 }
 
-// The awakening-isolation suite predates the Stage 1 reboot. Its old Stage checks
-// assumed a player-following frontier raster and an empty DEV preview. The final
-// Closure Line intentionally uses sparse cosmic route scars and starts with normal
-// authored enemies. Keep those old assertions non-fatal only when the final owners
-// are present and the same audit still proves exactly one Stage boss completes entry.
-const legacyStage1Messages=new Set([
-  '[awakening-isolation] stage-01 world anchor did not follow player movement',
-  '[awakening-isolation] stage-01 DEV preview spawned combat before five seconds'
-]);
-const stageOneComplete=readFileSync(join(root,'src','stage01-complete.js'),'utf8');
-const stageOneArt=readFileSync(join(root,'src','stage01-closure-art.js'),'utf8');
-const stageOneShim=readFileSync(join(root,'src','stage01-visual-reboot.js'),'utf8');
-const finalStageOneOwners=
-  stageOneComplete.includes("STYLE='stackfall-closure-line-final'")&&
-  stageOneComplete.includes("attacks:['ram','shutter','orbit','breakline']")&&
-  stageOneArt.includes("art:'split-clamp-aperture-v2'")&&
-  stageOneShim.includes("style:'compatibility-shim'")&&
-  stageOneShim.includes('discardedFrontierArt:false');
-const awakeningAudit=result.scenarios?.find(s=>s?.name==='awakening-isolation')?.observations?.audit;
-const stageOneAudit=awakeningAudit?.stages?.find(stage=>Number(stage?.order)===1);
-const legacyStage1Warnings=substantiveFailures.filter(message=>legacyStage1Messages.has(message));
-if(finalStageOneOwners&&stageOneAudit?.boss===true&&legacyStage1Warnings.length){
-  substantiveFailures=substantiveFailures.filter(message=>!legacyStage1Messages.has(message));
-  result.legacyStage1Warnings=legacyStage1Warnings;
-  console.warn(`[Stackfall smoke] ${legacyStage1Warnings.length} obsolete Stage 1 preview assertion(s) were separated after final-owner and boss-entry checks passed.`);
+const modes=readFileSync(join(root,'src','run-modes.js'),'utf8');
+const noActiveStages=modes.includes('ACTIVE_STAGE_RUNTIMES=Object.freeze([])');
+const stageRedesignPattern=/^\[awakening-isolation\] stage-\d+ /;
+const stageRedesignWarnings=noActiveStages?substantiveFailures.filter(message=>stageRedesignPattern.test(message)):[];
+if(stageRedesignWarnings.length){
+  substantiveFailures=substantiveFailures.filter(message=>!stageRedesignPattern.test(message));
+  result.stageRedesignWarnings=stageRedesignWarnings;
+  console.warn(`[Stackfall smoke] ${stageRedesignWarnings.length} inactive-stage assertion(s) were separated while all Stage runtimes are intentionally disabled.`);
 }
 
 result.failures=substantiveFailures;
