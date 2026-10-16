@@ -65,9 +65,15 @@
     document.head.appendChild(metadata);
   }
 
+  const loadStageOneAudio=()=>{
+    if(typeof document==='undefined'||window.__stackfallStage01AudioPolishLoaded||document.querySelector('script[data-stage01-audio-polish]'))return;
+    const sound=document.createElement('script');sound.src='src/stage01-audio-polish.js';sound.dataset.stage01AudioPolish='true';document.body.appendChild(sound);
+  };
   const loadStageOneArt=()=>{
-    if(typeof document==='undefined'||window.__stackfallStage01ClosureArtLoaded||document.querySelector('script[data-stage01-closure-art]'))return;
-    const art=document.createElement('script');art.src='src/stage01-closure-art.js';art.dataset.stage01ClosureArt='true';document.body.appendChild(art);
+    if(typeof document==='undefined')return;
+    const existing=document.querySelector('script[data-stage01-closure-art]');
+    if(existing){if(window.__stackfallStage01ClosureArtLoaded)loadStageOneAudio();else existing.addEventListener('load',loadStageOneAudio,{once:true});return;}
+    const art=document.createElement('script');art.src='src/stage01-closure-art.js';art.dataset.stage01ClosureArt='true';art.addEventListener('load',loadStageOneAudio,{once:true});document.body.appendChild(art);
   };
   const loadStageOneComplete=()=>{
     if(typeof document==='undefined')return;
@@ -75,7 +81,6 @@
     if(existing){if(window.__stackfallStage01CompleteLoaded)loadStageOneArt();else existing.addEventListener('load',loadStageOneArt,{once:true});return;}
     const complete=document.createElement('script');complete.src='src/stage01-complete.js';complete.dataset.stage01Complete='true';complete.addEventListener('load',loadStageOneArt,{once:true});document.body.appendChild(complete);
   };
-  // The small reboot shim retains compatibility while Stage 1 combat and final art own the live experience.
   const loadStageOneReboot=()=>{
     if(typeof document==='undefined')return;
     const existing=document.querySelector('script[data-stage01-visual-reboot]');
