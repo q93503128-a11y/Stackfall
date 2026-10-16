@@ -49,13 +49,26 @@
       metadata.dataset.worldRebootMetadata='true';
       document.head.appendChild(metadata);
     }
-    // Stage 1 remains layered: v2 owns combat/environment, v3 owns motion-art presentation.
-    // Both load after legacy page-load installers so these hooks remain authoritative.
+    // Stage 1 is layered: v2 owns combat/environment, v3 owns the material boss,
+    // and v4 is the self-review correction for ram body language and route telegraphing.
+    const loadStageOneV4=()=>{
+      if(document.querySelector('script[data-stage01-rework-v4]'))return;
+      const script=document.createElement('script');
+      script.src='src/stage01-rework-v4.js';
+      script.dataset.stage01ReworkV4='true';
+      document.head.appendChild(script);
+    };
     const loadStageOneV3=()=>{
-      if(document.querySelector('script[data-stage01-rework-v3]'))return;
+      const existing=document.querySelector('script[data-stage01-rework-v3]');
+      if(existing){
+        if(window.__stackfallStageOneReworkV3Loaded)setTimeout(loadStageOneV4,0);
+        else existing.addEventListener('load',()=>setTimeout(loadStageOneV4,0),{once:true});
+        return;
+      }
       const script=document.createElement('script');
       script.src='src/stage01-rework-v3.js';
       script.dataset.stage01ReworkV3='true';
+      script.addEventListener('load',()=>setTimeout(loadStageOneV4,0),{once:true});
       document.head.appendChild(script);
     };
     const loadStageOneV2=()=>{
