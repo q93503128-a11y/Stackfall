@@ -49,13 +49,27 @@
       metadata.dataset.worldRebootMetadata='true';
       document.head.appendChild(metadata);
     }
-    // Stage 1 is layered: v2 owns combat/environment, v3 owns the material boss,
-    // and v4 is the self-review correction for ram body language and route telegraphing.
+    // Stage 1 is layered: v2 owns combat/environment, v3 owns motion/material state,
+    // v4 corrects ram body language, and v5 replaces the visible boss with the
+    // production-mass silhouette while preserving the established collision runtime.
+    const loadStageOneV5=()=>{
+      if(document.querySelector('script[data-stage01-rework-v5]'))return;
+      const script=document.createElement('script');
+      script.src='src/stage01-rework-v5.js';
+      script.dataset.stage01ReworkV5='true';
+      document.head.appendChild(script);
+    };
     const loadStageOneV4=()=>{
-      if(document.querySelector('script[data-stage01-rework-v4]'))return;
+      const existing=document.querySelector('script[data-stage01-rework-v4]');
+      if(existing){
+        if(window.__stackfallStageOneReworkV4Loaded)setTimeout(loadStageOneV5,0);
+        else existing.addEventListener('load',()=>setTimeout(loadStageOneV5,0),{once:true});
+        return;
+      }
       const script=document.createElement('script');
       script.src='src/stage01-rework-v4.js';
       script.dataset.stage01ReworkV4='true';
+      script.addEventListener('load',()=>setTimeout(loadStageOneV5,0),{once:true});
       document.head.appendChild(script);
     };
     const loadStageOneV3=()=>{
