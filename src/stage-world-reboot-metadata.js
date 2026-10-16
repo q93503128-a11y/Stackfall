@@ -1,5 +1,4 @@
 // Runtime-facing names for the stage world reboot.
-// Boss ids remain compatibility ids until each stage receives its production rebuild.
 (()=>{
   if(window.__stackfallWorldRebootMetadataApplied)return;
   window.__stackfallWorldRebootMetadataApplied=true;
@@ -44,7 +43,10 @@
       const patch={...row,title:Object.freeze({...row.title,...title})};
       if(row.id==='stage-01'){
         patch.description=Object.freeze(stageOneDescription);
-        patch.boss=Object.freeze({...row.boss,name:Object.freeze({ko:'폐쇄체',en:'Closure'} )});
+        patch.gimmick=null;
+        patch.discoveries=Object.freeze({...row.discoveries,gimmicks:Object.freeze([])});
+        patch.fixedEvents=Object.freeze(row.fixedEvents.filter(event=>event.kind!=='hazard').map(event=>Object.freeze(event.kind==='boss'?{...event,variant:'closure'}:{...event})));
+        patch.boss=Object.freeze({...row.boss,id:'closure',name:Object.freeze({ko:'폐쇄체',en:'Closure'})});
       }
       return Object.freeze(patch);
     });
