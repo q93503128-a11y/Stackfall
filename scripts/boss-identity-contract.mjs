@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const exists=p=>fs.existsSync(p);
-const catalog=read('src/boss-catalog.js'),patterns=read('src/boss-patterns.js'),renderers=read('src/elite-renderers.js'),bosses=read('src/bosses.js'),stage=read('src/stage-runtime.js'),stageOne=read('src/stage01-visual-reboot.js'),modes=read('src/run-modes.js'),index=read('index.html');
+const catalog=read('src/boss-catalog.js'),patterns=read('src/boss-patterns.js'),renderers=read('src/elite-renderers.js'),bosses=read('src/bosses.js'),stage=read('src/stage-runtime.js'),stageOne=read('src/stage01-complete.js'),stageOneArt=read('src/stage01-closure-art.js'),stageOneShim=read('src/stage01-visual-reboot.js'),modes=read('src/run-modes.js'),index=read('index.html');
 const regular=['eclipse','seraph','pulsar','leviathan','archivist','heliarch','tempest','nullengine'];
 const mini=['knight','warden','executioner','colossus','harvester','mirror'];
 const voids=['maw','oracle','weaver','grave','paradox'];
@@ -20,14 +20,15 @@ const checks=[
  ['Apex forms have separate signature attacks',['chronophageSignature','starforgeSignature','constellationSignature'].every(name=>patterns.includes('function '+name))],
  ['Apex forms have separate set-piece behavior',['startChronoPursuit','startForgeTidalCore','startConstellationSweep'].every(name=>bosses.includes('function '+name)&&bosses.includes(name+'(e,phase,d)'))],
  ['Apex forms have separate silhouette renderers',['drawChronophageApex','drawStarforgeApex','drawLastConstellationApex'].every(name=>renderers.includes('function '+name))],
- ['Stage 1 final boss owns the reboot silhouette and combat route',stageOne.includes('function drawStageOneBoss')&&stageOne.includes("e?.kind==='stage-boss'&&e.eventKind==='stage-01'")&&stageOne.includes('window.updateStageBossSkill=function stageOneBossSkill')&&stage.includes("form:'closure'")&&stage.includes("eventVariant:'stage01-closure'")],
- ['Stage 1 final boss uses authored two-phase motion with full attack lifecycle',stageOne.includes("nextPhase=ratio<=.52?2:1")&&['brace','compress','charge','dash','impact','recover'].every(mode=>stageOne.includes("'"+mode+"'"))&&stageOne.includes('function advanceRam')&&stageOne.includes('function stageOneShapes')],
+ ['Stage 1 final boss owns the final silhouette and combat route',stageOneArt.includes('function drawBossArt')&&stageOneArt.includes("e?.kind==='stage-boss'&&e.eventKind===STAGE_ID")&&stageOne.includes('window.updateStageBossSkill=function stageOneCompleteBossSkill')&&stage.includes("form:'closure'")&&stage.includes("eventVariant:'stage01-closure'")],
+ ['Stage 1 final boss uses authored two-phase motion with full attack lifecycle',stageOne.includes('ratio<=.55')&&['brace','fold','charge','dash','impact','recover'].every(mode=>stageOne.includes("'"+mode+"'"))&&['ram','shutter','orbit','breakline'].every(type=>stageOne.includes("'"+type+"'"))&&stageOne.includes('function updateBossIdle')&&stageOne.includes('function updateMorph')],
  ['rejected Stage 2-18 runtime adapters stay removed',retiredStageAdapters.every(path=>!exists(path))],
  ['rejected layered Stage 1 production files stay removed',retiredStageOneLayers.every(path=>!exists(path))],
  ['HTML no longer loads rejected stage production layers',retiredStageAdapters.concat(retiredStageOneLayers).every(path=>!index.includes(path))],
  ['run-mode gate exposes only the approved Stage 1 runtime',modes.includes("ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01'])")&&modes.includes("stage&&!hasStageRuntime(stage.id)?'planned':baseStatus(stage)")],
  ['discarded per-stage generic boss rotations are absent',rejectedStageTokens.every(token=>!stage.includes(token))&&stage.includes('bossSkill:null')],
  ['Stage runtime has no shared circular barrage helper calls',!stage.includes('fireRing(')&&!stage.includes('fireRingWithGaps(')],
- ['Stage 1 reboot owns visible movement directly',stageOne.includes('e.x=lerp(r.originX,r.targetX,t)')&&stageOne.includes('e.y=lerp(r.originY,r.targetY,t)')&&stageOne.includes('window.stackfallClampStageBossToArena=')],
+ ['Stage 1 final runtime owns visible movement directly',stageOne.includes('e.x=lerp(a.originX,a.targetX,t)')&&stageOne.includes('e.y=lerp(a.originY,a.targetY,t)')&&stageOne.includes('function updateBossIdle')&&stageOneArt.includes('window.stackfallStageBodyShapes=')],
+ ['Stage 1 reboot shim cannot restore discarded frontier art',stageOneShim.includes("style:'compatibility-shim'")&&stageOneShim.includes('discardedFrontierArt:false')&&!stageOneShim.includes('frontierSprite')&&!stageOneShim.includes('FRONTIER_ART')],
 ];
 let failed=0;for(const [name,ok] of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failed++;}console.log(`Checked ${checks.length} boss identity contracts; failures=${failed}`);if(failed)process.exit(1);
