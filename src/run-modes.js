@@ -58,11 +58,25 @@
     else installStageStatusGate();
   }
 
-  // Stage 1's base realm renderer used to borrow sprites from the rejected
-  // production-art layer. Keep the base renderer callable while that art is
-  // intentionally absent; the next approved Stage 1 art pass will own visuals.
+  // Stage 1's base realm renderer used to borrow sprites and pose helpers from
+  // the rejected production-art layer. Keep only runtime geometry compatibility;
+  // no rejected visual asset or renderer is restored here.
   if(!window.FRONTIER_ART)window.FRONTIER_ART=Object.freeze({});
   if(typeof window.frontierSprite!=='function')window.frontierSprite=()=>false;
+  if(typeof window.stageOneArtPose!=='function')window.stageOneArtPose=e=>{
+    const ease=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
+    const kick=(age,start,amount)=>{const t=age-start;return t<0?0:amount*Math.sin(t*18)*Math.exp(-t*5.2);};
+    const now=state.time||0,age=Math.max(0,now-(e.stageActionAt??-10)),open=e.stageGateCoreOpen?ease((now-(e.stageGateOpenedAt??-10))/.82):0;
+    const parts=[[0,-19-open*14,124,58,-.012],[-143-open*31,31,42,78,-.13-open*.035],[140+open*28,22,44,69,.11+open*.045],[9,22+open*5,28,27,.015]];
+    const wind=ease(age/.82),release=1-ease((age-1.62)/.9);
+    if(e.stageAction==='salvage'){const q=wind*release;parts[2][0]-=15*q;parts[2][1]-=43*q;parts[2][4]+=.42*q;parts[1][1]+=16*q;parts[1][4]-=.12*q;parts[0][0]-=8*q;parts[0][1]+=kick(age,.82,7);}
+    if(e.stageAction==='bulkhead'){const q=ease(age/.74)*(1-ease((age-2.08)/.78));parts[1][0]+=30*q;parts[2][0]-=33*q;parts[1][1]-=23*q;parts[2][1]-=19*q;parts[1][4]+=.19*q;parts[2][4]-=.17*q;parts[0][1]+=kick(age,1.28,8);}
+    if(e.stageAction==='ram'){const load=ease(age/.94)*(1-ease((age-1.82)/.6));parts[0][1]+=15*load;parts[1][0]+=30*load;parts[2][0]-=27*load;parts[1][1]-=35*load;parts[2][1]-=31*load;parts[1][4]+=.25*load;parts[2][4]-=.22*load;parts[0][1]+=kick(age,1.74,10);}
+    if(e.stageAction==='girder'){const q=ease(age/.84)*(1-ease((age-1.64)/.74));parts[1][0]-=13*q;parts[2][1]-=45*q;parts[2][4]-=.52*q;parts[0][0]+=kick(age,1.54,8);}
+    if(e.stageEntryProgress!=null){const q=1-ease((e.stageEntryProgress-.10)/.84);parts[0][1]-=46*q;parts[1][0]-=112*q;parts[2][0]+=118*q;parts[1][1]-=58*q;parts[2][1]-=43*q;}
+    if(e.stageDefeatAge!=null){const q=ease(e.stageDefeatAge/1.35);parts[1][0]-=75*q;parts[1][1]+=84*q;parts[1][4]-=.70*q;parts[2][0]+=83*q;parts[2][1]+=72*q;parts[2][4]+=.82*q;parts[3][1]+=25*q;parts[0][1]+=19*q;}
+    return parts;
+  };
 
   if(typeof document!=='undefined'&&!document.querySelector('script[data-world-reboot-metadata]')){
     const metadata=document.createElement('script');
