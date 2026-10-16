@@ -8,9 +8,12 @@ const root=resolve('.'),out=resolve('test-results','stage01-reboot');mkdirSync(o
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.wav':'audio/wav','.ogg':'audio/ogg'};
 const server=createServer((req,res)=>{try{const raw=decodeURIComponent((req.url||'/').split('?')[0]),path=resolve(root,'.'+(raw==='/'?'/index.html':raw));if(!path.startsWith(root)||!existsSync(path)){res.writeHead(404);res.end('not found');return;}res.writeHead(200,{'content-type':mime[extname(path)]||'application/octet-stream','cache-control':'no-store'});res.end(readFileSync(path));}catch(error){res.writeHead(500);res.end(String(error));}});
 await new Promise(ok=>server.listen(8000,'127.0.0.1',ok));
-const chrome=process.env.STACKFALL_CHROME||'/usr/bin/google-chrome',profile=join(tmpdir(),`stackfall-stage01-${process.pid}`),browser=spawn(chrome,['--headless=new','--disable-gpu','--no-sandbox','--disable-dev-shm-usage','--remote-debugging-port=9223',`--user-data-dir=${profile}`,'about:blank'],{stdio:'ignore'});
+const chrome=process.env.STACKFALL_CHROME||'/usr/bin/google-chrome',profile=join(tmpdir(),`stackfall-stage01-${process.pid}`);
+let chromeStderr='';
+const browser=spawn(chrome,['--headless','--disable-gpu','--no-sandbox','--disable-dev-shm-usage','--no-first-run','--no-default-browser-check','--remote-debugging-address=127.0.0.1','--remote-debugging-port=9223',`--user-data-dir=${profile}`,'about:blank'],{stdio:['ignore','ignore','pipe']});
+browser.stderr?.on('data',chunk=>{chromeStderr=(chromeStderr+String(chunk)).slice(-12000);});
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-async function retry(fn,timeout=10000){const at=Date.now();let err;while(Date.now()-at<timeout){try{return await fn();}catch(e){err=e;await sleep(100);}}throw err||new Error('timeout');}
+async function retry(fn,timeout=16000){const at=Date.now();let err;while(Date.now()-at<timeout){try{return await fn();}catch(e){err=e;if(browser.exitCode!==null)throw new Error(`Chrome exited ${browser.exitCode}: ${chromeStderr||e.message}`);await sleep(100);}}throw new Error(`${err?.message||'timeout'}\nChrome stderr:\n${chromeStderr}`);}
 const target=await retry(async()=>{const r=await fetch('http://127.0.0.1:9223/json/new?http://127.0.0.1:8000/?dev=1',{method:'PUT'});if(!r.ok)throw new Error('debug target '+r.status);return r.json();});
 const ws=new WebSocket(target.webSocketDebuggerUrl);await new Promise((ok,fail)=>{ws.addEventListener('open',ok,{once:true});ws.addEventListener('error',fail,{once:true});});
 let seq=0;const pending=new Map();ws.addEventListener('message',event=>{const msg=JSON.parse(String(event.data));if(msg.id&&pending.has(msg.id)){const p=pending.get(msg.id);pending.delete(msg.id);msg.error?p.reject(new Error(msg.error.message)):p.resolve(msg.result);}});
