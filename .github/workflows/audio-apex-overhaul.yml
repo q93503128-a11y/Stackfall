@@ -1,0 +1,348 @@
+name: Apply sound identity and Stage 1 apex overhaul
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audio-apex-overhaul.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply authored audio and apex changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          # ------------------------------------------------------------
+          # 1) Procedural music becomes the single BGM owner.
+          # ------------------------------------------------------------
+          p=Path('src/runtime-config.js')
+          text=p.read_text(encoding='utf-8')
+          a=text.index('const MUSIC_SCENES={')
+          b=text.index('const WEAPON_SOUND_PROFILES=',a)
+          music=r'''const STACKFALL_MOTIF=Object.freeze([0,3,7,5,10,7,3,2]);
+const MUSIC_SCENES=Object.freeze({
+  // Four normal identities: Endless + one theme for each constellation family.
+  endless:Object.freeze({bpm:90,root:55,bed:[27.5,41.2,55,82.41],bass:[0,null,0,null,7,null,3,null,0,null,10,null,7,null,3,null],lead:[12,null,15,null,19,17,null,22,19,null,15,14,null,10,null,12],accent:[0,6,8,14],filter:1480,noise:230,drive:.72,master:.235,leadType:'triangle',leadGain:.0068,bassGain:.0105}),
+  constellation1:Object.freeze({bpm:104,root:61.735,bed:[30.87,46.25,61.74,92.5],bass:[0,null,0,7,3,null,7,null,0,null,10,7,3,null,2,null],lead:[12,15,null,19,17,null,22,19,15,null,14,10,null,15,19,null],accent:[0,3,8,11,14],filter:2280,noise:340,drive:.88,master:.245,leadType:'triangle',leadGain:.0084,bassGain:.0118}),
+  constellation2:Object.freeze({bpm:96,root:51.913,bed:[25.96,38.89,51.91,77.78],bass:[0,null,7,null,3,10,null,7,0,null,7,3,null,10,5,null],lead:[12,null,15,19,null,17,22,null,19,15,null,10,14,null,17,15],accent:[0,5,8,13],filter:1960,noise:410,drive:.84,master:.242,leadType:'sine',leadGain:.0080,bassGain:.0114}),
+  constellation3:Object.freeze({bpm:84,root:46.249,bed:[23.12,34.65,46.25,69.3],bass:[0,null,null,0,7,null,3,null,0,null,null,10,7,null,2,null],lead:[12,null,null,15,19,null,17,null,22,null,19,null,14,null,10,null],accent:[0,4,8,12],filter:1320,noise:620,drive:.78,master:.240,leadType:'square',leadGain:.0067,bassGain:.0124}),
+
+  // Each Apex owns a distinct score. All four still quote/transform the same
+  // Stackfall interval cell so they belong to one musical world.
+  'apex-warden':Object.freeze({bpm:132,root:55,bed:[27.5,41.2,55,82.41],bass:[0,0,null,7,0,null,3,0,10,10,null,7,3,null,2,0],lead:[12,13,19,null,15,22,18,null,12,19,23,null,15,13,10,null],accent:[0,3,6,8,11,14],filter:2720,noise:760,drive:1.18,master:.255,leadType:'sawtooth',leadGain:.0100,bassGain:.0142,apex:true}),
+  'apex-chronophage':Object.freeze({bpm:118,root:49,bed:[24.5,36.71,49,73.42],bass:[0,null,0,6,null,3,0,null,10,null,7,null,1,null,3,null],lead:[12,null,15,14,19,null,22,17,null,19,13,null,10,14,null,12],accent:[0,2,7,8,13],filter:2360,noise:690,drive:1.08,master:.252,leadType:'triangle',leadGain:.0095,bassGain:.0135,apex:true}),
+  'apex-starforge':Object.freeze({bpm:144,root:46.249,bed:[23.12,34.65,46.25,69.3],bass:[0,0,7,0,6,0,10,7,0,0,3,7,10,6,3,0],lead:[12,19,18,24,22,19,15,18,12,22,19,27,24,18,15,12],accent:[0,2,4,6,8,10,12,14],filter:3100,noise:980,drive:1.25,master:.255,leadType:'sawtooth',leadGain:.0098,bassGain:.0148,apex:true}),
+  'apex-lastconstellation':Object.freeze({bpm:108,root:58.27,bed:[29.14,43.65,58.27,87.31],bass:[0,null,7,null,10,null,3,null,0,null,5,null,10,null,2,null],lead:[12,19,null,22,17,null,15,24,19,null,14,17,null,10,15,null],accent:[0,5,8,13],filter:2520,noise:540,drive:1.05,master:.252,leadType:'triangle',leadGain:.0092,bassGain:.0131,apex:true})
+});
+const STACKFALL_NORMAL_MUSIC=Object.freeze(['endless','constellation1','constellation2','constellation3']);
+const STACKFALL_APEX_MUSIC=Object.freeze(['apex-warden','apex-chronophage','apex-starforge','apex-lastconstellation']);
+'''
+          text=text[:a]+music+text[b:]
+          text=text.replace("audio.soundProfiles={music:Object.keys(MUSIC_SCENES),stageApex:{...STAGE_APEX_MUSIC_SCENES},weapons:Object.keys(WEAPON_SOUND_PROFILES),level:'submerged-descending'};","audio.soundProfiles={music:Object.keys(MUSIC_SCENES),normal:[...STACKFALL_NORMAL_MUSIC],apex:[...STACKFALL_APEX_MUSIC],weapons:Object.keys(WEAPON_SOUND_PROFILES),level:'submerged-descending'};")
+
+          # Route sequence notes through the ambient bus so BGM level/ducking owns
+          # every musical layer instead of only the drone bed.
+          a=text.index('audio.playChannel=function playCosmicChannel(')
+          b=text.index('\naudio.tone=function',a)
+          play=r'''audio.playChannel=function playCosmicChannel(channel,freq,duration=.06,type='sine',volume=.025,slide=0,pan=0,options={}){if(!this.allowed(channel))return;rawAudioInit();this.ensureOutput();const t=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain(),filter=this.ctx.createBiquadFilter(),panner=typeof this.ctx.createStereoPanner==='function'?this.ctx.createStereoPanner():null,musicBus=options.bus==='music'&&this.ambientMaster,destination=musicBus?this.ambientMaster:this.outputNode,scaled=volume*(musicBus?1:audioVolume(channel))*5.65;o.type=type;o.detune.value=Number(options.detune)||rand(-5,5);o.frequency.setValueAtTime(Math.max(30,freq),t);o.frequency.exponentialRampToValueAtTime(Math.max(30,freq+slide),t+duration);filter.type=options.filterType||(type==='square'||type==='sawtooth'?'lowpass':'bandpass');filter.frequency.value=clamp(Number(options.filterHz)||freq*3.1,90,6800);filter.Q.value=Number(options.q)||(type==='sine'?.75:.58);g.gain.setValueAtTime(Math.max(.0001,scaled),t);g.gain.exponentialRampToValueAtTime(.0001,t+duration);if(panner){panner.pan.value=clamp(pan+rand(-.10,.10),-1,1);o.connect(filter).connect(g).connect(panner);panner.connect(destination);if(!musicBus&&options.echo!==false)panner.connect(this.echoInput);}else{o.connect(filter).connect(g);g.connect(destination);if(!musicBus&&options.echo!==false)g.connect(this.echoInput);}o.start(t);o.stop(t+duration+.03);};'''
+          text=text[:a]+play+text[b:]
+
+          # Distinct Apex arrival signatures.
+          a=text.index('audio.apexIntro=function apexIntro(')
+          b=text.index('\naudio.stageAttack=function',a)
+          intro=r'''audio.apexIntro=function apexIntro(form){const profile={warden:[55,82.41,220],chronophage:[49,73.42,196],starforge:[46.25,92.5,277.18],lastconstellation:[58.27,87.31,233.08]}[form]||[43.65,65.4,174.61],root=profile[0];this.duckMusic?.(.34,.82);this.playChannel('combat',root,1.45,'sawtooth',.084,root*.18,0,{filterHz:720});scheduleUiAction(360,()=>this.playChannel('combat',profile[1],1.02,'triangle',.052,-root*.20,-.24,{filterHz:1500}));scheduleUiAction(780,()=>this.playChannel('combat',profile[2],.68,form==='starforge'?'sawtooth':'sine',.034,-profile[2]*.28,.24,{filterHz:3000}));scheduleUiAction(1450,()=>this.enemyImpact(1.75));};'''
+          text=text[:a]+intro+text[b:]
+
+          # Add Stage 1 Apex signature sound events.
+          needle="    else if(attack==='ram-impact'){this.enemyImpact(1.45);}\n    else if(attack==='defeat')"
+          repl="    else if(attack==='ram-impact'){this.enemyImpact(1.45);}\n    else if(attack==='orbit-dominion'){this.duckMusic?.(.46,.48);this.playChannel('combat',55,.86,'sawtooth',.052,110,-.20,{filterHz:1120});this.playChannel('combat',329.63,.38,'triangle',.022,-165,.22,{filterHz:3100});}\n    else if(attack==='anchor-fire'){this.playChannel('combat',740,.085,'square',.017,-390,.22,{filterHz:3300,echo:false});this.playChannel('combat',123.47,.20,'triangle',.014,-42,-.18,{filterHz:980});}\n    else if(attack==='defeat')"
+          if needle not in text: raise SystemExit('Stage 1 SFX insertion point missing')
+          text=text.replace(needle,repl,1)
+
+          # Replace the old sparse pulse router with four normal themes and
+          # per-Apex adaptive sequencing. World events keep the underlying theme.
+          a=text.index('audio.musicSceneForState=function musicSceneForState()')
+          b=text.index('\naudio.updateMusic=function',a)
+          router=r'''audio.musicSceneForState=function musicSceneForState(){
+  if(['menu','gameover','stageComplete','stageVictory'].includes(state.mode))return null;
+  const stage=state.stageRun?.stage||null,stageId=stage?.id||null,production=window.stackfallStageProduction?.(stageId);
+  if(stageId&&(state.stageRun?.bossSpawned||state.stageRun?.bossIntroPending))return production?.music||'apex-warden';
+  const apexEnemy=state.apexActiveId?state.entities.enemies.find(e=>e&&!e.dead&&e.id===state.apexActiveId):null,apexForm=apexEnemy?.apexForm||state.pendingApexForm||state.apexArena?.form||null;
+  if(apexForm){const key='apex-'+apexForm;return MUSIC_SCENES[key]?key:'apex-chronophage';}
+  if(stage){if(stage.constellationId==='constellation-02')return'constellation2';if(stage.constellationId==='constellation-03')return'constellation3';return'constellation1';}
+  return'endless';
+};
+audio.musicIntensity=function musicIntensity(){const stageBoss=state.stageRun?.bossId?state.entities.enemies.find(e=>e&&!e.dead&&e.id===state.stageRun.bossId):null;if(stageBoss)return clamp(Number(stageBoss.stagePhase)||1,1,3);const apex=state.apexActiveId?state.entities.enemies.find(e=>e&&!e.dead&&e.id===state.apexActiveId):null;return clamp(Number(apex?.apexPhase)||1,1,4);};
+audio.musicBaseGain=function musicBaseGain(){const profile=MUSIC_SCENES[this.musicScene]||MUSIC_SCENES.endless;return(profile.master??.24)*audioVolume('ambient');};
+audio.duckMusic=function duckMusic(amount=.52,hold=.22){if(!this.ctx||!this.ambientMaster)return;const now=this.ctx.currentTime,target=this.musicBaseGain();this.ambientMaster.gain.cancelScheduledValues(now);this.ambientMaster.gain.setTargetAtTime(target*clamp(amount,.18,1),now,.018);this.ambientMaster.gain.setTargetAtTime(target,now+Math.max(.04,hold),.11);};
+audio.startAmbientSequence=function startAmbientSequence(){
+  if(this.ambientTimer||!this.ctx||!this.allowed('ambient'))return;const profile=MUSIC_SCENES[this.musicScene]||MUSIC_SCENES.endless,stepMs=60000/Math.max(54,profile.bpm)/2,ratio=n=>Math.pow(2,n/12),pulse=()=>{if(!this.ctx||!this.allowed('ambient')||!this.ambientMaster)return;const step=this.ambientStep++,slot=step%16,intensity=this.musicIntensity(),apex=profile.apex===true,drive=profile.drive||1,pan=Math.sin(step*.73)*.30,bass=profile.bass[slot],lead=profile.lead[slot];
+    if(bass!=null)this.playChannel('ambient',profile.root*ratio(bass),stepMs/1000*.78,'sine',(profile.bassGain||.011)*drive,profile.root*.025,pan*.24,{bus:'music',filterType:'lowpass',filterHz:apex?820:680,echo:false});
+    if(lead!=null&&(apex||slot%2===0||slot%4===3))this.playChannel('ambient',profile.root*2*ratio(lead-12),stepMs/1000*(apex?.68:.88),profile.leadType||'triangle',(profile.leadGain||.008)*drive*(apex?1+.08*(intensity-1):1),lead%2?pan:-pan,{bus:'music',filterType:'lowpass',filterHz:profile.filter*1.35,echo:false});
+    if(profile.accent.includes(slot)){this.playChannel('ambient',profile.root*.5,apex?.16:.12,'sine',.0105*drive*(apex?1+.10*(intensity-1):1),-profile.root*.10,0,{bus:'music',filterType:'lowpass',filterHz:420,echo:false});this.playChannel('ambient',profile.root*4,apex?.055:.038,'square',.0028*drive,-profile.root*1.2,pan,{bus:'music',filterType:'bandpass',filterHz:apex?3600:2800,echo:false});}
+    if(slot%8===0){const fifth=profile.root*ratio(7);this.playChannel('ambient',fifth,stepMs/1000*1.8,'triangle',.0042*drive,-fifth*.025,-pan*.35,{bus:'music',filterType:'lowpass',filterHz:profile.filter*.82,echo:false});}
+    if(apex&&intensity>=2&&slot%4===2)this.playChannel('ambient',profile.root*4*ratio(STACKFALL_MOTIF[(slot//2)%STACKFALL_MOTIF.length]-12),stepMs/1000*.42,'triangle',.0044*drive*(1+.12*(intensity-2)),profile.root*.06,-pan,{bus:'music',filterType:'bandpass',filterHz:profile.filter*1.55,echo:false});
+    if(apex&&intensity>=3&&slot%2===1)this.playChannel('ambient',profile.root*.75,.055,'square',.0034*drive,-profile.root*.18,pan*.18,{bus:'music',filterType:'lowpass',filterHz:900,echo:false});
+  };pulse();this.ambientTimer=setInterval(pulse,stepMs);
+};
+audio.stopAmbient=function(){if(this.ambientTimer){clearInterval(this.ambientTimer);this.ambientTimer=null;}for(const node of this.ambientNodes){try{node.stop?.();}catch{}try{node.disconnect?.();}catch{}}this.ambientNodes=[];this.ambientMaster=null;this.ambientStep=0;this.musicScene=null;};
+audio.syncAmbient=function syncSceneMusic(force=false){if(!this.ctx||!this.allowed('ambient')){this.stopAmbient();return;}this.ensureOutput();const scene=this.musicSceneForState();if(!scene){this.stopAmbient();return;}if(!force&&this.ambientMaster&&this.musicScene===scene){this.ambientMaster.gain.setTargetAtTime(this.musicBaseGain(),this.ctx.currentTime,.16);this.startAmbientSequence();return;}this.stopAmbient();this.musicScene=scene;const profile=MUSIC_SCENES[scene]||MUSIC_SCENES.endless,t=this.ctx.currentTime,master=this.ctx.createGain(),lowpass=this.ctx.createBiquadFilter();master.gain.value=this.musicBaseGain();lowpass.type='lowpass';lowpass.frequency.value=profile.filter;lowpass.Q.value=.62;master.connect(lowpass).connect(this.outputNode);this.ambientNodes=[master,lowpass];const gains=profile.apex?[.82,.36,.14,.052]:[.66,.25,.095,.030];for(let i=0;i<profile.bed.length;i++){const o=this.ctx.createOscillator(),g=this.ctx.createGain(),p=typeof this.ctx.createStereoPanner==='function'?this.ctx.createStereoPanner():null,lfo=this.ctx.createOscillator(),lfoGain=this.ctx.createGain();o.type=i<2?'sine':'triangle';o.frequency.value=profile.bed[i];o.detune.value=i%2?-6:5;g.gain.value=gains[i];lfo.frequency.value=.020+i*.008;lfoGain.gain.value=3.2+i*1.2;lfo.connect(lfoGain).connect(o.detune);if(p){p.pan.value=(i-1.5)*.18;o.connect(g).connect(p).connect(master);this.ambientNodes.push(p);}else o.connect(g).connect(master);o.start(t);lfo.start(t);this.ambientNodes.push(o,g,lfo,lfoGain);}const length=Math.max(1,Math.floor(this.ctx.sampleRate*2)),buffer=this.ctx.createBuffer(1,length,this.ctx.sampleRate),data=buffer.getChannelData(0);let last=0;for(let i=0;i<length;i++){last=last*.989+(Math.random()*2-1)*.011;data[i]=last;}const noise=this.ctx.createBufferSource(),noiseFilter=this.ctx.createBiquadFilter(),noiseGain=this.ctx.createGain();noise.buffer=buffer;noise.loop=true;noiseFilter.type='bandpass';noiseFilter.frequency.value=profile.noise;noiseFilter.Q.value=.82;noiseGain.gain.value=profile.apex?.085:.048;noise.connect(noiseFilter).connect(noiseGain).connect(master);noise.start(t);this.ambientNodes.push(noise,noiseFilter,noiseGain);this.ambientMaster=master;this.startAmbientSequence();};'''
+          text=text[:a]+router+text[b:]
+          p.write_text(text,encoding='utf-8')
+
+          # ------------------------------------------------------------
+          # 2) Stage 1 uses the procedural score only and gains an Apex set-piece.
+          # ------------------------------------------------------------
+          p=Path('src/stage01-remodel.js')
+          text=p.read_text(encoding='utf-8')
+          a=text.index('  const STAGE_AUDIO_SOURCES=')
+          b=text.index('  const localText=',a)
+          text=text[:a]+text[b:]
+          text=text.replace('stageAudio.playBoss();','audio.syncAmbient?.(true);')
+          text=text.replace('stageAudio.playVictory();','audio.syncAmbient?.(true);audio.stageAttack?.(STAGE_ID,\'defeat\');')
+          text=text.replace('stageAudio.playAmbient();','audio.syncAmbient?.(true);')
+
+          a=text.index('  function updateOrbitWarden(enemy,dt){')
+          b=text.index('\n\n  if(typeof window.stackfallRegisterStageRuntime',a)
+          boss=r'''  function startOrbitDominion(enemy,phase){
+    const radius=compactDevice()?255:365,arms=phase>=3?4:3;
+    enemy.stage01Dominion={warmup:1.08,life:phase>=3?4.25:3.65,angle:(enemy.phase||0)+.32,dir:enemy.stage01OrbitDir||1,radius,arms,phase,tick:0,visual:0,anchorShot:.72};
+    enemy.stage01AttackCd=Math.max(enemy.stage01AttackCd,1.35);enemy.stage01BurstCd=Math.max(enemy.stage01BurstCd,1.65);enemy.stage01LockCd=Math.max(enemy.stage01LockCd,2.0);
+    state.entities.enemyProjectiles.length=0;shockwave(enemy.x,enemy.y,'#7de8ff',175+phase*25,.58,3.4);spawnParticle(enemy.x,enemy.y,'#b9f7ff',10+phase*3,180,4);state.camera.shake=Math.max(state.camera.shake,6+phase);audio.stageAttack?.(STAGE_ID,'orbit-dominion');
+  }
+  function updateOrbitDominion(enemy,dt){
+    const field=enemy.stage01Dominion;if(!field)return false;field.life-=dt;field.warmup-=dt;field.visual-=dt;field.tick-=dt;field.anchorShot-=dt;const active=field.warmup<=0,turn=(active?.62:.18)+field.phase*.075;field.angle+=dt*turn*field.dir;
+    if(field.visual<=0){field.visual=compactDevice()?.075:.048;for(let i=0;i<field.arms;i++){const a=field.angle+i/field.arms*TAU,x2=enemy.x+Math.cos(a)*field.radius,y2=enemy.y+Math.sin(a)*field.radius,width=active?10+field.phase*1.8:2.2;color=i%2?'#b991ff':'#7de8ff';if(state.entities.beams.length<entityCap('beams'))state.entities.beams.push({x1:enemy.x,y1:enemy.y,x2,y2,life:.085,max:.085,color,width});const next=field.angle+(i+1)/field.arms*TAU,nx=enemy.x+Math.cos(next)*field.radius,ny=enemy.y+Math.sin(next)*field.radius;if(state.entities.beams.length<entityCap('beams'))state.entities.beams.push({x1:x2,y1:y2,x2:nx,y2:ny,life:.085,max:.085,color:'rgba(154,112,232,.32)',width:1.15});}}
+    if(active&&field.tick<=0){field.tick=.16;const damage=Math.max(5.5,enemy.damage*(.34+field.phase*.035));for(let i=0;i<field.arms;i++){const a=field.angle+i/field.arms*TAU,x2=enemy.x+Math.cos(a)*field.radius,y2=enemy.y+Math.sin(a)*field.radius;if(player.invuln<=0&&lineDistance(player.x,player.y,enemy.x,enemy.y,x2,y2)<player.r+7+field.phase*1.4){hurtPlayer(damage,enemy);break;}}}
+    if(active&&field.phase>=2&&field.anchorShot<=0){field.anchorShot=field.phase>=3?.66:.92;const targetX=player.x+(Number(player.moveVX)||0)*.22,targetY=player.y+(Number(player.moveVY)||0)*.22;for(let i=0;i<field.arms;i++){const a=field.angle+i/field.arms*TAU,x=enemy.x+Math.cos(a)*field.radius,y=enemy.y+Math.sin(a)*field.radius;hostileShot(x,y,Math.atan2(targetY-y,targetX-x),field.phase>=3?315:285,4.4+field.phase*.35,i%2?'#b991ff':'#7de8ff',5.1,4.1,'stage01-warden-anchor');}audio.stageAttack?.(STAGE_ID,'anchor-fire');}
+    if(field.life<=0){enemy.stage01Dominion=null;shockwave(enemy.x,enemy.y,'#9a70e8',135,.36,2.2);return false;}return true;
+  }
+
+  function updateOrbitWarden(enemy,dt){
+    if(!enemy||enemy.dead)return;
+    const ratio=clamp(enemy.hp/Math.max(1,enemy.maxHp),0,1),phase=ratio>.68?1:ratio>.34?2:3;
+    if(enemy.stagePhase!==phase){
+      enemy.stagePhase=phase;enemy.stage01AttackCd=.72;enemy.stage01BurstCd=1.35;enemy.stage01LockCd=2.6;enemy.stage01DominionCd=phase===2?2.8:2.1;enemy.stage01OrbitDir*=-1;enemy.stage01Dominion=null;
+      state.entities.enemyProjectiles.length=0;shockwave(enemy.x,enemy.y,phase===2?'#a59dff':'#79e5ff',260+phase*52,.76,5);spawnParticle(enemy.x,enemy.y,phase===2?'#a99dff':'#83e9ff',22+phase*5,255,5.5);
+      state.camera.shake=Math.max(state.camera.shake,10+phase*2);state.flash=Math.max(state.flash,.10);enemy.contactSafeUntil=(state.time||0)+.42;audio.stageAttack?.(STAGE_ID,'phase-open');audio.syncAmbient?.(true);
+    }
+    enemy.speed=enemy.stage01BaseSpeed*(phase===1?.84:phase===2?.94:1.02);
+    enemy.stage01AttackCd-=dt;enemy.stage01BurstCd-=dt;enemy.stage01LockCd-=dt;enemy.stage01DominionCd=(Number(enemy.stage01DominionCd)||4.8)-dt;
+    if(enemy.stage01Dominion){updateOrbitDominion(enemy,dt);return;}
+    if(enemy.stage01DominionCd<=0){enemy.stage01DominionCd=phase===1?9.4:phase===2?8.0:6.9;startOrbitDominion(enemy,phase);return;}
+    const damageScale=phase===1?.92:phase===2?1:1.06;
+    if(enemy.stage01AttackCd<=0){
+      if(phase===1)satelliteVolley(enemy,3,290,4.7*damageScale,'#82e6ff','stage01-warden-satellite',.20);
+      else if(phase===2)aimedFan(enemy,5,.58,315,5.0*damageScale,'#9e91ff','stage01-warden-fan',.24);
+      else{satelliteVolley(enemy,5,330,4.8*damageScale,'#80eaff','stage01-warden-satellite-fast',.28);aimedFan(enemy,3,.25,345,5.3*damageScale,'#aa9bff','stage01-warden-core',.30);}
+      enemy.stage01AttackCd=phase===1?1.96:phase===2?1.62:1.40;
+    }
+    if(enemy.stage01BurstCd<=0){
+      const count=phase===1?8:phase===2?10:12,speed=phase===1?205:phase===2?230:255,offset=(enemy.stage01RingOffset=(enemy.stage01RingOffset||0)+(phase===1?.23:.31));
+      radialBurst(enemy,count,speed,(4.0+phase*.32)*damageScale,phase===1?'#8cecff':'#a99cff',offset,'stage01-warden-ring');enemy.stage01BurstCd=phase===1?5.8:phase===2?5.0:4.25;
+    }
+    if(enemy.stage01LockCd<=0){
+      const count=phase+2,delay=phase===1?.68:phase===2?.58:.50;
+      satelliteLock(enemy,count,delay,phase===1?320:phase===2?350:380,(5.0+phase*.42)*damageScale);
+      if(phase===3)scheduleWeaponAction(380,()=>{if(stageOneActive()&&!enemy.dead)satelliteVolley(enemy,5,350,5.1*damageScale,'#c1b4ff','stage01-warden-satellite-follow',.26);});
+      enemy.stage01LockCd=phase===1?7.4:phase===2?6.4:5.55;
+    }
+  }'''
+          text=text[:a]+boss+text[b:]
+          text=text.replace("entryDuration:2.75,victoryDuration:3.15,subtitle:'ORBIT LOCK ACQUIRED',","entryDuration:3.35,victoryDuration:3.35,subtitle:'APEX ENTITY // ORBITAL AUTHORITY',music:'apex-warden',explorationMusic:'constellation1',")
+          text=text.replace("enemy.stage01AttackCd=.75;enemy.stage01BurstCd=2.3;enemy.stage01LockCd=3.5;enemy.stage01RingOffset=0;","enemy.stage01AttackCd=.75;enemy.stage01BurstCd=2.3;enemy.stage01LockCd=3.5;enemy.stage01DominionCd=4.8;enemy.stage01RingOffset=0;")
+          p.write_text(text,encoding='utf-8')
+
+          # ------------------------------------------------------------
+          # 3) Stage 1 Apex visual hierarchy: larger silhouette + detached anchors.
+          # ------------------------------------------------------------
+          p=Path('src/stage01-polish.js')
+          text=p.read_text(encoding='utf-8')
+          text=text.replace('const r=82,phase=', 'const r=96,phase=',1)
+          sat=text.index('  const satelliteCount=phase+1,orbitR=',text.index('function drawOrbitWarden'))
+          end=text.index('\n  ctx.restore();\n}',sat)
+          tail=r'''  const satelliteCount=phase+1,orbitR=r*(phase===3?1.98:1.84);
+  for(let i=0;i<satelliteCount;i++){
+    const a=t*(.46+phase*.035)+i/satelliteCount*TAU,x=Math.cos(a)*orbitR,y=Math.sin(a)*orbitR*.72;
+    ctx.save();ctx.globalAlpha=.23;ctx.strokeStyle=i%2?edge:cyan;ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(x*.76,y*.76);ctx.lineTo(x,y);ctx.stroke();ctx.restore();
+    ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/4);ctx.fillStyle=i%2?edge:cyan;ctx.shadowBlur=phase===3?14:10;ctx.shadowColor=i%2?edge:cyan;ctx.globalAlpha=.96;ctx.fillRect(-5,-5,10,10);ctx.globalAlpha=.48;ctx.strokeStyle='#effcff';ctx.lineWidth=1;ctx.strokeRect(-8,-8,16,16);ctx.restore();
+  }
+
+  // Detached orbital anchors give the Apex a battlefield-scale silhouette.
+  const anchorCount=phase===1?3:phase===2?4:5,anchorR=r*(phase===3?2.68:phase===2?2.48:2.28),field=enemy.stage01Dominion||null,anchorSpin=field?field.angle:t*.105;
+  for(let i=0;i<anchorCount;i++){
+    const a=anchorSpin+i/anchorCount*TAU,x=Math.cos(a)*anchorR,y=Math.sin(a)*anchorR*.74,pulseA=.82+.18*Math.sin(clock*4+i*1.7);
+    ctx.save();ctx.globalAlpha=phase===1?.20:.28;ctx.strokeStyle=i%2?main:cyan;ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(Math.cos(a)*r*1.45,Math.sin(a)*r*1.12);ctx.lineTo(x,y);ctx.stroke();ctx.restore();
+    ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/4);ctx.shadowBlur=field?18:10;ctx.shadowColor=i%2?main:cyan;ctx.fillStyle='#080611';ctx.strokeStyle=i%2?main:cyan;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-13*pulseA);ctx.lineTo(9,0);ctx.lineTo(0,13*pulseA);ctx.lineTo(-9,0);ctx.closePath();ctx.fill();ctx.stroke();ctx.globalAlpha=.72;ctx.fillStyle='#eaffff';ctx.fillRect(-2.2,-5,4.4,10);ctx.restore();
+  }
+  if(phase>=2){ctx.save();ctx.rotate(-t*.052);ctx.strokeStyle=phase===3?'rgba(117,225,239,.44)':'rgba(207,92,225,.32)';ctx.lineWidth=1.2;ctx.setLineDash([phase===3?13:9,12]);ctx.beginPath();ctx.ellipse(0,0,anchorR*1.03,anchorR*.76,0,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.restore();}
+'''
+          text=text[:sat]+tail+text[end:]
+          # More imposing entry, still using the same final renderer.
+          a=text.index('      drawEntry(_transition,p){')
+          b=text.index('\n              drawBody(enemy)',a)
+          entry=r'''      drawEntry(_transition,p){
+                const ease=p*p*(3-2*p),reveal=clamp(p/.16,0,1),fake={stagePhase:p>.72?2:1,stage01OrbitDir:1,stage01Dominion:p>.58?{angle:p*2.1}:null,hit:0},cx=vw*.5,cy=lerp(vh*.18,vh*.40,ease);
+                ctx.save();ctx.translate(cx,cy);ctx.globalAlpha=reveal;
+                const ringR=lerp(Math.max(vw,vh)*.34,255,ease);ctx.save();ctx.rotate((1-ease)*.75+p*.08);ctx.strokeStyle=`rgba(117,225,239,${(.12+.34*reveal).toFixed(3)})`;ctx.shadowBlur=20;ctx.shadowColor='#75e1ef';ctx.lineWidth=1.5;ctx.setLineDash([16,13]);ctx.beginPath();ctx.ellipse(0,0,ringR,ringR*.55,0,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+                for(let i=0;i<4;i++){const a=i/4*TAU-p*.45,rr=lerp(360,225,ease),x=Math.cos(a)*rr,y=Math.sin(a)*rr*.62;ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/4);ctx.globalAlpha=reveal*(.55+.35*ease);ctx.strokeStyle=i%2?'#cf5ce1':'#75e1ef';ctx.shadowBlur=18;ctx.shadowColor=ctx.strokeStyle;ctx.lineWidth=2;ctx.strokeRect(-9,-9,18,18);ctx.restore();}
+                ctx.globalAlpha=reveal;ctx.rotate((1-ease)*-.48);const scale=lerp(.24,compactDevice()?.72:1.04,ease);ctx.scale(scale,scale);drawOrbitWarden(fake);ctx.restore();
+              },'''
+          text=text[:a]+entry+text[b:]
+          text=text.replace("enemy.color='#9a55d6';enemy.r=82;enemy.visualR=82;enemy.hitRadius=88;enemy.contactRadius=54;","enemy.color='#9a55d6';enemy.r=96;enemy.visualR=96;enemy.hitRadius=102;enemy.contactRadius=58;")
+          text=text.replace("r:82,hitRadius:88,contactRadius:54,color:'#9a55d6',spawnShockwave:175","r:96,hitRadius:102,contactRadius:58,color:'#9a55d6',spawnShockwave:205")
+          p.write_text(text,encoding='utf-8')
+
+          # ------------------------------------------------------------
+          # 4) Semantic Apex ownership and language cleanup.
+          # ------------------------------------------------------------
+          p=Path('src/stage-catalog.js')
+          text=p.read_text(encoding='utf-8')
+          old="boss:definition.boss?freeze({...definition.boss}):null"
+          if old not in text: raise SystemExit('stage catalog boss normalization missing')
+          text=text.replace(old,"boss:definition.boss?freeze({rank:'apex',...definition.boss}):null",1)
+          p.write_text(text,encoding='utf-8')
+
+          p=Path('src/stage-runtime.js')
+          text=p.read_text(encoding='utf-8')
+          text=text.replace("id:state.nextId++,type:'boss',kind:'stage-boss',bossCategory:'apex',stageBossTier:","id:state.nextId++,type:'boss',kind:'stage-boss',bossCategory:stage.boss?.rank==='apex'?'apex':'boss',stageApex:stage.boss?.rank==='apex',stageBossTier:",1)
+          old="if(!options.suppressNotice)showBossNotice(e.name,tr(profile.warningKey));audio.boss();"
+          new="if(!options.suppressNotice)showBossNotice(e.name,e.stageApex?'APEX ENTITY':tr(profile.warningKey));audio.boss();"
+          if old not in text: raise SystemExit('stage boss notice point missing')
+          text=text.replace(old,new,1)
+          old="    audio.stageAttack?.(run.stage.id,'intro');\n    startRealmTransition(run.stage.id,{duration:production.entryDuration||3.2,owner:run.stage.id+'-boss-entry',title:localized(run.stage.boss.name),subtitle:production.subtitle,onComplete:()=>{if(stageRuntime()!==run)return;run.bossIntroPending=false;spawnStageBoss({suppressNotice:true});}});return true;"
+          new="    const profile=stageDefinition()?.bossProfile,apex=run.stage.boss?.rank==='apex';if(apex)audio.apexIntro?.(profile?.form||run.stage.boss?.id);else audio.stageAttack?.(run.stage.id,'intro');audio.syncAmbient?.(true);\n    startRealmTransition(run.stage.id,{duration:production.entryDuration||3.2,owner:run.stage.id+'-boss-entry',title:localized(run.stage.boss.name),subtitle:production.subtitle||(apex?'APEX ENTITY':'FINAL TARGET'),onComplete:()=>{if(stageRuntime()!==run)return;run.bossIntroPending=false;spawnStageBoss({suppressNotice:true});}});return true;"
+          if old not in text: raise SystemExit('production boss intro block missing')
+          text=text.replace(old,new,1)
+          p.write_text(text,encoding='utf-8')
+
+          p=Path('src/language-pack.js')
+          text=p.read_text(encoding='utf-8')
+          replacements={
+            "'stage01.boss':'붕괴의 전초 수호자','stage01.boss.warning':'최종 수호자 접근'":"'stage01.boss':'궤도 감시자','stage01.boss.warning':'초월체 접근'",
+            "'stage01.objective.next':'보스 출현까지','stage01.objective.boss':'최종 목표 · 전초 수호자 격파'":"'stage01.objective.next':'초월체 출현까지','stage01.objective.boss':'최종 목표 · 초월체 궤도 감시자 격파'",
+            "'stage01.boss':'Collapse Frontier Warden','stage01.boss.warning':'FINAL WARDEN APPROACHING'":"'stage01.boss':'Orbit Warden','stage01.boss.warning':'APEX ENTITY APPROACHING'",
+            "'stage01.objective.next':'BOSS IN','stage01.objective.boss':'FINAL OBJECTIVE · DEFEAT THE WARDEN'":"'stage01.objective.next':'APEX IN','stage01.objective.boss':'FINAL OBJECTIVE · DEFEAT ORBIT WARDEN'",
+            "'stage01.boss':'崩壊前線の守護者','stage01.boss.warning':'最終守護者接近'":"'stage01.boss':'軌道監視者','stage01.boss.warning':'超越体接近'",
+            "'stage01.objective.next':'ボス出現まで','stage01.objective.boss':'最終目標・守護者を撃破'":"'stage01.objective.next':'超越体出現まで','stage01.objective.boss':'最終目標・軌道監視者を撃破'",
+            "'stage01.boss':'崩塌前线守卫','stage01.boss.warning':'最终守卫接近'":"'stage01.boss':'轨道监视者','stage01.boss.warning':'超越体接近'",
+            "'stage01.objective.next':'首领出现倒计时','stage01.objective.boss':'最终目标 · 击败前线守卫'":"'stage01.objective.next':'超越体出现倒计时','stage01.objective.boss':'最终目标 · 击败轨道监视者'",
+            "'stage01.boss':'Guardián de la Frontera','stage01.boss.warning':'GUARDIÁN FINAL ACERCÁNDOSE'":"'stage01.boss':'Vigilante Orbital','stage01.boss.warning':'ENTIDAD ÁPICE ACERCÁNDOSE'",
+            "'stage01.objective.next':'JEFE EN','stage01.objective.boss':'OBJETIVO FINAL · DERROTA AL GUARDIÁN'":"'stage01.objective.next':'ÁPICE EN','stage01.objective.boss':'OBJETIVO FINAL · DERROTA AL VIGILANTE ORBITAL'",
+            "'stage01.boss':'Gardien de la Frontière','stage01.boss.warning':'GARDIEN FINAL EN APPROCHE'":"'stage01.boss':'Gardien Orbital','stage01.boss.warning':'ENTITÉ APEX EN APPROCHE'",
+            "'stage01.objective.next':'BOSS DANS','stage01.objective.boss':'OBJECTIF FINAL · VAINCRE LE GARDIEN'":"'stage01.objective.next':'APEX DANS','stage01.objective.boss':'OBJECTIF FINAL · VAINCRE LE GARDIEN ORBITAL'"
+          }
+          for old,new in replacements.items():
+              if old not in text: raise SystemExit('language replacement missing: '+old[:45])
+              text=text.replace(old,new,1)
+          p.write_text(text,encoding='utf-8')
+
+          # ------------------------------------------------------------
+          # 5) Remove the external BGM router (it was double-playing on top of
+          #    procedural music) and make the contract enforce single ownership.
+          # ------------------------------------------------------------
+          p=Path('src/run-modes.js')
+          text=p.read_text(encoding='utf-8')
+          text=text.replace("    'src/stage-constellation-backgrounds.js',\n    'src/stage-audio.js'","    'src/stage-constellation-backgrounds.js'")
+          p.write_text(text,encoding='utf-8')
+
+          p=Path('scripts/run-mode-contract.mjs')
+          text=p.read_text(encoding='utf-8')
+          text=text.replace(",backgrounds=read('src/stage-constellation-backgrounds.js'),stageAudio=read('src/stage-audio.js'),meta=",",backgrounds=read('src/stage-constellation-backgrounds.js'),runtimeConfig=read('src/runtime-config.js'),meta=")
+          text=text.replace("modes.includes(\"'src/stage-constellation-backgrounds.js'\")&&modes.includes(\"'src/stage-audio.js'\")&&","modes.includes(\"'src/stage-constellation-backgrounds.js'\")&&!modes.includes(\"stage-audio.js\")&&")
+          old=" ['authored stage music uses the shared router',stageAudio.includes('window.stackfallRegisterStageAudio=register')&&remodel.includes('window.stackfallRegisterStageAudio?.(STAGE_ID')&&!remodel.includes('setInterval(sync,650)')],"
+          new=" ['music has one procedural owner with four normal identities and distinct Apex scenes',!fs.existsSync('src/stage-audio.js')&&!remodel.includes('stackfallRegisterStageAudio')&&['endless','constellation1','constellation2','constellation3','apex-warden','apex-chronophage','apex-starforge','apex-lastconstellation'].every(scene=>runtimeConfig.includes(scene))&&runtimeConfig.includes(\"return'endless'\")],"
+          if old not in text: raise SystemExit('run-mode music contract missing')
+          text=text.replace(old,new,1)
+          p.write_text(text,encoding='utf-8')
+
+          p=Path('scripts/boss-identity-contract.mjs')
+          text=p.read_text(encoding='utf-8')
+          needle=" ['Stage 1 attacks use canonical enemy projectile visual families',"
+          insert=" ['Stage 1 final target is explicitly Apex-class with a battlefield set piece',stage.includes(\"bossCategory:stage.boss?.rank==='apex'?'apex':'boss'\")&&remodel.includes('function startOrbitDominion')&&remodel.includes('function updateOrbitDominion')&&remodel.includes(\"music:'apex-warden'\")&&polish.includes('Detached orbital anchors')],\n"
+          if needle not in text: raise SystemExit('boss identity contract insertion point missing')
+          text=text.replace(needle,insert+needle,1)
+          p.write_text(text,encoding='utf-8')
+
+          # Canon doc based on the research pass and the new implementation.
+          Path('docs/SOUND_DESIGN_CANON_2026-10-17.md').write_text(r'''# Stackfall sound design canon — 2026-10-17
+
+## Runtime ownership
+
+Stackfall music is authored and rendered by the Web Audio music engine in `src/runtime-config.js`. Runtime BGM must not depend on third-party hosted MP3/OGG files or a second HTMLAudio router.
+
+## Musical identity
+
+Normal play has exactly four score identities:
+
+1. `endless` — neutral deep-space expedition.
+2. `constellation1` — Shardway / cyan-violet forward motion.
+3. `constellation2` — Abyssal Bloom / magenta-teal organic syncopation.
+4. `constellation3` — Silent Array / teal-amber machine pulse.
+
+World events use stingers, sound effects, and texture changes. They do not replace these four normal scores with an unrelated fifth song.
+
+Every Apex owns a distinct score. Current canonical scenes are `apex-warden`, `apex-chronophage`, `apex-starforge`, and `apex-lastconstellation`. A new Apex must receive its own musical scene rather than inheriting a generic boss loop.
+
+All score identities may transform a small Stackfall interval motif. The motif is a branding device, not a melody to copy verbatim into every cue. Change rhythm, register, harmony, fragmentation, orchestration, and density to fit the encounter.
+
+## Adaptive rules
+
+- Apex music begins during anticipation/entry, before the entity becomes fully actionable.
+- Apex phase changes increase arrangement density; they do not simply raise volume.
+- Music remains below combat transients. Apex signatures and defeat stingers may briefly duck the music bus.
+- SFX with gameplay meaning (warnings, impacts, phase changes, signature attacks) take priority over decorative ambience.
+- Stage clear uses a short authored stinger rather than an unrelated full victory track.
+
+## Stage 1 Apex
+
+Orbit Warden is the first Apex, not a regular boss. It uses detached orbital anchors and the `Orbit Dominion` set-piece: rotating anchor beams temporarily redefine safe movement space. Its complexity stays below late Apex encounters, but its silhouette, entry, score, and battlefield authority must clearly belong to the Apex class.
+
+## Research basis
+
+The direction follows established game-audio practice: memorable themes/motifs create musical identity; variation and fragmentation extend a theme across contexts; adaptive music should manipulate melody/harmony/rhythm/form rather than treating implementation as a playlist switch; boss anticipation should begin musically before the event; and nonlinear mixes require level/spectral priority so critical SFX remain readable.
+
+References:
+- GDC 2020, Winifred Phillips — *From Assassin's Creed to The Dark Eye: The Importance of Themes*.
+- GDC 2010, Clint Bajakian — *Adaptive Music: The Secret Lies Within Music Itself*.
+- GDC 2016, Paul Lipson / Robert Ridihalgh — *Precognitive Interactive Music: Yes You Can!*.
+- Game Developer — *An Examination of Leitmotifs and Their Use to Shape Narrative in UNDERTALE*.
+- PC Gamer — *The making of Undertale*.
+- Game Developer Magazine — *Managing the Nonlinear Mix*.
+''',encoding='utf-8')
+
+          # Remove now-unused external audio implementation and provenance file.
+          for dead in ['src/stage-audio.js','docs/AUDIO_THIRD_PARTY.md']:
+              q=Path(dead)
+              if q.exists(): q.unlink()
+          PY
+
+          node scripts/build-fingerprint.mjs
+          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src -type f -name '*.js' -print0 | sort -z)
+          node scripts/run-mode-contract.mjs
+          node scripts/boss-identity-contract.mjs
+          node scripts/stage-catalog-contract.mjs
+          node scripts/stage-map-contract.mjs
+      - name: Commit overhaul
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'stackfall-audio-bot'
+          git config user.email 'stackfall-audio-bot@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m 'feat: establish Stackfall music identity and first Apex'
+          git push origin HEAD:main
