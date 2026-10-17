@@ -1,0 +1,57 @@
+name: One-time Stackfall cleanup v3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/refactor-cleanup-once-v3.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run corrected cleanup script
+        shell: bash
+        run: |
+          set -euo pipefail
+          awk '
+            /^          cat > \.tmp-stackfall-cleanup\.mjs <<'\''NODE'\''$/ {capture=1; next}
+            capture && /^          NODE$/ {exit}
+            capture {sub(/^          /, ""); print}
+          ' .github/workflows/refactor-cleanup-once-v2.yml > .tmp-stackfall-cleanup.mjs
+          node <<'PATCH'
+          const fs=require('fs');
+          const file='.tmp-stackfall-cleanup.mjs';
+          let source=fs.readFileSync(file,'utf8');
+          const old="write(file,next.endsWith('\\n')?next:next+'\\n');";
+          const next="write(file,next.replace(/\\n+$/,'')+'\\n');";
+          if(!source.includes(old))throw new Error('cleanup EOF normalizer not found');
+          source=source.replace(old,next);
+          fs.writeFileSync(file,source);
+          PATCH
+          node .tmp-stackfall-cleanup.mjs
+          rm -f .tmp-stackfall-cleanup.mjs
+          rm -f .github/workflows/refactor-cleanup-once.yml
+          rm -f .github/workflows/refactor-cleanup-once-v2.yml
+          rm -f .github/workflows/refactor-cleanup-once-v3.yml
+          node scripts/build-fingerprint.mjs
+          git diff --check
+      - name: Commit cleaned canonical state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'stackfall-cleanup-bot'
+          git config user.email 'stackfall-cleanup-bot@users.noreply.github.com'
+          git add -A
+          git commit -m 'refactor: remove obsolete stage runtime debt'
+          git push origin HEAD:main
