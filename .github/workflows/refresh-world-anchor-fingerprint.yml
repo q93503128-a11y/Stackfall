@@ -24,6 +24,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # This pass runs after the world-anchor contract was aligned.
           node scripts/build-fingerprint.mjs
           rm -f .github/workflows/refresh-world-anchor-fingerprint.yml
           git diff --check
