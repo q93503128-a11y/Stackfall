@@ -10,6 +10,20 @@
     return{wash:'rgba(54,70,172,.10)',glow:'rgba(72,211,255,.055)',primary:'rgba(145,170,255,.29)',secondary:'rgba(99,224,255,.25)'};
   };
 
+  // Endless is the visual source of truth. Keep the distant planet screen-anchored
+  // so it reads as a deep-background landmark instead of wrapping with player motion.
+  drawSpaceBackground=function drawStableSpaceBackground(){
+    const tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0;
+    drawCachedBackdrop('space',surfaceCtx=>{const base=surfaceCtx.createLinearGradient(0,0,vw,vh);base.addColorStop(0,'#02040d');base.addColorStop(.45,'#080c20');base.addColorStop(1,'#01030a');surfaceCtx.fillStyle=base;surfaceCtx.fillRect(0,0,vw,vh);const ambient=surfaceCtx.createRadialGradient(vw*.5,vh*.47,0,vw*.5,vh*.47,Math.max(vw,vh)*.78);ambient.addColorStop(0,'rgba(45,60,145,.25)');ambient.addColorStop(.45,'rgba(19,25,68,.10)');ambient.addColorStop(1,'rgba(0,0,0,0)');surfaceCtx.fillStyle=ambient;surfaceCtx.fillRect(0,0,vw,vh);});
+    const nebulaStride=tier===2?3:tier===1?2:1;
+    for(let index=0;index<NEBULAE.length;index+=nebulaStride){const n=NEBULAE[index],px=wrap(n.x-player.x*.016,1900)-260,py=wrap(n.y-player.y*.012,1350)-210,sprite=spaceNebulaSprite(n.c);ctx.save();ctx.translate(px,py);ctx.rotate(n.rot);ctx.scale(1.55,.72);ctx.drawImage(sprite,-n.r,-n.r,n.r*2,n.r*2);ctx.restore();}
+    if(tier<2){
+      ctx.save();ctx.translate(vw*.83,vh*.18);ctx.rotate(-.22);const planetR=Math.min(vw,vh)*.11,planet=spacePlanetSprite();ctx.drawImage(planet,-planetR,-planetR,planetR*2,planetR*2);ctx.strokeStyle='rgba(130,160,255,.09)';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,0,planetR*1.72,planetR*.29,0,0,TAU);ctx.stroke();ctx.restore();
+      drawSpaceLandmarks();
+    }
+    drawStars(undefined,tier===2?.30:tier===1?.58:1);
+  };
+
   function drawConstellationBackdrop(order){
     drawSpaceBackground();
     const family=familyForOrder(Math.max(1,Number(order)||1)),palette=paletteForFamily(family),size=Math.max(vw,vh);
