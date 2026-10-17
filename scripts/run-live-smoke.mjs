@@ -34,29 +34,9 @@ if(stageRedesignWarnings.length){
   console.warn(`[Stackfall smoke] ${stageRedesignWarnings.length} inactive-stage assertion(s) were separated while all Stage runtimes are intentionally disabled.`);
 }
 
-// The old awakening audit detects a bespoke Stage world anchor by spying on
-// drawImage/worldToScreen/StageCraft.worldPoint calls and expects that anchor to
-// move with the player. Stage 1 now deliberately derives its base from Endless,
-// while the distant ringed planet is screen-anchored to prevent the modulo jump
-// reported in both Endless and Stage play. Constellation decorations still use
-// player-relative parallax, so the obsolete single-anchor expectation is not a
-// valid gameplay regression gate for the current visual canon.
-const sharedBackgroundPath=join(root,'src','stage-constellation-backgrounds.js');
-const sharedBackground=existsSync(sharedBackgroundPath)?readFileSync(sharedBackgroundPath,'utf8'):'';
-const endlessDerivedStageOne=
-  modes.includes("ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01'])")&&
-  modes.includes("'src/stage-constellation-backgrounds.js'")&&
-  sharedBackground.includes('drawSpaceBackground=function drawStableSpaceBackground')&&
-  sharedBackground.includes('drawConstellationBackdrop(order)')&&
-  sharedBackground.includes('window.stackfallDrawStageConstellationField=drawConstellationField');
-const retiredAnchorAssertion=message=>message==='[awakening-isolation] stage-01 world anchor did not follow player movement';
-const retiredAnchorWarnings=endlessDerivedStageOne?substantiveFailures.filter(retiredAnchorAssertion):[];
-if(retiredAnchorWarnings.length){
-  substantiveFailures=substantiveFailures.filter(message=>!retiredAnchorAssertion(message));
-  result.stageVisualCanonWarnings=retiredAnchorWarnings;
-  console.warn(`[Stackfall smoke] ${retiredAnchorWarnings.length} retired bespoke-world-anchor assertion(s) were separated for the Endless-derived Stage 1 background.`);
-}
-
+// Active Stage backgrounds must expose real world-anchored visual landmarks.
+// Do not demote the awakening-isolation movement assertion: it catches the
+// screen-following/parallax-decoration regression that a static screenshot misses.
 result.failures=substantiveFailures;
 result.ok=substantiveFailures.length===0;
 writeFileSync(resultPath,`${JSON.stringify(result,null,2)}\n`);
