@@ -1,6 +1,10 @@
 (()=>{
   const MODES=Object.freeze({ENDLESS:'endless',STAGE:'stage'});
   const ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01']);
+  const SHARED_STAGE_RUNTIME_SCRIPTS=Object.freeze([
+    'src/stage-constellation-backgrounds.js',
+    'src/stage-audio.js'
+  ]);
   const STAGE_RUNTIME_SCRIPTS=Object.freeze({
     'stage-01':Object.freeze(['src/stage01-remodel.js','src/stage01-polish.js'])
   });
@@ -24,6 +28,7 @@
   state.runSelection=normalize(state.runSelection?.mode,state.runSelection?.stageId);
   window.STACKFALL_RUN_MODES=MODES;
   window.STACKFALL_ACTIVE_STAGE_RUNTIMES=ACTIVE_STAGE_RUNTIMES;
+  window.STACKFALL_SHARED_STAGE_RUNTIME_SCRIPTS=SHARED_STAGE_RUNTIME_SCRIPTS;
   window.STACKFALL_STAGE_RUNTIME_SCRIPTS=STAGE_RUNTIME_SCRIPTS;
   window.STACKFALL_ENDLESS_CONFIG=ENDLESS;
   window.stackfallHasStageRuntime=hasStageRuntime;
@@ -75,6 +80,7 @@
     document.head.appendChild(script);
   });
   const loadActiveStageRuntimes=async()=>{
+    for(const src of SHARED_STAGE_RUNTIME_SCRIPTS)await ensureScript(src);
     for(const stageId of ACTIVE_STAGE_RUNTIMES){
       const scripts=STAGE_RUNTIME_SCRIPTS[stageId]||[];
       for(const src of scripts)await ensureScript(src);
