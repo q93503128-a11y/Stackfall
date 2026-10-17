@@ -74,6 +74,8 @@
     }
   }
 
+  function pointSegmentDistance(px,py,x1,y1,x2,y2){const vx=x2-x1,vy=y2-y1,wx=px-x1,wy=py-y1,len2=vx*vx+vy*vy;if(len2<=1e-6)return Math.hypot(px-x1,py-y1);const t=clamp((wx*vx+wy*vy)/len2,0,1),cx=x1+vx*t,cy=y1+vy*t;return Math.hypot(px-cx,py-cy);}
+
   function startOrbitDominion(enemy,phase){
     const radius=compactDevice()?255:365,arms=phase>=3?4:3;
     enemy.stage01Dominion={warmup:1.08,life:phase>=3?4.25:3.65,angle:(enemy.phase||0)+.32,dir:enemy.stage01OrbitDir||1,radius,arms,phase,tick:0,visual:0,anchorShot:.72};
@@ -83,7 +85,7 @@
   function updateOrbitDominion(enemy,dt){
     const field=enemy.stage01Dominion;if(!field)return false;field.life-=dt;field.warmup-=dt;field.visual-=dt;field.tick-=dt;field.anchorShot-=dt;const active=field.warmup<=0,turn=(active?.62:.18)+field.phase*.075;field.angle+=dt*turn*field.dir;
     if(field.visual<=0){field.visual=compactDevice()?.075:.048;for(let i=0;i<field.arms;i++){const a=field.angle+i/field.arms*TAU,x2=enemy.x+Math.cos(a)*field.radius,y2=enemy.y+Math.sin(a)*field.radius,width=active?10+field.phase*1.8:2.2;color=i%2?'#b991ff':'#7de8ff';if(state.entities.beams.length<entityCap('beams'))state.entities.beams.push({x1:enemy.x,y1:enemy.y,x2,y2,life:.085,max:.085,color,width});const next=field.angle+(i+1)/field.arms*TAU,nx=enemy.x+Math.cos(next)*field.radius,ny=enemy.y+Math.sin(next)*field.radius;if(state.entities.beams.length<entityCap('beams'))state.entities.beams.push({x1:x2,y1:y2,x2:nx,y2:ny,life:.085,max:.085,color:'rgba(154,112,232,.32)',width:1.15});}}
-    if(active&&field.tick<=0){field.tick=.16;const damage=Math.max(5.5,enemy.damage*(.34+field.phase*.035));for(let i=0;i<field.arms;i++){const a=field.angle+i/field.arms*TAU,x2=enemy.x+Math.cos(a)*field.radius,y2=enemy.y+Math.sin(a)*field.radius;if(player.invuln<=0&&lineDistance(player.x,player.y,enemy.x,enemy.y,x2,y2)<player.r+7+field.phase*1.4){hurtPlayer(damage,enemy);break;}}}
+    if(active&&field.tick<=0){field.tick=.16;const damage=Math.max(5.5,enemy.damage*(.34+field.phase*.035));for(let i=0;i<field.arms;i++){const a=field.angle+i/field.arms*TAU,x2=enemy.x+Math.cos(a)*field.radius,y2=enemy.y+Math.sin(a)*field.radius;if(player.invuln<=0&&pointSegmentDistance(player.x,player.y,enemy.x,enemy.y,x2,y2)<player.r+7+field.phase*1.4){hurtPlayer(damage,enemy);break;}}}
     if(active&&field.phase>=2&&field.anchorShot<=0){field.anchorShot=field.phase>=3?.66:.92;const targetX=player.x+(Number(player.moveVX)||0)*.22,targetY=player.y+(Number(player.moveVY)||0)*.22;for(let i=0;i<field.arms;i++){const a=field.angle+i/field.arms*TAU,x=enemy.x+Math.cos(a)*field.radius,y=enemy.y+Math.sin(a)*field.radius;hostileShot(x,y,Math.atan2(targetY-y,targetX-x),field.phase>=3?315:285,4.4+field.phase*.35,i%2?'#b991ff':'#7de8ff',5.1,4.1,'stage01-warden-anchor');}audio.stageAttack?.(STAGE_ID,'anchor-fire');}
     if(field.life<=0){enemy.stage01Dominion=null;shockwave(enemy.x,enemy.y,'#9a70e8',135,.36,2.2);return false;}return true;
   }
