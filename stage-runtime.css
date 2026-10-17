@@ -1,0 +1,21 @@
+/* Runtime-gated stages are intentionally non-luminous until implemented/unlocked. */
+.galaxy-stage-node.planned .galaxy-node-star{
+  opacity:.34;
+  filter:grayscale(1) brightness(.48);
+  animation:none;
+  background:#9aa2b8;
+  box-shadow:0 0 2px 1px rgba(210,218,235,.34),0 0 10px 3px rgba(129,139,164,.12);
+}
+.galaxy-stage-node.planned .galaxy-node-star:before,
+.galaxy-stage-node.planned .galaxy-node-star:after{opacity:.16}
+.galaxy-stage-node.planned .galaxy-node-star i{opacity:.12;animation:none}
+.galaxy-stage-node.planned>small{
+  color:#737b91;
+  border-color:rgba(127,139,168,.13);
+  background:rgba(5,8,18,.90);
+}
+.galaxy-stage-node.planned:hover .galaxy-node-star,
+.galaxy-stage-node.planned.selected .galaxy-node-star{
+  transform:translate(-50%,-50%) scale(1.08);
+  box-shadow:0 0 2px 1px rgba(210,218,235,.38),0 0 12px 3px rgba(129,139,164,.14);
+}
