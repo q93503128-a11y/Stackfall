@@ -1,12 +1,14 @@
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
-const index=read('index.html'),catalog=read('src/stage-catalog.js'),modes=read('src/run-modes.js'),core=read('src/core.js'),render=read('src/render.js'),sortie=read('src/sortie-prep.js'),runtime=read('src/stage-runtime.js'),remodel=read('src/stage01-remodel.js'),meta=read('src/meta-progression.js'),events=read('src/map-event-expansion.js');
+const index=read('index.html'),catalog=read('src/stage-catalog.js'),modes=read('src/run-modes.js'),core=read('src/core.js'),render=read('src/render.js'),sortie=read('src/sortie-prep.js'),runtime=read('src/stage-runtime.js'),remodel=read('src/stage01-remodel.js'),polish=read('src/stage01-polish.js'),meta=read('src/meta-progression.js'),events=read('src/map-event-expansion.js');
 const checks=[
  ['stage catalog loads after core and before run modes',index.indexOf('src/core.js')<index.indexOf('src/stage-catalog.js')&&index.indexOf('src/stage-catalog.js')<index.indexOf('src/run-modes.js')],
  ['meta progression loads after runtime weapon definitions',index.indexOf('src/runtime-config.js')<index.indexOf('src/meta-progression.js')&&index.indexOf('src/weapons.js')<index.indexOf('src/meta-progression.js')],
  ['default run selection falls back to Endless',modes.includes("return{mode:MODES.ENDLESS,stageId:null}")&&modes.includes('state.runSelection=normalize')],
  ['Stage 1 is the only active authored runtime',modes.includes("ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01'])")&&modes.includes('stage&&hasStageRuntime(stage.id)')&&modes.includes("stage&&!hasStageRuntime(stage.id)?'planned':baseStatus(stage)")],
- ['Stage 1 remodel is loaded after the synchronous runtime stack',modes.includes("script.src='src/stage01-remodel.js'")&&modes.includes("document.addEventListener('DOMContentLoaded'")&&remodel.includes("window.stackfallStageRuntimeRegistry?.get(STAGE_ID)")],
+ ['authored runtime scripts use one centralized manifest',modes.includes("STAGE_RUNTIME_SCRIPTS=Object.freeze({")&&modes.includes("'stage-01':Object.freeze(['src/stage01-remodel.js','src/stage01-polish.js'])")&&modes.includes('loadActiveStageRuntimes')&&modes.includes('for(const src of scripts)await ensureScript(src)')],
+ ['Stage 1 runtime loads after the synchronous runtime stack',modes.includes("document.addEventListener('DOMContentLoaded',boot")&&remodel.includes("window.stackfallStageRuntimeRegistry?.get(STAGE_ID)")&&polish.includes("window.stackfallStageRuntimeRegistry?.get(STAGE_ID)")],
+ ['Stage 1 final world layer has one owner',polish.includes("drawWorld(){drawStageConstellationField(STAGE_ID);}")&&!modes.includes('stage01-world.js')&&!fs.existsSync('src/stage01-world.js')],
  ['main menu Endless choice opens preparation instead of starting immediately',render.includes("openStackfallSortiePrep?.('endless'")&&!render.includes("ui.start.onclick=()=>{window.stackfallSetRunSelection?.('endless');audio.init();resetGame();}")],
  ['sortie launch is the shared point that starts gameplay',sortie.includes('audio.init();resetGame()')&&sortie.includes('stackfallSetRunSelection?.(mode,stageId)')],
  ['Endless remains non-finite with random events and all enemy families',modes.includes('finite:false')&&modes.includes('randomWorldEvents:true')&&modes.includes('allEnemyFamilies:true')],
