@@ -1,0 +1,38 @@
+name: Align sound smoke contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/align-sound-smoke.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Align live smoke assertion with sound canon
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/browser-smoke.mjs')
+          text = path.read_text(encoding='utf-8')
+          old = "check(audioProfiles.combat==='combat'&&audioProfiles.event==='event'&&audioProfiles.voidScene==='event'&&audioProfiles.apexPending==='apex'&&audioProfiles.apexActive==='apex'&&audioProfiles.apexRealm==='apex','scene-aware BGM routing is incomplete',page.name);"
+          new = "check(audioProfiles.combat==='endless'&&audioProfiles.event==='endless'&&audioProfiles.voidScene==='endless'&&audioProfiles.apexPending==='apex-starforge'&&audioProfiles.apexActive==='endless'&&audioProfiles.apexRealm==='endless'&&audioProfiles.profiles.normal.join(',')==='endless,constellation1,constellation2,constellation3'&&audioProfiles.profiles.apex.join(',')==='apex-warden,apex-chronophage,apex-starforge,apex-lastconstellation','sound-canon BGM routing is incomplete',page.name);"
+          if old not in text:
+              raise SystemExit('target assertion not found')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+          git config user.name 'coworkaccount'
+          git config user.email 'cyp1jhh2@gmail.com'
+          git add scripts/browser-smoke.mjs
+          git diff --cached --check
+          git commit -m 'test: align live smoke with sound canon'
+          git push origin HEAD:main
