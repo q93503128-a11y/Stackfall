@@ -21,6 +21,10 @@ Discarded Stage 1 reboot/rework/vertical-slice documents and their old capture b
 
 Files such as `combat-balance-refinement.js`, `community-feedback-refinement.js`, `reward-refinement.js`, `endgame-balance-expansion.js`, and similar modules are still active runtime code and/or covered by explicit contracts. Deleting them by filename would be unsafe. Future cleanup should migrate them domain-by-domain only when equivalent canonical ownership is established and validated.
 
+### Second cleanup pass
+
+The Stage 1 source-of-truth split, generic-runtime Stage 1/2 compatibility branches, obsolete arena/clamp ownership, discarded Stage 1 design documents, and obsolete Stage 1 evidence captures were removed in the second cleanup pass. Temporary cleanup workflows were also removed after producing the canonical commit.
+
 ### Gate
 
 Before Stage 2 implementation, syntax checks, all repository contracts, the build fingerprint, and live browser verification must remain green. No new Stage-specific compatibility branch should be added to the generic stage runtime when a stage-owned production hook can express the behavior instead.
