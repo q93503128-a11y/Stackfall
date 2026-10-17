@@ -1,6 +1,7 @@
 (()=>{
   const MODES=Object.freeze({ENDLESS:'endless',STAGE:'stage'});
   const ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01']);
+  const SHARED_STAGE_RUNTIME_STYLES=Object.freeze(['stage-runtime.css']);
   const SHARED_STAGE_RUNTIME_SCRIPTS=Object.freeze([
     'src/stage-constellation-backgrounds.js',
     'src/stage-audio.js'
@@ -28,6 +29,7 @@
   state.runSelection=normalize(state.runSelection?.mode,state.runSelection?.stageId);
   window.STACKFALL_RUN_MODES=MODES;
   window.STACKFALL_ACTIVE_STAGE_RUNTIMES=ACTIVE_STAGE_RUNTIMES;
+  window.STACKFALL_SHARED_STAGE_RUNTIME_STYLES=SHARED_STAGE_RUNTIME_STYLES;
   window.STACKFALL_SHARED_STAGE_RUNTIME_SCRIPTS=SHARED_STAGE_RUNTIME_SCRIPTS;
   window.STACKFALL_STAGE_RUNTIME_SCRIPTS=STAGE_RUNTIME_SCRIPTS;
   window.STACKFALL_ENDLESS_CONFIG=ENDLESS;
@@ -63,6 +65,12 @@
     window.renderStackfallGalaxyMap?.();
   };
 
+  const findLoadedStyle=href=>[...document.querySelectorAll('link[rel="stylesheet"]')].find(link=>link.getAttribute('href')===href)||null;
+  const ensureStyle=href=>new Promise((resolve,reject)=>{
+    const existing=findLoadedStyle(href);if(existing){resolve();return;}
+    const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.stackfallStageRuntime='true';
+    link.addEventListener('load',()=>resolve(),{once:true});link.addEventListener('error',()=>reject(new Error('Failed to load stage runtime stylesheet: '+href)),{once:true});document.head.appendChild(link);
+  });
   const findLoadedScript=src=>[...document.scripts].find(script=>script.getAttribute('src')===src)||null;
   const ensureScript=src=>new Promise((resolve,reject)=>{
     const existing=findLoadedScript(src);
@@ -80,6 +88,7 @@
     document.head.appendChild(script);
   });
   const loadActiveStageRuntimes=async()=>{
+    for(const href of SHARED_STAGE_RUNTIME_STYLES)await ensureStyle(href);
     for(const src of SHARED_STAGE_RUNTIME_SCRIPTS)await ensureScript(src);
     for(const stageId of ACTIVE_STAGE_RUNTIMES){
       const scripts=STAGE_RUNTIME_SCRIPTS[stageId]||[];
