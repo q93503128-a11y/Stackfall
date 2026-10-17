@@ -1,11 +1,5 @@
 (()=>{
   const STAGE_ID='stage-01';
-  const STAGE_AUDIO_SOURCES=Object.freeze({
-    ambient:'https://raw.githubusercontent.com/S-H-GAMELINKS/termfront/master/data/audio/sector.mp3',
-    boss:'https://raw.githubusercontent.com/jarlah/dungeon-haskell/master/assets/music/boss.ogg',
-    victory:'https://raw.githubusercontent.com/S-H-GAMELINKS/termfront/master/data/audio/victory.mp3'
-  });
-  const stageAudio=window.stackfallRegisterStageAudio?.(STAGE_ID,STAGE_AUDIO_SOURCES,{baseVolume:{ambient:.34,boss:.31,victory:.42}})||Object.freeze({playAmbient(){},playBoss(){},playVictory(){},sync(){},stop(){},sources:STAGE_AUDIO_SOURCES});
   const localText=(ko,en)=>GAME_SETTINGS.language==='ko'?ko:en;
   const stageOneActive=()=>window.stackfallIsStageRun?.()===true&&state.stageRun?.stage?.id===STAGE_ID;
 
@@ -80,16 +74,32 @@
     }
   }
 
+  function startOrbitDominion(enemy,phase){
+    const radius=compactDevice()?255:365,arms=phase>=3?4:3;
+    enemy.stage01Dominion={warmup:1.08,life:phase>=3?4.25:3.65,angle:(enemy.phase||0)+.32,dir:enemy.stage01OrbitDir||1,radius,arms,phase,tick:0,visual:0,anchorShot:.72};
+    enemy.stage01AttackCd=Math.max(enemy.stage01AttackCd,1.35);enemy.stage01BurstCd=Math.max(enemy.stage01BurstCd,1.65);enemy.stage01LockCd=Math.max(enemy.stage01LockCd,2.0);
+    state.entities.enemyProjectiles.length=0;shockwave(enemy.x,enemy.y,'#7de8ff',175+phase*25,.58,3.4);spawnParticle(enemy.x,enemy.y,'#b9f7ff',10+phase*3,180,4);state.camera.shake=Math.max(state.camera.shake,6+phase);audio.stageAttack?.(STAGE_ID,'orbit-dominion');
+  }
+  function updateOrbitDominion(enemy,dt){
+    const field=enemy.stage01Dominion;if(!field)return false;field.life-=dt;field.warmup-=dt;field.visual-=dt;field.tick-=dt;field.anchorShot-=dt;const active=field.warmup<=0,turn=(active?.62:.18)+field.phase*.075;field.angle+=dt*turn*field.dir;
+    if(field.visual<=0){field.visual=compactDevice()?.075:.048;for(let i=0;i<field.arms;i++){const a=field.angle+i/field.arms*TAU,x2=enemy.x+Math.cos(a)*field.radius,y2=enemy.y+Math.sin(a)*field.radius,width=active?10+field.phase*1.8:2.2;color=i%2?'#b991ff':'#7de8ff';if(state.entities.beams.length<entityCap('beams'))state.entities.beams.push({x1:enemy.x,y1:enemy.y,x2,y2,life:.085,max:.085,color,width});const next=field.angle+(i+1)/field.arms*TAU,nx=enemy.x+Math.cos(next)*field.radius,ny=enemy.y+Math.sin(next)*field.radius;if(state.entities.beams.length<entityCap('beams'))state.entities.beams.push({x1:x2,y1:y2,x2:nx,y2:ny,life:.085,max:.085,color:'rgba(154,112,232,.32)',width:1.15});}}
+    if(active&&field.tick<=0){field.tick=.16;const damage=Math.max(5.5,enemy.damage*(.34+field.phase*.035));for(let i=0;i<field.arms;i++){const a=field.angle+i/field.arms*TAU,x2=enemy.x+Math.cos(a)*field.radius,y2=enemy.y+Math.sin(a)*field.radius;if(player.invuln<=0&&lineDistance(player.x,player.y,enemy.x,enemy.y,x2,y2)<player.r+7+field.phase*1.4){hurtPlayer(damage,enemy);break;}}}
+    if(active&&field.phase>=2&&field.anchorShot<=0){field.anchorShot=field.phase>=3?.66:.92;const targetX=player.x+(Number(player.moveVX)||0)*.22,targetY=player.y+(Number(player.moveVY)||0)*.22;for(let i=0;i<field.arms;i++){const a=field.angle+i/field.arms*TAU,x=enemy.x+Math.cos(a)*field.radius,y=enemy.y+Math.sin(a)*field.radius;hostileShot(x,y,Math.atan2(targetY-y,targetX-x),field.phase>=3?315:285,4.4+field.phase*.35,i%2?'#b991ff':'#7de8ff',5.1,4.1,'stage01-warden-anchor');}audio.stageAttack?.(STAGE_ID,'anchor-fire');}
+    if(field.life<=0){enemy.stage01Dominion=null;shockwave(enemy.x,enemy.y,'#9a70e8',135,.36,2.2);return false;}return true;
+  }
+
   function updateOrbitWarden(enemy,dt){
     if(!enemy||enemy.dead)return;
     const ratio=clamp(enemy.hp/Math.max(1,enemy.maxHp),0,1),phase=ratio>.68?1:ratio>.34?2:3;
     if(enemy.stagePhase!==phase){
-      enemy.stagePhase=phase;enemy.stage01AttackCd=.55;enemy.stage01BurstCd=1.1;enemy.stage01LockCd=2.4;enemy.stage01OrbitDir*=-1;
-      state.entities.enemyProjectiles.length=0;shockwave(enemy.x,enemy.y,phase===2?'#a59dff':'#79e5ff',230+phase*45,.72,5);spawnParticle(enemy.x,enemy.y,phase===2?'#a99dff':'#83e9ff',18+phase*4,235,5);
-      state.camera.shake=Math.max(state.camera.shake,8+phase*2);state.flash=Math.max(state.flash,.08);enemy.contactSafeUntil=(state.time||0)+.35;
+      enemy.stagePhase=phase;enemy.stage01AttackCd=.72;enemy.stage01BurstCd=1.35;enemy.stage01LockCd=2.6;enemy.stage01DominionCd=phase===2?2.8:2.1;enemy.stage01OrbitDir*=-1;enemy.stage01Dominion=null;
+      state.entities.enemyProjectiles.length=0;shockwave(enemy.x,enemy.y,phase===2?'#a59dff':'#79e5ff',260+phase*52,.76,5);spawnParticle(enemy.x,enemy.y,phase===2?'#a99dff':'#83e9ff',22+phase*5,255,5.5);
+      state.camera.shake=Math.max(state.camera.shake,10+phase*2);state.flash=Math.max(state.flash,.10);enemy.contactSafeUntil=(state.time||0)+.42;audio.stageAttack?.(STAGE_ID,'phase-open');audio.syncAmbient?.(true);
     }
-    enemy.speed=enemy.stage01BaseSpeed*(phase===1?.88:phase===2?.98:1.08);
-    enemy.stage01AttackCd-=dt;enemy.stage01BurstCd-=dt;enemy.stage01LockCd-=dt;
+    enemy.speed=enemy.stage01BaseSpeed*(phase===1?.84:phase===2?.94:1.02);
+    enemy.stage01AttackCd-=dt;enemy.stage01BurstCd-=dt;enemy.stage01LockCd-=dt;enemy.stage01DominionCd=(Number(enemy.stage01DominionCd)||4.8)-dt;
+    if(enemy.stage01Dominion){updateOrbitDominion(enemy,dt);return;}
+    if(enemy.stage01DominionCd<=0){enemy.stage01DominionCd=phase===1?9.4:phase===2?8.0:6.9;startOrbitDominion(enemy,phase);return;}
     const damageScale=phase===1?.92:phase===2?1:1.06;
     if(enemy.stage01AttackCd<=0){
       if(phase===1)satelliteVolley(enemy,3,290,4.7*damageScale,'#82e6ff','stage01-warden-satellite',.20);
@@ -111,16 +121,16 @@
 
   if(typeof window.stackfallRegisterStageRuntime==='function'){
     const production=Object.freeze({
-      entryDuration:2.75,victoryDuration:3.15,subtitle:'ORBIT LOCK ACQUIRED',
+      entryDuration:3.35,victoryDuration:3.35,subtitle:'APEX ENTITY // ORBITAL AUTHORITY',music:'apex-warden',explorationMusic:'constellation1',
       shapes:()=>[],
       environment(run,dt){updateStageOneActors(run,dt);},
       initialize(enemy){
-        enemy.stageProduction=true;enemy.eliteForm=null;enemy.variant='orbit-warden';enemy.stagePhase=1;enemy.stage01BaseSpeed=enemy.speed;enemy.stage01OrbitDir=enemy.id%2?1:-1;enemy.stage01AttackCd=.75;enemy.stage01BurstCd=2.3;enemy.stage01LockCd=3.5;enemy.stage01RingOffset=0;enemy.contactSafeUntil=(state.time||0)+1.2;stabilizeRealmTheme?.(STAGE_ID);
-        stageAudio.playBoss();shockwave(enemy.x,enemy.y,'#8cecff',220,.66,4);shockwave(enemy.x,enemy.y,'#a698ff',145,.48,2.5);spawnParticle(enemy.x,enemy.y,'#dffbff',20,205,4.5);state.camera.shake=Math.max(state.camera.shake,10);state.flash=Math.max(state.flash,.09);
+        enemy.stageProduction=true;enemy.eliteForm=null;enemy.variant='orbit-warden';enemy.stagePhase=1;enemy.stage01BaseSpeed=enemy.speed;enemy.stage01OrbitDir=enemy.id%2?1:-1;enemy.stage01AttackCd=.75;enemy.stage01BurstCd=2.3;enemy.stage01LockCd=3.5;enemy.stage01DominionCd=4.8;enemy.stage01RingOffset=0;enemy.contactSafeUntil=(state.time||0)+1.2;stabilizeRealmTheme?.(STAGE_ID);
+        audio.syncAmbient?.(true);shockwave(enemy.x,enemy.y,'#8cecff',220,.66,4);shockwave(enemy.x,enemy.y,'#a698ff',145,.48,2.5);spawnParticle(enemy.x,enemy.y,'#dffbff',20,205,4.5);state.camera.shake=Math.max(state.camera.shake,10);state.flash=Math.max(state.flash,.09);
       },
       combat(enemy,dt){updateOrbitWarden(enemy,dt);},
       defeat(enemy){
-        stageAudio.playVictory();shockwave(enemy.x,enemy.y,'#ffffff',320,.84,6);shockwave(enemy.x,enemy.y,'#7de8ff',455,1.02,3.5);spawnParticle(enemy.x,enemy.y,'#dffbff',42,340,7);spawnParticle(enemy.x,enemy.y,'#a79bff',30,265,5.5);state.camera.shake=Math.max(state.camera.shake,15);state.flash=Math.max(state.flash,.18);
+        audio.syncAmbient?.(true);audio.stageAttack?.(STAGE_ID,'defeat');shockwave(enemy.x,enemy.y,'#ffffff',320,.84,6);shockwave(enemy.x,enemy.y,'#7de8ff',455,1.02,3.5);spawnParticle(enemy.x,enemy.y,'#dffbff',42,340,7);spawnParticle(enemy.x,enemy.y,'#a79bff',30,265,5.5);state.camera.shake=Math.max(state.camera.shake,15);state.flash=Math.max(state.flash,.18);
       },
       drawVictory(v){
         const p=worldToScreen(v.x,v.y),body=v.body,fade=1-clamp((v.elapsed-2.35)/.70,0,1),collapse=clamp(v.elapsed/2.15,0,1);
@@ -156,7 +166,7 @@
       },
       hazard:null,
       onStart(api){
-        clearStagePhysicalObjects();api.run.stage01SweepCount=0;api.run.stage01LastSweep=-999;api.run.routeState={quiet:false,open:false};stageAudio.playAmbient();
+        clearStagePhysicalObjects();api.run.stage01SweepCount=0;api.run.stage01LastSweep=-999;api.run.routeState={quiet:false,open:false};audio.syncAmbient?.(true);
       },
       bossProfile:Object.freeze({form:'orbit-warden',eventVariant:'stage01-orbit-warden',nameKey:'stage01.boss',warningKey:'stage01.boss.warning',r:80,hitRadius:86,contactRadius:54,hp:1.22,speed:.98,damage:.94,color:'#9a55d6',xp:1.8,skillCd:2.2,burstCd:5.2,pulseCd:7.4,spawnRadius:180,spawnShockwave:190}),
       bossSkill:null,

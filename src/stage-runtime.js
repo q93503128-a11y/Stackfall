@@ -130,21 +130,21 @@
     const run=stageRuntime(),def=stageDefinition();if(!run||!def||run.bossSpawned||state.mapEventActive||state.entities.mapEvents?.length||!makeEnemyRoom('boss'))return null;
     const profile=typeof def.bossProfile==='function'?def.bossProfile(run):def.bossProfile;if(!profile)return null;
     const cfg=enemyConfig('boss'),stage=run.stage,angle=profile.angle??-Math.PI/2,radius=Math.min(Math.max(vw,vh)*.50,profile.spawnRadius||660),e={
-      id:state.nextId++,type:'boss',kind:'stage-boss',bossCategory:'apex',stageBossTier:Number(stage.order)%6===0?'constellation':'stage',variant:profile.form,eliteForm:profile.form,eventKind:stage.id,eventVariant:profile.eventVariant,name:localized(stage.boss?.name)||tr(profile.nameKey),
+      id:state.nextId++,type:'boss',kind:'stage-boss',bossCategory:stage.boss?.rank==='apex'?'apex':'boss',stageApex:stage.boss?.rank==='apex',stageBossTier:Number(stage.order)%6===0?'constellation':'stage',variant:profile.form,eliteForm:profile.form,eventKind:stage.id,eventVariant:profile.eventVariant,name:localized(stage.boss?.name)||tr(profile.nameKey),
       x:player.x+Math.cos(angle)*radius,y:player.y+Math.sin(angle)*radius,r:profile.hitRadius??profile.r,visualR:profile.r,contactR:profile.contactRadius??profile.r,hp:cfg.hp*profile.hp,maxHp:0,speed:cfg.speed*profile.speed,damage:cfg.damage*profile.damage,color:profile.color,xp:cfg.xp*profile.xp,
       hit:0,dead:false,phase:Math.random()*TAU,skillCd:profile.skillCd,burstCd:profile.burstCd,pulseCd:profile.pulseCd,rangedCd:999,strafeDir:1,dash:0,dashX:0,dashY:0,stagePhase:1,controlImmune:true
     };
     if(e.stageBossTier==='constellation'){e.hp*=1.18;e.damage*=1.06;e.skillCd*=.92;e.burstCd*=.92;e.pulseCd*=.92;}e.maxHp=e.hp;
     def.production?.initialize?.(e,apiFor(run));if(def.production){const shapes=def.production.shapes(e),points=shapes.flatMap(s=>s.points||[]);run.bodyQueryPadding=Math.max(155,...points.map(p=>Math.hypot(p.x-e.x,p.y-e.y)+100));}state.entities.enemies.push(e);state.bossActiveId=e.id;state.bossIndex++;run.bossSpawned=true;run.bossId=e.id;run.bossSnapshot={id:e.id,x:e.x,y:e.y,color:e.color,kind:'stage-boss'};
-    if(!options.suppressNotice)showBossNotice(e.name,tr(profile.warningKey));audio.boss();if(!def.production)shockwave(e.x,e.y,e.color,profile.spawnShockwave||195,.74,5);return e;
+    if(!options.suppressNotice)showBossNotice(e.name,e.stageApex?'APEX ENTITY':tr(profile.warningKey));audio.boss();if(!def.production)shockwave(e.x,e.y,e.color,profile.spawnShockwave||195,.74,5);return e;
   }
   function beginProductionBossIntro(event){
     const run=stageRuntime(),production=stageDefinition()?.production;if(!production||!run||run.bossSpawned||run.bossIntroPending||activeStageEncounterCount()>0)return false;
     run.bossIntroPending=true;ui.bossNotice.classList.add('hidden');document.querySelector('.stage-environment-notice')?.classList.remove('show');if(event?.id)run.eventsTriggered[event.id]=true;clearStagePhysicalObjects();clearPendingCombatActions();clearRunUiActions?.();window.closeMapEventOverlays?.();state.mapEventActive=null;state.entities.mapEvents.length=0;
     for(const enemy of state.entities.enemies)enemy.dead=true;state.entities.enemies.length=0;for(const key of['enemyProjectiles','telegraphs','beams','wells'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;
     run.productionEntry=StageCraft.entryPoint(production);
-    audio.stageAttack?.(run.stage.id,'intro');
-    startRealmTransition(run.stage.id,{duration:production.entryDuration||3.2,owner:run.stage.id+'-boss-entry',title:localized(run.stage.boss.name),subtitle:production.subtitle,onComplete:()=>{if(stageRuntime()!==run)return;run.bossIntroPending=false;spawnStageBoss({suppressNotice:true});}});return true;
+    const profile=stageDefinition()?.bossProfile,apex=run.stage.boss?.rank==='apex';if(apex)audio.apexIntro?.(profile?.form||run.stage.boss?.id);else audio.stageAttack?.(run.stage.id,'intro');audio.syncAmbient?.(true);
+    startRealmTransition(run.stage.id,{duration:production.entryDuration||3.2,owner:run.stage.id+'-boss-entry',title:localized(run.stage.boss.name),subtitle:production.subtitle||(apex?'APEX ENTITY':'FINAL TARGET'),onComplete:()=>{if(stageRuntime()!==run)return;run.bossIntroPending=false;spawnStageBoss({suppressNotice:true});}});return true;
   }
   window.stackfallStageProduction=id=>stageDefinition(id)?.production;
   function triggerStageEvent(event){

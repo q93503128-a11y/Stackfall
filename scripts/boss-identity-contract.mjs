@@ -24,6 +24,7 @@ const checks=[
  ['discarded Stage 1 implementation and metadata stay absent',removedStageOne.every(path=>!exists(path))],
  ['Stage 1 alone is active after the redesign reset',modes.includes("ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01'])")&&modes.includes("stage&&!hasStageRuntime(stage.id)?'planned':baseStatus(stage)")],
  ['Stage 1 final boss owns a distinct Stackfall-style silhouette',remodel.includes("form:'orbit-warden'")&&remodel.includes('enemy.eliteForm=null')&&polish.includes('function drawOrbitWarden(enemy)')&&polish.includes('drawBody(enemy){drawOrbitWarden(enemy);}')&&!remodel.includes("form:'closure'")&&!remodel.includes('stage01-closure')],
+ ['Stage 1 final target is explicitly Apex-class with a battlefield set piece',stage.includes("bossCategory:stage.boss?.rank==='apex'?'apex':'boss'")&&remodel.includes('function startOrbitDominion')&&remodel.includes('function updateOrbitDominion')&&remodel.includes("music:'apex-warden'")&&polish.includes('Detached orbital anchors')],
  ['Stage 1 attacks use canonical enemy projectile visual families',remodel.includes("return'constellation'")&&remodel.includes("return'rune'")&&remodel.includes("return'needle'")&&remodel.includes("return'ranged-bolt'")&&polish.includes("'debris'")],
  ['Stage 1 does not globally remap native Endless elite forms',!remodel.includes('stackfallSpawnEliteForm=')&&!remodel.includes('__stage01Remodel')],
  ['run-mode loader has no discarded Stage 1 hooks',!modes.includes('stage01-closure')&&!modes.includes('stage-world-reboot-metadata')],

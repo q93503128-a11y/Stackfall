@@ -64,39 +64,39 @@ Object.assign(TEXT.fr,{
 });
 
 Object.assign(TEXT.ko,{
-  'stage01.enemy.shardling':'파편 포식체','stage01.enemy.dart':'균열 추적체','stage01.enemy.bombardier':'잔해 포격체','stage01.enemy.bulwark':'붕괴 보루','stage01.boss':'붕괴의 전초 수호자','stage01.boss.warning':'최종 수호자 접근',
+  'stage01.enemy.shardling':'파편 포식체','stage01.enemy.dart':'균열 추적체','stage01.enemy.bombardier':'잔해 포격체','stage01.enemy.bulwark':'붕괴 보루','stage01.boss':'궤도 감시자','stage01.boss.warning':'초월체 접근',
   'stage01.event.warning':'붕괴 경보','stage01.event.fixed':'고정 작전 사건','stage01.event.collapse':'붕괴 파동','stage01.event.rush':'파편 급류','stage01.event.bombardment':'잔해 포격','stage01.event.wardenLine':'전초 수호대',
-  'stage01.objective.next':'보스 출현까지','stage01.objective.boss':'최종 목표 · 전초 수호자 격파',
+  'stage01.objective.next':'초월체 출현까지','stage01.objective.boss':'최종 목표 · 초월체 궤도 감시자 격파',
   'stageClear.kicker':'OPERATION COMPLETE','stageClear.title':'스테이지 클리어','stageClear.time':'작전 시간','stageClear.kills':'처치','stageClear.unlock':'신규 무기 해금','stageClear.rewardDone':'이미 획득한 작전 보상입니다.','stageClear.map':'은하 지도로','stageClear.menu':'메인 메뉴'
 });
 Object.assign(TEXT.en,{
-  'stage01.enemy.shardling':'Shard Feeder','stage01.enemy.dart':'Rift Dart','stage01.enemy.bombardier':'Debris Bombardier','stage01.enemy.bulwark':'Collapse Bulwark','stage01.boss':'Collapse Frontier Warden','stage01.boss.warning':'FINAL WARDEN APPROACHING',
+  'stage01.enemy.shardling':'Shard Feeder','stage01.enemy.dart':'Rift Dart','stage01.enemy.bombardier':'Debris Bombardier','stage01.enemy.bulwark':'Collapse Bulwark','stage01.boss':'Orbit Warden','stage01.boss.warning':'APEX ENTITY APPROACHING',
   'stage01.event.warning':'COLLAPSE WARNING','stage01.event.fixed':'FIXED OPERATION EVENT','stage01.event.collapse':'Collapse Pulse','stage01.event.rush':'Shard Rush','stage01.event.bombardment':'Debris Bombardment','stage01.event.wardenLine':'Frontier Guard Line',
-  'stage01.objective.next':'BOSS IN','stage01.objective.boss':'FINAL OBJECTIVE · DEFEAT THE WARDEN',
+  'stage01.objective.next':'APEX IN','stage01.objective.boss':'FINAL OBJECTIVE · DEFEAT ORBIT WARDEN',
   'stageClear.kicker':'OPERATION COMPLETE','stageClear.title':'STAGE CLEAR','stageClear.time':'OPERATION TIME','stageClear.kills':'KILLS','stageClear.unlock':'NEW WEAPON UNLOCKED','stageClear.rewardDone':'Operation reward already acquired.','stageClear.map':'GALAXY MAP','stageClear.menu':'MAIN MENU'
 });
 Object.assign(TEXT.ja,{
-  'stage01.enemy.shardling':'破片捕食体','stage01.enemy.dart':'亀裂追跡体','stage01.enemy.bombardier':'残骸砲撃体','stage01.enemy.bulwark':'崩壊防塁','stage01.boss':'崩壊前線の守護者','stage01.boss.warning':'最終守護者接近',
+  'stage01.enemy.shardling':'破片捕食体','stage01.enemy.dart':'亀裂追跡体','stage01.enemy.bombardier':'残骸砲撃体','stage01.enemy.bulwark':'崩壊防塁','stage01.boss':'軌道監視者','stage01.boss.warning':'超越体接近',
   'stage01.event.warning':'崩壊警報','stage01.event.fixed':'固定作戦イベント','stage01.event.collapse':'崩壊波動','stage01.event.rush':'破片急流','stage01.event.bombardment':'残骸砲撃','stage01.event.wardenLine':'前線守備隊',
-  'stage01.objective.next':'ボス出現まで','stage01.objective.boss':'最終目標・守護者を撃破',
+  'stage01.objective.next':'超越体出現まで','stage01.objective.boss':'最終目標・軌道監視者を撃破',
   'stageClear.kicker':'OPERATION COMPLETE','stageClear.title':'ステージクリア','stageClear.time':'作戦時間','stageClear.kills':'撃破','stageClear.unlock':'新武器解放','stageClear.rewardDone':'作戦報酬は取得済みです。','stageClear.map':'銀河マップへ','stageClear.menu':'メインメニュー'
 });
 Object.assign(TEXT['zh-CN'],{
-  'stage01.enemy.shardling':'碎片吞噬体','stage01.enemy.dart':'裂隙追踪体','stage01.enemy.bombardier':'残骸炮击体','stage01.enemy.bulwark':'崩塌壁垒','stage01.boss':'崩塌前线守卫','stage01.boss.warning':'最终守卫接近',
+  'stage01.enemy.shardling':'碎片吞噬体','stage01.enemy.dart':'裂隙追踪体','stage01.enemy.bombardier':'残骸炮击体','stage01.enemy.bulwark':'崩塌壁垒','stage01.boss':'轨道监视者','stage01.boss.warning':'超越体接近',
   'stage01.event.warning':'崩塌警报','stage01.event.fixed':'固定作战事件','stage01.event.collapse':'崩塌脉冲','stage01.event.rush':'碎片洪流','stage01.event.bombardment':'残骸炮击','stage01.event.wardenLine':'前线守卫队',
-  'stage01.objective.next':'首领出现倒计时','stage01.objective.boss':'最终目标 · 击败前线守卫',
+  'stage01.objective.next':'超越体出现倒计时','stage01.objective.boss':'最终目标 · 击败轨道监视者',
   'stageClear.kicker':'OPERATION COMPLETE','stageClear.title':'关卡完成','stageClear.time':'作战时间','stageClear.kills':'击杀','stageClear.unlock':'新武器已解锁','stageClear.rewardDone':'作战奖励已获得。','stageClear.map':'返回银河地图','stageClear.menu':'主菜单'
 });
 Object.assign(TEXT.es,{
-  'stage01.enemy.shardling':'Devorador de Fragmentos','stage01.enemy.dart':'Rastreador de Grieta','stage01.enemy.bombardier':'Bombardero de Escombros','stage01.enemy.bulwark':'Baluarte de Colapso','stage01.boss':'Guardián de la Frontera','stage01.boss.warning':'GUARDIÁN FINAL ACERCÁNDOSE',
+  'stage01.enemy.shardling':'Devorador de Fragmentos','stage01.enemy.dart':'Rastreador de Grieta','stage01.enemy.bombardier':'Bombardero de Escombros','stage01.enemy.bulwark':'Baluarte de Colapso','stage01.boss':'Vigilante Orbital','stage01.boss.warning':'ENTIDAD ÁPICE ACERCÁNDOSE',
   'stage01.event.warning':'ALERTA DE COLAPSO','stage01.event.fixed':'EVENTO FIJO','stage01.event.collapse':'Pulso de Colapso','stage01.event.rush':'Oleada de Fragmentos','stage01.event.bombardment':'Bombardeo de Escombros','stage01.event.wardenLine':'Línea de Guardia',
-  'stage01.objective.next':'JEFE EN','stage01.objective.boss':'OBJETIVO FINAL · DERROTA AL GUARDIÁN',
+  'stage01.objective.next':'ÁPICE EN','stage01.objective.boss':'OBJETIVO FINAL · DERROTA AL VIGILANTE ORBITAL',
   'stageClear.kicker':'OPERATION COMPLETE','stageClear.title':'ETAPA SUPERADA','stageClear.time':'TIEMPO','stageClear.kills':'BAJAS','stageClear.unlock':'NUEVA ARMA DESBLOQUEADA','stageClear.rewardDone':'Recompensa ya obtenida.','stageClear.map':'MAPA GALÁCTICO','stageClear.menu':'MENÚ PRINCIPAL'
 });
 Object.assign(TEXT.fr,{
-  'stage01.enemy.shardling':'Dévoreur d’Éclats','stage01.enemy.dart':'Traqueur de Faille','stage01.enemy.bombardier':'Bombardier de Débris','stage01.enemy.bulwark':'Rempart d’Effondrement','stage01.boss':'Gardien de la Frontière','stage01.boss.warning':'GARDIEN FINAL EN APPROCHE',
+  'stage01.enemy.shardling':'Dévoreur d’Éclats','stage01.enemy.dart':'Traqueur de Faille','stage01.enemy.bombardier':'Bombardier de Débris','stage01.enemy.bulwark':'Rempart d’Effondrement','stage01.boss':'Gardien Orbital','stage01.boss.warning':'ENTITÉ APEX EN APPROCHE',
   'stage01.event.warning':'ALERTE D’EFFONDREMENT','stage01.event.fixed':'ÉVÉNEMENT FIXE','stage01.event.collapse':'Onde d’Effondrement','stage01.event.rush':'Ruée d’Éclats','stage01.event.bombardment':'Bombardement de Débris','stage01.event.wardenLine':'Ligne de Garde',
-  'stage01.objective.next':'BOSS DANS','stage01.objective.boss':'OBJECTIF FINAL · VAINCRE LE GARDIEN',
+  'stage01.objective.next':'APEX DANS','stage01.objective.boss':'OBJECTIF FINAL · VAINCRE LE GARDIEN ORBITAL',
   'stageClear.kicker':'OPERATION COMPLETE','stageClear.title':'STAGE TERMINÉ','stageClear.time':'DURÉE','stageClear.kills':'ÉLIMINATIONS','stageClear.unlock':'NOUVELLE ARME DÉBLOQUÉE','stageClear.rewardDone':'Récompense déjà obtenue.','stageClear.map':'CARTE GALACTIQUE','stageClear.menu':'MENU PRINCIPAL'
 });
 

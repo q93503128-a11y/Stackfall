@@ -3,8 +3,7 @@
   const ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01']);
   const SHARED_STAGE_RUNTIME_STYLES=Object.freeze(['stage-runtime.css']);
   const SHARED_STAGE_RUNTIME_SCRIPTS=Object.freeze([
-    'src/stage-constellation-backgrounds.js',
-    'src/stage-audio.js'
+    'src/stage-constellation-backgrounds.js'
   ]);
   const STAGE_RUNTIME_SCRIPTS=Object.freeze({
     'stage-01':Object.freeze(['src/stage01-remodel.js','src/stage01-polish.js'])

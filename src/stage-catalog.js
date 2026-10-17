@@ -6,7 +6,7 @@
     id:String(definition.id),order:Number(definition.order),constellationId:String(definition.constellationId),status:definition.status||'planned',
     title:freeze({...definition.title}),description:freeze({...definition.description}),durationSeconds:Number(definition.durationSeconds||definition.estimatedMinutes*60),estimatedMinutes:Number(definition.estimatedMinutes),threat:Number(definition.threat),node:freeze({...definition.node}),requirements:freeze({...definition.requirements}),
     discoveries:freeze({gimmicks:freeze([...(definition.discoveries?.gimmicks||[])]),weapons:freeze([...(definition.discoveries?.weapons||[])]),events:freeze([...(definition.discoveries?.events||[])])}),gimmick:freeze({...definition.gimmick}),
-    enemySet:freezeRows(definition.enemySet),fixedEvents:freezeRows(definition.fixedEvents),boss:definition.boss?freeze({...definition.boss}):null,rewards:freezeRows(definition.rewards),challenges:freezeRows(definition.challenges)
+    enemySet:freezeRows(definition.enemySet),fixedEvents:freezeRows(definition.fixedEvents),boss:definition.boss?freeze({rank:'apex',...definition.boss}):null,rewards:freezeRows(definition.rewards),challenges:freezeRows(definition.challenges)
   });
   const constellations=freeze([
     createConstellation({id:'constellation-01',order:1,title:{ko:'파편의 항로',en:'Shardway'},description:{ko:'붕괴한 외곽 항로를 따라 점점 깊은 이상 지대로 진입하는 첫 작전 별자리.',en:'The first operation constellation, pushing from the collapsed outer route into increasingly unstable deep space.'}}),
