@@ -70,3 +70,5 @@ jobs:
           name: audio-apex-qa
           path: test-results/audio-apex-qa
           if-no-files-found: error
+
+# one-shot completion QA trigger 2026-10-17
