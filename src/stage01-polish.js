@@ -104,10 +104,9 @@
   if(runtime){
     const baseProduction=runtime.production;
     const production=Object.freeze({...baseProduction,
-      // Stage 1 deliberately has no bespoke terrain. Production mode still needs
-      // an explicit world layer, so render only the shared constellation field and
-      // the same traversal parallax used by Endless-derived stage backgrounds.
-      drawWorld(){drawStageConstellationField(STAGE_ID);drawTraversalParallax(STAGE_ID);},
+      // The base galaxy is already composited by realm-backgrounds. Stage 1's
+      // production layer owns only world-space constellation decoration/telegraphs.
+      drawWorld(){drawStageConstellationField(STAGE_ID);},
       worldStatic:()=>false,
       initialize(enemy){
         const start=state.entities.shockwaves?.length||0;baseProduction?.initialize?.(enemy);softenShockwaves(start,{radius:165,life:.42,width:3});
