@@ -1,0 +1,44 @@
+name: Refresh Stage world-anchor fingerprint v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/refresh-world-anchor-fingerprint-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate, refresh fingerprint, and clean temporary workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/run-mode-contract.mjs
+          node scripts/build-fingerprint.mjs
+          rm -f .github/workflows/refresh-world-anchor-fingerprint.yml
+          rm -f .github/workflows/refresh-world-anchor-fingerprint-v2.yml
+          git diff --check
+      - name: Commit canonical state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'stackfall-visual-test-bot'
+          git config user.email 'stackfall-visual-test-bot@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m 'fix: finalize stage background world anchoring'
+          git push origin main
