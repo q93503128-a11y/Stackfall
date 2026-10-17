@@ -64,49 +64,57 @@
   }
 
   function drawOrbitWarden(enemy){
-    const r=82,phase=Math.max(1,Number(enemy.stagePhase)||1),t=(state.time||0)*(enemy.stage01OrbitDir||1),hit=Number(enemy.hit)||0,pulse=.88+.12*Math.sin((state.time||0)*2.4);
-    const main=hit?'#ffffff':'#cf5ce1',cyan=hit?'#ffffff':'#75e1ef',edge=hit?'#ffffff':'#9a70e8';
-    ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+  const r=82,phase=Math.max(1,Number(enemy.stagePhase)||1),clock=state.time||0,t=clock*(enemy.stage01OrbitDir||1),hit=Number(enemy.hit)||0,pulse=.88+.12*Math.sin(clock*2.4),breath=1+Math.sin(clock*1.35)*.018;
+  const main=hit?'#f7dcff':'#cf5ce1',cyan=hit?'#eaffff':'#75e1ef',edge=hit?'#e6dcff':'#9a70e8';
+  const armour=ctx.createLinearGradient(-r*1.55,-r*.92,r*1.55,r*.92);armour.addColorStop(0,'#090716');armour.addColorStop(.42,'#17102d');armour.addColorStop(.68,'#25113b');armour.addColorStop(1,'#0a0817');
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.rotate(Math.sin(clock*.52)*.035);ctx.scale(breath,breath);
 
-    // Rear rails: partial arcs only. The silhouette remains a machine/crest,
-    // not the player's concentric circular core.
-    ctx.save();ctx.rotate(t*.055-.24);ctx.strokeStyle='rgba(207,92,225,.52)';ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(0,0,r*1.54,-2.70,-.28);ctx.stroke();ctx.beginPath();ctx.arc(0,0,r*1.54,.44,2.66);ctx.stroke();ctx.restore();
-    if(phase>=2){ctx.save();ctx.rotate(-t*.038+.36);ctx.setLineDash([10,9]);ctx.strokeStyle=phase===3?'rgba(117,225,239,.55)':'rgba(154,112,232,.48)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,r*1.84,-1.16,.34);ctx.stroke();ctx.beginPath();ctx.arc(0,0,r*1.84,1.90,3.38);ctx.stroke();ctx.setLineDash([]);ctx.restore();}
+  // Broken orbital rails read as machinery rather than a player shield.
+  ctx.save();ctx.rotate(t*.055-.24);ctx.strokeStyle=hit?'rgba(247,220,255,.84)':'rgba(207,92,225,.64)';ctx.shadowBlur=phase>=2?12:8;ctx.shadowColor='#cf5ce1';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,r*1.54,-2.70,-.28);ctx.stroke();ctx.beginPath();ctx.arc(0,0,r*1.54,.44,2.66);ctx.stroke();ctx.restore();
+  if(phase>=2){ctx.save();ctx.rotate(-t*.038+.36);ctx.setLineDash([10,9]);ctx.strokeStyle=phase===3?'rgba(117,225,239,.74)':'rgba(154,112,232,.64)';ctx.shadowBlur=10;ctx.shadowColor=phase===3?'#75e1ef':'#9a70e8';ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(0,0,r*1.84,-1.16,.34);ctx.stroke();ctx.beginPath();ctx.arc(0,0,r*1.84,1.90,3.38);ctx.stroke();ctx.setLineDash([]);ctx.restore();}
 
-    // Broad asymmetric armour blades give the boss a long, unmistakable silhouette.
-    const blade=(side,upper)=>{
-      ctx.save();ctx.scale(side,upper);ctx.fillStyle=hit?'#ffffff':'#100b22';ctx.strokeStyle=upper>0?edge:main;ctx.lineWidth=2.6;
-      ctx.beginPath();ctx.moveTo(r*.12,-r*.10);ctx.lineTo(r*.64,-r*.58);ctx.lineTo(r*1.46,-r*.76);ctx.lineTo(r*1.76,-r*.36);ctx.lineTo(r*1.36,-r*.12);ctx.lineTo(r*.70,-r*.04);ctx.lineTo(r*.34,r*.20);ctx.closePath();ctx.fill();ctx.stroke();
-      ctx.globalAlpha=.58;ctx.strokeStyle=cyan;ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(r*.54,-r*.37);ctx.lineTo(r*1.34,-r*.54);ctx.lineTo(r*1.53,-r*.34);ctx.stroke();ctx.restore();
-    };
-    blade(1,1);blade(-1,-1);
+  // Broad asymmetric armour blades carry the visual mass. Hit flash stays on
+  // the luminous edges so the silhouette does not wash into a white pinwheel.
+  const blade=(side,upper)=>{
+    ctx.save();ctx.scale(side,upper);ctx.fillStyle=armour;ctx.strokeStyle=upper>0?edge:main;ctx.shadowBlur=hit?13:5;ctx.shadowColor=upper>0?edge:main;ctx.lineWidth=2.8;
+    ctx.beginPath();ctx.moveTo(r*.12,-r*.10);ctx.lineTo(r*.64,-r*.58);ctx.lineTo(r*1.46,-r*.76);ctx.lineTo(r*1.76,-r*.36);ctx.lineTo(r*1.36,-r*.12);ctx.lineTo(r*.70,-r*.04);ctx.lineTo(r*.34,r*.20);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.shadowBlur=7;ctx.globalAlpha=.78;ctx.strokeStyle=cyan;ctx.lineWidth=1.55;ctx.beginPath();ctx.moveTo(r*.50,-r*.36);ctx.lineTo(r*1.30,-r*.55);ctx.lineTo(r*1.54,-r*.34);ctx.stroke();ctx.globalAlpha=.33;ctx.beginPath();ctx.moveTo(r*.68,-r*.16);ctx.lineTo(r*1.28,-r*.26);ctx.stroke();ctx.restore();
+  };
+  blade(1,1);blade(-1,-1);
 
-    // Counter-blades are shorter and offset, preventing mirror symmetry from
-    // collapsing back into a player-like round icon.
-    ctx.save();ctx.rotate(.20);ctx.fillStyle=hit?'#fff':'#17102d';ctx.strokeStyle=main;ctx.lineWidth=2.2;
-    ctx.beginPath();ctx.moveTo(-r*.18,-r*.12);ctx.lineTo(-r*.72,-r*.84);ctx.lineTo(-r*1.18,-r*.98);ctx.lineTo(-r*.96,-r*.42);ctx.lineTo(-r*.44,r*.02);ctx.closePath();ctx.fill();ctx.stroke();
-    ctx.beginPath();ctx.moveTo(r*.18,r*.12);ctx.lineTo(r*.72,r*.84);ctx.lineTo(r*1.18,r*.98);ctx.lineTo(r*.96,r*.42);ctx.lineTo(r*.44,-r*.02);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+  // Counter-blades keep the machine asymmetric and give it a second depth plane.
+  ctx.save();ctx.rotate(.20+Math.sin(clock*.72)*.018);ctx.fillStyle=armour;ctx.strokeStyle=main;ctx.shadowBlur=hit?11:4;ctx.shadowColor=main;ctx.lineWidth=2.35;
+  ctx.beginPath();ctx.moveTo(-r*.18,-r*.12);ctx.lineTo(-r*.72,-r*.84);ctx.lineTo(-r*1.18,-r*.98);ctx.lineTo(-r*.96,-r*.42);ctx.lineTo(-r*.44,r*.02);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(r*.18,r*.12);ctx.lineTo(r*.72,r*.84);ctx.lineTo(r*1.18,r*.98);ctx.lineTo(r*.96,r*.42);ctx.lineTo(r*.44,-r*.02);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
 
-    // Crown / keel fins communicate orientation without using the player's arrow.
-    ctx.fillStyle=hit?'#fff':'#17102d';ctx.strokeStyle=cyan;ctx.lineWidth=1.8;
-    ctx.beginPath();ctx.moveTo(-r*.18,-r*.42);ctx.lineTo(0,-r*1.18);ctx.lineTo(r*.22,-r*.48);ctx.lineTo(r*.08,-r*.24);ctx.closePath();ctx.fill();ctx.stroke();
-    ctx.beginPath();ctx.moveTo(-r*.10,r*.34);ctx.lineTo(r*.16,r*1.03);ctx.lineTo(r*.34,r*.40);ctx.lineTo(r*.10,r*.18);ctx.closePath();ctx.fill();ctx.stroke();
+  // Crown / keel fins communicate orientation without a player-like arrow.
+  ctx.fillStyle='#120b25';ctx.strokeStyle=cyan;ctx.shadowBlur=7;ctx.shadowColor=cyan;ctx.lineWidth=1.95;
+  ctx.beginPath();ctx.moveTo(-r*.18,-r*.42);ctx.lineTo(0,-r*1.18);ctx.lineTo(r*.22,-r*.48);ctx.lineTo(r*.08,-r*.24);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-r*.10,r*.34);ctx.lineTo(r*.16,r*1.03);ctx.lineTo(r*.34,r*.40);ctx.lineTo(r*.10,r*.18);ctx.closePath();ctx.fill();ctx.stroke();
 
-    // Void diamond core: deliberately non-circular and dark at the center.
-    ctx.save();ctx.rotate(Math.PI/4+t*.012);ctx.fillStyle='#05040d';ctx.strokeStyle=main;ctx.lineWidth=3;ctx.fillRect(-r*.34,-r*.34,r*.68,r*.68);ctx.strokeRect(-r*.34,-r*.34,r*.68,r*.68);ctx.restore();
-    ctx.save();ctx.rotate(-Math.PI/4);ctx.fillStyle=hit?'#fff':'#1e0d35';ctx.strokeStyle=edge;ctx.lineWidth=1.5;ctx.fillRect(-r*.20,-r*.20,r*.40,r*.40);ctx.strokeRect(-r*.20,-r*.20,r*.40,r*.40);ctx.restore();
-    ctx.fillStyle=cyan;ctx.globalAlpha=.84;ctx.fillRect(-r*.055,-r*.30*pulse,r*.11,r*.60*pulse);ctx.globalAlpha=1;
-
-    const satelliteCount=phase+1,orbitR=r*(phase===3?1.92:1.78);
-    for(let i=0;i<satelliteCount;i++){
-      const a=t*(.46+phase*.035)+i/satelliteCount*TAU,x=Math.cos(a)*orbitR,y=Math.sin(a)*orbitR*.72;
-      ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/4);ctx.fillStyle=i%2?edge:cyan;ctx.globalAlpha=.90;ctx.fillRect(-4.5,-4.5,9,9);ctx.globalAlpha=.34;ctx.strokeStyle='#effcff';ctx.lineWidth=1;ctx.strokeRect(-7,-7,14,14);ctx.restore();
-    }
-    if(phase===3){
-      ctx.save();ctx.rotate(t*.10);ctx.strokeStyle='rgba(117,225,239,.48)';ctx.lineWidth=1.5;for(let i=0;i<4;i++){const a=i*Math.PI/2+.14;ctx.beginPath();ctx.arc(0,0,r*2.08,a,a+.30);ctx.stroke();}ctx.restore();
-    }
+  // Later phases visibly unfold extra energy vanes instead of only adding bullets.
+  if(phase>=2){
+    ctx.save();ctx.rotate(-.16+Math.sin(clock*.9)*.025);ctx.shadowBlur=11;ctx.shadowColor=cyan;ctx.strokeStyle=phase===3?'rgba(126,238,255,.88)':'rgba(126,224,240,.70)';ctx.fillStyle=phase===3?'rgba(117,225,239,.12)':'rgba(154,112,232,.09)';ctx.lineWidth=1.7;
+    for(const side of[-1,1]){ctx.save();ctx.scale(side,1);ctx.beginPath();ctx.moveTo(r*.76,-r*.18);ctx.lineTo(r*1.42,-r*.08);ctx.lineTo(r*1.78,r*.20);ctx.lineTo(r*1.14,r*.10);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
     ctx.restore();
   }
+  if(phase===3){
+    ctx.save();ctx.rotate(t*.10);ctx.strokeStyle='rgba(117,225,239,.78)';ctx.shadowBlur=13;ctx.shadowColor='#75e1ef';ctx.lineWidth=2;for(let i=0;i<6;i++){const a=i*TAU/6+.12;ctx.beginPath();ctx.arc(0,0,r*2.10,a,a+.28);ctx.stroke();ctx.beginPath();ctx.moveTo(Math.cos(a+.14)*r*1.88,Math.sin(a+.14)*r*1.88);ctx.lineTo(Math.cos(a+.14)*r*2.22,Math.sin(a+.14)*r*2.22);ctx.stroke();}ctx.restore();
+  }
+
+  // Void diamond core: dark center, layered energy spine, no circular player core.
+  ctx.shadowBlur=0;ctx.save();ctx.rotate(Math.PI/4+t*.012);ctx.fillStyle='#05040d';ctx.strokeStyle=main;ctx.shadowBlur=hit?16:7;ctx.shadowColor=main;ctx.lineWidth=3.2;ctx.fillRect(-r*.34,-r*.34,r*.68,r*.68);ctx.strokeRect(-r*.34,-r*.34,r*.68,r*.68);ctx.restore();
+  ctx.save();ctx.rotate(-Math.PI/4);ctx.fillStyle='#211039';ctx.strokeStyle=edge;ctx.lineWidth=1.7;ctx.fillRect(-r*.20,-r*.20,r*.40,r*.40);ctx.strokeRect(-r*.20,-r*.20,r*.40,r*.40);ctx.restore();
+  const coreGlow=ctx.createLinearGradient(0,-r*.34,0,r*.34);coreGlow.addColorStop(0,'rgba(117,225,239,0)');coreGlow.addColorStop(.25,cyan);coreGlow.addColorStop(.50,'#f4fbff');coreGlow.addColorStop(.75,cyan);coreGlow.addColorStop(1,'rgba(117,225,239,0)');ctx.fillStyle=coreGlow;ctx.shadowBlur=16;ctx.shadowColor=cyan;ctx.globalAlpha=.92;ctx.fillRect(-r*.060,-r*.34*pulse,r*.12,r*.68*pulse);ctx.globalAlpha=1;ctx.shadowBlur=0;
+
+  const satelliteCount=phase+1,orbitR=r*(phase===3?1.94:1.80);
+  for(let i=0;i<satelliteCount;i++){
+    const a=t*(.46+phase*.035)+i/satelliteCount*TAU,x=Math.cos(a)*orbitR,y=Math.sin(a)*orbitR*.72;
+    ctx.save();ctx.globalAlpha=.23;ctx.strokeStyle=i%2?edge:cyan;ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(x*.76,y*.76);ctx.lineTo(x,y);ctx.stroke();ctx.restore();
+    ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/4);ctx.fillStyle=i%2?edge:cyan;ctx.shadowBlur=phase===3?13:9;ctx.shadowColor=i%2?edge:cyan;ctx.globalAlpha=.96;ctx.fillRect(-4.8,-4.8,9.6,9.6);ctx.globalAlpha=.46;ctx.strokeStyle='#effcff';ctx.lineWidth=1;ctx.strokeRect(-7.5,-7.5,15,15);ctx.restore();
+  }
+  ctx.restore();
+}
 
   const runtime=window.stackfallStageRuntimeRegistry?.get(STAGE_ID);
   if(runtime){
@@ -124,7 +132,13 @@
         const before=enemy.stagePhase,start=state.entities.shockwaves?.length||0;baseProduction?.combat?.(enemy,dt);
         if(enemy.stagePhase!==before)softenShockwaves(start,{radius:185,life:.40,width:2.5});
       },
-      drawBody(enemy){drawOrbitWarden(enemy);},
+      drawEntry(_transition,p){
+      const ease=p*p*(3-2*p),reveal=clamp(p/.18,0,1),fake={stagePhase:p>.70?2:1,stage01OrbitDir:1,hit:0};
+      ctx.save();ctx.translate(vw*.5,lerp(vh*.22,vh*.39,ease));ctx.globalAlpha=reveal;ctx.rotate((1-ease)*-.52);const scale=lerp(.30,compactDevice()?.70:1.02,ease);ctx.scale(scale,scale);
+      ctx.save();ctx.globalAlpha=(1-ease)*.58;ctx.strokeStyle='#7de8ff';ctx.shadowBlur=14;ctx.shadowColor='#7de8ff';ctx.lineWidth=1.5;for(let i=0;i<8;i++){const a=i/8*TAU+(1-ease)*.4;ctx.beginPath();ctx.moveTo(Math.cos(a)*54,Math.sin(a)*54);ctx.lineTo(Math.cos(a)*(118+90*(1-ease)),Math.sin(a)*(118+90*(1-ease)));ctx.stroke();}ctx.restore();
+      drawOrbitWarden(fake);ctx.restore();
+    },
+    drawBody(enemy){drawOrbitWarden(enemy);},
       defeat(enemy){enemy.color='#9a55d6';baseProduction?.defeat?.(enemy);}
     });
     const bossProfile=Object.freeze({...runtime.bossProfile,r:82,hitRadius:88,contactRadius:54,color:'#9a55d6',spawnShockwave:175});
