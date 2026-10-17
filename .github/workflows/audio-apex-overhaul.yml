@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 3
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -24,8 +24,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git show HEAD^:.github/workflows/audio-apex-overhaul.yml > /tmp/old-overhaul.yml
+          git show HEAD~2:.github/workflows/audio-apex-overhaul.yml > /tmp/old-overhaul.yml
           sed -n "/python3 - <<'PY'/,/^          PY$/p" /tmp/old-overhaul.yml | tail -n +2 | head -n -1 | sed 's/^          //' > /tmp/apply-overhaul.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/apply-overhaul.py')
+          s=p.read_text()
+          s=s.replace("b=text.index('\\n              drawBody(enemy)',a)","b=text.index('\\n    drawBody(enemy)',a)")
+          p.write_text(s)
+          PY
           python3 -m py_compile /tmp/apply-overhaul.py
           python3 /tmp/apply-overhaul.py
           node scripts/build-fingerprint.mjs
