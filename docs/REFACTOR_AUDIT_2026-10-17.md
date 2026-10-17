@@ -29,6 +29,10 @@ The Stage 1 source-of-truth split, generic-runtime Stage 1/2 compatibility branc
 
 A visual regression exposed by real Stage 1 movement was corrected after the cleanup. Authored stages no longer reuse the Endless decorative landmark layer that can read as screen-following during camera movement. Constellation decorations are now deterministic world-space anchors transformed through `worldToScreen`, while Endless keeps its own normal landmark layer. The previously demoted Stage world-anchor browser assertion was restored as a fatal smoke-test gate so this class of regression cannot silently pass again.
 
+### Constellation palette readability
+
+The initial constellation color wash technically existed but was too low-contrast to read during normal play, especially for the first blue-violet family against the already blue Endless base. The shared constellation background owner now applies a deliberately stronger family tint while preserving the Endless renderer underneath. Families remain grouped as Stage 1–6 blue-violet/cyan, Stage 7–12 magenta/teal, and Stage 13–18 teal/amber; the change affects authored stages only and leaves Endless unchanged.
+
 ### Gate
 
 Before Stage 2 implementation, syntax checks, all repository contracts, the build fingerprint, and live browser verification must remain green. No new Stage-specific compatibility branch should be added to the generic stage runtime when a stage-owned production hook can express the behavior instead.
