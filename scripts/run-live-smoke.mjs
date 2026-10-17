@@ -34,15 +34,21 @@ if(stageRedesignWarnings.length){
   console.warn(`[Stackfall smoke] ${stageRedesignWarnings.length} inactive-stage assertion(s) were separated while all Stage runtimes are intentionally disabled.`);
 }
 
-// The old awakening audit detects stage movement by spying on drawImage/worldToScreen/
-// StageCraft.worldPoint calls. The remodeled constellation field intentionally draws
-// directly with the Endless canvas vocabulary, so that instrumentation no longer sees
-// an anchor even though the field itself applies player-relative parallax. Keep this
-// retired assertion visible as a warning only when the new Endless-derived Stage 1
-// canon is present; boss-entry and runtime assertions remain fatal.
-const remodelPath=join(root,'src','stage01-remodel.js');
-const remodel=existsSync(remodelPath)?readFileSync(remodelPath,'utf8'):'';
-const endlessDerivedStageOne=modes.includes("ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01'])")&&remodel.includes('drawSpaceBackground();')&&remodel.includes('drawStageConstellationField=function drawSharedConstellationField');
+// The old awakening audit detects a bespoke Stage world anchor by spying on
+// drawImage/worldToScreen/StageCraft.worldPoint calls and expects that anchor to
+// move with the player. Stage 1 now deliberately derives its base from Endless,
+// while the distant ringed planet is screen-anchored to prevent the modulo jump
+// reported in both Endless and Stage play. Constellation decorations still use
+// player-relative parallax, so the obsolete single-anchor expectation is not a
+// valid gameplay regression gate for the current visual canon.
+const sharedBackgroundPath=join(root,'src','stage-constellation-backgrounds.js');
+const sharedBackground=existsSync(sharedBackgroundPath)?readFileSync(sharedBackgroundPath,'utf8'):'';
+const endlessDerivedStageOne=
+  modes.includes("ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01'])")&&
+  modes.includes("'src/stage-constellation-backgrounds.js'")&&
+  sharedBackground.includes('drawSpaceBackground=function drawStableSpaceBackground')&&
+  sharedBackground.includes('drawConstellationBackdrop(order)')&&
+  sharedBackground.includes('window.stackfallDrawStageConstellationField=drawConstellationField');
 const retiredAnchorAssertion=message=>message==='[awakening-isolation] stage-01 world anchor did not follow player movement';
 const retiredAnchorWarnings=endlessDerivedStageOne?substantiveFailures.filter(retiredAnchorAssertion):[];
 if(retiredAnchorWarnings.length){
