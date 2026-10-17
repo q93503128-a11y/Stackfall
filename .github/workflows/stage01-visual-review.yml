@@ -6,6 +6,8 @@ on:
     branches: [main]
     paths:
       - 'scripts/stage01-visual-review.mjs'
+      - 'src/stage01-polish.js'
+      - 'src/render-space.js'
       - '.github/workflows/stage01-visual-review.yml'
 
 permissions:
