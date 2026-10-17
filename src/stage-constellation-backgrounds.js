@@ -5,9 +5,9 @@
     return match?Math.max(1,Math.min(18,Number(match[1])||1)):null;
   };
   const paletteForFamily=family=>{
-    if(family===2)return{wash:'rgba(105,33,128,.105)',glow:'rgba(66,214,187,.055)',primary:'rgba(210,133,255,.30)',secondary:'rgba(111,232,207,.24)'};
-    if(family===3)return{wash:'rgba(16,93,112,.095)',glow:'rgba(223,173,81,.045)',primary:'rgba(106,226,238,.26)',secondary:'rgba(229,184,100,.23)'};
-    return{wash:'rgba(54,70,172,.10)',glow:'rgba(72,211,255,.055)',primary:'rgba(145,170,255,.29)',secondary:'rgba(99,224,255,.25)'};
+    if(family===2)return{wash:'rgba(145,40,170,.225)',glow:'rgba(47,221,193,.105)',edge:'rgba(217,73,192,.085)',primary:'rgba(222,137,255,.36)',secondary:'rgba(105,239,211,.31)'};
+    if(family===3)return{wash:'rgba(16,116,135,.205)',glow:'rgba(235,174,72,.090)',edge:'rgba(49,178,188,.080)',primary:'rgba(105,231,241,.34)',secondary:'rgba(236,190,101,.30)'};
+    return{wash:'rgba(66,78,216,.235)',glow:'rgba(73,219,255,.105)',edge:'rgba(125,90,255,.095)',primary:'rgba(151,178,255,.37)',secondary:'rgba(98,230,255,.32)'};
   };
 
   function drawStableSpaceBase({landmarks=true}={}){
@@ -30,8 +30,12 @@
     drawStableSpaceBase({landmarks:false});
     const family=familyForOrder(Math.max(1,Number(order)||1)),palette=paletteForFamily(family),size=Math.max(vw,vh);
     ctx.save();
-    const wash=ctx.createLinearGradient(0,0,vw,vh);wash.addColorStop(0,palette.wash);wash.addColorStop(.62,'rgba(0,0,0,0)');wash.addColorStop(1,palette.glow);ctx.fillStyle=wash;ctx.fillRect(0,0,vw,vh);
-    const ambient=ctx.createRadialGradient(vw*.48,vh*.46,0,vw*.48,vh*.46,size*.72);ambient.addColorStop(0,palette.glow);ambient.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=ambient;ctx.fillRect(0,0,vw,vh);
+    // Constellation identity must read at a glance, not only in isolated color sampling.
+    // Keep the Endless renderer as the structural base, then apply a stronger family tint.
+    const wash=ctx.createLinearGradient(0,0,vw,vh);wash.addColorStop(0,palette.wash);wash.addColorStop(.48,palette.edge);wash.addColorStop(.76,'rgba(0,0,0,0)');wash.addColorStop(1,palette.glow);ctx.fillStyle=wash;ctx.fillRect(0,0,vw,vh);
+    ctx.globalCompositeOperation='screen';
+    const ambient=ctx.createRadialGradient(vw*.46,vh*.44,0,vw*.46,vh*.44,size*.74);ambient.addColorStop(0,palette.glow);ambient.addColorStop(.46,palette.edge);ambient.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=ambient;ctx.fillRect(0,0,vw,vh);
+    ctx.globalCompositeOperation='source-over';
     ctx.restore();
   }
 
