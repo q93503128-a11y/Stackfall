@@ -1,6 +1,9 @@
 (()=>{
   const MODES=Object.freeze({ENDLESS:'endless',STAGE:'stage'});
   const ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01']);
+  const STAGE_RUNTIME_SCRIPTS=Object.freeze({
+    'stage-01':Object.freeze(['src/stage01-remodel.js','src/stage01-polish.js'])
+  });
   const ENDLESS=Object.freeze({
     mode:MODES.ENDLESS,
     finite:false,
@@ -21,6 +24,7 @@
   state.runSelection=normalize(state.runSelection?.mode,state.runSelection?.stageId);
   window.STACKFALL_RUN_MODES=MODES;
   window.STACKFALL_ACTIVE_STAGE_RUNTIMES=ACTIVE_STAGE_RUNTIMES;
+  window.STACKFALL_STAGE_RUNTIME_SCRIPTS=STAGE_RUNTIME_SCRIPTS;
   window.STACKFALL_ENDLESS_CONFIG=ENDLESS;
   window.stackfallHasStageRuntime=hasStageRuntime;
   window.stackfallSetRunSelection=(mode,stageId=null)=>{
@@ -53,28 +57,39 @@
     window.stackfallStageStatus=gatedStatus;
     window.renderStackfallGalaxyMap?.();
   };
-  const loadStageOneWorld=()=>{
-    if(typeof document==='undefined'||document.querySelector('script[data-stackfall-stage01-world]'))return;
-    const world=document.createElement('script');world.src='src/stage01-world.js';world.dataset.stackfallStage01World='true';document.head.appendChild(world);
-  };
-  const loadStageOnePolish=()=>{
-    if(typeof document==='undefined')return;
-    const existing=document.querySelector('script[data-stackfall-stage01-polish]');
+
+  const findLoadedScript=src=>[...document.scripts].find(script=>script.getAttribute('src')===src)||null;
+  const ensureScript=src=>new Promise((resolve,reject)=>{
+    const existing=findLoadedScript(src);
     if(existing){
-      if(window.stackfallStageRuntimeRegistry?.get('stage-01')?.bossProfile?.r===64)loadStageOneWorld();
-      else existing.addEventListener('load',loadStageOneWorld,{once:true});
+      if(existing.dataset.stackfallStageRuntimeLoaded==='true'){resolve();return;}
+      existing.addEventListener('load',()=>{existing.dataset.stackfallStageRuntimeLoaded='true';resolve();},{once:true});
+      existing.addEventListener('error',()=>reject(new Error('Failed to load stage runtime script: '+src)),{once:true});
       return;
     }
-    const polish=document.createElement('script');polish.src='src/stage01-polish.js';polish.dataset.stackfallStage01Polish='true';polish.addEventListener('load',loadStageOneWorld,{once:true});document.head.appendChild(polish);
+    const script=document.createElement('script');
+    script.src=src;
+    script.dataset.stackfallStageRuntime='true';
+    script.addEventListener('load',()=>{script.dataset.stackfallStageRuntimeLoaded='true';resolve();},{once:true});
+    script.addEventListener('error',()=>reject(new Error('Failed to load stage runtime script: '+src)),{once:true});
+    document.head.appendChild(script);
+  });
+  const loadActiveStageRuntimes=async()=>{
+    for(const stageId of ACTIVE_STAGE_RUNTIMES){
+      const scripts=STAGE_RUNTIME_SCRIPTS[stageId]||[];
+      for(const src of scripts)await ensureScript(src);
+    }
+    window.renderStackfallGalaxyMap?.();
   };
-  const loadStageOneRemodel=()=>{
-    if(typeof document==='undefined')return;
-    const existing=document.querySelector('script[data-stackfall-stage01-remodel]');
-    if(existing){if(window.stackfallStageRuntimeRegistry?.get('stage-01'))loadStageOnePolish();else existing.addEventListener('load',loadStageOnePolish,{once:true});return;}
-    const script=document.createElement('script');script.src='src/stage01-remodel.js';script.dataset.stackfallStage01Remodel='true';script.addEventListener('load',loadStageOnePolish,{once:true});document.head.appendChild(script);
+  const boot=()=>{
+    installStageStatusGate();
+    loadActiveStageRuntimes().catch(error=>{
+      console.error(error);
+      window.stackfallRuntimeDiagnostics?.('stage-runtime-loader',error);
+    });
   };
   if(typeof document!=='undefined'){
-    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installStageStatusGate();loadStageOneRemodel();},{once:true});
-    else{installStageStatusGate();loadStageOneRemodel();}
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
+    else boot();
   }
 })();
