@@ -25,6 +25,10 @@ Files such as `combat-balance-refinement.js`, `community-feedback-refinement.js`
 
 The Stage 1 source-of-truth split, generic-runtime Stage 1/2 compatibility branches, obsolete arena/clamp ownership, discarded Stage 1 design documents, and obsolete Stage 1 evidence captures were removed in the second cleanup pass. Temporary cleanup workflows were also removed after producing the canonical commit.
 
+### Stage background movement regression
+
+A visual regression exposed by real Stage 1 movement was corrected after the cleanup. Authored stages no longer reuse the Endless decorative landmark layer that can read as screen-following during camera movement. Constellation decorations are now deterministic world-space anchors transformed through `worldToScreen`, while Endless keeps its own normal landmark layer. The previously demoted Stage world-anchor browser assertion was restored as a fatal smoke-test gate so this class of regression cannot silently pass again.
+
 ### Gate
 
 Before Stage 2 implementation, syntax checks, all repository contracts, the build fingerprint, and live browser verification must remain green. No new Stage-specific compatibility branch should be added to the generic stage runtime when a stage-owned production hook can express the behavior instead.
