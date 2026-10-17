@@ -4,7 +4,7 @@
   const localText=(ko,en)=>GAME_SETTINGS.language==='ko'?ko:en;
 
   function spawnSweepProjectile(x,y,angle,speed,damage,r,life){
-    return spawnEnemyProjectile(x,y,angle,speed,damage,'#91d9f2',r,life,'stage01-route-sweep');
+    return spawnEnemyProjectile(x,y,angle,speed,damage,'#91d9f2',r,life,'debris');
   }
 
   function polishedRouteSweep(_event,api){
@@ -64,53 +64,61 @@
   }
 
   function drawOrbitWarden(enemy){
-    const r=64,phase=Math.max(1,Number(enemy.stagePhase)||1),t=(state.time||0)*(enemy.stage01OrbitDir||1),hit=Number(enemy.hit)||0;
+    const r=82,phase=Math.max(1,Number(enemy.stagePhase)||1),t=(state.time||0)*(enemy.stage01OrbitDir||1),hit=Number(enemy.hit)||0,pulse=.88+.12*Math.sin((state.time||0)*2.4);
+    const main=hit?'#ffffff':'#cf5ce1',cyan=hit?'#ffffff':'#75e1ef',edge=hit?'#ffffff':'#9a70e8';
     ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
 
-    // Preserve the original Stackfall eclipse language: a compact dark-purple
-    // core, clean magenta orbital loops, then only a few cyan route satellites.
-    ctx.save();ctx.rotate(t*.18);
-    ctx.strokeStyle=hit?'rgba(255,255,255,.95)':'rgba(220,82,214,.78)';ctx.lineWidth=2.2;
-    ctx.beginPath();ctx.ellipse(0,0,r*1.62,r*.55,.16,0,TAU);ctx.stroke();
-    ctx.rotate(-.88);ctx.globalAlpha=.72;ctx.beginPath();ctx.ellipse(0,0,r*1.43,r*.46,-.08,0,TAU);ctx.stroke();ctx.restore();
+    // Rear rails: partial arcs only. The silhouette remains a machine/crest,
+    // not the player's concentric circular core.
+    ctx.save();ctx.rotate(t*.055-.24);ctx.strokeStyle='rgba(207,92,225,.52)';ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(0,0,r*1.54,-2.70,-.28);ctx.stroke();ctx.beginPath();ctx.arc(0,0,r*1.54,.44,2.66);ctx.stroke();ctx.restore();
+    if(phase>=2){ctx.save();ctx.rotate(-t*.038+.36);ctx.setLineDash([10,9]);ctx.strokeStyle=phase===3?'rgba(117,225,239,.55)':'rgba(154,112,232,.48)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,r*1.84,-1.16,.34);ctx.stroke();ctx.beginPath();ctx.arc(0,0,r*1.84,1.90,3.38);ctx.stroke();ctx.setLineDash([]);ctx.restore();}
 
-    if(phase>=2){
-      ctx.save();ctx.rotate(-t*.10+.34);ctx.strokeStyle=phase===3?'rgba(105,224,242,.62)':'rgba(175,137,244,.52)';ctx.lineWidth=1.35;ctx.setLineDash([9,11]);ctx.beginPath();ctx.arc(0,0,r*(phase===3?1.90:1.78),-.22,Math.PI*1.47);ctx.stroke();ctx.setLineDash([]);ctx.restore();
-    }
+    // Broad asymmetric armour blades give the boss a long, unmistakable silhouette.
+    const blade=(side,upper)=>{
+      ctx.save();ctx.scale(side,upper);ctx.fillStyle=hit?'#ffffff':'#100b22';ctx.strokeStyle=upper>0?edge:main;ctx.lineWidth=2.6;
+      ctx.beginPath();ctx.moveTo(r*.12,-r*.10);ctx.lineTo(r*.64,-r*.58);ctx.lineTo(r*1.46,-r*.76);ctx.lineTo(r*1.76,-r*.36);ctx.lineTo(r*1.36,-r*.12);ctx.lineTo(r*.70,-r*.04);ctx.lineTo(r*.34,r*.20);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.globalAlpha=.58;ctx.strokeStyle=cyan;ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(r*.54,-r*.37);ctx.lineTo(r*1.34,-r*.54);ctx.lineTo(r*1.53,-r*.34);ctx.stroke();ctx.restore();
+    };
+    blade(1,1);blade(-1,-1);
 
-    const satelliteCount=phase+1,orbitR=r*(phase===3?1.82:1.72);
+    // Counter-blades are shorter and offset, preventing mirror symmetry from
+    // collapsing back into a player-like round icon.
+    ctx.save();ctx.rotate(.20);ctx.fillStyle=hit?'#fff':'#17102d';ctx.strokeStyle=main;ctx.lineWidth=2.2;
+    ctx.beginPath();ctx.moveTo(-r*.18,-r*.12);ctx.lineTo(-r*.72,-r*.84);ctx.lineTo(-r*1.18,-r*.98);ctx.lineTo(-r*.96,-r*.42);ctx.lineTo(-r*.44,r*.02);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.moveTo(r*.18,r*.12);ctx.lineTo(r*.72,r*.84);ctx.lineTo(r*1.18,r*.98);ctx.lineTo(r*.96,r*.42);ctx.lineTo(r*.44,-r*.02);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+
+    // Crown / keel fins communicate orientation without using the player's arrow.
+    ctx.fillStyle=hit?'#fff':'#17102d';ctx.strokeStyle=cyan;ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(-r*.18,-r*.42);ctx.lineTo(0,-r*1.18);ctx.lineTo(r*.22,-r*.48);ctx.lineTo(r*.08,-r*.24);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-r*.10,r*.34);ctx.lineTo(r*.16,r*1.03);ctx.lineTo(r*.34,r*.40);ctx.lineTo(r*.10,r*.18);ctx.closePath();ctx.fill();ctx.stroke();
+
+    // Void diamond core: deliberately non-circular and dark at the center.
+    ctx.save();ctx.rotate(Math.PI/4+t*.012);ctx.fillStyle='#05040d';ctx.strokeStyle=main;ctx.lineWidth=3;ctx.fillRect(-r*.34,-r*.34,r*.68,r*.68);ctx.strokeRect(-r*.34,-r*.34,r*.68,r*.68);ctx.restore();
+    ctx.save();ctx.rotate(-Math.PI/4);ctx.fillStyle=hit?'#fff':'#1e0d35';ctx.strokeStyle=edge;ctx.lineWidth=1.5;ctx.fillRect(-r*.20,-r*.20,r*.40,r*.40);ctx.strokeRect(-r*.20,-r*.20,r*.40,r*.40);ctx.restore();
+    ctx.fillStyle=cyan;ctx.globalAlpha=.84;ctx.fillRect(-r*.055,-r*.30*pulse,r*.11,r*.60*pulse);ctx.globalAlpha=1;
+
+    const satelliteCount=phase+1,orbitR=r*(phase===3?1.92:1.78);
     for(let i=0;i<satelliteCount;i++){
-      const a=t*(.52+phase*.04)+i/satelliteCount*TAU,x=Math.cos(a)*orbitR,y=Math.sin(a)*orbitR*.72;
-      ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/4);ctx.fillStyle=i%2?'#aa8ce9':'#79dce9';ctx.globalAlpha=.88;ctx.fillRect(-4,-4,8,8);ctx.globalAlpha=.34;ctx.strokeStyle='#eafcff';ctx.lineWidth=1;ctx.strokeRect(-6,-6,12,12);ctx.restore();
+      const a=t*(.46+phase*.035)+i/satelliteCount*TAU,x=Math.cos(a)*orbitR,y=Math.sin(a)*orbitR*.72;
+      ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/4);ctx.fillStyle=i%2?edge:cyan;ctx.globalAlpha=.90;ctx.fillRect(-4.5,-4.5,9,9);ctx.globalAlpha=.34;ctx.strokeStyle='#effcff';ctx.lineWidth=1;ctx.strokeRect(-7,-7,14,14);ctx.restore();
     }
-
     if(phase===3){
-      ctx.save();ctx.rotate(t*.13);ctx.strokeStyle='rgba(111,224,239,.42)';ctx.lineWidth=1.4;
-      for(let i=0;i<4;i++){const a=i*Math.PI/2+.18;ctx.beginPath();ctx.arc(0,0,r*2.02,a,a+.34);ctx.stroke();}
-      ctx.restore();
+      ctx.save();ctx.rotate(t*.10);ctx.strokeStyle='rgba(117,225,239,.48)';ctx.lineWidth=1.5;for(let i=0;i<4;i++){const a=i*Math.PI/2+.14;ctx.beginPath();ctx.arc(0,0,r*2.08,a,a+.30);ctx.stroke();}ctx.restore();
     }
-
-    const glow=ctx.createRadialGradient(-r*.18,-r*.22,r*.06,0,0,r*1.22);glow.addColorStop(0,hit?'rgba(255,255,255,.38)':'rgba(205,111,255,.30)');glow.addColorStop(.58,'rgba(120,47,183,.11)');glow.addColorStop(1,'rgba(80,25,120,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(0,0,r*1.22,0,TAU);ctx.fill();
-    const sphere=ctx.createRadialGradient(-r*.28,-r*.30,r*.08,-r*.02,-r*.02,r);sphere.addColorStop(0,hit?'#ffffff':'#d180ff');sphere.addColorStop(.24,hit?'#eadfff':'#a64de3');sphere.addColorStop(.67,'#5d178a');sphere.addColorStop(1,'#160d25');ctx.fillStyle=sphere;ctx.beginPath();ctx.arc(0,0,r*.72,0,TAU);ctx.fill();
-    ctx.strokeStyle=hit?'#ffffff':'rgba(226,133,255,.78)';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(0,0,r*.72,0,TAU);ctx.stroke();
-    ctx.fillStyle='rgba(255,236,255,.70)';ctx.beginPath();ctx.arc(-r*.18,-r*.20,r*.07,0,TAU);ctx.fill();
     ctx.restore();
   }
-
-  const baseConstellationField=drawStageConstellationField;
-  drawStageConstellationField=function polishedStageConstellationField(theme){baseConstellationField(theme);if(theme===STAGE_ID)drawRouteSweepWarning();};
 
   const runtime=window.stackfallStageRuntimeRegistry?.get(STAGE_ID);
   if(runtime){
     const baseProduction=runtime.production;
     const production=Object.freeze({...baseProduction,
-      // The base galaxy is already composited by realm-backgrounds. Stage 1's
-      // production layer owns only world-space constellation decoration/telegraphs.
-      drawWorld(){drawStageConstellationField(STAGE_ID);},
+      // Shared constellation service owns the base field. This production layer
+      // owns only Stage 1 telegraphs and the final-boss presentation.
+      drawWorld(){window.stackfallDrawStageConstellationField?.(STAGE_ID);drawRouteSweepWarning();},
       worldStatic:()=>false,
       initialize(enemy){
         const start=state.entities.shockwaves?.length||0;baseProduction?.initialize?.(enemy);softenShockwaves(start,{radius:165,life:.42,width:3});
-        enemy.color='#9a55d6';enemy.r=64;enemy.visualR=64;enemy.hitRadius=68;enemy.contactRadius=42;
+        enemy.color='#9a55d6';enemy.r=82;enemy.visualR=82;enemy.hitRadius=88;enemy.contactRadius=54;
       },
       combat(enemy,dt){
         const before=enemy.stagePhase,start=state.entities.shockwaves?.length||0;baseProduction?.combat?.(enemy,dt);
@@ -119,7 +127,7 @@
       drawBody(enemy){drawOrbitWarden(enemy);},
       defeat(enemy){enemy.color='#9a55d6';baseProduction?.defeat?.(enemy);}
     });
-    const bossProfile=Object.freeze({...runtime.bossProfile,r:64,hitRadius:68,contactRadius:42,color:'#9a55d6',spawnShockwave:150});
+    const bossProfile=Object.freeze({...runtime.bossProfile,r:82,hitRadius:88,contactRadius:54,color:'#9a55d6',spawnShockwave:175});
     window.stackfallStageRuntimeRegistry.set(STAGE_ID,Object.freeze({...runtime,hazard:polishedRouteSweep,bossProfile,production}));
   }
 })();
