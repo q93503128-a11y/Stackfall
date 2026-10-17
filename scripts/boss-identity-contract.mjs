@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const exists=p=>fs.existsSync(p);
-const catalog=read('src/boss-catalog.js'),patterns=read('src/boss-patterns.js'),renderers=read('src/elite-renderers.js'),bosses=read('src/bosses.js'),stage=read('src/stage-runtime.js'),remodel=read('src/stage01-remodel.js'),modes=read('src/run-modes.js'),index=read('index.html');
+const catalog=read('src/boss-catalog.js'),patterns=read('src/boss-patterns.js'),renderers=read('src/elite-renderers.js'),bosses=read('src/bosses.js'),stage=read('src/stage-runtime.js'),remodel=read('src/stage01-remodel.js'),polish=read('src/stage01-polish.js'),modes=read('src/run-modes.js'),index=read('index.html');
 const regular=['eclipse','seraph','pulsar','leviathan','archivist','heliarch','tempest','nullengine'];
 const mini=['knight','warden','executioner','colossus','harvester','mirror'];
 const voids=['maw','oracle','weaver','grave','paradox'];
@@ -23,7 +23,9 @@ const checks=[
  ['Apex forms have separate silhouette renderers',['drawChronophageApex','drawStarforgeApex','drawLastConstellationApex'].every(name=>renderers.includes('function '+name))],
  ['discarded Stage 1 implementation and metadata stay absent',removedStageOne.every(path=>!exists(path))],
  ['Stage 1 alone is active after the redesign reset',modes.includes("ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01'])")&&modes.includes("stage&&!hasStageRuntime(stage.id)?'planned':baseStatus(stage)")],
- ['new Stage 1 remodel reuses canonical boss language instead of the discarded closure design',remodel.includes("form:'eclipse'")&&remodel.includes("enemy.eliteForm='eclipse'")&&remodel.includes('drawEliteShape(enemy)')&&!remodel.includes("form:'closure'")&&!remodel.includes('stage01-closure')],
+ ['Stage 1 final boss owns a distinct Stackfall-style silhouette',remodel.includes("form:'orbit-warden'")&&remodel.includes('enemy.eliteForm=null')&&polish.includes('function drawOrbitWarden(enemy)')&&polish.includes('drawBody(enemy){drawOrbitWarden(enemy);}')&&!remodel.includes("form:'closure'")&&!remodel.includes('stage01-closure')],
+ ['Stage 1 attacks use canonical enemy projectile visual families',remodel.includes("return'constellation'")&&remodel.includes("return'rune'")&&remodel.includes("return'needle'")&&remodel.includes("return'ranged-bolt'")&&polish.includes("'debris'")],
+ ['Stage 1 does not globally remap native Endless elite forms',!remodel.includes('stackfallSpawnEliteForm=')&&!remodel.includes('__stage01Remodel')],
  ['run-mode loader has no discarded Stage 1 hooks',!modes.includes('stage01-closure')&&!modes.includes('stage-world-reboot-metadata')],
  ['rejected Stage 2-18 runtime adapters stay removed',retiredStageAdapters.every(path=>!exists(path))],
  ['rejected layered Stage 1 production files stay removed',retiredStageOneLayers.every(path=>!exists(path))],
