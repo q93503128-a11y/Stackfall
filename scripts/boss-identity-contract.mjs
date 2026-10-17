@@ -30,7 +30,7 @@ const checks=[
  ['rejected Stage 2-18 runtime adapters stay removed',retiredStageAdapters.every(path=>!exists(path))],
  ['rejected layered Stage 1 production files stay removed',retiredStageOneLayers.every(path=>!exists(path))],
  ['HTML no longer loads rejected stage production layers',retiredStageAdapters.concat(retiredStageOneLayers,removedStageOne).every(path=>!index.includes(path))],
- ['discarded per-stage generic boss rotations are absent',rejectedStageTokens.every(token=>!stage.includes(token))&&stage.includes('bossSkill:null')],
+ ['discarded per-stage generic boss rotations are absent',rejectedStageTokens.every(token=>!stage.includes(token))&&remodel.includes('bossSkill:null')&&!stage.includes('stageOneArena(')&&!stage.includes('beginStageOneBossIntro(')&&!stage.includes('beginStageTwoBossIntro(')],
  ['Stage runtime has no shared circular barrage helper calls',!stage.includes('fireRing(')&&!stage.includes('fireRingWithGaps(')]
 ];
 let failed=0;for(const [name,ok] of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failed++;}console.log(`Checked ${checks.length} boss identity contracts; failures=${failed}`);if(failed)process.exit(1);

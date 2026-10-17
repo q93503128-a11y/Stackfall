@@ -9,40 +9,6 @@
   const localText=(ko,en)=>GAME_SETTINGS.language==='ko'?ko:en;
   const stageOneActive=()=>window.stackfallIsStageRun?.()===true&&state.stageRun?.stage?.id===STAGE_ID;
 
-  const STAGE_ONE_GIMMICK=Object.freeze({startAt:80,interval:78,waveEvery:0,accelerate:.08});
-  const STAGE_ONE_ENEMY_SET=Object.freeze([
-    Object.freeze({id:'shardling',type:'grunt',unlockAt:0}),
-    Object.freeze({id:'dart',type:'fast',unlockAt:34}),
-    Object.freeze({id:'bombardier',type:'ranged',unlockAt:118}),
-    Object.freeze({id:'bulwark',type:'tank',unlockAt:205})
-  ]);
-  const STAGE_ONE_EVENTS=Object.freeze([
-    Object.freeze({id:'route-rush',at:52,kind:'wave',variant:'dart',count:5}),
-    Object.freeze({id:'outer-battery',at:145,kind:'wave',variant:'bombardier',count:4}),
-    Object.freeze({id:'route-sweep-fixed',at:196,kind:'hazard',variant:'route-shard-sweep'}),
-    Object.freeze({id:'guard-line',at:238,kind:'wave',variant:'bulwark',count:3}),
-    Object.freeze({id:'final-boss',at:300,kind:'boss',variant:'orbit-warden'})
-  ]);
-
-  const currentStage=window.stackfallStageById?.(STAGE_ID);
-  if(currentStage){
-    const stageOne=Object.freeze({...currentStage,
-      title:Object.freeze({ko:'외곽 항로',en:'Outer Route'}),
-      description:Object.freeze({
-        ko:'붕괴한 외곽 항로를 돌파하는 첫 작전. 파편체의 속도와 사격 밀도가 단계적으로 증가하고, 주기적으로 전장을 가로지르는 항로 파편대를 피한 뒤 궤도 감시자를 격파한다.',
-        en:'The first operation through a collapsed outer route. Enemy speed and fire density escalate in steps; evade route-wide shard sweeps, then destroy the Orbit Warden.'
-      }),
-      durationSeconds:300,estimatedMinutes:5,
-      discoveries:Object.freeze({...currentStage.discoveries,gimmicks:Object.freeze(['route-shard-sweep']),events:Object.freeze(['route-rush','outer-battery','guard-line'])}),
-      gimmick:STAGE_ONE_GIMMICK,
-      enemySet:STAGE_ONE_ENEMY_SET,
-      fixedEvents:STAGE_ONE_EVENTS,
-      boss:Object.freeze({...currentStage.boss,id:'orbit-warden',spawnAt:300,name:Object.freeze({ko:'궤도 감시자',en:'Orbit Warden'})})
-    });
-    const previousLookup=window.stackfallStageById,updated=Object.freeze((window.STACKFALL_STAGE_CATALOG||[]).map(stage=>stage.id===STAGE_ID?stageOne:stage));
-    window.STACKFALL_STAGE_CATALOG=updated;window.stackfallStageById=id=>String(id)===STAGE_ID?stageOne:previousLookup(id);
-  }
-
   function projectileVisual(tag){
     const value=String(tag||'');
     if(value.includes('route-sweep'))return'debris';
@@ -143,16 +109,14 @@
     }
   }
 
-  const base=window.stackfallStageRuntimeRegistry?.get(STAGE_ID);
-  if(base){
-    const previousStart=base.onStart;
+  if(typeof window.stackfallRegisterStageRuntime==='function'){
     const production=Object.freeze({
       entryDuration:2.75,victoryDuration:3.15,subtitle:'ORBIT LOCK ACQUIRED',
       shapes:()=>[],
       environment(run,dt){updateStageOneActors(run,dt);},
       initialize(enemy){
-        enemy.stageProduction=true;enemy.eliteForm=null;enemy.variant='orbit-warden';enemy.stagePhase=1;enemy.stage01BaseSpeed=enemy.speed;enemy.stage01OrbitDir=enemy.id%2?1:-1;enemy.stage01AttackCd=.75;enemy.stage01BurstCd=2.3;enemy.stage01LockCd=3.5;enemy.stage01RingOffset=0;
-        state.stageBossArena=null;stageAudio.playBoss();shockwave(enemy.x,enemy.y,'#8cecff',220,.66,4);shockwave(enemy.x,enemy.y,'#a698ff',145,.48,2.5);spawnParticle(enemy.x,enemy.y,'#dffbff',20,205,4.5);state.camera.shake=Math.max(state.camera.shake,10);state.flash=Math.max(state.flash,.09);
+        enemy.stageProduction=true;enemy.eliteForm=null;enemy.variant='orbit-warden';enemy.stagePhase=1;enemy.stage01BaseSpeed=enemy.speed;enemy.stage01OrbitDir=enemy.id%2?1:-1;enemy.stage01AttackCd=.75;enemy.stage01BurstCd=2.3;enemy.stage01LockCd=3.5;enemy.stage01RingOffset=0;enemy.contactSafeUntil=(state.time||0)+1.2;stabilizeRealmTheme?.(STAGE_ID);
+        stageAudio.playBoss();shockwave(enemy.x,enemy.y,'#8cecff',220,.66,4);shockwave(enemy.x,enemy.y,'#a698ff',145,.48,2.5);spawnParticle(enemy.x,enemy.y,'#dffbff',20,205,4.5);state.camera.shake=Math.max(state.camera.shake,10);state.flash=Math.max(state.flash,.09);
       },
       combat(enemy,dt){updateOrbitWarden(enemy,dt);},
       defeat(enemy){
@@ -164,8 +128,8 @@
         if(v.elapsed>.55){ctx.save();ctx.globalAlpha=clamp((v.elapsed-.55)/.45,0,1)*fade;ctx.textAlign='center';ctx.fillStyle='#eff8ff';ctx.font='900 24px "IBM Plex Sans KR",sans-serif';ctx.fillText(v.elapsed<1.55?tr('stageClear.targetDown'):tr('stageClear.operationComplete'),vw*.5,vh*.22);ctx.restore();}
       }
     });
-    const runtime=Object.freeze({...base,
-      theme:STAGE_ID,
+    const runtime=Object.freeze({
+      theme:STAGE_ID,objectiveKey:'stage01.objective.boss',fixedEventKey:'stage01.event.fixed',
       initialSpawnTimer:.78,spawnRadius:680,spawnRadiusMin:55,spawnRadiusMax:125,burstRadiusMin:610,burstRadiusMax:770,startingVariants:Object.freeze(['shardling','shardling','shardling']),
       variants:Object.freeze({
         shardling:Object.freeze({type:'grunt',color:'#788aff',hp:.88,speed:1.00,damage:.88,r:.92,xp:1,name:'stage01.enemy.shardling'}),
@@ -192,16 +156,15 @@
       },
       hazard:null,
       onStart(api){
-        previousStart?.(api);state.stageBossArena=null;api.run.stage01SweepCount=0;api.run.stage01LastSweep=-999;api.run.routeState={quiet:false,open:false};stageAudio.playAmbient();
+        clearStagePhysicalObjects();api.run.stage01SweepCount=0;api.run.stage01LastSweep=-999;api.run.routeState={quiet:false,open:false};stageAudio.playAmbient();
       },
-      bossProfile:Object.freeze({form:'orbit-warden',eventVariant:'stage01-orbit-warden',nameKey:'stage01.boss',warningKey:'stage01.boss.warning',r:80,hitRadius:86,contactRadius:54,hp:1.22,speed:.98,damage:.94,color:'#9a55d6',xp:1.8,skillCd:2.2,burstCd:5.2,pulseCd:7.4,spawnRadius:620,spawnShockwave:190}),
+      bossProfile:Object.freeze({form:'orbit-warden',eventVariant:'stage01-orbit-warden',nameKey:'stage01.boss',warningKey:'stage01.boss.warning',r:80,hitRadius:86,contactRadius:54,hp:1.22,speed:.98,damage:.94,color:'#9a55d6',xp:1.8,skillCd:2.2,burstCd:5.2,pulseCd:7.4,spawnRadius:180,spawnShockwave:190}),
+      bossSkill:null,
       production
     });
-    window.stackfallStageRuntimeRegistry.set(STAGE_ID,runtime);
+    window.stackfallRegisterStageRuntime(STAGE_ID,runtime);
   }
 
-  const previousClamp=window.stackfallClampStageBossToArena;
-  window.stackfallClampStageBossToArena=function stageOneFreeBossClamp(enemy){if(enemy?.eventKind===STAGE_ID)return;return previousClamp?.(enemy);};
   document.querySelector('#startBtn')?.addEventListener('click',()=>setTimeout(()=>stageAudio.sync(),0));
   window.renderStackfallGalaxyMap?.();
 })();

@@ -5,7 +5,6 @@ Gameplay timing, balance, unlocks, rewards, encounter cadence and victory owners
 
 ## Research and limits
 
-Reviewed the current remote main `66ff6b6ce64e27b6dbb46c2c6548f726ccc5933a`, then ran its Stage 1 in the in-app browser. `stage1-evidence/before-boss.png` shows box outlines dominating dark hollow masses and a miniature gate-shaped boss floating in the distance. Existing physical/swept collision and victory ownership are useful foundations.
 
 Sources were inspected on 2026-10-09. The interpretations below are our design deductions, not claims made by their developers. Static screenshots establish composition, not timing; trailer observation is qualitative, not frame-measured. No source assets or recognizable enemy designs are copied into the game.
 
@@ -59,5 +58,3 @@ Director keeps attacks separate and leaves breathing space. Opening is teachable
 - Stage 1–5 normal production budget; 6 Shardway finale larger; 7–11 normal; 12 Abyssal Bloom finale larger; 13–17 normal; 18 highest finale budget. These are future principles only; no Stage 2–18 redesign in this change.
 
 ## Acceptance
-
-Inspect actual browser start, general play, first incident, middle, late, 4:55, entrance, phase 1, all four attacks, structural phase, late attack and victory. Desktop, small desktop and mobile width; GPU and Canvas. Record repairs and limits in STAGE1_VERTICAL_SLICE.md. Contracts prove invariants, not art quality. User real playtest is the final quality gate.

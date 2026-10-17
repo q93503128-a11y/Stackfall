@@ -385,7 +385,6 @@ The main menu is a mode hub: `GALACTIC OPERATIONS`, `ENDLESS`, and `CORE DEVELOP
 
 ### Stage 1 production vertical slice — 2026-10-09
 
-붕괴 전초구역은 월드에 고정된 두 대형 항로와 검문소, 희소한 파손 지지대를 사용한다. 45초부터 부착 갑판이 떨어져 4.2초 동안 실물 우회 장애물로 남고, 후반에는 두 조각으로 변형된다. 전초 수호자는 쐐기형 티타늄 흉부·비대칭 유압 팔·내부 반응로를 가진 손상된 검역 인양 기계다. 4개 래스터 외장과 2개 연결부의 관절 좌표를 다각형 무기/접촉 판정이 공유하며 아래 중앙 틈은 비어 있다. 잔해 회수·격벽 교환·본체 돌파·거더 회수를 단일 디렉터로 실행한다. 48%에서 장갑과 팔이 벌어지고 하역장이 15% 확장되며 격벽 통로가 한 번 이동한다. 격파는 반응로 소등·팔 탈락·하단 봉쇄문 후퇴로 출구를 보여 준다. 5:00 등장, 적·사건·조우·보상·해금과 DEV 4:55 진입은 유지한다. 제작 기준은 [Production Bible](docs/STACKFALL_PRODUCTION_BIBLE.md), 실제 검증은 [Stage 1 보고서](docs/STAGE1_VERTICAL_SLICE.md)를 따른다. 사용자 실플레이 승인 전 Stage 2~18 production redesign을 진행하지 않는다.
 
 실제 Chromium GPU·Canvas·390×844 모바일에서 등장, 4종 동작, 48% 전환, 격파/보상 결과, 고속 탄환의 외장 적중과 중앙 공백을 검사한다. `scripts/stage-production-browser.mjs --stage=1`의 이미지·JSON은 로컬 `test-results/production-stage-01`에 생성된다.
 
@@ -395,7 +394,6 @@ The main menu is a mode hub: `GALACTIC OPERATIONS`, `ENDLESS`, and `CORE DEVELOP
 이온 성운 해구는 압력 증가·심층 진입·동맥류·먼 심실 맥박으로 진행된다. 전단 경고 뒤 실제 이온막이 흐르며 hard arena는 없다. 비대칭 심장은 0.75초 유맥 점등 후 방전, 흡기 후 방향 분출, 횡류의 대형 액적을 순차 사용한다. 68%에서 심실 분리, 32%에서 편심맥/역류로 바뀌며 예약 동작은 취소된다. 같은 심장이 응집 등장하고 격파 때 찢어져 해구가 맑아진다. 330초와 기존 보상·적·사건, visualR64 / hitRadius92 / contactR64를 유지한다. GPU도 전용 액적 외형을 보존한다. 음악은 탐험 trench / 전투 heart를 사용한다.
 
 
-Stage 3 production 정본: 유리별 묘역은 불규칙 수직 묘표가 시간에 따라 노출·균열되는 공간이다. 굴절 성물함은 길쭉한 결정 석관이며 독립 묘표 사이를 관성 이동한다. 52%에서 뚜껑이 분리된다. 결정 강하, 굴절 분열, 뚜껑 절단을 실제 다각형 이동과 swept 판정으로 구현한다. 3.4초 부상 등장과 3.9초 층별 박리·침강 격파가 동일 몸체를 사용한다. 360초와 유리날개·기존 조우·보상은 유지한다. 탐험 necropolis / 전투 reliquary 오리지널 음악 장면. 세부 검증과 중복 비교는 STAGE_PRODUCTION_REMAKE.md 참조.
 
 
 Stage 4 production 정본: 정지궤도 회랑의 단절 시간 철로와 거대한 고정 톱니가 제동·역방향 틱·시간 해방을 표현한다. 영점 조율기는 비대칭 수평 이스케이프먼트와 긴 추를 가진다. 수평 제동 후 P3 과거 자취를 연속 역행하며 68/30% 구조 전환을 갖는다. 실제 진자추, 정지했다 재개하는 톱니, 과거 자취의 역행 인장이 공격한다. 3.5초 철로 맞물림 등장, 4.1초 구동축 정지·추 낙하·회랑 정방향 복구. 390초/시차 방랑체/조난 사건/보상 유지. stasis→escapement 음악과 건조한 기계 틱.
@@ -429,5 +427,3 @@ Stage 5 production 정본: 거대 비선형 자속 띠·철가루 정렬·드문
 | 18 | 거대 기록 장·접힌 주소 층·잃은 행 | 주소 수렴→누락→축 불일치→정적 | 편측 기록 장·비스듬한 등뼈·off-center 실행실 / 기준점 수렴 | 두 L 지형 중심/축 재작성·세 주소 재배정·실행실 압출·장 박리 | 74% 실행실 노출·36% 기록 장 이탈 / 6.2초 시간차 장치 해제·열린 항로 |
 
 개발 보스 진입은 정확히 5초 뒤 정상 등장 트리거를 사용하며 이전 사건/적을 몰아서 실행하지 않는다. x2는 60Hz 물리 스텝 두 번, 고속 공격은 swept/segment, 독립 위험 물체는 최대 6개다. GPU·Canvas·모바일·성능 단계에서 저마다의 authored 외장을 유지한다. 탐험/최종전별 오리지널 WebAudio 장면과 효과음을 사용하고 런 종료 시 음악을 정지한다. 음질/재미는 실제 청취·실플레이로 별도 평가한다.
-
-설계와 검증, 9개 비교 축 및 세부 음악/등장/전장 목록은 [Stage production ledger](docs/STAGE_PRODUCTION_REMAKE.md)에 기록한다. `node scripts/stage-production-browser.mjs --stage=N`은 실제 세 렌더 경로의 이미지/JSON을 test-results/production-stage-NN에 저장한다.
