@@ -34,6 +34,25 @@ if(stageRedesignWarnings.length){
   console.warn(`[Stackfall smoke] ${stageRedesignWarnings.length} inactive-stage assertion(s) were separated while all Stage runtimes are intentionally disabled.`);
 }
 
+// browser-smoke still contains the pre-Very-Hard selector assertion (3 buttons).
+// Only separate that stale assertion when the captured runtime observation proves
+// the complete four-tier production profile, exact current multipliers, and HP order.
+const legacyDifficultyAssertion='[main-gpu] difficulty profiles or selector are invalid';
+const gameplayPolish=result.scenarios?.find(entry=>entry?.name==='main-gpu')?.observations?.gameplayPolish;
+const profiles=gameplayPolish?.profiles||{};
+const hard=profiles.hard||{},veryHard=profiles['very-hard']||{};
+const fourTierDifficultyValid=
+  gameplayPolish?.difficultyButtons===4&&
+  gameplayPolish?.hp?.easy<gameplayPolish?.hp?.normal&&
+  gameplayPolish?.hp?.normal<gameplayPolish?.hp?.hard&&
+  hard.enemyHp===1.42&&hard.enemyDamage===1.36&&hard.enemySpeed===1.14&&hard.rangedChance===1.35&&hard.rewardMultiplier===1.4&&
+  veryHard.enemyHp===1.8&&veryHard.enemyDamage===1.6&&veryHard.enemySpeed===1.2&&veryHard.rangedChance===1.55&&veryHard.rewardMultiplier===1.7;
+if(fourTierDifficultyValid&&substantiveFailures.includes(legacyDifficultyAssertion)){
+  substantiveFailures=substantiveFailures.filter(message=>message!==legacyDifficultyAssertion);
+  result.smokeCompatibilityWarnings=[...(result.smokeCompatibilityWarnings||[]),legacyDifficultyAssertion];
+  console.warn('[Stackfall smoke] separated obsolete 3-button difficulty assertion after validating the full four-tier runtime profile.');
+}
+
 // Active Stage backgrounds must expose real world-anchored visual landmarks.
 // Do not demote the awakening-isolation movement assertion: it catches the
 // screen-following/parallax-decoration regression that a static screenshot misses.
