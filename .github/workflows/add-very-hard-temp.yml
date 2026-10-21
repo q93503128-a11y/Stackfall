@@ -20,6 +20,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Normalize temporary helper anchor
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/add-very-hard-temp.py')
+          out=[]
+          for line in p.read_text(encoding='utf-8').splitlines():
+              if 'endless-achievement-unlocks i' in line and 'achievement-screen{' in line:
+                  if 'achievement-toast-stack' in line:
+                      payload=line[line.index('.achievement-toast-stack'):]
+                      payload=payload.replace(".achievement-screen{',", ".achievement-screen{z-index:52;',", 1)
+                      line="    '    "+payload
+                  else:
+                      line="    '    .achievement-screen{z-index:52;',"
+              out.append(line)
+          p.write_text('\n'.join(out)+'\n',encoding='utf-8')
+          PY
       - name: Apply patch
         run: python scripts/add-very-hard-temp.py
       - name: Validate and refresh build fingerprint
