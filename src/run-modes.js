@@ -1,6 +1,7 @@
 (()=>{
   const MODES=Object.freeze({ENDLESS:'endless',STAGE:'stage'});
   const ACTIVE_STAGE_RUNTIMES=Object.freeze(['stage-01']);
+  const ENDLESS_PROGRESSION_SCRIPTS=Object.freeze(['src/endless-progression.js']);
   const SHARED_STAGE_RUNTIME_STYLES=Object.freeze(['stage-runtime.css']);
   const SHARED_STAGE_RUNTIME_SCRIPTS=Object.freeze([
     'src/stage-constellation-backgrounds.js'
@@ -28,6 +29,7 @@
   state.runSelection=normalize(state.runSelection?.mode,state.runSelection?.stageId);
   window.STACKFALL_RUN_MODES=MODES;
   window.STACKFALL_ACTIVE_STAGE_RUNTIMES=ACTIVE_STAGE_RUNTIMES;
+  window.STACKFALL_ENDLESS_PROGRESSION_SCRIPTS=ENDLESS_PROGRESSION_SCRIPTS;
   window.STACKFALL_SHARED_STAGE_RUNTIME_STYLES=SHARED_STAGE_RUNTIME_STYLES;
   window.STACKFALL_SHARED_STAGE_RUNTIME_SCRIPTS=SHARED_STAGE_RUNTIME_SCRIPTS;
   window.STACKFALL_STAGE_RUNTIME_SCRIPTS=STAGE_RUNTIME_SCRIPTS;
@@ -86,6 +88,9 @@
     script.addEventListener('error',()=>reject(new Error('Failed to load stage runtime script: '+src)),{once:true});
     document.head.appendChild(script);
   });
+  const loadEndlessProgression=async()=>{
+    for(const src of ENDLESS_PROGRESSION_SCRIPTS)await ensureScript(src);
+  };
   const loadActiveStageRuntimes=async()=>{
     for(const href of SHARED_STAGE_RUNTIME_STYLES)await ensureStyle(href);
     for(const src of SHARED_STAGE_RUNTIME_SCRIPTS)await ensureScript(src);
@@ -97,6 +102,10 @@
   };
   const boot=()=>{
     installStageStatusGate();
+    loadEndlessProgression().catch(error=>{
+      console.error(error);
+      window.stackfallRuntimeDiagnostics?.('endless-progression-loader',error);
+    });
     loadActiveStageRuntimes().catch(error=>{
       console.error(error);
       window.stackfallRuntimeDiagnostics?.('stage-runtime-loader',error);
