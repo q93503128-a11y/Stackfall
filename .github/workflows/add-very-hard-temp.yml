@@ -40,6 +40,19 @@ jobs:
           PY
       - name: Apply patch
         run: python scripts/add-very-hard-temp.py
+      - name: Update balance contract expectations
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/meta-upgrade-contract.mjs')
+          text=p.read_text(encoding='utf-8')
+          old="difficulty.includes('rewardMultiplier:.85')&&difficulty.includes('rewardMultiplier:1.30')&&difficulty.includes('stackfallDifficultyRewardMultiplier')"
+          new="difficulty.includes('rewardMultiplier:.85')&&difficulty.includes('rewardMultiplier:1.40')&&difficulty.includes('rewardMultiplier:1.70')&&difficulty.includes(\"'very-hard':Object.freeze\")&&difficulty.includes('stackfallDifficultyRewardMultiplier')"
+          if text.count(old)!=1:
+              raise SystemExit(f'expected one difficulty contract match, got {text.count(old)}')
+          p.write_text(text.replace(old,new,1),encoding='utf-8')
+          PY
       - name: Validate and refresh build fingerprint
         run: |
           node --check src/meta-progression.js
@@ -52,6 +65,6 @@ jobs:
           set -euo pipefail
           git config user.name coworkaccount
           git config user.email cyp1jhh2@gmail.com
-          git add src/meta-progression.js src/difficulty-augment-expansion.js src/endless-progression.js src/build-info.js
+          git add src/meta-progression.js src/difficulty-augment-expansion.js src/endless-progression.js src/build-info.js scripts/meta-upgrade-contract.mjs
           git commit -m "feat: add very hard difficulty and live achievement toasts"
           git push origin HEAD:main
