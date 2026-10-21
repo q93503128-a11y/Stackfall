@@ -61,6 +61,14 @@ jobs:
           if text.count(old)!=1:
               raise SystemExit(f'expected one endgame difficulty contract match, got {text.count(old)}')
           p.write_text(text.replace(old,new,1),encoding='utf-8')
+
+          p=Path('scripts/legacy-chat-requirements-contract.mjs')
+          text=p.read_text(encoding='utf-8')
+          old="difficulty.includes(\"rewardMultiplier:.85\")&&difficulty.includes(\"rewardMultiplier:1.30\")&&design.includes('무기 해금과 Core Shard는 난이도 배율로 줄이거나 늘리지 않는다')"
+          new="difficulty.includes(\"rewardMultiplier:.85\")&&difficulty.includes(\"rewardMultiplier:1.40\")&&difficulty.includes(\"rewardMultiplier:1.70\")&&design.includes('무기 해금과 Core Shard는 난이도 배율로 줄이거나 늘리지 않는다')"
+          if text.count(old)!=1:
+              raise SystemExit(f'expected one legacy difficulty contract match, got {text.count(old)}')
+          p.write_text(text.replace(old,new,1),encoding='utf-8')
           PY
       - name: Validate and refresh build fingerprint
         run: |
@@ -74,6 +82,6 @@ jobs:
           set -euo pipefail
           git config user.name coworkaccount
           git config user.email cyp1jhh2@gmail.com
-          git add src/meta-progression.js src/difficulty-augment-expansion.js src/endless-progression.js src/build-info.js scripts/meta-upgrade-contract.mjs scripts/endgame-balance-contract.mjs
+          git add src/meta-progression.js src/difficulty-augment-expansion.js src/endless-progression.js src/build-info.js scripts/meta-upgrade-contract.mjs scripts/endgame-balance-contract.mjs scripts/legacy-chat-requirements-contract.mjs
           git commit -m "feat: add very hard difficulty and live achievement toasts"
           git push origin HEAD:main
