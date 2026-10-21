@@ -1,0 +1,67 @@
+name: Temporary UI visual capture
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmp-ui-visual.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Wait for redesigned CSS deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 40); do
+            if curl -fsSL "https://stackfall.pages.dev/feature-pack.css?visual=${GITHUB_SHA}-${i}" | grep -q 'Main hub: one primary route'; then
+              exit 0
+            fi
+            sleep 6
+          done
+          echo 'Redesigned CSS did not reach deployment in time' >&2
+          exit 1
+      - name: Capture desktop UI
+        shell: bash
+        run: |
+          cat > /tmp/capture.mjs <<'NODE'
+          import {spawn} from 'node:child_process';
+          import {existsSync,mkdtempSync,readFileSync,writeFileSync,mkdirSync} from 'node:fs';
+          import {tmpdir} from 'node:os';
+          import {join} from 'node:path';
+          const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+          const profile=mkdtempSync(join(tmpdir(),'stackfall-visual-'));
+          const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+          if(!chrome)throw new Error('Chrome not found');
+          const proc=spawn(chrome,['--headless=new','--no-sandbox','--remote-debugging-port=0',`--user-data-dir=${profile}`,'--window-size=1686,927','--force-device-scale-factor=1','--disable-background-timer-throttling','about:blank'],{stdio:'ignore'});
+          const portFile=join(profile,'DevToolsActivePort');
+          for(let i=0;i<150&&!existsSync(portFile);i++)await sleep(100);
+          if(!existsSync(portFile))throw new Error('No DevTools port');
+          const port=Number(readFileSync(portFile,'utf8').trim().split(/\r?\n/)[0]);
+          const target=await (await fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent('about:blank')}`,{method:'PUT'})).json();
+          class Cdp{constructor(url){this.id=0;this.pending=new Map();this.ready=new Promise((ok,fail)=>{this.ws=new WebSocket(url);this.ws.addEventListener('open',ok,{once:true});this.ws.addEventListener('error',fail,{once:true});this.ws.addEventListener('message',e=>{const m=JSON.parse(e.data);if(!m.id)return;const p=this.pending.get(m.id);if(!p)return;this.pending.delete(m.id);m.error?p.fail(new Error(m.error.message)):p.ok(m.result);});});}async send(method,params={}){await this.ready;const id=++this.id;return new Promise((ok,fail)=>{this.pending.set(id,{ok,fail});this.ws.send(JSON.stringify({id,method,params}));});}}
+          const cdp=new Cdp(target.webSocketDebuggerUrl);await cdp.ready;await cdp.send('Page.enable');await cdp.send('Runtime.enable');
+          const url=`https://stackfall.pages.dev/?visual=${Date.now()}`;await cdp.send('Page.navigate',{url});await sleep(6500);
+          mkdirSync('ui-capture',{recursive:true});
+          async function shot(name){const r=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});writeFileSync(`ui-capture/${name}.png`,Buffer.from(r.data,'base64'));}
+          async function evalJs(expression){return(await cdp.send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true,userGesture:true})).result?.value;}
+          await shot('home');
+          await evalJs("document.querySelector('#achievementHubBtn')?.click(); true");await sleep(700);await shot('achievements');
+          const info=await evalJs(`JSON.stringify({hub:[...document.querySelectorAll('.hub-panel>.hub-mode-card')].map(e=>({id:e.id,r:e.getBoundingClientRect().toJSON()})),achievement:{modal:document.querySelector('.achievement-modal')?.getBoundingClientRect().toJSON(),rows:document.querySelectorAll('.achievement-row').length,columns:getComputedStyle(document.querySelector('.achievement-grid')).gridTemplateColumns,bodyScrollbar:getComputedStyle(document.querySelector('.achievement-body')).scrollbarColor}})`);
+          writeFileSync('ui-capture/layout.json',info||'{}');proc.kill('SIGTERM');
+          NODE
+          node /tmp/capture.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stackfall-ui-redesign
+          path: ui-capture/
+          retention-days: 1
