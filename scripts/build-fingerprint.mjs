@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 const ownPath=fileURLToPath(import.meta.url);
 export const BUILD_INFO_PATH='src/build-info.js';
 export const REQUIRED_PUBLIC_ASSETS=['googlea1b39620fd8849c7.html'];
-export const DYNAMIC_PUBLIC_ASSETS=['stage-runtime.css','src/stage-constellation-backgrounds.js','src/stage-audio.js','src/stage01-remodel.js','src/stage01-polish.js'];
+export const DYNAMIC_PUBLIC_ASSETS=['stage-runtime.css','src/stage-constellation-backgrounds.js','src/stage-audio.js','src/stage01-remodel.js','src/stage01-polish.js','src/endless-progression.js'];
 const TEXT_ASSET_PATTERN=/\.(?:css|html|js|json|svg|webmanifest)$/i;
 const CONTRACTS=['polish-contract-check.mjs','meta-upgrade-contract.mjs','level-choice-contract.mjs','stage-catalog-contract.mjs','stage-geometry-contract.mjs','stage-craft-contract.mjs','sortie-prep-contract.mjs','boss-identity-contract.mjs','stage-map-contract.mjs','run-mode-contract.mjs','void-boss-contract.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','community-feedback-contract.mjs','damage-results-contract.mjs','dev-tools-contract.mjs','performance-audit-contract.mjs','legacy-chat-requirements-contract.mjs','awakening-first-set-contract.mjs','awakening-second-set-contract.mjs','awakening-final-set-contract.mjs'];
 const OWNERSHIP_GROUPS=['health','regen-runtime','regen-docs','hard','prism','targeting','docs','ci'];
