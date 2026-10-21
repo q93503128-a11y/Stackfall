@@ -281,6 +281,7 @@
 
   const style=document.createElement('style');style.textContent=`
     #stageMapBtn.stage-sealed{cursor:not-allowed;filter:saturate(.45);opacity:.72}#stageMapBtn.stage-sealed>i{font-style:normal;font-size:22px;opacity:.88}#stageMapBtn.stage-sealed:hover{transform:none}
+    @media(min-width:761px){.hub-mode-card.upgrade-card{grid-column:auto;min-height:170px}.hub-mode-card.upgrade-card strong{font-size:clamp(28px,3.1vw,42px)}}
     .hub-mode-card.achievement-card:before{background:radial-gradient(circle at 18% 20%,rgba(116,242,167,.16),transparent 35%),radial-gradient(circle at 88% 82%,rgba(124,232,255,.14),transparent 38%)}.achievement-card .hub-mode-kicker{color:#8fffc8}
     .starter-head{position:relative}.starter-unlock-progress{position:absolute;right:0;top:0;font-style:normal;font-size:10px;font-weight:900;letter-spacing:.06em;color:#9fb0d4}
     .starter-option.locked{position:relative;cursor:not-allowed;opacity:.64;filter:saturate(.42);overflow:hidden}.starter-option.locked .starter-icon{opacity:.55}.starter-option.locked .starter-label{opacity:.82}.starter-lock{position:absolute;right:7px;top:6px;font-size:12px;filter:grayscale(1)}.starter-condition{display:block;width:100%;margin-top:4px;color:#aab4cd;font-size:8px;line-height:1.25;white-space:normal}.starter-option.locked:hover{transform:none}
