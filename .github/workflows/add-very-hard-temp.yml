@@ -45,12 +45,21 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+
           p=Path('scripts/meta-upgrade-contract.mjs')
           text=p.read_text(encoding='utf-8')
           old="difficulty.includes('rewardMultiplier:.85')&&difficulty.includes('rewardMultiplier:1.30')&&difficulty.includes('stackfallDifficultyRewardMultiplier')"
           new="difficulty.includes('rewardMultiplier:.85')&&difficulty.includes('rewardMultiplier:1.40')&&difficulty.includes('rewardMultiplier:1.70')&&difficulty.includes(\"'very-hard':Object.freeze\")&&difficulty.includes('stackfallDifficultyRewardMultiplier')"
           if text.count(old)!=1:
-              raise SystemExit(f'expected one difficulty contract match, got {text.count(old)}')
+              raise SystemExit(f'expected one meta difficulty contract match, got {text.count(old)}')
+          p.write_text(text.replace(old,new,1),encoding='utf-8')
+
+          p=Path('scripts/endgame-balance-contract.mjs')
+          text=p.read_text(encoding='utf-8')
+          old="expect('hard difficulty increased',difficulty.includes('enemyHp:1.32')&&difficulty.includes('enemyDamage:1.30')&&difficulty.includes('enemySpeed:1.12')&&difficulty.includes('rangedChance:1.28'));"
+          new="expect('hard difficulty increased and very hard added',difficulty.includes('enemyHp:1.42')&&difficulty.includes('enemyDamage:1.36')&&difficulty.includes('enemySpeed:1.14')&&difficulty.includes('rangedChance:1.35')&&difficulty.includes('enemyHp:1.80')&&difficulty.includes('enemyDamage:1.60')&&difficulty.includes('enemySpeed:1.20')&&difficulty.includes('rangedChance:1.55'));"
+          if text.count(old)!=1:
+              raise SystemExit(f'expected one endgame difficulty contract match, got {text.count(old)}')
           p.write_text(text.replace(old,new,1),encoding='utf-8')
           PY
       - name: Validate and refresh build fingerprint
@@ -65,6 +74,6 @@ jobs:
           set -euo pipefail
           git config user.name coworkaccount
           git config user.email cyp1jhh2@gmail.com
-          git add src/meta-progression.js src/difficulty-augment-expansion.js src/endless-progression.js src/build-info.js scripts/meta-upgrade-contract.mjs
+          git add src/meta-progression.js src/difficulty-augment-expansion.js src/endless-progression.js src/build-info.js scripts/meta-upgrade-contract.mjs scripts/endgame-balance-contract.mjs
           git commit -m "feat: add very hard difficulty and live achievement toasts"
           git push origin HEAD:main
