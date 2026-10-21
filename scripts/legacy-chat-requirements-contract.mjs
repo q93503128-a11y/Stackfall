@@ -67,7 +67,7 @@ expect('awakened Lunar Return owns the lunar phase transformation',awakening.inc
 
 expect('damage results include timeline series and per-series toggles',damage.includes('damageTrend')&&damage.includes('damageTrendHidden'));
 expect('runtime keeps explicit x1 and x2 combat speed control',runtimeControls.includes("speed.textContent=state.gameSpeed===2?'×2':'×1'")&&runtimeControls.includes('stackfallGameSpeed'));
-expect('difficulty continues to scale Stardust rewards but not unlock currency',difficulty.includes("rewardMultiplier:.85")&&difficulty.includes("rewardMultiplier:1.30")&&design.includes('무기 해금과 Core Shard는 난이도 배율로 줄이거나 늘리지 않는다'));
+expect('difficulty continues to scale Stardust rewards but not unlock currency',difficulty.includes("rewardMultiplier:.85")&&difficulty.includes("rewardMultiplier:1.40")&&difficulty.includes("rewardMultiplier:1.70")&&design.includes('무기 해금과 Core Shard는 난이도 배율로 줄이거나 늘리지 않는다'));
 expect('unused awakening cores cash out at run end',design.includes('남은 코어는 런 종료 시 **1개당 기본 Stardust 40**')||design.includes('1개당 기본 Stardust 40'));
 expect('shield capacity remains additive across independent sources',rewards.includes("registerShieldCapacitySource('trait-aegis'")&&rewards.includes("registerShieldCapacitySource('augment-bulwark'")&&design.includes('보호막 최대치 기여량을 **합산**'));
 expect('expanded Apex arena remains 540 desktop and 350 compact',endgame.includes("state.apexArena.r=compactDevice()?350:540"));

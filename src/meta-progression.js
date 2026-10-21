@@ -12,6 +12,7 @@
     'special-ability':Object.freeze({ko:'보스 특수능력',en:'Boss Special Abilities'}),
     endless:Object.freeze({ko:'엔드리스 원정',en:'Endless Expedition'}),
     hard:Object.freeze({ko:'어려움 난이도',en:'Hard Difficulty'}),
+    'very-hard':Object.freeze({ko:'매우 어려움 난이도',en:'Very Hard Difficulty',ja:'非常に難しい難易度','zh-CN':'非常困难',es:'Dificultad muy difícil',fr:'Difficulté très difficile'}),
     'choice-4':Object.freeze({ko:'4중 재구성',en:'Four-way Reconstruction'}),
     'start-level-3':Object.freeze({ko:'선행 재구성 +3',en:'Advanced Start +3',ja:'先行再構成 +3','zh-CN':'先行重构 +3',es:'Inicio avanzado +3',fr:'Départ avancé +3'}),
     'core-development-iii':Object.freeze({ko:'코어 성장 3차 돌파',en:'Core Development III',ja:'コア成長 第3突破','zh-CN':'核心成长 III',es:'Desarrollo del núcleo III',fr:'Développement du cœur III'}),

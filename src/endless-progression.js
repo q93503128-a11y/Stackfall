@@ -14,7 +14,7 @@
     Object.freeze({id:'run-kills-400',weapon:'rail',kind:'runKills',value:400,test:(run)=>run.kills>=400}),
     Object.freeze({id:'level-20',weapon:'spiral',kind:'level',value:20,test:(run)=>run.level>=20}),
     Object.freeze({id:'chain-50',weapon:'mirror',kind:'chain',value:50,test:(run)=>run.maxCombo>=50}),
-    Object.freeze({id:'lifetime-kills-1000',weapon:'vacuum',kind:'lifetimeKills',value:1000,test:(run,meta)=>(meta.lifetime?.kills||0)>=1000}),
+    Object.freeze({id:'lifetime-kills-1000',weapon:'vacuum',kind:'lifetimeKills',value:1000,test:(run,meta)=>(meta.lifetime?.kills||0)+(run.kills||0)>=1000}),
     Object.freeze({id:'mini-10',weapon:'mine',kind:'mini',value:10,test:(run,meta)=>(meta.bossRecords?.mini||0)>=10}),
     Object.freeze({id:'survive-10m',weapon:'missile',kind:'survive',value:10,test:(run)=>run.time>=600}),
     Object.freeze({id:'apex-1',weapon:'gate',kind:'apex',value:1,test:(run,meta)=>(meta.bossRecords?.apex||0)>=1})
@@ -23,6 +23,7 @@
     Object.freeze({id:'feature-special-ability',feature:'special-ability',kind:'boss',value:1,test:(run,meta)=>(meta.bossRecords?.boss||0)>=1}),
     Object.freeze({id:'feature-awakening',feature:'awakening',kind:'survive',value:10,test:(run)=>run.time>=600}),
     Object.freeze({id:'feature-hard',feature:'hard',kind:'apex',value:1,test:(run,meta)=>(meta.bossRecords?.apex||0)>=1}),
+    Object.freeze({id:'feature-very-hard',feature:'very-hard',kind:'hardSurvive',value:15,test:(run)=>run.difficulty==='hard'&&run.time>=900}),
     Object.freeze({id:'feature-choice-4',feature:'choice-4',kind:'level',value:25,test:(run)=>run.level>=25}),
     Object.freeze({id:'feature-start-level-3',feature:'start-level-3',kind:'survive',value:15,test:(run)=>run.time>=900}),
     Object.freeze({id:'feature-core-development-iii',feature:'core-development-iii',kind:'apex',value:3,test:(run,meta)=>(meta.bossRecords?.apex||0)>=3}),
@@ -45,33 +46,34 @@
         featureUnlocks:sanitizeStrings(saved.featureUnlocks),
         survivalMilestones:sanitizeNumbers(saved.survivalMilestones),
         bestSurvival:sanitizeNumber(saved.bestSurvival),
+        bestHardSurvival:sanitizeNumber(saved.bestHardSurvival),
         bestLevel:Math.max(1,Math.floor(sanitizeNumber(saved.bestLevel)||1)),
         bestCombo:Math.floor(sanitizeNumber(saved.bestCombo)),
         bestRunKills:Math.floor(sanitizeNumber(saved.bestRunKills))
       };
     }catch{
-      return{version:2,completed:[],weaponUnlocks:[],featureUnlocks:[],survivalMilestones:[],bestSurvival:0,bestLevel:1,bestCombo:0,bestRunKills:0};
+      return{version:2,completed:[],weaponUnlocks:[],featureUnlocks:[],survivalMilestones:[],bestSurvival:0,bestHardSurvival:0,bestLevel:1,bestCombo:0,bestRunKills:0};
     }
   }
   const progress=loadProgress();
   function saveProgress(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(progress));}catch{}}
   function language(){return GAME_SETTINGS?.language||'ko';}
   const CONDITION_TEMPLATES={
-    ko:{survive:n=>`무한모드 ${n}분 생존`,mini:n=>`중간보스 누적 ${n}회 처치`,level:n=>`한 판에서 Lv.${n} 도달`,chain:n=>`한 판에서 연쇄 ${n} 달성`,runKills:n=>`한 판에서 적 ${n}마리 처치`,boss:n=>`보스 누적 ${n}회 처치`,lifetimeKills:n=>`적 누적 ${n}마리 처치`,apex:n=>`초월체 ${n}회 처치`},
-    en:{survive:n=>`Survive ${n}m in Endless`,mini:n=>`Defeat ${n} mini-boss${n===1?'':'es'}`,level:n=>`Reach Lv.${n} in one run`,chain:n=>`Reach ${n} Chain in one run`,runKills:n=>`Defeat ${n} enemies in one run`,boss:n=>`Defeat ${n} boss${n===1?'':'es'}`,lifetimeKills:n=>`Defeat ${n} enemies total`,apex:n=>`Defeat ${n} Apex`},
-    ja:{survive:n=>`エンドレスで${n}分生存`,mini:n=>`中ボスを累計${n}体撃破`,level:n=>`1回の出撃でLv.${n}到達`,chain:n=>`1回の出撃でチェイン${n}`,runKills:n=>`1回の出撃で敵${n}体撃破`,boss:n=>`ボスを累計${n}体撃破`,lifetimeKills:n=>`敵を累計${n}体撃破`,apex:n=>`超越体を${n}体撃破`},
-    'zh-CN':{survive:n=>`无尽模式生存${n}分钟`,mini:n=>`累计击败${n}个中型首领`,level:n=>`单局达到Lv.${n}`,chain:n=>`单局达到${n}连击`,runKills:n=>`单局击败${n}个敌人`,boss:n=>`累计击败${n}个首领`,lifetimeKills:n=>`累计击败${n}个敌人`,apex:n=>`击败${n}个超越体`},
-    es:{survive:n=>`Sobrevive ${n} min. en Infinito`,mini:n=>`Derrota ${n} minijefe(s)`,level:n=>`Alcanza Nv.${n} en una partida`,chain:n=>`Alcanza cadena ${n} en una partida`,runKills:n=>`Derrota ${n} enemigos en una partida`,boss:n=>`Derrota ${n} jefe(s)`,lifetimeKills:n=>`Derrota ${n} enemigos en total`,apex:n=>`Derrota ${n} Ápice`},
-    fr:{survive:n=>`Survivez ${n} min en Sans fin`,mini:n=>`Battez ${n} mini-boss`,level:n=>`Atteignez Niv.${n} en une partie`,chain:n=>`Atteignez une chaîne de ${n}`,runKills:n=>`Battez ${n} ennemis en une partie`,boss:n=>`Battez ${n} boss`,lifetimeKills:n=>`Battez ${n} ennemis au total`,apex:n=>`Battez ${n} Apex`}
+    ko:{survive:n=>`무한모드 ${n}분 생존`,hardSurvive:n=>`어려움 난이도에서 ${n}분 생존`,mini:n=>`중간보스 누적 ${n}회 처치`,level:n=>`한 판에서 Lv.${n} 도달`,chain:n=>`한 판에서 연쇄 ${n} 달성`,runKills:n=>`한 판에서 적 ${n}마리 처치`,boss:n=>`보스 누적 ${n}회 처치`,lifetimeKills:n=>`적 누적 ${n}마리 처치`,apex:n=>`초월체 ${n}회 처치`},
+    en:{survive:n=>`Survive ${n}m in Endless`,hardSurvive:n=>`Survive ${n}m on Hard`,mini:n=>`Defeat ${n} mini-boss${n===1?'':'es'}`,level:n=>`Reach Lv.${n} in one run`,chain:n=>`Reach ${n} Chain in one run`,runKills:n=>`Defeat ${n} enemies in one run`,boss:n=>`Defeat ${n} boss${n===1?'':'es'}`,lifetimeKills:n=>`Defeat ${n} enemies total`,apex:n=>`Defeat ${n} Apex`},
+    ja:{survive:n=>`エンドレスで${n}分生存`,hardSurvive:n=>`難しい難易度で${n}分生存`,mini:n=>`中ボスを累計${n}体撃破`,level:n=>`1回の出撃でLv.${n}到達`,chain:n=>`1回の出撃でチェイン${n}`,runKills:n=>`1回の出撃で敵${n}体撃破`,boss:n=>`ボスを累計${n}体撃破`,lifetimeKills:n=>`敵を累計${n}体撃破`,apex:n=>`超越体を${n}体撃破`},
+    'zh-CN':{survive:n=>`无尽模式生存${n}分钟`,hardSurvive:n=>`困难难度生存${n}分钟`,mini:n=>`累计击败${n}个中型首领`,level:n=>`单局达到Lv.${n}`,chain:n=>`单局达到${n}连击`,runKills:n=>`单局击败${n}个敌人`,boss:n=>`累计击败${n}个首领`,lifetimeKills:n=>`累计击败${n}个敌人`,apex:n=>`击败${n}个超越体`},
+    es:{survive:n=>`Sobrevive ${n} min. en Infinito`,hardSurvive:n=>`Sobrevive ${n} min. en Difícil`,mini:n=>`Derrota ${n} minijefe(s)`,level:n=>`Alcanza Nv.${n} en una partida`,chain:n=>`Alcanza cadena ${n} en una partida`,runKills:n=>`Derrota ${n} enemigos en una partida`,boss:n=>`Derrota ${n} jefe(s)`,lifetimeKills:n=>`Derrota ${n} enemigos en total`,apex:n=>`Derrota ${n} Ápice`},
+    fr:{survive:n=>`Survivez ${n} min en Sans fin`,hardSurvive:n=>`Survivez ${n} min en Difficile`,mini:n=>`Battez ${n} mini-boss`,level:n=>`Atteignez Niv.${n} en une partie`,chain:n=>`Atteignez une chaîne de ${n}`,runKills:n=>`Battez ${n} ennemis en une partie`,boss:n=>`Battez ${n} boss`,lifetimeKills:n=>`Battez ${n} ennemis au total`,apex:n=>`Battez ${n} Apex`}
   };
   function conditionText(row){const set=CONDITION_TEMPLATES[language()]||CONDITION_TEMPLATES.en;return(set[row.kind]||CONDITION_TEMPLATES.en[row.kind])?.(row.value)||row.id;}
   const UI_TEXT={
-    ko:{stage:'스테이지 모드는 추후 업데이트됩니다.',progress:(a,b)=>`${a} / ${b} 해금`,condition:'획득 조건',unlocked:'업적 보상 해금',milestone:'생존 기록 보상',achievementKicker:'ACHIEVEMENTS',achievementTitle:'업적',achievementDesc:'무한모드에서 목표를 달성해 장비와 기능을 해금합니다.',achievementSummary:(a,b)=>`${a} / ${b} 완료`,weaponRewards:'장비 해금',featureRewards:'기능 해금',complete:'완료',locked:'미완료',reward:'보상'},
-    en:{stage:'Stage mode will return in a future update.',progress:(a,b)=>`${a} / ${b} unlocked`,condition:'Unlock',unlocked:'ACHIEVEMENT REWARD',milestone:'SURVIVAL RECORD',achievementKicker:'ACHIEVEMENTS',achievementTitle:'Achievements',achievementDesc:'Complete Endless objectives to unlock weapons and features.',achievementSummary:(a,b)=>`${a} / ${b} complete`,weaponRewards:'Weapon unlocks',featureRewards:'Feature unlocks',complete:'COMPLETE',locked:'INCOMPLETE',reward:'Reward'},
-    ja:{stage:'ステージモードは今後のアップデートで追加されます。',progress:(a,b)=>`${a} / ${b} 解放`,condition:'獲得条件',unlocked:'実績報酬',milestone:'生存記録報酬',achievementKicker:'ACHIEVEMENTS',achievementTitle:'実績',achievementDesc:'エンドレスの目標を達成して装備と機能を解放します。',achievementSummary:(a,b)=>`${a} / ${b} 完了`,weaponRewards:'装備解放',featureRewards:'機能解放',complete:'完了',locked:'未完了',reward:'報酬'},
-    'zh-CN':{stage:'关卡模式将在后续更新中开放。',progress:(a,b)=>`${a} / ${b} 已解锁`,condition:'解锁条件',unlocked:'成就奖励',milestone:'生存记录奖励',achievementKicker:'ACHIEVEMENTS',achievementTitle:'成就',achievementDesc:'完成无尽模式目标，解锁武器和功能。',achievementSummary:(a,b)=>`${a} / ${b} 完成`,weaponRewards:'武器解锁',featureRewards:'功能解锁',complete:'完成',locked:'未完成',reward:'奖励'},
-    es:{stage:'El modo Etapas volverá en una futura actualización.',progress:(a,b)=>`${a} / ${b} desbloqueadas`,condition:'Desbloqueo',unlocked:'RECOMPENSA DE LOGRO',milestone:'RÉCORD DE SUPERVIVENCIA',achievementKicker:'ACHIEVEMENTS',achievementTitle:'Logros',achievementDesc:'Cumple objetivos de Infinito para desbloquear armas y funciones.',achievementSummary:(a,b)=>`${a} / ${b} completados`,weaponRewards:'Armas',featureRewards:'Funciones',complete:'COMPLETADO',locked:'INCOMPLETO',reward:'Recompensa'},
-    fr:{stage:'Le mode Étapes reviendra dans une prochaine mise à jour.',progress:(a,b)=>`${a} / ${b} débloquées`,condition:'Déblocage',unlocked:'RÉCOMPENSE DE SUCCÈS',milestone:'RECORD DE SURVIE',achievementKicker:'ACHIEVEMENTS',achievementTitle:'Succès',achievementDesc:'Atteignez des objectifs en Sans fin pour débloquer armes et fonctions.',achievementSummary:(a,b)=>`${a} / ${b} terminés`,weaponRewards:'Armes',featureRewards:'Fonctions',complete:'TERMINÉ',locked:'INCOMPLET',reward:'Récompense'}
+    ko:{achievementToast:'업적 달성',stage:'스테이지 모드는 추후 업데이트됩니다.',progress:(a,b)=>`${a} / ${b} 해금`,condition:'획득 조건',unlocked:'업적 보상 해금',milestone:'생존 기록 보상',achievementKicker:'ACHIEVEMENTS',achievementTitle:'업적',achievementDesc:'무한모드에서 목표를 달성해 장비와 기능을 해금합니다.',achievementSummary:(a,b)=>`${a} / ${b} 완료`,weaponRewards:'장비 해금',featureRewards:'기능 해금',complete:'완료',locked:'미완료',reward:'보상'},
+    en:{achievementToast:'ACHIEVEMENT COMPLETE',stage:'Stage mode will return in a future update.',progress:(a,b)=>`${a} / ${b} unlocked`,condition:'Unlock',unlocked:'ACHIEVEMENT REWARD',milestone:'SURVIVAL RECORD',achievementKicker:'ACHIEVEMENTS',achievementTitle:'Achievements',achievementDesc:'Complete Endless objectives to unlock weapons and features.',achievementSummary:(a,b)=>`${a} / ${b} complete`,weaponRewards:'Weapon unlocks',featureRewards:'Feature unlocks',complete:'COMPLETE',locked:'INCOMPLETE',reward:'Reward'},
+    ja:{achievementToast:'実績達成',stage:'ステージモードは今後のアップデートで追加されます。',progress:(a,b)=>`${a} / ${b} 解放`,condition:'獲得条件',unlocked:'実績報酬',milestone:'生存記録報酬',achievementKicker:'ACHIEVEMENTS',achievementTitle:'実績',achievementDesc:'エンドレスの目標を達成して装備と機能を解放します。',achievementSummary:(a,b)=>`${a} / ${b} 完了`,weaponRewards:'装備解放',featureRewards:'機能解放',complete:'完了',locked:'未完了',reward:'報酬'},
+    'zh-CN':{achievementToast:'成就完成',stage:'关卡模式将在后续更新中开放。',progress:(a,b)=>`${a} / ${b} 已解锁`,condition:'解锁条件',unlocked:'成就奖励',milestone:'生存记录奖励',achievementKicker:'ACHIEVEMENTS',achievementTitle:'成就',achievementDesc:'完成无尽模式目标，解锁武器和功能。',achievementSummary:(a,b)=>`${a} / ${b} 完成`,weaponRewards:'武器解锁',featureRewards:'功能解锁',complete:'完成',locked:'未完成',reward:'奖励'},
+    es:{achievementToast:'LOGRO COMPLETADO',stage:'El modo Etapas volverá en una futura actualización.',progress:(a,b)=>`${a} / ${b} desbloqueadas`,condition:'Desbloqueo',unlocked:'RECOMPENSA DE LOGRO',milestone:'RÉCORD DE SUPERVIVENCIA',achievementKicker:'ACHIEVEMENTS',achievementTitle:'Logros',achievementDesc:'Cumple objetivos de Infinito para desbloquear armas y funciones.',achievementSummary:(a,b)=>`${a} / ${b} completados`,weaponRewards:'Armas',featureRewards:'Funciones',complete:'COMPLETADO',locked:'INCOMPLETO',reward:'Recompensa'},
+    fr:{achievementToast:'SUCCÈS DÉBLOQUÉ',stage:'Le mode Étapes reviendra dans une prochaine mise à jour.',progress:(a,b)=>`${a} / ${b} débloquées`,condition:'Déblocage',unlocked:'RÉCOMPENSE DE SUCCÈS',milestone:'RECORD DE SURVIE',achievementKicker:'ACHIEVEMENTS',achievementTitle:'Succès',achievementDesc:'Atteignez des objectifs en Sans fin pour débloquer armes et fonctions.',achievementSummary:(a,b)=>`${a} / ${b} terminés`,weaponRewards:'Armes',featureRewards:'Fonctions',complete:'TERMINÉ',locked:'INCOMPLET',reward:'Récompense'}
   };
   function uiText(){return UI_TEXT[language()]||UI_TEXT.en;}
 
@@ -114,9 +116,10 @@
     if(changed)saveProgress();
     window.renderStackfallDifficulty?.();
   }
-  function snapshotRun(){return{time:Math.max(0,Number(state.time)||0),kills:Math.max(0,Math.floor(Number(state.kills)||0)),level:Math.max(1,Math.floor(Number(state.level)||1)),maxCombo:Math.max(0,Math.floor(Number(state.maxCombo)||0))};}
+  function snapshotRun(){return{time:Math.max(0,Number(state.time)||0),kills:Math.max(0,Math.floor(Number(state.kills)||0)),level:Math.max(1,Math.floor(Number(state.level)||1)),maxCombo:Math.max(0,Math.floor(Number(state.maxCombo)||0)),difficulty:String(state.selectedDifficulty||'normal')};}
   function rememberRunBest(run){
     progress.bestSurvival=Math.max(progress.bestSurvival,run.time);
+    if(run.difficulty==='hard')progress.bestHardSurvival=Math.max(progress.bestHardSurvival||0,run.time);
     progress.bestLevel=Math.max(progress.bestLevel,run.level);
     progress.bestCombo=Math.max(progress.bestCombo,run.maxCombo);
     progress.bestRunKills=Math.max(progress.bestRunKills,run.kills);
@@ -133,10 +136,10 @@
     return granted;
   }
   function evaluateAchievements(run){
-    const meta=window.stackfallMeta||{},newUnlocks=[];rememberRunBest(run);
+    const meta=window.stackfallMeta||{},newUnlocks=[];let changed=false;rememberRunBest(run);
     for(const row of ALL_ACHIEVEMENTS){
       if(progress.completed.includes(row.id)||!row.test(run,meta))continue;
-      progress.completed.push(row.id);
+      progress.completed.push(row.id);changed=true;
       if(row.weapon){
         const wasUnlocked=window.stackfallIsWeaponUnlocked?.(row.weapon)===true;
         if(!progress.weaponUnlocks.includes(row.weapon))progress.weaponUnlocks.push(row.weapon);
@@ -147,7 +150,7 @@
         if(!wasUnlocked&&grantFeature(row.feature))newUnlocks.push(row);
       }
     }
-    saveProgress();return newUnlocks;
+    if(changed)saveProgress();return newUnlocks;
   }
 
   function applyStageSeal(){
@@ -183,14 +186,28 @@
   function achievementProgress(row){
     const meta=window.stackfallMeta||{},current=(()=>{
       if(row.kind==='survive')return Math.floor(progress.bestSurvival/60);
+      if(row.kind==='hardSurvive')return Math.floor((progress.bestHardSurvival||0)/60);
       if(row.kind==='level')return progress.bestLevel;
       if(row.kind==='chain')return progress.bestCombo;
       if(row.kind==='runKills')return progress.bestRunKills;
-      if(row.kind==='lifetimeKills')return Math.floor(meta.lifetime?.kills||0);
+      if(row.kind==='lifetimeKills')return Math.floor(meta.lifetime?.kills||0)+(isEndless()&&state.mode==='playing'?Math.max(0,Math.floor(Number(state.kills)||0)):0);
       if(row.kind==='mini'||row.kind==='boss'||row.kind==='apex')return Math.floor(meta.bossRecords?.[row.kind]||0);
       return 0;
     })();
     return`${Math.min(current,row.value)} / ${row.value}`;
+  }
+  function ensureAchievementToastRoot(){
+    let root=document.querySelector('#achievementToastStack');if(root)return root;
+    root=document.createElement('div');root.id='achievementToastStack';root.className='achievement-toast-stack';root.setAttribute('aria-live','polite');root.setAttribute('aria-atomic','false');document.querySelector('#app')?.appendChild(root);return root;
+  }
+  function showAchievementToasts(rows=[]){
+    if(!rows.length)return;const root=ensureAchievementToastRoot();
+    for(const row of rows){
+      const reward=rewardInfo(row),toast=document.createElement('div');toast.className='achievement-toast';toast.innerHTML=`<i>${reward.icon}</i><div><span>${uiText().achievementToast}</span><strong>${reward.name}</strong><small>${conditionText(row)}</small></div>`;root.appendChild(toast);
+      requestAnimationFrame(()=>toast.classList.add('show'));setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),240);},3200);
+      while(root.children.length>3)root.firstElementChild?.remove();
+    }
+    try{audio.pickup();}catch{}
   }
   function renderAchievementUnlocks(rows=[]){
     const modal=document.querySelector('#gameOverScreen .result-modal');if(!modal)return;
@@ -247,10 +264,9 @@
   function featureAchievementCondition(key){const row=byFeature.get(key);return row?conditionText(row):'';}
 
   function refreshLegacyLockCopy(){
-    const hardButton=document.querySelector('.difficulty-option[data-difficulty="hard"]');
-    if(hardButton?.disabled){
-      const small=hardButton.querySelector('small'),condition=featureAchievementCondition('hard');
-      if(small&&condition&&small.textContent!==condition)small.textContent=condition;
+    for(const key of['hard','very-hard']){
+      const button=document.querySelector(`.difficulty-option[data-difficulty="${key}"]`);
+      if(button?.disabled){const small=button.querySelector('small'),condition=featureAchievementCondition(key);if(small&&condition&&small.textContent!==condition)small.textContent=condition;}
     }
     const lock=document.querySelector('#upgradeLockReason');
     if(lock&&/STAGE\s*16|CLEAR STAGE 16|스테이지\s*16/i.test(lock.textContent||'')){
@@ -286,10 +302,17 @@
     .starter-head{position:relative}.starter-unlock-progress{position:absolute;right:0;top:0;font-style:normal;font-size:10px;font-weight:900;letter-spacing:.06em;color:#9fb0d4}
     .starter-option.locked{position:relative;cursor:not-allowed;opacity:.64;filter:saturate(.42);overflow:hidden}.starter-option.locked .starter-icon{opacity:.55}.starter-option.locked .starter-label{opacity:.82}.starter-lock{position:absolute;right:7px;top:6px;font-size:12px;filter:grayscale(1)}.starter-condition{display:block;width:100%;margin-top:4px;color:#aab4cd;font-size:8px;line-height:1.25;white-space:normal}.starter-option.locked:hover{transform:none}
     .endless-achievement-unlocks{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:10px 0 2px}.endless-achievement-unlocks>span{width:100%;text-align:center;font-size:9px;font-weight:900;letter-spacing:.12em;color:#8fffe0}.endless-achievement-unlocks>b{display:flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid rgba(143,255,224,.24);background:rgba(18,44,55,.48);font-size:11px}.endless-achievement-unlocks i{font-style:normal;color:#dffcff}
-    .achievement-screen{z-index:52;padding:18px;background:rgba(2,4,13,.82);backdrop-filter:blur(14px)}.achievement-modal{width:min(1040px,95vw);max-height:92vh;display:grid;grid-template-rows:auto minmax(0,1fr);padding:24px;border-radius:24px;overflow:hidden}.achievement-heading{display:grid;grid-template-columns:minmax(0,1fr) 210px 44px;gap:18px;align-items:center;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.08)}.achievement-heading>div:first-child>span{color:#8fffc8;font-size:9px;font-weight:900;letter-spacing:.20em}.achievement-heading h2{margin:4px 0 0;font:38px/1 "Black Han Sans",sans-serif}.achievement-heading p{margin:7px 0 0;color:#8c9abd;font-size:10px}.achievement-heading>button{width:44px;height:44px;border:1px solid rgba(255,255,255,.12);border-radius:13px;background:rgba(7,11,29,.82);color:#fff;font-size:25px;cursor:pointer}.achievement-total{display:grid;gap:7px}.achievement-total>b{text-align:right;color:#dffdf2;font-size:12px}.achievement-total>i{height:6px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}.achievement-total>i>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#74f2a7,#7ce8ff);box-shadow:0 0 12px rgba(116,242,167,.28)}
+    .achievement-toast-stack{position:fixed;right:18px;top:76px;z-index:48;display:grid;gap:8px;width:min(330px,calc(100vw - 28px));pointer-events:none}.achievement-toast{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;align-items:center;padding:11px 12px;border:1px solid rgba(143,255,224,.25);border-radius:13px;background:linear-gradient(135deg,rgba(12,34,42,.94),rgba(6,10,25,.94));box-shadow:0 10px 28px rgba(0,0,0,.26),0 0 20px rgba(116,242,167,.08);opacity:0;transform:translateX(20px);transition:opacity .2s ease,transform .2s ease}.achievement-toast.show{opacity:1;transform:translateX(0)}.achievement-toast>i{display:grid;place-items:center;width:36px;height:36px;border:1px solid rgba(143,255,224,.22);border-radius:10px;background:rgba(116,242,167,.07);color:#dcfff1;font-style:normal;font-size:16px}.achievement-toast>div{min-width:0}.achievement-toast span{display:block;color:#8fffc8;font-size:8px;font-weight:900;letter-spacing:.13em}.achievement-toast strong{display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f4fffb;font-size:12px}.achievement-toast small{display:block;margin-top:3px;color:#9eacc6;font-size:8px}.achievement-screen{z-index:52;padding:18px;background:rgba(2,4,13,.82);backdrop-filter:blur(14px)}.achievement-modal{width:min(1040px,95vw);max-height:92vh;display:grid;grid-template-rows:auto minmax(0,1fr);padding:24px;border-radius:24px;overflow:hidden}.achievement-heading{display:grid;grid-template-columns:minmax(0,1fr) 210px 44px;gap:18px;align-items:center;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.08)}.achievement-heading>div:first-child>span{color:#8fffc8;font-size:9px;font-weight:900;letter-spacing:.20em}.achievement-heading h2{margin:4px 0 0;font:38px/1 "Black Han Sans",sans-serif}.achievement-heading p{margin:7px 0 0;color:#8c9abd;font-size:10px}.achievement-heading>button{width:44px;height:44px;border:1px solid rgba(255,255,255,.12);border-radius:13px;background:rgba(7,11,29,.82);color:#fff;font-size:25px;cursor:pointer}.achievement-total{display:grid;gap:7px}.achievement-total>b{text-align:right;color:#dffdf2;font-size:12px}.achievement-total>i{height:6px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}.achievement-total>i>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#74f2a7,#7ce8ff);box-shadow:0 0 12px rgba(116,242,167,.28)}
     .achievement-body{min-height:0;overflow:auto;padding:18px 4px 4px}.achievement-section+.achievement-section{margin-top:22px}.achievement-section-head{display:flex;justify-content:space-between;align-items:center;margin:0 2px 9px}.achievement-section-head strong{font-size:11px;letter-spacing:.07em}.achievement-section-head span{color:#8292b6;font-size:9px;font-weight:900}.achievement-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.achievement-row{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:88px;padding:12px;border:1px solid rgba(255,255,255,.075);border-radius:14px;background:rgba(5,9,24,.58);opacity:.78}.achievement-row.complete{border-color:rgba(116,242,167,.20);background:linear-gradient(135deg,rgba(18,53,46,.42),rgba(6,11,27,.64));opacity:1}.achievement-reward-icon{display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(255,255,255,.10);border-radius:10px;background:rgba(255,255,255,.04);font-size:14px}.achievement-row.complete .achievement-reward-icon{border-color:rgba(116,242,167,.28);color:#9affc5;background:rgba(116,242,167,.08)}.achievement-copy{min-width:0}.achievement-copy>span{display:block;color:#7890b7;font-size:7px;font-weight:900;letter-spacing:.10em}.achievement-copy>strong{display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f1f7ff;font-size:12px}.achievement-copy>p{margin:5px 0 0;color:#9ba8c6;font-size:9px}.achievement-status{text-align:right}.achievement-status>b{display:block;color:#8795b5;font-size:8px}.achievement-status>small{display:block;margin-top:5px;color:#b6c3df;font-size:9px;font-weight:900}.achievement-row.complete .achievement-status>b{color:#8fffc1}
-    @media(max-width:760px){.achievement-modal{padding:16px}.achievement-heading{grid-template-columns:1fr 40px;gap:11px}.achievement-total{grid-column:1/-1;grid-row:2}.achievement-total>b{text-align:left}.achievement-heading>button{grid-column:2;grid-row:1;width:40px;height:40px}.achievement-grid{grid-template-columns:1fr}.achievement-body{padding-top:14px}.achievement-row{min-height:80px}.hub-mode-card.achievement-card{grid-column:1}}
+    @media(max-width:760px){.achievement-toast-stack{right:50%;top:70px;transform:translateX(50%);width:min(320px,calc(100vw - 20px))}.achievement-toast{transform:translateY(-10px)}.achievement-toast.show{transform:translateY(0)}.achievement-modal{padding:16px}.achievement-heading{grid-template-columns:1fr 40px;gap:11px}.achievement-total{grid-column:1/-1;grid-row:2}.achievement-total>b{text-align:left}.achievement-heading>button{grid-column:2;grid-row:1;width:40px;height:40px}.achievement-grid{grid-template-columns:1fr}.achievement-body{padding-top:14px}.achievement-row{min-height:80px}.hub-mode-card.achievement-card{grid-column:1}}
   `;document.head.appendChild(style);
+
+  let liveAchievementPoll=0;
+  const baseAchievementUpdatePlayer=updatePlayer;
+  updatePlayer=function endlessAchievementUpdatePlayer(dt){
+    baseAchievementUpdatePlayer(dt);if(state.mode!=='playing'||!isEndless())return;liveAchievementPoll-=dt;if(liveAchievementPoll>0)return;liveAchievementPoll=.4;
+    const unlocked=evaluateAchievements(snapshotRun());if(!unlocked.length)return;showAchievementToasts(unlocked);renderAchievementUi();window.renderStackfallMetaUi?.();
+  };
 
   const baseEndGame=endGame;
   endGame=function endlessProgressionEndGame(){
@@ -311,5 +334,5 @@
   window.STACKFALL_ENDLESS_FEATURE_ACHIEVEMENTS=FEATURE_ACHIEVEMENTS;
   window.STACKFALL_ENDLESS_SURVIVAL_MILESTONES=SURVIVAL_MILESTONES;
   window.stackfallFeatureAchievementCondition=featureAchievementCondition;
-  window.stackfallEndlessProgression=Object.freeze({storageKey:STORAGE_KEY,progress,achievements:ALL_ACHIEVEMENTS,weaponAchievements:ACHIEVEMENTS,featureAchievements:FEATURE_ACHIEVEMENTS,survivalMilestones:SURVIVAL_MILESTONES,conditionText,featureAchievementCondition,evaluateAchievements,claimSurvivalMilestones,renderStarterOptions:finalRenderStarterOptions,applyStageSeal,renderAchievements:renderAchievementUi,openAchievements});
+  window.stackfallEndlessProgression=Object.freeze({storageKey:STORAGE_KEY,progress,achievements:ALL_ACHIEVEMENTS,weaponAchievements:ACHIEVEMENTS,featureAchievements:FEATURE_ACHIEVEMENTS,survivalMilestones:SURVIVAL_MILESTONES,conditionText,featureAchievementCondition,evaluateAchievements,claimSurvivalMilestones,renderStarterOptions:finalRenderStarterOptions,applyStageSeal,renderAchievements:renderAchievementUi,openAchievements,showAchievementToasts});
 })();

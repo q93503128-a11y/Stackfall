@@ -50,7 +50,7 @@ expect('awakened Lunar Return crosses the target and visibly switches to waning'
 expect('comet trail damage has one spatial update owner',performance.includes("source:'comet-trail'")&&!expansion.includes("source:'comet-trail'")&&!expansion.includes('visibleDotProjectiles'));
 expect('uncapped late enemy damage curve',expansion.includes('Math.pow(minutes,1.14)'));
 expect('uncapped late enemy speed curve',expansion.includes('Math.pow(minutes,1.10)'));
-expect('hard difficulty increased',difficulty.includes('enemyHp:1.32')&&difficulty.includes('enemyDamage:1.30')&&difficulty.includes('enemySpeed:1.12')&&difficulty.includes('rangedChance:1.28'));
+expect('hard difficulty increased and very hard added',difficulty.includes('enemyHp:1.42')&&difficulty.includes('enemyDamage:1.36')&&difficulty.includes('enemySpeed:1.14')&&difficulty.includes('rangedChance:1.35')&&difficulty.includes('enemyHp:1.80')&&difficulty.includes('enemyDamage:1.60')&&difficulty.includes('enemySpeed:1.20')&&difficulty.includes('rangedChance:1.55'));
 expect('difficulty has one canonical owner',!expansion.includes('window.stackfallDifficultyConfig=function refinedDifficultyConfig'));
 expect('event choices have no clock',!mapEvents.includes('armChoiceClock(LIMITS.choice'));
 expect('endless events use authored spacing and announce their signal',mapEvents.includes("INTERVALS={vault:[155,215]")&&mapEvents.includes("FIRST={vault:42")&&mapEvents.includes('EVENT_GAP=58')&&mapEvents.includes("showBossNotice(m.name,tx('eventDetected'))"));
