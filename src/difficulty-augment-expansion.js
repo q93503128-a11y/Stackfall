@@ -13,14 +13,20 @@
   window.stackfallDifficultyProfiles=profiles;
   window.stackfallDifficultyConfig=()=>profiles[state.selectedDifficulty]||profiles.normal;
   window.stackfallDifficultyRewardMultiplier=()=>Math.max(.5,Number(window.stackfallDifficultyConfig().rewardMultiplier)||1);
+  function veryHardEscalation(t=state.time||0){
+    const minutes=Math.max(0,t-240)/60;
+    if(state.selectedDifficulty!=='very-hard'||minutes<=0)return{minutes,hp:1,damage:1,speed:1};
+    return{minutes,hp:1+minutes*.008+Math.pow(minutes,1.08)*.0025,damage:1+minutes*.016+Math.pow(minutes,1.10)*.0045,speed:1+minutes*.0055+Math.pow(minutes,1.06)*.0017};
+  }
+  window.stackfallVeryHardEscalation=veryHardEscalation;
 
   const copy={
-    ko:{title:'난이도',easy:['쉬움','적 체력·피해 감소 · 성진 -15%'],normal:['보통','기준 난이도 · 성진 100%'],hard:['어려움','강화된 적 · 성진 +40%'],'very-hard':['매우 어려움','고강도 적 강화 · 성진 +70%']},
-    en:{title:'DIFFICULTY',easy:['EASY','Lower enemy health and damage · Stardust -15%'],normal:['NORMAL','Baseline difficulty · Stardust 100%'],hard:['HARD','Stronger enemies · Stardust +40%'],'very-hard':['VERY HARD','High-pressure enemies · Stardust +70%']},
-    ja:{title:'難易度',easy:['簡単','敵が弱化 · スターダスト -15%'],normal:['普通','基準難易度 · スターダスト 100%'],hard:['難しい','敵が強化 · スターダスト +40%'],'very-hard':['非常に難しい','敵が大幅強化 · スターダスト +70%']},
-    'zh-CN':{title:'难度',easy:['简单','敌人较弱 · 星尘 -15%'],normal:['普通','标准难度 · 星尘 100%'],hard:['困难','敌人强化 · 星尘 +40%'],'very-hard':['非常困难','敌人大幅强化 · 星尘 +70%']},
-    es:{title:'DIFICULTAD',easy:['FÁCIL','Enemigos más débiles · Polvo estelar -15%'],normal:['NORMAL','Dificultad base · Polvo estelar 100%'],hard:['DIFÍCIL','Enemigos reforzados · Polvo estelar +40%'],'very-hard':['MUY DIFÍCIL','Enemigos muy reforzados · Polvo estelar +70%']},
-    fr:{title:'DIFFICULTÉ',easy:['FACILE','Ennemis affaiblis · Poussière -15 %'],normal:['NORMAL','Difficulté de base · Poussière 100 %'],hard:['DIFFICILE','Ennemis renforcés · Poussière +40 %'],'very-hard':['TRÈS DIFFICILE','Ennemis fortement renforcés · Poussière +70 %']}
+    ko:{title:'난이도',easy:['쉬움','적 체력·피해 감소 · 성진 -15%'],normal:['보통','기준 난이도 · 성진 100%'],hard:['어려움','강화된 적 · 성진 +40%'],'very-hard':['매우 어려움','시간이 지날수록 더 빠르게 강화 · 성진 +70%']},
+    en:{title:'DIFFICULTY',easy:['EASY','Lower enemy health and damage · Stardust -15%'],normal:['NORMAL','Baseline difficulty · Stardust 100%'],hard:['HARD','Stronger enemies · Stardust +40%'],'very-hard':['VERY HARD','Enemy scaling accelerates over time · Stardust +70%']},
+    ja:{title:'難易度',easy:['簡単','敵が弱化 · スターダスト -15%'],normal:['普通','基準難易度 · スターダスト 100%'],hard:['難しい','敵が強化 · スターダスト +40%'],'very-hard':['非常に難しい','時間経過で敵の強化が加速 · スターダスト +70%']},
+    'zh-CN':{title:'难度',easy:['简单','敌人较弱 · 星尘 -15%'],normal:['普通','标准难度 · 星尘 100%'],hard:['困难','敌人强化 · 星尘 +40%'],'very-hard':['非常困难','敌人会随时间更快强化 · 星尘 +70%']},
+    es:{title:'DIFICULTAD',easy:['FÁCIL','Enemigos más débiles · Polvo estelar -15%'],normal:['NORMAL','Dificultad base · Polvo estelar 100%'],hard:['DIFÍCIL','Enemigos reforzados · Polvo estelar +40%'],'very-hard':['MUY DIFÍCIL','La fuerza enemiga aumenta más rápido · Polvo estelar +70%']},
+    fr:{title:'DIFFICULTÉ',easy:['FACILE','Ennemis affaiblis · Poussière -15 %'],normal:['NORMAL','Difficulté de base · Poussière 100 %'],hard:['DIFFICILE','Ennemis renforcés · Poussière +40 %'],'very-hard':['TRÈS DIFFICILE','La puissance ennemie accélère avec le temps · Poussière +70 %']}
   };
   const picker=document.createElement('div');picker.className='difficulty-picker';picker.innerHTML='<div class="difficulty-copy"><span id="difficultyLabel"></span><small id="difficultyDesc"></small></div><div id="difficultyOptions" class="difficulty-options" role="radiogroup" aria-labelledby="difficultyLabel"></div>';
   const difficultyMount=document.querySelector('#sortieDifficultyMount');if(difficultyMount)difficultyMount.appendChild(picker);else ui.start.insertAdjacentElement('beforebegin',picker);
@@ -35,7 +41,7 @@
   const baseStarterRender=renderStarterOptions;renderStarterOptions=function difficultyAwareStarterRender(){baseStarterRender();renderDifficulty();};
 
   const baseEnemyConfig=enemyConfig;
-  enemyConfig=function difficultyEnemyConfig(type){const c=baseEnemyConfig(type),d=window.stackfallDifficultyConfig();c.hp*=.88*d.enemyHp;c.damage*=.94*d.enemyDamage;c.speed*=.98*d.enemySpeed;return c;};
+  enemyConfig=function difficultyEnemyConfig(type){const c=baseEnemyConfig(type),d=window.stackfallDifficultyConfig(),r=veryHardEscalation();c.hp*=.88*d.enemyHp*r.hp;c.damage*=.94*d.enemyDamage*r.damage;c.speed*=.98*d.enemySpeed*r.speed;return c;};
 
   const baseNova=fireNovaPulse;
   fireNovaPulse=function augmentedNovaPulse(stacks,echoed=false){const x=player.x,y=player.y,size=weaponSizeMultiplier(),radius=(145+(stacks>=2?38:0)+(stacks>=5?18:0))*size;baseNova(stacks,echoed);if(state.weaponAugments?.nova&&!echoed)scheduleWeaponAction(420,()=>{for(const enemy of state.entities.enemies){if(enemy.dead)continue;const dx=x-enemy.x,dy=y-enemy.y,d=Math.hypot(dx,dy)||1;if(d<radius*1.05){const pull=(42+stacks*4)*enemyControlFactor(enemy);enemy.x+=dx/d*pull;enemy.y+=dy/d*pull;}}areaDamage(x,y,radius*.58,12+stacks*3.5,'#fff0c8','nova-implosion',{shake:false});shockwave(x,y,'#ffbd69',radius*.68,.38,2.6);});};
