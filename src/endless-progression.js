@@ -250,25 +250,25 @@
     const hardButton=document.querySelector('.difficulty-option[data-difficulty="hard"]');
     if(hardButton?.disabled){
       const small=hardButton.querySelector('small'),condition=featureAchievementCondition('hard');
-      if(small&&condition)small.textContent=condition;
+      if(small&&condition&&small.textContent!==condition)small.textContent=condition;
     }
     const lock=document.querySelector('#upgradeLockReason');
     if(lock&&/STAGE\s*16|CLEAR STAGE 16|스테이지\s*16/i.test(lock.textContent||'')){
       const condition=featureAchievementCondition('core-development-iii');
-      if(condition)lock.textContent=language()==='ko'?`3차 돌파 · ${condition}`:`BREAKTHROUGH III · ${condition}`;
+      if(condition){const next=language()==='ko'?`3차 돌파 · ${condition}`:`BREAKTHROUGH III · ${condition}`;if(lock.textContent!==next)lock.textContent=next;}
     }
     const rows=document.querySelectorAll('#unlockManagementList .unlock-feature-row');
     for(const row of rows){
       const name=row.querySelector('strong'),meta=row.querySelector('small');if(!name||!meta)continue;
       const key=FEATURE_ACHIEVEMENTS.find(entry=>(window.stackfallFeatureName?.(entry.feature)||entry.feature)===name.textContent)?.feature;
-      if(key)meta.textContent=language()==='ko'?'업적 보상':'Achievement reward';
+      if(key){const next=language()==='ko'?'업적 보상':'Achievement reward';if(meta.textContent!==next)meta.textContent=next;}
     }
   }
   function installLegacyLockCopyPatches(){
     const difficultyRoot=document.querySelector('#difficultyOptions');
     if(difficultyRoot&&!difficultyRoot.dataset.achievementCopyWatch){
       difficultyRoot.dataset.achievementCopyWatch='true';
-      new MutationObserver(()=>queueMicrotask(refreshLegacyLockCopy)).observe(difficultyRoot,{childList:true,subtree:true,characterData:true});
+      difficultyRoot.addEventListener('click',()=>queueMicrotask(refreshLegacyLockCopy));
     }
     if(typeof renderUnlockManagement==='function'&&!renderUnlockManagement.__achievementCopyPatched){
       const base=renderUnlockManagement,wrapped=function(){base();refreshLegacyLockCopy();};wrapped.__achievementCopyPatched=true;renderUnlockManagement=wrapped;
