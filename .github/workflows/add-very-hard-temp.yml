@@ -1,4 +1,4 @@
-name: Temporary very hard difficulty patch
+name: Temporary very hard live QA
 
 on:
   push:
@@ -6,88 +6,38 @@ on:
       - '.github/workflows/add-very-hard-temp.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  patch:
+  qa:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Normalize temporary helper anchor
+      - name: Wait for deployed fingerprint
         shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('scripts/add-very-hard-temp.py')
-          out=[]
-          for line in p.read_text(encoding='utf-8').splitlines():
-              if 'endless-achievement-unlocks i' in line and 'achievement-screen{' in line:
-                  if 'achievement-toast-stack' in line:
-                      payload=line[line.index('.achievement-toast-stack'):]
-                      payload=payload.replace(".achievement-screen{',", ".achievement-screen{z-index:52;',", 1)
-                      line="    '    "+payload
-                  else:
-                      line="    '    .achievement-screen{z-index:52;',"
-              out.append(line)
-          p.write_text('\n'.join(out)+'\n',encoding='utf-8')
-          PY
-      - name: Apply patch
-        run: python scripts/add-very-hard-temp.py
-      - name: Update balance contracts and canonical docs
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          def replace_once(path, old, new):
-              p=Path(path); text=p.read_text(encoding='utf-8')
-              count=text.count(old)
-              if count!=1: raise SystemExit(f'{path}: expected one match, got {count}: {old[:120]!r}')
-              p.write_text(text.replace(old,new,1),encoding='utf-8')
-
-          replace_once('scripts/meta-upgrade-contract.mjs',
-            "difficulty.includes('rewardMultiplier:.85')&&difficulty.includes('rewardMultiplier:1.30')&&difficulty.includes('stackfallDifficultyRewardMultiplier')",
-            "difficulty.includes('rewardMultiplier:.85')&&difficulty.includes('rewardMultiplier:1.40')&&difficulty.includes('rewardMultiplier:1.70')&&difficulty.includes(\"'very-hard':Object.freeze\")&&difficulty.includes('stackfallDifficultyRewardMultiplier')")
-
-          replace_once('scripts/endgame-balance-contract.mjs',
-            "expect('hard difficulty increased',difficulty.includes('enemyHp:1.32')&&difficulty.includes('enemyDamage:1.30')&&difficulty.includes('enemySpeed:1.12')&&difficulty.includes('rangedChance:1.28'));",
-            "expect('hard difficulty increased and very hard added',difficulty.includes('enemyHp:1.42')&&difficulty.includes('enemyDamage:1.36')&&difficulty.includes('enemySpeed:1.14')&&difficulty.includes('rangedChance:1.35')&&difficulty.includes('enemyHp:1.80')&&difficulty.includes('enemyDamage:1.60')&&difficulty.includes('enemySpeed:1.20')&&difficulty.includes('rangedChance:1.55'));")
-
-          replace_once('scripts/legacy-chat-requirements-contract.mjs',
-            "difficulty.includes(\"rewardMultiplier:.85\")&&difficulty.includes(\"rewardMultiplier:1.30\")&&design.includes('무기 해금과 Core Shard는 난이도 배율로 줄이거나 늘리지 않는다')",
-            "difficulty.includes(\"rewardMultiplier:.85\")&&difficulty.includes(\"rewardMultiplier:1.40\")&&difficulty.includes(\"rewardMultiplier:1.70\")&&design.includes('무기 해금과 Core Shard는 난이도 배율로 줄이거나 늘리지 않는다')")
-
-          replace_once('docs/WIKI.md',
-            '- **어려움**: 적 체력 1.32배, 피해 1.30배, 속도 1.12배, 원거리 적 등장 비중 1.28배, Stardust 보상 ×1.30. 4분 이후 피해와 속도 압박 추가',
-            '- **어려움**: 적 체력 1.42배, 피해 1.36배, 속도 1.14배, 원거리 적 등장 비중 1.35배, Stardust 보상 ×1.40. 4분 이후 피해와 속도 압박 추가\n- **매우 어려움**: 적 체력 1.80배, 피해 1.60배, 속도 1.20배, 원거리 적 등장 비중 1.55배, Stardust 보상 ×1.70. 어려움 난이도에서 15분 생존 업적으로 해금')
-
-          replace_once('docs/GAME_DESIGN.md',
-            '난이도는 전투 수치뿐 아니라 **성진(Stardust) 획득량**에도 적용한다. 쉬움은 ×0.85, 보통은 ×1.00, 어려움은 ×1.30이다. 무기 해금과 Core Shard는 난이도 배율로 줄이거나 늘리지 않는다.',
-            '난이도는 전투 수치뿐 아니라 **성진(Stardust) 획득량**에도 적용한다. 쉬움은 ×0.85, 보통은 ×1.00, 어려움은 ×1.40, 매우 어려움은 ×1.70이다. 어려움은 적 체력 ×1.42 / 피해 ×1.36 / 속도 ×1.14 / 원거리 비중 ×1.35, 매우 어려움은 적 체력 ×1.80 / 피해 ×1.60 / 속도 ×1.20 / 원거리 비중 ×1.55를 사용한다. 매우 어려움은 어려움 난이도에서 15분 생존 업적으로 해금한다. 무기 해금과 Core Shard는 난이도 배율로 줄이거나 늘리지 않는다.')
-
-          replace_once('scripts/source-ownership-contract.mjs',
-            "expect('hard','hard profile has one canonical owner',difficulty.includes(\"hard:Object.freeze({key:'hard',enemyHp:1.32,enemyDamage:1.30,enemySpeed:1.12,rangedChance:1.28,rewardMultiplier:1.30})\")&&!endgame.includes('window.stackfallDifficultyConfig=function refinedDifficultyConfig')&&!community.includes('stackfallDifficultyConfig='));\nexpect('hard','hard profile documentation matches runtime',wiki.includes('적 체력 1.32배, 피해 1.30배, 속도 1.12배, 원거리 적 등장 비중 1.28배'));",
-            "expect('hard','hard and very hard profiles have one canonical owner',difficulty.includes(\"hard:Object.freeze({key:'hard',enemyHp:1.42,enemyDamage:1.36,enemySpeed:1.14,rangedChance:1.35,rewardMultiplier:1.40})\")&&difficulty.includes(\"'very-hard':Object.freeze({key:'very-hard',enemyHp:1.80,enemyDamage:1.60,enemySpeed:1.20,rangedChance:1.55,rewardMultiplier:1.70})\")&&!endgame.includes('window.stackfallDifficultyConfig=function refinedDifficultyConfig')&&!community.includes('stackfallDifficultyConfig='));\nexpect('hard','difficulty profile documentation matches runtime',wiki.includes('적 체력 1.42배, 피해 1.36배, 속도 1.14배, 원거리 적 등장 비중 1.35배')&&wiki.includes('적 체력 1.80배, 피해 1.60배, 속도 1.20배, 원거리 적 등장 비중 1.55배'));")
-          PY
-      - name: Validate and refresh build fingerprint
-        run: |
-          node --check src/meta-progression.js
-          node --check src/difficulty-augment-expansion.js
-          node --check src/endless-progression.js
-          node scripts/build-fingerprint.mjs
-          git diff --check
-      - name: Commit production changes
         run: |
           set -euo pipefail
-          git config user.name coworkaccount
-          git config user.email cyp1jhh2@gmail.com
-          git add src/meta-progression.js src/difficulty-augment-expansion.js src/endless-progression.js src/build-info.js scripts/meta-upgrade-contract.mjs scripts/endgame-balance-contract.mjs scripts/legacy-chat-requirements-contract.mjs scripts/source-ownership-contract.mjs docs/GAME_DESIGN.md docs/WIKI.md
-          git commit -m "feat: add very hard difficulty and live achievement toasts"
-          git push origin HEAD:main
+          expected=$(node --input-type=module -e "import {computeBuildFingerprint} from './scripts/build-fingerprint.mjs'; console.log(computeBuildFingerprint(process.cwd()).sha)")
+          for attempt in $(seq 1 28); do
+            body=$(curl -fsS "https://stackfall.pages.dev/src/build-info.js?very-hard-qa=${GITHUB_SHA}-${attempt}" || true)
+            if printf '%s' "$body" | grep -Fq "$expected"; then
+              echo "deployed fingerprint matched: $expected"
+              exit 0
+            fi
+            echo "attempt $attempt: waiting for deployment"
+            sleep 15
+          done
+          exit 1
+      - name: Run very hard live QA
+        run: node scripts/very-hard-live-qa-temp.mjs
+      - name: Upload QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stackfall-very-hard-live-qa
+          path: test-results/very-hard-live-qa
+          if-no-files-found: error
