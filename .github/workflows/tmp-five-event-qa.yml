@@ -1,0 +1,37 @@
+name: One-shot five-event refinement QA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmp-five-event-qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  five-event-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser harness
+        run: npm install --no-save playwright-core@1.56.1
+      - name: Start local Stackfall
+        run: |
+          python3 -m http.server 8000 > /tmp/stackfall-five-event-http.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/ >/dev/null && exit 0; sleep 1; done
+          exit 1
+      - name: Run five-event rules and visuals
+        run: node scripts/tmp-five-event-qa.mjs
+      - name: Upload five-event QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stackfall-five-event-refinement
+          path: test-results/five-event-refinement
+          if-no-files-found: warn
+          retention-days: 2
