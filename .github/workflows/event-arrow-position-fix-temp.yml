@@ -27,6 +27,7 @@ jobs:
         run: |
           node --check src/map-event-expansion.js
           node --check src/dark-cosmic-polish.js
+          node --check scripts/community-feedback-contract.mjs
           node scripts/build-fingerprint.mjs
       - name: Commit patch
         shell: bash
@@ -34,7 +35,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/map-event-expansion.js src/dark-cosmic-polish.js src/build-info.js
+          git add src/map-event-expansion.js src/dark-cosmic-polish.js scripts/community-feedback-contract.mjs src/build-info.js
           git diff --cached --quiet && { echo 'No patch changes'; exit 1; }
           git commit -m "fix: restore event distance and raise edge guidance"
           git push origin HEAD:main
