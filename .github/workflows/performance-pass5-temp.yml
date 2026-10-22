@@ -1,5 +1,6 @@
 name: Temporary Stackfall performance pass 5
 
+# retry after contract syntax fix
 on:
   push:
     paths:
@@ -21,13 +22,27 @@ jobs:
       - name: Validate patch script
         run: python3 -m py_compile scripts/performance-pass5-temp.py
       - name: Apply performance pass 5
-        run: python3 scripts/performance-pass5-temp.py
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/performance-pass5-temp.py
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/performance-audit-contract.mjs')
+          text=p.read_text(encoding='utf-8')
+          old="&&!realm.includes('ctx.globalAlpha=(.05+(i%4)*.022)*intensity;ctx.strokeStyle=`rgba(${color},${.34+.28*intensity})`'))," 
+          new="&&!realm.includes('ctx.globalAlpha=(.05+(i%4)*.022)*intensity;ctx.strokeStyle=`rgba(${color},${.34+.28*intensity})`')],"
+          if text.count(old)!=1:
+              raise RuntimeError('contract typo repair target not unique')
+          p.write_text(text.replace(old,new,1),encoding='utf-8')
+          PY
       - name: Validate optimized runtime
         shell: bash
         run: |
           set -euo pipefail
           node --check src/realm-backgrounds.js
           node --check src/render-entities.js
+          node --check scripts/performance-audit-contract.mjs
           node scripts/performance-audit-contract.mjs
           node scripts/build-fingerprint.mjs
           git diff --check
