@@ -16,6 +16,7 @@
   const projectilePool=window.stackfallProjectilePool=window.stackfallProjectilePool||[];
   const PARTICLE_CAP_PROFILES={normal:{desktop:{particles:240,texts:52,shockwaves:54,beams:78},compact:{particles:150,texts:30,shockwaves:34,beams:48}},reduced:{desktop:{particles:168,texts:36,shockwaves:42,beams:58},compact:{particles:105,texts:22,shockwaves:26,beams:36}},critical:{desktop:{particles:112,texts:24,shockwaves:30,beams:40},compact:{particles:70,texts:14,shockwaves:18,beams:24}}};
   const projectileSpawnBuffer=[],projectileCollisionBuffer=[],projectileTrailBuffer=[],wellHitBuffer=[];
+  const PROJECTILE_TRAIL_SOURCE_SET=new Set(['ember','echo-star','core','core-echo','star-spark','wave','meteor-drone','echo-drone','drone-burst','spiral-bolt','echo-spiral','mirror-return','mirror-counter']);
   let heavyFrame=false;
   let frameMs=16.7;
   let slowDebt=0;
@@ -291,8 +292,8 @@
       }else{updateHomingProjectile(p,dt);p.x+=p.vx*dt;p.y+=p.vy*dt;}
       p.life-=dt;p.trailTick=(p.trailTick||0)-dt;
       if(Number.isFinite(p.maxRange)){const ox=Number.isFinite(p.originX)?p.originX:player.x,oy=Number.isFinite(p.originY)?p.originY:player.y;if((p.x-ox)**2+(p.y-oy)**2>p.maxRange*p.maxRange)p.life=0;}
-      const source=String(p.source||'');p.source=source;const cometTrail=source.includes('comet'),trailSource=cometTrail||['ember','echo-star','core','core-echo','star-spark','wave','meteor-drone','echo-drone','drone-burst','spiral-bolt','echo-spiral','mirror-return','mirror-counter'].includes(source);
-      if(p.life>0&&p.trailTick<=0&&trailSource&&state.entities.particles.length<particleCap&&!heavyFrame&&GAME_SETTINGS.hideProjectiles!==true){p.trailTick=compactDevice()?.09:cometTrail?.052:.075;state.entities.particles.push({x:p.x-p.vx*.018,y:p.y-p.vy*.018,vx:rand(-10,10),vy:rand(-10,10),life:cometTrail?.26:.16,max:cometTrail?.26:.16,size:cometTrail?rand(1.8,3.2):rand(.9,2),color:p.color||COLORS.white,star:true});}
+      const source=String(p.source||'');p.source=source;const cometTrail=source.includes('comet'),trailSource=cometTrail||PROJECTILE_TRAIL_SOURCE_SET.has(source);
+      if(p.life>0&&p.trailTick<=0&&trailSource&&state.entities.particles.length<particleCap&&!heavyFrame&&GAME_SETTINGS.hideProjectiles!==true){p.trailTick=compactDevice()?.09:cometTrail?.052:.075;const trailLife=cometTrail?.26:.16;state.entities.particles.push(acquireParticleObject(p.x-p.vx*.018,p.y-p.vy*.018,rand(-10,10),rand(-10,10),trailLife,trailLife,cometTrail?rand(1.8,3.2):rand(.9,2),p.color||COLORS.white,true));}
       if(p.life>0&&p.trailDamage){p.trailDamageCd=(p.trailDamageCd||0)-dt;while(p.trailDamageCd<=0){p.trailDamageCd+=.24;const rr=24+weaponCount('comet')*2,candidates=collectNearbyInto(p.x,p.y,rr+76,projectileTrailBuffer);for(let i=0;i<candidates.length;i++){const e=candidates[i];if(e&&!e.dead&&enemyCircleOverlap(e,p.x,p.y,rr))dealDamage(e,2.6+weaponCount('comet')*.85,{color:COLORS.comet,source:'comet-trail',canCrit:false});}}}
       if(p.life>0){const sweptBoss=state.stageRun?.bossSpawned===true,candidates=collectNearbyInto(sweptBoss?(projectilePreviousX+p.x)*.5:p.x,sweptBoss?(projectilePreviousY+p.y)*.5:p.y,p.r+86+(sweptBoss?Math.hypot(p.x-projectilePreviousX,p.y-projectilePreviousY)*.5:0),projectileCollisionBuffer);for(let candidateIndex=0;candidateIndex<candidates.length&&p.life>0;candidateIndex++){const e=candidates[candidateIndex];
         if(!e||e.dead||p.hitIds?.has(e.id))continue;
