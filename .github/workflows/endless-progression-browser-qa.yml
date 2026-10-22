@@ -1,0 +1,49 @@
+name: Endless progression browser QA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/endless-progression-browser-qa.mjs'
+      - '.github/workflows/endless-progression-browser-qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Wait for deployed build fingerprint
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=$(node --input-type=module -e "import {computeBuildFingerprint} from './scripts/build-fingerprint.mjs'; console.log(computeBuildFingerprint(process.cwd()).sha)")
+          for attempt in $(seq 1 32); do
+            body=$(curl -fsS "https://stackfall.pages.dev/src/build-info.js?endless-qa=${GITHUB_SHA}-${attempt}" || true)
+            if printf '%s' "$body" | grep -Fq "$expected"; then
+              echo "deployed fingerprint matched on attempt $attempt"
+              exit 0
+            fi
+            echo "attempt $attempt: deployment not ready"
+            sleep 15
+          done
+          echo "deployed fingerprint did not match $expected" >&2
+          exit 1
+      - name: Run live progression QA
+        env:
+          STACKFALL_CHROME: /usr/bin/google-chrome
+          STACKFALL_QA_DIR: test-results/endless-progression-qa
+        run: node scripts/endless-progression-browser-qa.mjs
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: endless-progression-browser-qa
+          path: test-results/endless-progression-qa
+          if-no-files-found: warn
