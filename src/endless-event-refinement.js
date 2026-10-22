@@ -63,19 +63,16 @@
         if(distance(player,ev.center)>=145)ev.hold=Math.max(0,(Number(ev.hold)||0)-dt*1.10);
       }else if(ev.type==='storm'){
         resetStorm(ev);if(ev.refinedCompleting)return;
-        const inside=distance(player,ev.center)<118;ev.refinedElapsed+=dt;
-        ev.refinedSafe=inside?Math.min(ev.refinedTargetSafe,ev.refinedSafe+dt):Math.max(0,ev.refinedSafe-dt*.42);
+        const inside=distance(player,ev.center)<118;ev.refinedElapsed+=dt;ev.refinedSafe=inside?Math.min(ev.refinedTargetSafe,ev.refinedSafe+dt):Math.max(0,ev.refinedSafe-dt*.42);
         if(ev.refinedSafe>=ev.refinedTargetSafe){ev.refinedCompleting=true;ev.remainingTime=.001;}
-        else if(ev.refinedElapsed>=ev.refinedMaxDuration)failStorm(ev);
-        else ev.remainingTime=9999;
+        else if(ev.refinedElapsed>=ev.refinedMaxDuration)failStorm(ev);else ev.remainingTime=9999;
       }
     }
 
     function liveRefinementLoop(){
       const serial=Number(state.runSerial)||0,now=Number(state.time)||0;
       if(serial!==lastRunSerial||now<lastGameTime){lastRunSerial=serial;lastGameTime=now;lastEvent=null;}
-      const ev=state.mapEventActive;
-      if(ev!==lastEvent){lastEvent=ev;lastGameTime=now;if(ev?.type==='storm'){resetStorm(ev);ev.remainingTime=9999;}lastHudSignature='';}
+      const ev=state.mapEventActive;if(ev!==lastEvent){lastEvent=ev;lastGameTime=now;if(ev?.type==='storm'){resetStorm(ev);ev.remainingTime=9999;}lastHudSignature='';}
       const dt=Math.max(0,Math.min(.5,now-lastGameTime));lastGameTime=now;
       if(ev&&FIELD_TYPES.has(ev.type)&&state.mode==='playing'){refineGameTime(ev,dt);if(state.mapEventActive===ev)renderProgressHud(ev);}
       requestAnimationFrame(liveRefinementLoop);
@@ -90,8 +87,10 @@
       if(ev.type==='distress'){const p=worldToScreen(ev.center.x,ev.center.y),inside=!snap.outside;arcProgress(p,154,snap.value/snap.target,inside?color:'#ff8398',4);ctx.translate(p.x,p.y);ctx.rotate(performance.now()/2100);ctx.strokeStyle=color;ctx.globalAlpha=.5;for(let i=0;i<4;i++){ctx.rotate(Math.PI/2);ctx.beginPath();ctx.moveTo(118,-10);ctx.lineTo(136,0);ctx.lineTo(118,10);ctx.stroke();}}
       else if(ev.type==='meteor'){const p=worldToScreen(ev.center.x,ev.center.y);arcProgress(p,166,snap.value/snap.target,color,3.5);const a=Number(ev.angle)||0;for(let i=1;i<=3;i++){const d=36+i*20;drawChevron(p.x-Math.cos(a)*d,p.y-Math.sin(a)*d,a,color,.72+i*.08);}}
       else if(ev.type==='predator'){const p=worldToScreen(ev.center.x,ev.center.y);arcProgress(p,246,snap.value/snap.target,color,5);ctx.translate(p.x,p.y);ctx.strokeStyle=color;ctx.globalAlpha=.42;ctx.setLineDash([6,10]);ctx.beginPath();ctx.arc(0,0,205+Math.sin(performance.now()/330)*7,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
-      else if(ev.type==='relay'){const points=[0,1,2].map(i=>{const world=relayWorldPoint(ev.origin,i);return worldToScreen(world.x,world.y);});ctx.strokeStyle='rgba(112,231,239,.24)';ctx.setLineDash([5,8]);ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.setLineDash([]);points.forEach((p,i)=>{ctx.globalAlpha=i<ev.index?1:(i===ev.index?.86:.22);ctx.strokeStyle=color;ctx.beginPath();ctx.arc(p.x,p.y,11+i*2,0,Math.PI*2);ctx.stroke();});const active=points[Math.min(2,Number(ev.index)||0)];if(active)arcProgress(active,88,snap.value/snap.target,color,3);}
-      else if(ev.type==='storm'){const p=worldToScreen(ev.center.x,ev.center.y),inside=!snap.outside;arcProgress(p,130,snap.value/snap.target,inside?color:'#ff8398',4.5);if(!inside){const pp=worldToScreen(player.x,player.y),a=Math.atan2(p.y-pp.y,p.x-pp.x);ctx.strokeStyle='rgba(255,131,152,.55)';ctx.setLineDash([4,8]);ctx.beginPath();ctx.moveTo(pp.x,pp.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.setLineDash([]);drawChevron(pp.x+Math.cos(a)*44,pp.y+Math.sin(a)*44,a,'#ff8398',1.1);}}
+      else if(ev.type==='relay'){
+        const points=[0,1,2].map(i=>{const world=relayWorldPoint(ev.origin,i);return worldToScreen(world.x,world.y);});ctx.strokeStyle='rgba(112,231,239,.24)';ctx.setLineDash([5,8]);ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.setLineDash([]);
+        points.forEach((p,i)=>{const alpha=i<ev.index?1:(i===ev.index?0.86:0.22);ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.beginPath();ctx.arc(p.x,p.y,11+i*2,0,Math.PI*2);ctx.stroke();});const active=points[Math.min(2,Number(ev.index)||0)];if(active)arcProgress(active,88,snap.value/snap.target,color,3);
+      }else if(ev.type==='storm'){const p=worldToScreen(ev.center.x,ev.center.y),inside=!snap.outside;arcProgress(p,130,snap.value/snap.target,inside?color:'#ff8398',4.5);if(!inside){const pp=worldToScreen(player.x,player.y),a=Math.atan2(p.y-pp.y,p.x-pp.x);ctx.strokeStyle='rgba(255,131,152,.55)';ctx.setLineDash([4,8]);ctx.beginPath();ctx.moveTo(pp.x,pp.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.setLineDash([]);drawChevron(pp.x+Math.cos(a)*44,pp.y+Math.sin(a)*44,a,'#ff8398',1.1);}}
       ctx.restore();
     }
     window.drawMapEvents=function refinedMapEventDraw(){const result=baseDraw();drawRefinedField(state.mapEventActive);return result;};
