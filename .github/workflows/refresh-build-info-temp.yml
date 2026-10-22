@@ -1,0 +1,35 @@
+name: Temporary refresh Stackfall build fingerprint
+
+on:
+  push:
+    paths:
+      - '.github/workflows/refresh-build-info-temp.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Refresh build fingerprint
+        run: node scripts/build-fingerprint.mjs
+      - name: Commit build info
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- src/build-info.js; then
+            echo 'build-info already current'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/build-info.js
+          git commit -m 'chore: refresh build fingerprint'
+          git push origin HEAD:main
