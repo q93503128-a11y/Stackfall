@@ -76,7 +76,7 @@ function updateEffects(dt){
   compactInPlace(shockwaves,keepShockwaveEffect,recycleShockwaveEffect);
   for(const beam of beams){if(!beam||!validEffectNumber(beam.x1)||!validEffectNumber(beam.y1)||!validEffectNumber(beam.x2)||!validEffectNumber(beam.y2)||!validEffectNumber(beam.life)||!validEffectNumber(beam.max)||!validEffectNumber(beam.width)||beam.max<=0||beam.width<0){if(beam)beam.life=0;continue;}beam.life-=dt;}
   compactInPlace(beams,keepBeamEffect,recycleBeamEffect);
-  trimOldest(particles,entityCap('particles'));trimOldest(texts,entityCap('texts'));trimOldest(shockwaves,entityCap('shockwaves'));trimOldest(state.entities.telegraphs,entityCap('telegraphs'));trimBeamEffects(beams,entityCap('beams'));state.camera.shake=Math.max(0,state.camera.shake-dt*36);state.flash=Math.max(0,state.flash-dt);
+  trimPooledEffects(particles,entityCap('particles'),recycleParticleObject);trimPooledEffects(texts,entityCap('texts'),recycleTextEffect);trimPooledEffects(shockwaves,entityCap('shockwaves'),recycleShockwaveEffect);trimOldest(state.entities.telegraphs,entityCap('telegraphs'));trimBeamEffects(beams,entityCap('beams'));state.camera.shake=Math.max(0,state.camera.shake-dt*36);state.flash=Math.max(0,state.flash-dt);
 }
 const BOOMERANG_NEARBY_BUFFER=[];
 function boomerangEase(t){return t*t*(3-2*t);}

@@ -324,7 +324,7 @@
 
   const baseUpdateEffects=updateEffects;
   updateEffects=function updateEffectsWithBudget(dt){
-    baseUpdateEffects(dt);trimOldest(state.entities.particles,entityCap('particles'));trimOldest(state.entities.shockwaves,entityCap('shockwaves'));trimOldest(state.entities.beams,entityCap('beams'));
+    baseUpdateEffects(dt);trimPooledEffects(state.entities.particles,entityCap('particles'),recycleParticleObject);trimPooledEffects(state.entities.shockwaves,entityCap('shockwaves'),recycleShockwaveEffect);trimBeamEffects(state.entities.beams,entityCap('beams'));
   };
 
 
