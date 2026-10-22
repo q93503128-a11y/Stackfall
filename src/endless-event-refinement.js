@@ -70,7 +70,7 @@
       if(!ev||!FIELD_TYPES.has(ev.type)||!Number.isFinite(dt)||dt<=0)return{outside:false};
       if(ev.type==='distress'){
         const outside=distance(player,ev.center)>=145;
-        return{outside,distressHold:Number(ev.hold)||0};
+        return{outside};
       }
       if(ev.type==='storm'){
         resetStormTracking(ev);
@@ -80,8 +80,6 @@
         else{ev.refinedOutside+=dt;ev.refinedSafe=Math.max(0,ev.refinedSafe-dt*.42);}
         if(ev.refinedSafe>=ev.refinedTargetSafe){ev.remainingTime=Math.min(Number(ev.remainingTime)||dt,dt*.45);return{outside:false,stormComplete:true};}
         if(ev.refinedElapsed>=ev.refinedMaxDuration){failStorm(ev);return{outside:true,stormFailed:true};}
-        // Preserve the original 42-second ceiling as the hard attempt timer, but do not let
-        // the base event auto-complete just because its old survival countdown reached zero.
         ev.remainingTime=Math.max(dt*2,ev.refinedMaxDuration-ev.refinedElapsed+dt);
         return{outside:!inside};
       }
@@ -90,20 +88,18 @@
 
     function postUpdate(before,ev,dt){
       if(before?.stormFailed||!ev||state.mapEventActive!==ev)return;
-      if(ev.type==='distress'&&before?.outside){
-        // Leaving the rescue perimeter now gives back progress instead of preserving it forever.
-        ev.hold=Math.max(0,(Number(ev.hold)||0)-dt*1.10);
-      }
+      if(ev.type==='distress'&&before?.outside)ev.hold=Math.max(0,(Number(ev.hold)||0)-dt*1.10);
     }
 
     function progressSnapshot(ev){
       if(!ev||!FIELD_TYPES.has(ev.type))return null;
       const remaining=Math.max(0,Math.ceil(Number(ev.remainingTime)||0));
-      if(ev.type==='distress')return{label:text('distress'),value:Number(ev.hold)||0,target:Number(ev.targetHold)||11,display:`${fmt(ev.hold)} / ${fmt(ev.targetHold||11)}초`,remaining,outside:distance(player,ev.center)>=145};
+      const sec=lang()==='ko'?'초':'s';
+      if(ev.type==='distress')return{label:text('distress'),value:Number(ev.hold)||0,target:Number(ev.targetHold)||11,display:`${fmt(ev.hold)} / ${fmt(ev.targetHold||11)}${sec}`,remaining,outside:distance(player,ev.center)>=145};
       if(ev.type==='meteor')return{label:text('meteor'),value:Number(ev.progress)||0,target:Number(ev.target)||12,display:`${fmt(ev.progress)} / ${fmt(ev.target||12)}`,remaining,outside:distance(player,ev.center)>=155};
       if(ev.type==='predator')return{label:text('predator'),value:Number(ev.kills)||0,target:Number(ev.target)||1,display:`${Math.floor(ev.kills||0)} / ${Math.floor(ev.target||1)}`,remaining,outside:distance(player,ev.center)>=235};
-      if(ev.type==='relay')return{label:`${text('relay')} · ${text('node')} ${Math.min(3,(Number(ev.index)||0)+1)}/3`,value:Number(ev.hold)||0,target:Number(ev.targetHold)||2.2,display:`${fmt(ev.hold)} / ${fmt(ev.targetHold||2.2)}초`,remaining,outside:distance(player,ev.point)>=78};
-      resetStormTracking(ev);return{label:text('storm'),value:Number(ev.refinedSafe)||0,target:Number(ev.refinedTargetSafe)||28,display:`${fmt(ev.refinedSafe)} / ${fmt(ev.refinedTargetSafe||28)}초`,remaining:Math.max(0,Math.ceil((ev.refinedMaxDuration||42)-(ev.refinedElapsed||0))),outside:distance(player,ev.center)>=118};
+      if(ev.type==='relay')return{label:`${text('relay')} · ${text('node')} ${Math.min(3,(Number(ev.index)||0)+1)}/3`,value:Number(ev.hold)||0,target:Number(ev.targetHold)||2.2,display:`${fmt(ev.hold)} / ${fmt(ev.targetHold||2.2)}${sec}`,remaining,outside:distance(player,ev.point)>=78};
+      resetStormTracking(ev);return{label:text('storm'),value:Number(ev.refinedSafe)||0,target:Number(ev.refinedTargetSafe)||28,display:`${fmt(ev.refinedSafe)} / ${fmt(ev.refinedTargetSafe||28)}${sec}`,remaining:Math.max(0,Math.ceil((ev.refinedMaxDuration||42)-(ev.refinedElapsed||0))),outside:distance(player,ev.center)>=118};
     }
 
     function renderProgressHud(ev){
@@ -152,9 +148,9 @@
         const p=worldToScreen(ev.center.x,ev.center.y);arcProgress(p,246,snap.value/snap.target,color,5);
         ctx.translate(p.x,p.y);ctx.strokeStyle=color;ctx.globalAlpha=.42;ctx.setLineDash([6,10]);ctx.beginPath();ctx.arc(0,0,205+Math.sin(performance.now()/330)*7,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
       }else if(ev.type==='relay'){
-        const points=[0,1,2].map(i=>worldToScreen(...Object.values(relayWorldPoint(ev.origin,i))));
+        const points=[0,1,2].map(i=>{const world=relayWorldPoint(ev.origin,i);return worldToScreen(world.x,world.y);});
         ctx.strokeStyle='rgba(112,231,239,.24)';ctx.setLineDash([5,8]);ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.setLineDash([]);
-        points.forEach((p,i)=>{ctx.globalAlpha=i<ev.index?1:i===ev.index?.86:.22;ctx.strokeStyle=color;ctx.beginPath();ctx.arc(p.x,p.y,11+i*2,0,Math.PI*2);ctx.stroke();});
+        points.forEach((p,i)=>{ctx.globalAlpha=i<ev.index?1:(i===ev.index?.86:.22);ctx.strokeStyle=color;ctx.beginPath();ctx.arc(p.x,p.y,11+i*2,0,Math.PI*2);ctx.stroke();});
         const active=points[Math.min(2,Number(ev.index)||0)];if(active)arcProgress(active,88,snap.value/snap.target,color,3);
       }else if(ev.type==='storm'){
         const p=worldToScreen(ev.center.x,ev.center.y),inside=!snap.outside;arcProgress(p,130,snap.value/snap.target,inside?color:'#ff8398',4.5);
