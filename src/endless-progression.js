@@ -150,13 +150,13 @@
     return restoring?false:newlyGranted;
   }
   function restoreAchievementRewards(){
-    const meta=window.stackfallMeta||{};let changed=false;
+    const meta=window.stackfallMeta||{};let changed=false;const claimCount=progress.rewardClaims.length;
     for(const key of progress.weaponUnlocks){const row=byWeapon.get(key);if(row&&!progress.completed.includes(row.id)){progress.completed.push(row.id);changed=true;}}
     for(const key of progress.featureUnlocks){const row=byFeature.get(key);if(row&&!progress.completed.includes(row.id)){progress.completed.push(row.id);changed=true;}}
     for(const row of ACHIEVEMENTS){const key=rewardOf(row,'unlock_weapon')?.key;if(key&&(meta.unlockedWeapons||[]).includes(key)){if(!progress.weaponUnlocks.includes(key)){progress.weaponUnlocks.push(key);changed=true;}if(!progress.completed.includes(row.id)){progress.completed.push(row.id);changed=true;}}}
     for(const row of FEATURE_ACHIEVEMENTS){const key=rewardOf(row,'unlock_feature')?.key;if(key&&(meta.unlockedFeatures||[]).includes(key)){if(!progress.featureUnlocks.includes(key)){progress.featureUnlocks.push(key);changed=true;}if(!progress.completed.includes(row.id)){progress.completed.push(row.id);changed=true;}}}
     for(const row of ALL_ACHIEVEMENTS)if(progress.completed.includes(row.id))row.rewards.forEach((reward,index)=>applyReward(row,reward,index,{restoring:true}));
-    if(changed)saveProgress();else if(progress.rewardClaims.length)saveProgress();
+    if(changed||progress.rewardClaims.length!==claimCount)saveProgress();
     window.renderStackfallDifficulty?.();
   }
   function snapshotRun(){return{time:Math.max(0,Number(state.time)||0),kills:Math.max(0,Math.floor(Number(state.kills)||0)),level:Math.max(1,Math.floor(Number(state.level)||1)),maxCombo:Math.max(0,Math.floor(Number(state.maxCombo)||0)),difficulty:String(state.selectedDifficulty||'normal')};}
@@ -343,10 +343,13 @@
     for(const[selector,label,value]of rows){const valueEl=screen.querySelector(selector),labelEl=valueEl?.parentElement?.querySelector('span');if(labelEl)labelEl.textContent=label;if(valueEl)valueEl.textContent=String(value);}
     const combatGrid=screen.querySelector('.profile-boss-grid');
     if(combatGrid){
-      let runs=combatGrid.querySelector('#profileEndlessRuns');if(!runs){runs=document.createElement('div');runs.innerHTML='<span></span><b id="profileEndlessRuns">0</b>';combatGrid.prepend(runs);}
-      let kills=combatGrid.querySelector('#profileEndlessKills');if(!kills){kills=document.createElement('div');kills.innerHTML='<span></span><b id="profileEndlessKills">0</b>';combatGrid.insertBefore(kills,runs.nextSibling);}
-      runs.parentElement.querySelector('span').textContent=text.runs;runs.textContent=String(meta.lifetime?.runs||0);
-      kills.parentElement.querySelector('span').textContent=text.kills;kills.textContent=String(meta.lifetime?.kills||0);
+      let runsValue=combatGrid.querySelector('#profileEndlessRuns');
+      if(!runsValue){const row=document.createElement('div');row.innerHTML='<span></span><b id="profileEndlessRuns">0</b>';combatGrid.prepend(row);runsValue=row.querySelector('#profileEndlessRuns');}
+      let killsValue=combatGrid.querySelector('#profileEndlessKills');
+      if(!killsValue){const row=document.createElement('div');row.innerHTML='<span></span><b id="profileEndlessKills">0</b>';runsValue?.parentElement?.insertAdjacentElement('afterend',row);killsValue=row.querySelector('#profileEndlessKills');}
+      const runsLabel=runsValue?.parentElement?.querySelector('span'),killsLabel=killsValue?.parentElement?.querySelector('span');
+      if(runsLabel)runsLabel.textContent=text.runs;if(runsValue)runsValue.textContent=String(meta.lifetime?.runs||0);
+      if(killsLabel)killsLabel.textContent=text.kills;if(killsValue)killsValue.textContent=String(meta.lifetime?.kills||0);
     }
   }
   const baseRenderMetaUi=window.renderStackfallMetaUi;
