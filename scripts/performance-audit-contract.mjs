@@ -18,8 +18,10 @@ const stageRuntime=read('src/stage-runtime.js');
 const stageOne=read('src/stage01-remodel.js');
 const controls=read('src/runtime-controls.js');
 const devTools=read('src/dev-tools-endless.js');
+const interfaceUi=read('src/interface.js');
 
 const checks=[
+ ['HUD refresh reuses elite aggregation storage and guards unchanged DOM writes',interfaceUi.includes('const HUD_ELITE_GROUPS=new Map(),HUD_ELITE_RECORDS=[],HUD_ELITES=[]')&&interfaceUi.includes('groups.clear();elites.length=0')&&interfaceUi.includes('elites.sort(hudEliteCompare)')&&interfaceUi.includes('if(el.textContent!==next)el.textContent=next')&&interfaceUi.includes('if(el.style[property]!==value)el.style[property]=value')&&interfaceUi.includes('if(elites.length>1)elites.sort(hudEliteCompare)')&&!interfaceUi.includes('const eliteGroups=new Map()')&&!interfaceUi.includes('elites.slice(1).map(')],
  ['missed render frames use bounded 60 Hz catch-up without spiral while retaining developer 10x headroom',render.includes('frameDt=Math.min(.1,')&&render.includes('MAX_SIMULATION_STEPS=12')&&render.includes('MAX_REALTIME_CATCHUP_STEPS=4')&&render.includes('maxSimulationSteps=gameSpeed>1?MAX_SIMULATION_STEPS:MAX_REALTIME_CATCHUP_STEPS')&&render.includes('simulationAccumulator%=SIMULATION_STEP')&&render.includes('dt=SIMULATION_STEP')],
  ['cached elite path uses one raster glow before live authored geometry',guard.includes('drawCachedEnemyGlow(ctx,')&&guard.includes('ctx.shadowBlur=0;ctx.shadowColor=e.color;')],
  ['authored terrain cache is transparent bounded, camera-compensated and invalidates on camera or stage changes',realm.includes('STAGE_WORLD_FRAME_CACHE.size>=3')&&realm.includes("getContext('2d',{alpha:true})")&&realm.includes('entry.signature!==signature')&&realm.includes('ctx.clearRect(0,0,vw,vh);production.drawWorld()')&&realm.includes('entry.x-player.x')&&realm.includes('drawThemeRaw(theme);')],
