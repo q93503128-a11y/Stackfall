@@ -2,7 +2,12 @@
   const hud=document.querySelector('#hud'),pause=document.querySelector('#pauseBtn');
   if(!hud||!pause)return;
 
-  state.gameSpeed=state.gameSpeed===2?2:1;
+  const normalizeGameSpeed=value=>{
+    const numeric=Number(value);
+    const bounded=Math.max(1,Math.min(10,Number.isFinite(numeric)?numeric:1));
+    return Math.round(bounded*2)/2;
+  };
+  state.gameSpeed=normalizeGameSpeed(state.gameSpeed);
 
   const style=document.createElement('style');
   style.textContent=`
@@ -41,18 +46,24 @@
     fr:{core:'ARME DE BASE',weapon:'ÉQUIPEMENT',passive:'PASSIF'}
   }[GAME_SETTINGS.language]?.[kind]||kind);
 
+  function speedText(){
+    const current=normalizeGameSpeed(state.gameSpeed);
+    return `×${Number.isInteger(current)?current:current.toFixed(1)}`;
+  }
   function syncSpeedButton(){
-    speed.textContent=state.gameSpeed===2?'×2':'×1';
-    speed.classList.toggle('fast',state.gameSpeed===2);
+    const current=normalizeGameSpeed(state.gameSpeed);
+    speed.textContent=speedText();
+    speed.classList.toggle('fast',current>1);
     speed.setAttribute('aria-label',`${speedLabel()} ${speed.textContent}`);
     speed.title=`${speedLabel()}: ${speed.textContent}`;
   }
-  function setGameSpeed(value){
-    state.gameSpeed=value===2?2:1;
+  function setGameSpeed(value,options={}){
+    state.gameSpeed=normalizeGameSpeed(value);
     syncSpeedButton();
-    if(GAME_SETTINGS.audio?.ui!==false)audio.pickup();
+    if(options?.silent!==true&&GAME_SETTINGS.audio?.ui!==false)audio.pickup();
+    return state.gameSpeed;
   }
-  speed.addEventListener('click',()=>setGameSpeed(state.gameSpeed===2?1:2));
+  speed.addEventListener('click',()=>setGameSpeed(state.gameSpeed===1?2:1));
 
   const queue=[];let showing=false,noticeSerial=0;
   function choiceSnapshot(choice){
@@ -84,7 +95,7 @@
     if(queue.length>=8)queue.shift();
     queue.push(item);showNext();
   };
-  window.stackfallGameSpeed=()=>state.gameSpeed===2?2:1;
+  window.stackfallGameSpeed=()=>normalizeGameSpeed(state.gameSpeed);
   window.stackfallSetGameSpeed=setGameSpeed;
   window.stackfallSyncRuntimeControls=syncSpeedButton;
 
@@ -102,4 +113,11 @@
   applyLanguage=function runtimeControlLanguage(){const result=baseApplyLanguage();syncSpeedButton();return result;};
 
   syncSpeedButton();
+
+  if(new URLSearchParams(location.search).get('dev')==='1'&&!document.querySelector('script[data-stackfall-dev-endless]')){
+    const extension=document.createElement('script');
+    extension.src='src/dev-tools-endless.js';
+    extension.dataset.stackfallDevEndless='1';
+    document.head.appendChild(extension);
+  }
 })();
