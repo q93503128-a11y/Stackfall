@@ -67,3 +67,13 @@ needle = " ['offscreen beams shockwaves text and allied particles are culled bef
 addition = " ['Canvas projectile and gem hot loops cache color validation reuse simulated heading and avoid gem screen-point allocations',entities.includes('const PROJECTILE_COLOR_VALIDITY_CACHE=new Map(),PROJECTILE_COLOR_VALIDITY_CACHE_LIMIT=96')&&entities.includes('PROJECTILE_COLOR_VALIDITY_CACHE.get(raw)')&&entities.includes('Number.isFinite(p.heading)?p.heading:Math.atan2')&&entities.includes('const sx=g.x-player.x+vw/2,sy=g.y-player.y+vh/2')&&!entities.includes('const p=worldToScreen(g.x,g.y)')&&!entities.includes(\"typeof p.color!=='string'||!CSS.supports('color',p.color)\")],\n" + needle
 audit = replace_once(audit, needle, addition, 'performance audit insertion')
 audit_path.write_text(audit, encoding='utf-8')
+
+community_path = Path('scripts/community-feedback-contract.mjs')
+community = community_path.read_text(encoding='utf-8').replace('\r\n', '\n')
+community = replace_once(
+    community,
+    "expect('gems are culled and cached',performance.includes('cachedGemRenderer')&&render.includes('if(p.x<-32||p.x>vw+32||p.y<-32||p.y>vh+32)continue'));",
+    "expect('gems are culled and cached',performance.includes('cachedGemRenderer')&&render.includes('if(sx<-32||sx>vw+32||sy<-32||sy>vh+32)continue'));",
+    'community gem culling contract',
+)
+community_path.write_text(community, encoding='utf-8')
