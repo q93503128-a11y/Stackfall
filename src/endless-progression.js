@@ -3,56 +3,68 @@
   const STORAGE_KEY=PROFILE==='developer'?'stackfall.endless.progression.dev.v1':'stackfall.endless.progression.v1';
   const BASELINE_FEATURES=Object.freeze(['endless','core-development']);
   const SURVIVAL_MILESTONES=Object.freeze([300,600,900,1200,1800,2700,3600]);
+  const freezeReward=(type,key,amount=1)=>Object.freeze({type,key,amount});
+  const weaponReward=key=>Object.freeze([freezeReward('unlock_weapon',key)]);
+  const featureReward=key=>Object.freeze([freezeReward('unlock_feature',key)]);
   const ACHIEVEMENTS=Object.freeze([
-    Object.freeze({id:'survive-3m',weapon:'comet',kind:'survive',value:3,test:(run)=>run.time>=180}),
-    Object.freeze({id:'mini-1',weapon:'prism',kind:'mini',value:1,test:(run,meta)=>(meta.bossRecords?.mini||0)>=1}),
-    Object.freeze({id:'level-10',weapon:'chrono',kind:'level',value:10,test:(run)=>run.level>=10}),
-    Object.freeze({id:'chain-20',weapon:'arc',kind:'chain',value:20,test:(run)=>run.maxCombo>=20}),
-    Object.freeze({id:'run-kills-200',weapon:'ion',kind:'runKills',value:200,test:(run)=>run.kills>=200}),
-    Object.freeze({id:'boss-1',weapon:'nova',kind:'boss',value:1,test:(run,meta)=>(meta.bossRecords?.boss||0)>=1}),
-    Object.freeze({id:'survive-5m',weapon:'drone',kind:'survive',value:5,test:(run)=>run.time>=300}),
-    Object.freeze({id:'run-kills-400',weapon:'rail',kind:'runKills',value:400,test:(run)=>run.kills>=400}),
-    Object.freeze({id:'level-20',weapon:'spiral',kind:'level',value:20,test:(run)=>run.level>=20}),
-    Object.freeze({id:'chain-50',weapon:'mirror',kind:'chain',value:50,test:(run)=>run.maxCombo>=50}),
-    Object.freeze({id:'lifetime-kills-1000',weapon:'vacuum',kind:'lifetimeKills',value:1000,test:(run,meta)=>(meta.lifetime?.kills||0)+(run.kills||0)>=1000}),
-    Object.freeze({id:'mini-10',weapon:'mine',kind:'mini',value:10,test:(run,meta)=>(meta.bossRecords?.mini||0)>=10}),
-    Object.freeze({id:'survive-10m',weapon:'missile',kind:'survive',value:10,test:(run)=>run.time>=600}),
-    Object.freeze({id:'apex-1',weapon:'gate',kind:'apex',value:1,test:(run,meta)=>(meta.bossRecords?.apex||0)>=1})
+    Object.freeze({id:'survive-3m',rewards:weaponReward('comet'),kind:'survive',value:3,test:(run)=>run.time>=180}),
+    Object.freeze({id:'mini-1',rewards:weaponReward('prism'),kind:'mini',value:1,test:(run,meta)=>(meta.bossRecords?.mini||0)>=1}),
+    Object.freeze({id:'level-10',rewards:weaponReward('chrono'),kind:'level',value:10,test:(run)=>run.level>=10}),
+    Object.freeze({id:'chain-20',rewards:weaponReward('arc'),kind:'chain',value:20,test:(run)=>run.maxCombo>=20}),
+    Object.freeze({id:'run-kills-200',rewards:weaponReward('ion'),kind:'runKills',value:200,test:(run)=>run.kills>=200}),
+    Object.freeze({id:'boss-1',rewards:weaponReward('nova'),kind:'boss',value:1,test:(run,meta)=>(meta.bossRecords?.boss||0)>=1}),
+    Object.freeze({id:'survive-5m',rewards:weaponReward('drone'),kind:'survive',value:5,test:(run)=>run.time>=300}),
+    Object.freeze({id:'run-kills-400',rewards:weaponReward('rail'),kind:'runKills',value:400,test:(run)=>run.kills>=400}),
+    Object.freeze({id:'level-20',rewards:weaponReward('spiral'),kind:'level',value:20,test:(run)=>run.level>=20}),
+    Object.freeze({id:'chain-50',rewards:weaponReward('mirror'),kind:'chain',value:50,test:(run)=>run.maxCombo>=50}),
+    Object.freeze({id:'lifetime-kills-1000',rewards:weaponReward('vacuum'),kind:'lifetimeKills',value:1000,test:(run,meta)=>(meta.lifetime?.kills||0)+(run.kills||0)>=1000}),
+    Object.freeze({id:'mini-10',rewards:weaponReward('mine'),kind:'mini',value:10,test:(run,meta)=>(meta.bossRecords?.mini||0)>=10}),
+    Object.freeze({id:'survive-10m',rewards:weaponReward('missile'),kind:'survive',value:10,test:(run)=>run.time>=600}),
+    Object.freeze({id:'apex-1',rewards:weaponReward('gate'),kind:'apex',value:1,test:(run,meta)=>(meta.bossRecords?.apex||0)>=1})
   ]);
   const FEATURE_ACHIEVEMENTS=Object.freeze([
-    Object.freeze({id:'feature-special-ability',feature:'special-ability',kind:'boss',value:1,test:(run,meta)=>(meta.bossRecords?.boss||0)>=1}),
-    Object.freeze({id:'feature-awakening',feature:'awakening',kind:'survive',value:10,test:(run)=>run.time>=600}),
-    Object.freeze({id:'feature-hard',feature:'hard',kind:'apex',value:1,test:(run,meta)=>(meta.bossRecords?.apex||0)>=1}),
-    Object.freeze({id:'feature-very-hard',feature:'very-hard',kind:'hardSurvive',value:15,test:(run)=>run.difficulty==='hard'&&run.time>=900}),
-    Object.freeze({id:'feature-choice-4',feature:'choice-4',kind:'level',value:25,test:(run)=>run.level>=25}),
-    Object.freeze({id:'feature-start-level-3',feature:'start-level-3',kind:'survive',value:15,test:(run)=>run.time>=900}),
-    Object.freeze({id:'feature-core-development-iii',feature:'core-development-iii',kind:'apex',value:3,test:(run,meta)=>(meta.bossRecords?.apex||0)>=3}),
-    Object.freeze({id:'feature-multiplicity-protocol',feature:'multiplicity-protocol',kind:'survive',value:30,test:(run)=>run.time>=1800})
+    Object.freeze({id:'feature-special-ability',rewards:featureReward('special-ability'),kind:'boss',value:1,test:(run,meta)=>(meta.bossRecords?.boss||0)>=1}),
+    Object.freeze({id:'feature-awakening',rewards:featureReward('awakening'),kind:'survive',value:10,test:(run)=>run.time>=600}),
+    Object.freeze({id:'feature-hard',rewards:featureReward('hard'),kind:'apex',value:1,test:(run,meta)=>(meta.bossRecords?.apex||0)>=1}),
+    Object.freeze({id:'feature-very-hard',rewards:featureReward('very-hard'),kind:'hardSurvive',value:15,test:(run)=>run.difficulty==='hard'&&run.time>=900}),
+    Object.freeze({id:'feature-choice-4',rewards:featureReward('choice-4'),kind:'level',value:25,test:(run)=>run.level>=25}),
+    Object.freeze({id:'feature-start-level-3',rewards:featureReward('start-level-3'),kind:'survive',value:15,test:(run)=>run.time>=900}),
+    Object.freeze({id:'feature-core-development-iii',rewards:featureReward('core-development-iii'),kind:'apex',value:3,test:(run,meta)=>(meta.bossRecords?.apex||0)>=3}),
+    Object.freeze({id:'feature-multiplicity-protocol',rewards:featureReward('multiplicity-protocol'),kind:'survive',value:30,test:(run)=>run.time>=1800})
   ]);
   const ALL_ACHIEVEMENTS=Object.freeze([...ACHIEVEMENTS,...FEATURE_ACHIEVEMENTS]);
-  const byWeapon=new Map(ACHIEVEMENTS.map(row=>[row.weapon,row]));
-  const byFeature=new Map(FEATURE_ACHIEVEMENTS.map(row=>[row.feature,row]));
+  const rewardOf=(row,type)=>row?.rewards?.find(reward=>reward.type===type)||null;
+  const byWeapon=new Map(ACHIEVEMENTS.map(row=>[rewardOf(row,'unlock_weapon')?.key,row]).filter(([key])=>key));
+  const byFeature=new Map(FEATURE_ACHIEVEMENTS.map(row=>[rewardOf(row,'unlock_feature')?.key,row]).filter(([key])=>key));
   const sanitizeStrings=value=>Array.isArray(value)?[...new Set(value.filter(item=>typeof item==='string'))]:[];
   const sanitizeNumbers=value=>Array.isArray(value)?[...new Set(value.map(Number).filter(Number.isFinite).map(n=>Math.max(0,Math.floor(n))))]:[];
   const sanitizeNumber=value=>Math.max(0,Number(value)||0);
+  const sanitizeNumberMap=value=>{
+    const out={};if(!value||typeof value!=='object'||Array.isArray(value))return out;
+    for(const[key,raw]of Object.entries(value)){const amount=Math.max(0,Math.floor(Number(raw)||0));if(amount)out[key]=amount;}return out;
+  };
 
   function loadProgress(){
     try{
       const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
       return{
-        version:2,
+        version:3,
         completed:sanitizeStrings(saved.completed),
         weaponUnlocks:sanitizeStrings(saved.weaponUnlocks),
         featureUnlocks:sanitizeStrings(saved.featureUnlocks),
+        rewardClaims:sanitizeStrings(saved.rewardClaims),
         survivalMilestones:sanitizeNumbers(saved.survivalMilestones),
         bestSurvival:sanitizeNumber(saved.bestSurvival),
         bestHardSurvival:sanitizeNumber(saved.bestHardSurvival),
         bestLevel:Math.max(1,Math.floor(sanitizeNumber(saved.bestLevel)||1)),
         bestCombo:Math.floor(sanitizeNumber(saved.bestCombo)),
-        bestRunKills:Math.floor(sanitizeNumber(saved.bestRunKills))
+        bestRunKills:Math.floor(sanitizeNumber(saved.bestRunKills)),
+        materials:sanitizeNumberMap(saved.materials),
+        cosmetics:sanitizeStrings(saved.cosmetics),
+        titles:sanitizeStrings(saved.titles)
       };
     }catch{
-      return{version:2,completed:[],weaponUnlocks:[],featureUnlocks:[],survivalMilestones:[],bestSurvival:0,bestHardSurvival:0,bestLevel:1,bestCombo:0,bestRunKills:0};
+      return{version:3,completed:[],weaponUnlocks:[],featureUnlocks:[],rewardClaims:[],survivalMilestones:[],bestSurvival:0,bestHardSurvival:0,bestLevel:1,bestCombo:0,bestRunKills:0,materials:{},cosmetics:[],titles:[]};
     }
   }
   const progress=loadProgress();
@@ -75,6 +87,14 @@
     es:{achievementToast:'LOGRO COMPLETADO',stage:'El modo Etapas volverá en una futura actualización.',progress:(a,b)=>`${a} / ${b} desbloqueadas`,condition:'Desbloqueo',unlocked:'RECOMPENSA DE LOGRO',milestone:'RÉCORD DE SUPERVIVENCIA',achievementKicker:'ACHIEVEMENTS',achievementTitle:'Logros',achievementDesc:'Cumple objetivos de Infinito para desbloquear armas y funciones.',achievementSummary:(a,b)=>`${a} / ${b} completados`,weaponRewards:'Armas',featureRewards:'Funciones',complete:'COMPLETADO',locked:'INCOMPLETO',reward:'Recompensa'},
     fr:{achievementToast:'SUCCÈS DÉBLOQUÉ',stage:'Le mode Étapes reviendra dans une prochaine mise à jour.',progress:(a,b)=>`${a} / ${b} débloquées`,condition:'Déblocage',unlocked:'RÉCOMPENSE DE SUCCÈS',milestone:'RECORD DE SURVIE',achievementKicker:'ACHIEVEMENTS',achievementTitle:'Succès',achievementDesc:'Atteignez des objectifs en Sans fin pour débloquer armes et fonctions.',achievementSummary:(a,b)=>`${a} / ${b} terminés`,weaponRewards:'Armes',featureRewards:'Fonctions',complete:'TERMINÉ',locked:'INCOMPLET',reward:'Récompense'}
   };
+  const PROFILE_TEXT={
+    ko:{survival:'최고 생존 시간',level:'최고 런 레벨',combo:'최대 연쇄',runKills:'한 런 최다 처치',weapons:'무기 해금',achievements:'업적 진행',runs:'총 출격',kills:'누적 처치'},
+    en:{survival:'Best Survival',level:'Best Run Level',combo:'Best Chain',runKills:'Best Run Kills',weapons:'Weapons Unlocked',achievements:'Achievements',runs:'Total Runs',kills:'Lifetime Kills'},
+    ja:{survival:'最高生存時間',level:'最高ランレベル',combo:'最大チェイン',runKills:'1回の最多撃破',weapons:'武器解放',achievements:'実績進行',runs:'総出撃',kills:'累計撃破'},
+    'zh-CN':{survival:'最长生存时间',level:'最高单局等级',combo:'最高连击',runKills:'单局最多击败',weapons:'武器解锁',achievements:'成就进度',runs:'总出击',kills:'累计击败'},
+    es:{survival:'Mejor supervivencia',level:'Mejor nivel',combo:'Mejor cadena',runKills:'Máx. bajas por partida',weapons:'Armas desbloqueadas',achievements:'Logros',runs:'Partidas',kills:'Bajas totales'},
+    fr:{survival:'Meilleure survie',level:'Meilleur niveau',combo:'Meilleure chaîne',runKills:'Éliminations par partie',weapons:'Armes débloquées',achievements:'Succès',runs:'Sorties',kills:'Éliminations totales'}
+  };
   function uiText(){return UI_TEXT[language()]||UI_TEXT.en;}
 
   function ensureBaselineFeatures(){
@@ -96,24 +116,47 @@
     window.renderStackfallDifficulty?.();
     return true;
   }
+  const rewardClaimId=(row,index)=>`${row.id}:${index}`;
+  function applyReward(row,reward,index,{restoring=false}={}){
+    if(!reward||!row)return false;
+    const claimId=rewardClaimId(row,index),claimed=progress.rewardClaims.includes(claimId),amount=Math.max(1,Math.floor(Number(reward.amount)||1));
+    let newlyGranted=false,settled=false;
+    if(reward.type==='unlock_weapon'){
+      const key=reward.key;if(!key||!WEAPONS?.[key])return false;
+      if(!progress.weaponUnlocks.includes(key))progress.weaponUnlocks.push(key);
+      const before=window.stackfallIsWeaponUnlocked?.(key)===true;
+      if(!before)window.stackfallUnlockWeapon?.(key);
+      newlyGranted=!before&&window.stackfallIsWeaponUnlocked?.(key)===true;settled=window.stackfallIsWeaponUnlocked?.(key)===true;
+    }else if(reward.type==='unlock_feature'){
+      const key=reward.key;if(!key||!window.STACKFALL_FEATURE_DEFS?.[key])return false;
+      if(!progress.featureUnlocks.includes(key))progress.featureUnlocks.push(key);
+      const before=window.stackfallIsFeatureAcquired?.(key)===true;
+      if(!before)grantFeature(key);
+      newlyGranted=!before&&window.stackfallIsFeatureAcquired?.(key)===true;settled=window.stackfallIsFeatureAcquired?.(key)===true;
+    }else if(reward.type==='currency'){
+      if(claimed)return false;
+      newlyGranted=(window.stackfallGrantCurrency?.(reward.key,amount)||0)>0;settled=newlyGranted;
+    }else if(reward.type==='material'){
+      if(claimed)return false;
+      progress.materials[reward.key]=(progress.materials[reward.key]||0)+amount;newlyGranted=true;settled=true;
+    }else if(reward.type==='cosmetic'){
+      if(claimed)return false;
+      if(!progress.cosmetics.includes(reward.key))progress.cosmetics.push(reward.key);newlyGranted=true;settled=true;
+    }else if(reward.type==='title'){
+      if(claimed)return false;
+      if(!progress.titles.includes(reward.key))progress.titles.push(reward.key);newlyGranted=true;settled=true;
+    }
+    if(settled&&!claimed)progress.rewardClaims.push(claimId);
+    return restoring?false:newlyGranted;
+  }
   function restoreAchievementRewards(){
-    const meta=window.stackfallMeta||{},acquiredFeatures=new Set(meta.unlockedFeatures||[]);
-    let changed=false;
-    for(const id of progress.completed){
-      const weaponRow=ACHIEVEMENTS.find(entry=>entry.id===id);
-      if(weaponRow&&!progress.weaponUnlocks.includes(weaponRow.weapon)){progress.weaponUnlocks.push(weaponRow.weapon);changed=true;}
-      const featureRow=FEATURE_ACHIEVEMENTS.find(entry=>entry.id===id);
-      if(featureRow&&!progress.featureUnlocks.includes(featureRow.feature)){progress.featureUnlocks.push(featureRow.feature);changed=true;}
-    }
-    for(const row of FEATURE_ACHIEVEMENTS){
-      if(acquiredFeatures.has(row.feature)){
-        if(!progress.featureUnlocks.includes(row.feature)){progress.featureUnlocks.push(row.feature);changed=true;}
-        if(!progress.completed.includes(row.id)){progress.completed.push(row.id);changed=true;}
-      }
-    }
-    for(const key of progress.weaponUnlocks)if(WEAPONS?.[key])window.stackfallUnlockWeapon?.(key);
-    for(const key of progress.featureUnlocks)grantFeature(key);
-    if(changed)saveProgress();
+    const meta=window.stackfallMeta||{};let changed=false;
+    for(const key of progress.weaponUnlocks){const row=byWeapon.get(key);if(row&&!progress.completed.includes(row.id)){progress.completed.push(row.id);changed=true;}}
+    for(const key of progress.featureUnlocks){const row=byFeature.get(key);if(row&&!progress.completed.includes(row.id)){progress.completed.push(row.id);changed=true;}}
+    for(const row of ACHIEVEMENTS){const key=rewardOf(row,'unlock_weapon')?.key;if(key&&(meta.unlockedWeapons||[]).includes(key)){if(!progress.weaponUnlocks.includes(key)){progress.weaponUnlocks.push(key);changed=true;}if(!progress.completed.includes(row.id)){progress.completed.push(row.id);changed=true;}}}
+    for(const row of FEATURE_ACHIEVEMENTS){const key=rewardOf(row,'unlock_feature')?.key;if(key&&(meta.unlockedFeatures||[]).includes(key)){if(!progress.featureUnlocks.includes(key)){progress.featureUnlocks.push(key);changed=true;}if(!progress.completed.includes(row.id)){progress.completed.push(row.id);changed=true;}}}
+    for(const row of ALL_ACHIEVEMENTS)if(progress.completed.includes(row.id))row.rewards.forEach((reward,index)=>applyReward(row,reward,index,{restoring:true}));
+    if(changed)saveProgress();else if(progress.rewardClaims.length)saveProgress();
     window.renderStackfallDifficulty?.();
   }
   function snapshotRun(){return{time:Math.max(0,Number(state.time)||0),kills:Math.max(0,Math.floor(Number(state.kills)||0)),level:Math.max(1,Math.floor(Number(state.level)||1)),maxCombo:Math.max(0,Math.floor(Number(state.maxCombo)||0)),difficulty:String(state.selectedDifficulty||'normal')};}
@@ -136,21 +179,13 @@
     return granted;
   }
   function evaluateAchievements(run){
-    const meta=window.stackfallMeta||{},newUnlocks=[];let changed=false;rememberRunBest(run);
+    const meta=window.stackfallMeta||{},newCompletions=[];let changed=false;rememberRunBest(run);
     for(const row of ALL_ACHIEVEMENTS){
       if(progress.completed.includes(row.id)||!row.test(run,meta))continue;
-      progress.completed.push(row.id);changed=true;
-      if(row.weapon){
-        const wasUnlocked=window.stackfallIsWeaponUnlocked?.(row.weapon)===true;
-        if(!progress.weaponUnlocks.includes(row.weapon))progress.weaponUnlocks.push(row.weapon);
-        if(!wasUnlocked&&window.stackfallUnlockWeapon?.(row.weapon))newUnlocks.push(row);
-      }else if(row.feature){
-        const wasUnlocked=window.stackfallIsFeatureAcquired?.(row.feature)===true;
-        if(!progress.featureUnlocks.includes(row.feature))progress.featureUnlocks.push(row.feature);
-        if(!wasUnlocked&&grantFeature(row.feature))newUnlocks.push(row);
-      }
+      progress.completed.push(row.id);changed=true;newCompletions.push(row);
+      row.rewards.forEach((reward,index)=>applyReward(row,reward,index));
     }
-    if(changed)saveProgress();return newUnlocks;
+    if(changed)saveProgress();return newCompletions;
   }
 
   function applyStageSeal(){
@@ -180,8 +215,11 @@
     const progressEl=ensureStarterProgress();if(progressEl)progressEl.textContent=uiText().progress(unlockedEntries.length,entries.length);
   }
   function rewardInfo(row){
-    if(row.weapon){const text=weaponText(row.weapon);return{icon:WEAPONS[row.weapon]?.icon||'✦',name:text.name,type:uiText().weaponRewards};}
-    return{icon:'◆',name:window.stackfallFeatureName?.(row.feature)||row.feature,type:uiText().featureRewards};
+    const reward=row?.rewards?.[0];if(!reward)return{icon:'◆',name:uiText().reward,type:uiText().reward};
+    if(reward.type==='unlock_weapon'){const text=weaponText(reward.key);return{icon:WEAPONS[reward.key]?.icon||'✦',name:text.name,type:uiText().weaponRewards};}
+    if(reward.type==='unlock_feature')return{icon:'◆',name:window.stackfallFeatureName?.(reward.key)||reward.key,type:uiText().featureRewards};
+    if(reward.type==='currency')return{icon:reward.key==='coreShard'?'◆':'✦',name:`${reward.key} +${reward.amount||1}`,type:uiText().reward};
+    return{icon:'◆',name:reward.key||uiText().reward,type:uiText().reward};
   }
   function achievementProgress(row){
     const meta=window.stackfallMeta||{},current=(()=>{
@@ -276,24 +314,47 @@
     const rows=document.querySelectorAll('#unlockManagementList .unlock-feature-row');
     for(const row of rows){
       const name=row.querySelector('strong'),meta=row.querySelector('small');if(!name||!meta)continue;
-      const key=FEATURE_ACHIEVEMENTS.find(entry=>(window.stackfallFeatureName?.(entry.feature)||entry.feature)===name.textContent)?.feature;
+      const key=FEATURE_ACHIEVEMENTS.find(entry=>(window.stackfallFeatureName?.(rewardOf(entry,'unlock_feature')?.key)||rewardOf(entry,'unlock_feature')?.key)===name.textContent)?.rewards?.[0]?.key;
       if(key){const next=language()==='ko'?'업적 보상':'Achievement reward';if(meta.textContent!==next)meta.textContent=next;}
     }
   }
   function installLegacyLockCopyPatches(){
     const difficultyRoot=document.querySelector('#difficultyOptions');
-    if(difficultyRoot&&!difficultyRoot.dataset.achievementCopyWatch){
-      difficultyRoot.dataset.achievementCopyWatch='true';
-      difficultyRoot.addEventListener('click',()=>queueMicrotask(refreshLegacyLockCopy));
-    }
-    if(typeof renderUnlockManagement==='function'&&!renderUnlockManagement.__achievementCopyPatched){
-      const base=renderUnlockManagement,wrapped=function(){base();refreshLegacyLockCopy();};wrapped.__achievementCopyPatched=true;renderUnlockManagement=wrapped;
-    }
-    if(typeof renderUpgradeUi==='function'&&!renderUpgradeUi.__achievementCopyPatched){
-      const base=renderUpgradeUi,wrapped=function(){const result=base();refreshLegacyLockCopy();return result;};wrapped.__achievementCopyPatched=true;renderUpgradeUi=wrapped;
-    }
+    if(difficultyRoot&&!difficultyRoot.dataset.achievementCopyWatch){difficultyRoot.dataset.achievementCopyWatch='true';difficultyRoot.addEventListener('click',()=>queueMicrotask(refreshLegacyLockCopy));}
+    if(typeof renderUnlockManagement==='function'&&!renderUnlockManagement.__achievementCopyPatched){const base=renderUnlockManagement,wrapped=function(){base();refreshLegacyLockCopy();};wrapped.__achievementCopyPatched=true;renderUnlockManagement=wrapped;}
+    if(typeof renderUpgradeUi==='function'&&!renderUpgradeUi.__achievementCopyPatched){const base=renderUpgradeUi,wrapped=function(){const result=base();refreshLegacyLockCopy();return result;};wrapped.__achievementCopyPatched=true;renderUpgradeUi=wrapped;}
     refreshLegacyLockCopy();
   }
+
+  function formatProfileTime(seconds){const total=Math.max(0,Math.floor(Number(seconds)||0)),m=Math.floor(total/60),s=total%60;return`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;}
+  function renderEndlessProfile(){
+    const screen=document.querySelector('#profileScreen');if(!screen)return;
+    const text=PROFILE_TEXT[language()]||PROFILE_TEXT.en,meta=window.stackfallMeta||{};
+    const weaponEntries=Object.entries(WEAPONS||{}).filter(([,weapon])=>weapon.starter!==false&&!weapon.basic),unlockedWeapons=weaponEntries.filter(([key])=>window.stackfallIsWeaponUnlocked?.(key)!==false).length;
+    const completed=ALL_ACHIEVEMENTS.filter(row=>progress.completed.includes(row.id)).length;
+    const rows=[
+      ['#profileDetailClears',text.survival,formatProfileTime(progress.bestSurvival)],
+      ['#profileDetailStageClears',text.level,progress.bestLevel],
+      ['#profileDetailRuns',text.combo,progress.bestCombo],
+      ['#profileDetailKills',text.runKills,progress.bestRunKills],
+      ['#profileDetailBosses',text.weapons,`${unlockedWeapons} / ${weaponEntries.length}`],
+      ['#profileDetailWeapons',text.achievements,`${completed} / ${ALL_ACHIEVEMENTS.length}`]
+    ];
+    for(const[selector,label,value]of rows){const valueEl=screen.querySelector(selector),labelEl=valueEl?.parentElement?.querySelector('span');if(labelEl)labelEl.textContent=label;if(valueEl)valueEl.textContent=String(value);}
+    const combatGrid=screen.querySelector('.profile-boss-grid');
+    if(combatGrid){
+      let runs=combatGrid.querySelector('#profileEndlessRuns');if(!runs){runs=document.createElement('div');runs.innerHTML='<span></span><b id="profileEndlessRuns">0</b>';combatGrid.prepend(runs);}
+      let kills=combatGrid.querySelector('#profileEndlessKills');if(!kills){kills=document.createElement('div');kills.innerHTML='<span></span><b id="profileEndlessKills">0</b>';combatGrid.insertBefore(kills,runs.nextSibling);}
+      runs.parentElement.querySelector('span').textContent=text.runs;runs.textContent=String(meta.lifetime?.runs||0);
+      kills.parentElement.querySelector('span').textContent=text.kills;kills.textContent=String(meta.lifetime?.kills||0);
+    }
+  }
+  const baseRenderMetaUi=window.renderStackfallMetaUi;
+  if(typeof baseRenderMetaUi==='function'&&!baseRenderMetaUi.__endlessProfile){
+    const wrapped=function(){const result=baseRenderMetaUi();renderEndlessProfile();return result;};wrapped.__endlessProfile=true;window.renderStackfallMetaUi=wrapped;
+  }
+  document.querySelector('#hubProfile')?.addEventListener('click',()=>queueMicrotask(renderEndlessProfile));
+  document.querySelector('#profileNameSaveBtn')?.addEventListener('click',()=>queueMicrotask(renderEndlessProfile));
 
   const style=document.createElement('style');style.textContent=`
     #stageMapBtn.stage-sealed{cursor:not-allowed;filter:saturate(.45);opacity:.72}#stageMapBtn.stage-sealed>i{font-style:normal;font-size:22px;opacity:.88}#stageMapBtn.stage-sealed:hover{transform:none}
@@ -311,28 +372,29 @@
   const baseAchievementUpdatePlayer=updatePlayer;
   updatePlayer=function endlessAchievementUpdatePlayer(dt){
     baseAchievementUpdatePlayer(dt);if(state.mode!=='playing'||!isEndless())return;liveAchievementPoll-=dt;if(liveAchievementPoll>0)return;liveAchievementPoll=.4;
-    const unlocked=evaluateAchievements(snapshotRun());if(!unlocked.length)return;showAchievementToasts(unlocked);renderAchievementUi();window.renderStackfallMetaUi?.();
+    const completed=evaluateAchievements(snapshotRun());if(!completed.length)return;showAchievementToasts(completed);renderAchievementUi();renderEndlessProfile();window.renderStackfallMetaUi?.();
   };
 
   const baseEndGame=endGame;
   endGame=function endlessProgressionEndGame(){
     if(state.mode==='gameover')return;
-    const endless=isEndless(),run=snapshotRun();let survivalReward=0;if(endless){rememberRunBest(run);survivalReward=claimSurvivalMilestones(run.time);}
+    const endless=isEndless(),run=snapshotRun();let survivalReward=0,completed=[];
+    if(endless){rememberRunBest(run);survivalReward=claimSurvivalMilestones(run.time);completed=evaluateAchievements(run);}
     baseEndGame();
-    const unlocked=endless?evaluateAchievements(run):[];renderAchievementUnlocks(unlocked);renderAchievementUi();
+    renderAchievementUnlocks(completed);renderAchievementUi();renderEndlessProfile();
     if(survivalReward>0)window.renderStackfallMetaUi?.();
   };
   const baseShowMainMenu=showMainMenu;
-  showMainMenu=function endlessProgressionMainMenu(){baseShowMainMenu();applyStageSeal();finalRenderStarterOptions();renderAchievementUi();};
+  showMainMenu=function endlessProgressionMainMenu(){baseShowMainMenu();applyStageSeal();finalRenderStarterOptions();renderAchievementUi();renderEndlessProfile();};
   const baseApplyLanguage=applyLanguage;
-  applyLanguage=function endlessProgressionLanguage(){baseApplyLanguage();applyStageSeal();finalRenderStarterOptions();renderAchievementUi();window.renderStackfallDifficulty?.();};
+  applyLanguage=function endlessProgressionLanguage(){baseApplyLanguage();applyStageSeal();finalRenderStarterOptions();renderAchievementUi();renderEndlessProfile();window.renderStackfallDifficulty?.();};
   renderStarterOptions=finalRenderStarterOptions;
   window.addEventListener('keydown',e=>{const screen=document.querySelector('#achievementScreen');if(e.code==='Escape'&&screen&&!screen.classList.contains('hidden')){e.preventDefault();e.stopImmediatePropagation();closeAchievements();}},true);
 
-  ensureBaselineFeatures();restoreAchievementRewards();applyStageSeal();finalRenderStarterOptions();ensureAchievementUi();installLegacyLockCopyPatches();renderAchievementUi();renderAchievementUnlocks([]);window.renderStackfallMetaUi?.();
+  ensureBaselineFeatures();restoreAchievementRewards();applyStageSeal();finalRenderStarterOptions();ensureAchievementUi();installLegacyLockCopyPatches();renderAchievementUi();renderAchievementUnlocks([]);renderEndlessProfile();window.renderStackfallMetaUi?.();
   window.STACKFALL_ENDLESS_ACHIEVEMENTS=ACHIEVEMENTS;
   window.STACKFALL_ENDLESS_FEATURE_ACHIEVEMENTS=FEATURE_ACHIEVEMENTS;
   window.STACKFALL_ENDLESS_SURVIVAL_MILESTONES=SURVIVAL_MILESTONES;
   window.stackfallFeatureAchievementCondition=featureAchievementCondition;
-  window.stackfallEndlessProgression=Object.freeze({storageKey:STORAGE_KEY,progress,achievements:ALL_ACHIEVEMENTS,weaponAchievements:ACHIEVEMENTS,featureAchievements:FEATURE_ACHIEVEMENTS,survivalMilestones:SURVIVAL_MILESTONES,conditionText,featureAchievementCondition,evaluateAchievements,claimSurvivalMilestones,renderStarterOptions:finalRenderStarterOptions,applyStageSeal,renderAchievements:renderAchievementUi,openAchievements,showAchievementToasts});
+  window.stackfallEndlessProgression=Object.freeze({storageKey:STORAGE_KEY,progress,achievements:ALL_ACHIEVEMENTS,weaponAchievements:ACHIEVEMENTS,featureAchievements:FEATURE_ACHIEVEMENTS,survivalMilestones:SURVIVAL_MILESTONES,conditionText,featureAchievementCondition,evaluateAchievements,claimSurvivalMilestones,applyReward,renderStarterOptions:finalRenderStarterOptions,applyStageSeal,renderAchievements:renderAchievementUi,renderProfile:renderEndlessProfile,openAchievements,showAchievementToasts});
 })();
