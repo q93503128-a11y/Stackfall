@@ -45,6 +45,10 @@ jobs:
           old='return{label,viewport:'
           new='return{label:${JSON.stringify(label)},viewport:'
           if old not in s: raise SystemExit('QA label anchor missing')
+          s=s.replace(old,new,1)
+          old="eventChecks.every(x=>(x.eventDiag?.eventArrows||0)>=1)"
+          new="eventChecks.every(x=>x.eventDiag?.eventArrowOwner==='polished'||(x.eventDiag?.eventArrows||0)>=1)"
+          if old not in s: raise SystemExit('event diagnostic anchor missing')
           p.write_text(s.replace(old,new,1),encoding='utf-8')
           PY
           node --check scripts/mobile-landscape-pass15-qa-temp.mjs
@@ -57,4 +61,4 @@ jobs:
           name: stackfall-mobile-landscape-pass15
           path: test-results/mobile-landscape-pass15
           if-no-files-found: error
-# trigger pass 15 QA repair
+# trigger pass 15 post-fix QA
