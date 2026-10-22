@@ -167,8 +167,8 @@
       for(const card of cards.querySelectorAll('.world-event-card')){
         const heading=card.querySelector('b')?.textContent?.trim(),desc=card.querySelector('p');
         if(!desc)continue;
-        if(heading==='회수 모듈')desc.textContent='무작위 보유 패시브 2종 +1. 대상이 없으면 선체 강화.';
-        else if(heading==='Recovery Module')desc.textContent='Two random owned passives gain +1 stack. Reinforces the hull if none qualify.';
+        const next=heading==='회수 모듈'?'무작위 보유 패시브 2종 +1. 대상이 없으면 선체 강화.':heading==='Recovery Module'?'Two random owned passives gain +1 stack. Reinforces the hull if none qualify.':'';
+        if(next&&desc.textContent!==next)desc.textContent=next;
       }
     };
     if(cards){new MutationObserver(simplifyRecoveryCopy).observe(cards,{childList:true,subtree:true});simplifyRecoveryCopy();}
