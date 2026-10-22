@@ -299,15 +299,15 @@
         if(!e||e.dead||p.hitIds?.has(e.id))continue;
         if(e.stageBodyShapes?enemySegmentOverlap(e,projectilePreviousX,projectilePreviousY,p.x,p.y,p.r):enemyCircleOverlap(e,p.x,p.y,p.r)){
           dealDamage(e,p.damage,{color:p.color,source});if(!p.hitIds)p.hitIds=new Set();p.hitIds.add(e.id);
-          if(p.split&&(p.splitCount||0)<2){p.splitCount=(p.splitCount||0)+1;for(let i=0;i<3;i++){const a=Math.atan2(p.vy,p.vx)+(i-1)*.58;spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*350,vy:Math.sin(a)*350,r:3.1,life:.58,maxRange:210,damage:p.damage*.30,color:'#ffb3d0',pierce:0,source:'star-spark'});}}
-          if(p.fragment&&(p.fragmentCount||0)<2){p.fragmentCount=(p.fragmentCount||0)+1;for(let i=0;i<4;i++){const a=i/4*TAU+Math.atan2(p.vy,p.vx);spawned.push({x:p.x,y:p.y,vx:Math.cos(a)*285,vy:Math.sin(a)*285,r:3.4,life:.60,maxRange:190,damage:p.damage*.22,color:'#d9fbff',pierce:0,source:'comet-fragment'});}}
+          if(p.split&&(p.splitCount||0)<2){p.splitCount=(p.splitCount||0)+1;const splitAngle=Math.atan2(p.vy,p.vx);for(let i=0;i<3;i++){const a=splitAngle+(i-1)*.58;spawned.push(acquireProjectileSpawnDescriptor(p.x,p.y,Math.cos(a)*350,Math.sin(a)*350,3.1,.58,210,p.damage*.30,'#ffb3d0','star-spark'));}}
+          if(p.fragment&&(p.fragmentCount||0)<2){p.fragmentCount=(p.fragmentCount||0)+1;const fragmentAngle=Math.atan2(p.vy,p.vx);for(let i=0;i<4;i++){const a=i/4*TAU+fragmentAngle;spawned.push(acquireProjectileSpawnDescriptor(p.x,p.y,Math.cos(a)*285,Math.sin(a)*285,3.4,.60,190,p.damage*.22,'#d9fbff','comet-fragment'));}}
           if(p.pierce>0)p.pierce--;else p.life=0;
         }
       }}
       if(p.life<=0&&p.explode&&!p.exploded){p.exploded=true;areaDamage(p.x,p.y,118,20+weaponCount('comet')*3.8,COLORS.comet,'comet-burst');}
       if((p.x-player.x)**2+(p.y-player.y)**2>4410000)p.life=0;
     }
-    for(const projectile of spawned)spawnPlayerProjectile(projectile);
+    for(const projectile of spawned){spawnPlayerProjectile(projectile);recycleProjectileSpawnDescriptor(projectile);}spawned.length=0;
     compactInPlace(state.entities.projectiles,keepLiveProjectile,recycleProjectile);
   };
 
