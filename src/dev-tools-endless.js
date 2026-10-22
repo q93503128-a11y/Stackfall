@@ -2,8 +2,7 @@
   'use strict';
 
   const EVENT_TYPES=[
-    ['vault','성운 보관소'],['crash','추락한 우주선'],['void','공허 균열'],['distress','조난 신호'],
-    ['meteor','유성 광맥'],['predator','포식성 성운'],['relay','중계기 복구'],['storm','항성 폭풍의 눈']
+    ['vault','성운 보관소'],['crash','추락한 우주선'],['void','공허 균열']
   ];
   const ELITE_POOLS={
     mini:[
