@@ -22,6 +22,26 @@
   const sanitizeNumber=value=>Math.max(0,Math.floor(Number(value)||0));
   const sanitizeMap=value=>value&&typeof value==='object'&&!Array.isArray(value)?{...value}:{};
   const sanitizeProfileName=value=>String(value??'').replace(/[\u0000-\u001f\u007f]/g,'').replace(/\s+/g,' ').trim().slice(0,16);
+  const createBossRecords=()=>({mini:0,boss:0,apex:0,void:0,crash:0});
+  const bossTotal=records=>BOSS_RECORD_KEYS.reduce((sum,key)=>sum+sanitizeNumber(records?.[key]),0);
+  const normalizeCurrencies=value=>{
+    const currencies={stardust:0,coreShard:0,...sanitizeMap(value)};
+    for(const key of CURRENCY_KEYS)currencies[key]=sanitizeNumber(currencies[key]);
+    return currencies;
+  };
+  const normalizeUpgrades=value=>{
+    const upgrades=sanitizeMap(value);
+    for(const key of Object.keys(upgrades))upgrades[key]=sanitizeNumber(upgrades[key]);
+    return upgrades;
+  };
+  const normalizeBossRecords=(value,legacyBosses=0)=>{
+    const savedBossRecords=sanitizeMap(value),bossRecords=createBossRecords();
+    const hasBossBreakdown=BOSS_RECORD_KEYS.some(key=>Object.prototype.hasOwnProperty.call(savedBossRecords,key));
+    for(const key of BOSS_RECORD_KEYS)bossRecords[key]=sanitizeNumber(savedBossRecords[key]);
+    if(!hasBossBreakdown)bossRecords.apex=sanitizeNumber(legacyBosses);
+    return bossRecords;
+  };
+  const createDefaultMeta=()=>({version:7,profileName:'',unlockedWeapons:[...INITIAL_WEAPONS],unlockedFeatures:[],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},bossRecords:createBossRecords(),lifetime:{runs:0,kills:0,bosses:0}});
   function canonicalClearedStages(value){const saved=new Set(sanitizeList(value)),accepted=[];for(const stage of [...(window.STACKFALL_STAGE_CATALOG||[])].sort((a,b)=>a.order-b.order)){if(!saved.has(stage.id))continue;const previous=stage.requirements?.previous;if(previous&&!accepted.includes(previous))continue;accepted.push(stage.id);}return accepted;}
   function progressionUnlockedWeapons(clearedStages,savedWeapons=[]){
     const unlocked=new Set(INITIAL_WEAPONS);
@@ -38,15 +58,7 @@
     try{
       const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'),sharedProfileName=sanitizeProfileName(localStorage.getItem(PROFILE_NAME_KEY)||saved.profileName);
       const clearedStages=canonicalClearedStages(saved.clearedStages),unlocked=progressionUnlockedWeapons(clearedStages,saved.unlockedWeapons),unlockedFeatures=progressionUnlockedFeatures(clearedStages,saved.unlockedFeatures);
-      const currencies={stardust:0,coreShard:0,...sanitizeMap(saved.currencies)};
-      for(const key of CURRENCY_KEYS)currencies[key]=sanitizeNumber(currencies[key]);
-      const upgrades=sanitizeMap(saved.upgrades);
-      for(const key of Object.keys(upgrades))upgrades[key]=sanitizeNumber(upgrades[key]);
-      const savedBossRecords=sanitizeMap(saved.bossRecords),bossRecords={mini:0,boss:0,apex:0,void:0,crash:0};
-      const hasBossBreakdown=BOSS_RECORD_KEYS.some(key=>Object.prototype.hasOwnProperty.call(savedBossRecords,key));
-      for(const key of BOSS_RECORD_KEYS)bossRecords[key]=sanitizeNumber(savedBossRecords[key]);
-      if(!hasBossBreakdown)bossRecords.apex=sanitizeNumber(saved.lifetime?.bosses);
-      const bossTotal=BOSS_RECORD_KEYS.reduce((sum,key)=>sum+bossRecords[key],0);
+      const currencies=normalizeCurrencies(saved.currencies),upgrades=normalizeUpgrades(saved.upgrades),bossRecords=normalizeBossRecords(saved.bossRecords,saved.lifetime?.bosses);
       return{
         version:7,
         profileName:sharedProfileName,
@@ -58,10 +70,10 @@
         currencies,
         upgrades,
         bossRecords,
-        lifetime:{runs:sanitizeNumber(saved.lifetime?.runs),kills:sanitizeNumber(saved.lifetime?.kills),bosses:bossTotal}
+        lifetime:{runs:sanitizeNumber(saved.lifetime?.runs),kills:sanitizeNumber(saved.lifetime?.kills),bosses:bossTotal(bossRecords)}
       };
     }catch{
-      return{version:7,profileName:'',unlockedWeapons:[...INITIAL_WEAPONS],unlockedFeatures:[],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},bossRecords:{mini:0,boss:0,apex:0,void:0,crash:0},lifetime:{runs:0,kills:0,bosses:0}};
+      return createDefaultMeta();
     }
   }
   const meta=load();
@@ -134,9 +146,8 @@
   }
   function recordBossDefeat(enemy){
     const key=bossRecordCategory(enemy);if(!key)return null;
-    meta.bossRecords=meta.bossRecords&&typeof meta.bossRecords==='object'?meta.bossRecords:{mini:0,boss:0,apex:0,void:0,crash:0};
-    for(const recordKey of BOSS_RECORD_KEYS)meta.bossRecords[recordKey]=sanitizeNumber(meta.bossRecords[recordKey]);
-    meta.bossRecords[key]++;meta.lifetime.bosses=BOSS_RECORD_KEYS.reduce((sum,recordKey)=>sum+sanitizeNumber(meta.bossRecords[recordKey]),0);save();return key;
+    meta.bossRecords=normalizeBossRecords(meta.bossRecords);
+    meta.bossRecords[key]++;meta.lifetime.bosses=bossTotal(meta.bossRecords);save();return key;
   }
   function recordRun(kills=0){meta.lifetime.runs=sanitizeNumber(meta.lifetime.runs)+1;meta.lifetime.kills=sanitizeNumber(meta.lifetime.kills)+sanitizeNumber(kills);save();}
   window.STACKFALL_INITIAL_WEAPONS=INITIAL_WEAPONS;
