@@ -50,6 +50,8 @@
   let gpuCanvasReady=false;
   let gpuFrameRateCap=0;
   const warned=new Set();
+  const tintCache=new Map();
+  const TINT_CACHE_LIMIT=96;
 
   const sparklesEnabled=()=>GAME_SETTINGS.sparkles!==false;
   const USE_GPU_PLAYER_PROJECTILES=false;
@@ -74,13 +76,17 @@
     warned.add(key);
     console.warn(message,error||'');
   }
+  function cacheTint(key,value){
+    if(tintCache.size>=TINT_CACHE_LIMIT&&!tintCache.has(key))tintCache.delete(tintCache.keys().next().value);
+    tintCache.set(key,value);return value;
+  }
   function parseColor(value,fallback=0xffffff){
     if(typeof value!=='string')return fallback;
-    const text=value.trim();
-    if(/^#[0-9a-f]{6}$/i.test(text))return Number.parseInt(text.slice(1),16);
-    if(/^#[0-9a-f]{3}$/i.test(text)){const r=Number.parseInt(text[1],16),g=Number.parseInt(text[2],16),b=Number.parseInt(text[3],16);return(r*17<<16)|(g*17<<8)|(b*17);}
+    const text=value.trim(),cached=tintCache.get(text);if(cached!==undefined)return cached;
+    if(/^#[0-9a-f]{6}$/i.test(text))return cacheTint(text,Number.parseInt(text.slice(1),16));
+    if(/^#[0-9a-f]{3}$/i.test(text)){const r=Number.parseInt(text[1],16),g=Number.parseInt(text[2],16),b=Number.parseInt(text[3],16);return cacheTint(text,(r*17<<16)|(g*17<<8)|(b*17));}
     const rgb=text.match(/^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
-    if(rgb)return(clamp(Number(rgb[1]),0,255)<<16)|(clamp(Number(rgb[2]),0,255)<<8)|clamp(Number(rgb[3]),0,255);
+    if(rgb)return cacheTint(text,(clamp(Number(rgb[1]),0,255)<<16)|(clamp(Number(rgb[2]),0,255)<<8)|clamp(Number(rgb[3]),0,255));
     return fallback;
   }
   function makeTexture(size,soft=true){
@@ -133,7 +139,7 @@
       const p=list[i];if(p?.visual==='ion-globule')continue;if(!p||p.life<=0||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;
       const x=p.x-player.x+vw/2,y=p.y-player.y+vh/2;if(x<-64||x>vw+64||y<-64||y>vh+64)continue;
       const r=Math.max(2.4,Math.min(13,Number(p.r)||4)),sprite=ensureSprite(hostileSprites,used++,hostileLayer,hostileTexture||PIXI.Texture.WHITE);
-      sprite.visible=true;sprite.x=Math.round(x);sprite.y=Math.round(y);sprite.rotation=Math.atan2(p.vy||0,p.vx||0);sprite.tint=parseColor(p.color,0xff6c91);sprite.alpha=.96;sprite.width=r*5.0;sprite.height=r*2.65;
+      sprite.visible=true;sprite.x=Math.round(x);sprite.y=Math.round(y);sprite.rotation=Number.isFinite(p.heading)?p.heading:Math.atan2(p.vy||0,p.vx||0);sprite.tint=parseColor(p.color,0xff6c91);sprite.alpha=.96;sprite.width=r*5.0;sprite.height=r*2.65;
     }
     hideUnused(hostileSprites,used);
   }
@@ -187,7 +193,7 @@
     if(!sparklesEnabled()||GAME_SETTINGS.hideProjectiles===true||state.mode==='menu'){hideUnused(particleSprites,0);return;}
     const list=state.entities.particles||[];
     let used=0;
-    const tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,limit=Math.min(list.length,tier===2?24:tier===1?72:compactDevice()?120:220);
+    const tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,limit=Math.min(list.length,tier===2?24:tier===1?72:compactDevice()?120:220),rotationBase=performance.now()*.002;
     for(let i=0;i<limit;i++){
       const p=list[i];
       if(!p||p.life<=0||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;
@@ -199,7 +205,7 @@
       sprite.tint=parseColor(p.color,0xffffff);
       sprite.alpha=clamp((Number(p.life)||0)/Math.max(.001,Number(p.max)||Number(p.life)||1),0,.85);
       sprite.width=sprite.height=size*(p.star?4.1:3.2);
-      sprite.rotation=p.star?(performance.now()*.002+i*.73):0;
+      sprite.rotation=p.star?(rotationBase+i*.73):0;
     }
     visibleParticleSprites=used;
     hideUnused(particleSprites,used);

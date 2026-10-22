@@ -46,7 +46,17 @@ function normalizeWell(w){if(!w||!Number.isFinite(w.x)||!Number.isFinite(w.y))re
 function updateWells(dt){return updateWellBodies(dt);}
 function updateWellBodies(dt){const wells=state.entities.wells;for(const w of wells){if(!normalizeWell(w)){if(w)w.life=0;continue;}w.life-=dt;w.tick-=dt;if(w.damage>0&&w.tick<=0){w.tick=.3;const hitRadius=w.r*.42;forEachNearbyEnemyCandidate(w.x,w.y,hitRadius+130,e=>{if(!e.dead&&enemyCircleOverlap(e,w.x,w.y,hitRadius))dealDamage(e,w.damage,{color:w.color,source:'well',canCrit:false});});}}compactInPlace(wells,w=>w&&w.life>0);}
 function keepLiveGem(g){return!!(g&&g.life>0);}
-function updateGems(dt){const range=Math.max(24,Number(magnetRange())||74),magnetStacks=stat('magnet'),gems=state.entities.gems,drag=Math.pow(.04,dt);for(const g of gems){if(!g||!Number.isFinite(g.x)||!Number.isFinite(g.y)){if(g)g.life=0;continue;}g.life=Number.isFinite(g.life)?g.life-dt:0;g.pulse=Number.isFinite(g.pulse)?g.pulse+dt*5:dt*5;g.vx=Number.isFinite(g.vx)?g.vx:0;g.vy=Number.isFinite(g.vy)?g.vy:0;g.r=Number.isFinite(g.r)?clamp(g.r,2,14):4;g.value=Number.isFinite(g.value)?Math.max(0,g.value):0;g.x+=g.vx*dt;g.y+=g.vy*dt;g.vx*=drag;g.vy*=drag;const dx=player.x-g.x,dy=player.y-g.y,d=Math.hypot(dx,dy)||1;if(d<range){const force=270+(range-d)*(7.5+magnetStacks*.4);g.vx+=dx/d*force*dt;g.vy+=dy/d*force*dt;}if(d<player.r+10){g.life=0;gainXp(g.value*xpMult());audio.pickup();spawnParticle(g.x,g.y,COLORS.cyan,3,70,2);}}compactInPlace(gems,keepLiveGem);}
+function updateGems(dt){
+  const range=Math.max(24,Number(magnetRange())||74),range2=range*range,pickupRange2=(player.r+10)**2,magnetStacks=stat('magnet'),gems=state.entities.gems,drag=Math.pow(.04,dt);
+  for(const g of gems){
+    if(!g||!Number.isFinite(g.x)||!Number.isFinite(g.y)){if(g)g.life=0;continue;}
+    g.life=Number.isFinite(g.life)?g.life-dt:0;g.pulse=Number.isFinite(g.pulse)?g.pulse+dt*5:dt*5;g.vx=Number.isFinite(g.vx)?g.vx:0;g.vy=Number.isFinite(g.vy)?g.vy:0;g.r=Number.isFinite(g.r)?clamp(g.r,2,14):4;g.value=Number.isFinite(g.value)?Math.max(0,g.value):0;g.x+=g.vx*dt;g.y+=g.vy*dt;g.vx*=drag;g.vy*=drag;
+    const dx=player.x-g.x,dy=player.y-g.y,d2=dx*dx+dy*dy;
+    if(d2<range2){const d=Math.sqrt(d2)||1,force=270+(range-d)*(7.5+magnetStacks*.4);g.vx+=dx/d*force*dt;g.vy+=dy/d*force*dt;}
+    if(d2<pickupRange2){g.life=0;gainXp(g.value*xpMult());audio.pickup();spawnParticle(g.x,g.y,COLORS.cyan,3,70,2);}
+  }
+  compactInPlace(gems,keepLiveGem);
+}
 function tryLevelUp(){if(state.mode!=='playing'||state.choiceLocked||state.xp<state.xpNeed)return false;state.xp-=state.xpNeed;state.level++;state.xpNeed=levelXpRequirement(state.level);openChoices();return true;}
 function gainXp(v){const amount=Number(v);if(!Number.isFinite(amount)||amount<=0)return;state.xp+=amount;tryLevelUp();}
 function validEffectNumber(value){return typeof value==='number'&&Number.isFinite(value);}
