@@ -1,0 +1,47 @@
+name: Temporary Stackfall mobile landscape visual QA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mobile-landscape-pass15-qa-temp.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  visual-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Wait for deployed fingerprint
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$(grep -o 'sha256-[a-f0-9]*' src/build-info.js | head -1)"
+          for i in $(seq 1 100); do
+            live="$(curl -fsS "https://stackfall.pages.dev/src/build-info.js?mobile15=${GITHUB_SHA}-${i}" || true)"
+            if printf '%s' "$live" | grep -Fq "$expected"; then
+              echo "Live fingerprint matched: $expected"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Live deployment did not reach expected fingerprint: $expected" >&2
+          exit 1
+      - name: Validate QA harness
+        run: node --check scripts/mobile-landscape-pass15-qa-temp.mjs
+      - name: Capture mobile landscape QA
+        run: node scripts/mobile-landscape-pass15-qa-temp.mjs
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stackfall-mobile-landscape-pass15
+          path: test-results/mobile-landscape-pass15
+          if-no-files-found: error
