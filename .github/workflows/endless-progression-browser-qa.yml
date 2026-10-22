@@ -7,6 +7,7 @@ on:
       - 'src/endless-progression.js'
       - 'src/meta-progression.js'
       - 'src/dev-tools-endless.js'
+      - 'src/stage01-remodel.js'
       - 'scripts/build-fingerprint.mjs'
       - 'scripts/endless-progression-browser-qa.mjs'
       - '.github/workflows/endless-progression-browser-qa.yml'
