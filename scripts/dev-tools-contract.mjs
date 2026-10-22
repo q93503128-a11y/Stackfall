@@ -15,10 +15,10 @@ const checks=[
   ['manual combat cleanup clears stale map-event state',dev.includes('window.closeMapEventOverlays?.();state.mapEventActive=null')],
   ['developer actions expose visible success or failure feedback',dev.includes("let devActionMessage='준비됨'")&&dev.includes("setDevAction(result?.ok?")&&dev.includes("result?.reason||'unknown'")],
   ['Stage and Endless developer tools are visually separated',endless.includes('STAGE TOOLS')&&endless.includes('ENDLESS TOOLS')&&endless.includes('dev-stage-section')&&endless.includes('dev-endless-section')],
-  ['Endless developer tools expose all eight world events',[
-    "'vault','성운 보관소'","'crash','추락한 우주선'","'void','공허 균열'","'distress','조난 신호'",
-    "'meteor','유성 광맥'","'predator','포식성 성운'","'relay','중계기 복구'","'storm','항성 폭풍의 눈'"
-  ].every(token=>endless.includes(token))],
+  ['Endless developer tools expose only the canonical three world events',[
+    "'vault','성운 보관소'","'crash','추락한 우주선'","'void','공허 균열'"
+  ].every(token=>endless.includes(token))&&!["'distress','조난 신호'","'meteor','유성 광맥'","'predator','포식성 성운'","'relay','중계기 복구'","'storm','항성 폭풍의 눈'"].some(token=>endless.includes(token))],
+  ['runtime canonical world-event list matches developer source',controls.includes("Object.freeze(['vault','crash','void'])")&&endless.includes("['vault','성운 보관소'],['crash','추락한 우주선'],['void','공허 균열']")],
   ['Endless developer tools can spawn mini boss boss void boss and apex',endless.includes("spawnElite('mini'")&&endless.includes("spawnElite('boss'")&&endless.includes("spawnElite('void'")&&endless.includes('spawnApex(apexSelect.value)')],
   ['developer apex spawn uses the normal Apex encounter director',endless.includes('state.bossBags.apex=[form]')&&endless.includes('updateApexSystems(0,true)')],
   ['developer tools can force Apex phases 1 through 4',endless.includes('PHASE 4 · TERMINAL')&&endless.includes('apexElapsed=settings.time')&&endless.includes('applyEndlessApexPhase')],
