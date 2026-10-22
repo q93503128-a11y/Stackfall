@@ -1,0 +1,241 @@
+{
+  "startedAt": "2026-10-22T07:27:05.178Z",
+  "url": "https://stackfall.pages.dev/?dev=1",
+  "screenshots": [
+    "01-desktop-menu.png",
+    "02-desktop-endless.png",
+    "03-desktop-hud-mutated.png",
+    "04-desktop-multi-boss.png",
+    "05-desktop-dense-combat.png",
+    "06-laptop-dense-combat.png",
+    "07-mobile-menu.png",
+    "08-mobile-endless.png",
+    "09-mobile-multi-boss.png",
+    "10-mobile-level-choice.png"
+  ],
+  "observations": [
+    {
+      "label": "snapshot",
+      "mode": "menu",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "scroll": [
+        1920,
+        1080
+      ],
+      "overflow": [],
+      "canvas": 3,
+      "bossHidden": true,
+      "bossName": "Boss",
+      "bossExtras": 0,
+      "hp": "100 / 100",
+      "timer": "00:00",
+      "level": "1",
+      "combo": "0"
+    },
+    {
+      "label": "snapshot",
+      "mode": "playing",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "scroll": [
+        1920,
+        1080
+      ],
+      "overflow": [],
+      "canvas": 3,
+      "bossHidden": true,
+      "bossName": "Boss",
+      "bossExtras": 0,
+      "hp": "100 / 100",
+      "timer": "00:00",
+      "level": "2",
+      "combo": "0"
+    },
+    {
+      "label": "snapshot",
+      "mode": "playing",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "scroll": [
+        1920,
+        1080
+      ],
+      "overflow": [],
+      "canvas": 3,
+      "bossHidden": true,
+      "bossName": "Boss",
+      "bossExtras": 0,
+      "hp": "73 / 120 +17",
+      "timer": "02:06",
+      "level": "8",
+      "combo": "7"
+    },
+    {
+      "label": "snapshot",
+      "mode": "playing",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "scroll": [
+        1920,
+        1080
+      ],
+      "overflow": [],
+      "canvas": 3,
+      "bossHidden": false,
+      "bossName": "일식의 군주",
+      "bossExtras": 0,
+      "hp": "73 / 120 +17",
+      "timer": "02:07",
+      "level": "8",
+      "combo": "0"
+    },
+    {
+      "label": "snapshot",
+      "mode": "playing",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "scroll": [
+        1920,
+        1080
+      ],
+      "overflow": [],
+      "canvas": 3,
+      "bossHidden": true,
+      "bossName": "일식의 군주",
+      "bossExtras": 0,
+      "hp": "100 / 100 +49",
+      "timer": "00:03",
+      "level": "1",
+      "combo": "0"
+    },
+    {
+      "label": "snapshot",
+      "mode": "playing",
+      "viewport": [
+        1280,
+        720
+      ],
+      "scroll": [
+        1280,
+        720
+      ],
+      "overflow": [],
+      "canvas": 3,
+      "bossHidden": true,
+      "bossName": "일식의 군주",
+      "bossExtras": 0,
+      "hp": "100 / 100 +62",
+      "timer": "00:04",
+      "level": "1",
+      "combo": "0"
+    },
+    {
+      "label": "snapshot",
+      "mode": "menu",
+      "viewport": [
+        390,
+        844
+      ],
+      "scroll": [
+        390,
+        844
+      ],
+      "overflow": [],
+      "canvas": 3,
+      "bossHidden": true,
+      "bossName": "일식의 군주",
+      "bossExtras": 0,
+      "hp": "100 / 100 +62",
+      "timer": "00:04",
+      "level": "1",
+      "combo": "0"
+    },
+    {
+      "label": "snapshot",
+      "mode": "playing",
+      "viewport": [
+        390,
+        844
+      ],
+      "scroll": [
+        390,
+        844
+      ],
+      "overflow": [],
+      "canvas": 3,
+      "bossHidden": true,
+      "bossName": "일식의 군주",
+      "bossExtras": 0,
+      "hp": "100 / 100",
+      "timer": "00:00",
+      "level": "2",
+      "combo": "0"
+    },
+    {
+      "label": "snapshot",
+      "mode": "playing",
+      "viewport": [
+        390,
+        844
+      ],
+      "scroll": [
+        390,
+        844
+      ],
+      "overflow": [],
+      "canvas": 3,
+      "bossHidden": false,
+      "bossName": "일식의 군주",
+      "bossExtras": 0,
+      "hp": "100 / 100",
+      "timer": "00:01",
+      "level": "2",
+      "combo": "0"
+    },
+    {
+      "label": "snapshot",
+      "mode": "choice",
+      "viewport": [
+        390,
+        844
+      ],
+      "scroll": [
+        390,
+        844
+      ],
+      "overflow": [],
+      "canvas": 3,
+      "bossHidden": false,
+      "bossName": "일식의 군주",
+      "bossExtras": 0,
+      "hp": "100 / 100",
+      "timer": "00:01",
+      "level": "2",
+      "combo": "0"
+    }
+  ],
+  "consoleErrors": [],
+  "exceptions": [],
+  "hudMutation": {
+    "hp": "73 / 120 +17",
+    "hpWidth": "60.8333%",
+    "xpWidth": "45%",
+    "level": "8",
+    "timer": "02:05",
+    "combo": "7",
+    "comboActive": true
+  },
+  "ok": true,
+  "endedAt": "2026-10-22T07:27:36.006Z"
+}
