@@ -20,3 +20,21 @@ new_label = "const w=46,lx=clamp(x-w/2,5,vw-w-5),bottomEdge=dy>0&&sy<=sx,ly=clam
 if old_label not in render_src:
     raise SystemExit('event arrow label anchor missing')
 render_path.write_text(render_src.replace(old_label, new_label, 1), encoding='utf-8')
+
+contract_path = Path('scripts/community-feedback-contract.mjs')
+contract_src = contract_path.read_text(encoding='utf-8')
+old_name = 'mobile landscape keeps desktop composition and nearby event guidance'
+new_name = 'mobile landscape keeps desktop composition and visible event guidance'
+if old_name not in contract_src:
+    raise SystemExit('mobile landscape contract name anchor missing')
+contract_src = contract_src.replace(old_name, new_name, 1)
+old_contract_distance = "read('src/map-event-expansion.js').includes('d=rand(520,700)')"
+new_contract_distance = "read('src/map-event-expansion.js').includes('d=rand(720,930)')"
+if old_contract_distance not in contract_src:
+    raise SystemExit('mobile landscape distance contract anchor missing')
+contract_src = contract_src.replace(old_contract_distance, new_contract_distance, 1)
+old_guide_anchor = "&&read('src/map-event-expansion.js').includes('function eventGuideFrame()')"
+new_guide_anchor = "&&darkCosmic.includes('bottomMargin=phoneLandscape?100:76')&&darkCosmic.includes('bottomEdge=dy>0&&sy<=sx')&&read('src/map-event-expansion.js').includes('function eventGuideFrame()')"
+if old_guide_anchor not in contract_src:
+    raise SystemExit('mobile landscape guidance contract anchor missing')
+contract_path.write_text(contract_src.replace(old_guide_anchor, new_guide_anchor, 1), encoding='utf-8')
