@@ -1,6 +1,6 @@
 name: Temporary Stackfall performance pass 5
 
-# retry after contract syntax fix
+# retry after contract syntax fixes
 on:
   push:
     paths:
@@ -30,11 +30,15 @@ jobs:
           from pathlib import Path
           p=Path('scripts/performance-audit-contract.mjs')
           text=p.read_text(encoding='utf-8')
-          old="&&!realm.includes('ctx.globalAlpha=(.05+(i%4)*.022)*intensity;ctx.strokeStyle=`rgba(${color},${.34+.28*intensity})`'))," 
-          new="&&!realm.includes('ctx.globalAlpha=(.05+(i%4)*.022)*intensity;ctx.strokeStyle=`rgba(${color},${.34+.28*intensity})`')],"
-          if text.count(old)!=1:
-              raise RuntimeError('contract typo repair target not unique')
-          p.write_text(text.replace(old,new,1),encoding='utf-8')
+          repairs=[
+              ("&&!realm.includes('ctx.globalAlpha=(.05+(i%4)*.022)*intensity;ctx.strokeStyle=`rgba(${color},${.34+.28*intensity})`')),", "&&!realm.includes('ctx.globalAlpha=(.05+(i%4)*.022)*intensity;ctx.strokeStyle=`rgba(${color},${.34+.28*intensity})`')],"),
+              ("&&!entities.includes('ctx.font=`800 ${t.size}px IBM Plex Sans KR`')),", "&&!entities.includes('ctx.font=`800 ${t.size}px IBM Plex Sans KR`')],"),
+          ]
+          for old,new in repairs:
+              if text.count(old)!=1:
+                  raise RuntimeError(f'contract typo repair target not unique: {old}')
+              text=text.replace(old,new,1)
+          p.write_text(text,encoding='utf-8')
           PY
       - name: Validate optimized runtime
         shell: bash
