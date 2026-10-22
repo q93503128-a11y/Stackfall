@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
     paths:
+      - 'src/endless-progression.js'
+      - 'src/meta-progression.js'
+      - 'src/dev-tools-endless.js'
+      - 'scripts/build-fingerprint.mjs'
       - 'scripts/endless-progression-browser-qa.mjs'
       - '.github/workflows/endless-progression-browser-qa.yml'
 
