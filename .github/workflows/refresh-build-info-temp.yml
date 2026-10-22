@@ -33,3 +33,5 @@ jobs:
           git add src/build-info.js
           git commit -m 'chore: refresh build fingerprint'
           git push origin HEAD:main
+
+# temporary rerun marker: stage01-audio-fix
