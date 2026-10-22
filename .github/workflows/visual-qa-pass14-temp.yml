@@ -37,6 +37,13 @@ jobs:
           node --check scripts/visual-qa-pass14-temp.mjs
       - name: Capture live visual QA
         run: node scripts/visual-qa-pass14-temp.mjs
+      - name: Upload visual QA artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stackfall-visual-qa-pass14
+          path: test-results/visual-pass14
+          if-no-files-found: error
       - name: Commit screenshots and report
         if: always()
         shell: bash
