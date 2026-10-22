@@ -1,6 +1,8 @@
 let drawProjectiles,drawGravityLens; // Assigned by canonical-weapon-visuals.js.
 const ENEMY_GLOW_CACHE=new Map();
 const RENDER_SCREEN_A={x:0,y:0},RENDER_SCREEN_B={x:0,y:0};
+const EFFECT_TEXT_FONT_CACHE=new Map();
+function effectTextFont(size){let font=EFFECT_TEXT_FONT_CACHE.get(size);if(font)return font;font=`800 ${size}px IBM Plex Sans KR`;if(EFFECT_TEXT_FONT_CACHE.size>=24)EFFECT_TEXT_FONT_CACHE.delete(EFFECT_TEXT_FONT_CACHE.keys().next().value);EFFECT_TEXT_FONT_CACHE.set(size,font);return font;}
 function setRenderScreenPoint(out,x,y){out.x=x-player.x+vw/2;out.y=y-player.y+vh/2;return out;}
 function cachedEnemyGlow(color='#8b79ff'){
   const key=String(color||'#8b79ff');if(ENEMY_GLOW_CACHE.has(key))return ENEMY_GLOW_CACHE.get(key);
@@ -195,7 +197,7 @@ function drawBeamEffects(){
     ctx.strokeStyle='#ffffff';ctx.globalAlpha=alpha*.78;ctx.lineWidth=Math.max(.7,beam.width*.32);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore();
   }
 }
-function drawForegroundEffects(){for(const s of state.entities.shockwaves){const sx=s.x-player.x+vw/2,sy=s.y-player.y+vh/2,r=Math.max(0,Number(s.r)||0);if(sx+r<-24||sx-r>vw+24||sy+r<-24||sy-r>vh+24)continue;ctx.globalAlpha=s.life/s.max;ctx.strokeStyle=s.color;ctx.lineWidth=s.width;ctx.beginPath();ctx.arc(sx,sy,r,0,TAU);ctx.stroke();}ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.textAlign='center';for(const t of state.entities.texts){const sx=t.x-player.x+vw/2,sy=t.y-player.y+vh/2;if(sx<-140||sx>vw+140||sy<-80||sy>vh+80)continue;ctx.globalAlpha=clamp(t.life/t.max,0,1);ctx.fillStyle=t.color;ctx.font=`800 ${t.size}px IBM Plex Sans KR`;ctx.fillText(t.text,sx,sy);}ctx.globalAlpha=1;}
+function drawForegroundEffects(){for(const s of state.entities.shockwaves){const sx=s.x-player.x+vw/2,sy=s.y-player.y+vh/2,r=Math.max(0,Number(s.r)||0);if(sx+r<-24||sx-r>vw+24||sy+r<-24||sy-r>vh+24)continue;ctx.globalAlpha=s.life/s.max;ctx.strokeStyle=s.color;ctx.lineWidth=s.width;ctx.beginPath();ctx.arc(sx,sy,r,0,TAU);ctx.stroke();}ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.textAlign='center';for(const t of state.entities.texts){const sx=t.x-player.x+vw/2,sy=t.y-player.y+vh/2;if(sx<-140||sx>vw+140||sy<-80||sy>vh+80)continue;ctx.globalAlpha=clamp(t.life/t.max,0,1);ctx.fillStyle=t.color;ctx.font=effectTextFont(t.size);ctx.fillText(t.text,sx,sy);}ctx.globalAlpha=1;}
 
 const POST_ROSTER_RASTER_CACHE=new Map();
 function postRosterRaster(key,size,painter){return cachedRasterSurface(POST_ROSTER_RASTER_CACHE,key,size,painter,64);}
