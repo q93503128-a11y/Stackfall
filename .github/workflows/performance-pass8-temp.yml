@@ -20,10 +20,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate patch script
-        run: python -m py_compile scripts/performance-pass8-temp.py
+      - name: Validate patch scripts
+        run: python -m py_compile scripts/performance-pass8-temp.py scripts/performance-pass8-contract-fix.py
       - name: Apply performance pass 8
-        run: python scripts/performance-pass8-temp.py
+        run: |
+          python scripts/performance-pass8-temp.py
+          python scripts/performance-pass8-contract-fix.py
       - name: Validate optimized runtime and regenerate build fingerprint
         run: node scripts/build-fingerprint.mjs
       - name: Commit optimized runtime
@@ -32,7 +34,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/systems-base.js src/build-info.js scripts/performance-audit-contract.mjs
+          git add src/systems-base.js src/build-info.js scripts/performance-audit-contract.mjs scripts/void-boss-contract.mjs
           git diff --cached --check
           git commit -m 'perf: reduce endless spawn and overflow allocation churn'
           git push origin HEAD:main
