@@ -30,7 +30,7 @@ jobs:
           python3 -m http.server 4173 >/tmp/stackfall-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
-          cat > /tmp/stackfall-qa.mjs <<'JS'
+          cat > ./stackfall-qa.mjs <<'JS'
           import { chromium } from 'playwright';
           import fs from 'node:fs';
 
@@ -131,32 +131,21 @@ jobs:
             await page.waitForTimeout(1400);
             const after=await page.evaluate(key=>{
               const entityCounts={}; for(const [name,value] of Object.entries(state.entities||{})) if(Array.isArray(value)) entityCounts[name]=value.length;
-              return {
-                armed:state.awakenedWeapons?.[key]===true && (state.weaponStacks?.[key]||0)>=6,
-                stack:state.weaponStacks?.[key]||0,
-                hp:(state.entities.enemies||[]).reduce((s,e)=>s+(e?.hp||0),0),
-                kills:state.kills||0,
-                entityCounts,
-                snapshot:window.stackfallDeveloperTest?.snapshot?.()||null
-              };
+              return {armed:state.awakenedWeapons?.[key]===true && (state.weaponStacks?.[key]||0)>=6,stack:state.weaponStacks?.[key]||0,hp:(state.entities.enemies||[]).reduce((s,e)=>s+(e?.hp||0),0),kills:state.kills||0,entityCounts};
             },key);
             awakeningResults.push({key,armed:after.armed,stack:after.stack,hpDelta:Math.max(0,before.hp-after.hp),killDelta:Math.max(0,after.kills-before.kills),entityCounts:after.entityCounts,newPageErrors:pageErrors.slice(errorsBefore)});
             if(!after.armed) throw new Error(`awakening did not arm: ${key}`);
             if(pageErrors.length>errorsBefore) throw new Error(`runtime error during awakening ${key}: ${pageErrors.slice(errorsBefore).join(' | ')}`);
           }
 
-          const runtime=await page.evaluate(()=>({
-            eventClockKeys:Object.keys(state.eventClocks||{}),
-            mode:window.stackfallCurrentRunConfig?.().mode||null,
-            awakeningCount:Object.keys(window.stackfallAwakeningDefs||{}).length,
-            developerSnapshot:window.stackfallDeveloperTest?.snapshot?.()||null
-          }));
+          const runtime=await page.evaluate(()=>({eventClockKeys:Object.keys(state.eventClocks||{}),mode:window.stackfallCurrentRunConfig?.().mode||null,awakeningCount:Object.keys(window.stackfallAwakeningDefs||{}).length}));
           const manifest={bossResults,awakeningResults,runtime,pageErrors,consoleErrors};
           fs.writeFileSync('audit/manifest.json',JSON.stringify(manifest,null,2));
           await browser.close();
           if(pageErrors.length) throw new Error(`page errors: ${pageErrors.join(' | ')}`);
           JS
-          node /tmp/stackfall-qa.mjs
+          node ./stackfall-qa.mjs
+          rm -f ./stackfall-qa.mjs
           echo '--- audit manifest summary ---'
           node -e "const m=require('./audit/manifest.json'); console.log(JSON.stringify({bossShots:m.bossResults.length,awakenings:m.awakeningResults.length,eventClockKeys:m.runtime.eventClockKeys,pageErrors:m.pageErrors,consoleErrors:m.consoleErrors.slice(0,5)},null,2))"
       - name: Upload QA captures
