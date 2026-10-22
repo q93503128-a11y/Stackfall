@@ -152,7 +152,7 @@
       if(state.realmTransition)window.cancelRealmTransition?.('space');
       state.mapEventActive=null;clearPendingCombatActions?.();
       for(const key of ENCOUNTER_ENTITY_KEYS){
-        const list=state.entities?.[key];if(Array.isArray(list))list.length=0;
+        const list=state.entities?.[key];if(Array.isArray(list)){if(key==='enemyProjectiles')clearEnemyProjectiles(list);else list.length=0;}
       }
       state.bossActiveId=null;state.apexActiveId=null;state.pendingApexForm=null;state.apexArena=null;state.apexExitPending=false;
       ui.bossBar?.classList.add('hidden');

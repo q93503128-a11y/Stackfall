@@ -80,7 +80,7 @@
     const radius=compactDevice()?255:365,arms=phase>=3?4:3;
     enemy.stage01Dominion={warmup:1.08,life:phase>=3?4.25:3.65,angle:(enemy.phase||0)+.32,dir:enemy.stage01OrbitDir||1,radius,arms,phase,tick:0,visual:0,anchorShot:.72};
     enemy.stage01AttackCd=Math.max(enemy.stage01AttackCd,1.35);enemy.stage01BurstCd=Math.max(enemy.stage01BurstCd,1.65);enemy.stage01LockCd=Math.max(enemy.stage01LockCd,2.0);
-    state.entities.enemyProjectiles.length=0;shockwave(enemy.x,enemy.y,'#7de8ff',175+phase*25,.58,3.4);spawnParticle(enemy.x,enemy.y,'#b9f7ff',10+phase*3,180,4);state.camera.shake=Math.max(state.camera.shake,6+phase);audio.stageAttack?.(STAGE_ID,'orbit-dominion');
+    clearEnemyProjectiles();shockwave(enemy.x,enemy.y,'#7de8ff',175+phase*25,.58,3.4);spawnParticle(enemy.x,enemy.y,'#b9f7ff',10+phase*3,180,4);state.camera.shake=Math.max(state.camera.shake,6+phase);audio.stageAttack?.(STAGE_ID,'orbit-dominion');
   }
   function updateOrbitDominion(enemy,dt){
     const field=enemy.stage01Dominion;if(!field)return false;field.life-=dt;field.warmup-=dt;field.visual-=dt;field.tick-=dt;field.anchorShot-=dt;const active=field.warmup<=0,turn=(active?.62:.18)+field.phase*.075;field.angle+=dt*turn*field.dir;
@@ -95,7 +95,7 @@
     const ratio=clamp(enemy.hp/Math.max(1,enemy.maxHp),0,1),phase=ratio>.68?1:ratio>.34?2:3;
     if(enemy.stagePhase!==phase){
       enemy.stagePhase=phase;enemy.stage01AttackCd=.72;enemy.stage01BurstCd=1.35;enemy.stage01LockCd=2.6;enemy.stage01DominionCd=phase===2?2.8:2.1;enemy.stage01OrbitDir*=-1;enemy.stage01Dominion=null;
-      state.entities.enemyProjectiles.length=0;shockwave(enemy.x,enemy.y,phase===2?'#a59dff':'#79e5ff',260+phase*52,.76,5);spawnParticle(enemy.x,enemy.y,phase===2?'#a99dff':'#83e9ff',22+phase*5,255,5.5);
+      clearEnemyProjectiles();shockwave(enemy.x,enemy.y,phase===2?'#a59dff':'#79e5ff',260+phase*52,.76,5);spawnParticle(enemy.x,enemy.y,phase===2?'#a99dff':'#83e9ff',22+phase*5,255,5.5);
       state.camera.shake=Math.max(state.camera.shake,10+phase*2);state.flash=Math.max(state.flash,.10);enemy.contactSafeUntil=(state.time||0)+.42;audio.stageAttack?.(STAGE_ID,'phase-open');audio.syncAmbient?.(true);
     }
     enemy.speed=enemy.stage01BaseSpeed*(phase===1?.84:phase===2?.94:1.02);

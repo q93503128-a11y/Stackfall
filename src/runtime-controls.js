@@ -133,7 +133,7 @@
         const retiredType=active.type;
         state.mapEventActive=null;
         if(Array.isArray(state.entities?.enemies))compactInPlace(state.entities.enemies,enemy=>!enemy||enemy.eventKind!==retiredType);
-        if(Array.isArray(state.entities?.enemyProjectiles))state.entities.enemyProjectiles.length=0;
+        if(Array.isArray(state.entities?.enemyProjectiles))clearEnemyProjectiles();
         if(Array.isArray(state.entities?.telegraphs))state.entities.telegraphs.length=0;
         if(Array.isArray(state.entities?.beams))state.entities.beams.length=0;
         combatTimer?.classList.add('hidden');
