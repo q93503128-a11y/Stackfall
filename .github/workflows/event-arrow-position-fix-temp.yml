@@ -1,0 +1,40 @@
+name: Temporary Stackfall event arrow position fix
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/event-arrow-position-fix-temp.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate patch script
+        run: python -m py_compile scripts/event-arrow-position-fix-temp.py
+      - name: Apply event arrow fix
+        run: python scripts/event-arrow-position-fix-temp.py
+      - name: Validate patched runtime
+        run: |
+          node --check src/map-event-expansion.js
+          node --check src/dark-cosmic-polish.js
+          node scripts/build-fingerprint.mjs
+      - name: Commit patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/map-event-expansion.js src/dark-cosmic-polish.js src/build-info.js
+          git diff --cached --quiet && { echo 'No patch changes'; exit 1; }
+          git commit -m "fix: restore event distance and raise edge guidance"
+          git push origin HEAD:main
