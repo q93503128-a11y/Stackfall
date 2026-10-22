@@ -177,6 +177,5 @@
     window.stackfallRegisterStageRuntime(STAGE_ID,runtime);
   }
 
-  document.querySelector('#startBtn')?.addEventListener('click',()=>setTimeout(()=>stageAudio.sync(),0));
   window.renderStackfallGalaxyMap?.();
 })();
