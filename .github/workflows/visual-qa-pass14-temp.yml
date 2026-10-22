@@ -1,0 +1,40 @@
+name: Temporary Stackfall visual QA pass 14
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/visual-qa-pass14-temp.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  visual-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate harness
+        run: node --check scripts/visual-qa-pass14-temp.mjs
+      - name: Capture live visual QA
+        run: node scripts/visual-qa-pass14-temp.mjs
+      - name: Commit screenshots and report
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -d test-results/visual-pass14 ]]; then exit 1; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add test-results/visual-pass14
+          git diff --cached --check
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'test: capture Stackfall visual QA pass 14'
+          git push origin HEAD:main
