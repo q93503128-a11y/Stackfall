@@ -6,7 +6,7 @@ expect('player movement telemetry and facing',core.includes('speed:248')&&core.i
 expect('fixed orbit bands',runtime.includes('ORBIT_RADIUS_BANDS')&&!runtime.includes('ORBIT_EQUIPMENT_ORDER')&&runtime.includes('blade:104')&&runtime.includes('prism:151'));
 expect('pickup and hostile projectile silhouettes differ',render.includes("fillStyle='#72e69a'")&&render.includes('drawEnemyProjectileShape')&&community.includes("drawEnemyProjectileShape(p,p.visual||'orb'"));
 expect('cached hostile bullets remain as noncritical fallback',performance.includes('cachedEnemyProjectiles')&&performance.includes('drawCachedProjectiles(state.entities.enemyProjectiles,true)')&&community.includes('previousEnemyProjectileRenderer'));
-expect('gems are culled and cached',performance.includes('cachedGemRenderer')&&render.includes('if(p.x<-32||p.x>vw+32||p.y<-32||p.y>vh+32)continue'));
+expect('gems are culled and cached',performance.includes('cachedGemRenderer')&&render.includes('if(sx<-32||sx>vw+32||sy<-32||sy>vh+32)continue'));
 expect('single canonical entity render definitions remain',render.match(/function drawPlayer\(/g)?.length===1&&render.match(/function drawWells\(/g)?.length===1&&render.match(/function drawEquippedOrbits\(/g)?.length===1);
 expect('movement landmarks and streaks',background.includes('SPACE_LANDMARKS')&&background.includes('drawSpaceLandmarks')&&background.includes('drawMotionStreaks'));
 expect('teleport warning and contact grace',patterns.includes('constellationTeleportDestination')&&patterns.includes('teleportQueued')&&patterns.includes('contactSafeUntil=state.time+.48')&&bosses.includes('(e.contactSafeUntil||0)<=state.time'));
