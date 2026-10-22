@@ -43,23 +43,25 @@ jobs:
           await page.goto('http://127.0.0.1:4173/?dev=1',{waitUntil:'networkidle'});
           await page.waitForFunction(()=>window.stackfallDeveloperTest?.enabled===true,{timeout:20000});
 
+          function forceActiveCombat(){
+            state.startLevelBonusRemaining=0; state.choiceOpening=false; state.choiceLocked=false; state.mode='playing';
+            ui.choice?.classList.add('hidden'); if(ui.choiceCards) ui.choiceCards.innerHTML='';
+            document.querySelector('#awakeningScreen')?.classList.add('hidden');
+            document.querySelector('#bossRewardScreen')?.classList.add('hidden');
+          }
           async function prep(){
             await page.evaluate(()=>{
               const api=window.stackfallDeveloperTest;
-              if(window.stackfallMeta && window.STACKFALL_FEATURE_DEFS){
-                window.stackfallMeta.unlockedFeatures=Object.keys(window.STACKFALL_FEATURE_DEFS);
-                window.stackfallSaveMeta?.();
-              }
-              api.startEndless();
-              api.setInvincible(true);
-              api.setLevelUpsDisabled(true);
+              if(window.stackfallMeta){window.stackfallMeta.unlockedFeatures=['awakening'];window.stackfallSaveMeta?.();}
+              api.startEndless(); api.setInvincible(true); api.setLevelUpsDisabled(true);
+              state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;state.mode='playing';ui.choice?.classList.add('hidden');if(ui.choiceCards)ui.choiceCards.innerHTML='';
               state.weaponSlots=[]; state.weaponStacks={}; state.awakenedWeapons={};
               player.x=0; player.y=0; state.camera.x=0; state.camera.y=0;
               for(const value of Object.values(state.entities||{})) if(Array.isArray(value)) value.length=0;
               state.bossActiveId=null; state.apexActiveId=null; state.apexArena=null;
               updateHUD?.(); renderLoadout?.();
             });
-            await page.waitForTimeout(180);
+            await page.waitForTimeout(120);
           }
 
           async function spawnForm(category,form,phase='base'){
@@ -71,37 +73,23 @@ jobs:
               e.maxHp=Math.max(1000000,Number(e.maxHp)||0); e.hp=e.maxHp;
               state.bossActiveId=e.id;
               if(category==='apex'){
-                state.apexActiveId=e.id;
-                state.apexArena={x:player.x,y:player.y,r:470};
+                state.apexActiveId=e.id;state.apexArena={x:player.x,y:player.y,r:470};
                 if(phase==='final') e.hp=e.maxHp*.12;
               }
               return {id:e.id,name:typeof bossDisplayName==='function'?bossDisplayName(e):(e.name||form),category,form};
             },{category,form,phase});
-            await page.waitForTimeout(phase==='final'?1500:900);
+            await page.waitForTimeout(phase==='final'?1200:700);
             return info;
           }
 
-          const pools={
-            mini:['knight','warden','executioner','colossus','harvester','mirror'],
-            boss:['eclipse','seraph','pulsar','leviathan','archivist','heliarch','tempest','nullengine'],
-            void:['maw','oracle','weaver','grave','paradox'],
-            apex:['chronophage','starforge','lastconstellation']
-          };
+          const pools={mini:['knight','warden','executioner','colossus','harvester','mirror'],boss:['eclipse','seraph','pulsar','leviathan','archivist','heliarch','tempest','nullengine'],void:['maw','oracle','weaver','grave','paradox'],apex:['chronophage','starforge','lastconstellation']};
           const bossResults=[];
-          for(const category of ['mini','boss','void']){
-            for(const form of pools[category]){
-              const info=await spawnForm(category,form);
-              await page.screenshot({path:`audit/bosses/${category}/${form}.png`,fullPage:false});
-              bossResults.push(info);
-            }
+          for(const category of ['mini','boss','void']) for(const form of pools[category]){
+            const info=await spawnForm(category,form);await page.screenshot({path:`audit/bosses/${category}/${form}.png`,fullPage:false});bossResults.push(info);
           }
           for(const form of pools.apex){
-            let info=await spawnForm('apex',form,'base');
-            await page.screenshot({path:`audit/bosses/apex/${form}-base.png`,fullPage:false});
-            bossResults.push({...info,phase:'base'});
-            info=await spawnForm('apex',form,'final');
-            await page.screenshot({path:`audit/bosses/apex/${form}-final.png`,fullPage:false});
-            bossResults.push({...info,phase:'final'});
+            let info=await spawnForm('apex',form,'base');await page.screenshot({path:`audit/bosses/apex/${form}-base.png`,fullPage:false});bossResults.push({...info,phase:'base'});
+            info=await spawnForm('apex',form,'final');await page.screenshot({path:`audit/bosses/apex/${form}-final.png`,fullPage:false});bossResults.push({...info,phase:'final'});
           }
 
           const awakeningKeys=await page.evaluate(()=>Object.keys(window.stackfallAwakeningDefs||{}));
@@ -110,44 +98,27 @@ jobs:
             const errorsBefore=pageErrors.length;
             await page.evaluate(key=>{
               const api=window.stackfallDeveloperTest;
-              api.startEndless(); api.setInvincible(true); api.setLevelUpsDisabled(true);
-              if(window.stackfallMeta && window.STACKFALL_FEATURE_DEFS){
-                window.stackfallMeta.unlockedFeatures=Object.keys(window.STACKFALL_FEATURE_DEFS);
-                window.stackfallSaveMeta?.();
-              }
-              for(const value of Object.values(state.entities||{})) if(Array.isArray(value)) value.length=0;
-              api.equipOnly(key,6,true);
-              player.x=0; player.y=0; state.camera.x=0; state.camera.y=0;
-              const e=spawnEnemy('boss');
-              if(e){e.x=230;e.y=0;e.speed=0;e.damage=0;e.maxHp=Math.max(1000000,e.maxHp||0);e.hp=e.maxHp;state.bossActiveId=e.id;}
-              for(let i=0;i<7;i++){
-                const m=spawnEnemy('normal'); if(!m) continue;
-                const a=i/7*Math.PI*2; m.x=Math.cos(a)*(150+i*9);m.y=Math.sin(a)*(150+i*9);m.speed=0;m.damage=0;m.maxHp=Math.max(250000,m.maxHp||0);m.hp=m.maxHp;
-              }
+              if(window.stackfallMeta){window.stackfallMeta.unlockedFeatures=['awakening'];window.stackfallSaveMeta?.();}
+              api.startEndless();api.setInvincible(true);api.setLevelUpsDisabled(true);
+              state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;state.mode='playing';ui.choice?.classList.add('hidden');if(ui.choiceCards)ui.choiceCards.innerHTML='';
+              for(const value of Object.values(state.entities||{}))if(Array.isArray(value))value.length=0;
+              api.equipOnly(key,6,true);player.x=0;player.y=0;state.camera.x=0;state.camera.y=0;
+              const e=spawnEnemy('boss');if(e){e.x=230;e.y=0;e.speed=0;e.damage=0;e.maxHp=Math.max(1000000,e.maxHp||0);e.hp=e.maxHp;state.bossActiveId=e.id;}
+              for(let i=0;i<7;i++){const m=spawnEnemy('normal');if(!m)continue;const a=i/7*Math.PI*2;m.x=Math.cos(a)*(150+i*9);m.y=Math.sin(a)*(150+i*9);m.speed=0;m.damage=0;m.maxHp=Math.max(250000,m.maxHp||0);m.hp=m.maxHp;}
             },key);
             const before=await page.evaluate(()=>({hp:(state.entities.enemies||[]).reduce((s,e)=>s+(e?.hp||0),0),kills:state.kills||0}));
-            await page.waitForTimeout(2200);
-            await page.screenshot({path:`audit/awakenings/${key}.png`,fullPage:false});
-            await page.waitForTimeout(1400);
-            const after=await page.evaluate(key=>{
-              const entityCounts={}; for(const [name,value] of Object.entries(state.entities||{})) if(Array.isArray(value)) entityCounts[name]=value.length;
-              return {armed:state.awakenedWeapons?.[key]===true && (state.weaponStacks?.[key]||0)>=6,stack:state.weaponStacks?.[key]||0,hp:(state.entities.enemies||[]).reduce((s,e)=>s+(e?.hp||0),0),kills:state.kills||0,entityCounts};
-            },key);
+            await page.waitForTimeout(1800);await page.screenshot({path:`audit/awakenings/${key}.png`,fullPage:false});await page.waitForTimeout(1000);
+            const after=await page.evaluate(key=>{const entityCounts={};for(const[name,value]of Object.entries(state.entities||{}))if(Array.isArray(value))entityCounts[name]=value.length;return{armed:state.awakenedWeapons?.[key]===true&&(state.weaponStacks?.[key]||0)>=6,stack:state.weaponStacks?.[key]||0,hp:(state.entities.enemies||[]).reduce((s,e)=>s+(e?.hp||0),0),kills:state.kills||0,entityCounts};},key);
             awakeningResults.push({key,armed:after.armed,stack:after.stack,hpDelta:Math.max(0,before.hp-after.hp),killDelta:Math.max(0,after.kills-before.kills),entityCounts:after.entityCounts,newPageErrors:pageErrors.slice(errorsBefore)});
-            if(!after.armed) throw new Error(`awakening did not arm: ${key}`);
-            if(pageErrors.length>errorsBefore) throw new Error(`runtime error during awakening ${key}: ${pageErrors.slice(errorsBefore).join(' | ')}`);
+            if(!after.armed)throw new Error(`awakening did not arm: ${key}`);if(pageErrors.length>errorsBefore)throw new Error(`runtime error during awakening ${key}: ${pageErrors.slice(errorsBefore).join(' | ')}`);
           }
 
-          const runtime=await page.evaluate(()=>({eventClockKeys:Object.keys(state.eventClocks||{}),mode:window.stackfallCurrentRunConfig?.().mode||null,awakeningCount:Object.keys(window.stackfallAwakeningDefs||{}).length}));
-          const manifest={bossResults,awakeningResults,runtime,pageErrors,consoleErrors};
-          fs.writeFileSync('audit/manifest.json',JSON.stringify(manifest,null,2));
-          await browser.close();
-          if(pageErrors.length) throw new Error(`page errors: ${pageErrors.join(' | ')}`);
+          const runtime=await page.evaluate(()=>({eventClockKeys:Object.keys(state.eventClocks||{}),mode:window.stackfallCurrentRunConfig?.().mode||null,awakeningCount:Object.keys(window.stackfallAwakeningDefs||{}).length,stateMode:state.mode}));
+          const manifest={bossResults,awakeningResults,runtime,pageErrors,consoleErrors};fs.writeFileSync('audit/manifest.json',JSON.stringify(manifest,null,2));await browser.close();if(pageErrors.length)throw new Error(`page errors: ${pageErrors.join(' | ')}`);
           JS
           node ./stackfall-qa.mjs
           rm -f ./stackfall-qa.mjs
-          echo '--- audit manifest summary ---'
-          node -e "const m=require('./audit/manifest.json'); console.log(JSON.stringify({bossShots:m.bossResults.length,awakenings:m.awakeningResults.length,eventClockKeys:m.runtime.eventClockKeys,pageErrors:m.pageErrors,consoleErrors:m.consoleErrors.slice(0,5)},null,2))"
+          node -e "const m=require('./audit/manifest.json'); console.log(JSON.stringify({bossShots:m.bossResults.length,awakenings:m.awakeningResults.length,eventClockKeys:m.runtime.eventClockKeys,stateMode:m.runtime.stateMode,pageErrors:m.pageErrors,consoleErrors:m.consoleErrors.slice(0,5),activeAwakenings:m.awakeningResults.filter(x=>x.hpDelta>0||Object.values(x.entityCounts).some(n=>n>0)).length},null,2))"
       - name: Upload QA captures
         uses: actions/upload-artifact@v4
         with:
