@@ -1,0 +1,46 @@
+name: Temporary Stackfall mobile landscape pass 15
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/mobile-landscape-pass15-temp.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate patch script
+        run: python -m py_compile scripts/mobile-landscape-pass15-temp.py
+      - name: Apply mobile landscape patch
+        run: python scripts/mobile-landscape-pass15-temp.py
+      - name: Validate patched runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/map-event-expansion.js
+          node --check scripts/community-feedback-contract.mjs
+          node scripts/community-feedback-contract.mjs
+          node scripts/build-fingerprint.mjs
+          git diff --check
+      - name: Commit patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/map-event-expansion.js styles.css scripts/community-feedback-contract.mjs src/build-info.js
+          git diff --cached --check
+          git commit -m 'feat: adapt Stackfall for mobile landscape play'
+          git push origin HEAD:main
