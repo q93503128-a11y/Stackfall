@@ -49,7 +49,7 @@
   const EVENT_TYPES=Object.freeze([...EVENT_CLOCK_KEYS]);
   function dueType(){const now=state.time||0,eligible=[];for(const type of EVENT_TYPES){const value=Number(state.eventClocks?.[type]);if(!Number.isFinite(value)||value>0||now<(state.eventBlockedUntil?.[type]||0)||type===state.lastMapEventType)continue;eligible.push(type);}return eligible.length?eligible[Math.floor(Math.random()*eligible.length)]:null;}
   function spawnMarker(type,options={}){
-    if(state.mapEventActive||state.entities.mapEvents.length)return false;const a=Math.random()*TAU,d=rand(520,700),m=meta(type),authored=options.authored===true,life=authored?150:LIMITS.marker;
+    if(state.mapEventActive||state.entities.mapEvents.length)return false;const a=Math.random()*TAU,d=rand(720,930),m=meta(type),authored=options.authored===true,life=authored?150:LIMITS.marker;
     state.eventGlobalCooldown=Math.max(state.eventGlobalCooldown||0,EVENT_GAP);state.entities.mapEvents=[{type,x:player.x+Math.cos(a)*d,y:player.y+Math.sin(a)*d,pulse:0,life,maxLife:life,spawnedAt:state.time||0,consumed:false,authored}];showBossNotice(m.name,tx('eventDetected'));return true;
   }
   window.stackfallSpawnAuthoredMapEvent=function(type){
