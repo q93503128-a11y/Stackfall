@@ -61,9 +61,10 @@ function drawSpaceLandmarks(){const ox=player.x*.42,oy=player.y*.42;for(const ma
 function drawTraversalParallax(theme='space'){
   const tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,stageOne=theme==='stage-01',stageTwo=theme==='stage-02',limit=stageOne?(tier===2?5:tier===1?7:10):stageTwo?(tier===2?4:tier===1?6:8):(tier===2?8:tier===1?14:24),move=Math.hypot(player.moveVX||0,player.moveVY||0),moving=clamp(move/Math.max(1,player.speed||248),0,1),palette=stageTwo?'130,232,255':String(theme).startsWith('stage-')?'154,211,255':theme==='void'?'181,132,255':'145,215,255';
   ctx.save();ctx.lineCap='round';
+  const vx=player.moveVX||0,vy=player.moveVY||0,d=move||1,nx=vx/d,ny=vy/d;
   for(let i=0;i<limit;i++){
     const m=TRAVEL_MARKERS[i],parallax=m.layer?.34:.18,x=wrap(m.x-player.x*parallax,1900)-100,y=wrap(m.y-player.y*parallax,1350)-80;if(x<-60||x>vw+60||y<-60||y>vh+60)continue;
-    const vx=player.moveVX||0,vy=player.moveVY||0,d=Math.hypot(vx,vy)||1,nx=vx/d,ny=vy/d,len=m.len*(.72+moving*.75);
+    const len=m.len*(.72+moving*.75);
     const special=stageOne||stageTwo;ctx.globalAlpha=m.a*(stageOne?.42:stageTwo?.30:.72)*(1+moving*(stageOne?.38:stageTwo?.28:.65));ctx.strokeStyle=`rgba(${palette},${stageOne?.20+moving*.12:stageTwo?.16+moving*.10:.28+moving*.22})`;ctx.lineWidth=special?(m.layer?.9:.6):(m.layer?1.15:.75);ctx.beginPath();ctx.moveTo(x-nx*len*.7,y-ny*len*.7);ctx.lineTo(x+nx*len*.3,y+ny*len*.3);ctx.stroke();
   }
   ctx.restore();
