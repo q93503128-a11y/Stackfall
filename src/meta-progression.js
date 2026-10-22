@@ -65,7 +65,7 @@
   function isPassiveChoiceUnlocked(key){if(key==='multiplicity')return isFeatureUnlocked('multiplicity-protocol');return true;}
   function featureName(key){const def=FEATURE_DEFS[key];return def?.[GAME_SETTINGS?.language]||def?.en||def?.ko||key;}
   function syncFeatureEntries(){
-    const endless=document.querySelector('#startBtn');if(endless){const unlocked=isFeatureUnlocked('endless');endless.disabled=!unlocked;endless.classList.toggle('locked',!unlocked);endless.title=unlocked?'':'Stage 6 클리어 후 엔드리스 해금';}
+    const endless=document.querySelector('#startBtn');if(endless){const unlocked=isFeatureUnlocked('endless');endless.disabled=!unlocked;endless.classList.toggle('locked',!unlocked);endless.title='';}
   }
   function unlockWeapon(key){
     if(!WEAPONS[key]||isWeaponUnlocked(key))return false;
