@@ -3,8 +3,6 @@ name: One-shot five-event refinement QA
 on:
   push:
     branches: [main]
-    paths:
-      - '.github/workflows/tmp-five-event-qa.yml'
 
 permissions:
   contents: read
@@ -35,5 +33,3 @@ jobs:
           path: test-results/five-event-refinement
           if-no-files-found: warn
           retention-days: 2
-
-# one-shot trigger
