@@ -23,9 +23,18 @@
       ['lastconstellation','무명의 마지막 성좌']
     ]
   };
+  const ENCOUNTER_ENTITY_KEYS=Object.freeze(['enemies','enemyProjectiles','projectiles','telegraphs','beams','curves','wells','mapEvents']);
+  const COMBAT_OVERLAY_SELECTORS=Object.freeze(['#awakeningScreen','#bossRewardScreen','#apexRewardScreen']);
+  const APEX_PHASE_SETTINGS=Object.freeze({
+    1:Object.freeze({hp:.90,time:0}),
+    2:Object.freeze({hp:.70,time:106}),
+    3:Object.freeze({hp:.45,time:181}),
+    4:Object.freeze({hp:.20,time:241})
+  });
   const pairOptions=pairs=>'<option value="random">무작위</option>'+pairs.map(([id,name])=>`<option value="${id}">${name}</option>`).join('');
   const eventOptions=EVENT_TYPES.map(([id,name])=>`<option value="${id}">${name}</option>`).join('');
   const formatSpeed=value=>Number.isInteger(value)?`${value}`:Number(value).toFixed(1);
+  const poolFor=category=>ELITE_POOLS[category]||[];
 
   let attempts=0;
   function mount(){
@@ -118,17 +127,17 @@
 
     const endless=panel.querySelector('#devEndlessTools');
     if(!endless)return;
-    const status=endless.querySelector('#devEndlessStatus');
+    const query=selector=>endless.querySelector(selector);
+    const status=query('#devEndlessStatus');
     const setStatus=(message,ok=true)=>{status.textContent=`${ok?'✓':'✕'} ${message}`;};
+    const hide=selector=>document.querySelector(selector)?.classList.add('hidden');
 
     function forceActiveCombat(){
       state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;
       if(!['cinematic','worldEvent'].includes(state.mode))state.mode='playing';
       ui.choice?.classList.add('hidden');if(ui.choiceCards)ui.choiceCards.innerHTML='';
       ui.pauseScreen?.classList.add('hidden');
-      document.querySelector('#awakeningScreen')?.classList.add('hidden');
-      document.querySelector('#bossRewardScreen')?.classList.add('hidden');
-      document.querySelector('#apexRewardScreen')?.classList.add('hidden');
+      for(const selector of COMBAT_OVERLAY_SELECTORS)hide(selector);
     }
     function ensureEndless(){
       const config=window.stackfallCurrentRunConfig?.();
@@ -139,10 +148,10 @@
     }
     function clearEncounterState(){
       window.closeMapEventOverlays?.();
-      document.querySelector('#worldEventScreen')?.classList.add('hidden');
+      hide('#worldEventScreen');
       if(state.realmTransition)window.cancelRealmTransition?.('space');
       state.mapEventActive=null;clearPendingCombatActions?.();
-      for(const key of['enemies','enemyProjectiles','projectiles','telegraphs','beams','curves','wells','mapEvents']){
+      for(const key of ENCOUNTER_ENTITY_KEYS){
         const list=state.entities?.[key];if(Array.isArray(list))list.length=0;
       }
       state.bossActiveId=null;state.apexActiveId=null;state.pendingApexForm=null;state.apexArena=null;state.apexExitPending=false;
@@ -150,22 +159,23 @@
       forceActiveCombat();
     }
     function resolveForm(category,requested){
-      const pool=ELITE_POOLS[category]||[];
+      const pool=poolFor(category);
       if(requested&&requested!=='random'&&pool.some(([id])=>id===requested))return requested;
       return pool[Math.floor(Math.random()*pool.length)]?.[0]||null;
     }
     function displayName(category,form){
-      return (ELITE_POOLS[category]||[]).find(([id])=>id===form)?.[1]||form;
+      return poolFor(category).find(([id])=>id===form)?.[1]||form;
+    }
+    function moveEliteNearPlayer(enemy){
+      const dx=player.x+Math.min(285,Math.max(210,enemy.r*3.2))-enemy.x,dy=player.y-enemy.y,group=enemy.twinGroup;
+      for(const actor of state.entities.enemies||[])if(actor===enemy||(group&&actor.twinGroup===group)){actor.x+=dx;actor.y+=dy;}
     }
     function spawnElite(category,requested){
       if(!ensureEndless())return{ok:false,reason:'endless-start-failed'};
       clearEncounterState();
       const form=resolveForm(category,requested);if(!form)return{ok:false,reason:'form-missing'};
       const enemy=window.stackfallSpawnEliteForm?.(category,form);if(!enemy)return{ok:false,reason:'spawn-failed',form};
-      const dx=player.x+Math.min(285,Math.max(210,enemy.r*3.2))-enemy.x,dy=player.y-enemy.y;
-      const group=enemy.twinGroup;
-      for(const actor of state.entities.enemies||[])if(actor===enemy||(group&&actor.twinGroup===group)){actor.x+=dx;actor.y+=dy;}
-      updateHUD?.();
+      moveEliteNearPlayer(enemy);updateHUD?.();
       return{ok:true,form,id:enemy.id,name:displayName(category,form)};
     }
     function spawnEvent(type,immediate=false){
@@ -191,15 +201,14 @@
     function applyApexPhase(phase){
       const target=(state.entities.enemies||[]).find(enemy=>!enemy.dead&&enemy.id===state.apexActiveId&&enemy.kind==='apex');
       if(!target)return{ok:false,reason:'apex-not-active'};
-      const p=Math.max(1,Math.min(4,Math.floor(Number(phase)||1))),settings={
-        1:{hp:.90,time:0},2:{hp:.70,time:106},3:{hp:.45,time:181},4:{hp:.20,time:241}
-      }[p];
+      const p=Math.max(1,Math.min(4,Math.floor(Number(phase)||1))),settings=APEX_PHASE_SETTINGS[p];
       target.hp=Math.max(1,target.maxHp*settings.hp);target.apexElapsed=settings.time;target.skillCd=Math.min(target.skillCd||.4,.35);target.burstCd=Math.min(target.burstCd||.6,.55);target.pulseCd=Math.min(target.pulseCd||.8,.75);target.signatureCd=.25;target.apexSetpieceCd=.4;
       return{ok:true,phase:p,name:typeof bossDisplayName==='function'?bossDisplayName(target):(target.name||'APEX')};
     }
 
-    const eventSelect=endless.querySelector('#devEndlessEvent'),miniSelect=endless.querySelector('#devMiniForm'),bossSelect=endless.querySelector('#devBossForm'),voidSelect=endless.querySelector('#devVoidForm'),apexSelect=endless.querySelector('#devApexForm'),phaseSelect=endless.querySelector('#devApexPhase');
-    const speedRange=endless.querySelector('#devGameSpeed'),speedValue=endless.querySelector('#devGameSpeedValue');
+    const eventSelect=query('#devEndlessEvent'),miniSelect=query('#devMiniForm'),bossSelect=query('#devBossForm'),voidSelect=query('#devVoidForm'),apexSelect=query('#devApexForm'),phaseSelect=query('#devApexPhase');
+    const speedRange=query('#devGameSpeed'),speedValue=query('#devGameSpeedValue');
+    const onClick=(selector,handler)=>query(selector)?.addEventListener('click',handler);
     function syncSpeed(value=window.stackfallGameSpeed?.()||state.gameSpeed||1){
       const next=Math.max(1,Math.min(10,Number(value)||1));speedRange.value=String(next);speedValue.textContent=`×${formatSpeed(next)}`;
     }
@@ -207,17 +216,17 @@
       const next=window.stackfallSetGameSpeed?.(Number(value),{silent:true})??1;syncSpeed(next);setStatus(`배속 ×${formatSpeed(next)}`,true);return next;
     }
 
-    endless.querySelector('#devEndlessClean')?.addEventListener('click',()=>{
+    onClick('#devEndlessClean',()=>{
       const ok=ensureEndless();if(ok)clearEncounterState();setStatus(ok?'Endless 새 런 시작 · 전투 정리 완료':'Endless 시작 실패',ok);
     });
     panel.querySelector('#devEndless')?.addEventListener('click',()=>queueMicrotask(()=>{forceActiveCombat();syncSpeed();}));
-    endless.querySelector('#devEventSignal')?.addEventListener('click',()=>{const result=spawnEvent(eventSelect.value,false);setStatus(result.ok?`${result.name} 신호 생성`:`이벤트 신호 실패 · ${result.reason}`,result.ok);});
-    endless.querySelector('#devEventNow')?.addEventListener('click',()=>{const result=spawnEvent(eventSelect.value,true);setStatus(result.ok?`${result.name} 즉시 시작`:`이벤트 시작 실패 · ${result.reason}`,result.ok);});
-    endless.querySelector('#devSpawnMini')?.addEventListener('click',()=>{const result=spawnElite('mini',miniSelect.value);setStatus(result.ok?`${result.name} 등장`:`중간보스 실패 · ${result.reason}`,result.ok);});
-    endless.querySelector('#devSpawnBoss')?.addEventListener('click',()=>{const result=spawnElite('boss',bossSelect.value);setStatus(result.ok?`${result.name} 등장`:`보스 실패 · ${result.reason}`,result.ok);});
-    endless.querySelector('#devSpawnVoid')?.addEventListener('click',()=>{const result=spawnElite('void',voidSelect.value);setStatus(result.ok?`${result.name} 등장`:`균열 보스 실패 · ${result.reason}`,result.ok);});
-    endless.querySelector('#devSpawnApex')?.addEventListener('click',()=>{const result=spawnApex(apexSelect.value);setStatus(result.ok?`${result.name} 정상 초월체 연출 시작`:`초월체 실패 · ${result.reason}`,result.ok);});
-    endless.querySelector('#devApplyApexPhase')?.addEventListener('click',()=>{const result=applyApexPhase(phaseSelect.value);setStatus(result.ok?`${result.name} · PHASE ${result.phase}`:`페이즈 적용 실패 · ${result.reason}`,result.ok);});
+    onClick('#devEventSignal',()=>{const result=spawnEvent(eventSelect.value,false);setStatus(result.ok?`${result.name} 신호 생성`:`이벤트 신호 실패 · ${result.reason}`,result.ok);});
+    onClick('#devEventNow',()=>{const result=spawnEvent(eventSelect.value,true);setStatus(result.ok?`${result.name} 즉시 시작`:`이벤트 시작 실패 · ${result.reason}`,result.ok);});
+    onClick('#devSpawnMini',()=>{const result=spawnElite('mini',miniSelect.value);setStatus(result.ok?`${result.name} 등장`:`중간보스 실패 · ${result.reason}`,result.ok);});
+    onClick('#devSpawnBoss',()=>{const result=spawnElite('boss',bossSelect.value);setStatus(result.ok?`${result.name} 등장`:`보스 실패 · ${result.reason}`,result.ok);});
+    onClick('#devSpawnVoid',()=>{const result=spawnElite('void',voidSelect.value);setStatus(result.ok?`${result.name} 등장`:`균열 보스 실패 · ${result.reason}`,result.ok);});
+    onClick('#devSpawnApex',()=>{const result=spawnApex(apexSelect.value);setStatus(result.ok?`${result.name} 정상 초월체 연출 시작`:`초월체 실패 · ${result.reason}`,result.ok);});
+    onClick('#devApplyApexPhase',()=>{const result=applyApexPhase(phaseSelect.value);setStatus(result.ok?`${result.name} · PHASE ${result.phase}`:`페이즈 적용 실패 · ${result.reason}`,result.ok);});
     speedRange?.addEventListener('input',event=>setSpeed(event.target.value));
     for(const button of endless.querySelectorAll('[data-dev-speed]'))button.addEventListener('click',()=>setSpeed(button.dataset.devSpeed));
     syncSpeed();
