@@ -23,21 +23,44 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Wait for deployed build fingerprint
+      - name: Wait for exact deployed progression sources
         shell: bash
         run: |
           set -euo pipefail
-          expected=$(node --input-type=module -e "import {computeBuildFingerprint} from './scripts/build-fingerprint.mjs'; console.log(computeBuildFingerprint(process.cwd()).sha)")
+          files=(
+            index.html
+            src/endless-progression.js
+            src/meta-progression.js
+            src/dev-tools-endless.js
+            src/runtime-controls.js
+            src/meta-upgrades.js
+            src/weapon-awakening.js
+          )
           for attempt in $(seq 1 32); do
-            body=$(curl -fsS "https://stackfall.pages.dev/src/build-info.js?endless-qa=${GITHUB_SHA}-${attempt}" || true)
-            if printf '%s' "$body" | grep -Fq "$expected"; then
-              echo "deployed fingerprint matched on attempt $attempt"
+            ok=1
+            for file in "${files[@]}"; do
+              expected=$(sha256sum "$file" | awk '{print $1}')
+              tmp=$(mktemp)
+              if ! curl -fsS "https://stackfall.pages.dev/${file}?endless-qa=${GITHUB_SHA}-${attempt}" -o "$tmp"; then
+                ok=0
+                rm -f "$tmp"
+                break
+              fi
+              actual=$(sha256sum "$tmp" | awk '{print $1}')
+              rm -f "$tmp"
+              if [ "$actual" != "$expected" ]; then
+                ok=0
+                break
+              fi
+            done
+            if [ "$ok" -eq 1 ]; then
+              echo "all progression sources matched deployed bytes on attempt $attempt"
               exit 0
             fi
-            echo "attempt $attempt: deployment not ready"
+            echo "attempt $attempt: deployed progression sources not current"
             sleep 15
           done
-          echo "deployed fingerprint did not match $expected" >&2
+          echo "deployed progression sources did not match current main bytes" >&2
           exit 1
       - name: Run live progression QA
         env:
