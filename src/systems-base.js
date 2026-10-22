@@ -13,9 +13,10 @@ function clearRunUiActions(){for(const timer of runUiTimers)clearTimeout(timer);
 function scheduleUiAction(delay,action){const run=state.runSerial,timer=setTimeout(()=>{runUiTimers.delete(timer);if(state.runSerial===run)action();},Math.max(0,delay));runUiTimers.add(timer);return timer;}
 function clearPendingCombatActions(){if(state.pendingActions)state.pendingActions.length=0;}
 function scheduleWeaponAction(delay,action){if(typeof action!=='function')return null;const pending=state.pendingActions||(state.pendingActions=[]),environmentContext=state.stageEnvironmentTelegraphContext?{...state.stageEnvironmentTelegraphContext}:null,entry={remaining:Math.max(0,Number(delay)||0)/1000,runSerial:state.runSerial,action,environmentContext};if(pending.length>=320)pending.splice(0,pending.length-319);pending.push(entry);return entry;}
+const PENDING_ACTION_DUE=[];
 function updatePendingActions(dt){
   const pending=state.pendingActions;if(!pending?.length||state.mode!=='playing')return;
-  const currentRun=state.runSerial,due=[],initial=pending.length;let write=0;
+  const currentRun=state.runSerial,due=PENDING_ACTION_DUE,initial=pending.length;due.length=0;let write=0;
   for(let read=0;read<initial;read++){const entry=pending[read];if(!entry||entry.runSerial!==currentRun||typeof entry.action!=='function')continue;entry.remaining-=dt;if(entry.remaining<=0)due.push(entry);else pending[write++]=entry;}
   pending.length=write;
   for(const entry of due){
@@ -26,9 +27,11 @@ function updatePendingActions(dt){
   }
 }
 function forEachNearbyEnemyCandidate(x,y,range,visit){if(typeof performanceForEachNearbyEnemy==='function')return performanceForEachNearbyEnemy(x,y,range,visit);const nearby=typeof performanceNearbyEnemies==='function'?performanceNearbyEnemies(x,y,range):state.entities.enemies;for(const enemy of nearby)visit(enemy);}
-function enemyConfig(type){const t=state.time||0,threat=1+Math.floor(t/60),baseScale=enemyHpMult(),configs={grunt:{r:13,hp:22,speed:50,damage:6,color:'#7769ff',xp:3,name:'공허 유체'},fast:{r:11,hp:17,speed:82,damage:5,color:'#ff4f9a',xp:3,name:'추적 혜성'},ranged:{r:15,hp:34,speed:45,damage:7,color:'#ff6f7d',xp:5,name:'성운 포격체'},tank:{r:22,hp:82,speed:31,damage:10,color:'#ff9f43',xp:8,name:'성간 보루'},mini:{r:34,hp:420,speed:43,damage:14,color:'#d85cff',xp:42,name:'균열의 기사'},boss:{r:58,hp:1850,speed:30,damage:18,color:'#ff536f',xp:160,name:'일식의 군주'}},c=configs[type]||configs.grunt,tier=type==='mini'?1+t/820:type==='boss'?1+t/700:1,damageScale=1+Math.min(.45,t/1500)+Math.max(0,threat-1)*.015;return{...c,hp:c.hp*baseScale*tier,damage:c.damage*damageScale};}
+const ENEMY_BASE_CONFIGS={grunt:{r:13,hp:22,speed:50,damage:6,color:'#7769ff',xp:3,name:'공허 유체'},fast:{r:11,hp:17,speed:82,damage:5,color:'#ff4f9a',xp:3,name:'추적 혜성'},ranged:{r:15,hp:34,speed:45,damage:7,color:'#ff6f7d',xp:5,name:'성운 포격체'},tank:{r:22,hp:82,speed:31,damage:10,color:'#ff9f43',xp:8,name:'성간 보루'},mini:{r:34,hp:420,speed:43,damage:14,color:'#d85cff',xp:42,name:'균열의 기사'},boss:{r:58,hp:1850,speed:30,damage:18,color:'#ff536f',xp:160,name:'일식의 군주'}};
+const ELITE_SPAWN_KINDS=new Set(['mini','boss','void','apex']),ELITE_TWIN_FORMS=new Set(['mirror','paradox']);
+function enemyConfig(type){const t=state.time||0,threat=1+Math.floor(t/60),baseScale=enemyHpMult(),c=ENEMY_BASE_CONFIGS[type]||ENEMY_BASE_CONFIGS.grunt,tier=type==='mini'?1+t/820:type==='boss'?1+t/700:1,damageScale=1+Math.min(.45,t/1500)+Math.max(0,threat-1)*.015;return{...c,hp:c.hp*baseScale*tier,damage:c.damage*damageScale};}
 function makeEnemyRoom(kind){
-  const elite=['mini','boss','void','apex'].includes(kind),cap=entityCap('enemies'),normalCap=Math.max(24,cap-7);
+  const elite=ELITE_SPAWN_KINDS.has(kind),cap=entityCap('enemies'),normalCap=Math.max(24,cap-7);
   let liveCount=0;for(const e of state.entities.enemies)if(e&&!e.dead)liveCount++;
   if(!elite&&liveCount>=normalCap)return false;
   if(elite&&liveCount>=cap){
@@ -65,23 +68,24 @@ function mergeExperienceGem(x,y,value,baseRadius=4,vx=0,vy=0){
 }
 function compressExperience(){
   const gems=state.entities.gems,cap=entityCap('gems');if(!gems||gems.length<=cap)return;if(cap<=0){gems.length=0;return;}
-  const ranked=gems.filter(Boolean).sort((a,b)=>((a.x-player.x)**2+(a.y-player.y)**2)-((b.x-player.x)**2+(b.y-player.y)**2)),keep=ranked.slice(0,cap),overflow=ranked.slice(cap);
-  for(const far of overflow){
-    if(!keep.length)break;let anchor=keep[0],best=Infinity;
-    for(const near of keep){const dx=near.x-far.x,dy=near.y-far.y,d2=dx*dx+dy*dy;if(d2<best){best=d2;anchor=near;}}
+  const ranked=EXPERIENCE_ANCHORS;ranked.length=0;for(let i=0;i<gems.length;i++){const gem=gems[i];if(gem)ranked.push(gem);}ranked.sort((a,b)=>((a.x-player.x)**2+(a.y-player.y)**2)-((b.x-player.x)**2+(b.y-player.y)**2));
+  const keepCount=Math.min(cap,ranked.length);
+  if(keepCount>0)for(let farIndex=keepCount;farIndex<ranked.length;farIndex++){
+    const far=ranked[farIndex];let anchor=ranked[0],best=Infinity;
+    for(let nearIndex=0;nearIndex<keepCount;nearIndex++){const near=ranked[nearIndex],dx=near.x-far.x,dy=near.y-far.y,d2=dx*dx+dy*dy;if(d2<best){best=d2;anchor=near;}}
     const amount=Math.max(0,Number(far.value)||0);anchor.value=(Number(anchor.value)||0)+amount;anchor.compressedValue=(anchor.compressedValue||0)+amount;anchor.r=experienceGemRadius(anchor.value,Math.max(Number(anchor.r)||4,Number(far.r)||4));anchor.life=Math.max(Number(anchor.life)||0,Number(far.life)||0,35);anchor.pulse=(anchor.pulse||0)+.55;
   }
-  gems.length=0;gems.push(...keep);
+  gems.length=keepCount;for(let i=0;i<keepCount;i++)gems[i]=ranked[i];ranked.length=0;
 }
 function createEliteTwin(enemy){
-  if(!enemy||!['mirror','paradox'].includes(enemy.eliteForm))return null;
+  if(!enemy||!ELITE_TWIN_FORMS.has(enemy.eliteForm))return null;
   const group=`twins-${enemy.id}`,ratio=enemy.eliteForm==='paradox'?.72:.68,baseHp=enemy.hp*ratio,baseXp=enemy.xp*.62,angle=Math.atan2(enemy.y-player.y,enemy.x-player.x),normal={x:-Math.sin(angle),y:Math.cos(angle)},gap=enemy.r*1.7;
   enemy.twinGroup=group;enemy.twinSide=-1;enemy.noEliteReward=true;enemy.hp=enemy.maxHp=baseHp;enemy.xp=baseXp;enemy.x+=normal.x*gap;enemy.y+=normal.y*gap;
   const twin={...enemy,id:state.nextId++,x:enemy.x-normal.x*gap*2,y:enemy.y-normal.y*gap*2,phase:(enemy.phase||0)+Math.PI,skillCd:(enemy.skillCd||3)+.45,burstCd:(enemy.burstCd||6)+.75,pulseCd:(enemy.pulseCd||8)+.3,twinSide:1,noEliteReward:true,dead:false};
   twin.color=enemy.eliteForm==='paradox'?'#8d6bce':'#e3d8ff';state.entities.enemies.push(twin);return twin;
 }
 function spawnEnemy(kind='normal'){
-  if(!makeEnemyRoom(kind))return null;const a=Math.random()*TAU,radius=Math.min(Math.max(vw,vh)*.52,690)+rand(50,150),eliteKind=['mini','boss','void','apex'].includes(kind)?kind:null;let type;
+  if(!makeEnemyRoom(kind))return null;const a=Math.random()*TAU,radius=Math.min(Math.max(vw,vh)*.52,690)+rand(50,150),eliteKind=ELITE_SPAWN_KINDS.has(kind)?kind:null;let type;
   if(kind==='mini')type='mini';else if(kind==='boss'||kind==='void'||kind==='apex')type='boss';else{const t=state.time||0,fastChance=clamp(.07+t/520,.07,.27),tankChance=clamp((t-70)/480,0,.17),rangedChance=clamp((t-55)/650,0,.13)*(window.stackfallDifficultyConfig?.().rangedChance||1),roll=Math.random();type=roll<tankChance?'tank':roll<tankChance+rangedChance?'ranged':roll<tankChance+rangedChance+fastChance?'fast':'grunt';}
   const cfg=enemyConfig(type),threat=1+Math.floor((state.time||0)/60),speedScale=1+Math.min(.55,(state.time||0)/1500)+Math.min(.20,Math.max(0,threat-1)*.012),enemy={id:state.nextId++,type,kind:eliteKind||'normal',variant:null,name:cfg.name,x:player.x+Math.cos(a)*radius,y:player.y+Math.sin(a)*radius,r:cfg.r,hp:cfg.hp,maxHp:cfg.hp,speed:cfg.speed*speedScale,damage:cfg.damage,color:cfg.color,xp:cfg.xp,hit:0,dead:false,phase:Math.random()*TAU,skillCd:type==='boss'?2.4:type==='mini'?3.2:999,burstCd:type==='boss'?5.4:type==='mini'?6.2:999,pulseCd:type==='boss'?8.2:999,rangedCd:type==='ranged'?rand(1.0,1.8):999,strafeDir:Math.random()<.5?-1:1,dash:0,dashX:0,dashY:0};
   if(eliteKind&&typeof configureElite==='function')configureElite(enemy,eliteKind);state.entities.enemies.push(enemy);const twin=createEliteTwin(enemy);

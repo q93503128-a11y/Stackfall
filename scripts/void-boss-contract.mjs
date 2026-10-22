@@ -6,7 +6,7 @@ const checks=[
  ['boss bags use Fisher-Yates rather than random sort',catalog.includes('function shuffledBossPool')&&catalog.includes('Math.floor(Math.random()*(i+1))')&&!catalog.includes("bag=[...pool].sort(()=>Math.random()-.5)")],
  ['bag refills avoid immediate repeats across resets',catalog.includes('state.lastBossForms=state.lastBossForms||{}')&&catalog.includes('bag[bag.length-1]===lastForm')&&catalog.includes('state.lastBossForms[kind]=form')],
  ['five void patterns remain distinct',['maw','oracle','weaver','grave','paradox'].every(form=>patterns.includes(`f==='${form}'`))],
- ['paradox still creates a real twin',systems.includes("['mirror','paradox'].includes(enemy.eliteForm)")&&systems.includes('twinSide=-1')&&systems.includes('twinSide:1')],
+ ['paradox still creates a real twin',systems.includes("const ELITE_SPAWN_KINDS=new Set(['mini','boss','void','apex']),ELITE_TWIN_FORMS=new Set(['mirror','paradox'])")&&systems.includes('ELITE_TWIN_FORMS.has(enemy.eliteForm)')&&systems.includes('twinSide=-1')&&systems.includes('twinSide:1')],
  ['oracle and paradox no longer reuse another boss silhouette',renderers.includes("f==='oracle'")&&renderers.includes("f==='paradox'")&&!renderers.includes("f==='archivist'||f==='oracle'")&&!renderers.includes("f==='mirror'||f==='paradox'")],
  ['maw and weaver use different silhouette geometry',renderers.includes("f==='maw'")&&renderers.includes("ctx.ellipse(0,0,e.r*1.18,e.r*.78")&&renderers.includes("f==='weaver'")&&renderers.includes('for(let i=0;i<8;i++){const a=i/8*TAU')],
  ['oracle and paradox projectiles have distinct visual families',catalog.includes("if(form==='oracle')return'rune'")&&catalog.includes("if(form==='paradox')return'mirror'")],
