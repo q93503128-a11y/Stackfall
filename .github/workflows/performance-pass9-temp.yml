@@ -20,10 +20,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate patch script
-        run: python -m py_compile scripts/performance-pass9-temp.py
+      - name: Validate patch scripts
+        run: python -m py_compile scripts/performance-pass9-temp.py scripts/performance-pass9-contract-fix.py
       - name: Apply performance pass 9
-        run: python scripts/performance-pass9-temp.py
+        run: |
+          python scripts/performance-pass9-temp.py
+          python scripts/performance-pass9-contract-fix.py
       - name: Validate optimized runtime and regenerate build fingerprint
         run: node scripts/build-fingerprint.mjs
       - name: Commit optimized runtime
