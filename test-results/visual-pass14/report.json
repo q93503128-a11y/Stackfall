@@ -1,5 +1,5 @@
 {
-  "startedAt": "2026-10-22T07:39:28.636Z",
+  "startedAt": "2026-10-22T07:44:35.835Z",
   "url": "https://stackfall.pages.dev/?dev=1",
   "screenshots": [
     "01-desktop-menu.png",
@@ -115,7 +115,7 @@
       "bossName": "일식의 군주",
       "bossExtras": 0,
       "hp": "100 / 100 +49",
-      "timer": "00:03",
+      "timer": "00:02",
       "level": "1",
       "combo": "0"
     },
@@ -237,5 +237,5 @@
     "comboActive": true
   },
   "ok": true,
-  "endedAt": "2026-10-22T07:39:58.060Z"
+  "endedAt": "2026-10-22T07:45:06.254Z"
 }
