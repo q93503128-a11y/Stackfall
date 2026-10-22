@@ -34,8 +34,20 @@ jobs:
           done
           echo "Live deployment did not reach expected fingerprint: $expected" >&2
           exit 1
-      - name: Validate QA harness
-        run: node --check scripts/mobile-landscape-pass15-qa-temp.mjs
+      - name: Repair and validate QA harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/mobile-landscape-pass15-qa-temp.mjs')
+          s=p.read_text(encoding='utf-8')
+          old='return{label,viewport:'
+          new='return{label:${JSON.stringify(label)},viewport:'
+          if old not in s: raise SystemExit('QA label anchor missing')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
+          node --check scripts/mobile-landscape-pass15-qa-temp.mjs
       - name: Capture mobile landscape QA
         run: node scripts/mobile-landscape-pass15-qa-temp.mjs
       - name: Upload screenshots
@@ -45,4 +57,4 @@ jobs:
           name: stackfall-mobile-landscape-pass15
           path: test-results/mobile-landscape-pass15
           if-no-files-found: error
-# trigger pass 15 QA
+# trigger pass 15 QA repair
