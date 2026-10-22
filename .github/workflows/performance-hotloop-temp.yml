@@ -1,0 +1,145 @@
+name: Temporary Stackfall performance hot-loop patch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/performance-hotloop-temp.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply behavior-preserving hot-loop optimizations
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          def replace_once(path, old, new):
+              p=Path(path); text=p.read_text()
+              count=text.count(old)
+              if count!=1:
+                  raise SystemExit(f'{path}: expected 1 exact match, got {count}')
+              p.write_text(text.replace(old,new,1))
+
+          # GPU: cache parsed tints, reuse simulation heading, and sample the clock once per particle sync.
+          replace_once('src/gpu-renderer.js',
+              "  const warned=new Set();\n",
+              "  const warned=new Set();\n  const tintCache=new Map();\n  const TINT_CACHE_LIMIT=96;\n")
+
+          old_parse="""  function parseColor(value,fallback=0xffffff){
+    if(typeof value!=='string')return fallback;
+    const text=value.trim();
+    if(/^#[0-9a-f]{6}$/i.test(text))return Number.parseInt(text.slice(1),16);
+    if(/^#[0-9a-f]{3}$/i.test(text)){const r=Number.parseInt(text[1],16),g=Number.parseInt(text[2],16),b=Number.parseInt(text[3],16);return(r*17<<16)|(g*17<<8)|(b*17);}
+    const rgb=text.match(/^rgba?\\(\\s*(\\d+)[,\\s]+(\\d+)[,\\s]+(\\d+)/i);
+    if(rgb)return(clamp(Number(rgb[1]),0,255)<<16)|(clamp(Number(rgb[2]),0,255)<<8)|clamp(Number(rgb[3]),0,255);
+    return fallback;
+  }
+"""
+          new_parse="""  function cacheTint(key,value){
+    if(tintCache.size>=TINT_CACHE_LIMIT&&!tintCache.has(key))tintCache.delete(tintCache.keys().next().value);
+    tintCache.set(key,value);return value;
+  }
+  function parseColor(value,fallback=0xffffff){
+    if(typeof value!=='string')return fallback;
+    const text=value.trim(),cached=tintCache.get(text);if(cached!==undefined)return cached;
+    if(/^#[0-9a-f]{6}$/i.test(text))return cacheTint(text,Number.parseInt(text.slice(1),16));
+    if(/^#[0-9a-f]{3}$/i.test(text)){const r=Number.parseInt(text[1],16),g=Number.parseInt(text[2],16),b=Number.parseInt(text[3],16);return cacheTint(text,(r*17<<16)|(g*17<<8)|(b*17));}
+    const rgb=text.match(/^rgba?\\(\\s*(\\d+)[,\\s]+(\\d+)[,\\s]+(\\d+)/i);
+    if(rgb)return cacheTint(text,(clamp(Number(rgb[1]),0,255)<<16)|(clamp(Number(rgb[2]),0,255)<<8)|clamp(Number(rgb[3]),0,255));
+    return fallback;
+  }
+"""
+          replace_once('src/gpu-renderer.js',old_parse,new_parse)
+          replace_once('src/gpu-renderer.js',
+              "sprite.rotation=Math.atan2(p.vy||0,p.vx||0);sprite.tint=parseColor(p.color,0xff6c91);",
+              "sprite.rotation=Number.isFinite(p.heading)?p.heading:Math.atan2(p.vy||0,p.vx||0);sprite.tint=parseColor(p.color,0xff6c91);")
+          replace_once('src/gpu-renderer.js',
+              "    const tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,limit=Math.min(list.length,tier===2?24:tier===1?72:compactDevice()?120:220);\n",
+              "    const tier=typeof stackfallPerformanceTier==='function'?stackfallPerformanceTier():0,limit=Math.min(list.length,tier===2?24:tier===1?72:compactDevice()?120:220),rotationBase=performance.now()*.002;\n")
+          replace_once('src/gpu-renderer.js',
+              "      sprite.rotation=p.star?(performance.now()*.002+i*.73):0;",
+              "      sprite.rotation=p.star?(rotationBase+i*.73):0;")
+
+          # Enemy bullets already calculate heading in simulation; use squared distance for lifetime culling.
+          replace_once('src/bosses.js',
+              "if(Math.hypot(player.x-p.x,player.y-p.y)>1900)p.life=0;",
+              "const cullDx=player.x-p.x,cullDy=player.y-p.y;if(cullDx*cullDx+cullDy*cullDy>3610000)p.life=0;")
+
+          # XP gems only need sqrt while inside magnet range; pickup checks can remain squared.
+          systems=Path('src/systems.js')
+          text=systems.read_text()
+          pattern=r"function updateGems\(dt\)\{.*?\}\nfunction tryLevelUp"
+          replacement="""function updateGems(dt){
+  const range=Math.max(24,Number(magnetRange())||74),range2=range*range,pickupRange2=(player.r+10)**2,magnetStacks=stat('magnet'),gems=state.entities.gems,drag=Math.pow(.04,dt);
+  for(const g of gems){
+    if(!g||!Number.isFinite(g.x)||!Number.isFinite(g.y)){if(g)g.life=0;continue;}
+    g.life=Number.isFinite(g.life)?g.life-dt:0;g.pulse=Number.isFinite(g.pulse)?g.pulse+dt*5:dt*5;g.vx=Number.isFinite(g.vx)?g.vx:0;g.vy=Number.isFinite(g.vy)?g.vy:0;g.r=Number.isFinite(g.r)?clamp(g.r,2,14):4;g.value=Number.isFinite(g.value)?Math.max(0,g.value):0;g.x+=g.vx*dt;g.y+=g.vy*dt;g.vx*=drag;g.vy*=drag;
+    const dx=player.x-g.x,dy=player.y-g.y,d2=dx*dx+dy*dy;
+    if(d2<range2){const d=Math.sqrt(d2)||1,force=270+(range-d)*(7.5+magnetStacks*.4);g.vx+=dx/d*force*dt;g.vy+=dy/d*force*dt;}
+    if(d2<pickupRange2){g.life=0;gainXp(g.value*xpMult());audio.pickup();spawnParticle(g.x,g.y,COLORS.cyan,3,70,2);}
+  }
+  compactInPlace(gems,keepLiveGem);
+}
+function tryLevelUp"""
+          text2,n=re.subn(pattern,replacement,text,count=1,flags=re.S)
+          if n!=1: raise SystemExit(f'src/systems.js: updateGems replacement count={n}')
+          systems.write_text(text2)
+
+          # Avoid the classic fixed-step spiral: normal-speed play catches up at most 4 steps in one render callback,
+          # then discards excess lag debt. Developer accelerated modes retain the existing 12-step headroom.
+          replace_once('src/render.js',
+              "const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0,lastRenderAt=0,simulationAccumulator=0;const TARGET_RENDER_INTERVAL=1000/60,SIMULATION_STEP=1/60,MAX_SIMULATION_STEPS=12,runtimeUpdateMusic=typeof audio.updateMusic==='function'?audio.updateMusic.bind(audio):null;",
+              "const stackfallLoopGeneration=window.__stackfallLoopGeneration=(window.__stackfallLoopGeneration||0)+1;let last=performance.now(),hudRefresh=0,lastRenderAt=0,simulationAccumulator=0;const TARGET_RENDER_INTERVAL=1000/60,SIMULATION_STEP=1/60,MAX_SIMULATION_STEPS=12,MAX_REALTIME_CATCHUP_STEPS=4,runtimeUpdateMusic=typeof audio.updateMusic==='function'?audio.updateMusic.bind(audio):null;")
+          replace_once('src/render.js',
+              "      let simulationSteps=0;\n      while(simulationAccumulator>=SIMULATION_STEP&&simulationSteps<MAX_SIMULATION_STEPS&&state.mode==='playing'){",
+              "      let simulationSteps=0;const maxSimulationSteps=gameSpeed>1?MAX_SIMULATION_STEPS:MAX_REALTIME_CATCHUP_STEPS;\n      while(simulationAccumulator>=SIMULATION_STEP&&simulationSteps<maxSimulationSteps&&state.mode==='playing'){")
+          replace_once('src/render.js',
+              "      }\n      shouldDraw=true;\n    }else if(state.mode==='cinematic')",
+              "      }\n      if(gameSpeed===1&&simulationSteps>=maxSimulationSteps&&simulationAccumulator>=SIMULATION_STEP)simulationAccumulator%=SIMULATION_STEP;\n      shouldDraw=true;\n    }else if(state.mode==='cinematic')")
+
+          # Strengthen the performance contract around the new hot-path invariants.
+          perf=Path('scripts/performance-audit-contract.mjs')
+          ptext=perf.read_text()
+          ptext=ptext.replace("const systems=read('src/systems-base.js');\n", "const systems=read('src/systems-base.js');\nconst runtimeSystems=read('src/systems.js');\nconst bosses=read('src/bosses.js');\n",1)
+          old=" ['missed render frames retain elapsed time with bounded 60 Hz catch-up including developer 10x headroom',render.includes('frameDt=Math.min(.1,')&&render.includes('MAX_SIMULATION_STEPS=12')&&render.includes('dt=SIMULATION_STEP')],"
+          new=" ['missed render frames use bounded 60 Hz catch-up without spiral while retaining developer 10x headroom',render.includes('frameDt=Math.min(.1,')&&render.includes('MAX_SIMULATION_STEPS=12')&&render.includes('MAX_REALTIME_CATCHUP_STEPS=4')&&render.includes('maxSimulationSteps=gameSpeed>1?MAX_SIMULATION_STEPS:MAX_REALTIME_CATCHUP_STEPS')&&render.includes('simulationAccumulator%=SIMULATION_STEP')&&render.includes('dt=SIMULATION_STEP')],"
+          if old not in ptext: raise SystemExit('performance contract catch-up check not found')
+          ptext=ptext.replace(old,new,1)
+          marker=" ['GPU degraded cadence remains at least 30 FPS and does not use the old 24 FPS cap',gpu.includes('cap=emergency?30:tier===2?40:tier===1?50:60')&&!/cap\\s*=.*\\?24:/.test(gpu)],\n"
+          extra=marker+" ['GPU hot loops cache tint parsing, reuse simulated hostile heading, and sample particle rotation clock once',gpu.includes('const tintCache=new Map()')&&gpu.includes('Number.isFinite(p.heading)?p.heading:Math.atan2')&&gpu.includes('rotationBase=performance.now()*.002')&&!gpu.includes('p.star?(performance.now()*.002+i*.73):0')],\n ['enemy projectile lifetime culling avoids per-projectile sqrt',bosses.includes('cullDx*cullDx+cullDy*cullDy>3610000')&&!bosses.includes('Math.hypot(player.x-p.x,player.y-p.y)>1900')],\n ['gem magnet update avoids sqrt until a gem enters magnet range',runtimeSystems.includes('const dx=player.x-g.x,dy=player.y-g.y,d2=dx*dx+dy*dy')&&runtimeSystems.includes('if(d2<range2){const d=Math.sqrt(d2)||1')],\n"
+          if marker not in ptext: raise SystemExit('performance contract GPU marker not found')
+          ptext=ptext.replace(marker,extra,1)
+          perf.write_text(ptext)
+          PY
+
+          node --check src/gpu-renderer.js
+          node --check src/bosses.js
+          node --check src/systems.js
+          node --check src/render.js
+          node scripts/performance-audit-contract.mjs
+          node scripts/apex-encounter-contract.mjs
+          node scripts/boss-identity-contract.mjs
+          node scripts/build-fingerprint.mjs
+      - name: Commit optimized runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/gpu-renderer.js src/bosses.js src/systems.js src/render.js scripts/performance-audit-contract.mjs src/build-info.js
+          git diff --cached --check
+          git commit -m 'perf: reduce endless hot-loop overhead'
+          git push origin HEAD:main
