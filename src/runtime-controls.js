@@ -114,6 +114,13 @@
 
   syncSpeedButton();
 
+  if(!document.querySelector('script[data-stackfall-event-refinement]')){
+    const refinement=document.createElement('script');
+    refinement.src='src/endless-event-refinement.js';
+    refinement.dataset.stackfallEventRefinement='1';
+    document.head.appendChild(refinement);
+  }
+
   if(new URLSearchParams(location.search).get('dev')==='1'&&!document.querySelector('script[data-stackfall-dev-endless]')){
     const extension=document.createElement('script');
     extension.src='src/dev-tools-endless.js';
