@@ -32,7 +32,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/render-entities.js src/build-info.js scripts/performance-audit-contract.mjs
+          git add src/render-entities.js src/build-info.js scripts/performance-audit-contract.mjs scripts/community-feedback-contract.mjs
           git diff --cached --check
           git commit -m 'perf: reduce combat render hot-loop overhead'
           git push origin HEAD:main
