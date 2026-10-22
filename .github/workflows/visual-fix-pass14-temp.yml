@@ -40,8 +40,8 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add styles.css src/interface.js src/ability-ledger-audit.js scripts/community-feedback-contract.mjs src/build-info.js
+          git add styles.css feature-pack.css src/interface.js src/ability-ledger-audit.js scripts/community-feedback-contract.mjs src/build-info.js
           git diff --cached --check
-          git commit -m 'fix: resolve mobile visual QA regressions'
+          git commit -m 'fix: finish mobile hub visual QA corrections'
           git push origin HEAD:main
-# trigger pass 14 visual repair rerun
+# trigger final pass 14 mobile hub repair
