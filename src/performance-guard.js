@@ -122,11 +122,12 @@
     for(let move=nextLength-1;move>index;move--){nearestEnemyBuffer[move]=nearestEnemyBuffer[move-1];nearestDistanceBuffer[move]=nearestDistanceBuffer[move-1];}
     nearestEnemyBuffer[index]=e;nearestDistanceBuffer[index]=distance;
   }
-  function nearestIndexedEnemies(x,y,count,excluded=null,maxRange=Infinity){
+  function nearestIndexedEnemies(x,y,count,excluded=null,maxRange=Infinity,out=null){
     if(!grid.size)rebuildEnemyGrid();
     nearestQueryX=x;nearestQueryY=y;nearestQueryCount=Math.max(0,Math.floor(count));nearestQueryLimit=Number.isFinite(maxRange)?maxRange*maxRange:Infinity;nearestQueryExcluded=excluded;
     nearestEnemyBuffer.length=0;nearestDistanceBuffer.length=0;
     if(Number.isFinite(maxRange))forEachNearbyEnemy(x,y,maxRange,considerNearestEnemy);else for(const enemy of enemyIndex.values())considerNearestEnemy(enemy);
+    if(Array.isArray(out)){out.length=nearestEnemyBuffer.length;for(let i=0;i<nearestEnemyBuffer.length;i++)out[i]=nearestEnemyBuffer[i];return out;}
     return nearestEnemyBuffer.slice();
   }
   function nearestIndexedEnemy(x,y,maxRange=Infinity,predicate=null){
