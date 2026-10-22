@@ -66,7 +66,7 @@ expect('normal Boomerang retains its non-lunar curved energy blade',!entities.in
 expect('awakened Lunar Return owns the lunar phase transformation',awakening.includes('function drawMoonBoomerang(p)')&&awakening.includes("p.stage='return'")&&awakening.includes('p.awMoonPhase=1-.86*clamp(p.returnLife/1.15,0,1)'));
 
 expect('damage results include timeline series and per-series toggles',damage.includes('damageTrend')&&damage.includes('damageTrendHidden'));
-expect('runtime keeps explicit x1 and x2 combat speed control',runtimeControls.includes("speed.textContent=state.gameSpeed===2?'×2':'×1'")&&runtimeControls.includes('stackfallGameSpeed'));
+expect('normal HUD keeps explicit x1/x2 toggle while developer mode may request higher simulation speed',runtimeControls.includes("speed.addEventListener('click',()=>setGameSpeed(state.gameSpeed===1?2:1))")&&runtimeControls.includes('window.stackfallGameSpeed')&&runtimeControls.includes('window.stackfallSetGameSpeed'));
 expect('difficulty continues to scale Stardust rewards but not unlock currency',difficulty.includes("rewardMultiplier:.85")&&difficulty.includes("rewardMultiplier:1.40")&&difficulty.includes("rewardMultiplier:1.70")&&design.includes('무기 해금과 Core Shard는 난이도 배율로 줄이거나 늘리지 않는다'));
 expect('unused awakening cores cash out at run end',design.includes('남은 코어는 런 종료 시 **1개당 기본 Stardust 40**')||design.includes('1개당 기본 Stardust 40'));
 expect('shield capacity remains additive across independent sources',rewards.includes("registerShieldCapacitySource('trait-aegis'")&&rewards.includes("registerShieldCapacitySource('augment-bulwark'")&&design.includes('보호막 최대치 기여량을 **합산**'));
