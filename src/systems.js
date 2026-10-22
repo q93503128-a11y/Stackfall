@@ -14,6 +14,7 @@ function updateHomingProjectile(p,dt){
   const delta=Math.atan2(Math.sin(desired-current),Math.cos(desired-current)),turn=Math.max(.1,Number(p.homingTurn)||6.4),next=current+clamp(delta,-turn*dt,turn*dt);
   p.vx=Math.cos(next)*speed;p.vy=Math.sin(next)*speed;
 }
+const PROJECTILE_TRAIL_SOURCES=new Set(['ember','echo-star','comet','echo-comet','core','core-echo','star-spark','wave','meteor-drone','echo-drone','drone-burst','spiral-bolt','echo-spiral','mirror-return','mirror-counter']);
 function updateProjectiles(dt){
   const spawned=[],collisionCandidates=[];
   for(const p of state.entities.projectiles){
@@ -27,7 +28,7 @@ function updateProjectiles(dt){
     }else{updateHomingProjectile(p,dt);p.x+=p.vx*dt;p.y+=p.vy*dt;}
     p.life-=dt;p.trailTick=(p.trailTick||0)-dt;
     if(Number.isFinite(p.maxRange)){const ox=Number.isFinite(p.originX)?p.originX:player.x,oy=Number.isFinite(p.originY)?p.originY:player.y;if((p.x-ox)**2+(p.y-oy)**2>p.maxRange*p.maxRange)p.life=0;}
-    if(p.life>0&&p.trailTick<=0&&['ember','echo-star','comet','echo-comet','core','core-echo','star-spark','wave','meteor-drone','echo-drone','drone-burst','spiral-bolt','echo-spiral','mirror-return','mirror-counter'].includes(p.source)){p.trailTick=compactDevice()?.055:p.source.includes('comet')?.024:.045;if(state.entities.particles.length<entityCap('particles')&&GAME_SETTINGS.hideProjectiles!==true)state.entities.particles.push({x:p.x-p.vx*.018,y:p.y-p.vy*.018,vx:rand(-12,12),vy:rand(-12,12),life:p.source.includes('comet')?.42:.25,max:p.source.includes('comet')?.42:.25,size:p.source.includes('comet')?rand(2,5):rand(1.2,3.2),color:p.color||COLORS.white,star:true});}
+    if(p.life>0&&p.trailTick<=0&&PROJECTILE_TRAIL_SOURCES.has(p.source)){p.trailTick=compactDevice()?.055:p.source.includes('comet')?.024:.045;if(state.entities.particles.length<entityCap('particles')&&GAME_SETTINGS.hideProjectiles!==true)state.entities.particles.push({x:p.x-p.vx*.018,y:p.y-p.vy*.018,vx:rand(-12,12),vy:rand(-12,12),life:p.source.includes('comet')?.42:.25,max:p.source.includes('comet')?.42:.25,size:p.source.includes('comet')?rand(2,5):rand(1.2,3.2),color:p.color||COLORS.white,star:true});}
     const candidates=typeof performanceNearbyEnemies==='function'?performanceNearbyEnemies(p.x,p.y,p.r+150,collisionCandidates):state.entities.enemies;
     for(const e of candidates){
       if(p.life<=0||e.dead||p.hitIds?.has(e.id))continue;
@@ -40,7 +41,7 @@ function updateProjectiles(dt){
     }
     if(p.life<=0&&p.explode&&!p.exploded){p.exploded=true;areaDamage(p.x,p.y,115,22+weaponCount('comet')*4,COLORS.comet,'comet-burst');}
   }
-  for(const p of spawned)spawnPlayerProjectile(p);compactInPlace(state.entities.projectiles,p=>p&&p.life>0&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&Math.hypot(p.x-player.x,p.y-player.y)<2100);trimOldest(state.entities.projectiles,entityCap('playerProjectiles'));
+  for(const p of spawned)spawnPlayerProjectile(p);compactInPlace(state.entities.projectiles,p=>p&&p.life>0&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&((p.x-player.x)**2+(p.y-player.y)**2)<4410000);trimOldest(state.entities.projectiles,entityCap('playerProjectiles'));
 }
 function normalizeWell(w){if(!w||!Number.isFinite(w.x)||!Number.isFinite(w.y))return false;w.r=Number.isFinite(w.r)?clamp(w.r,24,320):120;w.life=Number.isFinite(w.life)?w.life:0;w.max=Number.isFinite(w.max)&&w.max>0?w.max:Math.max(.1,w.life);w.strength=Number.isFinite(w.strength)?clamp(w.strength,0,900):0;w.damage=Number.isFinite(w.damage)?Math.max(0,w.damage):0;w.tick=Number.isFinite(w.tick)?w.tick:0;w.color=typeof w.color==='string'?w.color:COLORS.violet;return w.life>0;}
 function updateWells(dt){return updateWellBodies(dt);}
@@ -67,7 +68,7 @@ function keepBeamEffect(b){return!!(b&&b.life>0&&validEffectNumber(b.x1)&&validE
 function updateEffects(dt){
   const particles=state.entities.particles,texts=state.entities.texts,shockwaves=state.entities.shockwaves,beams=state.entities.beams,particleDrag=Math.pow(.08,dt),shockwaveEase=1-Math.pow(.001,dt);
   for(const p of particles){if(!p||!validEffectNumber(p.x)||!validEffectNumber(p.y)||!validEffectNumber(p.vx)||!validEffectNumber(p.vy)||!validEffectNumber(p.life)||!validEffectNumber(p.max)||!validEffectNumber(p.size)||p.max<=0||p.size<0){if(p)p.life=0;continue;}p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=particleDrag;p.vy*=particleDrag;p.life-=dt;}
-  compactInPlace(particles,keepParticleEffect);
+  compactInPlace(particles,keepParticleEffect,recycleParticleObject);
   for(const t of texts){if(!t||!validEffectNumber(t.x)||!validEffectNumber(t.y)||!validEffectNumber(t.vy)||!validEffectNumber(t.life)||!validEffectNumber(t.max)||!validEffectNumber(t.size)||t.max<=0||t.size<0){if(t)t.life=0;continue;}t.y+=t.vy*dt;t.life-=dt;}
   compactInPlace(texts,keepTextEffect);
   for(const wave of shockwaves){if(!wave||!validEffectNumber(wave.x)||!validEffectNumber(wave.y)||!validEffectNumber(wave.r)||!validEffectNumber(wave.maxR)||!validEffectNumber(wave.life)||!validEffectNumber(wave.max)||!validEffectNumber(wave.width)||wave.max<=0||wave.maxR<0||wave.r<0||wave.width<0){if(wave)wave.life=0;continue;}wave.life-=dt;wave.r=lerp(wave.r,wave.maxR,shockwaveEase);}
