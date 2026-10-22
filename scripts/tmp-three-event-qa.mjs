@@ -28,6 +28,7 @@ try{
   check(result.checks.retired.denied.every(([,value])=>value===false),'a retired event can still be authored/spawned');
   check(Object.values(result.checks.retired.clocks).every(v=>v===null||v===Infinity),'retired event clocks are still active');
 
+  await page.evaluate(()=>{state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;state.mode='playing';state.entities.enemies.length=0;state.bossActiveId=null;state.apexActiveId=null;state.entities.mapEvents.length=0;state.mapEventActive=null;});
   const spawned=await page.evaluate(()=>window.stackfallSpawnAuthoredMapEvent('crash'));
   check(spawned===true,'crash event failed to spawn');
   await page.evaluate(()=>{const marker=state.entities.mapEvents[0];marker.x=player.x;marker.y=player.y;window.updateMapEvents(.016);});
