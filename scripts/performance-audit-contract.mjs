@@ -12,7 +12,7 @@ const feature=read('src/feature-pack.js');
 const entities=read('src/render-entities.js');
 
 const checks=[
- ['missed render frames retain elapsed time with bounded 60 Hz catch-up',render.includes('frameDt=Math.min(.1,')&&render.includes('MAX_SIMULATION_STEPS=8')&&render.includes('dt=SIMULATION_STEP')],
+ ['missed render frames retain elapsed time with bounded 60 Hz catch-up including developer 10x headroom',render.includes('frameDt=Math.min(.1,')&&render.includes('MAX_SIMULATION_STEPS=12')&&render.includes('dt=SIMULATION_STEP')],
  ['cached elite path uses one raster glow before live authored geometry',guard.includes('drawCachedEnemyGlow(ctx,')&&guard.includes('ctx.shadowBlur=0;ctx.shadowColor=e.color;')],
  ['authored terrain cache is transparent bounded, camera-compensated and invalidates on camera or stage changes',realm.includes('STAGE_WORLD_FRAME_CACHE.size>=3')&&realm.includes("getContext('2d',{alpha:true})")&&realm.includes('entry.signature!==signature')&&realm.includes('ctx.clearRect(0,0,vw,vh);production.drawWorld()')&&realm.includes('entry.x-player.x')&&realm.includes('drawThemeRaw(theme);')],
  ['material cache retains full-resolution authored materials within 64 MiB',read('src/stage-craft.js').includes('stageMaterialRasterBytes+entry.bytes>64*1024*1024')&&read('src/stage-craft.js').includes('dpr*scale')],
@@ -25,7 +25,7 @@ const checks=[
  ['ember and core burst damage use spatial candidate broad phase',feature.includes('forEachNearbyEnemyCandidate(x,y,radius+128')&&!feature.includes('for(const other of state.entities.enemies){\n      if(other===enemy||other.dead)continue;')],
  ['object pressure alone cannot enter emergency rendering',!guard.includes('if(!emergencyResolution&&pressureScore()>proactiveLimit)applyEmergencyResolution(true)')&&guard.includes('pressureScore()>proactiveLimit&&frameMs>26')],
  ['GPU degraded cadence remains at least 30 FPS and does not use the old 24 FPS cap',gpu.includes('cap=emergency?30:tier===2?40:tier===1?50:60')&&!/cap\s*=.*\?24:/.test(gpu)],
- ['simulation is fixed at 60 Hz and 2x speed scales accumulated simulation time rather than RAF count',render.includes('SIMULATION_STEP=1/60')&&render.includes("simulationAccumulator+frameDt*(state.gameSpeed===2?2:1)")&&render.includes('while(simulationAccumulator>=SIMULATION_STEP')&&!render.includes('const simulationSteps=state.gameSpeed===2?2:1')],
+ ['simulation remains fixed at 60 Hz while runtime speed scales accumulated simulation time up to developer 10x',render.includes('SIMULATION_STEP=1/60')&&render.includes("typeof window.stackfallGameSpeed==='function'?window.stackfallGameSpeed()")&&render.includes('simulationAccumulator+frameDt*gameSpeed')&&render.includes('while(simulationAccumulator>=SIMULATION_STEP')&&!render.includes('const simulationSteps=state.gameSpeed===2?2:1')],
  ['dense strong-hit and pickup accents are rate limited without disabling weapon audio',audio.includes('audio.lastStrongHitAt=0')&&audio.includes('now-this.lastStrongHitAt>=42')&&audio.includes('audio.lastPickupAt=0')&&audio.includes('now-this.lastPickupAt<28')],
  ['offscreen beams shockwaves text and allied particles are culled before Canvas draw work',entities.includes('beamMargin=Math.max(80')&&entities.includes('Math.max(a.x,b.x)<-beamMargin')&&entities.includes('sx+r<-24')&&entities.includes('sx<-140||sx>vw+140')&&entities.includes('sx<-24-size||sx>vw+24+size')]
 ];
