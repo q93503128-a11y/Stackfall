@@ -20,6 +20,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Protect QA player before Apex intro
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/apex-visual-qa-temp.mjs')
+          text = path.read_text(encoding='utf-8')
+          old = "async function spawnApex(page,form){\n  const started="
+          new = "async function spawnApex(page,form){\n  await prepIdleTest(page);await configureQuietRun(page);\n  const started="
+          if old not in text:
+              raise SystemExit('spawnApex patch anchor missing')
+          path.write_text(text.replace(old,new,1),encoding='utf-8')
+          PY
       - name: Check QA harness syntax
         run: node --check scripts/apex-visual-qa-temp.mjs
       - name: Wait for deployed Apex runtime fingerprint
