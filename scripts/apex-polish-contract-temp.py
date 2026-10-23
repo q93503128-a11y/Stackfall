@@ -1,24 +1,19 @@
 from pathlib import Path
 
-
-def migrate(path_name, old, new, label):
-    path=Path(path_name)
+replacements={
+    "bosses.includes('addCircle(x,y,r,chase.damage')":"bosses.includes('chronophageScar(x,y,r,chase.damage')",
+    "patterns.includes('addCircle(now.x,now.y')":"patterns.includes('chronophageScar(now.x,now.y')",
+    "read('src/boss-patterns.js').includes('addCircle(now.x,now.y')":"read('src/boss-patterns.js').includes('chronophageScar(now.x,now.y')",
+}
+changed=[]
+for path in sorted(Path('scripts').glob('*.mjs')):
     text=path.read_text(encoding='utf-8')
-    if old not in text:
-        raise SystemExit(f'{label} migration anchor missing')
-    path.write_text(text.replace(old,new,1),encoding='utf-8')
-
-
-migrate(
-    'scripts/polish-contract-check.mjs',
-    "  ['apex chronophage scars force present-position movement',bosses.includes('scarCd')&&bosses.includes('addCircle(x,y,r,chase.damage')&&read('src/boss-patterns.js').includes('addCircle(now.x,now.y')],",
-    "  ['apex chronophage scars force present-position movement',bosses.includes('scarCd')&&bosses.includes('chronophageScar(x,y,r,chase.damage')&&read('src/boss-patterns.js').includes('chronophageScar(now.x,now.y')&&read('src/boss-patterns.js').includes(\"'temporal-shear'\")],",
-    'polish contract',
-)
-
-migrate(
-    'scripts/endgame-balance-contract.mjs',
-    "expect('apex chronophage forces movement with delayed scars',bosses.includes('scarCd')&&bosses.includes('addCircle(x,y,r,chase.damage')&&read('src/boss-patterns.js').includes('addCircle(now.x,now.y'));",
-    "expect('apex chronophage forces movement with delayed scars',bosses.includes('scarCd')&&bosses.includes('chronophageScar(x,y,r,chase.damage')&&read('src/boss-patterns.js').includes('chronophageScar(now.x,now.y')&&read('src/boss-patterns.js').includes(\"'temporal-shear'\"));",
-    'endgame balance contract',
-)
+    next_text=text
+    for old,new in replacements.items():
+        next_text=next_text.replace(old,new)
+    if next_text!=text:
+        path.write_text(next_text,encoding='utf-8')
+        changed.append(str(path))
+if not changed:
+    raise SystemExit('no stale Chronophage contract references found')
+print('migrated stale Chronophage contract references:', ', '.join(changed))
