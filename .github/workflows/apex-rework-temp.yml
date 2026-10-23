@@ -55,11 +55,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
+          git config user.name "github-actions[bot]]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/boss-patterns.js src/bosses.js src/elite-renderers.js src/dark-cosmic-polish.js src/render-space.js src/boss-catalog.js docs/WIKI.md scripts/apex-encounter-contract.mjs scripts/community-feedback-contract.mjs scripts/polish-contract-check.mjs scripts/endgame-balance-contract.mjs scripts/performance-audit-contract.mjs src/build-info.js
           git diff --cached --quiet && { echo 'No Apex changes'; exit 1; }
           git commit -m "feat: rework apex identities and combat pressure"
           git push origin HEAD:main
 
-# trigger: beam-contract-corrected
+# trigger: stage-beam-contract-separated
