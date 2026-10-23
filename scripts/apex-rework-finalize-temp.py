@@ -17,4 +17,18 @@ if anchor not in contract:
     raise SystemExit('apex cage contract anchor missing')
 contract=contract.replace(anchor,replacement,1)
 contract_path.write_text(contract,encoding='utf-8')
+
+polish_path=Path('scripts/polish-contract-check.mjs')
+polish=polish_path.read_text(encoding='utf-8')
+old_tracking="  ['apex tracking beam sweeps from an offset',bosses.includes('aim+side*(.92+phase*.07)')&&bosses.includes('angleToward(beam.angle,target,turnRate*dt)')],"
+new_tracking="  ['apex chronophage scars force present-position movement',bosses.includes('scarCd')&&bosses.includes('addCircle(x,y,r,chase.damage')&&read('src/boss-patterns.js').includes('addCircle(now.x,now.y')],"
+if old_tracking not in polish:
+    raise SystemExit('legacy apex tracking polish contract missing')
+polish=polish.replace(old_tracking,new_tracking,1)
+old_beams="  ['continuous apex beams are visually throttled',bosses.includes('beam.visual=stressed?.070:.040')&&bosses.includes('sweep.visual=stressed?.075:.045')&&bosses.includes('network.visual=stressed?.085:.050')],"
+new_beams="  ['apex set pieces reject shared continuous beams',!bosses.includes('beam.visual=stressed?.070:.040')&&!bosses.includes('sweep.visual=stressed?.075:.045')&&bosses.includes('network.visual=stressed?.085:.050')],"
+if old_beams not in polish:
+    raise SystemExit('legacy apex beam polish contract missing')
+polish=polish.replace(old_beams,new_beams,1)
+polish_path.write_text(polish,encoding='utf-8')
 print('apex rework finalizer applied')
