@@ -10,7 +10,7 @@ const checks=[
   ['apex terminal frenzy',read('src/boss-patterns.js').includes('e.apexElapsed>=240')],
   ['apex ignores build strength',!catalog.includes('apexPlayerGrowthScale')&&!catalog.includes('weaponTotal')&&!catalog.includes('passiveTotal')],
   ['apex has visible four-phase variants',bosses.includes('function apexPhaseDirector')&&bosses.includes('function apexVariantAttack')&&combat.includes('초월체 · P${phase}')],
-  ['apex chronophage scars force present-position movement',bosses.includes('scarCd')&&bosses.includes('addCircle(x,y,r,chase.damage')&&read('src/boss-patterns.js').includes('addCircle(now.x,now.y')],
+  ['apex chronophage scars force present-position movement',bosses.includes('scarCd')&&bosses.includes('chronophageScar(x,y,r,chase.damage')&&read('src/boss-patterns.js').includes('chronophageScar(now.x,now.y')],
   ['apex set pieces reject shared continuous beams',!bosses.includes('beam.visual=stressed?.070:.040')&&!bosses.includes('sweep.visual=stressed?.075:.045')&&bosses.includes('network.visual=stressed?.085:.050')],
   ['singularity distortion',rewards.includes("w.kind!=='trait-singularity'||w.life<=0")&&rewards.includes('p.vx*=slow;p.vy*=slow')],
   ['random upgrade notice',read('src/map-event-expansion.js').includes('showUpgradeNotice')],

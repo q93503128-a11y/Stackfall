@@ -15,7 +15,7 @@ const checks=[
  ['appearance escalation has no finite appearance cap',!catalog.includes('Math.min(10,cycle)')&&catalog.includes('for(let i=0;i<cycle;i++')&&catalog.includes('if(value>=1e120)return 1e120')],
  ['first apex has extreme fixed base strength',catalog.includes('enemy.hp*=7.60*escalation.hp')&&catalog.includes('enemy.damage*=2.15*escalation.damage')&&catalog.includes('enemy.skillCd*=.52/escalation.pattern')],
  ['phase transitions and variants',bosses.includes('function apexPhaseTransition')&&bosses.includes('function apexVariantAttack')&&bosses.includes("showBossNotice(bossName(form)+' · PHASE '+phase")],
- ['chronophage scar chase forces present-position movement',bosses.includes('scarCd')&&bosses.includes('addCircle(x,y,r,chase.damage')&&patterns.includes('addCircle(now.x,now.y')],
+ ['chronophage scar chase forces present-position movement',bosses.includes('scarCd')&&bosses.includes('chronophageScar(x,y,r,chase.damage')&&patterns.includes('chronophageScar(now.x,now.y')&&patterns.includes("'temporal-shear'")],
  ['omega is fixed and oversized',catalog.includes("starforge:{color:'#ffb04e',hp:2.48,speed:0")&&catalog.includes('r:2.28')&&bosses.includes("if(form==='starforge'){out.x=0;out.y=0;return out;}")],
  ['apex silhouettes reject clock eye and rectangular-machine shortcuts',eliteRenderers.includes('temporal fracture anatomy')&&eliteRenderers.includes('huge anchored ruptured stellar mass')&&eliteRenderers.includes('no central eye/oval body')],
  ['persistent gravity furnace set piece',bosses.includes('function startForgeTidalCore')&&bosses.includes('function updateForgeTidalCore')&&bosses.includes('player.x+=dx/d*pull*dt')],
