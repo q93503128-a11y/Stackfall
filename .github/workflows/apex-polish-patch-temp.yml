@@ -1,4 +1,4 @@
-name: Temporary Apex Readability Patch
+name: Temporary Apex Contract Finalizer
 
 on:
   workflow_dispatch:
@@ -6,14 +6,12 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/apex-polish-patch-temp.yml'
-      - 'scripts/apex-polish-patch-temp.py'
-      - 'scripts/apex-polish-contract-temp.py'
 
 permissions:
   contents: write
 
 jobs:
-  patch:
+  finalize:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -23,27 +21,43 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Apply targeted Apex patch
+      - name: Migrate stale Chronophage contract references
+        shell: bash
         run: |
-          python scripts/apex-polish-patch-temp.py
-          python scripts/apex-polish-contract-temp.py
-      - name: Verify targeted source syntax and Apex contracts
+          python - <<'PY'
+          from pathlib import Path
+          replacements={
+              "bosses.includes('addCircle(x,y,r,chase.damage')":"bosses.includes('chronophageScar(x,y,r,chase.damage')",
+              "patterns.includes('addCircle(now.x,now.y')":"patterns.includes('chronophageScar(now.x,now.y')",
+              "read('src/boss-patterns.js').includes('addCircle(now.x,now.y')":"read('src/boss-patterns.js').includes('chronophageScar(now.x,now.y')",
+          }
+          changed=[]
+          for path in sorted(Path('scripts').glob('*.mjs')):
+              text=path.read_text(encoding='utf-8')
+              out=text
+              for old,new in replacements.items():
+                  out=out.replace(old,new)
+              if out!=text:
+                  path.write_text(out,encoding='utf-8')
+                  changed.append(str(path))
+          print('migrated:', ', '.join(changed) if changed else 'none')
+          PY
+      - name: Validate current Apex source and full build
         run: |
           node --check src/boss-patterns.js
           node --check src/bosses.js
           node --check src/render-space.js
           node scripts/apex-encounter-contract.mjs
           node scripts/polish-contract-check.mjs
+          node scripts/build-fingerprint.mjs
           git diff --check
-      - name: Refresh fingerprint and run canonical validation
-        run: node scripts/build-fingerprint.mjs
-      - name: Commit patch and remove temporary patcher
+      - name: Commit contract sync and remove finalizer
         shell: bash
         run: |
-          rm .github/workflows/apex-polish-patch-temp.yml scripts/apex-polish-patch-temp.py scripts/apex-polish-contract-temp.py
+          rm .github/workflows/apex-polish-patch-temp.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/boss-patterns.js src/bosses.js src/render-space.js src/build-info.js scripts/*.mjs .github/workflows/apex-polish-patch-temp.yml scripts/apex-polish-patch-temp.py scripts/apex-polish-contract-temp.py
+          git add scripts/*.mjs src/build-info.js .github/workflows/apex-polish-patch-temp.yml
           git diff --cached --check
-          git commit -m "fix: refine apex readability and pressure"
+          git commit -m "test: sync apex contracts with temporal scars"
           git push origin HEAD:main
