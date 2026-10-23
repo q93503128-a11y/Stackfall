@@ -20,18 +20,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Protect QA player before Apex intro
+      - name: Protect QA player and instrument Chronophage spawn
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
           path = Path('scripts/apex-visual-qa-temp.mjs')
           text = path.read_text(encoding='utf-8')
-          old = "async function spawnApex(page,form){\n  const started="
-          new = "async function spawnApex(page,form){\n  await prepIdleTest(page);await configureQuietRun(page);\n  const started="
-          if old not in text:
-              raise SystemExit('spawnApex patch anchor missing')
-          path.write_text(text.replace(old,new,1),encoding='utf-8')
+          replacements = [
+            ("const forms=['chronophage','starforge','lastconstellation'];", "const forms=['chronophage'];"),
+            ("async function spawnApex(page,form){\n  const started=", "async function spawnApex(page,form){\n  await prepIdleTest(page);await configureQuietRun(page);\n  const started="),
+            ("if(!active)return false;\n  await configureQuietRun(page);", "if(!active){const diagnostic=await evaluate(page,`(()=>({mode:state.mode,time:state.time,pendingApexForm:state.pendingApexForm,apexActiveId:state.apexActiveId,realmTransition:state.realmTransition?{from:state.realmTransition.from,to:state.realmTransition.to,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration,midpointDone:state.realmTransition.midpointDone}:null,arena:state.apexArena,enemies:state.entities.enemies.filter(x=>!x.dead).map(x=>({id:x.id,kind:x.kind,eliteForm:x.eliteForm,apexForm:x.apexForm,x:x.x,y:x.y,hp:x.hp,maxHp:x.maxHp}))}))()`);console.log('APEX_SPAWN_DIAGNOSTIC '+JSON.stringify(diagnostic));return false;}\n  await configureQuietRun(page);")
+          ]
+          for old,new in replacements:
+              if old not in text:
+                  raise SystemExit('QA patch anchor missing: '+old[:80])
+              text = text.replace(old,new,1)
+          path.write_text(text,encoding='utf-8')
           PY
       - name: Check QA harness syntax
         run: node --check scripts/apex-visual-qa-temp.mjs
