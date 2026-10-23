@@ -23,10 +23,12 @@ jobs:
         run: |
           python -m py_compile scripts/apex-rework-temp.py
           python -m py_compile scripts/apex-rework-finalize-temp.py
+          python -m py_compile scripts/apex-rework-perf-finalize-temp.py
       - name: Apply Apex rework
         run: |
           python scripts/apex-rework-temp.py
           python scripts/apex-rework-finalize-temp.py
+          python scripts/apex-rework-perf-finalize-temp.py
       - name: Check changed JavaScript
         run: |
           node --check src/boss-patterns.js
@@ -64,4 +66,4 @@ jobs:
           git commit -m "feat: rework apex identities and combat pressure"
           git push origin HEAD:main
 
-# trigger: synced-apex-docs
+# trigger: final-performance-contract-fix
