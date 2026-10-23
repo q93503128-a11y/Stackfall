@@ -1,0 +1,49 @@
+name: Temporary Apex Readability Patch
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apex-polish-patch-temp.yml'
+      - 'scripts/apex-polish-patch-temp.py'
+      - 'scripts/apex-polish-contract-temp.py'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply targeted Apex patch
+        run: |
+          python scripts/apex-polish-patch-temp.py
+          python scripts/apex-polish-contract-temp.py
+      - name: Verify targeted source syntax and Apex contracts
+        run: |
+          node --check src/boss-patterns.js
+          node --check src/bosses.js
+          node --check src/render-space.js
+          node scripts/apex-encounter-contract.mjs
+          node scripts/polish-contract-check.mjs
+          git diff --check
+      - name: Refresh fingerprint and run canonical validation
+        run: node scripts/build-fingerprint.mjs
+      - name: Commit patch and remove temporary patcher
+        shell: bash
+        run: |
+          rm .github/workflows/apex-polish-patch-temp.yml scripts/apex-polish-patch-temp.py scripts/apex-polish-contract-temp.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/boss-patterns.js src/bosses.js src/render-space.js src/build-info.js scripts/*.mjs .github/workflows/apex-polish-patch-temp.yml scripts/apex-polish-patch-temp.py scripts/apex-polish-contract-temp.py
+          git diff --cached --check
+          git commit -m "fix: refine apex readability and pressure"
+          git push origin HEAD:main
