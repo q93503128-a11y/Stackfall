@@ -81,7 +81,7 @@ expect('docs','chain recovery buff is documented',progression.includes('Math.min
 expect('docs','ledger pause rule documented',design.includes('능력 장부를 열면 게임 일시정지')&&wiki.includes('능력 장부를 열면 게임이 일시정지'));
 expect('docs','apex ignores build and uses appearance escalation',design.includes('플레이어 레벨·무기·패시브 성장량을 읽지 않음')&&wiki.includes('등장 횟수만으로 누적 복리 강화')&&!catalog.includes('apexPlayerGrowthScale'));
 expect('docs','apex legacies remain active and shield free',design.includes('보호막 충전형이 아님')&&wiki.includes('보호막 충전형 유산이 아니다')&&bosses.includes('function updateConstellationLegacy')&&!rewards.includes('보호막 36'));
-expect('docs','continuous beam performance fix documented',readme.includes('지속 광선 렉 수정')&&design.includes('지속 광선 객체 제한')&&bosses.includes('beam.visual=stressed?.070:.040'));
+expect('docs','apex rework documentation matches current non-shared-beam grammar',readme.includes('초월체 전투 문법 리워크')&&design.includes('초월체 공격 문법')&&design.includes('대표 시그니처 주기 동안 가만히 있으면')&&design.includes('오메가 완전 고정')&&!design.includes('### 시간포식자 추적광')&&!bosses.includes('beam.visual=stressed?.070:.040')&&bosses.includes('constellationCage'));
 expect('docs','combat multipliers delegate from meta upgrades to canonical progression',forbiddenBalanceAssignments.length===0&&read('src/meta-upgrades.js').includes("return baseDamageMult()*(1+valueAt(byId('output'))*.01)")&&read('src/meta-upgrades.js').includes("baseHasteMult()*(1-valueAt(byId('cycle'))*.01)"));
 expect('docs','audit UI does not redefine combat balance',!auditUi.includes('hasteMult=function')&&!auditUi.includes('damageMult=function')&&!auditUi.includes('window.chainDamageBonus=')&&!auditUi.includes('window.chainDurationMultiplier='));
 

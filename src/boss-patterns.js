@@ -218,29 +218,48 @@ function bossAntiIdleSkill(e,dt){
   if(!e||e.dead||e.type!=='boss'||e.kind!=='apex')return;
   e.antiIdleSampleCd=(e.antiIdleSampleCd||0)-dt;e.antiIdleCd=(e.antiIdleCd??3.4)-dt;
   if(e.antiIdleSampleCd<=0){e.antiIdleSampleCd=.24;const lx=Number.isFinite(e.antiIdlePlayerX)?e.antiIdlePlayerX:player.x,ly=Number.isFinite(e.antiIdlePlayerY)?e.antiIdlePlayerY:player.y,moved=Math.hypot(player.x-lx,player.y-ly);e.antiIdleStill=moved<7?(e.antiIdleStill||0)+.24:Math.max(0,(e.antiIdleStill||0)-.72);e.antiIdlePlayerX=player.x;e.antiIdlePlayerY=player.y;}
-  if((e.antiIdleStill||0)<1.20||e.antiIdleCd>0)return;e.antiIdleStill=.25;e.antiIdleCd=e.kind==='apex'?3.05:4.35;const d=Math.max(4,e.damage*(e.kind==='apex'?.30:.34)),x=player.x,y=player.y,form=e.apexForm||e.eliteForm;
-  if(form==='chronophage'){rawLine(x-185,y-185,x+185,y+185,18,d,'#79ffe1',.96,'boss-line');rawLine(x+185,y-185,x-185,y+185,18,d*.82,'#d9fff8',1.12,'boss-line');}
-  else if(form==='starforge'){addCircle(x,y,58,d*1.08,'#ff8a42',1.02);for(let i=0;i<4;i++){const a=i*TAU/4+e.phase*.08;addCircle(x+Math.cos(a)*105,y+Math.sin(a)*105,40,d*.62,'#ffd26f',1.17+i*.04);}}
-  else if(form==='lastconstellation'){rawLine(x-215,y,x+215,y,17,d,'#d8e2ff',1.02,'boss-line');rawLine(x,y-215,x,y+215,17,d*.88,'#879be0',1.16,'boss-line');}
-  else addCircle(x,y,52,d,e.color||'#ff72cb',1.08);
+  if((e.antiIdleStill||0)<1.20||e.antiIdleCd>0)return;
+  e.antiIdleStill=.25;e.antiIdleCd=3.05;const d=Math.max(4,e.damage*.30),x=player.x,y=player.y,form=e.apexForm||e.eliteForm;
+  if(form==='chronophage'){
+    addCircle(x,y,58,d*1.08,'#79ffe1',.72);addCircle(x,y,92,d*.72,'#c6fff4',1.02);
+  }else if(form==='starforge'){
+    addCircle(x,y,68,d*1.12,'#ff7135',.76);const aim=Math.atan2(y-e.y,x-e.x);for(let i=-3;i<=3;i++)spawnEnemyProjectile(e.x,e.y,aim+i*.105,215+Math.abs(i)*8,d*.56,i%2?'#ffd26f':'#ff9d42',5.4,6,'forge');
+  }else if(form==='lastconstellation'){
+    const sx=184,sy=112;rawLine(x-sx,y-sy,x+sx,y+sy,18,d,'#d8e2ff',.88,'constellation-link');rawLine(x-sx,y+sy,x+sx,y-sy,18,d*.88,'#879be0',1.02,'constellation-link');
+  }else addCircle(x,y,52,d,e.color||'#ff72cb',1.08);
 }
 function chronophageSignature(e,d,arena,phase){
-  const history=e.apexPlayerHistory||[],now={x:player.x,y:player.y},p1=history[Math.max(0,history.length-4)]||now,p2=history[Math.max(0,history.length-8)]||p1,p3=history[Math.max(0,history.length-12)]||p2;
-  addCircle(p1.x,p1.y,46+phase*4,d*.62,'#c6fff4',.82);addCircle(p2.x,p2.y,54+phase*4,d*.54,'#79ffe1',1.02);
-  rawLine(p3.x,p3.y,p2.x,p2.y,17+phase*2,d*.72,'#79ffe1',.88,'boss-line');rawLine(p2.x,p2.y,p1.x,p1.y,18+phase*2,d*.82,'#8fffe0',1.02,'boss-line');rawLine(p1.x,p1.y,now.x,now.y,20+phase*2,d*.96,'#d9fff8',1.16,'boss-line');
-  if(phase>=3){const dx=now.x-p2.x,dy=now.y-p2.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;for(const side of[-1,1])rawLine(p2.x+nx*side*105,p2.y+ny*side*105,now.x+nx*side*105,now.y+ny*side*105,15+phase,d*.58,'#bffdf3',1.24,'boss-line');}
+  const history=e.apexPlayerHistory||[],now={x:player.x,y:player.y},p1=history[Math.max(0,history.length-(3+phase))]||now,p2=history[Math.max(0,history.length-(7+phase))]||p1,p3=history[Math.max(0,history.length-(10+phase))]||p2;
+  // Present position always owns a real delayed rupture, so an idle player cannot null the pattern.
+  addCircle(now.x,now.y,48+phase*5,d*1.00,'#d9fff8',.72);
+  addCircle(p1.x,p1.y,42+phase*4,d*.70,'#79ffe1',.90);
+  addCircle(p2.x,p2.y,50+phase*4,d*.58,'#9fffea',1.08);
+  const dx=now.x-p2.x,dy=now.y-p2.y,len=Math.hypot(dx,dy);
+  if(len>42){const nx=-dy/len,ny=dx/len,half=Math.min(170,92+phase*18);rawLine(now.x-nx*half,now.y-ny*half,now.x+nx*half,now.y+ny*half,14+phase,d*.66,'#bffdf3',1.00,'temporal-shear');}
+  else addCircle(now.x,now.y,82+phase*6,d*.62,'#bffdf3',1.12);
+  if(phase>=3){bossLater(e,330,()=>addCircle(player.x,player.y,44+phase*4,d*.72,'#ecfffb',.66));}
+  if(phase===4){bossLater(e,620,()=>{const q={x:player.x,y:player.y};addCircle(q.x,q.y,60,d*.82,'#79ffe1',.64);addCircle(p3.x,p3.y,68,d*.52,'#c6fff4',.84);});}
 }
 function starforgeSignature(e,d,arena,phase){
-  e.forgeSignaturePhase=(e.forgeSignaturePhase||0)+.73;const target=predictedPlayer(70+phase*34),span=arena.r*.86,gap=Math.max(92,162-phase*13),horizontal=Math.floor(e.forgeSignaturePhase)%2===0;
-  if(horizontal){for(const side of[-1,1])rawLine(arena.x-span,target.y+side*gap,arena.x+span,target.y+side*gap,21+phase*2,d*.78,side>0?'#fff1b0':'#ff9d42',.98,'boss-line');}
-  else{for(const side of[-1,1])rawLine(target.x+side*gap,arena.y-span,target.x+side*gap,arena.y+span,21+phase*2,d*.78,side>0?'#fff1b0':'#ff9d42',.98,'boss-line');}
-  for(let i=0;i<3+phase;i++){const p=i===0?target:predictedPlayer(55+i*34),a=i*2.399+e.phase*.05,r=i?44+phase*5:0;addCircle(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r,42+phase*4,d*(i===0?1.08:.68),i%2?'#ffd26f':'#ff7135',.78+i*.11);}
+  const target=predictedPlayer(42+phase*16),primary=62+phase*6;
+  addCircle(target.x,target.y,primary,d*1.10,'#ff7135',.78);
+  const satellites=3+phase;
+  for(let i=0;i<satellites;i++){const a=i/satellites*TAU+e.phase*.04,rr=92+phase*8+(i%2)*26;addCircle(target.x+Math.cos(a)*rr,target.y+Math.sin(a)*rr,38+phase*3,d*.58,i%2?'#ffd26f':'#ff9d42',.92+i*.055);}
+  bossLater(e,430,()=>{if(e.dead)return;const aim=Math.atan2(player.y-e.y,player.x-e.x),count=7+phase*2;for(let i=0;i<count;i++){const off=(i-(count-1)/2)*.085;spawnEnemyProjectile(e.x,e.y,aim+off,195+phase*13,d*.52,i%2?'#fff1b0':'#ff9d42',5.4,6,'forge');}});
+}
+function localConstellationPoints(cx,cy,count,radius,phase=0){const points=[];for(let i=0;i<count;i++){const a=i/count*TAU+phase,rr=radius*(i%2?1:.84);points.push({x:cx+Math.cos(a)*rr,y:cy+Math.sin(a)*rr});}return points;}
+function constellationCage(e,d,arena,phase,life=1.02){
+  const cx=player.x,cy=player.y,count=6+phase,radius=Math.min(arena.r*.42,142+phase*14),points=localConstellationPoints(cx,cy,count,radius,e.phase*.025),jump=phase>=3?2:1;
+  for(let i=0;i<count;i++){if(i===count-1)continue;const a=points[i],b=points[(i+jump)%count];rawLine(a.x,a.y,b.x,b.y,11+phase,d*.54,i%2?'#9fb2ef':'#d8e2ff',life+i*.018,'constellation-link');}
+  const centerCut=e.phase*.031,ux=Math.cos(centerCut),uy=Math.sin(centerCut),half=radius*1.08;rawLine(cx-ux*half,cy-uy*half,cx+ux*half,cy+uy*half,16+phase,d*.92,'#ffffff',life*.88,'constellation-link');if(phase>=3){const px=-uy,py=ux;rawLine(cx-px*half*.92,cy-py*half*.92,cx+px*half*.92,cy+py*half*.92,13+phase,d*.66,'#879be0',life*1.04,'constellation-link');}
+  return points;
+}
+function constellationNodeVolley(e,d,arena,phase){
+  const target={x:player.x,y:player.y},points=localConstellationPoints(target.x,target.y,5+phase,Math.min(arena.r*.46,180+phase*12),-e.phase*.02);
+  for(let i=0;i<points.length;i++){const point=points[i],aim=Math.atan2(target.y-point.y,target.x-point.x);for(const off of[-.065,.065])spawnEnemyProjectile(point.x,point.y,aim+off,168+phase*18,d*.56,i%2?'#f0f4ff':'#9fb2ef',4.2,6,'constellation');}
 }
 function constellationSignature(e,d,arena,phase){
-  const count=7+phase*2,points=apexArenaPoints(count,arena.r*.68,e.phase*.035),jump=phase>=3?3:2;
-  for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+jump)%points.length];rawLine(a.x,a.y,b.x,b.y,16+phase*2,d*.92,i%2?'#d8e2ff':'#879be0',1.18+i*.025,'boss-line');}
-  const x=player.x,y=player.y;rawLine(x-190,y-190,x+190,y+190,18,d*1.10,'#ffffff',1.02,'boss-line');
-  scheduleWeaponAction(500,()=>{if(e.dead)return;for(let i=0;i<points.length;i+=2){const point=points[i],aim=Math.atan2(player.y-point.y,player.x-point.x);spawnEnemyProjectile(point.x,point.y,aim,185+phase*14,d*.58,i%4?'#9fb2ef':'#ffffff',4.2,6,'constellation');}});teleportConstellation(e,phase);
+  constellationCage(e,d,arena,phase,1.06);bossLater(e,430,()=>{if(!e.dead)constellationNodeVolley(e,d*.92,arena,phase);});if(phase>=2)teleportConstellation(e,phase,.56);
 }
 function apexBossSkill(e,dt){
   e.apexElapsed=(e.apexElapsed||0)+dt;rememberApexPlayer(e,dt);
@@ -250,23 +269,18 @@ function apexBossSkill(e,dt){
   const d=Math.max(7,e.damage*.40),f=e.eliteForm,arena=state.apexArena||{x:player.x,y:player.y,r:460};
   if(e.signatureCd<=0){e.signatureCd=Math.max(5.4,8.8-phase*.82);if(f==='chronophage')chronophageSignature(e,d,arena,phase);else if(f==='starforge')starforgeSignature(e,d,arena,phase);else constellationSignature(e,d,arena,phase);}
   e.apexFrenzyCd=(e.apexFrenzyCd??1.35)-dt;
-  if(terminal&&e.apexFrenzyCd<=0){
-    e.apexFrenzyCd=.95;
-    if(f==='chronophage'){const h=e.apexPlayerHistory||[],past=h[Math.max(0,h.length-7)]||{x:player.x,y:player.y};rawLine(past.x,past.y,player.x,player.y,17,d*.72,'#d9fff8',.72,'boss-line');}
-    else if(f==='starforge'){const p=predictedPlayer(70);addCircle(p.x,p.y,44,d*.76,'#ff7135',.68);}
-    else{const points=apexArenaPoints(6,arena.r*.58,e.phase*.04);for(const point of points){const a=Math.atan2(player.y-point.y,player.x-point.x);spawnEnemyProjectile(point.x,point.y,a,205,d*.54,'#b7c9ff',4.1,6,'constellation');}}
-  }
+  if(terminal&&e.apexFrenzyCd<=0){e.apexFrenzyCd=.95;if(f==='chronophage')addCircle(player.x,player.y,48,d*.78,'#d9fff8',.58);else if(f==='starforge'){addCircle(player.x,player.y,52,d*.82,'#ff7135',.60);const aim=Math.atan2(player.y-e.y,player.x-e.x);for(let i=-3;i<=3;i++)spawnEnemyProjectile(e.x,e.y,aim+i*.10,225,d*.48,'#ffd26f',5.2,5.5,'forge');}else constellationNodeVolley(e,d*.82,arena,phase);}
   if(f==='chronophage'){
-    if(e.skillCd<=0){e.skillCd=phase>=3?2.1:2.75;const h=e.apexPlayerHistory||[],now={x:player.x,y:player.y},p1=h[Math.max(0,h.length-(3+phase))]||now,p2=h[Math.max(0,h.length-(7+phase))]||p1;rawLine(p2.x,p2.y,p1.x,p1.y,16+phase*2,d*.70,'#79ffe1',.82,'boss-line');rawLine(p1.x,p1.y,now.x,now.y,18+phase*2,d*.88,'#d9fff8',1.02,'boss-line');}
-    if(e.burstCd<=0){e.burstCd=phase>=3?4.9:6.1;const h=e.apexPlayerHistory||[],past=h[Math.max(0,h.length-7)]||{x:player.x,y:player.y},dx=player.x-past.x,dy=player.y-past.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len,nx=-uy,ny=ux;for(const side of[-1,1])for(const band of[76,154])rawLine(past.x+nx*side*band-ux*arena.r,past.y+ny*side*band-uy*arena.r,past.x+nx*side*band+ux*arena.r,past.y+ny*side*band+uy*arena.r,17+phase*2,d*.78,'#8fffe0',.96+band*.001,'boss-line');}
-    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.9:8.5;const h=e.apexPlayerHistory||[],marks=[h[Math.max(0,h.length-11)],h[Math.max(0,h.length-7)],h[Math.max(0,h.length-3)]].filter(Boolean);marks.forEach((p,i)=>addCircle(p.x,p.y,42+phase*4+i*7,d*(.48+i*.10),'#bffdf3',.72+i*.16));}
+    if(e.skillCd<=0){e.skillCd=phase>=3?2.0:2.65;const h=e.apexPlayerHistory||[],past=h[Math.max(0,h.length-(5+phase))]||{x:player.x,y:player.y};addCircle(player.x,player.y,44+phase*4,d*.92,'#d9fff8',.68);addCircle(past.x,past.y,50+phase*4,d*.62,'#79ffe1',.94);}
+    if(e.burstCd<=0){e.burstCd=phase>=3?4.65:5.8;chronophageSignature(e,d*.88,arena,phase);}
+    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.4:7.9;const h=e.apexPlayerHistory||[],marks=[{x:player.x,y:player.y},h[Math.max(0,h.length-4)],h[Math.max(0,h.length-8)]].filter(Boolean);marks.forEach((p,i)=>addCircle(p.x,p.y,38+phase*4+i*8,d*(.84-i*.12),'#bffdf3',.62+i*.17));}
   }else if(f==='starforge'){
-    if(e.skillCd<=0){e.skillCd=phase>=3?2.25:2.95;const p=predictedPlayer(80+phase*28);for(let i=0;i<2+phase;i++){const a=i*2.399+e.phase*.05,r=i?58+phase*8:0;addCircle(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r,39+phase*4,d*(i?.58:.96),i%2?'#ffd26f':'#ff7135',.72+i*.10);}}
-    if(e.burstCd<=0){e.burstCd=phase>=3?4.75:5.95;const p=predictedPlayer(120),axis=(e.forgePressAxis=(e.forgePressAxis||0)+1)%2,span=arena.r*.84,gap=Math.max(82,142-phase*10);if(axis===0){for(const side of[-1,1])rawLine(arena.x-span,p.y+side*gap,arena.x+span,p.y+side*gap,22+phase,d*.86,side>0?'#fff1b0':'#ff9d42',1.02,'boss-line');}else{for(const side of[-1,1])rawLine(p.x+side*gap,arena.y-span,p.x+side*gap,arena.y+span,22+phase,d*.86,side>0?'#fff1b0':'#ff9d42',1.02,'boss-line');}}
-    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.5:8.1;const points=apexArenaPoints(4+phase,arena.r*.68,e.phase*.035);for(let i=0;i<points.length;i++){const point=points[i],target=predictedPlayer(55+i*24);addCircle(target.x+(point.x-arena.x)*.12,target.y+(point.y-arena.y)*.12,44+phase*4,d*.68,i%2?'#ff9d42':'#ffd26f',.82+i*.07);}}
+    if(e.skillCd<=0){e.skillCd=phase>=3?2.05:2.75;starforgeSignature(e,d*.86,arena,phase);}
+    if(e.burstCd<=0){e.burstCd=phase>=3?4.35:5.55;const p=predictedPlayer(38+phase*12),horizontal=(e.forgePressAxis=(e.forgePressAxis||0)+1)%2===0,spacing=Math.max(68,98-phase*6);for(let i=-2;i<=2;i++){const x=p.x+(horizontal?i*spacing:0),y=p.y+(horizontal?0:i*spacing),center=i===0;addCircle(x,y,46+phase*4,d*(center?1.04:.60),center?'#ff7135':'#ffd26f',.72+Math.abs(i)*.075);}}
+    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.1:7.6;const aim=Math.atan2(player.y-e.y,player.x-e.x),count=9+phase*2;for(let i=0;i<count;i++){const off=(i-(count-1)/2)*.082;spawnEnemyProjectile(e.x,e.y,aim+off,185+phase*15,d*.60,i%2?'#fff1b0':'#ff9d42',5.5,6,'forge');}addCircle(player.x,player.y,54+phase*4,d*.78,'#ff8a42',.84);}
   }else{
-    if(e.skillCd<=0){e.skillCd=phase>=3?1.95:2.65;const nodes=apexArenaPoints(5+phase,arena.r*.55,e.phase*.04);for(const [index,point] of nodes.entries()){const base=Math.atan2(player.y-point.y,player.x-point.x);for(let j=-1;j<=1;j++)spawnEnemyProjectile(point.x,point.y,base+j*.11,145+phase*18,d*.64,index%2?'#f0f4ff':'#9fb2ef',4.3,7,'constellation');}}
-    if(e.burstCd<=0){e.burstCd=phase>=3?4.7:6.1;const points=apexArenaPoints(7+phase,arena.r*.50,-Math.PI/2+e.phase*.025),jump=phase>=3?3:2,open=(e.constellationOpenEdge=(e.constellationOpenEdge||0)+1)%points.length;for(let i=0;i<points.length;i++){if(i===open)continue;const a=points[i],b=points[(i+jump)%points.length];rawLine(a.x,a.y,b.x,b.y,17+phase*2,d*1.02,i%2?'#d8e2ff':'#8fa6e8',1.02+i*.038,'boss-line');}teleportConstellation(e,1);}
-    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.35:8.2;const points=apexArenaPoints(6+phase,arena.r*.62,e.phase*.03);for(let i=0;i<points.length;i+=2){const point=points[i],a=Math.atan2(player.y-point.y,player.x-point.x);spawnEnemyProjectile(point.x,point.y,a,185+phase*18,d*.58,'#dce6ff',4.2,6,'constellation');}if(phase>=2)teleportConstellation(e,2);}
+    if(e.skillCd<=0){e.skillCd=phase>=3?1.9:2.55;constellationNodeVolley(e,d,arena,phase);}
+    if(e.burstCd<=0){e.burstCd=phase>=3?4.4:5.75;constellationCage(e,d,arena,phase,.94);teleportConstellation(e,1,.52);}
+    if(e.pulseCd<=0){e.pulseCd=phase>=3?5.9:7.5;constellationSignature(e,d*.86,arena,phase);}
   }
 }

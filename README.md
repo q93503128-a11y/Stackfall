@@ -38,7 +38,7 @@ python -m http.server 8000
 - 레벨당 기본 피해 증가: 1.1%
 - 같은 이름의 스탯은 합연산
 - 이름이 다른 피해 계수는 곱연산
-- 초월체: 실제 게임 시간 8분 간격
+- 초월체: 실제 게임 시간 10분 간격
 - 일시정지·능력 장부·선택·보상 중에는 게임 시간과 초월체 예정 시간이 진행되지 않음
 
 ## 주요 패시브
@@ -203,24 +203,19 @@ python -m http.server 8000
 
 ## 초월체
 
-초월체는 실제 게임 시간 8분·16분·24분마다 등장하며 전용 봉쇄장을 사용합니다. 넉백·중력 흡입·시간 정지·이동 봉쇄에 면역입니다.
+초월체는 실제 게임 시간 10분·20분·30분마다 등장하며 전용 봉쇄장을 사용합니다. 넉백·중력 흡입·시간 정지·이동 봉쇄에 면역입니다.
 
 초월체 능력치는 플레이어 레벨·무기 중첩·패시브 중첩을 읽지 않습니다. 첫 등장부터 고정 초고스펙을 사용하고 이후 등장 횟수마다 체력·피해·패턴 압력을 누적 복리로 강화합니다.
 
-### 시간포식자 추적광
+### 초월체 전투 문법 리워크
 
-추적광은 플레이어에게 바로 꽂히지 않습니다.
+대표 시그니처 주기 동안 플레이어가 가만히 있으면 실제 공격에 맞아야 한다. 대신 예고를 읽고 이동하면 피할 수 있는 탈출 방향을 남긴다. 화려하지만 안전한 장식 탄막이나 세 초월체가 공유하는 지속 추적광을 핵심 패턴으로 사용하지 않는다.
 
-- 플레이어 방향에서 약 0.92라디안 이상 비껴난 각도로 시작
-- 0.9초 준비 단계
-- 제한된 회전 속도로 플레이어를 따라 휩씀
-- 피해 판정 주기와 광선 화면 갱신 주기를 분리
+- **시간포식자 아트로포스**: 시계판·바늘·톱니 대신 서로 다른 시간에 걸린 비대칭 파편체다. 현재 위치와 최근 위치에 지연 시간 흉터를 남기고, 플레이어가 실제로 이동했을 때만 그 이동축을 짧은 시간 절단으로 재생한다. 같은 자리에 서 있으면 현재 위치 흉터가 반복해서 겹친다.
+- **종말 항성 오메가**: 전장 중심에 고정된 초거대 파열 항성체다. 본체는 이동하지 않고 예측 핵낙하, 플레이어 위치를 통과하는 용광로 압착열, 방사 포화와 조석 용광핵으로 이동을 강제한다.
+- **무명의 마지막 성좌**: 중앙 눈을 제거한 각진 핵체와 분리된 천체 파편으로 구성한다. 연결선은 상시 장식이 아니라 공격 순간에만 드러나며, 플레이어 스냅샷을 가로지르는 국지 성좌 우리와 노드 집중사격 뒤 재배치한다.
 
-### 다른 고유 세트피스
-
-- 종말 항성: 중앙 조석 용광핵, 약한 중력, 탄환륜·운석, 종료 붕괴
-- 마지막 성좌: 회전 다중 휩쓸기와 임시 성좌 전령
-- 시간포식자: 시간 잔상·시곗바늘 절단과 지속 추적광
+페이즈는 단순 탄속·탄수 증가만 하지 않고 앞에서 배운 회피 규칙 위에 새 압박을 하나씩 겹친다.
 
 ### 초월체 유산
 
@@ -262,18 +257,18 @@ python -m http.server 8000
 - 런 세대와 게임 시간 기반 예약 공격
 - 측정된 프레임 지연에 따른 장식 파티클 예산과 Pixi 갱신 빈도 조절
 
-### 2026-07 지속 광선 렉 수정
+### 2026-10 초월체 전투 문법 리워크와 광선 성능 규칙
 
-렉의 직접 원인은 초월체 추적광·성좌 휩쓸기·살아 있는 성좌망이 매 브라우저 프레임마다 여러 개의 짧은 `beam` 객체를 생성한 구조였습니다.
+과거에는 초월체 추적광·성좌 휩쓸기·성좌망이 매 브라우저 프레임마다 짧은 `beam` 객체를 만들었고, 이를 시각 틱 제한으로 완화했다. 현재 3종 초월체의 핵심 공격에서는 공용 지속 추적광과 회전 휩쓸기를 제거했다.
 
-수정 후:
-
-- 공격 판정 틱은 기존 주기 유지
-- 시각 광선 객체 생성은 일반 상태 약 20~25FPS로 제한
-- 성능 보호 상태에서는 더 낮은 빈도로 제한
-- 성좌망·추적광·휩쓸기 각각 별도 시각 타이머 사용
-- 장식 파티클 생성률 축소
+- 시간포식자는 지연 시간 흉터와 짧은 경로 절단을 사용
+- 오메가는 위치 고정형 충돌 지대·탄막·조석 용광핵을 사용
+- 마지막 성좌는 국지 성좌 연결선과 노드 사격을 사용하며 연결선이 고유 공격 언어임
+- 표준 전투 광선은 고정 스키마의 bounded pool을 재사용
+- Stage 전용 특수 메타데이터 광선은 표준 풀과 분리
+- 초월체 보상인 살아 있는 성좌망의 시각 갱신 제한은 유지하지만 보스 3종의 공용 공격 문법으로 재사용하지 않음
 - 프리즘 시각 광선 역시 피해 틱과 분리
+
 - 투사체·중력 우물·범위 피해의 충돌 후보를 공간 격자에서만 조회
 - 공간 격자 버킷과 충돌 후보 배열을 재사용하고 다중 표적 정렬의 후보별 객체 생성을 없애 전투 중 임시 할당을 줄임
 - 잘린 게임 진행 시간이 아닌 실제 브라우저 프레임 간격으로 렉을 감지하고, **2배속에서도 렌더 프레임당 한 번만 측정**해 시뮬레이션 다중 업데이트 때문에 부하가 낮게 측정되지 않도록 함
@@ -301,7 +296,7 @@ endgame-balance-expansion.js
 주요 소유 모듈:
 
 - 일반 투사체 이동·유도: `systems.js`
-- 초월체·적 투사체·지속 광선 판정: `bosses.js`
+- 초월체 패턴·세트피스·적 투사체 판정: `bosses.js`
 - 성장·연쇄 계산: `progression-expansion.js`
 - 맵 이벤트 본체: `map-event-expansion.js`
 - 수동 조준·자석 흡인·보관소 정예 예외: `targeting-motion-refinement.js`
@@ -326,7 +321,7 @@ node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-r
 
 ### Run modes and finite stages
 
-`ENDLESS` remains the default infinite mode with random world events, the full enemy family pool, and the 480-second (8-minute) Apex cadence. Finite stages use their own catalog timelines and do not inherit the Endless encounter director.
+`ENDLESS` remains the default infinite mode with random world events, the full enemy family pool, and the 600-second (10-minute) Apex cadence. Finite stages use their own catalog timelines and do not inherit the Endless encounter director.
 
 Stage 1 now starts at **5 minutes**, and the campaign rises to **15 minutes at Stage 18**. Fixed incidents and the recurring stage gimmick are compressed with the new operation length rather than being cut off. Reaching the listed time only spawns the final boss; the operation ends only when that boss is defeated.
 
