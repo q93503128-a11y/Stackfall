@@ -1,0 +1,53 @@
+name: Temporary Stackfall Apex Comprehensive Live QA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/apex-visual-qa-temp.mjs'
+      - '.github/workflows/apex-visual-qa-temp.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  visual-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check QA harness syntax
+        run: node --check scripts/apex-visual-qa-temp.mjs
+      - name: Wait for deployed Apex runtime fingerprint
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$(sed -n 's/^window.STACKFALL_BUILD_SHA="\([^"]*\)";.*/\1/p' src/build-info.js)"
+          test -n "$expected"
+          for attempt in $(seq 1 72); do
+            live="$(curl -fsSL "https://stackfall.pages.dev/src/build-info.js?apexqa=${GITHUB_SHA}-${attempt}" || true)"
+            if printf '%s' "$live" | grep -Fq "$expected"; then
+              echo "deployed fingerprint matched: $expected"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "live deployment did not reach expected fingerprint: $expected" >&2
+          exit 1
+      - name: Run live Apex visual and idle-pressure QA
+        env:
+          STACKFALL_URL: https://stackfall.pages.dev/
+          APEX_QA_DIR: test-results/apex-visual-qa
+        run: node scripts/apex-visual-qa-temp.mjs
+      - name: Upload Apex QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-live-visual-qa
+          path: test-results/apex-visual-qa
+          if-no-files-found: error
+          retention-days: 5
