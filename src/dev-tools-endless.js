@@ -106,6 +106,8 @@
         <label class="dev-endless-label" for="devApexForm">초월체</label>
         <div class="dev-endless-row"><select id="devApexForm">${pairOptions(ELITE_POOLS.apex)}</select><button id="devSpawnApex" class="accent">정상 연출로 등장</button></div>
         <div class="dev-endless-row"><select id="devApexPhase"><option value="1">PHASE 1</option><option value="2">PHASE 2</option><option value="3">PHASE 3</option><option value="4">PHASE 4 · TERMINAL</option></select><button id="devApplyApexPhase">현재 초월체 페이즈 적용</button></div>
+        <button id="devReadAtrophos" style="margin-top:7px">Atrophos 상태 읽기</button>
+        <output id="devAtrophosStatus" class="dev-endless-status" style="display:block;white-space:pre-wrap">Atrophos 전투 대기</output>
 
         <div class="dev-speed-wrap">
           <div class="dev-speed-head"><span>게임 배속</span><b id="devGameSpeedValue">×1</b></div>
@@ -227,6 +229,7 @@
     onClick('#devSpawnVoid',()=>{const result=spawnElite('void',voidSelect.value);setStatus(result.ok?`${result.name} 등장`:`균열 보스 실패 · ${result.reason}`,result.ok);});
     onClick('#devSpawnApex',()=>{const result=spawnApex(apexSelect.value);setStatus(result.ok?`${result.name} 정상 초월체 연출 시작`:`초월체 실패 · ${result.reason}`,result.ok);});
     onClick('#devApplyApexPhase',()=>{const result=applyApexPhase(phaseSelect.value);setStatus(result.ok?`${result.name} · PHASE ${result.phase}`:`페이즈 적용 실패 · ${result.reason}`,result.ok);});
+    onClick('#devReadAtrophos',()=>{const d=window.stackfallAtrophosDiagnostics?.();query('#devAtrophosStatus').textContent=d?`P${d.phase} · ${d.clock.toFixed(1)}s · 표적 #${d.id} · HP ${Math.round(d.hp)}\n열린 위험 ${d.pending} · 판정 진입 ${d.collisions} · 손목 ${Math.round(d.projection.screenX)},${Math.round(d.projection.screenY)}\n${d.events.slice(-8).map(e=>`${e.at.toFixed(2)} ${e.type} ${e.detail}`).join('\n')}`:'Atrophos 전투 대기';});
     speedRange?.addEventListener('input',event=>setSpeed(event.target.value));
     for(const button of endless.querySelectorAll('[data-dev-speed]'))button.addEventListener('click',()=>setSpeed(button.dataset.devSpeed));
     syncSpeed();

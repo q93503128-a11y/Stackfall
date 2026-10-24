@@ -5,7 +5,6 @@ function placeMines(e,count,color,damage){const base=Math.atan2(player.y-e.y,pla
 function webAroundPlayer(count,radius,damage,color){const pts=[];for(let i=0;i<count;i++){const a=i/count*TAU+.25,rr=radius*(i%2?1:.72);pts.push({x:player.x+Math.cos(a)*rr,y:player.y+Math.sin(a)*rr});}for(let i=0;i<count;i++)rawLine(pts[i].x,pts[i].y,pts[(i+2)%count].x,pts[(i+2)%count].y,18,damage,color,1.15);}
 
 function bossLater(e,delayMs,action){scheduleWeaponAction(delayMs,()=>{if(!e||e.dead||!state.entities.enemies.includes(e)||['gameover','stageVictory','stageComplete'].includes(state.mode))return;action();});}
-function chronophageScar(cx,cy,r,damage,color,life,angle=0){const ux=Math.cos(angle),uy=Math.sin(angle),nx=-uy,ny=ux,half=r*.78,width=Math.max(9,r*.17);rawLine(cx-ux*half,cy-uy*half,cx+ux*half,cy+uy*half,width,damage,color,life,'temporal-shear');for(const side of[-1,1]){const offset=r*(side>0?.42:.37),outer=r*.66,inner=r*.18;rawLine(cx+nx*side*offset-ux*outer,cy+ny*side*offset-uy*outer,cx+nx*side*offset-ux*inner,cy+ny*side*offset-uy*inner,Math.max(5,r*.09),damage*.44,color,life+.08+(side>0?.05:0),'temporal-shear');}}
 
 function miniSkill(e,dt){
   e.skillCd-=dt;e.burstCd-=dt;const d=Math.max(4,e.damage*.5),f=e.eliteForm;
@@ -216,31 +215,19 @@ function constellationTeleportDestination(e,step=0){const arena=state.apexArena;
 function teleportConstellation(e,step=0,delay=.66){const destination=constellationTeleportDestination(e,step);if(!destination||e.teleportQueued)return;e.teleportQueued=true;e.attackLockUntil=Math.max(e.attackLockUntil||0,state.time+delay+.44);state.entities.telegraphs.push({type:'circle',x:destination.x,y:destination.y,r:e.r+38,life:delay,max:delay,damage:0,color:'#dce6ff',impactStyle:'teleport-arrival',cosmetic:true});scheduleWeaponAction(delay*1000,()=>{e.teleportQueued=false;if(e.dead||state.mode!=='playing')return;const oldX=e.x,oldY=e.y;e.x=destination.x;e.y=destination.y;e.dash=0;e.contactSafeUntil=state.time+.48;e.attackLockUntil=Math.max(e.attackLockUntil||0,state.time+.42);state.entities.beams.push({x1:oldX,y1:oldY,x2:e.x,y2:e.y,life:.38,max:.38,color:'#dce6ff',width:2.2});shockwave(oldX,oldY,'#7f91ca',72,.28,2);shockwave(e.x,e.y,'#e7edff',102,.42,3);});}
 function rememberApexPlayer(e,dt){e.apexHistoryCd=(e.apexHistoryCd||0)-dt;if(e.apexHistoryCd>0)return;e.apexHistoryCd=.30;e.apexPlayerHistory=e.apexPlayerHistory||[];e.apexPlayerHistory.push({x:player.x,y:player.y});if(e.apexPlayerHistory.length>14)e.apexPlayerHistory.shift();}
 function bossAntiIdleSkill(e,dt){
-  if(!e||e.dead||e.type!=='boss'||e.kind!=='apex')return;
+  if(!e||e.dead||e.type!=='boss'||e.kind!=='apex'||isAtrophos(e))return;
   e.antiIdleSampleCd=(e.antiIdleSampleCd||0)-dt;e.antiIdleCd=(e.antiIdleCd??3.4)-dt;
   if(e.antiIdleSampleCd<=0){e.antiIdleSampleCd=.24;const lx=Number.isFinite(e.antiIdlePlayerX)?e.antiIdlePlayerX:player.x,ly=Number.isFinite(e.antiIdlePlayerY)?e.antiIdlePlayerY:player.y,moved=Math.hypot(player.x-lx,player.y-ly);e.antiIdleStill=moved<7?(e.antiIdleStill||0)+.24:Math.max(0,(e.antiIdleStill||0)-.72);e.antiIdlePlayerX=player.x;e.antiIdlePlayerY=player.y;}
   if((e.antiIdleStill||0)<1.20||e.antiIdleCd>0)return;
   e.antiIdleStill=.25;e.antiIdleCd=3.05;const d=Math.max(4,e.damage*.30),x=player.x,y=player.y,form=e.apexForm||e.eliteForm;
-  if(form==='chronophage'){
-    chronophageScar(x,y,76,d*1.08,'#79ffe1',.78,e.phase*.13);bossLater(e,220,()=>chronophageScar(player.x,player.y,94,d*.64,'#c6fff4',.72,e.phase*.13+.88));
-  }else if(form==='starforge'){
+  if(form==='starforge'){
     addCircle(x,y,68,d*1.12,'#ff7135',.76);const aim=Math.atan2(y-e.y,x-e.x);for(let i=-2;i<=2;i++)spawnEnemyProjectile(e.x,e.y,aim+i*.115,215+Math.abs(i)*8,d*.56,i%2?'#ffd26f':'#ff9d42',5.4,4.2,'forge');
   }else if(form==='lastconstellation'){
     const sx=184,sy=112;rawLine(x-sx,y-sy,x+sx,y+sy,18,d,'#d8e2ff',.88,'constellation-link');rawLine(x-sx,y+sy,x+sx,y-sy,18,d*.88,'#879be0',1.02,'constellation-link');
   }else addCircle(x,y,52,d,e.color||'#ff72cb',1.08);
 }
-function chronophageSignature(e,d,arena,phase){
-  const history=e.apexPlayerHistory||[],now={x:player.x,y:player.y},p1=history[Math.max(0,history.length-(3+phase))]||now,p2=history[Math.max(0,history.length-(7+phase))]||p1,p3=history[Math.max(0,history.length-(10+phase))]||p2,base=e.phase*.11;
-  // Present position always owns a real delayed rupture, so an idle player cannot null the pattern.
-  chronophageScar(now.x,now.y,58+phase*5,d*1.00,'#d9fff8',.72,base);
-  chronophageScar(p1.x,p1.y,50+phase*4,d*.70,'#79ffe1',.90,base+.78);
-  chronophageScar(p2.x,p2.y,58+phase*4,d*.58,'#9fffea',1.08,base-.64);
-  const dx=now.x-p2.x,dy=now.y-p2.y,len=Math.hypot(dx,dy);
-  if(len>42){const nx=-dy/len,ny=dx/len,half=Math.min(170,92+phase*18);rawLine(now.x-nx*half,now.y-ny*half,now.x+nx*half,now.y+ny*half,14+phase,d*.66,'#bffdf3',1.00,'temporal-shear');}
-  else chronophageScar(now.x,now.y,86+phase*5,d*.62,'#bffdf3',1.08,base+1.34);
-  if(phase>=3){bossLater(e,330,()=>chronophageScar(player.x,player.y,52+phase*4,d*.72,'#ecfffb',.66,e.phase*.11+.46));}
-  if(phase===4){bossLater(e,620,()=>{const q={x:player.x,y:player.y};chronophageScar(q.x,q.y,64,d*.82,'#79ffe1',.64,e.phase*.11-.86);chronophageScar(p3.x,p3.y,70,d*.52,'#c6fff4',.84,e.phase*.11+.98);});}
-}
+function chronophageSignature(e,d,arena,phase){return atrophosDelayedCut(e,d,arena,phase);}
+
 function starforgeSignature(e,d,arena,phase){
   const target=predictedPlayer(42+phase*16),primary=62+phase*6;
   addCircle(target.x,target.y,primary,d*1.10,'#ff7135',.78);
@@ -263,19 +250,16 @@ function constellationSignature(e,d,arena,phase){
   constellationCage(e,d,arena,phase,1.06);bossLater(e,430,()=>{if(!e.dead)constellationNodeVolley(e,d*.92,arena,phase);});if(phase>=2)teleportConstellation(e,phase,.56);
 }
 function apexBossSkill(e,dt){
+  if(isAtrophos(e))return updateAtrophos(e,dt);
   e.apexElapsed=(e.apexElapsed||0)+dt;rememberApexPlayer(e,dt);
   const health=e.hp/Math.max(1,e.maxHp),healthPhase=health<.25?4:health<.50?3:health<.75?2:1,timePhase=e.apexElapsed>=240?4:e.apexElapsed>=180?3:e.apexElapsed>=105?2:1,phase=Math.max(healthPhase,timePhase),terminal=phase===4&&e.apexElapsed>=240,k=terminal?.42:[1,.86,.72,.58][phase-1];
   e.apexPhase=phase;e.timeLock=0;if((e.attackLockUntil||0)>state.time)return;
   e.skillCd-=dt/k;e.burstCd-=dt/k;e.pulseCd-=dt/k;e.signatureCd=(e.signatureCd??5.8)-dt/k;
   const d=Math.max(7,e.damage*.40),f=e.eliteForm,arena=state.apexArena||{x:player.x,y:player.y,r:460};
-  if(e.signatureCd<=0){e.signatureCd=Math.max(5.4,8.8-phase*.82);if(f==='chronophage')chronophageSignature(e,d,arena,phase);else if(f==='starforge')starforgeSignature(e,d,arena,phase);else constellationSignature(e,d,arena,phase);}
+  if(e.signatureCd<=0){e.signatureCd=Math.max(5.4,8.8-phase*.82);if(f==='starforge')starforgeSignature(e,d,arena,phase);else constellationSignature(e,d,arena,phase);}
   e.apexFrenzyCd=(e.apexFrenzyCd??1.35)-dt;
-  if(terminal&&e.apexFrenzyCd<=0){e.apexFrenzyCd=.95;if(f==='chronophage')chronophageScar(player.x,player.y,58,d*.78,'#d9fff8',.58,e.phase*.13);else if(f==='starforge'){addCircle(player.x,player.y,52,d*.82,'#ff7135',.60);const aim=Math.atan2(player.y-e.y,player.x-e.x);for(let i=-2;i<=2;i++)spawnEnemyProjectile(e.x,e.y,aim+i*.115,225,d*.48,'#ffd26f',5.2,4.0,'forge');}else constellationNodeVolley(e,d*.82,arena,phase);}
-  if(f==='chronophage'){
-    if(e.skillCd<=0){e.skillCd=phase>=3?2.0:2.65;const h=e.apexPlayerHistory||[],past=h[Math.max(0,h.length-(5+phase))]||{x:player.x,y:player.y};chronophageScar(player.x,player.y,54+phase*4,d*.92,'#d9fff8',.68,e.phase*.12);chronophageScar(past.x,past.y,60+phase*4,d*.62,'#79ffe1',.94,e.phase*.12+.92);}
-    if(e.burstCd<=0){e.burstCd=phase>=3?4.65:5.8;chronophageSignature(e,d*.88,arena,phase);}
-    if(e.pulseCd<=0){e.pulseCd=phase>=3?6.4:7.9;const h=e.apexPlayerHistory||[],marks=[{x:player.x,y:player.y},h[Math.max(0,h.length-4)],h[Math.max(0,h.length-8)]].filter(Boolean);marks.forEach((p,i)=>chronophageScar(p.x,p.y,48+phase*4+i*7,d*(.84-i*.12),'#bffdf3',.62+i*.17,e.phase*.10+i*.72));}
-  }else if(f==='starforge'){
+  if(terminal&&e.apexFrenzyCd<=0){e.apexFrenzyCd=.95;if(f==='starforge'){addCircle(player.x,player.y,52,d*.82,'#ff7135',.60);const aim=Math.atan2(player.y-e.y,player.x-e.x);for(let i=-2;i<=2;i++)spawnEnemyProjectile(e.x,e.y,aim+i*.115,225,d*.48,'#ffd26f',5.2,4.0,'forge');}else constellationNodeVolley(e,d*.82,arena,phase);}
+  if(f==='starforge'){
     if(e.skillCd<=0){e.skillCd=phase>=3?2.05:2.75;starforgeSignature(e,d*.86,arena,phase);}
     if(e.burstCd<=0){e.burstCd=phase>=3?4.35:5.55;const p=predictedPlayer(38+phase*12),horizontal=(e.forgePressAxis=(e.forgePressAxis||0)+1)%2===0,spacing=Math.max(68,98-phase*6);for(let i=-1;i<=1;i++){const x=p.x+(horizontal?i*spacing*1.12:0),y=p.y+(horizontal?0:i*spacing*1.12),center=i===0;addCircle(x,y,50+phase*4,d*(center?1.04:.64),center?'#ff7135':'#ffd26f',.72+Math.abs(i)*.09);}}
     if(e.pulseCd<=0){e.pulseCd=phase>=3?6.1:7.6;const aim=Math.atan2(player.y-e.y,player.x-e.x),count=7+phase;for(let i=0;i<count;i++){const off=(i-(count-1)/2)*.095;spawnEnemyProjectile(e.x,e.y,aim+off,185+phase*15,d*.60,i%2?'#fff1b0':'#ff9d42',5.5,4.2,'forge');}addCircle(player.x,player.y,54+phase*4,d*.78,'#ff8a42',.84);}
