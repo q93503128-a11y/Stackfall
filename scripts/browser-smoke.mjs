@@ -25,7 +25,7 @@ const screenshotDir=resolve(process.env.STACKFALL_SCREENSHOT_DIR||join(dirname(r
 const profile=mkdtempSync(join(tmpdir(),'stackfall-cdp-'));
 const startedAt=new Date().toISOString();
 const failures=[],skips=[],scenarios=[],allWarnings=[],allNetworkFailures=[];
-let browser=null,debugPort=0,chromeVersion='unknown',deployedBuildSha=null;
+let browser=null,debugPort=0,chromeVersion='unknown',deployedBuildSha=null,chromeStartupLog='';
 
 function chromeCandidates(){
   const explicit=[process.env.STACKFALL_CHROME,process.env.CHROME_PATH].filter(Boolean);
@@ -40,7 +40,7 @@ function percentile(sorted,p){return sorted[Math.min(sorted.length-1,Math.floor(
 function isPixiUrl(url=''){return/cdn\.jsdelivr\.net\/npm\/pixi\.js/i.test(url);}
 function writeResult(extra={}){
   mkdirSync(dirname(resultPath),{recursive:true});
-  const result={ok:failures.length===0,startedAt,endedAt:new Date().toISOString(),url:requestedGameUrl,checkedUrl:gameUrl,runType,commit:commitSha(),expectedBuildSha,deployedBuildSha,chromeVersion,viewport:{desktop:{width:1920,height:1080,dpr:1},mobile:{width:390,height:844,dpr:2}},browserArgs,soakRequestedMs:soakMs,soakBudgetEnforced:strictSoak,failures,warnings:allWarnings,networkFailures:allNetworkFailures,skips,scenarios,...extra};
+  const result={ok:failures.length===0,startedAt,endedAt:new Date().toISOString(),url:requestedGameUrl,checkedUrl:gameUrl,runType,commit:commitSha(),expectedBuildSha,deployedBuildSha,chromeVersion,chromeStartupLog,viewport:{desktop:{width:1920,height:1080,dpr:1},mobile:{width:390,height:844,dpr:2}},browserArgs,soakRequestedMs:soakMs,soakBudgetEnforced:strictSoak,failures,warnings:allWarnings,networkFailures:allNetworkFailures,skips,scenarios,...extra};
   writeFileSync(resultPath,`${JSON.stringify(result,null,2)}\n`);
   return result;
 }
@@ -269,7 +269,7 @@ async function fallbackScenario(page,scenario){
 }
 
 try{
-  mkdirSync(screenshotDir,{recursive:true});chromePath=findChrome();browser=spawn(chromePath,browserArgs,{stdio:'ignore',windowsHide:true});debugPort=await waitForDebugPort();const version=await jsonEndpoint('/json/version');chromeVersion=version.Product||version['User-Agent']||'unknown';
+  mkdirSync(screenshotDir,{recursive:true});chromePath=findChrome();browser=spawn(chromePath,browserArgs,{stdio:['ignore','ignore','pipe'],windowsHide:true});browser.stderr?.on('data',chunk=>{chromeStartupLog=(chromeStartupLog+chunk.toString()).slice(-6000);});debugPort=await waitForDebugPort();const version=await jsonEndpoint('/json/version');chromeVersion=version.Product||version['User-Agent']||'unknown';
   if(!process.argv.includes('--awakening-only')&&!process.argv.includes('--atrophos-only')){
     await runScenario('main-gpu',{allowWarnings:[],allowNetwork:[]},mainScenario);
     await runScenario('pixi-fallback',{blockPixi:true,allowWarnings:[/^\[Stackfall\] PixiJS download failed; Canvas 2D fallback remains active\.?$/, /^Failed to load resource: net::ERR_BLOCKED_BY_CLIENT$/],allowNetwork:[item=>isPixiUrl(item.url)]},fallbackScenario);
