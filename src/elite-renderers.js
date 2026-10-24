@@ -2,10 +2,16 @@ function eliteGlowCore(e,inner='#ffffff',middle=e.color,outer='#090615',scale=.5
 function eliteNode(x,y,r,color='#fff'){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();}
 function eliteDiamond(r){ctx.beginPath();ctx.moveTo(0,-r);ctx.lineTo(r*.72,0);ctx.lineTo(0,r);ctx.lineTo(-r*.72,0);ctx.closePath();}
 function drawChronophageApex(e,t,enraged){
-  // Temporal fracture anatomy is now a wrist receiver; the colossus is rear scenery.
-  drawAtrophosWrist(e);
+  // Apex rework: temporal fracture anatomy — deliberately no clock face, hands or gear motif.
+  const r=e.r,phase=e.apexPhase||1,pulse=.92+.08*Math.sin(t*.41);ctx.save();ctx.rotate(-.10+Math.sin(t*.13)*.045);ctx.lineJoin='round';
+  for(let ghost=2;ghost>=1;ghost--){ctx.save();ctx.globalAlpha=.10+(2-ghost)*.07;ctx.translate(-ghost*r*.12+Math.sin(t*.9+ghost)*r*.04,ghost*r*.05);ctx.strokeStyle=ghost===1?'#79ffe1':'#9fb2ff';ctx.lineWidth=2;for(let i=0;i<5;i++){const a=-1.9+i*.86+(i%2?.16:-.09),rr=r*(.58+i*.10);ctx.save();ctx.rotate(a);ctx.translate(rr,0);ctx.rotate((i%2?1:-1)*.38);ctx.beginPath();ctx.moveTo(-r*.30,-r*.17);ctx.lineTo(r*.24,-r*.28);ctx.lineTo(r*.42,r*.03);ctx.lineTo(-r*.12,r*.24);ctx.closePath();ctx.stroke();ctx.restore();}ctx.restore();}
+  const shell=ctx.createLinearGradient(-r,-r,r,r);shell.addColorStop(0,'#07171a');shell.addColorStop(.48,'#12363b');shell.addColorStop(1,'#04090d');ctx.fillStyle=shell;ctx.strokeStyle=e.hit?'#fff':'#79ffe1';ctx.lineWidth=3.2+phase*.35;
+  const plates=[[-.82,-.42,-.16,-.78,.08,-.25,-.34,.02],[-.28,-.78,.42,-.60,.30,-.08,-.06,-.22],[.18,-.20,.76,-.46,.88,.06,.22,.22],[.06,.26,.68,.20,.44,.76,-.14,.62],[-.68,.06,-.14,.18,-.24,.76,-.82,.52],[-.92,-.20,-.46,-.40,-.26,.02,-.76,.18]];
+  for(let i=0;i<plates.length;i++){const p=plates[i],lag=Math.sin(t*(.42+i*.06)+i*1.7)*r*(.018+phase*.004);ctx.save();ctx.translate((i%2?lag:-lag),i%3===0?-lag*.5:lag*.35);ctx.beginPath();ctx.moveTo(p[0]*r,p[1]*r);ctx.lineTo(p[2]*r,p[3]*r);ctx.lineTo(p[4]*r,p[5]*r);ctx.lineTo(p[6]*r,p[7]*r);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
+  ctx.shadowBlur=22;ctx.shadowColor='#bffdf3';ctx.fillStyle='#02080a';ctx.strokeStyle='#dffff9';ctx.lineWidth=2.6;ctx.beginPath();ctx.moveTo(-r*.16,-r*.52);ctx.lineTo(r*.06,-r*.22);ctx.lineTo(-r*.03,-r*.06);ctx.lineTo(r*.13,r*.14);ctx.lineTo(-r*.10,r*.54);ctx.lineTo(-r*.30,r*.18);ctx.lineTo(-r*.19,-r*.08);ctx.lineTo(-r*.34,-r*.28);ctx.closePath();ctx.fill();ctx.stroke();ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(223,255,249,.72)';ctx.lineWidth=1.5;for(let i=0;i<3+phase;i++){const y=(-.34+i*(.68/Math.max(1,2+phase)))*r,shift=Math.sin(t*.7+i)*r*.08;ctx.beginPath();ctx.moveTo(-r*.66+shift,y);ctx.lineTo(-r*.22+shift*.3,y+r*.05);ctx.moveTo(r*.20-shift*.2,y-r*.03);ctx.lineTo(r*.70-shift,y+r*.04);ctx.stroke();}
+  ctx.globalAlpha=.55+.25*pulse;ctx.fillStyle='#ecfffb';ctx.beginPath();ctx.moveTo(-r*.09,-r*.18);ctx.lineTo(r*.13,-r*.03);ctx.lineTo(-r*.02,r*.22);ctx.lineTo(-r*.20,r*.02);ctx.closePath();ctx.fill();ctx.restore();
 }
-
 function drawStarforgeApex(e,t,enraged){
   // Apex rework: Omega is a huge anchored ruptured stellar mass, not a rectangular machine.
   const r=e.r,phase=e.apexPhase||1,pulse=.90+.10*Math.sin(t*.36);ctx.save();ctx.rotate(Math.sin(t*.055)*.018);ctx.lineJoin='round';

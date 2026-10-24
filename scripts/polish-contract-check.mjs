@@ -10,7 +10,7 @@ const checks=[
   ['apex terminal frenzy',read('src/boss-patterns.js').includes('e.apexElapsed>=240')],
   ['apex ignores build strength',!catalog.includes('apexPlayerGrowthScale')&&!catalog.includes('weaponTotal')&&!catalog.includes('passiveTotal')],
   ['apex has visible four-phase variants',bosses.includes('function apexPhaseDirector')&&bosses.includes('function apexVariantAttack')&&combat.includes('초월체 · P${phase}')],
-  ['apex Atrophos uses locked delayed scars',read('src/atrophos-combat.js').includes('atrophosStart')&&read('src/atrophos-combat.js').includes('atrophosSample(a,.85)')&&bosses.includes('updateAtrophos(enemy,dt)')],
+  ['apex chronophage scars force present-position movement',bosses.includes('scarCd')&&bosses.includes('chronophageScar(x,y,r,chase.damage')&&read('src/boss-patterns.js').includes('chronophageScar(now.x,now.y')],
   ['apex set pieces reject shared continuous beams',!bosses.includes('beam.visual=stressed?.070:.040')&&!bosses.includes('sweep.visual=stressed?.075:.045')&&bosses.includes('network.visual=stressed?.085:.050')],
   ['singularity distortion',rewards.includes("w.kind!=='trait-singularity'||w.life<=0")&&rewards.includes('p.vx*=slow;p.vy*=slow')],
   ['random upgrade notice',read('src/map-event-expansion.js').includes('showUpgradeNotice')],
@@ -54,7 +54,7 @@ const checks=[
   ['enemy shots use cached bullet renderer',read('src/performance-guard.js').includes('cachedEnemyProjectiles')&&read('src/performance-guard.js').includes('drawCachedProjectiles(state.entities.enemyProjectiles,true)')&&!read('src/performance-guard.js').includes('styledEnemyProjectiles')],
   ['core pulse has a distinct player visual marker',endgame.includes("projectile.color='#35f4ff'")&&endgame.includes("projectile.playerVisual='core'")&&endgame.includes("color:'#86fbff'")],
   ['shorter hit invulnerability',endgame.includes('shorterHitInvulnerability')&&endgame.includes('Math.min(player.invuln,.5)')],
-  ['apex arena expanded and boss start separated',endgame.includes('compactDevice()?350:540')&&endgame.includes('minDistance=arena.r*.54')],
+  ['Apex player movement is not constrained by an expanded arena',!endgame.includes('compactDevice()?350:540')&&!endgame.includes('minDistance=arena.r*.54')],
   ['ability UI is display only',!auditUi.includes('hasteMult=function')&&!auditUi.includes('damageMult=function')&&!auditUi.includes('window.chainDamageBonus=')]
 ];
 const failed=checks.filter(([,ok])=>!ok);for(const [name,ok]of checks)console.log(ok?'PASS':'FAIL',name);if(failed.length)process.exit(1);

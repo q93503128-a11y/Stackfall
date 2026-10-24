@@ -26,7 +26,7 @@ expect('ranged overlay and edge helper remain defined',buildAudit.includes('func
 expect('map event arrows remain on canvas path',buildAudit.includes('drawMapEventEdgeArrows')&&buildAudit.includes('guidanceEventArrows')&&renderLoop.includes("runDrawStage('drawMapEvents'"));
 expect('map event arrows have one renderer owner',buildAudit.includes("baseDrawMapEvents.name==='drawPolishedMapEvents'")&&buildAudit.includes('if(baseOwnsEventArrows)guidanceEventArrows=0;else drawMapEventEdgeArrows()'));
 expect('crash arena remains visible without duplicate ship beacon',darkCosmic.includes('function drawCrashArena(ev,t)')&&darkCosmic.includes("ev?.type==='crash'&&ev.arena")&&darkCosmic.includes('drawCrashArena(ev,t)')&&!darkCosmic.includes("drawCrashBeacon({x:0,y:0},t)"));
-expect('apex arena remains visible',buildAudit.includes("typeof drawApexArena==='function'")&&buildAudit.includes('drawApexArena()'));
+expect('Apex has no arena wall or visual cage',read('src/boss-body-parts.js').includes('drawApexArena=function apexArenaHasNoPlayerCage(){return;}')&&read('src/boss-body-parts.js').includes('updateMapEventPlayerWithoutApexCage'));
 expect('manual aim is optional persistent and visibly guided',targeting.includes('id="manualAim"')&&targeting.includes('GAME_SETTINGS.manualAim')&&targeting.includes('saveGameSettings()')&&settings.includes('GAME_SETTINGS.manualAim=saved.manualAim===true')&&targeting.includes('drawPlayerWithManualAim')&&targeting.includes('cursorD2+d2*.002'));
 expect('magnet stacks accelerate pickup',targeting.includes('pullSpeed=1+magnetStacks*.22')&&wiki.includes('더 빠르게 끌려온다'));
 expect('projection core copy is effect-only',endgame.includes("ko:['다중 투영 코어','일부 장비의 동시 공격 수 +1.']")&&!endgame.includes('추가 공격체는 원본과 같은 적을 노린다')&&!buildAudit.includes('sanitizeWorldEventCopy')&&!buildAudit.includes('현재 복제 확률')&&!buildAudit.includes('추가 흡인 속도'));
@@ -54,12 +54,12 @@ expect('starlight caster has one canonical directional painter',read('src/canoni
 expect('basic bulwark receives canonical low-stack recharge and reduction buff',read('src/weapons.js').includes('function bulwarkRechargeProfile')&&read('src/weapons.js').includes('interval:7.4,cap:20,gain:5')&&read('src/weapons.js').includes('interval:6.8,cap:28,gain:7')&&community.includes('communityBulwarkReduction')&&!community.includes('communityBulwarkCd'));
 expect('community per-run state resets cleanly',community.includes('resetCommunityRunState')&&community.includes('player.communityCoreRicochetCycle=0')&&!community.includes('player.communityBulwarkCd'));
 expect('offense outlier scaling is explicit and bounded',community.includes("clampScale(n,[1,1,1,1,.84,.78,.68])")&&community.includes("clampScale(n,[1,1,.95,.92,.88,.82,.68])")&&community.includes("clampScale(n,[1,1,1,1,.96,.92,.78])"));
-expect('apex chronophage uses delayed time scars instead of a shared tracking beam',read('src/atrophos-combat.js').includes('atrophosSample(a,.85)')&&bosses.includes('updateAtrophos(enemy,dt)')&&wiki.includes('시간 흉터'));
+expect('apex chronophage uses delayed time scars instead of a shared tracking beam',bosses.includes('scarCd')&&bosses.includes('chronophageScar(x,y,r,chase.damage')&&wiki.includes('시간 흉터'));
 expect('apex set pieces avoid continuous generic beam churn',!bosses.includes('beam.visual=stressed?.070:.040')&&!bosses.includes('sweep.visual=stressed?.075:.045')&&bosses.includes('network.visual=stressed?.085:.050'));
 expect('vault remains available during elite combat',targeting.includes('vaultDuringEliteEncounters')&&wiki.includes('Stage 서브보스가 살아 있어도 표식이 먼저 나타날 수 있다'));
 expect('player core projectile is visually distinct',endgame.includes("projectile.color='#35f4ff'")&&endgame.includes("projectile.playerVisual='core'")&&endgame.includes("color:'#86fbff'"));
 expect('shorter player hit grace',endgame.includes('shorterHitInvulnerability')&&endgame.includes('Math.min(player.invuln,.5)'));
-expect('larger and spaced apex arena',endgame.includes('expandedApexEncounter')&&endgame.includes('compactDevice()?350:540')&&endgame.includes("options?.owner!=='apex-entry'")&&endgame.includes('minDistance=arena.r*.54'));
+expect('Apex entry does not resize or space around a forced arena',!endgame.includes('expandedApexEncounter')&&!endgame.includes('minDistance=arena.r*.54'));
 expect('player wiki synced',(wiki.includes('수동 조준')&&wiki.includes('최대 출력: ×4.45'))||wiki.includes('6중첩 최대 출력: ×4.45'));
 expect('community refinement is final load owner',index.indexOf('src/community-feedback-refinement.js')>index.indexOf('src/endgame-balance-expansion.js'));
 expect('community contract wired into CI',validate.includes('node scripts/community-feedback-contract.mjs'));

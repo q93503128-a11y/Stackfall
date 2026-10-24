@@ -207,9 +207,9 @@ export function awakeningRuntimeChecks(){
     const raster=a.length>0&&b.length>0&&Math.abs(((b[0][0]-a[0][0]+1400)%1400)-1363)<=1&&Math.abs(((b[0][1]-a[0][1]+1000)%1000)-977)<=1,moved=projected||raster;
     check(moved,`${theme} world anchor did not follow player movement`);
     state.mode='playing';const preview=dev.jumpStageBoss();check(preview?.ok===true,`${theme} DEV boss preview failed`);if(!preview?.ok)continue;
-    for(let i=0;i<299;i++){state.time=preview.startAt+(i+1)/60;updateSpawning(1/60);}
+    for(let i=0;i<299;i++){state.time=preview.startAt+(i+1)/60;state.runTime=state.time;updateSpawning(1/60);}
     check(state.stageRun?.bossSpawned===false&&state.entities.enemies.length===0,`${theme} DEV preview spawned combat before five seconds`);
-    state.time=preview.bossAt;updateSpawning(1/60);if(state.realmTransition)updateRealmTransition(state.realmTransition.duration);
+    state.time=preview.bossAt;state.runTime=state.time;updateSpawning(1/60);if(state.realmTransition)updateRealmTransition(state.realmTransition.duration);
     const boss=state.entities.enemies.filter(e=>e.kind==='stage-boss'&&!e.dead).length===1;check(boss,`${theme} normal five-second trigger did not finish entry`);stages.push({order,moved,boss});
   }
   dev.startEndless();check(window.stackfallCurrentRunConfig().mode==='endless','DEV Endless failed');state.mode='paused';draw();

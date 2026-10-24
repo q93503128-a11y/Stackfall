@@ -79,7 +79,7 @@
     ctx.restore();
   }
   drawRealmCinematicOverlay=function drawDistinctApexOverlay(){
-    const tr=state.realmTransition;if(tr?.form==='chronophage')return drawAtrophosCinematic();if(!tr?.apex)return baseDrawRealmCinematicOverlay();
+    const tr=state.realmTransition;if(!tr?.apex)return baseDrawRealmCinematicOverlay();
     const p=clamp(tr.elapsed/tr.duration,0,1),fade=Math.sin(Math.PI*p),exit=tr.owner==='apex-exit',reveal=exit?1-clamp((p-.12)/.72,0,1):clamp((p-.22)/.45,0,1),color=tr.form==='chronophage'?'#79ffe1':tr.form==='starforge'?'#ffb04e':tr.form==='lastconstellation'?'#b7c9ff':transitionColor(tr.to),x=vw/2,y=vh*.42,t=tr.elapsed;
     ctx.save();ctx.fillStyle=`rgba(0,0,7,${.38+.38*fade})`;ctx.fillRect(0,0,vw,vh);ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,vw,Math.max(22,vh*.09));ctx.fillRect(0,vh-Math.max(22,vh*.09),vw,Math.max(22,vh*.09));
     ctx.translate(x,y);ctx.globalAlpha=fade*.42;ctx.strokeStyle=color;ctx.lineWidth=1.2;for(let i=0;i<48;i++){const a=i/48*TAU+Math.sin(i*9.17)*.05,r1=220*(1-reveal)+35,r2=Math.max(vw,vh)*(.48+.32*reveal);ctx.beginPath();ctx.moveTo(Math.cos(a)*r1,Math.sin(a)*r1);ctx.lineTo(Math.cos(a)*r2,Math.sin(a)*r2);ctx.stroke();}ctx.restore();

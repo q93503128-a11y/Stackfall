@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
-const catalog=read('src/boss-catalog.js'),core=read('src/core.js'),render=read('src/render.js'),eliteRenderers=read('src/elite-renderers.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),events=read('src/map-event-expansion.js'),difficulty=read('src/difficulty-augment-expansion.js'),endgame=read('src/endgame-balance-expansion.js'),combat=read('src/combat-balance-refinement.js'),smoke=read('scripts/browser-smoke.mjs');
+const catalog=read('src/boss-catalog.js'),core=read('src/core.js'),render=read('src/render.js'),eliteRenderers=read('src/elite-renderers.js'),bosses=read('src/bosses.js'),patterns=read('src/boss-patterns.js'),events=read('src/map-event-expansion.js'),difficulty=read('src/difficulty-augment-expansion.js'),endgame=read('src/endgame-balance-expansion.js'),combat=read('src/combat-balance-refinement.js'),smoke=read('scripts/browser-smoke.mjs'),runClock=read('src/apex-run-clock.js'),bodyParts=read('src/boss-body-parts.js'),foundationQa=read('scripts/apex-foundation-browser.mjs');
 const checks=[
  ['apex interval is 600 game seconds',catalog.includes('APEX_INTERVAL_SECONDS=600')&&core.includes('nextApexAt:600')&&core.includes('state.nextApexAt=600')],
  ['paused wall clock cannot advance apex',!render.includes('state.apexClock=')&&!catalog.includes('state.apexClock=0')],
@@ -15,9 +15,9 @@ const checks=[
  ['appearance escalation has no finite appearance cap',!catalog.includes('Math.min(10,cycle)')&&catalog.includes('for(let i=0;i<cycle;i++')&&catalog.includes('if(value>=1e120)return 1e120')],
  ['first apex has extreme fixed base strength',catalog.includes('enemy.hp*=7.60*escalation.hp')&&catalog.includes('enemy.damage*=2.15*escalation.damage')&&catalog.includes('enemy.skillCd*=.52/escalation.pattern')],
  ['phase transitions and variants',bosses.includes('function apexPhaseTransition')&&bosses.includes('function apexVariantAttack')&&bosses.includes("showBossNotice(bossName(form)+' · PHASE '+phase")],
- ['Atrophos delayed snapshots have a dedicated owner',read('src/atrophos-combat.js').includes('atrophosSample(a,.85)')&&bosses.includes('updateAtrophos(enemy,dt)')],
+ ['chronophage scar chase forces present-position movement',bosses.includes('scarCd')&&bosses.includes('chronophageScar(x,y,r,chase.damage')&&patterns.includes('chronophageScar(now.x,now.y')&&patterns.includes("'temporal-shear'")],
  ['omega is fixed and oversized',catalog.includes("starforge:{color:'#ffb04e',hp:2.48,speed:0")&&catalog.includes('r:2.28')&&bosses.includes("if(form==='starforge'){out.x=0;out.y=0;return out;}")],
- ['apex silhouettes reject clock eye and rectangular-machine shortcuts',read('src/atrophos-render.js').includes('ATROPHOS_PLANES')&&eliteRenderers.includes('huge anchored ruptured stellar mass')&&eliteRenderers.includes('no central eye/oval body')],
+ ['apex silhouettes reject clock eye and rectangular-machine shortcuts',eliteRenderers.includes('temporal fracture anatomy')&&eliteRenderers.includes('huge anchored ruptured stellar mass')&&eliteRenderers.includes('no central eye/oval body')],
  ['persistent gravity furnace set piece',bosses.includes('function startForgeTidalCore')&&bosses.includes('function updateForgeTidalCore')&&bosses.includes('player.x+=dx/d*pull*dt')],
  ['temporary herald summon set piece',bosses.includes('function summonConstellationHeralds')&&bosses.includes("eventKind='apex-herald'")&&bosses.includes('apexSummonLife')],
  ['local constellation cage set piece replaces rotating sweep',bosses.includes('function startConstellationSweep')&&bosses.includes('function updateConstellationSweep')&&bosses.includes('constellationCage(e,sweep.damage')&&!bosses.includes('sweep.angle+=dt')],
@@ -30,5 +30,11 @@ const checks=[
  ['overall base difficulty slightly reduced',difficulty.includes('c.hp*=.88*d.enemyHp')&&difficulty.includes('c.damage*=.94*d.enemyDamage')&&difficulty.includes('c.speed*=.98*d.enemySpeed')],
  ['hard late scaling increased progressively',endgame.includes("hardLate=hard?(minutes*.014+Math.pow(minutes,1.08)*.0040):0")&&endgame.includes("hardLate=hard?(minutes*.0065+Math.pow(minutes,1.06)*.0022):0")],
  ['balance audit reports 600',endgame.includes("APEX_INTERVAL_SECONDS==='number'?APEX_INTERVAL_SECONDS:600")]
+ ,['Apex progression clock freezes while the combat simulation clock keeps advancing',render.includes('state.time+=dt;if(!isApexProgressionClockPaused())state.runTime')&&runClock.includes("['apex-entry','apex-exit']")&&runClock.includes("['apexReward']")&&runClock.includes('state.apexExitPending')&&runClock.includes('function updateApexAtProgressionTime')]
+ ,['Apex progression resumes after reward and reset clears run time',runClock.includes('resetGameWithRunClock')&&runClock.includes('state.runTime=0;return apexClockResetBase()')&&runClock.includes('updateHudWithRunClock')]
+ ,['multipart boss parts share one owner and one health pool',bodyParts.includes('function defineBossBodyParts')&&bodyParts.includes('function bossPartOwner')&&bodyParts.includes('routeBossPartDamageToSharedPool')&&bodyParts.includes('multipartEnemyCircleOverlap')]
+ ,['multipart queries cover extended spatial bounds and active parts only',bodyParts.includes('function nearestBossBodyPart')&&bodyParts.includes('includeMultipartBossBounds')&&bodyParts.includes('if(!enemy||enemy.dead||!enemy.bodyParts?.length')&&bodyParts.includes('handOffInactiveBossPartMissiles')===false&&bodyParts.includes('handoffInactiveBossPartMissiles')]
+ ,['Apex debug fixture is dev-only and never draws new production art',bodyParts.includes("if(!window.stackfallDeveloperTest?.enabled)return")&&bodyParts.includes('DEBUG ${part.label}')]
+ ,['browser QA covers all Apex forms, timer, handoff, overlap, and attack families',smoke.includes("runScenario('apex-foundation'")&&['chronophage','starforge','lastconstellation','homingHandoff','duplicateAoE','attackPaths','rewardResume'].every(value=>foundationQa.includes(value))]
 ];
 let failed=0;for(const [name,ok] of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failed++;}console.log(`Checked ${checks.length} apex contracts; failures=${failed}`);if(failed)process.exit(1);
