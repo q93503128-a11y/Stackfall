@@ -33,8 +33,10 @@
     const ok=baseEnsure(e);if(!ok)return false;
     const r=e.atroposReborn;
     if(!r.artAnchorV8){
-      r.anchorX=player.x+Math.min(330,vw*.20);
-      r.anchorY=player.y-Math.min(340,vh*.36);
+      r.artScreenAnchorX=Math.min(330,vw*.20);
+      r.artScreenAnchorY=-Math.min(340,vh*.36);
+      r.anchorX=player.x+r.artScreenAnchorX;
+      r.anchorY=player.y+r.artScreenAnchorY;
       e.x=r.anchorX;e.y=r.anchorY;r.artAnchorV8=true;
       refreshBossBodyParts(e);
     }
@@ -52,15 +54,14 @@
       align=a<.78?smooth(a/.78):a<1.46?1:1-smooth((a-1.46)/.74);
       if(a>=1.16&&a<1.58)open=Math.sin(Math.PI*clamp((a-1.16)/.42,0,1));
     }
-    const driftX=(e.atroposReborn.anchorX-player.x)*.035,driftY=(e.atroposReborn.anchorY-(player.y-vh*.36))*.025;
+    const anchorX=e.atroposReborn.artScreenAnchorX??Math.min(330,vw*.20),anchorY=e.atroposReborn.artScreenAnchorY??-Math.min(340,vh*.36);
     for(const [key,p] of Object.entries(pose)){
       const part=partOf(e,key);if(!part)continue;
-      let sx=vw*p.x+driftX,sy=vh*p.y+driftY;
       const side=key==='west-blade'||key==='crown-anchor'?-1:1;
-      sx+=side*(18+16*(key.includes('blade')?1:0))*align+side*18*open;
-      sy+=(key==='crown-anchor'?-18:key==='keel-anchor'?20:8)*align;
-      part.dx=player.x+sx-vw/2-e.x;
-      part.dy=player.y+sy-vh/2-e.y;
+      const attackX=side*(18+16*(key.includes('blade')?1:0))*align+side*18*open;
+      const attackY=(key==='crown-anchor'?-18:key==='keel-anchor'?20:8)*align;
+      part.dx=(p.x-.5)*vw-anchorX+attackX;
+      part.dy=(p.y-.5)*vh-anchorY+attackY;
     }
     refreshBossBodyParts(e);return result;
   };
@@ -69,9 +70,9 @@
     if(!arenaArt.complete||arenaArt.naturalWidth<2||manifest<=.001)return;
     const e=state.entities.enemies?.find(enemy=>!enemy.dead&&enemy.apexForm==='chronophage');
     const r=e?.atroposReborn;
-    const ox=clamp(((r?.anchorX??player.x)-player.x)*.045,-34,34);
-    const oy=clamp(((r?.anchorY??player.y)-(player.y-vh*.36))*.025,-18,18);
-    const breathe=1.035+Math.sin((state.time||0)*.10)*.0025;
+    const initialX=r?.artScreenAnchorX??Math.min(330,vw*.20),initialY=r?.artScreenAnchorY??-Math.min(340,vh*.36);
+    const ox=r?(r.anchorX-player.x-initialX):0,oy=r?(r.anchorY-player.y-initialY):0;
+    const visualTime=performance.now()*.001,breathe=1.055+Math.sin(visualTime*.32)*.0025;
     const dw=vw*breathe,dh=vh*breathe,x=(vw-dw)*.5+ox,y=(vh-dh)*.5+oy;
     ctx.save();ctx.globalAlpha=.88*manifest;ctx.drawImage(arenaArt,x,y,dw,dh);
     ctx.globalCompositeOperation='source-over';ctx.globalAlpha=.09*manifest;ctx.fillStyle='#07142a';ctx.fillRect(0,0,vw,vh);
@@ -90,7 +91,7 @@
     const p=atroposScreenPoint(part.x,part.y),hit=typeof atroposPartHitPulse==='function'?atroposPartHitPulse(e,key):0;
     const active=part.active!==false,manifest=artManifest(),base=Math.max(82,part.r*1.55)*cfg.scale;
     ctx.save();ctx.translate(p.x,p.y);ctx.rotate(cfg.rot+(key==='rift-core'?-.04:0));
-    const wobble=1+Math.sin((state.time||0)*.38+(part.r||0))*.012;
+    const wobble=1+Math.sin(performance.now()*.00038+(part.r||0))*.012;
     ctx.scale(wobble,wobble);ctx.globalAlpha=manifest*(active?.76:.28);
     if(hit){ctx.shadowColor='#eaffff';ctx.shadowBlur=22;ctx.globalAlpha=Math.min(1,ctx.globalAlpha+.42*hit);}
     ctx.drawImage(fractureArt,-base,-base*.73,base*2,base*1.46);
