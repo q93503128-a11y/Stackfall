@@ -79,3 +79,13 @@ if(window.stackfallDeveloperTest?.enabled){const panel=document.querySelector('#
 // DEV-only visual fixture marker; never adds render or collision geometry.
 const baseDrawBossParts=typeof drawEnemies==='function'?drawEnemies:null;
 if(baseDrawBossParts)drawEnemies=function drawEnemiesWithDevBossParts(){baseDrawBossParts();if(!window.stackfallDeveloperTest?.enabled)return;for(const enemy of state.entities.enemies){if(enemy.dead||!enemy.bodyParts)continue;for(const part of activeBossBodyParts(enemy)){const p=worldToScreen(part.x,part.y);ctx.save();ctx.strokeStyle='#ff365f';ctx.fillStyle='#ff365f';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();ctx.arc(p.x,p.y,part.r,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.font='900 10px monospace';ctx.textAlign='center';ctx.fillText(`DEBUG ${part.label}`,p.x,p.y-part.r-7);ctx.restore();}}};
+
+// Load the Atropos mass-only visual override after every synchronous game script,
+// especially apex-run-clock.js, has established the combat foundation.
+window.addEventListener('load',()=>{
+  if(document.querySelector('script[data-atropos-mass-overhaul]'))return;
+  const script=document.createElement('script');
+  script.src='src/atropos-mass-overhaul.js';
+  script.dataset.atroposMassOverhaul='1';
+  document.body.appendChild(script);
+},{once:true});
