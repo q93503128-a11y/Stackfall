@@ -1,108 +1,128 @@
-// Atropos visual v6 — one asymmetric world-scale mass with readable surface targets.
-// Combat, multipart targeting, entry control and space-cut timing remain owned by apex-run-clock.js.
+// Atropos visual v5 — readable mass-first rendering inspired by Stackfall's earliest Apex silhouettes.
+// Combat, body-part targeting, entry freeze/push and space-cut timing stay owned by apex-run-clock.js.
 (()=>{
-  const VERSION='atropos-visual-v6';
-  const C={deep:'#06131d',deep2:'#0a202c',mid:'#174256',mid2:'#286579',cyan:'#69e4d8',ice:'#c9fff5',violet:'#6572c9'};
+  const VERSION='atropos-visual-v5';
+  const COLORS={
+    deep:'#06121c',deep2:'#0a1e2a',mid:'#123747',mid2:'#1c5566',
+    cyan:'#58d9d2',ice:'#b9fff4',blue:'#4f8fc7',violet:'#706fc9'
+  };
 
   function partOf(e,key){return typeof atroposPart==='function'?atroposPart(e,key):e?.bodyParts?.find(p=>p.key===key);}
   function screenOf(part){return part?atroposScreenPoint(part.x,part.y):null;}
   function hitPulse(e,key){return typeof atroposPartHitPulse==='function'?atroposPartHitPulse(e,key):0;}
-
-  function hullPath(g,p){
-    const w=p['west-blade'],n=p['crown-anchor'],r=p['east-blade'],s=p['keel-anchor'];
-    if(!w||!n||!r||!s)return false;
+  function shardPath(g,key,r){
     g.beginPath();
-    g.moveTo(w.x-160,w.y+80);
-    g.bezierCurveTo(w.x-170,w.y-155,n.x-190,n.y+85,n.x-34,n.y-132);
-    g.bezierCurveTo(n.x+118,n.y-78,r.x+188,r.y-168,r.x+150,r.y+30);
-    g.bezierCurveTo(r.x+168,r.y+170,s.x+164,s.y-115,s.x+26,s.y+148);
-    g.bezierCurveTo(s.x-130,s.y+132,w.x-190,w.y+190,w.x-160,w.y+80);
-    g.closePath();return true;
+    if(key==='west-blade'){
+      g.moveTo(-1.26*r,-.28*r);g.bezierCurveTo(-.92*r,-.86*r,-.22*r,-1.00*r,.42*r,-.62*r);g.lineTo(.16*r,-.08*r);g.lineTo(.76*r,.34*r);g.bezierCurveTo(.16*r,.88*r,-.66*r,.92*r,-1.12*r,.48*r);g.closePath();
+    }else if(key==='east-blade'){
+      g.moveTo(1.24*r,-.42*r);g.bezierCurveTo(.72*r,-.92*r,.08*r,-.94*r,-.56*r,-.48*r);g.lineTo(-.20*r,.02*r);g.lineTo(-.70*r,.62*r);g.bezierCurveTo(.02*r,.92*r,.72*r,.72*r,1.18*r,.26*r);g.closePath();
+    }else if(key==='crown-anchor'){
+      g.moveTo(-.78*r,-1.12*r);g.lineTo(.06*r,-1.32*r);g.lineTo(.72*r,-.78*r);g.lineTo(.54*r,-.08*r);g.lineTo(.90*r,.42*r);g.lineTo(.08*r,1.06*r);g.lineTo(-.70*r,.56*r);g.lineTo(-.96*r,-.18*r);g.closePath();
+    }else if(key==='keel-anchor'){
+      g.moveTo(-.96*r,-.52*r);g.lineTo(-.18*r,-1.10*r);g.lineTo(.66*r,-.82*r);g.lineTo(.92*r,-.08*r);g.lineTo(.46*r,.36*r);g.lineTo(.18*r,1.18*r);g.lineTo(-.62*r,.76*r);g.lineTo(-.82*r,.10*r);g.closePath();
+    }else{
+      g.moveTo(-.66*r,-1.12*r);g.bezierCurveTo(.06*r,-1.34*r,.76*r,-.86*r,.74*r,-.18*r);g.lineTo(.46*r,.16*r);g.bezierCurveTo(.78*r,.64*r,.32*r,1.14*r,-.18*r,1.18*r);g.lineTo(-.82*r,.56*r);g.lineTo(-.50*r,-.04*r);g.lineTo(-.84*r,-.50*r);g.closePath();
+    }
   }
 
-  function drawAura(g,c,e,manifest){
-    const t=state.time||0,pulse=.5+.5*Math.sin(t*.34+e.atroposReborn.driftSeed);
-    g.save();g.globalAlpha=manifest;
-    const glow=g.createRadialGradient(c.x-90,c.y-80,50,c.x,c.y,610);
-    glow.addColorStop(0,`rgba(93,226,218,${.11+.035*pulse})`);
-    glow.addColorStop(.42,'rgba(45,112,135,.08)');
-    glow.addColorStop(.82,'rgba(11,34,48,.035)');
-    glow.addColorStop(1,'rgba(5,14,23,0)');
-    g.fillStyle=glow;g.fillRect(c.x-650,c.y-560,1300,1120);
+  function drawTemporalField(g,c,e,manifest){
+    const t=state.time||0,pulse=.5+.5*Math.sin(t*.42+e.atroposReborn.driftSeed);
+    g.save();g.translate(c.x,c.y);g.globalAlpha=manifest;
+    const aura=g.createRadialGradient(-70,-40,30,0,0,520);
+    aura.addColorStop(0,`rgba(88,217,210,${.16+.04*pulse})`);
+    aura.addColorStop(.36,'rgba(43,114,130,.12)');
+    aura.addColorStop(.72,'rgba(16,44,60,.07)');
+    aura.addColorStop(1,'rgba(4,13,22,0)');
+    g.fillStyle=aura;g.fillRect(-560,-500,1120,1000);
+
+    // Broad phase shadows: filled masses, never decorative squiggle lines.
+    g.globalAlpha=.22*manifest;g.fillStyle='#133544';
+    g.beginPath();g.moveTo(-470,-180);g.bezierCurveTo(-260,-360,40,-390,310,-260);g.lineTo(238,-170);g.bezierCurveTo(20,-260,-230,-248,-402,-92);g.closePath();g.fill();
+    g.globalAlpha=.16*manifest;g.fillStyle='#1a4050';
+    g.beginPath();g.moveTo(-360,180);g.bezierCurveTo(-80,320,230,306,430,118);g.lineTo(340,50);g.bezierCurveTo(150,190,-96,210,-310,86);g.closePath();g.fill();
     g.restore();
   }
 
-  function drawMainMass(g,p,c,e,manifest){
-    const t=state.time||0,hit=Math.max(...['west-blade','crown-anchor','rift-core','keel-anchor','east-blade'].map(k=>hitPulse(e,k)));
-    g.save();g.globalAlpha=manifest;
-    const base=g.createLinearGradient(c.x-520,c.y-360,c.x+520,c.y+360);
-    base.addColorStop(0,hit?'#dffff8':'#315d70');
-    base.addColorStop(.16,hit?'#bffff2':'#21495b');
-    base.addColorStop(.48,'#102d3c');
-    base.addColorStop(.78,'#0a1d29');
-    base.addColorStop(1,'#050f18');
-    g.fillStyle=base;if(hullPath(g,p))g.fill();
+  function drawPhaseRibbon(g,a,b,width,alpha,manifest){
+    if(!a||!b)return;const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,w=width*.5;
+    g.save();g.globalAlpha=alpha*manifest;const grad=g.createLinearGradient(a.x,a.y,b.x,b.y);grad.addColorStop(0,'rgba(45,112,126,.08)');grad.addColorStop(.48,'rgba(83,186,190,.24)');grad.addColorStop(1,'rgba(42,94,118,.08)');g.fillStyle=grad;
+    g.beginPath();g.moveTo(a.x+nx*w,a.y+ny*w);g.lineTo(b.x+nx*w*.72,b.y+ny*w*.72);g.lineTo(b.x-nx*w*.72,b.y-ny*w*.72);g.lineTo(a.x-nx*w,a.y-ny*w);g.closePath();g.fill();g.restore();
+  }
 
-    g.save();if(hullPath(g,p))g.clip();
-    // Large material planes. These are intentionally broad so the boss reads as mass, not line-art.
-    g.globalAlpha=.58*manifest;g.fillStyle='#2b6679';
-    g.beginPath();g.moveTo(c.x-520,c.y-210);g.lineTo(c.x-160,c.y-350);g.lineTo(c.x-70,c.y+20);g.lineTo(c.x-410,c.y+145);g.closePath();g.fill();
-    g.globalAlpha=.42*manifest;g.fillStyle='#345b78';
-    g.beginPath();g.moveTo(c.x+30,c.y-360);g.lineTo(c.x+480,c.y-210);g.lineTo(c.x+230,c.y+60);g.lineTo(c.x-12,c.y-18);g.closePath();g.fill();
-    g.globalAlpha=.48*manifest;g.fillStyle='#173f50';
-    g.beginPath();g.moveTo(c.x-360,c.y+128);g.lineTo(c.x-30,c.y+18);g.lineTo(c.x+350,c.y+150);g.lineTo(c.x+82,c.y+350);g.lineTo(c.x-270,c.y+300);g.closePath();g.fill();
-    g.globalAlpha=.27*manifest;g.fillStyle='#6473c3';
-    g.beginPath();g.moveTo(c.x+128,c.y-210);g.lineTo(c.x+420,c.y-80);g.lineTo(c.x+250,c.y+94);g.lineTo(c.x+72,c.y+22);g.closePath();g.fill();
-    // A second time layer is a broad displaced surface, not a ring or worm line.
-    g.globalAlpha=(.12+.04*Math.sin(t*.41))*manifest;g.fillStyle='#7be2db';
-    g.beginPath();g.moveTo(c.x-470,c.y-80);g.lineTo(c.x-130,c.y-278);g.lineTo(c.x+360,c.y-118);g.lineTo(c.x+500,c.y+78);g.lineTo(c.x+110,c.y+240);g.lineTo(c.x-390,c.y+170);g.closePath();g.fill();
+  function drawShard(g,e,key,p,angle,scale,manifest){
+    const part=partOf(e,key);if(!part||!p)return;const r=(part.r||110)*scale,hit=hitPulse(e,key),active=part.active!==false,t=state.time||0;
+    g.save();g.translate(p.x,p.y);g.rotate(angle);g.globalAlpha=manifest*(active?1:.72);
+    if(hit){g.translate(Math.sin(t*91+part.r)*5*hit,Math.cos(t*77+part.r)*4*hit);}
+
+    // Offset phase echo gives scale without line-art clutter.
+    g.save();g.translate(-12,10);g.globalAlpha=.22+.12*hit;g.fillStyle='#24566a';shardPath(g,key,r);g.fill();g.restore();
+
+    const body=g.createLinearGradient(-r,-r,r,r);
+    body.addColorStop(0,hit?'#efffff':'#315e72');
+    body.addColorStop(.24,hit?'#c9fff6':'#20495d');
+    body.addColorStop(.62,active?'#123241':'#0d2632');
+    body.addColorStop(1,'#07151f');
+    g.fillStyle=body;shardPath(g,key,r);g.fill();
+
+    // Large faceted faces: readable at gameplay scale, no hairline scratches.
+    g.save();shardPath(g,key,r);g.clip();
+    g.globalAlpha=.60;g.fillStyle=active?'#2c7180':'#1d4756';
+    g.beginPath();g.moveTo(-1.12*r,-.38*r);g.lineTo(-.18*r,-.94*r);g.lineTo(.20*r,-.10*r);g.lineTo(-.42*r,.32*r);g.closePath();g.fill();
+    g.globalAlpha=.42;g.fillStyle=key==='east-blade'?'#596ac0':'#397f8a';
+    g.beginPath();g.moveTo(.02*r,-.76*r);g.lineTo(.88*r,-.28*r);g.lineTo(.34*r,.18*r);g.lineTo(-.02*r,-.06*r);g.closePath();g.fill();
+    g.globalAlpha=.26+.28*hit;g.fillStyle=hit?'#ffffff':'#8ef4e8';
+    g.beginPath();g.moveTo(-.54*r,.34*r);g.lineTo(.20*r,.10*r);g.lineTo(.58*r,.34*r);g.lineTo(.05*r,.52*r);g.closePath();g.fill();
     g.restore();
 
-    // Deep negative-space wounds keep the silhouette alien without becoming a central sword icon.
-    g.globalAlpha=.94*manifest;g.fillStyle='#02070d';
-    g.beginPath();g.moveTo(c.x-60,c.y-174);g.bezierCurveTo(c.x+42,c.y-154,c.x+118,c.y-70,c.x+84,c.y+18);g.bezierCurveTo(c.x+42,c.y+102,c.x+110,c.y+174,c.x+10,c.y+225);g.bezierCurveTo(c.x-88,c.y+176,c.x-128,c.y+92,c.x-96,c.y+14);g.bezierCurveTo(c.x-54,c.y-72,c.x-132,c.y-126,c.x-60,c.y-174);g.fill();
-    g.globalAlpha=.72*manifest;g.fillStyle='#07111a';
-    g.beginPath();g.moveTo(c.x+286,c.y-142);g.lineTo(c.x+432,c.y-82);g.lineTo(c.x+328,c.y+20);g.lineTo(c.x+220,c.y-8);g.closePath();g.fill();
+    if(active){g.globalAlpha=.36+.22*hit;g.shadowBlur=18;g.shadowColor=COLORS.cyan;g.fillStyle=hit?'#ffffff':COLORS.ice;g.beginPath();g.ellipse(.10*r,-.05*r,r*.13,r*.055,.18,0,TAU);g.fill();g.shadowBlur=0;}
     g.restore();
   }
 
-  function targetPatch(g,e,key,p,angle,scale,manifest){
-    const part=partOf(e,key);if(!part||!p)return;const r=(part.r||100)*scale,hit=hitPulse(e,key),active=part.active!==false,t=state.time||0;
-    g.save();g.translate(p.x,p.y);g.rotate(angle);g.globalAlpha=manifest*(active?1:.58);
-    if(hit)g.translate(Math.sin(t*93+part.r)*4.8*hit,Math.cos(t*79+part.r)*4.2*hit);
-    const grad=g.createLinearGradient(-r,-r,r,r);grad.addColorStop(0,hit?'#ffffff':'#72b8bf');grad.addColorStop(.38,hit?'#d5fff8':'#377889');grad.addColorStop(1,'#183747');g.fillStyle=grad;
-    g.beginPath();g.moveTo(-.92*r,-.42*r);g.lineTo(-.22*r,-.86*r);g.lineTo(.74*r,-.48*r);g.lineTo(.88*r,.08*r);g.lineTo(.30*r,.72*r);g.lineTo(-.64*r,.58*r);g.closePath();g.fill();
-    g.globalAlpha=(active?.42:.18)+.28*hit;g.fillStyle=key==='east-blade'||key==='keel-anchor'?C.violet:C.cyan;
-    g.beginPath();g.moveTo(-.52*r,-.18*r);g.lineTo(.18*r,-.58*r);g.lineTo(.60*r,-.16*r);g.lineTo(.18*r,.30*r);g.lineTo(-.46*r,.18*r);g.closePath();g.fill();
-    // Small luminous face gives early-Apex readability without outlining the whole part.
-    if(active){g.globalAlpha=.55+.28*hit;g.shadowBlur=16;g.shadowColor=C.cyan;g.fillStyle=hit?'#fff':C.ice;g.beginPath();g.moveTo(.18*r,-.30*r);g.lineTo(.56*r,-.12*r);g.lineTo(.30*r,.12*r);g.lineTo(.04*r,.02*r);g.closePath();g.fill();g.shadowBlur=0;}
-    g.restore();
-  }
-
-  function drawCoreVoid(g,e,p,axis,manifest){
-    const part=partOf(e,'rift-core');if(!part||!p)return;const r=part.r||166,hit=hitPulse(e,'rift-core'),active=part.active!==false,t=state.time||0;
+  function drawCore(g,e,p,axis,manifest){
+    const part=partOf(e,'rift-core');if(!part||!p)return;const r=part.r||166,hit=hitPulse(e,'rift-core'),t=state.time||0,active=part.active!==false;
     g.save();g.translate(p.x,p.y);g.rotate(axis);g.globalAlpha=manifest;
-    // Broad cavity instead of the old vertical blade shape.
-    const halo=g.createRadialGradient(0,0,r*.10,0,0,r*1.15);halo.addColorStop(0,`rgba(107,238,226,${active?.26:.11})`);halo.addColorStop(.55,'rgba(54,130,150,.10)');halo.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=halo;g.fillRect(-r*1.3,-r*1.3,r*2.6,r*2.6);
-    g.fillStyle='#01050a';g.beginPath();g.moveTo(-.64*r,-.36*r);g.bezierCurveTo(-.30*r,-.92*r,.50*r,-.86*r,.72*r,-.28*r);g.bezierCurveTo(.94*r,.30*r,.38*r,.88*r,-.22*r,.80*r);g.bezierCurveTo(-.88*r,.70*r,-.98*r,.06*r,-.64*r,-.36*r);g.fill();
-    g.globalAlpha=(active?.82:.36)+.18*hit;g.shadowBlur=24;g.shadowColor=C.cyan;g.fillStyle=hit?'#ffffff':'#8ff4e8';
-    g.beginPath();g.moveTo(-.52*r,-.38*r);g.bezierCurveTo(-.26*r,-.72*r,.14*r,-.72*r,.34*r,-.52*r);g.lineTo(.20*r,-.30*r);g.bezierCurveTo(-.08*r,-.48*r,-.32*r,-.34*r,-.46*r,-.08*r);g.closePath();g.fill();
-    g.shadowBlur=0;g.globalAlpha=.28+.10*Math.sin(t*.72);g.fillStyle=C.violet;g.beginPath();g.moveTo(.34*r,.02*r);g.lineTo(.62*r,.28*r);g.lineTo(.28*r,.56*r);g.lineTo(.06*r,.30*r);g.closePath();g.fill();
+
+    const halo=g.createRadialGradient(0,0,r*.10,0,0,r*1.35);halo.addColorStop(0,`rgba(128,255,241,${active?.30:.16})`);halo.addColorStop(.45,'rgba(59,133,150,.14)');halo.addColorStop(1,'rgba(7,18,28,0)');g.fillStyle=halo;g.fillRect(-r*1.45,-r*1.45,r*2.9,r*2.9);
+
+    const body=g.createLinearGradient(-r,-r,r,r);body.addColorStop(0,hit?'#f5ffff':'#3f7786');body.addColorStop(.24,hit?'#c8fff5':'#245665');body.addColorStop(.64,'#102d3b');body.addColorStop(1,'#07151f');g.fillStyle=body;shardPath(g,'rift-core',r);g.fill();
+
+    g.save();shardPath(g,'rift-core',r);g.clip();
+    g.globalAlpha=.55;g.fillStyle='#347487';g.beginPath();g.moveTo(-.70*r,-.78*r);g.lineTo(.04*r,-1.02*r);g.lineTo(.22*r,-.18*r);g.lineTo(-.48*r,.16*r);g.closePath();g.fill();
+    g.globalAlpha=.36;g.fillStyle='#5d70bd';g.beginPath();g.moveTo(.18*r,-.74*r);g.lineTo(.70*r,-.30*r);g.lineTo(.44*r,.26*r);g.lineTo(.02*r,-.02*r);g.closePath();g.fill();
+    g.restore();
+
+    // The center is an absence, not an orb or weak-point icon.
+    const voidGrad=g.createLinearGradient(0,-r*.70,0,r*.72);voidGrad.addColorStop(0,'#02060c');voidGrad.addColorStop(.50,'#000207');voidGrad.addColorStop(1,'#08131c');g.fillStyle=voidGrad;g.beginPath();g.moveTo(-.12*r,-.70*r);g.bezierCurveTo(.08*r,-.42*r,.16*r,-.18*r,.04*r,.02*r);g.bezierCurveTo(-.08*r,.24*r,.10*r,.48*r,-.04*r,.72*r);g.lineTo(-.28*r,.30*r);g.lineTo(-.18*r,-.12*r);g.closePath();g.fill();
+
+    // Broad luminous cut faces recover the clarity of early Apex art without becoming wireframe.
+    g.globalAlpha=(active?.72:.34)+.20*hit;g.shadowBlur=22;g.shadowColor=COLORS.cyan;g.fillStyle=hit?'#ffffff':'#9cf9ed';
+    g.beginPath();g.moveTo(-.17*r,-.68*r);g.lineTo(-.06*r,-.38*r);g.lineTo(-.10*r,.62*r);g.lineTo(-.22*r,.30*r);g.closePath();g.fill();
+    g.shadowBlur=0;
+    g.globalAlpha=.34+.12*Math.sin(t*.8);g.fillStyle='#6f82d1';g.beginPath();g.moveTo(.03*r,-.47*r);g.lineTo(.15*r,-.18*r);g.lineTo(.10*r,.40*r);g.lineTo(.02*r,.18*r);g.closePath();g.fill();
     g.restore();
   }
 
   function renderAtropos(e){
     if(!ensureRebornAtropos(e))return;updateAtroposPose(e);
-    const center=atroposScreenPoint(e.x,e.y),p={};for(const def of ATROPOS_PART_LAYOUT){const part=partOf(e,def.key);if(part)p[def.key]=screenOf(part);}
-    const margin=1120;if(center.x<-margin||center.x>vw+margin||center.y<-margin||center.y>vh+margin)return;
-    const manifest=atroposManifest(e),axis=atroposStructureAxis(e);
-    ctx.save();ctx.lineJoin='round';ctx.lineCap='round';drawAura(ctx,center,e,manifest);drawMainMass(ctx,p,center,e,manifest);
-    // Targetable regions are embedded as surface plates, not detached circular props.
-    targetPatch(ctx,e,'west-blade',p['west-blade'],axis+Math.PI*.94,.86,manifest);
-    targetPatch(ctx,e,'crown-anchor',p['crown-anchor'],axis-Math.PI*.48,.80,manifest);
-    targetPatch(ctx,e,'east-blade',p['east-blade'],axis+.10,.86,manifest);
-    targetPatch(ctx,e,'keel-anchor',p['keel-anchor'],axis+Math.PI*.50,.82,manifest);
-    drawCoreVoid(ctx,e,p['rift-core'],axis,manifest);
+    const center=atroposScreenPoint(e.x,e.y),points={};for(const def of ATROPOS_PART_LAYOUT){const part=partOf(e,def.key);if(part)points[def.key]=screenOf(part);}
+    const margin=1050;if(center.x<-margin||center.x>vw+margin||center.y<-margin||center.y>vh+margin)return;
+    const manifest=atroposManifest(e),axis=atroposStructureAxis(e),t=state.time||0;
+    ctx.save();ctx.lineJoin='round';ctx.lineCap='round';drawTemporalField(ctx,center,e,manifest);
+
+    // Wide filled phase ribbons bind the pieces into one being without ring/line motifs.
+    drawPhaseRibbon(ctx,points['rift-core'],points['west-blade'],72,.34,manifest);
+    drawPhaseRibbon(ctx,points['rift-core'],points['east-blade'],82,.34,manifest);
+    drawPhaseRibbon(ctx,points['rift-core'],points['crown-anchor'],64,.24,manifest);
+    drawPhaseRibbon(ctx,points['rift-core'],points['keel-anchor'],68,.24,manifest);
+
+    drawShard(ctx,e,'west-blade',points['west-blade'],axis+Math.PI*.93,1.18,manifest);
+    drawShard(ctx,e,'crown-anchor',points['crown-anchor'],axis-Math.PI*.52,1.05,manifest);
+    drawShard(ctx,e,'east-blade',points['east-blade'],axis+.10,1.18,manifest);
+    drawShard(ctx,e,'keel-anchor',points['keel-anchor'],axis+Math.PI*.52,1.06,manifest);
+    drawCore(ctx,e,points['rift-core'],axis,manifest);
+
+    // Sparse filled fragments only; no decorative worm-lines.
+    ctx.globalAlpha=.30*manifest;ctx.fillStyle='#6abebd';for(let i=0;i<4;i++){const a=e.atroposReborn.driftSeed+i*1.61,rr=440+(i%2)*52,sz=8+(i%2)*5;ctx.save();ctx.translate(center.x+Math.cos(a+t*.012)*rr,center.y+Math.sin(a+t*.012)*rr*.72);ctx.rotate(a*.4);ctx.fillRect(-sz*.5,-sz*.8,sz,sz*1.6);ctx.restore();}
     ctx.restore();
   }
 
