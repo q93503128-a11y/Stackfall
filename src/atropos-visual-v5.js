@@ -9,30 +9,28 @@
   script.src='src/atropos-world-devourer-prototype.js';
   script.dataset.atroposWorldDevourer='1';
   script.addEventListener('load',()=>{
-    // Until the new six-pattern kit is implemented and motion-reviewed, the prototype must
-    // never fall through to the retired chronophage slash/temporal-shear attack set.
+    // Retired chronophage attacks stay gated. The branch-owned combat prototype is invoked
+    // only when its reviewed motion module is available.
     if(typeof apexBossSkill==='function'){
       const baseApexBossSkill=apexBossSkill;
       apexBossSkill=function worldDevourerAttackGate(e,dt){
         if((e?.apexForm||e?.eliteForm)==='chronophage'&&e?.atroposReborn?.worldDevourer){
-          e.apexElapsed=(e.apexElapsed||0)+dt;
-          const health=e.hp/Math.max(1,e.maxHp);
-          e.apexPhase=health<.25?4:health<.50?3:health<.75?2:1;
-          e.timeLock=0;
-          if(e.atroposReborn){e.atroposReborn.slash=null;e.atroposReborn.slashCd=1e9;}
-          return;
+          if(typeof window.stackfallUpdateWorldDevourerCrossing==='function')return window.stackfallUpdateWorldDevourerCrossing(e,dt);
+          e.apexElapsed=(e.apexElapsed||0)+dt;const health=e.hp/Math.max(1,e.maxHp);e.apexPhase=health<.25?4:health<.50?3:health<.75?2:1;e.timeLock=0;
+          if(e.atroposReborn){e.atroposReborn.slash=null;e.atroposReborn.slashCd=1e9;}return;
         }
         return baseApexBossSkill(e,dt);
       };
     }
     if(typeof drawAtroposSpaceCut==='function'){
       const baseSpaceCut=drawAtroposSpaceCut;
-      drawAtroposSpaceCut=function worldDevourerLegacySpaceCutGate(e){
-        if(e?.apexForm==='chronophage'&&e?.atroposReborn?.worldDevourer)return;
-        return baseSpaceCut(e);
-      };
+      drawAtroposSpaceCut=function worldDevourerLegacySpaceCutGate(e){if(e?.apexForm==='chronophage'&&e?.atroposReborn?.worldDevourer)return;return baseSpaceCut(e);};
     }
-    window.stackfallAtroposPrototypeAttackState='legacy-disabled-new-kit-pending';
+    const attackScript=document.createElement('script');
+    attackScript.src='src/atropos-world-devourer-attack-crossing.js';
+    attackScript.dataset.atroposWorldDevourerAttack='giant-crossing';
+    document.body.appendChild(attackScript);
+    window.stackfallAtroposPrototypeAttackState='giant-crossing-loading';
   });
   document.body.appendChild(script);
 })();
