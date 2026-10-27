@@ -38,6 +38,13 @@
         const ringScript=document.createElement('script');
         ringScript.src='src/atropos-world-devourer-attack-ring.js';
         ringScript.dataset.atroposWorldDevourerAttack='devourer-ring';
+        ringScript.addEventListener('load',()=>{
+          const pastScript=document.createElement('script');
+          pastScript.src='src/atropos-world-devourer-attack-past.js';
+          pastScript.dataset.atroposWorldDevourerAttack='past-trajectory';
+          document.body.appendChild(pastScript);
+          window.stackfallAtroposPrototypeAttackState='past-trajectory-loading';
+        });
         document.body.appendChild(ringScript);
         window.stackfallAtroposPrototypeAttackState='devourer-ring-loading';
       });
