@@ -1,11 +1,11 @@
-// Atropos world-devourer prototype v1 — segmented serpent renderer + distance-follow chain.
-// Branch-only prototype. Keeps shared HP targeting and the accepted Apex clock/space-cut foundation.
+// Atropos world-devourer prototype v2 — world-anchored serpent, continuous body and stable depth layers.
+// Branch-only visual/movement prototype. Attack rework and final swallow entrance are intentionally deferred.
 (()=>{
-  const VERSION='atropos-world-devourer-prototype-v1';
+  const VERSION='atropos-world-devourer-prototype-v2';
   const ENTRY_DURATION=6.2;
-  const BODY_COUNT=12;
-  const SAMPLE_SPACING=86;
-  const HISTORY_LIMIT=900;
+  const BODY_COUNT=15;
+  const SAMPLE_SPACING=72;
+  const HISTORY_LIMIT=1500;
   const PART_KEYS=['head',...Array.from({length:BODY_COUNT},(_,i)=>`body-${String(i+1).padStart(2,'0')}`),'tail'];
 
   const art={head:new Image(),body:new Image(),tail:new Image()};
@@ -15,37 +15,36 @@
   art.tail.src='assets/atropos-tail.svg';
 
   const APEX_ENTRY={serial:null,mobs:[],removed:false,form:null};
-
   const smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
-  const screenToWorld=(sx,sy)=>({x:player.x+(sx-vw*.5),y:player.y+(sy-vh*.5)});
+  const smoothRange=(a,b,x)=>smooth((x-a)/Math.max(.0001,b-a));
   const entryTransition=()=>{const tr=state.realmTransition;return tr?.owner==='apex-entry'&&tr?.to==='apex-chrono'&&tr?.form==='chronophage'?tr:null;};
   const chronoSceneActive=()=>state.realmTheme==='apex-chrono'||state.pendingApexForm==='chronophage'||state.realmTransition?.to==='apex-chrono'||!!state.entities.enemies?.some(e=>!e.dead&&e.apexForm==='chronophage');
   const serpentEnemy=()=>state.entities.enemies?.find(e=>!e.dead&&e.apexForm==='chronophage')||null;
 
   function artManifest(){
-    const tr=state.realmTransition;
-    if(tr?.to==='apex-chrono'&&tr?.owner==='apex-entry'){
-      const p=tr.elapsed/Math.max(.001,tr.duration);
-      return smooth(clamp((p-.47)/.34,0,1));
-    }
+    const tr=entryTransition();
+    if(tr){const p=tr.elapsed/Math.max(.001,tr.duration);return smooth(clamp((p-.47)/.34,0,1));}
     return serpentEnemy()?1:0;
   }
 
-  function idleHeadPosition(e,t){
-    const phase=(e?.id||0)*.173;
-    const a=t*.19+phase;
-    const rx=Math.max(520,vw*.54),ry=Math.max(270,vh*.38);
+  function motionScale(){return clamp(Math.min(vw,vh)/900,.88,1.16);}
+  function headWorldPosition(e,serpent,t){
+    const phase=serpent.phaseBase;
+    const a=t*.165+phase;
+    const rx=clamp(vw*.32,520,640),ry=clamp(vh*.30,250,330);
     return{
-      x:vw*.5+Math.cos(a)*rx+Math.sin(a*2.17)*vw*.035,
-      y:vh*.47+Math.sin(a*.94)*ry+Math.sin(a*2.73+1.2)*vh*.045
+      x:serpent.anchorX+Math.cos(a)*rx+Math.sin(a*2.07)*38,
+      y:serpent.anchorY+Math.sin(a*.96)*ry+Math.sin(a*2.41+1.1)*28,
+      orbitA:a
     };
   }
 
-  function seedHistory(e,serpent,t){
+  function seedHistory(e,serpent){
     serpent.history.length=0;
+    const now=serpent.motionTime;
     for(let i=HISTORY_LIMIT-1;i>=0;i--){
-      const p=idleHeadPosition(e,t-i*.018);
-      serpent.history.push({x:p.x,y:p.y});
+      const p=headWorldPosition(e,serpent,now-i*.018);
+      serpent.history.push(p);
     }
     serpent.last=serpent.history[serpent.history.length-1];
   }
@@ -54,84 +53,114 @@
     if(!e||e.apexForm!=='chronophage')return null;
     const r=e.atroposReborn||(e.atroposReborn={});
     let serpent=r.worldDevourer;
-    if(!serpent)serpent=r.worldDevourer={history:[],points:[],last:null,phase:0,initialized:false};
+    if(!serpent)serpent=r.worldDevourer={history:[],points:[],last:null,initialized:false};
     if(!serpent.initialized){
-      const definitions=PART_KEYS.map((key,i)=>({key,label:key.toUpperCase(),dx:0,dy:0,r:i===0?88:i===PART_KEYS.length-1?44:64,active:true,visible:true}));
+      const arena=state.apexArena;
+      serpent.anchorX=Number.isFinite(arena?.x)?arena.x:(Number.isFinite(e.x)?e.x:player.x);
+      serpent.anchorY=Number.isFinite(arena?.y)?arena.y:(Number.isFinite(e.y)?e.y:player.y);
+      serpent.phaseBase=(e.id||0)*.173+.4;
+      serpent.motionTime=0;
+      serpent.lastReal=performance.now()*.001;
+      const definitions=PART_KEYS.map((key,i)=>({key,label:key.toUpperCase(),dx:0,dy:0,r:i===0?92:i===PART_KEYS.length-1?36:58,active:true,visible:true}));
       if(typeof defineBossBodyParts==='function')defineBossBodyParts(e,definitions);
-      seedHistory(e,serpent,Number(state.time)||0);
+      seedHistory(e,serpent);
       serpent.initialized=true;
       e.contactSafeUntil=1e12;
     }
     return serpent;
   }
 
-  function appendHistory(e,serpent,t){
-    const p=idleHeadPosition(e,t),last=serpent.last;
-    if(!last||Math.hypot(p.x-last.x,p.y-last.y)>=4){
+  function advanceSerpent(e,serpent){
+    const now=performance.now()*.001;
+    const realDt=clamp(now-(serpent.lastReal||now),0,.05);
+    serpent.lastReal=now;
+    const speed=state.mode==='playing'&&typeof window.stackfallGameSpeed==='function'?clamp(window.stackfallGameSpeed(),1,4):1;
+    serpent.motionTime+=realDt*speed;
+    const follow=1-Math.exp(-.30*realDt);
+    serpent.anchorX+=((Number(player.x)||0)-serpent.anchorX)*follow;
+    serpent.anchorY+=((Number(player.y)||0)-serpent.anchorY)*follow;
+    const p=headWorldPosition(e,serpent,serpent.motionTime),last=serpent.last;
+    if(!last||Math.hypot(p.x-last.x,p.y-last.y)>=3.2){
       serpent.history.push(p);serpent.last=p;
       if(serpent.history.length>HISTORY_LIMIT)serpent.history.splice(0,serpent.history.length-HISTORY_LIMIT);
     }
-    serpent.phase=t*.19+(e?.id||0)*.173;
   }
 
   function sampleHistory(history,distance){
-    if(!history.length)return{x:vw*.5,y:vh*.5,a:0};
+    if(!history.length)return{x:player.x,y:player.y,a:0,orbitA:0};
     let remaining=Math.max(0,distance),newer=history[history.length-1];
     for(let i=history.length-2;i>=0;i--){
       const older=history[i],dx=newer.x-older.x,dy=newer.y-older.y,len=Math.hypot(dx,dy);
-      if(len>0&&remaining<=len){const q=remaining/len;return{x:newer.x-dx*q,y:newer.y-dy*q,a:Math.atan2(dy,dx)};}
+      if(len>0&&remaining<=len){
+        const q=remaining/len;
+        return{x:newer.x-dx*q,y:newer.y-dy*q,a:Math.atan2(dy,dx),orbitA:lerp(newer.orbitA,older.orbitA,q)};
+      }
       remaining-=len;newer=older;
     }
     const a=history.length>1?Math.atan2(history[1].y-history[0].y,history[1].x-history[0].x):0;
-    return{x:history[0].x,y:history[0].y,a};
+    return{x:history[0].x,y:history[0].y,a,orbitA:history[0].orbitA||0};
   }
 
   function buildSerpentPose(e){
     const serpent=ensureSerpent(e);if(!serpent)return null;
-    const t=Number(state.time)||performance.now()*.001;
-    appendHistory(e,serpent,t);
-    const scaleUnit=clamp(Math.min(vw,vh)/900,.78,1.32),points=[];
+    advanceSerpent(e,serpent);
+    const scaleUnit=motionScale(),points=[];
     for(let i=0;i<PART_KEYS.length;i++){
-      const tailT=i/(PART_KEYS.length-1),dist=i*SAMPLE_SPACING*scaleUnit*(1+tailT*.08),p=sampleHistory(serpent.history,dist);
-      const depth=Math.sin(serpent.phase-i*.46),taper=i===0?1.22:i===PART_KEYS.length-1?.54:lerp(1.02,.68,tailT);
-      points.push({...p,key:PART_KEYS[i],index:i,tailT,depth,taper,scaleUnit});
+      const tailT=i/(PART_KEYS.length-1),dist=i*SAMPLE_SPACING*scaleUnit*(1+tailT*.06),p=sampleHistory(serpent.history,dist);
+      const screen=worldToScreen(p.x,p.y),depth=Math.sin((p.orbitA||0)+.35);
+      const taper=i===0?1.22:i===PART_KEYS.length-1?.40:lerp(1.08,.62,tailT);
+      points.push({...p,sx:screen.x,sy:screen.y,key:PART_KEYS[i],index:i,tailT,depth,taper,scaleUnit});
     }
     serpent.points=points;
-    e.x=player.x;e.y=player.y;
+    e.x=serpent.anchorX;e.y=serpent.anchorY;
     for(let i=0;i<points.length;i++){
       const part=e.bodyParts?.[i];if(!part)continue;
-      const p=points[i],world=screenToWorld(p.x,p.y);
-      part.dx=world.x-e.x;part.dy=world.y-e.y;part.r=(i===0?76:i===points.length-1?38:56)*p.taper*p.scaleUnit;
+      const p=points[i];part.dx=p.x-e.x;part.dy=p.y-e.y;
+      part.r=(i===0?82:i===points.length-1?34:55)*p.taper*p.scaleUnit;
       part.active=true;part.visible=true;part.dead=false;
     }
     if(typeof refreshBossBodyParts==='function')refreshBossBodyParts(e);
     return serpent;
   }
 
-  function drawSprite(img,p,w,h,alpha=1,glow=0){
-    if(!img.complete||img.naturalWidth<2)return;
-    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a);ctx.globalAlpha=alpha;
-    if(glow>0){ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha*glow;ctx.drawImage(img,-w*.5,-h*.5,w,h);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=alpha;}
-    ctx.drawImage(img,-w*.5,-h*.5,w,h);ctx.restore();
+  function layerWeights(depth){
+    const front=smoothRange(.16,.70,depth),back=smoothRange(.16,.70,-depth),mid=clamp(1-front-back,0,1);
+    return{front,mid,back};
   }
-
-  function drawSerpent(manifest){
+  function drawSpine(points,manifest,layer){
+    ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+    for(let i=points.length-1;i>0;i--){
+      const p=points[i],q=points[i-1],weight=(layerWeights(p.depth)[layer]+layerWeights(q.depth)[layer])*.5;
+      if(weight<=.01)continue;
+      const tailT=i/(points.length-1),width=158*lerp(1,.40,tailT)*p.scaleUnit;
+      ctx.globalAlpha=manifest*weight*.94;ctx.strokeStyle='#050918';ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
+      ctx.globalAlpha=manifest*weight*.24;ctx.strokeStyle='#40527f';ctx.lineWidth=Math.max(3,width*.08);ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function drawSprite(img,p,w,h,alpha=1,glow=0,flip=false){
+    if(!img.complete||img.naturalWidth<2||alpha<=.005)return;
+    const depthScale=lerp(.90,1.10,(p.depth+1)*.5);
+    ctx.save();ctx.translate(p.sx,p.sy);ctx.rotate(p.a);if(flip)ctx.scale(1,-1);
+    if(glow>0){ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha*glow;ctx.drawImage(img,-w*depthScale*.5,-h*depthScale*.5,w*depthScale,h*depthScale);ctx.globalCompositeOperation='source-over';}
+    ctx.globalAlpha=alpha;ctx.drawImage(img,-w*depthScale*.5,-h*depthScale*.5,w*depthScale,h*depthScale);ctx.restore();
+  }
+  function drawSerpentLayer(manifest,layer){
     if(manifest<=.001)return;
     const e=serpentEnemy();if(!e)return;
     const serpent=buildSerpentPose(e);if(!serpent?.points?.length)return;
-    const pts=serpent.points,order=[...pts].sort((a,b)=>a.depth-b.depth);
-    for(const p of order){
-      const depthScale=lerp(.88,1.08,(p.depth+1)*.5),alpha=manifest*lerp(.66,.98,(p.depth+1)*.5);
-      if(p.index===0){drawSprite(art.head,p,350*p.scaleUnit*depthScale,188*p.scaleUnit*depthScale,alpha,.10);continue;}
-      if(p.index===pts.length-1){drawSprite(art.tail,p,278*p.scaleUnit*depthScale,122*p.scaleUnit*depthScale,alpha,.07);continue;}
-      const variant=1+Math.sin(p.index*2.31)*.035;
-      drawSprite(art.body,p,224*p.taper*p.scaleUnit*depthScale*variant,138*p.taper*p.scaleUnit*depthScale,alpha,.065);
+    const pts=serpent.points;drawSpine(pts,manifest,layer);
+    for(let i=pts.length-1;i>=0;i--){
+      const p=pts[i],weight=layerWeights(p.depth)[layer];if(weight<=.01)continue;
+      const alpha=manifest*weight;
+      if(i===0){drawSprite(art.head,p,430*p.scaleUnit,222*p.scaleUnit,.98*alpha,.09);continue;}
+      if(i===pts.length-1){drawSprite(art.tail,p,290*p.taper*p.scaleUnit,98*p.taper*p.scaleUnit,.96*alpha,.04);continue;}
+      drawSprite(art.body,p,250*p.taper*p.scaleUnit,114*p.taper*p.scaleUnit,.94*alpha,.045,i%2===0);
     }
   }
 
   const baseEnsure=ensureRebornAtropos;
   ensureRebornAtropos=function ensureWorldDevourer(e){const ok=baseEnsure(e);if(!ok)return false;ensureSerpent(e);return true;};
-
   const basePose=updateAtroposPose;
   updateAtroposPose=function updateWorldDevourerPose(e){basePose(e);if(!e?.atroposReborn||e.apexForm!=='chronophage')return;buildSerpentPose(e);};
 
@@ -141,27 +170,27 @@
     if(tr){
       const p=clamp(tr.elapsed/Math.max(.001,tr.duration),0,1),blend=smooth(clamp((p-.50)/.36,0,1));
       drawTheme(normalizedRealmTheme(tr.from));if(blend>0){ctx.save();ctx.globalAlpha=blend;drawTheme(normalizedRealmTheme(tr.to));ctx.restore();}
-      drawSerpent(artManifest());return;
+      drawSerpentLayer(artManifest(),'back');return;
     }
-    const result=baseBackground();if(chronoSceneActive())drawSerpent(artManifest());return result;
+    const result=baseBackground();if(chronoSceneActive())drawSerpentLayer(artManifest(),'back');return result;
   };
 
   drawAtroposWorldBody=function drawWorldDevourerTargets(e){if(ensureRebornAtropos(e))updateAtroposPose(e);};
-
   const baseDrawEnemies=drawEnemies;
   drawEnemies=function drawEnemiesWithoutWorldDevourerOwner(){
     const list=state.entities.enemies||[],e=list.find(enemy=>!enemy?.dead&&enemy.apexForm==='chronophage');
     if(!e)return baseDrawEnemies();const index=list.indexOf(e);if(index<0)return baseDrawEnemies();
     list.splice(index,1);try{baseDrawEnemies();}finally{list.splice(Math.min(index,list.length),0,e);}
-    drawAtroposWorldBody(e);drawAtroposSpaceCut(e);
+    drawAtroposWorldBody(e);drawSerpentLayer(artManifest(),'mid');drawAtroposSpaceCut(e);
   };
+  const baseDrawPlayer=drawPlayer;
+  drawPlayer=function drawPlayerWithWorldDevourerForeground(){baseDrawPlayer();if(chronoSceneActive())drawSerpentLayer(artManifest(),'front');};
 
   function clearEntryTransientCombat(){
     clearEnemyProjectiles?.();
     for(const key of ['telegraphs','projectiles','guidedMissiles','curves','wells']){const list=state.entities?.[key];if(Array.isArray(list))list.length=0;}
     clearBeamEffects?.();clearPendingCombatActions?.();
   }
-
   function prepareEntryMobs(form){
     APEX_ENTRY.form=form;APEX_ENTRY.serial=null;APEX_ENTRY.removed=false;APEX_ENTRY.mobs.length=0;
     const cx=player.x,cy=player.y,edge=Math.max(vw,vh)*.72+280;let i=0;
@@ -172,7 +201,6 @@
     }
     clearEntryTransientCombat();state.bossActiveId=null;ui.bossBar?.classList.add('hidden');state.camera.shake=0;state.flash=0;
   }
-
   function updateEntryMobs(tr){
     if(!tr||tr.owner!=='apex-entry'||tr.to!=='apex-chrono'||tr.form!=='chronophage')return;
     if(APEX_ENTRY.serial===null)APEX_ENTRY.serial=tr.serial;if(APEX_ENTRY.serial!==tr.serial)return;
@@ -212,7 +240,6 @@
     });
     APEX_ENTRY.serial=serial;return true;
   };
-
   const baseTransition=updateRealmTransition;
   updateRealmTransition=function updateRealmTransitionWithWorldDevourer(dt){const tr=entryTransition();if(tr)updateEntryMobs(tr);const result=baseTransition(dt);const after=entryTransition();if(after)updateEntryMobs(after);return result;};
   if(typeof updateAtroposEntryControl==='function')updateAtroposEntryControl=function disableLegacyAtroposEntryControl(){return false;};
@@ -228,5 +255,5 @@
   };
 
   window.stackfallAtroposVisualVersion=VERSION;
-  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:art.head.complete&&art.head.naturalWidth>1,body:art.body.complete&&art.body.naturalWidth>1,tail:art.tail.complete&&art.tail.naturalWidth>1},scene:chronoSceneActive(),segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration,mobs:APEX_ENTRY.mobs.length}:null,clock:window.stackfallApexClockDiagnostics?.()||null};};
+  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:art.head.complete&&art.head.naturalWidth>1,body:art.body.complete&&art.body.naturalWidth>1,tail:art.tail.complete&&art.tail.naturalWidth>1},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration,mobs:APEX_ENTRY.mobs.length}:null,clock:window.stackfallApexClockDiagnostics?.()||null};};
 })();
