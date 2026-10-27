@@ -10,11 +10,12 @@
   script.dataset.atroposWorldDevourer='1';
   script.addEventListener('load',()=>{
     // Retired chronophage attacks stay gated. The branch-owned combat prototype is invoked
-    // only when its reviewed motion module is available.
+    // only when its reviewed motion modules are available.
     if(typeof apexBossSkill==='function'){
       const baseApexBossSkill=apexBossSkill;
       apexBossSkill=function worldDevourerAttackGate(e,dt){
         if((e?.apexForm||e?.eliteForm)==='chronophage'&&e?.atroposReborn?.worldDevourer){
+          if(typeof window.stackfallUpdateWorldDevourerCombat==='function')return window.stackfallUpdateWorldDevourerCombat(e,dt);
           if(typeof window.stackfallUpdateWorldDevourerCrossing==='function')return window.stackfallUpdateWorldDevourerCrossing(e,dt);
           e.apexElapsed=(e.apexElapsed||0)+dt;const health=e.hp/Math.max(1,e.maxHp);e.apexPhase=health<.25?4:health<.50?3:health<.75?2:1;e.timeLock=0;
           if(e.atroposReborn){e.atroposReborn.slash=null;e.atroposReborn.slashCd=1e9;}return;
@@ -28,9 +29,16 @@
     }
     const attackScript=document.createElement('script');
     attackScript.src='src/atropos-world-devourer-attack-crossing.js';
-    attackScript.dataset.atroposWorldDevourerAttack='giant-crossing';
+    attackScript.dataset.atroposWorldDevourerAttack='giant-crossing-tail-sever';
+    attackScript.addEventListener('load',()=>{
+      const mawScript=document.createElement('script');
+      mawScript.src='src/atropos-world-devourer-attack-maw.js';
+      mawScript.dataset.atroposWorldDevourerAttack='void-maw';
+      document.body.appendChild(mawScript);
+      window.stackfallAtroposPrototypeAttackState='void-maw-loading';
+    });
     document.body.appendChild(attackScript);
-    window.stackfallAtroposPrototypeAttackState='giant-crossing-loading';
+    window.stackfallAtroposPrototypeAttackState='crossing-tail-loading';
   });
   document.body.appendChild(script);
 })();
