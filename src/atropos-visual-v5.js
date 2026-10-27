@@ -1,22 +1,20 @@
-// Atropos art pass v11 — readable distant illustration, compact fracture targets,
-// and an Atropos-only frozen gray entrance. Other Apex forms keep their own entrance language.
+// Atropos art pass v12 — transparent stylized game asset, whole-body targeting,
+// and an Atropos-only frozen gray entrance. No photographic texture or visible core markers.
 (()=>{
-  const VERSION='atropos-art-v11';
+  const VERSION='atropos-art-v12';
   const ENTRY_DURATION=6.2;
-  const arenaArt=new Image();
-  arenaArt.decoding='async';
-  arenaArt.src='assets/atropos-arena.webp';
+  const bodyArt=new Image();
+  bodyArt.decoding='async';
+  bodyArt.src='assets/atropos-body.svg';
 
-  const fractureArt=new Image();
-  const fractureSvg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 190"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#efffff"/><stop offset=".22" stop-color="#a7f3eb"/><stop offset=".58" stop-color="#587f9f"/><stop offset="1" stop-color="#292f52"/></linearGradient><filter id="b" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.2" result="q"/><feMerge><feMergeNode in="q"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path d="M18 111 55 42 126 17 217 45 244 92 202 142 116 174 42 148Z" fill="#07111b" stroke="#31465b" stroke-width="7"/><path d="m42 105 38-48 55-19 72 25 16 31-38 34-67 24-56-18Z" fill="url(#g)" opacity=".86" filter="url(#b)"/><path d="m65 91 48-35 43-7-35 31-26 48-38-5Z" fill="#f1ffff" opacity=".24"/><path d="m174 59 33 17 10 22-39-4-40 25 15-38Z" fill="#9599dc" opacity=".24"/></svg>`;
-  fractureArt.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(fractureSvg);
-
-  const pose={
-    'west-blade':{x:.245,y:.390,rot:-.20,scale:.96,hitR:68},
-    'crown-anchor':{x:.410,y:.245,rot:.14,scale:.82,hitR:60},
-    'rift-core':{x:.585,y:.350,rot:-.06,scale:1.04,hitR:78},
-    'keel-anchor':{x:.665,y:.565,rot:.22,scale:.86,hitR:62},
-    'east-blade':{x:.805,y:.430,rot:-.28,scale:.96,hitR:68}
+  // These are invisible combat proxies distributed across the visible body. They are
+  // intentionally broad and always active: the player attacks Atropos itself, not gems/cores.
+  const HIT_ZONES={
+    'west-blade':{x:.18,y:.47,scale:1.05},
+    'crown-anchor':{x:.39,y:.25,scale:1.00},
+    'rift-core':{x:.61,y:.24,scale:1.08},
+    'keel-anchor':{x:.70,y:.65,scale:1.00},
+    'east-blade':{x:.83,y:.47,scale:1.04}
   };
   const APEX_ENTRY={serial:null,mobs:[],removed:false,form:null};
 
@@ -28,111 +26,86 @@
     const tr=state.realmTransition;
     if(tr?.to==='apex-chrono'&&tr?.owner==='apex-entry'){
       const p=tr.elapsed/Math.max(.001,tr.duration);
-      return smooth(clamp((p-.52)/.28,0,1));
+      return smooth(clamp((p-.50)/.30,0,1));
     }
     return state.entities.enemies?.some(e=>!e.dead&&e.apexForm==='chronophage')?1:0;
   }
 
-  // Keep the colossus away from the player's collision plane. Only embedded fracture
-  // targets participate in combat, and their hit radii match their compact visuals.
   const baseEnsure=ensureRebornAtropos;
-  ensureRebornAtropos=function ensureAtroposArtAnchor(e){
+  ensureRebornAtropos=function ensureAtroposWholeBodyAnchor(e){
     const ok=baseEnsure(e);if(!ok)return false;
     const r=e.atroposReborn;
-    if(!r.artAnchorV11){
-      r.artScreenAnchorX=Math.min(330,vw*.20);
-      r.artScreenAnchorY=-Math.min(340,vh*.36);
+    if(!r.artAnchorV12){
+      r.artScreenAnchorX=0;
+      r.artScreenAnchorY=-Math.min(170,vh*.18);
       r.anchorX=player.x+r.artScreenAnchorX;
       r.anchorY=player.y+r.artScreenAnchorY;
-      e.x=r.anchorX;e.y=r.anchorY;r.artAnchorV11=true;
+      e.x=r.anchorX;e.y=r.anchorY;r.artAnchorV12=true;
       r.slashCd=Math.max(r.slashCd||0,3.8);
-      refreshBossBodyParts(e);
     }
     return true;
   };
 
+  // Keep the old structural animation only as attack timing data, then replace its tiny
+  // weak-point geometry with broad invisible body coverage. No zone is visually rendered.
   const basePose=updateAtroposPose;
-  updateAtroposPose=function updateAtroposArtPose(e){
-    const result=basePose(e);if(!e?.atroposReborn||e.apexForm!=='chronophage')return result;
-    const slash=e.atroposReborn.slash;
-    let align=0,open=0;
-    if(slash){
-      const a=slash.age;
-      align=a<.78?smooth(a/.78):a<1.46?1:1-smooth((a-1.46)/.74);
-      if(a>=1.16&&a<1.58)open=Math.sin(Math.PI*clamp((a-1.16)/.42,0,1));
-    }
-    const anchorX=e.atroposReborn.artScreenAnchorX??Math.min(330,vw*.20),anchorY=e.atroposReborn.artScreenAnchorY??-Math.min(340,vh*.36);
-    for(const [key,cfg] of Object.entries(pose)){
+  updateAtroposPose=function updateAtroposWholeBodyPose(e){
+    basePose(e);if(!e?.atroposReborn||e.apexForm!=='chronophage')return;
+    const anchorX=e.atroposReborn.artScreenAnchorX||0,anchorY=e.atroposReborn.artScreenAnchorY||0;
+    const baseR=Math.max(112,Math.min(vw,vh)*.175);
+    for(const [key,cfg] of Object.entries(HIT_ZONES)){
       const part=partOf(e,key);if(!part)continue;
-      const side=key==='west-blade'||key==='crown-anchor'?-1:1;
-      part.dx=(cfg.x-.5)*vw-anchorX+side*(12+10*(key.includes('blade')?1:0))*align+side*11*open;
-      part.dy=(cfg.y-.5)*vh-anchorY+(key==='crown-anchor'?-13:key==='keel-anchor'?15:6)*align;
-      part.r=cfg.hitR;
+      part.dx=(cfg.x-.5)*vw-anchorX;
+      part.dy=(cfg.y-.5)*vh-anchorY;
+      part.r=baseR*cfg.scale;
+      part.active=true;part.visible=true;part.dead=false;
     }
-    refreshBossBodyParts(e);return result;
+    refreshBossBodyParts(e);
   };
 
-  function drawArenaIllustration(manifest){
-    if(!arenaArt.complete||arenaArt.naturalWidth<2||manifest<=.001)return;
-    const e=state.entities.enemies?.find(enemy=>!enemy.dead&&enemy.apexForm==='chronophage');
+  function artPlacement(e){
     const r=e?.atroposReborn;
-    const initialX=r?.artScreenAnchorX??Math.min(330,vw*.20),initialY=r?.artScreenAnchorY??-Math.min(340,vh*.36);
+    const initialX=r?.artScreenAnchorX||0,initialY=r?.artScreenAnchorY||0;
     const ox=r?(r.anchorX-player.x-initialX):0,oy=r?(r.anchorY-player.y-initialY):0;
-    const visualTime=performance.now()*.001,breathe=.915+Math.sin(visualTime*.26)*.0015;
-    const dw=vw*breathe,dh=vh*breathe,x=(vw-dw)*.5+ox,y=(vh-dh)*.5+oy+vh*.012;
-
-    // The source illustration contains its own dark space. Screen blending discards that
-    // baked darkness instead of laying a dark rectangle over Stackfall's world, while the
-    // brighter crystalline planes remain visible. A restrained cool backlight gives the
-    // black mass an edge without inventing a floor shadow in space.
+    const t=performance.now()*.001,breathe=1.015+Math.sin(t*.25)*.0022;
+    const dw=vw*1.06*breathe,dh=vh*1.06*breathe;
+    return{x:(vw-dw)*.5+ox,y:(vh-dh)*.5+oy, w:dw,h:dh};
+  }
+  function drawAtroposBodyArt(manifest){
+    if(!bodyArt.complete||bodyArt.naturalWidth<2||manifest<=.001)return;
+    const e=state.entities.enemies?.find(enemy=>!enemy.dead&&enemy.apexForm==='chronophage');
+    const place=artPlacement(e),lastHit=Number(e?.atroposReborn?.lastHitAt),now=Number(state.time)||0;
+    const hitPulse=Number.isFinite(lastHit)?clamp(1-(now-lastHit)/.14,0,1):0;
     ctx.save();
-    const halo=ctx.createRadialGradient(vw*.53,vh*.46,Math.min(vw,vh)*.08,vw*.53,vh*.46,Math.max(vw,vh)*.48);
-    halo.addColorStop(0,`rgba(104,124,170,${.115*manifest})`);
-    halo.addColorStop(.55,`rgba(55,72,116,${.055*manifest})`);
-    halo.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle=halo;ctx.fillRect(0,0,vw,vh);
-    ctx.globalCompositeOperation='screen';
-    ctx.filter='brightness(1.52) contrast(1.24) saturate(1.16)';
-    ctx.globalAlpha=.96*manifest;ctx.drawImage(arenaArt,x,y,dw,dh);
-    ctx.filter='none';ctx.globalAlpha=.24*manifest;ctx.drawImage(arenaArt,x-2,y-1,dw+4,dh+2);
+    // Transparent vector art: source-over only. No baked space background, screen blend,
+    // photo texture, blur, noise or rectangular image boundary.
+    ctx.globalAlpha=.96*manifest;
+    ctx.drawImage(bodyArt,place.x,place.y,place.w,place.h);
+    if(hitPulse>0){ctx.globalCompositeOperation='screen';ctx.globalAlpha=.14*manifest*hitPulse;ctx.drawImage(bodyArt,place.x,place.y,place.w,place.h);}
     ctx.restore();
   }
 
-  // Only Atropos gets the quiet gray crossfade. Other Apex forms fall through unchanged.
+  // Atropos is a distant colossus layer. The world background remains Stackfall's own art.
   const baseBackground=drawBackground;
-  drawBackground=function drawBackgroundWithAtroposEntry(){
+  drawBackground=function drawBackgroundWithAtroposBody(){
     const tr=entryTransition();
     if(tr){
       const p=clamp(tr.elapsed/Math.max(.001,tr.duration),0,1),blend=smooth(clamp((p-.50)/.36,0,1));
       drawTheme(normalizedRealmTheme(tr.from));
       if(blend>0){ctx.save();ctx.globalAlpha=blend;drawTheme(normalizedRealmTheme(tr.to));ctx.restore();}
-      drawArenaIllustration(artManifest());
+      drawAtroposBodyArt(artManifest());
       return;
     }
-    const result=baseBackground();if(chronoSceneActive())drawArenaIllustration(artManifest());return result;
+    const result=baseBackground();if(chronoSceneActive())drawAtroposBodyArt(artManifest());return result;
   };
 
-  function drawFracture(e,key){
-    const part=partOf(e,key),cfg=pose[key];if(!part||!cfg||!fractureArt.complete)return;
-    const p=atroposScreenPoint(part.x,part.y),hit=typeof atroposPartHitPulse==='function'?atroposPartHitPulse(e,key):0,active=part.active!==false,manifest=artManifest();
-    const half=clamp((part.r||64)*.72,42,62)*cfg.scale;
-    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(cfg.rot+(key==='rift-core'?-.04:0));
-    const wobble=1+Math.sin(performance.now()*.00042+(part.r||0))*.008;ctx.scale(wobble,wobble);
-    ctx.globalAlpha=manifest*(active?.78:.25);if(hit){ctx.shadowColor='#eaffff';ctx.shadowBlur=16;ctx.globalAlpha=Math.min(1,ctx.globalAlpha+.36*hit);}
-    ctx.drawImage(fractureArt,-half,-half*.73,half*2,half*1.46);ctx.restore();
-  }
+  // No rendered weak points, jewels or center core. All hit proxies stay invisible.
+  drawAtroposWorldBody=function drawAtroposWholeBodyTargets(e){if(ensureRebornAtropos(e))updateAtroposPose(e);};
 
-  drawAtroposWorldBody=function drawAtroposArtSurfaces(e){
-    if(!ensureRebornAtropos(e))return;updateAtroposPose(e);
-    for(const key of['west-blade','crown-anchor','rift-core','keel-anchor','east-blade'])drawFracture(e,key);
-  };
-
-  // The legacy Atropos renderer hides its owner by moving it to (1e9,1e9) for one draw.
-  // Any generic off-screen boss guide then sees a real target ~sqrt(2)e9 units away and
-  // renders the bogus yellow APEX arrow. Exclude the owner from the render list instead;
-  // combat state and world coordinates never change, then draw only the authored surfaces.
+  // Never move the owner to fake coordinates for rendering. That legacy trick created the
+  // bogus off-screen Apex arrow. Exclude it from the ordinary enemy render list instead.
   const baseDrawEnemiesWithLegacyAtropos=drawEnemies;
-  drawEnemies=function drawEnemiesWithoutPhantomAtroposGuide(){
+  drawEnemies=function drawEnemiesWithoutAtroposMarker(){
     const list=state.entities.enemies||[],e=list.find(enemy=>!enemy?.dead&&enemy.apexForm==='chronophage');
     if(!e)return baseDrawEnemiesWithLegacyAtropos();
     const index=list.indexOf(e);if(index<0)return baseDrawEnemiesWithLegacyAtropos();
@@ -175,17 +148,14 @@
   }
   function resetEntryMobs(){APEX_ENTRY.serial=null;APEX_ENTRY.mobs.length=0;APEX_ENTRY.removed=false;APEX_ENTRY.form=null;}
 
-  // Preserve the canonical entrance for every non-Atropos Apex. We peek the bag once,
-  // put the chosen form back unchanged when it is not Atropos, then delegate to the base flow.
+  // Preserve the canonical entrance for every non-Atropos Apex.
   const baseBeginApexEncounter=beginApexEncounter;
   beginApexEncounter=function beginAtroposScopedEncounter(){
     if(state.apexActiveId||state.pendingApexForm)return false;
     const previousLast=state.lastBossForms?.apex;
     const form=bossBag('apex');
     if(form!=='chronophage'){
-      state.bossBags=state.bossBags||{};
-      state.bossBags.apex=state.bossBags.apex||[];
-      state.bossBags.apex.push(form);
+      state.bossBags=state.bossBags||{};state.bossBags.apex=state.bossBags.apex||[];state.bossBags.apex.push(form);
       state.lastBossForms=state.lastBossForms||{};
       if(previousLast==null)delete state.lastBossForms.apex;else state.lastBossForms.apex=previousLast;
       return baseBeginApexEncounter();
@@ -211,7 +181,6 @@
     APEX_ENTRY.serial=serial;return true;
   };
 
-  // Cinematic mode freezes normal simulation; this extra evacuation animation is Atropos-only.
   const baseTransition=updateRealmTransition;
   updateRealmTransition=function updateRealmTransitionWithAtroposEntry(dt){
     const tr=entryTransition();if(tr)updateEntryMobs(tr);
@@ -220,15 +189,13 @@
   };
   if(typeof updateAtroposEntryControl==='function')updateAtroposEntryControl=function disableLegacyAtroposEntryControl(){return false;};
 
-  // Atropos entrance owns only its own final overlay. Other Apex forms use the canonical overlay.
+  // Quiet Atropos-only entrance: gray frozen world, mob evacuation, name panel, then reveal.
   const baseCinematicOverlay=drawRealmCinematicOverlay;
   drawRealmCinematicOverlay=function drawAtroposEntryOverlay(){
     const tr=entryTransition();if(!tr)return baseCinematicOverlay();
     const p=clamp(tr.elapsed/Math.max(.001,tr.duration),0,1),restore=smooth(clamp((p-.82)/.15,0,1));
-    ctx.save();
-    ctx.globalCompositeOperation='saturation';ctx.globalAlpha=1-restore;ctx.fillStyle='#777';ctx.fillRect(0,0,vw,vh);
+    ctx.save();ctx.globalCompositeOperation='saturation';ctx.globalAlpha=1-restore;ctx.fillStyle='#777';ctx.fillRect(0,0,vw,vh);
     ctx.globalCompositeOperation='source-over';ctx.globalAlpha=(1-restore)*.20;ctx.fillStyle='#02050a';ctx.fillRect(0,0,vw,vh);ctx.restore();
-
     const fadeIn=smooth(clamp((p-.08)/.13,0,1)),fadeOut=1-smooth(clamp((p-.76)/.16,0,1)),alpha=fadeIn*fadeOut;
     if(alpha<=.002)return;
     const w=Math.min(560,vw*.72),h=94,x=(vw-w)*.5,y=vh*.48-h*.5;
@@ -239,5 +206,5 @@
   };
 
   window.stackfallAtroposVisualVersion=VERSION;
-  window.stackfallAtroposArtDiagnostics=()=>({version:VERSION,arenaReady:arenaArt.complete&&arenaArt.naturalWidth>1,fractureReady:fractureArt.complete&&fractureArt.naturalWidth>1,scene:chronoSceneActive(),entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration,mobs:APEX_ENTRY.mobs.length}:null,clock:window.stackfallApexClockDiagnostics?.()||null});
+  window.stackfallAtroposArtDiagnostics=()=>({version:VERSION,bodyReady:bodyArt.complete&&bodyArt.naturalWidth>1,scene:chronoSceneActive(),entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration,mobs:APEX_ENTRY.mobs.length}:null,clock:window.stackfallApexClockDiagnostics?.()||null});
 })();
