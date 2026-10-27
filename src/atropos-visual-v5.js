@@ -1,7 +1,7 @@
-// Atropos art pass v10 — distant arena illustration, compact fracture targets,
+// Atropos art pass v11 — readable distant illustration, compact fracture targets,
 // and an Atropos-only frozen gray entrance. Other Apex forms keep their own entrance language.
 (()=>{
-  const VERSION='atropos-art-v10';
+  const VERSION='atropos-art-v11';
   const ENTRY_DURATION=6.2;
   const arenaArt=new Image();
   arenaArt.decoding='async';
@@ -39,12 +39,12 @@
   ensureRebornAtropos=function ensureAtroposArtAnchor(e){
     const ok=baseEnsure(e);if(!ok)return false;
     const r=e.atroposReborn;
-    if(!r.artAnchorV9){
+    if(!r.artAnchorV11){
       r.artScreenAnchorX=Math.min(330,vw*.20);
       r.artScreenAnchorY=-Math.min(340,vh*.36);
       r.anchorX=player.x+r.artScreenAnchorX;
       r.anchorY=player.y+r.artScreenAnchorY;
-      e.x=r.anchorX;e.y=r.anchorY;r.artAnchorV9=true;
+      e.x=r.anchorX;e.y=r.anchorY;r.artAnchorV11=true;
       r.slashCd=Math.max(r.slashCd||0,3.8);
       refreshBossBodyParts(e);
     }
@@ -78,9 +78,24 @@
     const r=e?.atroposReborn;
     const initialX=r?.artScreenAnchorX??Math.min(330,vw*.20),initialY=r?.artScreenAnchorY??-Math.min(340,vh*.36);
     const ox=r?(r.anchorX-player.x-initialX):0,oy=r?(r.anchorY-player.y-initialY):0;
-    const visualTime=performance.now()*.001,breathe=1.045+Math.sin(visualTime*.26)*.0018;
-    const dw=vw*breathe,dh=vh*breathe,x=(vw-dw)*.5+ox,y=(vh-dh)*.5+oy;
-    ctx.save();ctx.globalAlpha=.86*manifest;ctx.drawImage(arenaArt,x,y,dw,dh);ctx.globalAlpha=.08*manifest;ctx.fillStyle='#07142a';ctx.fillRect(0,0,vw,vh);ctx.restore();
+    const visualTime=performance.now()*.001,breathe=.915+Math.sin(visualTime*.26)*.0015;
+    const dw=vw*breathe,dh=vh*breathe,x=(vw-dw)*.5+ox,y=(vh-dh)*.5+oy+vh*.012;
+
+    // The source illustration contains its own dark space. Screen blending discards that
+    // baked darkness instead of laying a dark rectangle over Stackfall's world, while the
+    // brighter crystalline planes remain visible. A restrained cool backlight gives the
+    // black mass an edge without inventing a floor shadow in space.
+    ctx.save();
+    const halo=ctx.createRadialGradient(vw*.53,vh*.46,Math.min(vw,vh)*.08,vw*.53,vh*.46,Math.max(vw,vh)*.48);
+    halo.addColorStop(0,`rgba(104,124,170,${.115*manifest})`);
+    halo.addColorStop(.55,`rgba(55,72,116,${.055*manifest})`);
+    halo.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=halo;ctx.fillRect(0,0,vw,vh);
+    ctx.globalCompositeOperation='screen';
+    ctx.filter='brightness(1.52) contrast(1.24) saturate(1.16)';
+    ctx.globalAlpha=.96*manifest;ctx.drawImage(arenaArt,x,y,dw,dh);
+    ctx.filter='none';ctx.globalAlpha=.24*manifest;ctx.drawImage(arenaArt,x-2,y-1,dw+4,dh+2);
+    ctx.restore();
   }
 
   // Only Atropos gets the quiet gray crossfade. Other Apex forms fall through unchanged.
@@ -103,13 +118,28 @@
     const half=clamp((part.r||64)*.72,42,62)*cfg.scale;
     ctx.save();ctx.translate(p.x,p.y);ctx.rotate(cfg.rot+(key==='rift-core'?-.04:0));
     const wobble=1+Math.sin(performance.now()*.00042+(part.r||0))*.008;ctx.scale(wobble,wobble);
-    ctx.globalAlpha=manifest*(active?.72:.24);if(hit){ctx.shadowColor='#eaffff';ctx.shadowBlur=16;ctx.globalAlpha=Math.min(1,ctx.globalAlpha+.36*hit);}
+    ctx.globalAlpha=manifest*(active?.78:.25);if(hit){ctx.shadowColor='#eaffff';ctx.shadowBlur=16;ctx.globalAlpha=Math.min(1,ctx.globalAlpha+.36*hit);}
     ctx.drawImage(fractureArt,-half,-half*.73,half*2,half*1.46);ctx.restore();
   }
 
   drawAtroposWorldBody=function drawAtroposArtSurfaces(e){
     if(!ensureRebornAtropos(e))return;updateAtroposPose(e);
     for(const key of['west-blade','crown-anchor','rift-core','keel-anchor','east-blade'])drawFracture(e,key);
+  };
+
+  // The legacy Atropos renderer hides its owner by moving it to (1e9,1e9) for one draw.
+  // Any generic off-screen boss guide then sees a real target ~sqrt(2)e9 units away and
+  // renders the bogus yellow APEX arrow. Exclude the owner from the render list instead;
+  // combat state and world coordinates never change, then draw only the authored surfaces.
+  const baseDrawEnemiesWithLegacyAtropos=drawEnemies;
+  drawEnemies=function drawEnemiesWithoutPhantomAtroposGuide(){
+    const list=state.entities.enemies||[],e=list.find(enemy=>!enemy?.dead&&enemy.apexForm==='chronophage');
+    if(!e)return baseDrawEnemiesWithLegacyAtropos();
+    const index=list.indexOf(e);if(index<0)return baseDrawEnemiesWithLegacyAtropos();
+    list.splice(index,1);
+    try{baseDrawEnemiesWithLegacyAtropos();}
+    finally{list.splice(Math.min(index,list.length),0,e);}
+    drawAtroposWorldBody(e);drawAtroposSpaceCut(e);
   };
 
   function clearEntryTransientCombat(){
