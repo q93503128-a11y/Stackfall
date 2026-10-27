@@ -34,6 +34,13 @@
       const mawScript=document.createElement('script');
       mawScript.src='src/atropos-world-devourer-attack-maw.js';
       mawScript.dataset.atroposWorldDevourerAttack='void-maw';
+      mawScript.addEventListener('load',()=>{
+        const ringScript=document.createElement('script');
+        ringScript.src='src/atropos-world-devourer-attack-ring.js';
+        ringScript.dataset.atroposWorldDevourerAttack='devourer-ring';
+        document.body.appendChild(ringScript);
+        window.stackfallAtroposPrototypeAttackState='devourer-ring-loading';
+      });
       document.body.appendChild(mawScript);
       window.stackfallAtroposPrototypeAttackState='void-maw-loading';
     });
