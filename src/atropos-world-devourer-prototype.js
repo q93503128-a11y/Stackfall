@@ -1,10 +1,10 @@
-// Atropos world-devourer prototype v2 — world-anchored serpent, continuous body and stable depth layers.
+// Atropos world-devourer prototype v3 — world-anchored serpent, continuous body and stable depth layers.
 // Branch-only visual/movement prototype. Attack rework and final swallow entrance are intentionally deferred.
 (()=>{
-  const VERSION='atropos-world-devourer-prototype-v2';
+  const VERSION='atropos-world-devourer-prototype-v3';
   const ENTRY_DURATION=6.2;
   const BODY_COUNT=15;
-  const SAMPLE_SPACING=72;
+  const SAMPLE_SPACING=64;
   const HISTORY_LIMIT=1500;
   const PART_KEYS=['head',...Array.from({length:BODY_COUNT},(_,i)=>`body-${String(i+1).padStart(2,'0')}`),'tail'];
 
@@ -106,9 +106,9 @@
     advanceSerpent(e,serpent);
     const scaleUnit=motionScale(),points=[];
     for(let i=0;i<PART_KEYS.length;i++){
-      const tailT=i/(PART_KEYS.length-1),dist=i*SAMPLE_SPACING*scaleUnit*(1+tailT*.06),p=sampleHistory(serpent.history,dist);
+      const tailT=i/(PART_KEYS.length-1),dist=i*SAMPLE_SPACING*scaleUnit*(1+tailT*.05),p=sampleHistory(serpent.history,dist);
       const screen=worldToScreen(p.x,p.y),depth=Math.sin((p.orbitA||0)+.35);
-      const taper=i===0?1.22:i===PART_KEYS.length-1?.40:lerp(1.08,.62,tailT);
+      const taper=i===0?1.22:i===PART_KEYS.length-1?.38:lerp(1.08,.62,tailT);
       points.push({...p,sx:screen.x,sy:screen.y,key:PART_KEYS[i],index:i,tailT,depth,taper,scaleUnit});
     }
     serpent.points=points;
@@ -132,9 +132,9 @@
     for(let i=points.length-1;i>0;i--){
       const p=points[i],q=points[i-1],weight=(layerWeights(p.depth)[layer]+layerWeights(q.depth)[layer])*.5;
       if(weight<=.01)continue;
-      const tailT=i/(points.length-1),width=158*lerp(1,.40,tailT)*p.scaleUnit;
-      ctx.globalAlpha=manifest*weight*.94;ctx.strokeStyle='#050918';ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
-      ctx.globalAlpha=manifest*weight*.24;ctx.strokeStyle='#40527f';ctx.lineWidth=Math.max(3,width*.08);ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
+      const tailT=i/(points.length-1),width=196*lerp(1,.42,tailT)*p.scaleUnit;
+      ctx.globalAlpha=manifest*weight*.95;ctx.strokeStyle='#050915';ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
+      ctx.globalAlpha=manifest*weight*.20;ctx.strokeStyle='#40527f';ctx.lineWidth=Math.max(3,width*.065);ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
     }
     ctx.restore();
   }
@@ -153,9 +153,10 @@
     for(let i=pts.length-1;i>=0;i--){
       const p=pts[i],weight=layerWeights(p.depth)[layer];if(weight<=.01)continue;
       const alpha=manifest*weight;
-      if(i===0){drawSprite(art.head,p,430*p.scaleUnit,222*p.scaleUnit,.98*alpha,.09);continue;}
-      if(i===pts.length-1){drawSprite(art.tail,p,290*p.taper*p.scaleUnit,98*p.taper*p.scaleUnit,.96*alpha,.04);continue;}
-      drawSprite(art.body,p,250*p.taper*p.scaleUnit,114*p.taper*p.scaleUnit,.94*alpha,.045,i%2===0);
+      if(i===0){drawSprite(art.head,p,445*p.scaleUnit,223*p.scaleUnit,.98*alpha,.08);continue;}
+      if(i===pts.length-1){drawSprite(art.tail,p,245*p.taper*p.scaleUnit,82*p.taper*p.scaleUnit,.94*alpha,.035);continue;}
+      if(i>=4&&i%2===0)continue;
+      drawSprite(art.body,p,245*p.taper*p.scaleUnit,90*p.taper*p.scaleUnit,.80*alpha,.035,i%4===3);
     }
   }
 
