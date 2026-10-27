@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+  <g fill-rule="evenodd" stroke-linejoin="round">
+    <!-- One continuous colossal silhouette. The center is an irregular absence, not a core. -->
+    <path d="M72 586 L116 410 L214 278 L354 177 L504 118 L676 86 L846 108 L1015 96 L1172 148 L1314 244 L1454 370 L1518 512 L1482 642 L1358 722 L1216 736 L1115 672 L1044 580 L988 505 L920 458 L840 436 L760 446 L690 486 L632 552 L566 633 L474 704 L350 730 L220 696 L126 646 Z M520 498 L578 410 L664 344 L760 314 L860 326 L946 366 L1006 430 L1022 504 L985 574 L920 630 L836 658 L738 648 L656 606 L588 552 Z"
+          fill="#070b18" stroke="#334264" stroke-width="12"/>
+
+    <!-- Large readable armor planes; deliberately flat and graphic, not photographic. -->
+    <path d="M126 536 L170 382 L286 250 L452 168 L548 166 L466 250 L390 344 L344 470 L278 566 L190 602 Z" fill="#111a33"/>
+    <path d="M348 250 L532 142 L720 112 L810 154 L704 214 L602 294 L522 396 L418 356 Z" fill="#16213f"/>
+    <path d="M742 126 L914 132 L1050 118 L1166 178 L1086 246 L986 286 L894 256 L816 210 Z" fill="#0f1833"/>
+    <path d="M1084 196 L1230 236 L1380 344 L1462 456 L1414 540 L1310 510 L1226 424 L1144 350 L1046 314 Z" fill="#182444"/>
+    <path d="M1184 454 L1326 508 L1450 558 L1404 648 L1290 690 L1178 664 L1092 584 Z" fill="#111b36"/>
+    <path d="M160 596 L286 560 L390 498 L454 552 L414 644 L332 696 L220 680 L138 632 Z" fill="#0d1730"/>
+
+    <!-- Broad fracture faces. Four values only: black/navy/mid-blue/ice. -->
+    <path d="M206 368 L302 252 L390 198 L352 292 L284 412 L228 506 L170 488 Z" fill="#7f9fdc"/>
+    <path d="M242 352 L304 270 L348 238 L320 306 L270 390 Z" fill="#d9f3ff"/>
+
+    <path d="M518 168 L662 114 L742 126 L662 184 L594 260 L536 350 L470 314 Z" fill="#6686ca"/>
+    <path d="M590 154 L666 126 L704 136 L646 178 L604 226 Z" fill="#dbefff"/>
+
+    <path d="M1024 142 L1128 164 L1212 218 L1138 252 L1068 300 L1000 276 Z" fill="#5f79bc"/>
+    <path d="M1086 158 L1144 180 L1180 204 L1136 216 L1092 246 Z" fill="#e5f6ff"/>
+
+    <path d="M1278 422 L1392 476 L1460 540 L1404 574 L1320 542 L1248 492 Z" fill="#6f83c7"/>
+    <path d="M1340 468 L1404 500 L1434 532 L1392 536 L1342 512 Z" fill="#e0f4ff"/>
+
+    <path d="M332 590 L410 526 L458 560 L426 624 L366 670 L302 674 Z" fill="#536da9"/>
+    <path d="M374 568 L414 544 L434 562 L410 602 L378 622 Z" fill="#c8e8ff"/>
+
+    <!-- Sparse violet accents unify with Stackfall without turning into neon line art. -->
+    <path d="M406 362 L462 314 L522 396 L486 440 Z" fill="#4a477f"/>
+    <path d="M890 254 L958 280 L1012 328 L952 342 L898 304 Z" fill="#45457d"/>
+    <path d="M1100 572 L1178 664 L1128 650 L1068 600 Z" fill="#50467e"/>
+
+    <!-- A few detached chunks; kept sparse so the boss still reads as one body. -->
+    <path d="M104 244 L144 214 L182 226 L164 266 L126 278 Z" fill="#192544" stroke="#43567c" stroke-width="6"/>
+    <path d="M720 62 L756 30 L796 42 L784 78 L744 92 Z" fill="#202d50" stroke="#53698e" stroke-width="6"/>
+    <path d="M1486 326 L1520 306 L1550 332 L1522 366 L1490 356 Z" fill="#1b2848" stroke="#4f6287" stroke-width="6"/>
+
+    <!-- Crisp rim facets: game-readable highlights, no noisy surface texture. -->
+    <path d="M96 574 L136 420 L224 300" fill="none" stroke="#7ea0d5" stroke-width="10" opacity=".34"/>
+    <path d="M462 164 L612 104 L742 100" fill="none" stroke="#9bbce8" stroke-width="9" opacity=".30"/>
+    <path d="M1070 126 L1206 178 L1328 274" fill="none" stroke="#91addd" stroke-width="9" opacity=".28"/>
+    <path d="M1360 700 L1228 714 L1130 664" fill="none" stroke="#718dc1" stroke-width="8" opacity=".24"/>
+  </g>
+</svg>
