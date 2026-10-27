@@ -1,7 +1,7 @@
-// Atropos art pass v9 — distant arena illustration, compact fracture targets,
-// and a deliberately quiet Apex entrance. Apex arrival is a world event, not a summon VFX.
+// Atropos art pass v10 — distant arena illustration, compact fracture targets,
+// and an Atropos-only frozen gray entrance. Other Apex forms keep their own entrance language.
 (()=>{
-  const VERSION='atropos-art-v9';
+  const VERSION='atropos-art-v10';
   const ENTRY_DURATION=6.2;
   const arenaArt=new Image();
   arenaArt.decoding='async';
@@ -22,7 +22,7 @@
 
   function smooth(t){t=clamp(t,0,1);return t*t*(3-2*t);}
   function partOf(e,key){return typeof atroposPart==='function'?atroposPart(e,key):e?.bodyParts?.find(p=>p.key===key);}
-  function entryTransition(){const tr=state.realmTransition;return tr?.owner==='apex-entry'&&String(tr.to||'').startsWith('apex-')?tr:null;}
+  function entryTransition(){const tr=state.realmTransition;return tr?.owner==='apex-entry'&&tr?.to==='apex-chrono'&&tr?.form==='chronophage'?tr:null;}
   function chronoSceneActive(){return state.realmTheme==='apex-chrono'||state.pendingApexForm==='chronophage'||state.realmTransition?.to==='apex-chrono'||!!state.entities.enemies?.some(e=>!e.dead&&e.apexForm==='chronophage');}
   function artManifest(){
     const tr=state.realmTransition;
@@ -83,15 +83,15 @@
     ctx.save();ctx.globalAlpha=.86*manifest;ctx.drawImage(arenaArt,x,y,dw,dh);ctx.globalAlpha=.08*manifest;ctx.fillStyle='#07142a';ctx.fillRect(0,0,vw,vh);ctx.restore();
   }
 
-  // Apex entry backgrounds crossfade quietly. No radial portal, streak fan or summon glyph.
+  // Only Atropos gets the quiet gray crossfade. Other Apex forms fall through unchanged.
   const baseBackground=drawBackground;
-  drawBackground=function drawBackgroundWithQuietApexEntry(){
+  drawBackground=function drawBackgroundWithAtroposEntry(){
     const tr=entryTransition();
     if(tr){
       const p=clamp(tr.elapsed/Math.max(.001,tr.duration),0,1),blend=smooth(clamp((p-.50)/.36,0,1));
       drawTheme(normalizedRealmTheme(tr.from));
       if(blend>0){ctx.save();ctx.globalAlpha=blend;drawTheme(normalizedRealmTheme(tr.to));ctx.restore();}
-      if(tr.to==='apex-chrono')drawArenaIllustration(artManifest());
+      drawArenaIllustration(artManifest());
       return;
     }
     const result=baseBackground();if(chronoSceneActive())drawArenaIllustration(artManifest());return result;
@@ -132,7 +132,7 @@
     clearEntryTransientCombat();state.bossActiveId=null;ui.bossBar?.classList.add('hidden');state.camera.shake=0;state.flash=0;
   }
   function updateEntryMobs(tr){
-    if(!tr||tr.owner!=='apex-entry')return;
+    if(!tr||tr.owner!=='apex-entry'||tr.to!=='apex-chrono'||tr.form!=='chronophage')return;
     if(APEX_ENTRY.serial===null)APEX_ENTRY.serial=tr.serial;
     if(APEX_ENTRY.serial!==tr.serial)return;
     const p=clamp(tr.elapsed/Math.max(.001,tr.duration),0,1),move=smooth(clamp((p-.08)/.30,0,1));
@@ -145,12 +145,23 @@
   }
   function resetEntryMobs(){APEX_ENTRY.serial=null;APEX_ENTRY.mobs.length=0;APEX_ENTRY.removed=false;APEX_ENTRY.form=null;}
 
-  // The natural Apex scheduler still triggers at APEX_INTERVAL_SECONDS (600s). This override
-  // only changes presentation: the progression clock freezes as soon as pendingApexForm is set.
-  beginApexEncounter=function beginQuietApexEncounter(){
+  // Preserve the canonical entrance for every non-Atropos Apex. We peek the bag once,
+  // put the chosen form back unchanged when it is not Atropos, then delegate to the base flow.
+  const baseBeginApexEncounter=beginApexEncounter;
+  beginApexEncounter=function beginAtroposScopedEncounter(){
     if(state.apexActiveId||state.pendingApexForm)return false;
+    const previousLast=state.lastBossForms?.apex;
+    const form=bossBag('apex');
+    if(form!=='chronophage'){
+      state.bossBags=state.bossBags||{};
+      state.bossBags.apex=state.bossBags.apex||[];
+      state.bossBags.apex.push(form);
+      state.lastBossForms=state.lastBossForms||{};
+      if(previousLast==null)delete state.lastBossForms.apex;else state.lastBossForms.apex=previousLast;
+      return baseBeginApexEncounter();
+    }
     if(state.realmTransition)cancelRealmTransition('space');
-    const form=bossBag('apex');state.pendingApexForm=form;
+    state.pendingApexForm=form;
     if(!forceApexPriority()){state.pendingApexForm=null;return false;}
     prepareEntryMobs(form);
     const radius=compactDevice()?318:486,arena={x:player.x,y:player.y,r:radius,form,createdAt:state.time||0},title=bossName(form);
@@ -162,9 +173,7 @@
         const e=spawnEnemy('apex');
         if(!e){state.pendingApexForm=null;state.nextApexAt=(typeof runProgressionTime==='function'?runProgressionTime():state.time||0)+30;cancelRealmTransition('space');return;}
         e.eliteForm=form;e.apexForm=form;e.name=title;e.color=BOSS_STATS[form].color;e.timeLock=0;e.apexElapsed=0;
-        if(form==='starforge'){e.speed=0;e.x=liveArena.x;e.y=liveArena.y-liveArena.r*.24;}
-        else if(form==='chronophage'){e.speed*=.82;e.x=liveArena.x+liveArena.r*.24;e.y=liveArena.y-liveArena.r*.10;}
-        else{e.speed=Math.max(72,e.speed*1.65);e.x=liveArena.x-liveArena.r*.42;e.y=liveArena.y;}
+        e.speed*=.82;e.x=liveArena.x+liveArena.r*.24;e.y=liveArena.y-liveArena.r*.10;
         state.apexActiveId=e.id;state.apexCount++;state.nextApexAt=(state.apexCount+1)*APEX_INTERVAL_SECONDS;
       },
       onComplete:()=>{state.pendingApexForm=null;stabilizeRealmTheme(apexTheme(form));resetEntryMobs();}
@@ -172,20 +181,18 @@
     APEX_ENTRY.serial=serial;return true;
   };
 
-  // Cinematic mode already freezes normal simulation. We only animate the pre-existing mobs
-  // outward so the player sees the battlefield being evacuated instead of instantly erased.
+  // Cinematic mode freezes normal simulation; this extra evacuation animation is Atropos-only.
   const baseTransition=updateRealmTransition;
-  updateRealmTransition=function updateRealmTransitionWithQuietApexEntry(dt){
+  updateRealmTransition=function updateRealmTransitionWithAtroposEntry(dt){
     const tr=entryTransition();if(tr)updateEntryMobs(tr);
     const result=baseTransition(dt);
     const after=entryTransition();if(after)updateEntryMobs(after);return result;
   };
   if(typeof updateAtroposEntryControl==='function')updateAtroposEntryControl=function disableLegacyAtroposEntryControl(){return false;};
 
-  // Final overlay owns Apex entrance presentation. It intentionally does not call the old
-  // transition signature, so no rotating glyph, squiggle, portal or decorative summon survives.
+  // Atropos entrance owns only its own final overlay. Other Apex forms use the canonical overlay.
   const baseCinematicOverlay=drawRealmCinematicOverlay;
-  drawRealmCinematicOverlay=function drawQuietApexEntryOverlay(){
+  drawRealmCinematicOverlay=function drawAtroposEntryOverlay(){
     const tr=entryTransition();if(!tr)return baseCinematicOverlay();
     const p=clamp(tr.elapsed/Math.max(.001,tr.duration),0,1),restore=smooth(clamp((p-.82)/.15,0,1));
     ctx.save();
