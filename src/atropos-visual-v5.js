@@ -42,6 +42,13 @@
           const pastScript=document.createElement('script');
           pastScript.src='src/atropos-world-devourer-attack-past.js';
           pastScript.dataset.atroposWorldDevourerAttack='past-trajectory';
+          pastScript.addEventListener('load',()=>{
+            const worldScript=document.createElement('script');
+            worldScript.src='src/atropos-world-devourer-attack-world.js';
+            worldScript.dataset.atroposWorldDevourerAttack='world-devour';
+            document.body.appendChild(worldScript);
+            window.stackfallAtroposPrototypeAttackState='world-devour-loading';
+          });
           document.body.appendChild(pastScript);
           window.stackfallAtroposPrototypeAttackState='past-trajectory-loading';
         });
