@@ -1,14 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 190">
-<defs>
- <linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#121c3d"/><stop offset=".58" stop-color="#080e23"/><stop offset="1" stop-color="#030611"/></linearGradient>
- <linearGradient id="plate" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#637ac1"/><stop offset=".62" stop-color="#3d4482"/><stop offset="1" stop-color="#242653"/></linearGradient>
-</defs>
-<g stroke-linejoin="round" transform="translate(0 -7.6) scale(1 1.08)">
- <path d="M8 95 72 48 172 25 288 22 397 42 512 79 518 108 404 149 292 169 174 165 70 140Z" fill="url(#body)"/>
- <path d="M92 62 177 37 262 32 231 68 166 91 84 99Z" fill="url(#plate)" opacity=".86"/>
- <path d="M253 33 345 34 429 50 392 82 320 77 231 68Z" fill="#495b9c" opacity=".82"/>
- <path d="M91 120 169 99 247 104 210 143 137 154Z" fill="#303e74" opacity=".84"/>
- <path d="M247 104 331 93 415 105 376 141 301 157 210 143Z" fill="#1b2851" opacity=".88"/>
- <path d="M177 44 207 38 232 43 203 54Z" fill="#d6f3ff" opacity=".56"/>
- <path d="M345 45 374 48 397 55 367 61Z" fill="#bfe7ff" opacity=".42"/>
+<defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#141c38"/><stop offset=".55" stop-color="#080d20"/><stop offset="1" stop-color="#02040b"/></linearGradient><linearGradient id="p" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#38446c"/><stop offset="1" stop-color="#141a38"/></linearGradient></defs>
+<g stroke-linejoin="round">
+ <path d="M8 99 62 59 141 36 230 29 322 32 414 50 512 82 516 107 422 143 324 162 225 164 133 152 57 128Z" fill="url(#b)" stroke="#263252" stroke-width="5"/>
+ <path d="M67 62 146 40 222 34 191 68 126 90 55 99Z" fill="url(#p)"/>
+ <path d="M217 34 303 34 384 46 349 78 284 76 191 68Z" fill="#29345b"/>
+ <path d="M364 49 432 60 491 82 454 102 395 96 349 78Z" fill="#11182f"/>
+ <path d="M91 122 163 103 236 107 205 140 139 150Z" fill="#202b50"/>
+ <path d="M233 107 310 99 390 108 354 139 285 154 205 140Z" fill="#111b38"/>
+ <path d="M178 45 191 58 205 54 218 67" fill="none" stroke="#b8e9f7" stroke-width="4" opacity=".40"/>
+ <path d="M356 111 369 124 382 119 395 132" fill="none" stroke="#8fc9db" stroke-width="3" opacity=".28"/>
 </g></svg>
