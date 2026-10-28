@@ -18,6 +18,7 @@ jobs:
           fetch-depth: 0
       - name: Rebuild static WebP asset
         run: |
+          mkdir -p assets
           cat scripts/atropos-art-chunks/chunk*.txt | tr -d '\n\r' | base64 -d > assets/atropos-production.webp
           python - <<'PY'
           from pathlib import Path
