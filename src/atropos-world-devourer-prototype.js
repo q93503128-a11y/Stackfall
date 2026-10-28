@@ -227,7 +227,7 @@
   }
   function bodyHalfWidth(p,i,side=1){
     const tailT=clamp(Number.isFinite(p.tailT)?p.tailT:i/Math.max(1,PART_KEYS.length-1),0,1);
-    const base=tailT<.10?lerp(78,70,tailT/.10):tailT<.62?lerp(70,46,(tailT-.10)/.52):lerp(46,5,(tailT-.62)/.38);
+    const base=tailT<.10?lerp(78,70,tailT/.10):tailT<.62?lerp(70,46,(tailT-.10)/.52):lerp(46,.5,(tailT-.62)/.38);
     const jag=1+.050*Math.sin(tailT*21+side*.83)+.020*Math.sin(tailT*57+side*2.27);
     return base*p.scaleUnit*jag;
   }
@@ -245,12 +245,12 @@
   function traceBodyPolygon(run,scale=1){
     ctx.beginPath();
     for(let k=0;k<run.length;k++){
-      const {p,i}=run[k],half=bodyHalfWidth(p,i,1)*scale,nx=-Math.sin(p.a),ny=Math.cos(p.a),tx=Math.cos(p.a),ty=Math.sin(p.a),phase=(p.tailT||0)*Math.PI*2,j=(Math.sin(phase*5.3)+Math.sin(phase*11.7))*1.15*scale,x=p.sx+nx*half+tx*j,y=p.sy+ny*half+ty*j;
+      const {p,i}=run[k],isHead=k===0,isTail=k===run.length-1,half=(isTail?0:bodyHalfWidth(p,i,1))*scale,nx=-Math.sin(p.a),ny=Math.cos(p.a),tx=Math.cos(p.a),ty=Math.sin(p.a),phase=(p.tailT||0)*Math.PI*2,j=(Math.sin(phase*5.3)+Math.sin(phase*11.7))*1.15*scale,lead=isHead?-58*p.scaleUnit:isTail?34*p.scaleUnit:0,x=p.sx+nx*half+tx*(j+lead),y=p.sy+ny*half+ty*(j+lead);
       if(k===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
     }
     for(let k=run.length-1;k>=0;k--){
-      const {p,i}=run[k],half=bodyHalfWidth(p,i,-1)*scale,nx=-Math.sin(p.a),ny=Math.cos(p.a),tx=Math.cos(p.a),ty=Math.sin(p.a),phase=(p.tailT||0)*Math.PI*2,j=(Math.cos(phase*4.9)+Math.sin(phase*9.1))*1.05*scale;
-      ctx.lineTo(p.sx-nx*half+tx*j,p.sy-ny*half+ty*j);
+      const {p,i}=run[k],isHead=k===0,isTail=k===run.length-1,half=(isTail?0:bodyHalfWidth(p,i,-1))*scale,nx=-Math.sin(p.a),ny=Math.cos(p.a),tx=Math.cos(p.a),ty=Math.sin(p.a),phase=(p.tailT||0)*Math.PI*2,j=(Math.cos(phase*4.9)+Math.sin(phase*9.1))*1.05*scale,lead=isHead?-58*p.scaleUnit:isTail?34*p.scaleUnit:0;
+      ctx.lineTo(p.sx-nx*half+tx*(j+lead),p.sy-ny*half+ty*(j+lead));
     }
     ctx.closePath();
   }
@@ -367,5 +367,5 @@
   };
 
   window.stackfallAtroposVisualVersion=VERSION;
-  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-textured-historysync-v9',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
+  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-textured-endcaps-v10',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
 })();
