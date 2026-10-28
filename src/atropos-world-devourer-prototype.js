@@ -72,6 +72,16 @@
     };
   }
   window.stackfallAtroposIdleOffset=idleOffset;
+  function idleOffset(serpent,t=serpent.motionTime){
+    const phase=Number(serpent.phaseBase)||0,a=(Number(t)||0)*.118+phase;
+    const rx=clamp(vw*.34,520,700),ry=clamp(vh*.225,200,290),drift=clamp(Math.min(vw,vh)*.08,55,90);
+    return{
+      x:Math.cos(a)*rx+Math.sin(a*.47+.4)*drift,
+      y:Math.sin(a*1.65)*ry+Math.sin(a*.73+1.2)*62,
+      orbitA:a
+    };
+  }
+  window.stackfallAtroposIdleOffset=idleOffset;
   function headWorldPosition(e,serpent,t){
     const o=idleOffset(serpent,t);
     return{x:serpent.anchorX+o.x,y:serpent.anchorY+o.y,orbitA:o.orbitA};
