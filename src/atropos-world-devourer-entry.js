@@ -92,7 +92,7 @@
   function drawSuctionTrails(){
     const tr=trNow();if(!tr||!ENTRY.active)return;const p=progress();if(p<WRAP_START)return;const head=entryHeadPose(p);
     ctx.save();ctx.lineCap='round';ctx.globalCompositeOperation='screen';
-    for(const item of ENTRY.mobs){if(item.consumed||item.pull<=.01||!item.e||item.e.dead)continue;const A=worldToScreen(item.e.x,item.e.y),B=worldToScreen(head.x,head.y),q=item.pull;ctx.globalAlpha=.10+.28*q;ctx.strokeStyle='rgba(224,238,244,.85)';ctx.lineWidth=1.5+2*q;ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.quadraticCurveTo(lerp(A.x,B.x,.55)+item.controlSign*18,lerp(A.y,B.y,.55)-item.controlSign*14,B.x,B.y);ctx.stroke();}
+    for(const item of ENTRY.mobs){if(item.consumed||item.pull<=.01||!item.e||item.e.dead)continue;const A=worldToScreen(item.e.x,item.e.y),B=worldToScreen(head.x,head.y),q=item.pull;ctx.globalAlpha=.16+.42*q;ctx.strokeStyle='rgba(224,238,244,.88)';ctx.lineWidth=1.7+2.4*q;ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.quadraticCurveTo(lerp(A.x,B.x,.55)+item.controlSign*18,lerp(A.y,B.y,.55)-item.controlSign*14,B.x,B.y);ctx.stroke();}
     ctx.restore();
   }
   function resetEntry(restore=false){if(restore)restoreUnconsumedMobs();ENTRY.serial=null;ENTRY.active=false;ENTRY.mobs.length=0;ENTRY.bossId=null;ENTRY.consumed=0;}

@@ -53,10 +53,10 @@ async function captureWhen(name,expr,metaFn=null,timeout=12000){const value=awai
 async function boss(){return evaluate(`(()=>{const e=state.entities.enemies.find(x=>!x?.dead&&x.apexForm==='chronophage');if(!e)return null;const s=e.atroposReborn?.worldDevourer;return{id:e.id,hp:e.hp,maxHp:e.maxHp,phase:e.apexPhase,serpent:!!s,parts:e.bodyParts?.length||0,active:window.stackfallAtroposDirectorDiagnostics?.(),entry:window.stackfallAtroposEntryDiagnostics?.(),art:window.stackfallAtroposArtDiagnostics?.()};})()`);}
 async function neutralize(){return evaluate(`(()=>{const e=state.entities.enemies.find(x=>!x?.dead&&x.apexForm==='chronophage'),s=e?.atroposReborn?.worldDevourer;if(!s)return false;for(const k of ['crossingPrototype','tailSeverPrototype','mawPrototype','ringPrototype','pastPrototype','worldDevourPrototype'])s[k]=null;s.prototypeAttackCd=9999;s.entryGrace=0;state.spawnTimer=state.encounterTimer=99999;player.invuln=99999;player.moveVX=player.moveVY=0;state.weaponSlots=[];for(const key of ['projectiles','guidedMissiles','curves','telegraphs','beams','shockwaves'])if(Array.isArray(state.entities[key]))state.entities[key].length=0;return true;})()`);}
 async function setPhase(fraction){return evaluate(`(()=>{const e=state.entities.enemies.find(x=>!x?.dead&&x.apexForm==='chronophage');if(!e)return null;e.hp=e.maxHp*${fraction};const s=e.atroposReborn?.worldDevourer;if(s){s.prototypeAttackCd=9999;s.entryGrace=0;}return{hp:e.hp,maxHp:e.maxHp,fraction:e.hp/e.maxHp};})()`);}
-async function runAttack({name,phase,trigger,diag,stages,active='d?.active',stageValue='d?.stage'}){
+async function runAttack({name,phase,trigger,diag,stages,active='d?.active',stageValue='d?.stage',ageValue='d?.age'}){
   await neutralize();await setPhase(phase);await sleep(220);
   const started=await evaluate(`${trigger}()`);if(!started)throw new Error(`${name} trigger failed`);
-  for(const item of stages){const [stage,label,delay=0]=item;await captureWhen(`${name}-${label}`,`(()=>{const d=${diag}();return (${active})&&(${stageValue})===${JSON.stringify(stage)}?d:null;})()`,async d=>({attack:name,stage,diag:d,boss:await boss()}),12000);if(delay)await sleep(delay);}
+  for(const item of stages){const [stage,label,delay=0,minAge=null]=item;const ageGate=minAge==null?'true':`(${ageValue})>=${Number(minAge)}`;await captureWhen(`${name}-${label}`,`(()=>{const d=${diag}();return (${active})&&(${stageValue})===${JSON.stringify(stage)}&&(${ageGate})?d:null;})()`,async d=>({attack:name,stage,diag:d,boss:await boss()}),12000);if(delay)await sleep(delay);}
   await waitFor(`(()=>{const d=${diag}();return !(${active});})()`,16000);await neutralize();await sleep(260);await capture(`${name}-recovery`,{attack:name,stage:'recovery',boss:await boss()});
 }
 
@@ -78,12 +78,12 @@ try{
   await captureWhen('entry-colour-return',`(()=>{const d=window.stackfallAtroposEntryDiagnostics?.();return d?.active&&d.progress>=.88?d:null;})()`,async d=>({entry:d,boss:await boss()}));
   await waitFor(`!window.stackfallAtroposEntryDiagnostics?.().active&&state.apexActiveId`,12000);await neutralize();await sleep(900);await capture('combat-idle',{boss:await boss()});
 
-  await runAttack({name:'crossing',phase:.90,trigger:'stackfallTriggerAtroposGiantCrossing',diag:'stackfallAtroposCombatDiagnostics',active:'d?.crossing',stageValue:'d?.crossing?.stage',stages:[['warn','warn'],['cross','cross-a',240],['cross','cross-b']]});
-  await runAttack({name:'tail',phase:.90,trigger:'stackfallTriggerAtroposTailSever',diag:'stackfallAtroposCombatDiagnostics',active:'d?.tail',stageValue:'d?.tail?.stage',stages:[['wind','wind'],['sweep','sweep'],['scar-warn','scar-warn'],['rupture','rupture']]});
+  await runAttack({name:'crossing',phase:.90,trigger:'stackfallTriggerAtroposGiantCrossing',diag:'stackfallAtroposCombatDiagnostics',active:'d?.crossing',stageValue:'d?.crossing?.stage',ageValue:'d?.crossing?.age',stages:[['warn','warn-mid',0,1.05],['cross','cross-early',0,1.90],['cross','cross-mid',0,2.82],['cross','cross-late',0,3.55]]});
+  await runAttack({name:'tail',phase:.90,trigger:'stackfallTriggerAtroposTailSever',diag:'stackfallAtroposCombatDiagnostics',active:'d?.tail',stageValue:'d?.tail?.stage',ageValue:'d?.tail?.age',stages:[['wind','wind-mid',0,.45],['sweep','sweep-mid',0,1.18],['scar-warn','scar-warn',0,1.80],['rupture','rupture',0,2.16]]});
   await runAttack({name:'maw',phase:.65,trigger:'stackfallTriggerAtroposVoidMaw',diag:'stackfallAtroposMawDiagnostics',stages:[['warn','warn'],['suction','suction'],['bite','bite']]});
   await runAttack({name:'ring',phase:.65,trigger:'stackfallTriggerAtroposDevourerRing',diag:'stackfallAtroposRingDiagnostics',stages:[['warn','warn'],['wrap','wrap'],['hold','hold']]});
-  await runAttack({name:'past',phase:.40,trigger:'stackfallTriggerAtroposPastTrajectory',diag:'stackfallAtroposPastDiagnostics',stages:[['warn','warn'],['present','present'],['memory','memory'],['rewarn','rewarn'],['replay','replay']]});
-  await runAttack({name:'world',phase:.15,trigger:'stackfallTriggerAtroposWorldDevour',diag:'stackfallAtroposWorldDevourDiagnostics',stages:[['withdraw','withdraw'],['warn','warn'],['bite','bite'],['scar','scar'],['recover','recover']]});
+  await runAttack({name:'past',phase:.40,trigger:'stackfallTriggerAtroposPastTrajectory',diag:'stackfallAtroposPastDiagnostics',stages:[['warn','warn-mid',0,.42],['present','present-mid',0,1.72],['memory','memory',0,3.50],['rewarn','rewarn',0,4.28],['replay','replay-early',0,4.78],['replay','replay-mid',0,5.32],['replay','replay-late',0,5.76]]});
+  await runAttack({name:'world',phase:.15,trigger:'stackfallTriggerAtroposWorldDevour',diag:'stackfallAtroposWorldDevourDiagnostics',stages:[['withdraw','withdraw-mid',0,.42],['warn','warn-mid',0,1.95],['bite','bite-enter',0,3.18],['bite','bite-snap',0,3.54],['scar','scar-mid',0,4.30],['recover','recover-mid',0,5.35]]});
 
   observations.finalBoss=await boss();observations.damage=await evaluate('stackfallAtroposDamageDiagnostics?.()');observations.director=await evaluate('stackfallAtroposDirectorDiagnostics?.()');observations.endedAt=new Date().toISOString();
   if(observations.exceptions.length)throw new Error(`runtime exceptions: ${observations.exceptions.join(' | ')}`);
@@ -91,5 +91,5 @@ try{
   console.log(`ATROPOS_VISUAL_AUDIT_OK frames=${observations.frames.length}`);
 }catch(error){observations.error=String(error?.stack||error);observations.endedAt=new Date().toISOString();writeFileSync(join(out,'manifest.json'),JSON.stringify(observations,null,2));console.error(error);process.exitCode=1;
 }finally{
-  try{cdp?.close();}catch{}try{browser.kill('SIGTERM');}catch{}await new Promise(ok=>server.close(ok));rmSync(profile,{recursive:true,force:true});
+  try{cdp?.close();}catch{}try{browser.kill('SIGTERM');}catch{}await sleep(300);await new Promise(ok=>server.close(ok));try{rmSync(profile,{recursive:true,force:true});}catch{}
 }

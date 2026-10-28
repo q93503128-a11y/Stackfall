@@ -23,7 +23,7 @@
 
   function artManifest(){
     const tr=entryTransition();
-    if(tr){const p=tr.elapsed/Math.max(.001,tr.duration);return smooth(clamp((p-.47)/.34,0,1));}
+    if(tr){const p=tr.elapsed/Math.max(.001,tr.duration);return smooth(clamp((p-.495)/.12,0,1));}
     return serpentEnemy()?1:0;
   }
 
