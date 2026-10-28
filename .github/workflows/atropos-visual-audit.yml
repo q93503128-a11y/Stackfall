@@ -1,0 +1,28 @@
+name: Atropos visual audit
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  visual-audit:
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'feature/atropos-world-devourer-prototype'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run Atropos runtime visual capture
+        run: node scripts/atropos-visual-audit.mjs
+      - name: Upload Atropos visual audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atropos-visual-audit
+          path: test-results/atropos-visual
+          if-no-files-found: error
