@@ -1,0 +1,31 @@
+name: Atropos entry continuity v8
+
+on:
+  push:
+    branches: [feature/atropos-world-devourer-prototype]
+    paths: [scripts/atropos-entry-continuity-v8-trigger.txt]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/atropos-world-devourer-prototype
+          fetch-depth: 0
+      - name: Apply entry continuity v8
+        run: |
+          python scripts/atropos-entry-continuity-v8.py
+          node --check src/atropos-world-devourer-prototype.js
+          node --check src/atropos-world-devourer-entry.js
+          node scripts/atropos-code-audit.mjs
+      - name: Commit entry continuity v8
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/atropos-world-devourer-prototype.js src/atropos-world-devourer-entry.js
+          git commit -m "Sync Atropos entrance with canonical idle path"
+          git push origin HEAD:feature/atropos-world-devourer-prototype
