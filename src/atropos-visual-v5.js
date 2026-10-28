@@ -30,6 +30,16 @@
     entryScript.src='src/atropos-world-devourer-entry.js';
     entryScript.dataset.atroposWorldDevourerEntry='swallow';
     entryScript.addEventListener('load',()=>{
+      // Gravity wells are updated outside updateWeapons(). Preserve them visually but freeze
+      // their lifetime/damage ticks during the Atropos time-stop entrance.
+      if(typeof updateWells==='function'){
+        const baseEntryUpdateWells=updateWells;
+        updateWells=function pauseGravityWellsForWorldDevourerEntry(dt){
+          const tr=state.realmTransition;
+          if(tr?.owner==='apex-entry'&&tr?.to==='apex-chrono'&&tr?.form==='chronophage')return;
+          return baseEntryUpdateWells(dt);
+        };
+      }
       const damageScript=document.createElement('script');
       damageScript.src='src/atropos-world-devourer-damage.js';
       damageScript.dataset.atroposWorldDevourerDamage='boss-scaled';
