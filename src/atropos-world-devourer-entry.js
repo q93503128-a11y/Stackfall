@@ -46,8 +46,11 @@
   }
   function clearTransientCombat(){
     clearEnemyProjectiles?.();clearPendingCombatActions?.();
-    const clearKeys=['telegraphs','projectiles','guidedMissiles','curves','wells','phaseMines','gateNetworks','vacuumSeeds','shockwaves'];
+    // Clear already-fired attacks only. Placed/persistent player weapons survive the cinematic
+    // and are frozen because their update functions are paused below.
+    const clearKeys=['telegraphs','projectiles','guidedMissiles','curves','shockwaves'];
     for(const key of clearKeys){const list=state.entities?.[key];if(Array.isArray(list))list.length=0;}
+    // Existing beams/lasers fade almost instantly instead of freezing as solid lines.
     const beams=state.entities?.beams;if(Array.isArray(beams))for(const beam of beams)if(beam)beam.life=Math.min(Number(beam.life)||.12,.12);
     state.camera.shake=0;state.flash=0;
   }
@@ -57,10 +60,17 @@
     for(const e of state.entities.enemies||[]){
       if(!e||e.dead||e.kind==='apex'||e.apexForm)continue;
       const dx=e.x-ENTRY.centerX,dy=e.y-ENTRY.centerY,ang=Math.atan2(dy/Math.max(1,ry),dx/Math.max(1,rx)),phase=mod(ang-ENTRY.startAngle,TAU)/TAU,eatAt=.545+phase*.235;
-      ENTRY.mobs.push({e,x:e.x,y:e.y,r:Math.max(4,Number(e.r)||12),eatAt,controlSign:((e.id||0)&1)?1:-1,pull:0,consumed:false});
+      ENTRY.mobs.push({e,x:e.x,y:e.y,r:Math.max(4,Number(e.r)||12),eatAt,controlSign:((e.id||0)&1)?1:-1,pull:0,consumed:false,
+        original:{speed:e.speed,damage:e.damage,timeLock:e.timeLock,contactSafeUntil:e.contactSafeUntil,rangedCd:e.rangedCd,skillCd:e.skillCd,burstCd:e.burstCd,pulseCd:e.pulseCd}});
       e.speed=0;e.damage=0;e.timeLock=999;e.contactSafeUntil=1e12;e.rangedCd=e.skillCd=e.burstCd=e.pulseCd=1e9;
     }
     ENTRY.mobs.sort((a,b)=>a.eatAt-b.eatAt);
+  }
+  function restoreUnconsumedMobs(){
+    for(const item of ENTRY.mobs){
+      const e=item.e,o=item.original;if(!e||item.consumed||e.dead||!o)continue;
+      e.x=item.x;e.y=item.y;e.r=item.r;e.speed=o.speed;e.damage=o.damage;e.timeLock=o.timeLock;e.contactSafeUntil=o.contactSafeUntil;e.rangedCd=o.rangedCd;e.skillCd=o.skillCd;e.burstCd=o.burstCd;e.pulseCd=o.pulseCd;
+    }
   }
   function updateMobs(p,head){
     let removed=false;
@@ -73,11 +83,11 @@
       e.x=u*u*item.x+2*u*q*control.x+q*q*head.x;e.y=u*u*item.y+2*u*q*control.y+q*q*head.y;e.r=item.r*lerp(1,.16,q);e.timeLock=999;e.contactSafeUntil=1e12;
       if(q>=.995||p>=.815){item.consumed=true;e.dead=true;ENTRY.consumed++;removed=true;spawnParticle?.(head.x,head.y,'#d9f6ff',2,65,2.2);}
     }
-    if(removed&&typeof compactInPlace==='function')compactInPlace(state.entities.enemies,e=>e&&!e.dead);
+    if(removed){if(typeof compactInPlace==='function')compactInPlace(state.entities.enemies,e=>e&&!e.dead);else state.entities.enemies=state.entities.enemies.filter(e=>e&&!e.dead);}
   }
   function consumeRemainder(){
     let removed=false;for(const item of ENTRY.mobs){const e=item.e;if(item.consumed||!e||e.dead)continue;item.consumed=true;e.dead=true;ENTRY.consumed++;removed=true;}
-    if(removed&&typeof compactInPlace==='function')compactInPlace(state.entities.enemies,e=>e&&!e.dead);
+    if(removed){if(typeof compactInPlace==='function')compactInPlace(state.entities.enemies,e=>e&&!e.dead);else state.entities.enemies=state.entities.enemies.filter(e=>e&&!e.dead);}
   }
   function drawSuctionTrails(){
     const tr=trNow();if(!tr||!ENTRY.active)return;const p=progress();if(p<WRAP_START)return;const head=entryHeadPose(p);
@@ -85,7 +95,7 @@
     for(const item of ENTRY.mobs){if(item.consumed||item.pull<=.01||!item.e||item.e.dead)continue;const A=worldToScreen(item.e.x,item.e.y),B=worldToScreen(head.x,head.y),q=item.pull;ctx.globalAlpha=.10+.28*q;ctx.strokeStyle='rgba(224,238,244,.85)';ctx.lineWidth=1.5+2*q;ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.quadraticCurveTo(lerp(A.x,B.x,.55)+item.controlSign*18,lerp(A.y,B.y,.55)-item.controlSign*14,B.x,B.y);ctx.stroke();}
     ctx.restore();
   }
-  function resetEntry(){ENTRY.serial=null;ENTRY.active=false;ENTRY.mobs.length=0;ENTRY.bossId=null;ENTRY.consumed=0;}
+  function resetEntry(restore=false){if(restore)restoreUnconsumedMobs();ENTRY.serial=null;ENTRY.active=false;ENTRY.mobs.length=0;ENTRY.bossId=null;ENTRY.consumed=0;}
 
   const baseBegin=beginApexEncounter;
   beginApexEncounter=function beginWorldDevourerSwallowEntrance(){
@@ -100,13 +110,13 @@
     const radius=compactDevice()?318:486,arena={x:ENTRY.centerX,y:ENTRY.centerY,r:radius,form,createdAt:state.time||0},title=bossName(form);state.apexArena=arena;
     const serial=startRealmTransition(apexTheme(form),{duration:ENTRY_DURATION,title,subtitle:'',apex:true,form,owner:'apex-entry',introStyle:null,
       onMidpoint:()=>{
-        const liveArena=state.apexArena;if(!liveArena){state.pendingApexForm=null;resetEntry();cancelRealmTransition('space');return;}
+        const liveArena=state.apexArena;if(!liveArena){state.pendingApexForm=null;resetEntry(true);cancelRealmTransition('space');return;}
         const savedBossAudio=audio?.boss;let e=null;try{if(audio&&typeof savedBossAudio==='function')audio.boss=()=>{};e=spawnEnemy('apex');}finally{if(audio&&typeof savedBossAudio==='function')audio.boss=savedBossAudio;}
-        if(!e){state.pendingApexForm=null;state.nextApexAt=(typeof runProgressionTime==='function'?runProgressionTime():state.time||0)+30;resetEntry();cancelRealmTransition('space');return;}
-        e.eliteForm=form;e.apexForm=form;e.name=title;e.color=BOSS_STATS[form].color;e.timeLock=0;e.apexElapsed=0;e.speed*=.82;e.x=liveArena.x;e.y=liveArena.y;ensureRebornAtropos?.(e);const s=serpentOf(e);if(s){s.entryActive=true;s.entryGrace=1.0;s.prototypeAttackCd=2.1;s.nextPrototypeAttack='crossing';seedEntryHistoryOffscreen(s);}
+        if(!e){state.pendingApexForm=null;state.nextApexAt=(typeof runProgressionTime==='function'?runProgressionTime():state.time||0)+30;resetEntry(true);cancelRealmTransition('space');return;}
+        e.eliteForm=form;e.apexForm=form;e.name=title;e.color=BOSS_STATS[form].color;e.timeLock=0;e.apexElapsed=0;e.speed*=.82;e.x=liveArena.x;e.y=liveArena.y;ensureRebornAtropos?.(e);const s=serpentOf(e);if(s){s.entryActive=true;s.entryGrace=.55;s.prototypeAttackCd=1.25;s.nextPrototypeAttack='crossing';seedEntryHistoryOffscreen(s);}
         ENTRY.bossId=e.id;state.apexActiveId=e.id;state.apexCount++;state.nextApexAt=(state.apexCount+1)*APEX_INTERVAL_SECONDS;ui.bossNotice?.classList.add('hidden');ui.bossBar?.classList.add('hidden');
       },
-      onComplete:()=>{consumeRemainder();const e=serpentEnemy(),s=serpentOf(e);if(s){s.entryActive=false;s.entryGrace=1.0;s.anchorX=ENTRY.centerX;s.anchorY=ENTRY.centerY;s.lastReal=performance.now()*.001;}state.pendingApexForm=null;stabilizeRealmTheme(apexTheme(form));ui.bossBar?.classList.remove('hidden');resetEntry();}
+      onComplete:()=>{consumeRemainder();const e=serpentEnemy(),s=serpentOf(e);if(s){s.entryActive=false;s.entryGrace=.55;s.anchorX=ENTRY.centerX;s.anchorY=ENTRY.centerY;s.lastReal=performance.now()*.001;}state.pendingApexForm=null;stabilizeRealmTheme(apexTheme(form));ui.bossBar?.classList.remove('hidden');resetEntry(false);}
     });
     ENTRY.serial=serial;return true;
   };
@@ -119,12 +129,16 @@
     return result;
   };
 
+  // The entrance is a true time-stop tableau. Keep the player fixed at the captured center.
+  if(typeof updatePlayer==='function'){const basePlayer=updatePlayer;updatePlayer=function freezePlayerForWorldDevourerEntry(dt){if(trNow()){player.stagePreviousX=player.x;player.stagePreviousY=player.y;player.x=ENTRY.centerX;player.y=ENTRY.centerY;player.moveVX=0;player.moveVY=0;player.moveIntensity=0;return;}return basePlayer(dt);};}
   if(typeof updateWeapons==='function'){const baseUpdateWeapons=updateWeapons;updateWeapons=function pauseWeaponsForWorldDevourerEntry(dt){if(trNow())return;return baseUpdateWeapons(dt);};}
   if(typeof updatePostRosterWeapons==='function'){const basePost=updatePostRosterWeapons;updatePostRosterWeapons=function pausePostRosterForWorldDevourerEntry(dt){if(trNow())return;return basePost(dt);};}
+  // Prevent the normal spawner from repopulating the frozen scene. The midpoint Apex spawn is allowed.
+  if(typeof spawnEnemy==='function'){const baseSpawn=spawnEnemy;spawnEnemy=function suppressSpawnsDuringWorldDevourerEntry(kind='normal'){if(trNow()&&kind!=='apex')return null;return baseSpawn(kind);};}
   if(typeof dealDamage==='function'){const baseDeal=dealDamage;dealDamage=function protectWorldDevourerDuringEntry(target,amount,opts){const owner=typeof bossPartOwner==='function'?bossPartOwner(target):target;if(trNow()&&owner?.apexForm==='chronophage'&&serpentOf(owner))return;return baseDeal(target,amount,opts);};}
   if(typeof apexBossSkill==='function'){const baseApexSkill=apexBossSkill;apexBossSkill=function gateWorldDevourerEntranceCombat(e,dt){const s=serpentOf(e);if(s&&(trNow()||s.entryActive))return;if(s&&(Number(s.entryGrace)||0)>0){s.entryGrace=Math.max(0,s.entryGrace-dt);return;}return baseApexSkill(e,dt);};}
   if(typeof drawRealmCinematicOverlay==='function'){const baseOverlay=drawRealmCinematicOverlay;drawRealmCinematicOverlay=function drawWorldDevourerSwallowOverlay(){drawSuctionTrails();return baseOverlay();};}
 
-  window.stackfallAtroposEntryDiagnostics=()=>({active:ENTRY.active,serial:ENTRY.serial,progress:+progress().toFixed(3),mobs:ENTRY.mobs.length,consumed:ENTRY.consumed,bossId:ENTRY.bossId,weaponPause:!!trNow(),colourReturnAt:COLOR_RETURN});
-  window.stackfallAtroposEntryVersion='world-devourer-swallow-entry-v2';
+  window.stackfallAtroposEntryDiagnostics=()=>({active:ENTRY.active,serial:ENTRY.serial,progress:+progress().toFixed(3),mobs:ENTRY.mobs.length,consumed:ENTRY.consumed,bossId:ENTRY.bossId,weaponPause:!!trNow(),playerFrozen:!!trNow(),colourReturnAt:COLOR_RETURN});
+  window.stackfallAtroposEntryVersion='world-devourer-swallow-entry-v3';
 })();
