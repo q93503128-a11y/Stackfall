@@ -12,18 +12,17 @@
   if(!production?.src)throw new Error('Atropos production raster atlas missing');
   const atlas=new Image();atlas.decoding='async';atlas.src=production.src;
   const ART_FRAMES={
-    headClosed:{x:7,y:7,w:204,h:152},
-    headOpen:{x:219,y:9,w:189,h:157},
-    neckA:{x:415,y:9,w:170,h:135},
-    neckB:{x:592,y:9,w:168,h:136},
-    bodyA:{x:770,y:10,w:199,h:142},
-    bodyB:{x:7,y:175,w:182,h:139},
-    bodyC:{x:197,y:175,w:187,h:146},
-    bodyD:{x:391,y:174,w:198,h:135},
-    rear:{x:595,y:175,w:195,h:115},
-    tail:{x:7,y:329,w:265,h:159}
-  };
-  production.frames=ART_FRAMES;production.image=atlas;
+  headClosed:{x:5,y:6,w:153,h:113},
+  headOpen:{x:164,y:6,w:142,h:119},
+  neckA:{x:311,y:6,w:128,h:102},
+  neckB:{x:444,y:7,w:126,h:102},
+  bodyA:{x:577,y:7,w:150,h:107},
+  bodyB:{x:5,y:131,w:137,h:105},
+  bodyC:{x:148,y:131,w:140,h:110},
+  bodyD:{x:293,y:131,w:149,h:101},
+  rear:{x:446,y:131,w:146,h:87},
+  tail:{x:5,y:247,w:199,h:120}
+};  production.frames=ART_FRAMES;production.image=atlas;
   production.drawScreen=function drawAtroposProductionFrame(key,x,y,a,w,h,alpha=1,options={}){
     const frame=ART_FRAMES[key];if(!frame||!atlas.complete||atlas.naturalWidth<2||alpha<=.005)return false;
     const flip=options.flip===true,scaleX=Number.isFinite(options.scaleX)?options.scaleX:1,scaleY=Number.isFinite(options.scaleY)?options.scaleY:1;
