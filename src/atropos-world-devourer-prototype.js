@@ -74,8 +74,7 @@
   }
 
   function motionScale(){return clamp(Math.min(vw,vh)/900,.92,1.20);}
-  function idleOffset(serpent,t=serpent.motionTime){
-    const phase=Number(serpent.phaseBase)||0,a=(Number(t)||0)*.11+phase;
+  function idleOffsetAtAngle(a){
     const rx=clamp(vw*.54,760,900),ry=clamp(vh*.30,280,360),wave=Math.sin(a*2.18+.55)*46;
     return{
       x:80+Math.cos(a)*rx-Math.sin(a)*wave,
@@ -83,7 +82,13 @@
       orbitA:a
     };
   }
+  function idleOffset(serpent,t=serpent.motionTime){
+    const phase=Number(serpent.phaseBase)||0,a=(Number(t)||0)*.11+phase;
+    return idleOffsetAtAngle(a);
+  }
   window.stackfallAtroposIdleOffset=idleOffset;
+  window.stackfallAtroposIdleOffsetAtAngle=idleOffsetAtAngle;
+  window.stackfallAtroposIdleAngularSpeed=.11;
   function headWorldPosition(e,serpent,t){
     const o=idleOffset(serpent,t);
     return{x:serpent.anchorX+o.x,y:serpent.anchorY+o.y,orbitA:o.orbitA};
@@ -310,7 +315,6 @@
       const jaw=window.stackfallAtroposMawJawScale,scaleX=Number(jaw?.x)||1,scaleY=Number(jaw?.y)||1,open=!!jaw;
       drawSprite(open?'headOpen':'headClosed',head,382*head.scaleUnit,216*head.scaleUnit,.96*headAlpha,.024,false,scaleX,scaleY);
     }
-    if(tail&&layer==='mid')drawSprite('tail',tail,175*tail.scaleUnit,76*tail.scaleUnit,.82*manifest,.008,false,1,1);
   }
 
   const baseEnsure=ensureRebornAtropos;
@@ -355,5 +359,5 @@
   };
 
   window.stackfallAtroposVisualVersion=VERSION;
-  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-textured-continuous-v7',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
+  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-textured-entrysync-v8',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
 })();

@@ -14,9 +14,10 @@
   const mod=(a,n)=>((a%n)+n)%n;
 
   function orbitOffsetAt(a){
-    const rx=clamp(vw*.43,650,820),ry=clamp(vh*.40,330,450);
-    return{x:Math.cos(a)*rx+Math.sin(a*2.07)*38,y:Math.sin(a*.96)*ry+Math.sin(a*2.41+1.1)*28};
+    if(typeof window.stackfallAtroposIdleOffsetAtAngle==='function')return window.stackfallAtroposIdleOffsetAtAngle(a);
+    return{x:Math.cos(a)*760,y:Math.sin(a)*300,orbitA:a};
   }
+  const idleAngularSpeed=()=>Number(window.stackfallAtroposIdleAngularSpeed)||.11;
   function loopPoint(a){
     const rx=clamp(vw*.38,560,720)*(1+.050*Math.sin(a*1.7+.6)),ry=clamp(vh*.34,285,385)*(1+.045*Math.cos(a*2.1-.2));
     return{x:ENTRY.centerX+Math.cos(a)*rx+Math.sin(a*2.35)*42,y:ENTRY.centerY+Math.sin(a)*ry+Math.sin(a*1.28+.5)*25};
@@ -30,17 +31,17 @@
     if(q<.86){
       const t=smooth((q-.13)/.73),a=start+t*TAU,p=loopPoint(a);return{x:p.x,y:p.y,a};
     }
-    const t=smooth((q-.86)/.14),a0=start+TAU,a1=a0+.62,p0=loopPoint(a0),off=orbitOffsetAt(a1),p2={x:ENTRY.centerX+off.x,y:ENTRY.centerY+off.y};
+    const t=smooth((q-.86)/.14),a0=start+TAU,a1=1.62+TAU,p0=loopPoint(a0),off=orbitOffsetAt(a1),p2={x:ENTRY.centerX+off.x,y:ENTRY.centerY+off.y};
     const tx=-Math.sin(a0),ty=Math.cos(a0),control={x:p0.x+tx*460,y:p0.y+ty*330},u=1-t;
     return{x:u*u*p0.x+2*u*t*control.x+t*t*p2.x,y:u*u*p0.y+2*u*t*control.y+t*t*p2.y,a:lerp(a0,a1,t)};
   }
   function seedEntryHistoryOffscreen(s){
     if(!s)return;const pose=entryHeadPose(WRAP_START),to=loopPoint(ENTRY.startAngle),dx=to.x-pose.x,dy=to.y-pose.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d,step=4,count=520,history=[];
     for(let i=count;i>=0;i--)history.push({x:pose.x-ux*i*step,y:pose.y-uy*i*step,orbitA:pose.a});
-    s.history=history;s.last=history[history.length-1];s.points=[];s.motionTime=(pose.a-(Number(s.phaseBase)||0))/.165;const off=orbitOffsetAt(pose.a);s.anchorX=pose.x-off.x;s.anchorY=pose.y-off.y;s.lastReal=performance.now()*.001;
+    s.history=history;s.last=history[history.length-1];s.points=[];s.motionTime=(pose.a-(Number(s.phaseBase)||0))/idleAngularSpeed();const off=orbitOffsetAt(pose.a);s.anchorX=pose.x-off.x;s.anchorY=pose.y-off.y;s.lastReal=performance.now()*.001;
   }
   function driveEntryHead(e,s,p){
-    if(!e||!s||p<WRAP_START)return null;const pose=entryHeadPose(p),phase=Number(s.phaseBase)||0;s.motionTime=(pose.a-phase)/.165;const off=orbitOffsetAt(pose.a);s.anchorX=pose.x-off.x;s.anchorY=pose.y-off.y;s.lastReal=performance.now()*.001;
+    if(!e||!s||p<WRAP_START)return null;const pose=entryHeadPose(p),phase=Number(s.phaseBase)||0;s.motionTime=(pose.a-phase)/idleAngularSpeed();const off=orbitOffsetAt(pose.a);s.anchorX=pose.x-off.x;s.anchorY=pose.y-off.y;s.lastReal=performance.now()*.001;
     const last=s.last;if(!last||Math.hypot(pose.x-last.x,pose.y-last.y)>=3){const point={x:pose.x,y:pose.y,orbitA:pose.a};s.history=s.history||[];s.history.push(point);if(s.history.length>900)s.history.splice(0,s.history.length-900);s.last=point;}
     return pose;
   }
