@@ -11,7 +11,10 @@
   const serpentOf=e=>e?.atroposReborn?.worldDevourer||null;
   const copyPose=points=>(points||[]).map(p=>({x:Number(p.x)||0,y:Number(p.y)||0,orbitA:Number(p.orbitA)||0,depth:Number(p.depth)||0}));
   function phaseOf(e){const hp=e.hp/Math.max(1,e.maxHp);return hp<.25?4:hp<.50?3:hp<.75?2:1;}
-  function orbitOffset(serpent){const a=(Number(serpent.motionTime)||0)*.165+(Number(serpent.phaseBase)||0),rx=clamp(vw*.32,520,640),ry=clamp(vh*.30,250,330);return{x:Math.cos(a)*rx+Math.sin(a*2.07)*38,y:Math.sin(a*.96)*ry+Math.sin(a*2.41+1.1)*28,orbitA:a};}
+  function orbitOffset(serpent){
+    if(typeof window.stackfallAtroposIdleOffset==='function')return window.stackfallAtroposIdleOffset(serpent,Number(serpent.motionTime)||0);
+    return{x:0,y:0,orbitA:Number(serpent.phaseBase)||0};
+  }
   function ringStage(a){if(!a)return'idle';const n=a.age;return n<RING.warn?'warn':n<RING.wrapEnd?'wrap':n<RING.holdEnd?'hold':n<RING.end?'release':'done';}
   function targetRing(a,count){
     const out=[],start=a.gapCenter+GAP*.5,span=TAU-GAP;

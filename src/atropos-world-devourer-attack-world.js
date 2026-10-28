@@ -17,7 +17,10 @@
   const serpentOf=e=>e?.atroposReborn?.worldDevourer||null;
   const phaseOf=e=>{const h=e.hp/Math.max(1,e.maxHp);return h<.25?4:h<.50?3:h<.75?2:1;};
 
-  function orbitOffset(s){const a=(+s.motionTime||0)*.165+(+s.phaseBase||0),rx=clamp(vw*.32,520,640),ry=clamp(vh*.30,250,330);return{x:Math.cos(a)*rx+Math.sin(a*2.07)*38,y:Math.sin(a*.96)*ry+Math.sin(a*2.41+1.1)*28};}
+  function orbitOffset(s){
+    if(typeof window.stackfallAtroposIdleOffset==='function')return window.stackfallAtroposIdleOffset(s,Number(s.motionTime)||0);
+    return{x:0,y:0,orbitA:Number(s.phaseBase)||0};
+  }
   function headPoint(s){const p=s?.points?.[0];if(p&&Number.isFinite(p.x)&&Number.isFinite(p.y))return{x:p.x,y:p.y};const o=orbitOffset(s);return{x:(+s.anchorX||0)+o.x,y:(+s.anchorY||0)+o.y};}
   function drive(s,a,x,y){const o=orbitOffset(s);s.motionTime=a.hold;s.anchorX=x-o.x;s.anchorY=y-o.y;s.lastReal=performance.now()*.001;}
   function stage(a){if(!a)return'idle';const n=a.age;return n<WORLD.withdraw?'withdraw':n<WORLD.warnEnd?'warn':n<WORLD.biteEnd?'bite':n<WORLD.scarEnd?'scar':n<WORLD.end?'recover':'done';}

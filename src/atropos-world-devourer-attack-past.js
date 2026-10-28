@@ -10,7 +10,10 @@
   const copyPose=pts=>(pts||[]).map(p=>({x:+p.x||0,y:+p.y||0,orbitA:+p.orbitA||0,depth:+p.depth||0}));
   const productionArt=()=>window.stackfallAtroposProductionArt;
 
-  function orbitOffset(s){const a=(+s.motionTime||0)*.165+(+s.phaseBase||0),rx=clamp(vw*.43,650,820),ry=clamp(vh*.40,330,450);return{x:Math.cos(a)*rx+Math.sin(a*2.07)*38,y:Math.sin(a*.96)*ry+Math.sin(a*2.41+1.1)*28};}
+  function orbitOffset(s){
+    if(typeof window.stackfallAtroposIdleOffset==='function')return window.stackfallAtroposIdleOffset(s,Number(s.motionTime)||0);
+    return{x:0,y:0,orbitA:Number(s.phaseBase)||0};
+  }
   function stage(a){if(!a)return'idle';const n=a.age;return n<PAST.warn?'warn':n<PAST.presentEnd?'present':n<PAST.clearEnd?'clear':n<PAST.delayEnd?(n>=PAST.delayEnd-REWARN?'rewarn':'memory'):n<PAST.replayEnd?'replay':n<PAST.end?'recover':'done';}
   function quad(a,b,c,t){const u=1-t;return{x:u*u*a.x+2*u*t*b.x+t*t*c.x,y:u*u*a.y+2*u*t*b.y+t*t*c.y};}
   function buildRoute(origin,target,serial){

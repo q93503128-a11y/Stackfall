@@ -12,8 +12,8 @@
   const copyPose=points=>(points||[]).map(p=>({x:Number(p.x)||0,y:Number(p.y)||0,orbitA:Number(p.orbitA)||0,depth:Number(p.depth)||0}));
 
   function orbitOffset(serpent){
-    const a=(Number(serpent.motionTime)||0)*.165+(Number(serpent.phaseBase)||0),rx=clamp(vw*.32,520,640),ry=clamp(vh*.30,250,330);
-    return{x:Math.cos(a)*rx+Math.sin(a*2.07)*38,y:Math.sin(a*.96)*ry+Math.sin(a*2.41+1.1)*28,orbitA:a};
+    if(typeof window.stackfallAtroposIdleOffset==='function')return window.stackfallAtroposIdleOffset(serpent,Number(serpent.motionTime)||0);
+    return{x:0,y:0,orbitA:Number(serpent.phaseBase)||0};
   }
   function mawStage(a){if(!a)return'idle';const n=a.age;return n<MAW.aim?'aim':n<MAW.warnEnd?'warn':n<MAW.suctionEnd?'suction':n<MAW.biteEnd?'bite':n<MAW.end?'recover':'done';}
   function updateJawScale(a){let scale=null;if(a&&mawStage(a)==='bite'){const q=clamp((a.age-MAW.suctionEnd)/MAW.bite,0,1),snap=Math.sin(q*Math.PI);scale={x:1+.10*snap,y:1-.34*snap};}window.stackfallAtroposMawJawScale=scale;}

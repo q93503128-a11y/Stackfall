@@ -12,8 +12,8 @@
   const serpentOf=e=>e?.atroposReborn?.worldDevourer||null;
 
   function orbitOffset(serpent){
-    const a=(Number(serpent.motionTime)||0)*.165+(Number(serpent.phaseBase)||0),rx=clamp(vw*.32,520,640),ry=clamp(vh*.30,250,330);
-    return{x:Math.cos(a)*rx+Math.sin(a*2.07)*38,y:Math.sin(a*.96)*ry+Math.sin(a*2.41+1.1)*28,orbitA:a};
+    if(typeof window.stackfallAtroposIdleOffset==='function')return window.stackfallAtroposIdleOffset(serpent,Number(serpent.motionTime)||0);
+    return{x:0,y:0,orbitA:Number(serpent.phaseBase)||0};
   }
   function headPoint(serpent){
     const p=serpent?.points?.[0];if(p&&Number.isFinite(p.x)&&Number.isFinite(p.y))return{x:p.x,y:p.y};
