@@ -1,10 +1,7 @@
-// Branch-only damage model for the World Devourer Atropos prototype.
-// Player durability remains meaningful: all six patterns scale from normal Apex boss damage and
-// still enter the canonical hurtPlayer pipeline at the attack site.
+// Simplified Atropos damage model. All damage remains boss-scaled and uses the normal hurtPlayer pipeline.
 (()=>{
   const apexBaseDamage=e=>Math.max(7,(Number(e?.damage)||0)*.40);
-  const DAMAGE_MULTIPLIERS=Object.freeze({giantCrossing:.95,tailSever:1.05,tailRupture:.72,voidMaw:1.35,devourerRing:1.10,pastTrajectory:.92,worldDevour:1.75});
-  const patternDamage=(e,key)=>apexBaseDamage(e)*(DAMAGE_MULTIPLIERS[key]??1);
-  window.stackfallAtroposPatternDamage=patternDamage;
-  window.stackfallAtroposDamageDiagnostics=()=>({model:'boss-damage-scaled-v2-direct',usesPlayerMaxHp:false,base:'max(7, boss.damage * 0.40)',multipliers:{...DAMAGE_MULTIPLIERS},globalHurtPlayerOverride:false});
+  const DAMAGE_MULTIPLIERS=Object.freeze({charge:.95,devour:1.25,tail:1.05,worldBite:1.55,giantCrossing:.95,voidMaw:1.25,tailSever:1.05,worldDevour:1.55});
+  window.stackfallAtroposPatternDamage=(e,key)=>apexBaseDamage(e)*(DAMAGE_MULTIPLIERS[key]??1);
+  window.stackfallAtroposDamageDiagnostics=()=>({model:'simple-boss-damage-v1',usesPlayerMaxHp:false,base:'max(7, boss.damage * 0.40)',multipliers:{...DAMAGE_MULTIPLIERS},globalHurtPlayerOverride:false});
 })();
