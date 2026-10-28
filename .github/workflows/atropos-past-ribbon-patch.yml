@@ -1,0 +1,43 @@
+name: Atropos past ribbon patch
+
+on:
+  push:
+    branches:
+      - feature/atropos-world-devourer-prototype
+    paths:
+      - .github/workflows/atropos-past-ribbon-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/atropos-world-devourer-prototype
+          fetch-depth: 0
+      - name: Replace segmented echo body with continuous tapered ribbon
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from base64 import b64decode
+          old=b64decode('ICBmdW5jdGlvbiBkcmF3R2hvc3QoYSxxKXsKICAgIGNvbnN0IHA9Z2hvc3RQb3NlKGEscSkubWFwKHY9Pih7Li4udiwuLi53b3JsZFRvU2NyZWVuKHYueCx2LnkpfSkpO2lmKCFwLmxlbmd0aClyZXR1cm47CiAgICBjdHguc2F2ZSgpO2N0eC5nbG9iYWxDb21wb3NpdGVPcGVyYXRpb249J3NjcmVlbic7Y3R4LmxpbmVDYXA9J3JvdW5kJztjdHgubGluZUpvaW49J3JvdW5kJzsKICAgIGZvcihsZXQgaT1wLmxlbmd0aC0xO2k+MDtpLS0pe2NvbnN0IHRhaWxUPWkvKHAubGVuZ3RoLTEpLHc9bGVycChNYXRoLm1heCgxMTIsTWF0aC5taW4odncsdmgpKi4xMjUpLDQ0LHRhaWxUKTtjdHguZ2xvYmFsQWxwaGE9bGVycCguMTgsLjEwLHRhaWxUKTtjdHguc3Ryb2tlU3R5bGU9J3JnYmEoMTY1LDIxOCwyMzUsLjc4KSc7Y3R4LmxpbmVXaWR0aD13O2N0eC5iZWdpblBhdGgoKTtjdHgubW92ZVRvKHBbaV0ueCxwW2ldLnkpO2N0eC5saW5lVG8ocFtpLTFdLngscFtpLTFdLnkpO2N0eC5zdHJva2UoKTtjdHguZ2xvYmFsQWxwaGE9bGVycCguMzQsLjE4LHRhaWxUKTtjdHguc3Ryb2tlU3R5bGU9J3JnYmEoMjI2LDI0OSwyNTUsLjc2KSc7Y3R4LmxpbmVXaWR0aD1NYXRoLm1heCgyLHcqLjAzNSk7Y3R4LnN0cm9rZSgpO30KICAgIGN0eC5yZXN0b3JlKCk7CiAgICBmb3IobGV0IGk9cC5sZW5ndGgtMTtpPj0wO2ktLSl7Y29uc3Qgdj1wW2ldLHNjPWxlcnAoMSwuNDUsdi50YWlsVCksYWxwaGE9LjYwKigxLXYudGFpbFQqLjMwKTtpZihpPT09MCl7ZHJhd0dob3N0UGxhdGUodiwyNTAqc2MsMTA4KnNjLGFscGhhLCdoZWFkJyk7Y29udGludWU7fWlmKGk9PT1wLmxlbmd0aC0xKXtkcmF3R2hvc3RQbGF0ZSh2LDE1MCpzYyw1NCpzYyxhbHBoYSouNzgsJ3RhaWwnKTtjb250aW51ZTt9aWYoaSUzIT09MSljb250aW51ZTtkcmF3R2hvc3RQbGF0ZSh2LDE2NipzYyw2NipzYyxhbHBoYSouNzIsJ2JvZHknLGklNj09PTQpO30KICB9').decode()
+          new=b64decode('ICBmdW5jdGlvbiBkcmF3R2hvc3QoYSxxKXsKICAgIGNvbnN0IHA9Z2hvc3RQb3NlKGEscSkubWFwKHY9Pih7Li4udiwuLi53b3JsZFRvU2NyZWVuKHYueCx2LnkpfSkpO2lmKHAubGVuZ3RoPDIpcmV0dXJuOwogICAgY29uc3QgaGVhZEhhbGY9TWF0aC5tYXgoNTgsTWF0aC5taW4odncsdmgpKi4wNjQpLHRhaWxIYWxmPTIyLGxlZnQ9W10scmlnaHQ9W107CiAgICBmb3IobGV0IGk9MDtpPHAubGVuZ3RoO2krKyl7Y29uc3Qgdj1wW2ldLGhhbGY9bGVycChoZWFkSGFsZix0YWlsSGFsZix2LnRhaWxUKSooMSsuMDM1Kk1hdGguc2luKGkqMS43MykpO2NvbnN0IG54PS1NYXRoLnNpbih2LmEpLG55PU1hdGguY29zKHYuYSk7bGVmdC5wdXNoKHt4OnYueCtueCpoYWxmLHk6di55K255KmhhbGZ9KTtyaWdodC5wdXNoKHt4OnYueC1ueCpoYWxmLHk6di55LW55KmhhbGZ9KTt9CiAgICBjdHguc2F2ZSgpO2N0eC5nbG9iYWxDb21wb3NpdGVPcGVyYXRpb249J3NjcmVlbic7Y3R4LmxpbmVKb2luPSdyb3VuZCc7Y3R4Lmdsb2JhbEFscGhhPS4xODtjdHguZmlsbFN0eWxlPSdyZ2JhKDE0NSwyMDMsMjIyLC43MiknO2N0eC5zdHJva2VTdHlsZT0ncmdiYSgyMTgsMjQ2LDI1NSwuNTgpJztjdHgubGluZVdpZHRoPTIuMjtjdHguYmVnaW5QYXRoKCk7Y3R4Lm1vdmVUbyhsZWZ0WzBdLngsbGVmdFswXS55KTtmb3IobGV0IGk9MTtpPGxlZnQubGVuZ3RoO2krKyljdHgubGluZVRvKGxlZnRbaV0ueCxsZWZ0W2ldLnkpO2ZvcihsZXQgaT1yaWdodC5sZW5ndGgtMTtpPj0wO2ktLSljdHgubGluZVRvKHJpZ2h0W2ldLngscmlnaHRbaV0ueSk7Y3R4LmNsb3NlUGF0aCgpO2N0eC5maWxsKCk7Y3R4Lmdsb2JhbEFscGhhPS4zNDtjdHguc3Ryb2tlKCk7Y3R4Lmdsb2JhbEFscGhhPS4yODtjdHguc3Ryb2tlU3R5bGU9J3JnYmEoMjI2LDI0OSwyNTUsLjc4KSc7Y3R4LmxpbmVXaWR0aD0yO2N0eC5iZWdpblBhdGgoKTtjdHgubW92ZVRvKHBbMF0ueCxwWzBdLnkpO2ZvcihsZXQgaT0xO2k8cC5sZW5ndGg7aSsrKWN0eC5saW5lVG8ocFtpXS54LHBbaV0ueSk7Y3R4LnN0cm9rZSgpO2N0eC5yZXN0b3JlKCk7CiAgICBmb3IobGV0IGk9cC5sZW5ndGgtMTtpPj0wO2ktLSl7Y29uc3Qgdj1wW2ldLHNjPWxlcnAoMSwuNDUsdi50YWlsVCksYWxwaGE9LjUyKigxLXYudGFpbFQqLjMyKTtpZihpPT09MCl7ZHJhd0dob3N0UGxhdGUodiwyMzgqc2MsMTAyKnNjLGFscGhhLCdoZWFkJyk7Y29udGludWU7fWlmKGk9PT1wLmxlbmd0aC0xKXtkcmF3R2hvc3RQbGF0ZSh2LDE0MipzYyw1MCpzYyxhbHBoYSouNzQsJ3RhaWwnKTtjb250aW51ZTt9aWYoaSU0IT09MSljb250aW51ZTtkcmF3R2hvc3RQbGF0ZSh2LDE1NCpzYyw1OCpzYyxhbHBoYSouNTgsJ2JvZHknLGklOD09PTUpO30KICB9').decode()
+          p=Path('src/atropos-world-devourer-attack-past.js')
+          text=p.read_text(encoding='utf-8')
+          if text.count(old)!=1: raise SystemExit(f'expected one drawGhost block, got {text.count(old)}')
+          p.write_text(text.replace(old,new,1),encoding='utf-8')
+          PY
+          node --check src/atropos-world-devourer-attack-past.js
+          git diff --check
+      - name: Commit temporal ribbon refinement
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/atropos-world-devourer-attack-past.js
+          git commit -m "Render Past Trajectory echo as a continuous ribbon"
+          git push origin HEAD:feature/atropos-world-devourer-prototype
