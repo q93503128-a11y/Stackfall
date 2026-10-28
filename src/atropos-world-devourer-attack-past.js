@@ -8,13 +8,7 @@
   const serpentEnemy=()=>state.entities.enemies?.find(e=>!e?.dead&&e.apexForm==='chronophage')||null,serpentOf=e=>e?.atroposReborn?.worldDevourer||null;
   const phaseOf=e=>{const h=e.hp/Math.max(1,e.maxHp);return h<.25?4:h<.50?3:h<.75?2:1;};
   const copyPose=pts=>(pts||[]).map(p=>({x:+p.x||0,y:+p.y||0,orbitA:+p.orbitA||0,depth:+p.depth||0}));
-  const ghostArt={head:new Image(),body:[new Image(),new Image(),new Image()],tail:new Image()};
-  for(const img of [ghostArt.head,...ghostArt.body,ghostArt.tail])img.decoding='async';
-  ghostArt.head.src='assets/atropos-head.svg';
-  ghostArt.body[0].src='assets/atropos-segment.svg';
-  ghostArt.body[1].src='assets/atropos-segment-b.svg';
-  ghostArt.body[2].src='assets/atropos-segment-c.svg';
-  ghostArt.tail.src='assets/atropos-tail.svg';
+  const productionArt=()=>window.stackfallAtroposProductionArt;
 
   function orbitOffset(s){const a=(+s.motionTime||0)*.165+(+s.phaseBase||0),rx=clamp(vw*.43,650,820),ry=clamp(vh*.40,330,450);return{x:Math.cos(a)*rx+Math.sin(a*2.07)*38,y:Math.sin(a*.96)*ry+Math.sin(a*2.41+1.1)*28};}
   function stage(a){if(!a)return'idle';const n=a.age;return n<PAST.warn?'warn':n<PAST.presentEnd?'present':n<PAST.clearEnd?'clear':n<PAST.delayEnd?(n>=PAST.delayEnd-REWARN?'rewarn':'memory'):n<PAST.replayEnd?'replay':n<PAST.end?'recover':'done';}
@@ -36,11 +30,9 @@
   function recoverPoint(s,a,q){const o=orbitOffset(s),idle={x:(+player.x||0)+o.x,y:(+player.y||0)+o.y},cx=a.far.x+a.ux*260+a.nx*820,cy=a.far.y+a.uy*260+a.ny*820,u=1-q;return{x:u*u*a.far.x+2*u*q*cx+q*q*idle.x,y:u*u*a.far.y+2*u*q*cy+q*q*idle.y};}
   function updatePast(e,s,dt){const a=s.pastPrototype;if(!a)return false;a.age+=dt;const st=stage(a);if(st==='warn')rebuildPose(s,a.base,a.hold);else if(st==='present'){const p=sampleRoute(a,a.routeLength*ease((a.age-PAST.warn)/PAST.present));drive(s,a,p.x,p.y);presentHit(e,a);}else if(st==='clear'){const q=smooth((a.age-PAST.presentEnd)/PAST.clear);drive(s,a,lerp(a.end.x,a.far.x,q),lerp(a.end.y,a.far.y,q));presentHit(e,a);}else if(st==='memory'||st==='rewarn'||st==='replay'){drive(s,a,a.far.x,a.far.y);if(st==='replay')echoHit(e,a,(a.age-PAST.delayEnd)/PAST.replay);}else if(st==='recover'){const p=recoverPoint(s,a,smooth((a.age-PAST.replayEnd)/PAST.recover));drive(s,a,p.x,p.y);}if(a.age>=PAST.end){s.pastPrototype=null;s.prototypeAttackCd=Math.max(.86,1.28-(phaseOf(e)-3)*.12);s.nextPrototypeAttack='crossing';s.anchorX=Number.isFinite(player.x)?player.x:s.anchorX;s.anchorY=Number.isFinite(player.y)?player.y:s.anchorY;}return true;}
   function stroke(a,w,color,alpha,dash=false){ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=color;ctx.globalAlpha=alpha;ctx.lineWidth=w;if(dash)ctx.setLineDash([22,16]);ctx.beginPath();let p=worldToScreen(a.route[0].x,a.route[0].y);ctx.moveTo(p.x,p.y);for(let i=2;i<a.route.length;i+=2){p=worldToScreen(a.route[i].x,a.route[i].y);ctx.lineTo(p.x,p.y);}ctx.stroke();ctx.restore();}
-  function drawGhostSprite(img,v,w,h,alpha,flip=false){
-    if(!img?.complete||img.naturalWidth<2||alpha<=.005)return;
-    ctx.save();ctx.translate(v.x,v.y);ctx.rotate(v.a);if(flip)ctx.scale(1,-1);
-    ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha;ctx.filter='grayscale(1) brightness(1.85) sepia(.08) hue-rotate(145deg) saturate(.55)';
-    ctx.drawImage(img,-w*.5,-h*.5,w,h);ctx.restore();
+  function drawGhostSprite(frameKey,v,w,h,alpha,flip=false){
+    const art=productionArt();if(!art?.drawScreen||alpha<=.005)return;
+    art.drawScreen(frameKey,v.x,v.y,v.a,w,h,alpha,{flip,composite:'screen',filter:'grayscale(1) brightness(1.85) sepia(.08) hue-rotate(145deg) saturate(.55)'});
   }
   function drawGhost(a,q){
     const p=ghostPose(a,q).map(v=>({...v,...worldToScreen(v.x,v.y)}));if(p.length<2)return;
@@ -56,10 +48,10 @@
     ctx.globalAlpha=.30;ctx.strokeStyle='rgba(226,249,255,.82)';ctx.lineWidth=1.7;ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(let i=1;i<p.length;i++)ctx.lineTo(p[i].x,p[i].y);ctx.stroke();ctx.restore();
     for(let i=p.length-1;i>=0;i--){
       const v=p[i],sc=lerp(1,.52,v.tailT),alpha=.72*(1-v.tailT*.18);
-      if(i===0){drawGhostSprite(ghostArt.head,v,440*sc,215*sc,alpha);continue;}
-      if(i===p.length-1){drawGhostSprite(ghostArt.tail,v,280*sc,96*sc,alpha*.90);continue;}
+      if(i===0){drawGhostSprite('headClosed',v,455*sc,230*sc,alpha);continue;}
+      if(i===p.length-1){drawGhostSprite('tail',v,310*sc,145*sc,alpha*.90);continue;}
       if(i>=7&&i%3===0)continue;
-      drawGhostSprite(ghostArt.body[i%ghostArt.body.length],v,255*sc,108*sc,alpha*.92,i%5===3);
+      drawGhostSprite(['bodyA','bodyB','bodyC','bodyD'][i%4],v,270*sc,148*sc,alpha*.92,i%5===3);
     }
   }
   function drawPast(){const e=serpentEnemy(),s=serpentOf(e),a=s?.pastPrototype;if(!a)return;const st=stage(a);if(st==='warn'){const q=smooth(a.age/PAST.warn);stroke(a,Math.max(82,Math.min(vw,vh)*.092),'#ff3048',.08+.10*q);stroke(a,4,'#ff8294',.58+.24*q,true);}else if(st==='memory'){stroke(a,20,'#b9deec',.12);stroke(a,3,'#e5f8ff',.34);}else if(st==='rewarn'){const q=clamp((a.age-(PAST.delayEnd-REWARN))/REWARN,0,1);stroke(a,18,'#b9deec',.10);stroke(a,Math.max(72,Math.min(vw,vh)*.082),'#ff3048',.06+.10*q);stroke(a,4,'#ff8fa0',.50+.35*q,true);}else if(st==='replay'){stroke(a,10,'#ff6f85',.24);stroke(a,2,'#ffc0ca',.40);drawGhost(a,clamp((a.age-PAST.delayEnd)/PAST.replay,0,1));}}

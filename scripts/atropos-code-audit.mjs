@@ -23,6 +23,9 @@ requireCheck(loader.includes('e.atroposReborn.slash=null')&&loader.includes('e.a
 requireCheck(proto.includes("return e.atroposReborn.worldDevourer;return basePose(e);"),'World Devourer pose does not bypass the legacy pose path');
 requireCheck(proto.includes("const serpent=ensureSerpent(e);if(!serpent?.points?.length)return;"),'Render layers still rebuild the serpent pose');
 requireCheck(!maw.includes('baseDrawImage')&&maw.includes('updateJawScale'),'Void Maw still uses the global image interception path');
-const report={files:files.length,historyLimit:900,onePassHistory:true,renderPoseOwner:'background-once-per-render',legacy:{entry:'isolated',slash:'isolated',spaceCut:'isolated'},damage:{playerMaxHpReferences:false,globalHurtPlayerOverride:false},canvas:{globalDrawImageOverride:false},status:failures.length?'FAIL':'PASS',failures};
+requireCheck(loader.includes('atropos-production-art-data.js'),'Production raster atlas is not loaded before the World Devourer runtime');
+requireCheck(!/assets\/atropos-(?:head|body|segment|tail)[^'\"]*\.svg/.test(all),'World Devourer runtime still references legacy SVG art assets');
+requireCheck(proto.includes('atropos-world-devourer-production-raster-v1')&&proto.includes('ART_FRAMES'),'Production raster atlas renderer is not active');
+const report={files:files.length,historyLimit:900,onePassHistory:true,renderPoseOwner:'background-once-per-render',legacy:{entry:'isolated',slash:'isolated',spaceCut:'isolated'},damage:{playerMaxHpReferences:false,globalHurtPlayerOverride:false},canvas:{globalDrawImageOverride:false},art:{productionRaster:true,legacySvgRuntimeReferences:false},status:failures.length?'FAIL':'PASS',failures};
 console.log(JSON.stringify(report,null,2));
 if(failures.length)process.exit(1);

@@ -1,18 +1,36 @@
 // Atropos World Devourer — world-anchored serpent with continuous body, stable depth layers and final-art vector plates.
 // The combat branch remains a prototype until visual review and player approval; these assets are the first final-art pass.
 (()=>{
-  const VERSION='atropos-world-devourer-colossal-pass-v5';
+  const VERSION='atropos-world-devourer-production-raster-v1';
   const BODY_COUNT=19;
   const SAMPLE_SPACING=78;
   const HISTORY_LIMIT=900;
   const PART_KEYS=['head',...Array.from({length:BODY_COUNT},(_,i)=>`body-${String(i+1).padStart(2,'0')}`),'tail'];
   const PERF={poseBuilds:0,historySegmentsVisited:0,maxHistoryLength:0};
 
-  const art={head:new Image(),body:[new Image(),new Image(),new Image()],tail:new Image()};
-  art.head.decoding=art.tail.decoding='async';for(const img of art.body)img.decoding='async';
-  art.head.src='assets/atropos-head.svg';
-  art.body[0].src='assets/atropos-segment.svg';art.body[1].src='assets/atropos-segment-b.svg';art.body[2].src='assets/atropos-segment-c.svg';
-  art.tail.src='assets/atropos-tail.svg';
+  const production=window.stackfallAtroposProductionArt;
+  if(!production?.src)throw new Error('Atropos production raster atlas missing');
+  const atlas=new Image();atlas.decoding='async';atlas.src=production.src;
+  const ART_FRAMES={
+    headClosed:{x:16,y:16,w:408,h:300},
+    headOpen:{x:440,y:16,w:375,h:315},
+    neckA:{x:831,y:16,w:339,h:270},
+    neckB:{x:1186,y:16,w:339,h:276},
+    bodyA:{x:1541,y:16,w:402,h:291},
+    bodyB:{x:16,y:347,w:363,h:285},
+    bodyC:{x:395,y:347,w:372,h:297},
+    bodyD:{x:783,y:347,w:393,h:273},
+    rear:{x:1192,y:347,w:390,h:234},
+    tail:{x:16,y:660,w:531,h:318}
+  };
+  production.frames=ART_FRAMES;production.image=atlas;
+  production.drawScreen=function drawAtroposProductionFrame(key,x,y,a,w,h,alpha=1,options={}){
+    const frame=ART_FRAMES[key];if(!frame||!atlas.complete||atlas.naturalWidth<2||alpha<=.005)return false;
+    const flip=options.flip===true,scaleX=Number.isFinite(options.scaleX)?options.scaleX:1,scaleY=Number.isFinite(options.scaleY)?options.scaleY:1;
+    ctx.save();ctx.translate(x,y);ctx.rotate(a||0);ctx.scale(scaleX,scaleY);if(flip)ctx.scale(1,-1);
+    if(options.composite)ctx.globalCompositeOperation=options.composite;if(options.filter)ctx.filter=options.filter;
+    ctx.globalAlpha=alpha;ctx.drawImage(atlas,frame.x,frame.y,frame.w,frame.h,-w*.5,-h*.5,w,h);ctx.restore();return true;
+  };
 
   const smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
   const smoothRange=(a,b,x)=>smooth((x-a)/Math.max(.0001,b-a));
@@ -177,12 +195,15 @@
     }
     ctx.restore();
   }
-  function drawSprite(img,p,w,h,alpha=1,glow=0,flip=false,scaleX=1,scaleY=1){
-    if(!img.complete||img.naturalWidth<2||alpha<=.005)return;
-    const depthScale=lerp(.88,1.12,(p.depth+1)*.5);
-    ctx.save();ctx.translate(p.sx,p.sy);ctx.rotate(p.a);ctx.scale(scaleX,scaleY);if(flip)ctx.scale(1,-1);
-    if(glow>0){ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha*glow;ctx.drawImage(img,-w*depthScale*.5,-h*depthScale*.5,w*depthScale,h*depthScale);ctx.globalCompositeOperation='source-over';}
-    ctx.globalAlpha=alpha;ctx.drawImage(img,-w*depthScale*.5,-h*depthScale*.5,w*depthScale,h*depthScale);ctx.restore();
+  function drawSprite(frameKey,p,w,h,alpha=1,glow=0,flip=false,scaleX=1,scaleY=1){
+    if(!atlas.complete||atlas.naturalWidth<2||alpha<=.005)return;
+    const depthScale=lerp(.88,1.12,(p.depth+1)*.5),W=w*depthScale,H=h*depthScale;
+    if(glow>0)production.drawScreen(frameKey,p.sx,p.sy,p.a,W,H,alpha*glow,{flip,scaleX,scaleY,composite:'screen'});
+    production.drawScreen(frameKey,p.sx,p.sy,p.a,W,H,alpha,{flip,scaleX,scaleY});
+  }
+  function productionPlateKey(i,total){
+    if(i===1)return'neckA';if(i===2)return'neckB';if(i>=total-3)return'rear';
+    return['bodyA','bodyB','bodyC','bodyD'][Math.abs(i-3)%4];
   }
   function drawSerpentLayer(manifest,layer){
     if(manifest<=.001)return;
@@ -192,11 +213,12 @@
     for(let i=pts.length-1;i>=0;i--){
       const p=pts[i],weight=layerWeights(p.depth)[layer];if(weight<=.01)continue;
       const foregroundFade=layer==='front'?.88:1,alpha=manifest*weight*foregroundFade;
-      if(i===0){const jaw=window.stackfallAtroposMawJawScale,scaleX=Number(jaw?.x)||1,scaleY=Number(jaw?.y)||1;drawSprite(art.head,p,470*p.scaleUnit,250*p.scaleUnit,.98*alpha,.07,false,scaleX,scaleY);continue;}
-      if(i===pts.length-1){drawSprite(art.tail,p,330*p.taper*p.scaleUnit,122*p.taper*p.scaleUnit,.90*alpha,.025);continue;}
-      const plateSlot=i<=5?i%2===1:i%4===1;if(!plateSlot)continue;
-      const bodyArt=art.body[(i*5+Math.floor(i/2))%art.body.length],neckBoost=i<=5?lerp(1.10,1.01,(i-1)/4):1,bodyGlow=layer==='front'?.022:.010;
-      drawSprite(bodyArt,p,238*p.taper*neckBoost*p.scaleUnit,108*p.taper*neckBoost*p.scaleUnit,.64*alpha,bodyGlow,i%7===3);
+      if(i===0){const jaw=window.stackfallAtroposMawJawScale,scaleX=Number(jaw?.x)||1,scaleY=Number(jaw?.y)||1,open=!!jaw;drawSprite(open?'headOpen':'headClosed',p,510*p.scaleUnit,278*p.scaleUnit,.99*alpha,.055,false,scaleX,scaleY);continue;}
+      if(i===pts.length-1){drawSprite('tail',p,370*p.taper*p.scaleUnit,188*p.taper*p.scaleUnit,.94*alpha,.018);continue;}
+      const plateSlot=i<=2||i>=pts.length-3||i%3===1;if(!plateSlot)continue;
+      const key=productionPlateKey(i,pts.length),neck=i<=2,nearTail=i>=pts.length-3;
+      const W=(neck?270:nearTail?245:255)*p.taper*p.scaleUnit,H=(neck?188:nearTail?142:166)*p.taper*p.scaleUnit;
+      drawSprite(key,p,W,H,.88*alpha,layer==='front'?.018:.008,i%7===3);
     }
   }
 
@@ -242,5 +264,5 @@
   };
 
   window.stackfallAtroposVisualVersion=VERSION;
-  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:art.head.complete&&art.head.naturalWidth>1,body:art.body.every(img=>img.complete&&img.naturalWidth>1),bodyVariants:art.body.map(img=>img.complete&&img.naturalWidth>1),tail:art.tail.complete&&art.tail.naturalWidth>1},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
+  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
 })();

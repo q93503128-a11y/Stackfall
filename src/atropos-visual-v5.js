@@ -92,5 +92,10 @@
     document.body.appendChild(entryScript);
     window.stackfallAtroposPrototypeAttackState='entry-loading';
   });
-  document.body.appendChild(script);
+  const artData=document.createElement('script');
+  artData.src='src/atropos-production-art-data.js';
+  artData.dataset.atroposProductionArt='raster-v1';
+  artData.addEventListener('load',()=>document.body.appendChild(script),{once:true});
+  artData.addEventListener('error',()=>{window.stackfallAtroposPrototypeAttackState='production-art-load-failed';},{once:true});
+  document.body.appendChild(artData);
 })();

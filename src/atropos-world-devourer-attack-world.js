@@ -8,7 +8,7 @@
   WORLD.scarEnd=WORLD.biteEnd+WORLD.scar;
   WORLD.end=WORLD.scarEnd+WORLD.recover;
   const BOUNDARY_SAMPLES=19;
-  const headArt=new Image();headArt.decoding='async';headArt.src='assets/atropos-head.svg';
+  const productionArt=()=>window.stackfallAtroposProductionArt;
   const smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
   const ease=t=>{t=clamp(t,0,1);return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
   const fract=x=>x-Math.floor(x);
@@ -54,14 +54,9 @@
   }
 
   function drawSuction(a,strength){for(let i=0;i<28;i++){const r1=seeded(i,a.serial),r2=seeded(i+41,a.serial),r3=seeded(i+83,a.serial),ortho=a.orthoCenter+(r1*2-1)*a.orthoSpan*.94,b=boundaryValue(a,ortho),axis=lerp(b,a.outer,r2),len=lerp(35,145,r3)*strength;let A,B;if(a.side==='right'||a.side==='left'){const dir=a.side==='right'?1:-1;A=worldToScreen(axis,ortho);B=worldToScreen(axis+dir*len,ortho+(r3-.5)*10);}else{const dir=a.side==='bottom'?1:-1;A=worldToScreen(ortho,axis);B=worldToScreen(ortho+(r3-.5)*10,axis+dir*len);}ctx.save();ctx.globalAlpha=.16+.34*strength;ctx.strokeStyle='#c7f1ff';ctx.lineWidth=1+(i%3===0?1:0);ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();ctx.restore();}}
-  function drawGiantHead(a,q){if(!headArt.complete||headArt.naturalWidth<2)return;const enter=q<.48?ease(q/.48):q<.80?1:1-smooth((q-.80)/.20),x=lerp(a.headOutside.x,a.biteCenter.x,enter),y=lerp(a.headOutside.y,a.biteCenter.y,enter),p=worldToScreen(x,y),baseW=clamp(Math.min(vw,vh)*1.04,820,1180),baseH=baseW*.50,snap=Math.max(0,1-Math.abs(q-.62)/.16),sy=1-.34*snap;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(a.rot);if(a.flip)ctx.scale(-1,1);ctx.scale(1,sy);ctx.globalAlpha=.97;ctx.drawImage(headArt,-baseW*.5,-baseH*.5,baseW,baseH);ctx.restore();if(snap>.04)strokeBoundary(a,'#e5fbff',.78*snap,8);}
-  function drawScarCracks(a,alpha){const pts=boundaryPoints(a);ctx.save();ctx.strokeStyle='#a8e5f6';ctx.lineWidth=2;ctx.globalAlpha=alpha;for(let i=1;i<pts.length-1;i+=3){const p=pts[i],seed=i+a.serial*5,steps=3;let x=p.x,y=p.y;ctx.beginPath();let s=worldToScreen(x,y);ctx.moveTo(s.x,s.y);for(let k=0;k<steps;k++){const advance=35+seeded(seed+k*7,a.serial)*60,side=(seeded(seed+k*11,a.serial)-.5)*70;x+=a.outX*advance+a.perpX*side;y+=a.outY*advance+a.perpY*side;s=worldToScreen(x,y);ctx.lineTo(s.x,s.y);}ctx.stroke();}ctx.restore();}
-  function drawWorld(){
-    const e=serpentEnemy(),s=serpentOf(e),a=s?.worldDevourPrototype;if(!a)return;const st=stage(a),poly=polygonPoints(a);
-    if(st==='warn'){const q=smooth((a.age-WORLD.withdraw)/WORLD.warn);fillWorldPolygon(poly,'#ff3048',.07+.11*q,'#ff7184',.48+.30*q,4);strokeBoundary(a,'#ff9aaa',.58+.30*q,4);if(q>.22)drawSuction(a,clamp((q-.22)/.78,0,1));}
-    else if(st==='bite'){const q=clamp((a.age-WORLD.warnEnd)/WORLD.bite,0,1);if(q<.16)fillWorldPolygon(poly,'#ff3048',.08*(1-q/.16),'#ff7184',.42*(1-q/.16),3);drawSuction(a,1-q*.35);drawGiantHead(a,q);}
-    else if(st==='scar'){const q=clamp((a.age-WORLD.biteEnd)/WORLD.scar,0,1);fillWorldPolygon(poly,'#000107',.82*(1-.22*q),'#79b7ce',.56*(1-q*.32),4);strokeBoundary(a,'#bcefff',.34*(1-q*.62),7);drawScarCracks(a,.72*(1-q*.46));}
-    else if(st==='recover'){const q=clamp((a.age-WORLD.scarEnd)/WORLD.recover,0,1);fillWorldPolygon(poly,'#000107',.46*(1-q),'#79b7ce',.24*(1-q),3);strokeBoundary(a,'#a9e4f4',.16*(1-q),5);drawScarCracks(a,.26*(1-q));}
+  function drawGiantHead(a,q){
+    const art=productionArt();if(!art?.drawScreen)return;const enter=q<.48?ease(q/.48):q<.80?1:1-smooth((q-.80)/.20),x=lerp(a.headOutside.x,a.biteCenter.x,enter),y=lerp(a.headOutside.y,a.biteCenter.y,enter),p=worldToScreen(x,y),baseW=clamp(Math.min(vw,vh)*1.10,880,1240),baseH=baseW*.54,snap=Math.max(0,1-Math.abs(q-.62)/.16),sy=1-.28*snap;
+    art.drawScreen('headOpen',p.x,p.y,a.rot,baseW,baseH,.98,{flip:a.flip,scaleY:sy});if(snap>.04)strokeBoundary(a,'#e5fbff',.78*snap,8);
   }
 
   const baseCombat=window.stackfallUpdateWorldDevourerCombat||window.stackfallUpdateWorldDevourerCrossing;
