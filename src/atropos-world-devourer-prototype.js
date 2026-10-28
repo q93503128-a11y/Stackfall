@@ -34,7 +34,8 @@
         if(d[i+3]<8)continue;const r0=d[i],g0=d[i+1],b0=d[i+2],l=.299*r0+.587*g0+.114*b0,crack=clamp((b0-r0-18)/125,0,1);
         let r=l+(r0-l)*.46,gc=l+(g0-l)*.46,b=l+(b0-l)*.52;
         r=r*.66+7+crack*12;gc=gc*.69+9+crack*22;b=b*.76+16+crack*40;
-        const q=18;d[i]=clamp(Math.round(r/q)*q,0,255);d[i+1]=clamp(Math.round(gc/q)*q,0,255);d[i+2]=clamp(Math.round(b/q)*q,0,255);
+        const q=18,n=i>>2,x=n%f.w,y=Math.floor(n/f.w),edge=Math.min(x,y,f.w-1-x,f.h-1-y),edgeFade=smooth(clamp(edge/8,0,1));
+        d[i]=clamp(Math.round(r/q)*q,0,255);d[i+1]=clamp(Math.round(gc/q)*q,0,255);d[i+2]=clamp(Math.round(b/q)*q,0,255);d[i+3]=Math.round(d[i+3]*edgeFade);
       }
       g.putImageData(img,0,0);processedHeads[key]=c;
     }catch{}
@@ -75,10 +76,10 @@
 
   function motionScale(){return clamp(Math.min(vw,vh)/900,.92,1.20);}
   function idleOffsetAtAngle(a){
-    const rx=clamp(vw*.54,760,900),ry=clamp(vh*.30,280,360),wave=Math.sin(a*2.18+.55)*46;
+    const rx=clamp(vw*.54,760,900),ry=clamp(vh*.22,190,260),wave=Math.sin(a*2.18+.55)*42;
     return{
       x:80+Math.cos(a)*rx-Math.sin(a)*wave,
-      y:-80+Math.sin(a)*ry+Math.cos(a)*wave*.62,
+      y:-120+Math.sin(a)*ry+Math.cos(a)*wave*.56,
       orbitA:a
     };
   }
@@ -103,6 +104,13 @@
     }
     serpent.last=serpent.history[serpent.history.length-1];
   }
+
+  function reseedIdleHistory(serpent,anchorX=serpent.anchorX,anchorY=serpent.anchorY){
+    if(!serpent)return false;serpent.anchorX=anchorX;serpent.anchorY=anchorY;const now=Number(serpent.motionTime)||0,history=[];
+    for(let i=HISTORY_LIMIT-1;i>=0;i--){const o=idleOffset(serpent,now-i*.024);history.push({x:anchorX+o.x,y:anchorY+o.y,orbitA:o.orbitA});}
+    serpent.history=history;serpent.last=history[history.length-1];serpent.liveHead=serpent.last;serpent.lastReal=performance.now()*.001;return true;
+  }
+  window.stackfallAtroposReseedIdleHistory=reseedIdleHistory;
 
   function ensureSerpent(e){
     if(!e||e.apexForm!=='chronophage')return null;
@@ -359,5 +367,5 @@
   };
 
   window.stackfallAtroposVisualVersion=VERSION;
-  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-textured-entrysync-v8',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
+  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-textured-historysync-v9',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
 })();

@@ -117,7 +117,7 @@
         e.eliteForm=form;e.apexForm=form;e.name=title;e.color=BOSS_STATS[form].color;e.timeLock=0;e.apexElapsed=0;e.speed*=.82;e.x=liveArena.x;e.y=liveArena.y;ensureRebornAtropos?.(e);const s=serpentOf(e);if(s){s.entryActive=true;s.entryGrace=.55;s.prototypeAttackCd=1.25;s.nextPrototypeAttack='crossing';seedEntryHistoryOffscreen(s);}
         ENTRY.bossId=e.id;state.apexActiveId=e.id;state.apexCount++;state.nextApexAt=(state.apexCount+1)*APEX_INTERVAL_SECONDS;ui.bossNotice?.classList.add('hidden');ui.bossBar?.classList.add('hidden');
       },
-      onComplete:()=>{consumeRemainder();const e=serpentEnemy(),s=serpentOf(e);if(s){s.entryActive=false;s.entryGrace=.55;s.anchorX=ENTRY.centerX;s.anchorY=ENTRY.centerY;s.lastReal=performance.now()*.001;}state.pendingApexForm=null;stabilizeRealmTheme(apexTheme(form));ui.bossBar?.classList.remove('hidden');resetEntry(false);}
+      onComplete:()=>{consumeRemainder();const e=serpentEnemy(),s=serpentOf(e);if(s){s.entryActive=false;s.entryGrace=.55;s.anchorX=ENTRY.centerX;s.anchorY=ENTRY.centerY;if(typeof window.stackfallAtroposReseedIdleHistory==='function')window.stackfallAtroposReseedIdleHistory(s,ENTRY.centerX,ENTRY.centerY);else s.lastReal=performance.now()*.001;}state.pendingApexForm=null;stabilizeRealmTheme(apexTheme(form));ui.bossBar?.classList.remove('hidden');resetEntry(false);}
     });
     ENTRY.serial=serial;return true;
   };

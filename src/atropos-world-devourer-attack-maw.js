@@ -25,17 +25,19 @@
     return true;
   }
   function frontPose(a){
-    let bend=0,extend=0;const n=a.age;
-    if(n<MAW.aim){const q=smooth(n/MAW.aim);bend=.85*q;}
-    else if(n<MAW.warnEnd){const q=(n-MAW.aim)/MAW.warn;bend=.85;extend=-18*q;}
-    else if(n<MAW.suctionEnd){const q=(n-MAW.warnEnd)/MAW.suction;bend=.90;extend=-18+50*q;}
-    else if(n<MAW.biteEnd){const q=(n-MAW.suctionEnd)/MAW.bite;bend=.92;extend=32+145*ease(q);}
-    else{const q=smooth((n-MAW.biteEnd)/MAW.recover);bend=.92*(1-q);extend=177*(1-q);}
+    let bend=0,approach=0;const n=a.age;
+    if(n<MAW.aim){const q=smooth(n/MAW.aim);bend=.85*q;approach=0;}
+    else if(n<MAW.warnEnd){bend=.85;approach=0;}
+    else if(n<MAW.suctionEnd){const q=(n-MAW.warnEnd)/MAW.suction;bend=.90;approach=.46*smooth(q);}
+    else if(n<MAW.biteEnd){const q=(n-MAW.suctionEnd)/MAW.bite;bend=.92;approach=lerp(.46,.98,ease(q));}
+    else{const q=smooth((n-MAW.biteEnd)/MAW.recover);bend=.92*(1-q);approach=.98*(1-q);}
+    const headBase=a.base[0],turnHead=a.delta*bend,hdx=headBase.x-a.pivot.x,hdy=headBase.y-a.pivot.y,hc=Math.cos(turnHead),hs=Math.sin(turnHead),rotHead={x:a.pivot.x+hdx*hc-hdy*hs,y:a.pivot.y+hdx*hs+hdy*hc},dirX=Math.cos(a.targetAngle),dirY=Math.sin(a.targetAngle);
+    const needed=clamp((a.targetX-rotHead.x)*dirX+(a.targetY-rotHead.y)*dirY,0,250),extend=needed*approach;
     const out=a.base.map(p=>({...p}));
     for(let i=0;i<a.pivotIndex;i++){
-      const w=(a.pivotIndex-i)/a.pivotIndex,turn=a.delta*bend*(.45+.55*w),dx=a.base[i].x-a.pivot.x,dy=a.base[i].y-a.pivot.y,c=Math.cos(turn),s=Math.sin(turn);
-      out[i].x=a.pivot.x+dx*c-dy*s+Math.cos(a.targetAngle)*extend*w;
-      out[i].y=a.pivot.y+dx*s+dy*c+Math.sin(a.targetAngle)*extend*w;
+      const w=(a.pivotIndex-i)/a.pivotIndex,turn=a.delta*bend*(.45+.55*w),dx=a.base[i].x-a.pivot.x,dy=a.base[i].y-a.pivot.y,c=Math.cos(turn),ss=Math.sin(turn);
+      out[i].x=a.pivot.x+dx*c-dy*ss+dirX*extend*w;
+      out[i].y=a.pivot.y+dx*ss+dy*c+dirY*extend*w;
     }
     return out;
   }
