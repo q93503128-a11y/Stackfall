@@ -48,7 +48,7 @@
   function copyPose(points){return(points||[]).map(p=>({x:Number(p.x)||0,y:Number(p.y)||0,orbitA:Number(p.orbitA)||0,depth:Number(p.depth)||0}));}
   function startTailSever(e,serpent){
     const base=copyPose(serpent?.points);if(!e||!serpent||serpent.crossingPrototype||serpent.tailSeverPrototype||base.length<10)return false;
-    const pivotIndex=Math.max(6,base.length-7),pivot=base[pivotIndex],tip=base[base.length-1],startAngle=Math.atan2(tip.y-pivot.y,tip.x-pivot.x),playerAngle=Math.atan2(player.y-pivot.y,player.x-pivot.x);
+    const pivotIndex=Math.max(6,base.length-8),pivot=base[pivotIndex],tip=base[base.length-1],startAngle=Math.atan2(tip.y-pivot.y,tip.x-pivot.x),playerAngle=Math.atan2(player.y-pivot.y,player.x-pivot.x);
     let delta=angleDelta(startAngle,playerAngle),sign=delta>=0?1:-1;if(Math.abs(delta)<.50){sign=((serpent.tailSeverSerial||0)&1)?-1:1;delta=sign*.90;}
     const endDelta=clamp(delta+sign*.52,-2.15,2.15),windDelta=-sign*.24,radius=Math.max(180,Math.hypot(tip.x-pivot.x,tip.y-pivot.y));
     serpent.tailSeverPrototype={age:0,base,pivotIndex,pivot:{x:pivot.x,y:pivot.y},startAngle,endDelta,windDelta,radius,scarPath:[],directHit:false,scarResolved:false,serial:(serpent.tailSeverSerial=(serpent.tailSeverSerial||0)+1),holdMotionTime:Number(serpent.motionTime)||0};
