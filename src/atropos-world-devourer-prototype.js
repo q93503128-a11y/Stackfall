@@ -1,17 +1,17 @@
-// Atropos world-devourer prototype v3 — world-anchored serpent, continuous body and stable depth layers.
-// Branch-only visual/movement prototype. Attack rework and final swallow entrance are intentionally deferred.
+// Atropos World Devourer — world-anchored serpent with continuous body, stable depth layers and final-art vector plates.
+// The combat branch remains a prototype until visual review and player approval; these assets are the first final-art pass.
 (()=>{
-  const VERSION='atropos-world-devourer-prototype-v3';
+  const VERSION='atropos-world-devourer-final-art-pass-v1';
   const ENTRY_DURATION=6.2;
   const BODY_COUNT=15;
   const SAMPLE_SPACING=64;
   const HISTORY_LIMIT=1500;
   const PART_KEYS=['head',...Array.from({length:BODY_COUNT},(_,i)=>`body-${String(i+1).padStart(2,'0')}`),'tail'];
 
-  const art={head:new Image(),body:new Image(),tail:new Image()};
-  art.head.decoding=art.body.decoding=art.tail.decoding='async';
+  const art={head:new Image(),body:[new Image(),new Image(),new Image()],tail:new Image()};
+  art.head.decoding=art.tail.decoding='async';for(const img of art.body)img.decoding='async';
   art.head.src='assets/atropos-head.svg';
-  art.body.src='assets/atropos-segment.svg';
+  art.body[0].src='assets/atropos-segment.svg';art.body[1].src='assets/atropos-segment-b.svg';art.body[2].src='assets/atropos-segment-c.svg';
   art.tail.src='assets/atropos-tail.svg';
 
   const APEX_ENTRY={serial:null,mobs:[],removed:false,form:null};
@@ -140,7 +140,7 @@
   }
   function drawSprite(img,p,w,h,alpha=1,glow=0,flip=false){
     if(!img.complete||img.naturalWidth<2||alpha<=.005)return;
-    const depthScale=lerp(.90,1.10,(p.depth+1)*.5);
+    const depthScale=lerp(.88,1.12,(p.depth+1)*.5);
     ctx.save();ctx.translate(p.sx,p.sy);ctx.rotate(p.a);if(flip)ctx.scale(1,-1);
     if(glow>0){ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha*glow;ctx.drawImage(img,-w*depthScale*.5,-h*depthScale*.5,w*depthScale,h*depthScale);ctx.globalCompositeOperation='source-over';}
     ctx.globalAlpha=alpha;ctx.drawImage(img,-w*depthScale*.5,-h*depthScale*.5,w*depthScale,h*depthScale);ctx.restore();
@@ -155,8 +155,9 @@
       const alpha=manifest*weight;
       if(i===0){drawSprite(art.head,p,445*p.scaleUnit,223*p.scaleUnit,.98*alpha,.08);continue;}
       if(i===pts.length-1){drawSprite(art.tail,p,245*p.taper*p.scaleUnit,82*p.taper*p.scaleUnit,.94*alpha,.035);continue;}
-      if(i>=4&&i%2===0)continue;
-      drawSprite(art.body,p,245*p.taper*p.scaleUnit,90*p.taper*p.scaleUnit,.80*alpha,.035,i%4===3);
+      if(i>=5&&i%3===0)continue;
+      const bodyArt=art.body[(i*5+Math.floor(i/2))%art.body.length],bodyGlow=layer==='front'?.045:.025;
+      drawSprite(bodyArt,p,245*p.taper*p.scaleUnit,90*p.taper*p.scaleUnit,.84*alpha,bodyGlow,i%5===3);
     }
   }
 
@@ -256,5 +257,5 @@
   };
 
   window.stackfallAtroposVisualVersion=VERSION;
-  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:art.head.complete&&art.head.naturalWidth>1,body:art.body.complete&&art.body.naturalWidth>1,tail:art.tail.complete&&art.tail.naturalWidth>1},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration,mobs:APEX_ENTRY.mobs.length}:null,clock:window.stackfallApexClockDiagnostics?.()||null};};
+  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:art.head.complete&&art.head.naturalWidth>1,body:art.body.every(img=>img.complete&&img.naturalWidth>1),bodyVariants:art.body.map(img=>img.complete&&img.naturalWidth>1),tail:art.tail.complete&&art.tail.naturalWidth>1},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration,mobs:APEX_ENTRY.mobs.length}:null,clock:window.stackfallApexClockDiagnostics?.()||null};};
 })();
