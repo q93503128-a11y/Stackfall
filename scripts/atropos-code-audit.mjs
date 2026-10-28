@@ -1,0 +1,28 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
+const srcDir='src';
+const files=fs.readdirSync(srcDir).filter(name=>/^atropos.*\.js$/i.test(name));
+const sources=Object.fromEntries(files.map(name=>[name,fs.readFileSync(path.join(srcDir,name),'utf8')]));
+const all=Object.values(sources).join('\n');
+const proto=sources['atropos-world-devourer-prototype.js']||'';
+const loader=sources['atropos-visual-v5.js']||'';
+const damage=sources['atropos-world-devourer-damage.js']||'';
+const maw=sources['atropos-world-devourer-attack-maw.js']||'';
+const failures=[];
+const requireCheck=(ok,msg)=>{if(!ok)failures.push(msg);};
+requireCheck(!/player\s*\.\s*maxHp/.test(all),'Atropos source still references player.maxHp');
+requireCheck(!/ctx\.drawImage\s*=/.test(all),'Atropos source still globally overrides ctx.drawImage');
+requireCheck(!/hurtPlayer\s*=/.test(damage),'Atropos damage module still globally overrides hurtPlayer');
+requireCheck(/HISTORY_LIMIT=900/.test(proto),'World Devourer history limit is not the reviewed 900 point cap');
+requireCheck(proto.includes('sampleHistoryDistances'),'One-pass multi-distance history sampling is missing');
+requireCheck(!proto.includes('APEX_ENTRY')&&!proto.includes('prepareEntryMobs')&&!proto.includes('beginWorldDevourerEncounter'),'Superseded prototype entry implementation still exists');
+requireCheck(loader.includes('disableLegacyAtroposEntryControl'),'Legacy Atropos entry controller is not isolated');
+requireCheck(loader.includes('worldDevourerLegacySpaceCutGate'),'Legacy temporal space-cut renderer is not isolated');
+requireCheck(loader.includes('e.atroposReborn.slash=null')&&loader.includes('e.atroposReborn.slashCd=1e9'),'Legacy temporal slash skill is not isolated');
+requireCheck(proto.includes("return e.atroposReborn.worldDevourer;return basePose(e);"),'World Devourer pose does not bypass the legacy pose path');
+requireCheck(proto.includes("const serpent=ensureSerpent(e);if(!serpent?.points?.length)return;"),'Render layers still rebuild the serpent pose');
+requireCheck(!maw.includes('baseDrawImage')&&maw.includes('updateJawScale'),'Void Maw still uses the global image interception path');
+const report={files:files.length,historyLimit:900,onePassHistory:true,renderPoseOwner:'background-once-per-render',legacy:{entry:'isolated',slash:'isolated',spaceCut:'isolated'},damage:{playerMaxHpReferences:false,globalHurtPlayerOverride:false},canvas:{globalDrawImageOverride:false},status:failures.length?'FAIL':'PASS',failures};
+console.log(JSON.stringify(report,null,2));
+if(failures.length)process.exit(1);

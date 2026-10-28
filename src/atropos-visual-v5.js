@@ -9,6 +9,7 @@
   script.src='src/atropos-world-devourer-prototype.js';
   script.dataset.atroposWorldDevourer='1';
   script.addEventListener('load',()=>{
+    if(typeof updateAtroposEntryControl==='function')updateAtroposEntryControl=function disableLegacyAtroposEntryControl(){return false;};
     if(typeof apexBossSkill==='function'){
       const baseApexBossSkill=apexBossSkill;
       apexBossSkill=function worldDevourerAttackGate(e,dt){

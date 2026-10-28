@@ -16,6 +16,7 @@
     return{x:Math.cos(a)*rx+Math.sin(a*2.07)*38,y:Math.sin(a*.96)*ry+Math.sin(a*2.41+1.1)*28,orbitA:a};
   }
   function mawStage(a){if(!a)return'idle';const n=a.age;return n<MAW.aim?'aim':n<MAW.warnEnd?'warn':n<MAW.suctionEnd?'suction':n<MAW.biteEnd?'bite':n<MAW.end?'recover':'done';}
+  function updateJawScale(a){let scale=null;if(a&&mawStage(a)==='bite'){const q=clamp((a.age-MAW.suctionEnd)/MAW.bite,0,1),snap=Math.sin(q*Math.PI);scale={x:1+.10*snap,y:1-.34*snap};}window.stackfallAtroposMawJawScale=scale;}
   function startMaw(e,serpent){
     const base=copyPose(serpent?.points);if(!e||!serpent||serpent.crossingPrototype||serpent.tailSeverPrototype||serpent.mawPrototype||base.length<11)return false;
     const pivotIndex=Math.min(6,base.length-6),pivot=base[pivotIndex],head=base[0],targetX=Number(player.x)||0,targetY=Number(player.y)||0;
@@ -63,7 +64,7 @@
     state.camera.shake=Math.max(state.camera.shake,hit?9:5);state.flash=Math.max(state.flash,hit?.045:.022);if(typeof audio?.tone==='function')audio.tone(hit?48:62,.18,'sawtooth',hit?.040:.025,-12);
   }
   function updateMaw(e,serpent,dt){
-    const a=serpent.mawPrototype;if(!a)return false;a.age+=dt;const pts=rebuildFrontHistory(serpent,a),head=pts[0];applySuction(a,head,dt);resolveBite(e,a,head);
+    const a=serpent.mawPrototype;if(!a)return false;a.age+=dt;updateJawScale(a);const pts=rebuildFrontHistory(serpent,a),head=pts[0];applySuction(a,head,dt);resolveBite(e,a,head);
     if(a.age>=MAW.end){serpent.mawPrototype=null;serpent.prototypeAttackCd=1.45;serpent.nextPrototypeAttack='crossing';window.stackfallAtroposMawJawScale=null;}
     return true;
   }
@@ -90,16 +91,7 @@
 
   const baseBackground=drawBackground;drawBackground=function drawBackgroundWithVoidMaw(){const result=baseBackground();drawMawWarning();return result;};
 
-  // The head renderer lives in the visual prototype closure. Intercept only that sprite's draw call
-  // during the bite frames so the already-open maw briefly snaps shut without replacing the asset.
-  const baseDrawImage=ctx.drawImage.bind(ctx);ctx.drawImage=function worldDevourerJawSnap(img,...args){
-    const e=serpentEnemy(),a=serpentOf(e)?.mawPrototype;if(a&&mawStage(a)==='bite'&&String(img?.src||'').includes('atropos-head.svg')&&args.length===4){
-      const q=clamp((a.age-MAW.suctionEnd)/MAW.bite,0,1),snap=Math.sin(q*Math.PI),[x,y,w,h]=args,sx=1+.10*snap,sy=1-.34*snap,nw=w*sx,nh=h*sy;return baseDrawImage(img,x-(nw-w)*.5,y+(h-nh)*.5,nw,nh);
-    }
-    return baseDrawImage(img,...args);
-  };
-
-  window.stackfallTriggerAtroposVoidMaw=()=>{const e=serpentEnemy(),s=serpentOf(e);if(!e||!s)return false;s.crossingPrototype=null;s.tailSeverPrototype=null;s.mawPrototype=null;return startMaw(e,s);};
+  window.stackfallTriggerAtroposVoidMaw=()=>{const e=serpentEnemy(),s=serpentOf(e);if(!e||!s)return false;window.stackfallAtroposMawJawScale=null;s.crossingPrototype=null;s.tailSeverPrototype=null;s.mawPrototype=null;return startMaw(e,s);};
   window.stackfallAtroposMawDiagnostics=()=>{const e=serpentEnemy(),s=serpentOf(e),a=s?.mawPrototype;return{active:!!a,stage:mawStage(a),age:a?+a.age.toFixed(2):0,serial:a?.serial||0,target:a?{x:Math.round(a.targetX),y:Math.round(a.targetY)}:null};};
   window.stackfallAtroposPrototypeAttackState='giant-crossing+tail-sever+void-maw-motion-v3';
 })();
