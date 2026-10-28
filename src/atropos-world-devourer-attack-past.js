@@ -2,7 +2,7 @@
 // P3+ only. The present body crosses the locked player position, leaves a thin memory trace,
 // then a delayed pale temporal echo replays the exact same route after a renewed red warning.
 (()=>{
-  const PAST={warn:.85,present:1.75,clear:.75,delay:1.30,replay:1.35,recover:1.20},REWARN=.70,SEGMENTS=17,SPACING=64;
+  const PAST={warn:.85,present:1.75,clear:.75,delay:1.30,replay:1.35,recover:1.20},REWARN=.70,SEGMENTS=21,SPACING=78;
   PAST.presentEnd=PAST.warn+PAST.present;PAST.clearEnd=PAST.presentEnd+PAST.clear;PAST.delayEnd=PAST.clearEnd+PAST.delay;PAST.replayEnd=PAST.delayEnd+PAST.replay;PAST.end=PAST.replayEnd+PAST.recover;
   const smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);},ease=t=>{t=clamp(t,0,1);return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
   const serpentEnemy=()=>state.entities.enemies?.find(e=>!e?.dead&&e.apexForm==='chronophage')||null,serpentOf=e=>e?.atroposReborn?.worldDevourer||null;

@@ -1,9 +1,9 @@
 // Atropos World Devourer — world-anchored serpent with continuous body, stable depth layers and final-art vector plates.
 // The combat branch remains a prototype until visual review and player approval; these assets are the first final-art pass.
 (()=>{
-  const VERSION='atropos-world-devourer-final-art-pass-v1';
-  const BODY_COUNT=15;
-  const SAMPLE_SPACING=64;
+  const VERSION='atropos-world-devourer-colossal-pass-v2';
+  const BODY_COUNT=19;
+  const SAMPLE_SPACING=78;
   const HISTORY_LIMIT=900;
   const PART_KEYS=['head',...Array.from({length:BODY_COUNT},(_,i)=>`body-${String(i+1).padStart(2,'0')}`),'tail'];
   const PERF={poseBuilds:0,historySegmentsVisited:0,maxHistoryLength:0};
@@ -26,11 +26,11 @@
     return serpentEnemy()?1:0;
   }
 
-  function motionScale(){return clamp(Math.min(vw,vh)/900,.88,1.16);}
+  function motionScale(){return clamp(Math.min(vw,vh)/900,.92,1.20);}
   function headWorldPosition(e,serpent,t){
     const phase=serpent.phaseBase;
     const a=t*.165+phase;
-    const rx=clamp(vw*.32,520,640),ry=clamp(vh*.30,250,330);
+    const rx=clamp(vw*.43,650,820),ry=clamp(vh*.40,330,450);
     return{
       x:serpent.anchorX+Math.cos(a)*rx+Math.sin(a*2.07)*38,
       y:serpent.anchorY+Math.sin(a*.96)*ry+Math.sin(a*2.41+1.1)*28,
@@ -60,7 +60,7 @@
       serpent.phaseBase=(e.id||0)*.173+.4;
       serpent.motionTime=0;
       serpent.lastReal=performance.now()*.001;
-      const definitions=PART_KEYS.map((key,i)=>({key,label:key.toUpperCase(),dx:0,dy:0,r:i===0?92:i===PART_KEYS.length-1?36:58,active:true,visible:true}));
+      const definitions=PART_KEYS.map((key,i)=>({key,label:key.toUpperCase(),dx:0,dy:0,r:i===0?98:i===PART_KEYS.length-1?42:76,active:true,visible:true}));
       if(typeof defineBossBodyParts==='function')defineBossBodyParts(e,definitions);
       seedHistory(e,serpent);
       serpent.initialized=true;
@@ -115,7 +115,7 @@
     const samples=sampleHistoryDistances(serpent.history,distances);
     for(let i=0;i<PART_KEYS.length;i++){
       const tailT=i/(PART_KEYS.length-1),p=samples[i],screen=worldToScreen(p.x,p.y),depth=Math.sin((p.orbitA||0)+.35);
-      const taper=i===0?1.22:i===PART_KEYS.length-1?.38:lerp(1.08,.62,tailT);
+      const taper=i===0?1.14:i===PART_KEYS.length-1?.48:(tailT<.24?lerp(1.20,1.08,tailT/.24):lerp(1.08,.62,(tailT-.24)/.76));
       points.push({...p,sx:screen.x,sy:screen.y,key:PART_KEYS[i],index:i,tailT,depth,taper,scaleUnit});
     }
     serpent.points=points;
@@ -123,7 +123,7 @@
     for(let i=0;i<points.length;i++){
       const part=e.bodyParts?.[i];if(!part)continue;
       const p=points[i];part.dx=p.x-e.x;part.dy=p.y-e.y;
-      part.r=(i===0?82:i===points.length-1?34:55)*p.taper*p.scaleUnit;
+      part.r=(i===0?94:i===points.length-1?40:72)*p.taper*p.scaleUnit;
       part.active=true;part.visible=true;part.dead=false;
     }
     if(typeof refreshBossBodyParts==='function')refreshBossBodyParts(e);
@@ -139,9 +139,15 @@
     for(let i=points.length-1;i>0;i--){
       const p=points[i],q=points[i-1],weight=(layerWeights(p.depth)[layer]+layerWeights(q.depth)[layer])*.5;
       if(weight<=.01)continue;
-      const tailT=i/(points.length-1),width=196*lerp(1,.42,tailT)*p.scaleUnit;
-      ctx.globalAlpha=manifest*weight*.95;ctx.strokeStyle='#050915';ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
-      ctx.globalAlpha=manifest*weight*.20;ctx.strokeStyle='#40527f';ctx.lineWidth=Math.max(3,width*.065);ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
+      const tailT=i/(points.length-1),width=292*lerp(1,.44,tailT)*p.scaleUnit;
+      ctx.globalAlpha=manifest*weight*.78;ctx.strokeStyle='#34415f';ctx.lineWidth=width+12;ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
+      ctx.globalAlpha=manifest*weight*.98;ctx.strokeStyle='#050915';ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
+      ctx.globalAlpha=manifest*weight*.28;ctx.strokeStyle='#111a34';ctx.lineWidth=width*.70;ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
+    }
+    for(let i=3;i<points.length-2;i+=4){
+      const p=points[i],weight=layerWeights(p.depth)[layer];if(weight<=.03)continue;
+      const tailT=i/(points.length-1),half=92*lerp(1,.50,tailT)*p.scaleUnit,nx=-Math.sin(p.a),ny=Math.cos(p.a),tx=Math.cos(p.a),ty=Math.sin(p.a);
+      ctx.globalAlpha=manifest*weight*.30;ctx.strokeStyle='#9fd8ea';ctx.lineWidth=Math.max(2,3.6*p.scaleUnit);ctx.beginPath();ctx.moveTo(p.sx+nx*half,p.sy+ny*half);ctx.lineTo(p.sx+tx*10,p.sy+ty*10);ctx.lineTo(p.sx-nx*half*.72+tx*18,p.sy-ny*half*.72+ty*18);ctx.stroke();
     }
     ctx.restore();
   }
@@ -159,12 +165,12 @@
     const pts=serpent.points;drawSpine(pts,manifest,layer);
     for(let i=pts.length-1;i>=0;i--){
       const p=pts[i],weight=layerWeights(p.depth)[layer];if(weight<=.01)continue;
-      const alpha=manifest*weight;
-      if(i===0){const jaw=window.stackfallAtroposMawJawScale,scaleX=Number(jaw?.x)||1,scaleY=Number(jaw?.y)||1;drawSprite(art.head,p,445*p.scaleUnit,223*p.scaleUnit,.98*alpha,.08,false,scaleX,scaleY);continue;}
-      if(i===pts.length-1){drawSprite(art.tail,p,245*p.taper*p.scaleUnit,82*p.taper*p.scaleUnit,.94*alpha,.035);continue;}
-      if(i>=5&&i%3===0)continue;
-      const bodyArt=art.body[(i*5+Math.floor(i/2))%art.body.length],bodyGlow=layer==='front'?.045:.025;
-      drawSprite(bodyArt,p,245*p.taper*p.scaleUnit,90*p.taper*p.scaleUnit,.84*alpha,bodyGlow,i%5===3);
+      const foregroundFade=layer==='front'?.88:1,alpha=manifest*weight*foregroundFade;
+      if(i===0){const jaw=window.stackfallAtroposMawJawScale,scaleX=Number(jaw?.x)||1,scaleY=Number(jaw?.y)||1;drawSprite(art.head,p,420*p.scaleUnit,235*p.scaleUnit,.98*alpha,.07,false,scaleX,scaleY);continue;}
+      if(i===pts.length-1){drawSprite(art.tail,p,340*p.taper*p.scaleUnit,132*p.taper*p.scaleUnit,.92*alpha,.03);continue;}
+      if(i>=8&&i%4===0)continue;
+      const bodyArt=art.body[(i*7+Math.floor(i/3))%art.body.length],neckBoost=i<=5?lerp(1.16,1.02,(i-1)/4):1,bodyGlow=layer==='front'?.035:.018;
+      drawSprite(bodyArt,p,320*p.taper*neckBoost*p.scaleUnit,150*p.taper*neckBoost*p.scaleUnit,.72*alpha,bodyGlow,i%5===3);
     }
   }
 
