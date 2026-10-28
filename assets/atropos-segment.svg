@@ -3,7 +3,7 @@
  <linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#121c3d"/><stop offset=".58" stop-color="#080e23"/><stop offset="1" stop-color="#030611"/></linearGradient>
  <linearGradient id="plate" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#637ac1"/><stop offset=".62" stop-color="#3d4482"/><stop offset="1" stop-color="#242653"/></linearGradient>
 </defs>
-<g stroke-linejoin="round">
+<g stroke-linejoin="round" transform="translate(0 -7.6) scale(1 1.08)">
  <path d="M8 95 72 48 172 25 288 22 397 42 512 79 518 108 404 149 292 169 174 165 70 140Z" fill="url(#body)"/>
  <path d="M92 62 177 37 262 32 231 68 166 91 84 99Z" fill="url(#plate)" opacity=".86"/>
  <path d="M253 33 345 34 429 50 392 82 320 77 231 68Z" fill="#495b9c" opacity=".82"/>
