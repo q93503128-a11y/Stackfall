@@ -71,3 +71,5 @@ p=Path('src/atropos-world-devourer-attack-past.js')
 s=p.read_text()
 s=s.replace('SEGMENTS=17,SPACING=64','SEGMENTS=21,SPACING=78',1)
 p.write_text(s)
+
+# trigger: 2026-10-28 colossal visual repair
