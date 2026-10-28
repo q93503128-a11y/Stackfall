@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Run Atropos code/performance audit
+        run: node scripts/atropos-code-audit.mjs
       - name: Run Atropos runtime visual capture
         run: node scripts/atropos-visual-audit.mjs
       - name: Upload Atropos visual audit
