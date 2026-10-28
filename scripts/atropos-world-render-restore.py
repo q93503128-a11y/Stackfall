@@ -24,3 +24,4 @@ restore="""  function drawGiantHead(a,q){
 if s.count(needle)!=1: raise SystemExit('drawGiantHead insertion point not found exactly once')
 s=s.replace(needle,restore,1)
 p.write_text(s)
+# trigger restore
