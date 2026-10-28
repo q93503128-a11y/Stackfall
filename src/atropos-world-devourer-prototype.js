@@ -75,11 +75,11 @@
 
   function motionScale(){return clamp(Math.min(vw,vh)/900,.92,1.20);}
   function idleOffset(serpent,t=serpent.motionTime){
-    const phase=Number(serpent.phaseBase)||0,a=(Number(t)||0)*.17+phase;
-    const rx=clamp(vw*.54,760,900),ry=clamp(vh*.46,380,520),wave=Math.sin(a*2.18+.55)*54;
+    const phase=Number(serpent.phaseBase)||0,a=(Number(t)||0)*.11+phase;
+    const rx=clamp(vw*.54,760,900),ry=clamp(vh*.30,280,360),wave=Math.sin(a*2.18+.55)*46;
     return{
       x:80+Math.cos(a)*rx-Math.sin(a)*wave,
-      y:-40+Math.sin(a)*ry+Math.cos(a)*wave*.66,
+      y:-80+Math.sin(a)*ry+Math.cos(a)*wave*.62,
       orbitA:a
     };
   }
@@ -93,7 +93,7 @@
     serpent.history.length=0;
     const now=serpent.motionTime;
     for(let i=HISTORY_LIMIT-1;i>=0;i--){
-      const p=headWorldPosition(e,serpent,now-i*.018);
+      const p=headWorldPosition(e,serpent,now-i*.024);
       serpent.history.push(p);
     }
     serpent.last=serpent.history[serpent.history.length-1];
@@ -108,7 +108,7 @@
       const arena=state.apexArena;
       serpent.anchorX=Number.isFinite(arena?.x)?arena.x:(Number.isFinite(e.x)?e.x:player.x);
       serpent.anchorY=Number.isFinite(arena?.y)?arena.y:(Number.isFinite(e.y)?e.y:player.y);
-      serpent.phaseBase=.72;
+      serpent.phaseBase=1.15;
       serpent.motionTime=0;
       serpent.lastReal=performance.now()*.001;
       const definitions=PART_KEYS.map((key,i)=>({key,label:key.toUpperCase(),dx:0,dy:0,r:i===0?98:i===PART_KEYS.length-1?42:76,active:true,visible:true}));
@@ -201,7 +201,7 @@
     for(let i=0;i<points.length;i++){
       const part=e.bodyParts?.[i];if(!part)continue;
       const q=points[i];part.dx=q.x-e.x;part.dy=q.y-e.y;
-      part.r=(i===0?80:i===points.length-1?26:60)*q.taper*q.scaleUnit;
+      part.r=(i===0?72:i===points.length-1?22:50)*q.taper*q.scaleUnit;
       part.active=true;part.visible=true;part.dead=false;
     }
     if(typeof refreshBossBodyParts==='function')refreshBossBodyParts(e);
@@ -214,15 +214,17 @@
   }
   function bodyHalfWidth(p,i,side=1){
     const tailT=clamp(Number.isFinite(p.tailT)?p.tailT:i/Math.max(1,PART_KEYS.length-1),0,1);
-    const base=tailT<.10?lerp(94,84,tailT/.10):tailT<.62?lerp(84,56,(tailT-.10)/.52):lerp(56,6,(tailT-.62)/.38);
+    const base=tailT<.10?lerp(78,70,tailT/.10):tailT<.62?lerp(70,46,(tailT-.10)/.52):lerp(46,5,(tailT-.62)/.38);
     const jag=1+.050*Math.sin(tailT*21+side*.83)+.020*Math.sin(tailT*57+side*2.27);
     return base*p.scaleUnit*jag;
   }
   function layerRuns(points,layer){
+    if(layer==='mid')return[points.map((p,i)=>({p,i,weight:1}))];
+    if(layer==='back')return[];
     const runs=[];let run=[];const headDepth=points[0]?.depth||0;
     for(let i=0;i<points.length;i++){
-      const p=points[i],depth=i<8?headDepth:p.depth,weight=layerWeights(depth)[layer];
-      if(weight>.018)run.push({p,i,weight});
+      const p=points[i],depth=i<8?headDepth:p.depth,weight=layerWeights(depth).front;
+      if(weight>.18)run.push({p,i,weight});
       else if(run.length){if(run.length>1)runs.push(run);run=[];}
     }
     if(run.length>1)runs.push(run);return runs;
@@ -273,9 +275,10 @@
   }
   function drawSpine(points,manifest,layer){
     const runs=layerRuns(points,layer);if(!runs.length)return;
+    const layerAlpha=layer==='front'?.76:1;
     ctx.save();ctx.lineJoin='round';ctx.lineCap='butt';
     for(const run of runs){
-      const avg=run.reduce((sum,e)=>sum+e.weight,0)/run.length,solid=clamp(avg*1.72,.14,1);
+      const avg=run.reduce((sum,e)=>sum+e.weight,0)/run.length,solid=clamp(avg*1.72,.14,1)*layerAlpha;
       traceBodyPolygon(run,1.055);ctx.globalAlpha=manifest*solid*.84;ctx.fillStyle='#273249';ctx.fill();
       traceBodyPolygon(run,1);ctx.globalAlpha=manifest*solid;ctx.fillStyle='#030610';ctx.fill();
       traceBodyPolygon(run,1.01);ctx.globalAlpha=manifest*solid*.20;ctx.strokeStyle='#62718b';ctx.lineWidth=2.2;ctx.stroke();
@@ -296,16 +299,18 @@
     production.drawScreen(frameKey,p.sx,p.sy,p.a,W,H,alpha,{flip,scaleX,scaleY,filter:'saturate(.62) contrast(.90) brightness(.74)'});
   }
   function drawSerpentLayer(manifest,layer){
-    if(manifest<=.001)return;
+    if(manifest<=.001||layer==='back')return;
     const e=serpentEnemy();if(!e)return;
     const serpent=ensureSerpent(e);if(!serpent?.points?.length)return;
     const pts=serpent.renderPoints?.length?serpent.renderPoints:serpent.points;
     drawSpine(pts,manifest,layer);
-    const head=pts[0];if(!head)return;
-    const weight=layerWeights(head.depth)[layer];if(weight<=.01)return;
-    const foregroundFade=layer==='front'?.86:1,alpha=manifest*weight*foregroundFade;
-    const jaw=window.stackfallAtroposMawJawScale,scaleX=Number(jaw?.x)||1,scaleY=Number(jaw?.y)||1,open=!!jaw;
-    drawSprite(open?'headOpen':'headClosed',head,382*head.scaleUnit,216*head.scaleUnit,.94*alpha,.024,false,scaleX,scaleY);
+    const head=pts[0],tail=pts[pts.length-1];if(!head)return;
+    const headFront=layerWeights(head.depth).front,headAlpha=layer==='mid'?manifest:manifest*headFront*.74;
+    if(headAlpha>.01){
+      const jaw=window.stackfallAtroposMawJawScale,scaleX=Number(jaw?.x)||1,scaleY=Number(jaw?.y)||1,open=!!jaw;
+      drawSprite(open?'headOpen':'headClosed',head,382*head.scaleUnit,216*head.scaleUnit,.96*headAlpha,.024,false,scaleX,scaleY);
+    }
+    if(tail&&layer==='mid')drawSprite('tail',tail,175*tail.scaleUnit,76*tail.scaleUnit,.82*manifest,.008,false,1,1);
   }
 
   const baseEnsure=ensureRebornAtropos;
@@ -350,5 +355,5 @@
   };
 
   window.stackfallAtroposVisualVersion=VERSION;
-  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-textured-meshrope-v6',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
+  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-textured-continuous-v7',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
 })();
