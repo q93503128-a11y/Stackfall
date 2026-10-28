@@ -24,6 +24,23 @@
   rear:{x:446,y:131,w:146,h:87},
   tail:{x:5,y:247,w:199,h:120}
 };  production.frames=ART_FRAMES;production.image=atlas;
+  const processedHeads={};
+  function prepareProcessedHead(key){
+    const f=ART_FRAMES[key];if(!f||!atlas.complete||atlas.naturalWidth<2)return;
+    try{
+      const c=document.createElement('canvas');c.width=f.w;c.height=f.h;const g=c.getContext('2d',{willReadFrequently:true});
+      g.drawImage(atlas,f.x,f.y,f.w,f.h,0,0,f.w,f.h);const img=g.getImageData(0,0,f.w,f.h),d=img.data;
+      for(let i=0;i<d.length;i+=4){
+        if(d[i+3]<8)continue;const r0=d[i],g0=d[i+1],b0=d[i+2],l=.299*r0+.587*g0+.114*b0,crack=clamp((b0-r0-18)/125,0,1);
+        let r=l+(r0-l)*.46,gc=l+(g0-l)*.46,b=l+(b0-l)*.52;
+        r=r*.66+7+crack*12;gc=gc*.69+9+crack*22;b=b*.76+16+crack*40;
+        const q=18;d[i]=clamp(Math.round(r/q)*q,0,255);d[i+1]=clamp(Math.round(gc/q)*q,0,255);d[i+2]=clamp(Math.round(b/q)*q,0,255);
+      }
+      g.putImageData(img,0,0);processedHeads[key]=c;
+    }catch{}
+  }
+  function prepareProcessedHeads(){prepareProcessedHead('headClosed');prepareProcessedHead('headOpen');}
+  if(atlas.complete&&atlas.naturalWidth>1)prepareProcessedHeads();else atlas.addEventListener('load',prepareProcessedHeads,{once:true});
   production.drawScreen=function drawAtroposProductionFrame(key,x,y,a,w,h,alpha=1,options={}){
     const frame=ART_FRAMES[key];if(!frame||!atlas.complete||atlas.naturalWidth<2||alpha<=.005)return false;
     const flip=options.flip===true,scaleX=Number.isFinite(options.scaleX)?options.scaleX:1,scaleY=Number.isFinite(options.scaleY)?options.scaleY:1;
@@ -96,7 +113,7 @@
     const follow=1-Math.exp(-.30*realDt);
     serpent.anchorX+=((Number(player.x)||0)-serpent.anchorX)*follow;
     serpent.anchorY+=((Number(player.y)||0)-serpent.anchorY)*follow;
-    const p=headWorldPosition(e,serpent,serpent.motionTime),last=serpent.last;
+    const p=headWorldPosition(e,serpent,serpent.motionTime),last=serpent.last;serpent.liveHead=p;
     if(!last||Math.hypot(p.x-last.x,p.y-last.y)>=3.2){
       serpent.history.push(p);serpent.last=p;
       if(serpent.history.length>HISTORY_LIMIT)serpent.history.splice(0,serpent.history.length-HISTORY_LIMIT);
@@ -130,16 +147,19 @@
     PERF.poseBuilds++;PERF.maxHistoryLength=Math.max(PERF.maxHistoryLength,serpent.history.length);
     const scaleUnit=motionScale(),points=[],distances=[];
     for(let i=0;i<PART_KEYS.length;i++){const tailT=i/(PART_KEYS.length-1);distances.push(i*SAMPLE_SPACING*scaleUnit*(1+tailT*.025));}
-    const samples=sampleHistoryDistances(serpent.history,distances);
+    const history=serpent.history,live=serpent.liveHead,stored=history[history.length-1],useLive=!!(live&&stored&&Math.hypot(live.x-stored.x,live.y-stored.y)>.001);
+    if(useLive)history.push(live);
+    const samples=sampleHistoryDistances(history,distances);
     const taperAt=t=>t<.16?lerp(1.28,1.20,t/.16):t<.68?lerp(1.20,.92,(t-.16)/.52):lerp(.92,.18,(t-.68)/.32);
+    const totalDistance=distances[distances.length-1],renderDistances=[];
+    for(let d=0;d<totalDistance;d+=RENDER_SPACING*scaleUnit)renderDistances.push(d);
+    renderDistances.push(totalDistance);
+    const renderSamples=sampleHistoryDistances(history,renderDistances),renderPoints=[];
+    if(useLive)history.pop();
     for(let i=0;i<PART_KEYS.length;i++){
       const tailT=i/(PART_KEYS.length-1),q=samples[i],screen=worldToScreen(q.x,q.y),depth=Math.sin((q.orbitA||0)+.35);
       points.push({...q,sx:screen.x,sy:screen.y,key:PART_KEYS[i],index:i,tailT,depth,taper:taperAt(tailT),scaleUnit});
     }
-    const totalDistance=distances[distances.length-1],renderDistances=[];
-    for(let d=0;d<totalDistance;d+=RENDER_SPACING*scaleUnit)renderDistances.push(d);
-    renderDistances.push(totalDistance);
-    const renderSamples=sampleHistoryDistances(serpent.history,renderDistances),renderPoints=[];
     for(let i=0;i<renderSamples.length;i++){
       const tailT=i/Math.max(1,renderSamples.length-1),q=renderSamples[i],screen=worldToScreen(q.x,q.y),depth=Math.sin((q.orbitA||0)+.35);
       renderPoints.push({...q,sx:screen.x,sy:screen.y,index:i,tailT,depth,taper:taperAt(tailT),scaleUnit});
@@ -191,6 +211,21 @@
     }
     ctx.closePath();
   }
+  function drawCarapaceSurface(run,manifest,solid){
+    if(run.length<5)return;
+    ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
+    ctx.beginPath();for(let k=0;k<run.length;k++){const p=run[k].p;if(k===0)ctx.moveTo(p.sx,p.sy);else ctx.lineTo(p.sx,p.sy);}
+    ctx.globalAlpha=manifest*solid*.18;ctx.strokeStyle='#53627f';ctx.lineWidth=9;ctx.stroke();
+    ctx.globalAlpha=manifest*solid*.28;ctx.strokeStyle='#10182c';ctx.lineWidth=4;ctx.stroke();
+    const step=Math.max(6,Math.floor(run.length/7));
+    for(let k=step;k<run.length-step;k+=step){
+      const {p,i,weight}=run[k],flip=((Math.floor((p.tailT||0)*100))&1)?1:-1,half=bodyHalfWidth(p,i,1)*.78,nx=-Math.sin(p.a),ny=Math.cos(p.a),tx=Math.cos(p.a),ty=Math.sin(p.a),diag=18*p.scaleUnit*flip;
+      const ax=p.sx+nx*half-tx*diag,ay=p.sy+ny*half-ty*diag,bx=p.sx-nx*half+tx*diag,by=p.sy-ny*half+ty*diag;
+      ctx.globalAlpha=manifest*weight*.34;ctx.strokeStyle='#030610';ctx.lineWidth=Math.max(5,7*p.scaleUnit);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+      ctx.globalAlpha=manifest*weight*.22;ctx.strokeStyle='#60708f';ctx.lineWidth=Math.max(1,1.6*p.scaleUnit);ctx.beginPath();ctx.moveTo(ax+tx*2,ay+ty*2);ctx.lineTo(bx+tx*2,by+ty*2);ctx.stroke();
+    }
+    ctx.restore();
+  }
   function drawSpine(points,manifest,layer){
     const runs=layerRuns(points,layer);if(!runs.length)return;
     ctx.save();ctx.lineJoin='round';ctx.lineCap='butt';
@@ -201,6 +236,7 @@
       traceBodyPolygon(run,.82);ctx.globalAlpha=manifest*solid*.92;ctx.fillStyle='#0b142a';ctx.fill();
       traceBodyPolygon(run,.55);ctx.globalAlpha=manifest*solid*.74;ctx.fillStyle='#172440';ctx.fill();
       traceBodyPolygon(run,1.01);ctx.globalAlpha=manifest*solid*.26;ctx.strokeStyle='#70819f';ctx.lineWidth=3;ctx.stroke();
+      drawCarapaceSurface(run,manifest,solid);
     }
     const detailStep=Math.max(10,Math.floor(points.length/11));
     for(let i=detailStep;i<points.length-detailStep;i+=detailStep){
@@ -212,9 +248,14 @@
   }
   function drawSprite(frameKey,p,w,h,alpha=1,glow=0,flip=false,scaleX=1,scaleY=1){
     if(!atlas.complete||atlas.naturalWidth<2||alpha<=.005)return;
-    const depthScale=lerp(.88,1.12,(p.depth+1)*.5),W=w*depthScale,H=h*depthScale;
-    if(glow>0)production.drawScreen(frameKey,p.sx,p.sy,p.a,W,H,alpha*glow,{flip,scaleX,scaleY,composite:'screen',filter:'saturate(.70) contrast(.92) brightness(.78)'});
-    production.drawScreen(frameKey,p.sx,p.sy,p.a,W,H,alpha,{flip,scaleX,scaleY,filter:'saturate(.70) contrast(.92) brightness(.78)'});
+    const depthScale=lerp(.88,1.12,(p.depth+1)*.5),W=w*depthScale,H=h*depthScale,processed=processedHeads[frameKey];
+    if(processed){
+      ctx.save();ctx.translate(p.sx,p.sy);ctx.rotate(p.a||0);ctx.scale(scaleX,scaleY);if(flip)ctx.scale(1,-1);ctx.imageSmoothingEnabled=true;
+      if(glow>0){ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha*glow;ctx.filter='blur(.7px)';ctx.drawImage(processed,-W*.5,-H*.5,W,H);}
+      ctx.globalCompositeOperation='source-over';ctx.globalAlpha=alpha;ctx.filter='contrast(.96) saturate(.84)';ctx.drawImage(processed,-W*.5,-H*.5,W,H);ctx.restore();return;
+    }
+    if(glow>0)production.drawScreen(frameKey,p.sx,p.sy,p.a,W,H,alpha*glow,{flip,scaleX,scaleY,composite:'screen',filter:'saturate(.62) contrast(.90) brightness(.74)'});
+    production.drawScreen(frameKey,p.sx,p.sy,p.a,W,H,alpha,{flip,scaleX,scaleY,filter:'saturate(.62) contrast(.90) brightness(.74)'});
   }
   function drawSerpentLayer(manifest,layer){
     if(manifest<=.001)return;
@@ -271,5 +312,5 @@
   };
 
   window.stackfallAtroposVisualVersion=VERSION;
-  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-ribbon-resample-v2',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
+  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-ribbon-resample-v3-livehead-carapace',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
 })();
