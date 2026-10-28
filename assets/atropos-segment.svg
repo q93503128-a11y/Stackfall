@@ -1,12 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 190">
-<defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#141c38"/><stop offset=".55" stop-color="#080d20"/><stop offset="1" stop-color="#02040b"/></linearGradient><linearGradient id="p" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#38446c"/><stop offset="1" stop-color="#141a38"/></linearGradient></defs>
-<g stroke-linejoin="round">
- <path d="M8 99 62 59 141 36 230 29 322 32 414 50 512 82 516 107 422 143 324 162 225 164 133 152 57 128Z" fill="url(#b)" stroke="#263252" stroke-width="5"/>
- <path d="M67 62 146 40 222 34 191 68 126 90 55 99Z" fill="url(#p)"/>
- <path d="M217 34 303 34 384 46 349 78 284 76 191 68Z" fill="#29345b"/>
- <path d="M364 49 432 60 491 82 454 102 395 96 349 78Z" fill="#11182f"/>
- <path d="M91 122 163 103 236 107 205 140 139 150Z" fill="#202b50"/>
- <path d="M233 107 310 99 390 108 354 139 285 154 205 140Z" fill="#111b38"/>
- <path d="M178 45 191 58 205 54 218 67" fill="none" stroke="#b8e9f7" stroke-width="4" opacity=".40"/>
- <path d="M356 111 369 124 382 119 395 132" fill="none" stroke="#8fc9db" stroke-width="3" opacity=".28"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 260">
+<defs>
+ <linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#182241"/><stop offset=".56" stop-color="#080e21"/><stop offset="1" stop-color="#02040b"/></linearGradient>
+ <linearGradient id="p" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#44517b"/><stop offset="1" stop-color="#161d39"/></linearGradient>
+</defs>
+<g stroke-linejoin="round" stroke-linecap="round">
+ <path d="M8 132 59 79 139 48 232 37 330 43 425 63 552 105 558 136 438 194 338 218 236 220 142 205 58 174Z" fill="url(#b)" stroke="#334162" stroke-width="7"/>
+ <path d="M62 83 148 53 236 43 198 93 125 119 48 130Z" fill="url(#p)"/>
+ <path d="M223 43 321 47 411 64 367 110 293 118 198 93Z" fill="#2d385f"/>
+ <path d="M392 68 472 82 536 106 496 133 429 128 367 110Z" fill="#141c36"/>
+ <path d="M73 166 158 137 250 138 210 190 136 205Z" fill="#202a4c"/>
+ <path d="M248 138 343 126 441 141 395 190 312 211 210 190Z" fill="#111a34"/>
+ <path d="M178 57 196 77 218 69 237 91 260 84" fill="none" stroke="#c4f1ff" stroke-width="5" opacity=".46"/>
+ <path d="M352 151 370 171 390 162 409 183" fill="none" stroke="#94cfdf" stroke-width="4" opacity=".30"/>
+ <path d="M21 132 84 91 153 63 M308 47 397 63 482 86" fill="none" stroke="#607396" stroke-width="4" opacity=".32"/>
 </g></svg>
