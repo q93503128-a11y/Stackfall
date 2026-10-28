@@ -9,8 +9,6 @@
   script.src='src/atropos-world-devourer-prototype.js';
   script.dataset.atroposWorldDevourer='1';
   script.addEventListener('load',()=>{
-    // Retired chronophage attacks stay gated. The branch-owned combat prototype is invoked
-    // only when its reviewed motion modules are available.
     if(typeof apexBossSkill==='function'){
       const baseApexBossSkill=apexBossSkill;
       apexBossSkill=function worldDevourerAttackGate(e,dt){
@@ -50,6 +48,13 @@
               const damageScript=document.createElement('script');
               damageScript.src='src/atropos-world-devourer-damage.js';
               damageScript.dataset.atroposWorldDevourerDamage='boss-scaled';
+              damageScript.addEventListener('load',()=>{
+                const directorScript=document.createElement('script');
+                directorScript.src='src/atropos-world-devourer-director.js';
+                directorScript.dataset.atroposWorldDevourerDirector='phase-aware';
+                document.body.appendChild(directorScript);
+                window.stackfallAtroposPrototypeAttackState='director-loading';
+              });
               document.body.appendChild(damageScript);
               window.stackfallAtroposPrototypeAttackState='damage-model-loading';
             });
