@@ -1,14 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 190">
-<defs><linearGradient id="t" x1="1" y1="0" x2="0" y2="1"><stop stop-color="#111a35"/><stop offset=".58" stop-color="#070c1d"/><stop offset="1" stop-color="#02040a"/></linearGradient></defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 250">
+<defs><linearGradient id="t" x1="1" y1="0" x2="0" y2="1"><stop stop-color="#17203d"/><stop offset=".58" stop-color="#080d1f"/><stop offset="1" stop-color="#02040a"/></linearGradient></defs>
 <g stroke-linejoin="round" stroke-linecap="round">
- <path d="M17 95 62 72 126 53 205 39 297 33 388 39 474 55 543 78 556 94 531 111 462 132 380 147 291 154 201 149 120 135 55 115Z" fill="url(#t)" stroke="#2b3758" stroke-width="6"/>
- <path d="M15 95 61 70 47 91 68 108 20 113 2 101Z" fill="#02050c" stroke="#43516f" stroke-width="4"/>
- <path d="M76 70 143 51 207 42 183 72 128 91 65 98Z" fill="#253053"/>
- <path d="M205 42 278 35 349 38 321 70 266 78 183 72Z" fill="#1c2647"/>
- <path d="M346 39 411 45 477 58 445 84 386 82 321 70Z" fill="#131c37"/>
- <path d="M117 119 181 103 245 106 218 135 160 144Z" fill="#1a2546"/>
- <path d="M244 106 315 99 385 105 353 133 291 146 218 135Z" fill="#0e1730"/>
- <path d="M391 106 452 98 516 105 481 126 425 138 353 133Z" fill="#0a1228"/>
- <path d="M168 51 180 63 194 59 208 72" fill="none" stroke="#a9ddec" stroke-width="3.5" opacity=".33"/>
- <path d="M370 43 382 55 396 51 411 64 426 60" fill="none" stroke="#c4f2ff" stroke-width="4" opacity=".40"/>
+  <!-- root on the right, long taper to a chipped obsidian barb on the left -->
+  <path d="M610 88 526 61 433 48 340 48 250 59 166 79 95 99 39 117 6 127 38 139 93 157 165 178 251 193 343 197 437 188 531 166 613 137Z" fill="url(#t)" stroke="#334161" stroke-width="7"/>
+  <path d="M5 127 48 98 42 121 71 139 38 155 8 143 0 132Z" fill="#02050c" stroke="#53607c" stroke-width="5"/>
+  <path d="M516 66 427 52 338 53 380 92 453 108 537 106Z" fill="#293456"/>
+  <path d="M384 55 301 56 224 68 260 104 330 111 380 92Z" fill="#202a4a"/>
+  <path d="M241 70 169 84 103 102 132 127 192 130 260 104Z" fill="#141d38"/>
+  <path d="M510 160 426 181 338 191 377 154 447 140 532 139Z" fill="#111a33"/>
+  <path d="M377 154 297 185 218 181 251 144 317 132Z" fill="#182342"/>
+  <path d="M202 89 220 107 240 100 258 119" fill="none" stroke="#a6dbe9" stroke-width="4" opacity=".34"/>
+  <path d="M432 61 451 80 473 72 492 92" fill="none" stroke="#c6f2ff" stroke-width="5" opacity=".42"/>
 </g></svg>
