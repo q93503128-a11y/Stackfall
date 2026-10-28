@@ -30,3 +30,4 @@ s=s.replace(old,new,1)
 s=s.replace('final-art vector plates','production raster plates',1)
 s=s.replace('these assets are the first final-art pass.','these assets are the approved production raster pass.',1)
 p.write_text(s)
+# trigger production frame correction
