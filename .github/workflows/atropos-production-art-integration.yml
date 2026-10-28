@@ -1,0 +1,36 @@
+name: Atropos production art integration
+
+on:
+  push:
+    branches:
+      - feature/atropos-world-devourer-prototype
+    paths:
+      - scripts/atropos-production-art-integration.py
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/atropos-world-devourer-prototype
+          fetch-depth: 0
+      - name: Integrate approved production raster art
+        run: python scripts/atropos-production-art-integration.py
+      - name: Validate production art integration
+        run: |
+          node --check src/atropos-visual-v5.js
+          node --check src/atropos-world-devourer-prototype.js
+          node --check src/atropos-world-devourer-attack-past.js
+          node --check src/atropos-world-devourer-attack-world.js
+          node scripts/atropos-code-audit.mjs
+      - name: Commit integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/atropos-visual-v5.js src/atropos-world-devourer-prototype.js src/atropos-world-devourer-attack-past.js src/atropos-world-devourer-attack-world.js scripts/atropos-code-audit.mjs scripts/atropos-visual-audit.mjs
+          git commit -m "Integrate approved Atropos production raster art"
+          git push origin HEAD:feature/atropos-world-devourer-prototype
