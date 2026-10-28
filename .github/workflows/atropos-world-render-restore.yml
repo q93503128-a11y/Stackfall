@@ -1,0 +1,28 @@
+name: Atropos World Devour render restore
+
+on:
+  push:
+    branches: [feature/atropos-world-devourer-prototype]
+    paths: [scripts/atropos-world-render-restore.py]
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/atropos-world-devourer-prototype
+          fetch-depth: 0
+      - run: python scripts/atropos-world-render-restore.py
+      - run: |
+          node --check src/atropos-world-devourer-attack-world.js
+          node scripts/atropos-code-audit.mjs
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/atropos-world-devourer-attack-world.js
+          git commit -m "Restore World Devour production renderer"
+          git push origin HEAD:feature/atropos-world-devourer-prototype
