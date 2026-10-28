@@ -43,7 +43,7 @@
   }
   function withdrawPoint(a,q){const k=ease(q),bend=170*Math.sin(k*Math.PI),x=lerp(a.origin.x,a.staging.x,k)+a.perpX*bend,y=lerp(a.origin.y,a.staging.y,k)+a.perpY*bend;return{x,y};}
   function recoverPoint(s,a,q){const o=orbitOffset(s),idle={x:(+player.x||0)+o.x,y:(+player.y||0)+o.y},control={x:a.staging.x+a.outX*220+a.perpX*760,y:a.staging.y+a.outY*220+a.perpY*760},u=1-q;return{x:u*u*a.staging.x+2*u*q*control.x+q*q*idle.x,y:u*u*a.staging.y+2*u*q*control.y+q*q*idle.y};}
-  function resolveBite(e,a,q){if(a.hit||q<.60)return;a.hit=true;if(insideZone(a,+player.x||0,+player.y||0)&&player.invuln<=0)hurtPlayer(Math.max(12,(+player.maxHp||100)*.28),e);state.camera.shake=Math.max(state.camera.shake,11);state.flash=Math.max(state.flash,.05);if(typeof audio!=='undefined'&&typeof audio.tone==='function')audio.tone(42,.22,'sawtooth',.045,-15);}
+  function resolveBite(e,a,q){if(a.hit||q<.60)return;a.hit=true;if(insideZone(a,+player.x||0,+player.y||0)&&player.invuln<=0)hurtPlayer(window.stackfallAtroposPatternDamage(e,'worldDevour'),e);state.camera.shake=Math.max(state.camera.shake,11);state.flash=Math.max(state.flash,.05);if(typeof audio!=='undefined'&&typeof audio.tone==='function')audio.tone(42,.22,'sawtooth',.045,-15);}
   function updateWorld(e,s,dt){
     const a=s.worldDevourPrototype;if(!a)return false;a.age+=dt;const st=stage(a);
     if(st==='withdraw'){const p=withdrawPoint(a,a.age/WORLD.withdraw);drive(s,a,p.x,p.y);}

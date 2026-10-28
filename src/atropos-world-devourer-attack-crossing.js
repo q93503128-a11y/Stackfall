@@ -42,7 +42,7 @@
   function driveHead(serpent,a){const desired=desiredHead(serpent,a),offset=orbitOffset(serpent);serpent.anchorX=desired.x-offset.x;serpent.anchorY=desired.y-offset.y;}
   function crossingContact(e,a){
     if(a.playerHit)return;const stage=crossingStage(a);if(stage!=='cross'&&stage!=='clear')return;
-    for(const part of e.bodyParts||[]){if(!part?.active)continue;const x=e.x+(Number(part.dx)||0),y=e.y+(Number(part.dy)||0),r=Math.max(26,Number(part.r)||0);if(Math.hypot(player.x-x,player.y-y)<=r+(player.r||12)*.78){a.playerHit=true;if(player.invuln<=0)hurtPlayer(Math.max(8,(Number(player.maxHp)||100)*.14),e);break;}}
+    for(const part of e.bodyParts||[]){if(!part?.active)continue;const x=e.x+(Number(part.dx)||0),y=e.y+(Number(part.dy)||0),r=Math.max(26,Number(part.r)||0);if(Math.hypot(player.x-x,player.y-y)<=r+(player.r||12)*.78){a.playerHit=true;if(player.invuln<=0)hurtPlayer(window.stackfallAtroposPatternDamage(e,'giantCrossing'),e);break;}}
   }
 
   function copyPose(points){return(points||[]).map(p=>({x:Number(p.x)||0,y:Number(p.y)||0,orbitA:Number(p.orbitA)||0,depth:Number(p.depth)||0}));}
@@ -76,12 +76,12 @@
   function pointSegmentDistance(px,py,a,b){const vx=b.x-a.x,vy=b.y-a.y,wx=px-a.x,wy=py-a.y,len2=vx*vx+vy*vy;if(len2<=.0001)return Math.hypot(wx,wy);const t=clamp((wx*vx+wy*vy)/len2,0,1),x=a.x+vx*t,y=a.y+vy*t;return Math.hypot(px-x,py-y);}
   function tailDirectContact(e,a,pts){
     if(a.directHit||tailStage(a)!=='sweep')return;const start=Math.max(a.pivotIndex,pts.length-7),radius=(player.r||12)+42;
-    for(let i=start+1;i<pts.length;i++){if(pointSegmentDistance(player.x,player.y,pts[i-1],pts[i])<=radius){a.directHit=true;if(player.invuln<=0)hurtPlayer(Math.max(8,(Number(player.maxHp)||100)*.15),e);break;}}
+    for(let i=start+1;i<pts.length;i++){if(pointSegmentDistance(player.x,player.y,pts[i-1],pts[i])<=radius){a.directHit=true;if(player.invuln<=0)hurtPlayer(window.stackfallAtroposPatternDamage(e,'tailSever'),e);break;}}
   }
   function recordScar(a,pts){if(tailStage(a)!=='sweep')return;const tip=pts[pts.length-1],last=a.scarPath[a.scarPath.length-1];if(!last||Math.hypot(tip.x-last.x,tip.y-last.y)>=12)a.scarPath.push({x:tip.x,y:tip.y});}
   function resolveScar(e,a){
     if(a.scarResolved||a.age<TAIL.scarAt)return;a.scarResolved=true;let hit=false;for(let i=1;i<a.scarPath.length;i++){if(pointSegmentDistance(player.x,player.y,a.scarPath[i-1],a.scarPath[i])<=(player.r||12)+24){hit=true;break;}}
-    if(hit&&player.invuln<=0)hurtPlayer(Math.max(7,(Number(player.maxHp)||100)*.12),e);state.camera.shake=Math.max(state.camera.shake,6);state.flash=Math.max(state.flash,.035);
+    if(hit&&player.invuln<=0)hurtPlayer(window.stackfallAtroposPatternDamage(e,'tailRupture'),e);state.camera.shake=Math.max(state.camera.shake,6);state.flash=Math.max(state.flash,.035);
   }
 
   function updateCrossing(e,serpent,dt){const a=serpent.crossingPrototype;if(!a)return false;a.age+=dt;driveHead(serpent,a);crossingContact(e,a);if(a.age>=CROSS.end){serpent.crossingPrototype=null;serpent.prototypeAttackCd=1.35;serpent.nextPrototypeAttack='tail';serpent.anchorX=Number.isFinite(player.x)?player.x:serpent.anchorX;serpent.anchorY=Number.isFinite(player.y)?player.y:serpent.anchorY;}return true;}

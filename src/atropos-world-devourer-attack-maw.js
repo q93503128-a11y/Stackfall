@@ -59,7 +59,7 @@
   function resolveBite(e,a,head){
     if(a.hit||mawStage(a)!=='bite')return;const q=(a.age-MAW.suctionEnd)/MAW.bite;if(q<.66)return;a.hit=true;
     const hit=Math.hypot(player.x-head.x,player.y-head.y)<=(player.r||12)+78;
-    if(hit&&player.invuln<=0)hurtPlayer(Math.max(9,(Number(player.maxHp)||100)*.20),e);
+    if(hit&&player.invuln<=0)hurtPlayer(window.stackfallAtroposPatternDamage(e,'voidMaw'),e);
     state.camera.shake=Math.max(state.camera.shake,hit?9:5);state.flash=Math.max(state.flash,hit?.045:.022);if(typeof audio?.tone==='function')audio.tone(hit?48:62,.18,'sawtooth',hit?.040:.025,-12);
   }
   function updateMaw(e,serpent,dt){

@@ -5,15 +5,18 @@
   if(typeof hurtPlayer!=='function')return;
   const baseHurtPlayer=hurtPlayer;
   const apexBaseDamage=e=>Math.max(7,(Number(e?.damage)||0)*.40);
+  const DAMAGE_MULTIPLIERS=Object.freeze({giantCrossing:.95,tailSever:1.05,tailRupture:.72,voidMaw:1.35,devourerRing:1.10,pastTrajectory:.92,worldDevour:1.75});
+  const patternDamage=(e,key)=>apexBaseDamage(e)*(DAMAGE_MULTIPLIERS[key]??1);
+  window.stackfallAtroposPatternDamage=patternDamage;
   function worldDevourerDamage(e){
     if(!e||e.apexForm!=='chronophage'||!e.atroposReborn?.worldDevourer)return null;
-    const s=e.atroposReborn.worldDevourer,d=apexBaseDamage(e);
-    if(s.worldDevourPrototype)return d*1.75;
-    if(s.pastPrototype)return d*.92;
-    if(s.ringPrototype)return d*1.10;
-    if(s.mawPrototype)return d*1.35;
-    if(s.tailSeverPrototype)return d*(s.tailSeverPrototype.scarResolved?.72:1.05);
-    if(s.crossingPrototype)return d*.95;
+    const s=e.atroposReborn.worldDevourer;
+    if(s.worldDevourPrototype)return patternDamage(e,'worldDevour');
+    if(s.pastPrototype)return patternDamage(e,'pastTrajectory');
+    if(s.ringPrototype)return patternDamage(e,'devourerRing');
+    if(s.mawPrototype)return patternDamage(e,'voidMaw');
+    if(s.tailSeverPrototype)return patternDamage(e,s.tailSeverPrototype.scarResolved?'tailRupture':'tailSever');
+    if(s.crossingPrototype)return patternDamage(e,'giantCrossing');
     return null;
   }
   hurtPlayer=function worldDevourerDamageGate(damage,source,...rest){
@@ -24,6 +27,6 @@
     model:'boss-damage-scaled-v1',
     usesPlayerMaxHp:false,
     base:'max(7, boss.damage * 0.40)',
-    multipliers:{giantCrossing:.95,tailSever:1.05,tailRupture:.72,voidMaw:1.35,devourerRing:1.10,pastTrajectory:.92,worldDevour:1.75}
+    multipliers:{...DAMAGE_MULTIPLIERS}
   });
 })();

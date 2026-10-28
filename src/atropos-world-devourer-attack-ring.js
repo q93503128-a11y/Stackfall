@@ -46,7 +46,7 @@
   function pointSegmentDistance(px,py,a,b){const vx=b.x-a.x,vy=b.y-a.y,wx=px-a.x,wy=py-a.y,len2=vx*vx+vy*vy;if(len2<=.0001)return Math.hypot(wx,wy);const t=clamp((wx*vx+wy*vy)/len2,0,1),x=a.x+vx*t,y=a.y+vy*t;return Math.hypot(px-x,py-y);}
   function ringContact(e,a,pts){
     if(a.hit||ringStage(a)!=='hold')return;const radius=(player.r||12)+45;
-    for(let i=1;i<pts.length;i++){if(pointSegmentDistance(player.x,player.y,pts[i-1],pts[i])<=radius){a.hit=true;if(player.invuln<=0)hurtPlayer(Math.max(8,(Number(player.maxHp)||100)*.16),e);break;}}
+    for(let i=1;i<pts.length;i++){if(pointSegmentDistance(player.x,player.y,pts[i-1],pts[i])<=radius){a.hit=true;if(player.invuln<=0)hurtPlayer(window.stackfallAtroposPatternDamage(e,'devourerRing'),e);break;}}
   }
   function updateRing(e,s,dt){
     const a=s.ringPrototype;if(!a)return false;a.age+=dt;const pts=rebuildRingHistory(s,a);ringContact(e,a,pts);
