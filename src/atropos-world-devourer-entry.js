@@ -34,6 +34,11 @@
     const tx=-Math.sin(a0),ty=Math.cos(a0),control={x:p0.x+tx*460,y:p0.y+ty*330},u=1-t;
     return{x:u*u*p0.x+2*u*t*control.x+t*t*p2.x,y:u*u*p0.y+2*u*t*control.y+t*t*p2.y,a:lerp(a0,a1,t)};
   }
+  function seedEntryHistoryOffscreen(s){
+    if(!s)return;const pose=entryHeadPose(WRAP_START),to=loopPoint(ENTRY.startAngle),dx=to.x-pose.x,dy=to.y-pose.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d,step=4,count=430,history=[];
+    for(let i=count;i>=0;i--)history.push({x:pose.x-ux*i*step,y:pose.y-uy*i*step,orbitA:pose.a});
+    s.history=history;s.last=history[history.length-1];s.points=[];s.motionTime=(pose.a-(Number(s.phaseBase)||0))/.165;const off=orbitOffsetAt(pose.a);s.anchorX=pose.x-off.x;s.anchorY=pose.y-off.y;s.lastReal=performance.now()*.001;
+  }
   function driveEntryHead(e,s,p){
     if(!e||!s||p<WRAP_START)return null;const pose=entryHeadPose(p),phase=Number(s.phaseBase)||0;s.motionTime=(pose.a-phase)/.165;const off=orbitOffsetAt(pose.a);s.anchorX=pose.x-off.x;s.anchorY=pose.y-off.y;s.lastReal=performance.now()*.001;
     const last=s.last;if(!last||Math.hypot(pose.x-last.x,pose.y-last.y)>=3){const point={x:pose.x,y:pose.y,orbitA:pose.a};s.history=s.history||[];s.history.push(point);if(s.history.length>1500)s.history.splice(0,s.history.length-1500);s.last=point;}
@@ -70,8 +75,12 @@
     }
     if(removed&&typeof compactInPlace==='function')compactInPlace(state.entities.enemies,e=>e&&!e.dead);
   }
+  function consumeRemainder(){
+    let removed=false;for(const item of ENTRY.mobs){const e=item.e;if(item.consumed||!e||e.dead)continue;item.consumed=true;e.dead=true;ENTRY.consumed++;removed=true;}
+    if(removed&&typeof compactInPlace==='function')compactInPlace(state.entities.enemies,e=>e&&!e.dead);
+  }
   function drawSuctionTrails(){
-    const tr=trNow();if(!tr||!ENTRY.active)return;const p=progress(),e=serpentEnemy(),s=serpentOf(e),head=s?.points?.[0]||null;if(!head)return;
+    const tr=trNow();if(!tr||!ENTRY.active)return;const p=progress();if(p<WRAP_START)return;const head=entryHeadPose(p);
     ctx.save();ctx.lineCap='round';ctx.globalCompositeOperation='screen';
     for(const item of ENTRY.mobs){if(item.consumed||item.pull<=.01||!item.e||item.e.dead)continue;const A=worldToScreen(item.e.x,item.e.y),B=worldToScreen(head.x,head.y),q=item.pull;ctx.globalAlpha=.10+.28*q;ctx.strokeStyle='rgba(224,238,244,.85)';ctx.lineWidth=1.5+2*q;ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.quadraticCurveTo(lerp(A.x,B.x,.55)+item.controlSign*18,lerp(A.y,B.y,.55)-item.controlSign*14,B.x,B.y);ctx.stroke();}
     ctx.restore();
@@ -87,15 +96,17 @@
     }
     if(state.realmTransition)cancelRealmTransition('space');state.pendingApexForm=form;if(!forceApexPriority()){state.pendingApexForm=null;return false;}
     ENTRY.active=true;ENTRY.centerX=player.x;ENTRY.centerY=player.y;ENTRY.startAngle=-2.55+(((state.apexCount||0)&1)?.10:-.10);ENTRY.bossId=null;clearTransientCombat();captureMobs();state.bossActiveId=null;ui.bossBar?.classList.add('hidden');ui.bossNotice?.classList.add('hidden');
+    if(typeof audio?.tone==='function')audio.tone(58,.72,'sawtooth',.018,-14);
     const radius=compactDevice()?318:486,arena={x:ENTRY.centerX,y:ENTRY.centerY,r:radius,form,createdAt:state.time||0},title=bossName(form);state.apexArena=arena;
     const serial=startRealmTransition(apexTheme(form),{duration:ENTRY_DURATION,title,subtitle:'',apex:true,form,owner:'apex-entry',introStyle:null,
       onMidpoint:()=>{
         const liveArena=state.apexArena;if(!liveArena){state.pendingApexForm=null;resetEntry();cancelRealmTransition('space');return;}
-        const e=spawnEnemy('apex');if(!e){state.pendingApexForm=null;state.nextApexAt=(typeof runProgressionTime==='function'?runProgressionTime():state.time||0)+30;resetEntry();cancelRealmTransition('space');return;}
-        e.eliteForm=form;e.apexForm=form;e.name=title;e.color=BOSS_STATS[form].color;e.timeLock=0;e.apexElapsed=0;e.speed*=.82;e.x=liveArena.x;e.y=liveArena.y;ensureRebornAtropos?.(e);const s=serpentOf(e);if(s){s.entryActive=true;s.entryGrace=1.0;s.prototypeAttackCd=2.1;s.nextPrototypeAttack='crossing';}
+        const savedBossAudio=audio?.boss;let e=null;try{if(audio&&typeof savedBossAudio==='function')audio.boss=()=>{};e=spawnEnemy('apex');}finally{if(audio&&typeof savedBossAudio==='function')audio.boss=savedBossAudio;}
+        if(!e){state.pendingApexForm=null;state.nextApexAt=(typeof runProgressionTime==='function'?runProgressionTime():state.time||0)+30;resetEntry();cancelRealmTransition('space');return;}
+        e.eliteForm=form;e.apexForm=form;e.name=title;e.color=BOSS_STATS[form].color;e.timeLock=0;e.apexElapsed=0;e.speed*=.82;e.x=liveArena.x;e.y=liveArena.y;ensureRebornAtropos?.(e);const s=serpentOf(e);if(s){s.entryActive=true;s.entryGrace=1.0;s.prototypeAttackCd=2.1;s.nextPrototypeAttack='crossing';seedEntryHistoryOffscreen(s);}
         ENTRY.bossId=e.id;state.apexActiveId=e.id;state.apexCount++;state.nextApexAt=(state.apexCount+1)*APEX_INTERVAL_SECONDS;ui.bossNotice?.classList.add('hidden');ui.bossBar?.classList.add('hidden');
       },
-      onComplete:()=>{const e=serpentEnemy(),s=serpentOf(e);if(s){s.entryActive=false;s.entryGrace=1.0;s.anchorX=ENTRY.centerX;s.anchorY=ENTRY.centerY;s.lastReal=performance.now()*.001;}state.pendingApexForm=null;stabilizeRealmTheme(apexTheme(form));ui.bossBar?.classList.remove('hidden');resetEntry();}
+      onComplete:()=>{consumeRemainder();const e=serpentEnemy(),s=serpentOf(e);if(s){s.entryActive=false;s.entryGrace=1.0;s.anchorX=ENTRY.centerX;s.anchorY=ENTRY.centerY;s.lastReal=performance.now()*.001;}state.pendingApexForm=null;stabilizeRealmTheme(apexTheme(form));ui.bossBar?.classList.remove('hidden');resetEntry();}
     });
     ENTRY.serial=serial;return true;
   };
@@ -110,10 +121,10 @@
 
   if(typeof updateWeapons==='function'){const baseUpdateWeapons=updateWeapons;updateWeapons=function pauseWeaponsForWorldDevourerEntry(dt){if(trNow())return;return baseUpdateWeapons(dt);};}
   if(typeof updatePostRosterWeapons==='function'){const basePost=updatePostRosterWeapons;updatePostRosterWeapons=function pausePostRosterForWorldDevourerEntry(dt){if(trNow())return;return basePost(dt);};}
-  if(typeof dealDamage==='function'){const baseDeal=dealDamage;dealDamage=function protectWorldDevourerDuringEntry(enemy,amount,opts){if(trNow()&&enemy?.apexForm==='chronophage'&&serpentOf(enemy))return;return baseDeal(enemy,amount,opts);};}
+  if(typeof dealDamage==='function'){const baseDeal=dealDamage;dealDamage=function protectWorldDevourerDuringEntry(target,amount,opts){const owner=typeof bossPartOwner==='function'?bossPartOwner(target):target;if(trNow()&&owner?.apexForm==='chronophage'&&serpentOf(owner))return;return baseDeal(target,amount,opts);};}
   if(typeof apexBossSkill==='function'){const baseApexSkill=apexBossSkill;apexBossSkill=function gateWorldDevourerEntranceCombat(e,dt){const s=serpentOf(e);if(s&&(trNow()||s.entryActive))return;if(s&&(Number(s.entryGrace)||0)>0){s.entryGrace=Math.max(0,s.entryGrace-dt);return;}return baseApexSkill(e,dt);};}
   if(typeof drawRealmCinematicOverlay==='function'){const baseOverlay=drawRealmCinematicOverlay;drawRealmCinematicOverlay=function drawWorldDevourerSwallowOverlay(){drawSuctionTrails();return baseOverlay();};}
 
   window.stackfallAtroposEntryDiagnostics=()=>({active:ENTRY.active,serial:ENTRY.serial,progress:+progress().toFixed(3),mobs:ENTRY.mobs.length,consumed:ENTRY.consumed,bossId:ENTRY.bossId,weaponPause:!!trNow(),colourReturnAt:COLOR_RETURN});
-  window.stackfallAtroposEntryVersion='world-devourer-swallow-entry-v1';
+  window.stackfallAtroposEntryVersion='world-devourer-swallow-entry-v2';
 })();
