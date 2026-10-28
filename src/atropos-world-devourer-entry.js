@@ -18,7 +18,7 @@
     return{x:Math.cos(a)*rx+Math.sin(a*2.07)*38,y:Math.sin(a*.96)*ry+Math.sin(a*2.41+1.1)*28};
   }
   function loopPoint(a){
-    const rx=clamp(vw*.43,620,800)*(1+.055*Math.sin(a*1.7+.6)),ry=clamp(vh*.39,325,455)*(1+.050*Math.cos(a*2.1-.2));
+    const rx=clamp(vw*.38,560,720)*(1+.050*Math.sin(a*1.7+.6)),ry=clamp(vh*.34,285,385)*(1+.045*Math.cos(a*2.1-.2));
     return{x:ENTRY.centerX+Math.cos(a)*rx+Math.sin(a*2.35)*42,y:ENTRY.centerY+Math.sin(a)*ry+Math.sin(a*1.28+.5)*25};
   }
   function entryHeadPose(p){
@@ -28,7 +28,7 @@
       return{x:lerp(from.x,to.x,k),y:lerp(from.y,to.y,k),a:start};
     }
     if(q<.86){
-      const t=(q-.13)/.73,a=start+t*TAU,p=loopPoint(a);return{x:p.x,y:p.y,a};
+      const t=smooth((q-.13)/.73),a=start+t*TAU,p=loopPoint(a);return{x:p.x,y:p.y,a};
     }
     const t=smooth((q-.86)/.14),a0=start+TAU,a1=a0+.62,p0=loopPoint(a0),off=orbitOffsetAt(a1),p2={x:ENTRY.centerX+off.x,y:ENTRY.centerY+off.y};
     const tx=-Math.sin(a0),ty=Math.cos(a0),control={x:p0.x+tx*460,y:p0.y+ty*330},u=1-t;
@@ -56,7 +56,7 @@
   }
   function captureMobs(){
     ENTRY.mobs.length=0;ENTRY.consumed=0;
-    const rx=clamp(vw*.43,620,800),ry=clamp(vh*.39,325,455);
+    const rx=clamp(vw*.38,560,720),ry=clamp(vh*.34,285,385);
     for(const e of state.entities.enemies||[]){
       if(!e||e.dead||e.kind==='apex'||e.apexForm)continue;
       const dx=e.x-ENTRY.centerX,dy=e.y-ENTRY.centerY,ang=Math.atan2(dy/Math.max(1,ry),dx/Math.max(1,rx)),phase=mod(ang-ENTRY.startAngle,TAU)/TAU,eatAt=.545+phase*.235;
@@ -105,7 +105,7 @@
       state.bossBags=state.bossBags||{};state.bossBags.apex=state.bossBags.apex||[];state.bossBags.apex.push(form);state.lastBossForms=state.lastBossForms||{};if(previousLast==null)delete state.lastBossForms.apex;else state.lastBossForms.apex=previousLast;return baseBegin();
     }
     if(state.realmTransition)cancelRealmTransition('space');state.pendingApexForm=form;if(!forceApexPriority()){state.pendingApexForm=null;return false;}
-    ENTRY.active=true;ENTRY.centerX=player.x;ENTRY.centerY=player.y;ENTRY.startAngle=-2.55+(((state.apexCount||0)&1)?.10:-.10);ENTRY.bossId=null;clearTransientCombat();captureMobs();state.bossActiveId=null;ui.bossBar?.classList.add('hidden');ui.bossNotice?.classList.add('hidden');
+    ENTRY.active=true;ENTRY.centerX=player.x;ENTRY.centerY=player.y;ENTRY.startAngle=-2.30+(((state.apexCount||0)&1)?.08:-.08);ENTRY.bossId=null;clearTransientCombat();captureMobs();state.bossActiveId=null;ui.bossBar?.classList.add('hidden');ui.bossNotice?.classList.add('hidden');
     if(typeof audio?.tone==='function')audio.tone(58,.72,'sawtooth',.018,-14);
     const radius=compactDevice()?318:486,arena={x:ENTRY.centerX,y:ENTRY.centerY,r:radius,form,createdAt:state.time||0},title=bossName(form);state.apexArena=arena;
     const serial=startRealmTransition(apexTheme(form),{duration:ENTRY_DURATION,title,subtitle:'',apex:true,form,owner:'apex-entry',introStyle:null,
