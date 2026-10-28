@@ -46,6 +46,13 @@
             const worldScript=document.createElement('script');
             worldScript.src='src/atropos-world-devourer-attack-world.js';
             worldScript.dataset.atroposWorldDevourerAttack='world-devour';
+            worldScript.addEventListener('load',()=>{
+              const damageScript=document.createElement('script');
+              damageScript.src='src/atropos-world-devourer-damage.js';
+              damageScript.dataset.atroposWorldDevourerDamage='boss-scaled';
+              document.body.appendChild(damageScript);
+              window.stackfallAtroposPrototypeAttackState='damage-model-loading';
+            });
             document.body.appendChild(worldScript);
             window.stackfallAtroposPrototypeAttackState='world-devour-loading';
           });
