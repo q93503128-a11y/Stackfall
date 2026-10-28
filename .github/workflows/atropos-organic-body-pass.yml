@@ -1,0 +1,33 @@
+name: Atropos organic body renderer
+
+on:
+  push:
+    branches:
+      - feature/atropos-world-devourer-prototype
+    paths:
+      - scripts/atropos-organic-body-pass.py
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/atropos-world-devourer-prototype
+          fetch-depth: 0
+      - name: Replace stroke body with angular organic silhouette
+        run: python scripts/atropos-organic-body-pass.py
+      - name: Validate runtime
+        run: |
+          node --check src/atropos-world-devourer-prototype.js
+          node scripts/atropos-code-audit.mjs
+      - name: Commit renderer
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/atropos-world-devourer-prototype.js
+          git commit -m "Render Atropos as an irregular continuous leviathan"
+          git push origin HEAD:feature/atropos-world-devourer-prototype
