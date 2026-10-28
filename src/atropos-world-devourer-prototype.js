@@ -63,21 +63,11 @@
 
   function motionScale(){return clamp(Math.min(vw,vh)/900,.92,1.20);}
   function idleOffset(serpent,t=serpent.motionTime){
-    const phase=Number(serpent.phaseBase)||0,a=(Number(t)||0)*.118+phase;
-    const rx=clamp(vw*.34,520,700),ry=clamp(vh*.225,200,290),drift=clamp(Math.min(vw,vh)*.08,55,90);
+    const phase=Number(serpent.phaseBase)||0,a=(Number(t)||0)*.145+phase;
+    const rx=clamp(vw*.62,900,1120),ry=clamp(vh*.52,500,660),wave=Math.sin(a*2.35+.6)*72;
     return{
-      x:Math.cos(a)*rx+Math.sin(a*.47+.4)*drift,
-      y:Math.sin(a*1.65)*ry+Math.sin(a*.73+1.2)*62,
-      orbitA:a
-    };
-  }
-  window.stackfallAtroposIdleOffset=idleOffset;
-  function idleOffset(serpent,t=serpent.motionTime){
-    const phase=Number(serpent.phaseBase)||0,a=(Number(t)||0)*.118+phase;
-    const rx=clamp(vw*.34,520,700),ry=clamp(vh*.225,200,290),drift=clamp(Math.min(vw,vh)*.08,55,90);
-    return{
-      x:Math.cos(a)*rx+Math.sin(a*.47+.4)*drift,
-      y:Math.sin(a*1.65)*ry+Math.sin(a*.73+1.2)*62,
+      x:Math.cos(a)*rx-Math.sin(a)*wave,
+      y:Math.sin(a)*ry+Math.cos(a)*wave*.68,
       orbitA:a
     };
   }
@@ -155,6 +145,18 @@
     return out;
   }
 
+  function smoothRenderSamples(samples){
+    if(!samples||samples.length<3)return samples||[];
+    const out=[samples[0]];
+    for(let i=0;i<samples.length-1;i++){
+      const a=samples[i],b=samples[i+1];
+      out.push({x:lerp(a.x,b.x,.25),y:lerp(a.y,b.y,.25),orbitA:lerp(a.orbitA,b.orbitA,.25)});
+      out.push({x:lerp(a.x,b.x,.75),y:lerp(a.y,b.y,.75),orbitA:lerp(a.orbitA,b.orbitA,.75)});
+    }
+    out.push(samples[samples.length-1]);
+    return out;
+  }
+
   function buildSerpentPose(e){
     const serpent=ensureSerpent(e);if(!serpent)return null;
     advanceSerpent(e,serpent);
@@ -168,7 +170,7 @@
     const totalDistance=distances[distances.length-1],renderDistances=[];
     for(let d=0;d<totalDistance;d+=RENDER_SPACING*scaleUnit)renderDistances.push(d);
     renderDistances.push(totalDistance);
-    const renderSamples=sampleHistoryDistances(history,renderDistances),renderPoints=[];
+    const rawRenderSamples=sampleHistoryDistances(history,renderDistances),renderSamples=smoothRenderSamples(rawRenderSamples),renderPoints=[];
     if(useLive)history.pop();
     for(let i=0;i<PART_KEYS.length;i++){
       const tailT=i/(PART_KEYS.length-1),q=samples[i],screen=worldToScreen(q.x,q.y),depth=Math.sin((q.orbitA||0)+.35);
@@ -200,8 +202,8 @@
   }
   function bodyHalfWidth(p,i,side=1){
     const tailT=clamp(Number.isFinite(p.tailT)?p.tailT:i/Math.max(1,PART_KEYS.length-1),0,1);
-    const base=tailT<.10?lerp(108,94,tailT/.10):tailT<.62?lerp(94,72,(tailT-.10)/.52):lerp(72,7,(tailT-.62)/.38);
-    const jag=1+.042*Math.sin(tailT*23+side*.83)+.017*Math.sin(tailT*61+side*2.27);
+    const base=tailT<.10?lerp(94,84,tailT/.10):tailT<.62?lerp(84,56,(tailT-.10)/.52):lerp(56,6,(tailT-.62)/.38);
+    const jag=1+.050*Math.sin(tailT*21+side*.83)+.020*Math.sin(tailT*57+side*2.27);
     return base*p.scaleUnit*jag;
   }
   function layerRuns(points,layer){
@@ -254,7 +256,6 @@
       const avg=run.reduce((sum,e)=>sum+e.weight,0)/run.length,solid=clamp(avg*1.72,.14,1);
       traceBodyPolygon(run,1.055);ctx.globalAlpha=manifest*solid*.84;ctx.fillStyle='#273249';ctx.fill();
       traceBodyPolygon(run,1);ctx.globalAlpha=manifest*solid;ctx.fillStyle='#030610';ctx.fill();
-      traceBodyPolygon(run,.965);ctx.globalAlpha=manifest*solid*.72;ctx.fillStyle='#0a1020';ctx.fill();
       traceBodyPolygon(run,1.01);ctx.globalAlpha=manifest*solid*.20;ctx.strokeStyle='#62718b';ctx.lineWidth=2.2;ctx.stroke();
       drawCarapaceSurface(run,manifest,solid);
     }
@@ -281,7 +282,7 @@
     const weight=layerWeights(head.depth)[layer];if(weight<=.01)return;
     const foregroundFade=layer==='front'?.86:1,alpha=manifest*weight*foregroundFade;
     const jaw=window.stackfallAtroposMawJawScale,scaleX=Number(jaw?.x)||1,scaleY=Number(jaw?.y)||1,open=!!jaw;
-    drawSprite(open?'headOpen':'headClosed',head,410*head.scaleUnit,228*head.scaleUnit,.94*alpha,.028,false,scaleX,scaleY);
+    drawSprite(open?'headOpen':'headClosed',head,382*head.scaleUnit,216*head.scaleUnit,.94*alpha,.024,false,scaleX,scaleY);
   }
 
   const baseEnsure=ensureRebornAtropos;
@@ -326,5 +327,5 @@
   };
 
   window.stackfallAtroposVisualVersion=VERSION;
-  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-serpent-scurve-v4',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
+  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-serpent-nonbacktrack-v5',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
 })();
