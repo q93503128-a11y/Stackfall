@@ -42,16 +42,19 @@
     ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha;ctx.filter='grayscale(1) brightness(1.85) sepia(.08) hue-rotate(145deg) saturate(.55)';
     ctx.drawImage(img,-w*.5,-h*.5,w,h);ctx.restore();
   }
+  function drawGhostPlate(v,w,h,alpha,kind='body',flip=false){
+    if(alpha<=.005)return;ctx.save();ctx.translate(v.x,v.y);ctx.rotate(v.a);if(flip)ctx.scale(1,-1);ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha;ctx.fillStyle='rgba(166,214,230,.32)';ctx.strokeStyle='rgba(224,248,255,.72)';ctx.lineWidth=2;ctx.beginPath();
+    if(kind==='head'){ctx.moveTo(w*.54,0);ctx.lineTo(w*.18,-h*.42);ctx.lineTo(-w*.34,-h*.36);ctx.lineTo(-w*.50,-h*.12);ctx.lineTo(-w*.30,0);ctx.lineTo(-w*.50,h*.12);ctx.lineTo(-w*.34,h*.36);ctx.lineTo(w*.18,h*.42);}
+    else if(kind==='tail'){ctx.moveTo(-w*.56,0);ctx.lineTo(w*.18,-h*.46);ctx.lineTo(w*.52,-h*.18);ctx.lineTo(w*.38,h*.26);ctx.lineTo(w*.08,h*.44);}
+    else{ctx.moveTo(w*.50,0);ctx.lineTo(w*.25,-h*.45);ctx.lineTo(-w*.18,-h*.50);ctx.lineTo(-w*.50,-h*.16);ctx.lineTo(-w*.42,h*.24);ctx.lineTo(-w*.04,h*.50);ctx.lineTo(w*.34,h*.34);}
+    ctx.closePath();ctx.fill();ctx.stroke();ctx.globalAlpha=alpha*.78;ctx.strokeStyle='rgba(190,236,248,.82)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-w*.18,-h*.12);ctx.lineTo(-w*.03,h*.04);ctx.lineTo(w*.13,-h*.05);ctx.lineTo(w*.29,h*.10);ctx.stroke();ctx.restore();
+  }
   function drawGhost(a,q){
     const p=ghostPose(a,q).map(v=>({...v,...worldToScreen(v.x,v.y)}));if(!p.length)return;
-    ctx.save();ctx.globalCompositeOperation='screen';ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='rgba(166,219,236,.20)';ctx.lineWidth=Math.max(72,Math.min(vw,vh)*.080);ctx.beginPath();ctx.moveTo(p[0].x,p[0].y);for(let i=1;i<p.length;i++)ctx.lineTo(p[i].x,p[i].y);ctx.stroke();ctx.restore();
-    for(let i=p.length-1;i>=0;i--){
-      const v=p[i],sc=lerp(1,.46,v.tailT),alpha=.36*(1-v.tailT*.26);
-      if(i===0){drawGhostSprite(ghostArt.head,v,330*sc,165*sc,alpha*.96);continue;}
-      if(i===p.length-1){drawGhostSprite(ghostArt.tail,v,190*sc,62*sc,alpha*.88);continue;}
-      if(i>=4&&i%2===0)continue;
-      drawGhostSprite(ghostArt.body[i%ghostArt.body.length],v,178*sc,66*sc,alpha*.86,i%4===3);
-    }
+    ctx.save();ctx.globalCompositeOperation='screen';ctx.lineCap='round';ctx.lineJoin='round';
+    for(let i=p.length-1;i>0;i--){const tailT=i/(p.length-1),w=lerp(Math.max(112,Math.min(vw,vh)*.125),44,tailT);ctx.globalAlpha=lerp(.18,.10,tailT);ctx.strokeStyle='rgba(165,218,235,.78)';ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(p[i].x,p[i].y);ctx.lineTo(p[i-1].x,p[i-1].y);ctx.stroke();ctx.globalAlpha=lerp(.34,.18,tailT);ctx.strokeStyle='rgba(226,249,255,.76)';ctx.lineWidth=Math.max(2,w*.035);ctx.stroke();}
+    ctx.restore();
+    for(let i=p.length-1;i>=0;i--){const v=p[i],sc=lerp(1,.45,v.tailT),alpha=.60*(1-v.tailT*.30);if(i===0){drawGhostPlate(v,250*sc,108*sc,alpha,'head');continue;}if(i===p.length-1){drawGhostPlate(v,150*sc,54*sc,alpha*.78,'tail');continue;}if(i%3!==1)continue;drawGhostPlate(v,166*sc,66*sc,alpha*.72,'body',i%6===4);}
   }
   function drawPast(){const e=serpentEnemy(),s=serpentOf(e),a=s?.pastPrototype;if(!a)return;const st=stage(a);if(st==='warn'){const q=smooth(a.age/PAST.warn);stroke(a,Math.max(82,Math.min(vw,vh)*.092),'#ff3048',.08+.10*q);stroke(a,4,'#ff8294',.58+.24*q,true);}else if(st==='memory'){stroke(a,20,'#b9deec',.12);stroke(a,3,'#e5f8ff',.34);}else if(st==='rewarn'){const q=clamp((a.age-(PAST.delayEnd-REWARN))/REWARN,0,1);stroke(a,18,'#b9deec',.10);stroke(a,Math.max(72,Math.min(vw,vh)*.082),'#ff3048',.06+.10*q);stroke(a,4,'#ff8fa0',.50+.35*q,true);}else if(st==='replay'){stroke(a,10,'#ff6f85',.24);stroke(a,2,'#ffc0ca',.40);drawGhost(a,clamp((a.age-PAST.delayEnd)/PAST.replay,0,1));}}
   const baseCombat=window.stackfallUpdateWorldDevourerCombat||window.stackfallUpdateWorldDevourerCrossing;if(typeof baseCombat==='function')window.stackfallUpdateWorldDevourerCombat=function(e,dt){const s=serpentOf(e);if(!s)return baseCombat(e,dt);const phase=phaseOf(e);e.apexPhase=phase;if(s.pastPrototype){e.apexElapsed=(e.apexElapsed||0)+dt;return updatePast(e,s,dt);}if(phase<3&&s.nextPrototypeAttack==='past')s.nextPrototypeAttack='crossing';if(phase>=3&&!s.crossingPrototype&&!s.tailSeverPrototype&&!s.mawPrototype&&!s.ringPrototype&&s.nextPrototypeAttack==='past'&&(+s.prototypeAttackCd||0)<=0){if(startPast(e,s)){e.apexElapsed=(e.apexElapsed||0)+dt;return updatePast(e,s,dt);}}const hadRing=!!s.ringPrototype,result=baseCombat(e,dt);if(hadRing&&!s.ringPrototype&&!s.crossingPrototype&&!s.tailSeverPrototype&&!s.mawPrototype&&phase>=3)s.nextPrototypeAttack='past';return result;};
