@@ -40,7 +40,19 @@
     }catch{}
   }
   function prepareProcessedHeads(){prepareProcessedHead('headClosed');prepareProcessedHead('headOpen');}
-  if(atlas.complete&&atlas.naturalWidth>1)prepareProcessedHeads();else atlas.addEventListener('load',prepareProcessedHeads,{once:true});
+  let bodySkin=null;
+  function prepareBodySkin(){
+    try{
+      const keys=['neckA','bodyA','bodyB','bodyC','bodyD','rear'],c=document.createElement('canvas');c.width=960;c.height=128;const g=c.getContext('2d');
+      g.fillStyle='#030610';g.fillRect(0,0,c.width,c.height);g.globalAlpha=.86;g.filter='saturate(.62) brightness(.72) contrast(1.08)';
+      const slot=188,step=154;
+      for(let i=0;i<keys.length;i++){const f=ART_FRAMES[keys[i]],x=i*step-18;if(f)g.drawImage(atlas,f.x,f.y,f.w,f.h,x,-4,slot,136);}
+      g.filter='none';g.globalAlpha=.28;g.fillStyle='#07101f';g.fillRect(0,0,c.width,c.height);
+      bodySkin=c;
+    }catch{bodySkin=null;}
+  }
+  function prepareProductionRaster(){prepareProcessedHeads();prepareBodySkin();}
+  if(atlas.complete&&atlas.naturalWidth>1)prepareProductionRaster();else atlas.addEventListener('load',prepareProductionRaster,{once:true});
   production.drawScreen=function drawAtroposProductionFrame(key,x,y,a,w,h,alpha=1,options={}){
     const frame=ART_FRAMES[key];if(!frame||!atlas.complete||atlas.naturalWidth<2||alpha<=.005)return false;
     const flip=options.flip===true,scaleX=Number.isFinite(options.scaleX)?options.scaleX:1,scaleY=Number.isFinite(options.scaleY)?options.scaleY:1;
@@ -63,11 +75,11 @@
 
   function motionScale(){return clamp(Math.min(vw,vh)/900,.92,1.20);}
   function idleOffset(serpent,t=serpent.motionTime){
-    const phase=Number(serpent.phaseBase)||0,a=(Number(t)||0)*.145+phase;
-    const rx=clamp(vw*.62,900,1120),ry=clamp(vh*.52,500,660),wave=Math.sin(a*2.35+.6)*72;
+    const phase=Number(serpent.phaseBase)||0,a=(Number(t)||0)*.17+phase;
+    const rx=clamp(vw*.54,760,900),ry=clamp(vh*.46,380,520),wave=Math.sin(a*2.18+.55)*54;
     return{
-      x:Math.cos(a)*rx-Math.sin(a)*wave,
-      y:Math.sin(a)*ry+Math.cos(a)*wave*.68,
+      x:80+Math.cos(a)*rx-Math.sin(a)*wave,
+      y:-40+Math.sin(a)*ry+Math.cos(a)*wave*.66,
       orbitA:a
     };
   }
@@ -96,7 +108,7 @@
       const arena=state.apexArena;
       serpent.anchorX=Number.isFinite(arena?.x)?arena.x:(Number.isFinite(e.x)?e.x:player.x);
       serpent.anchorY=Number.isFinite(arena?.y)?arena.y:(Number.isFinite(e.y)?e.y:player.y);
-      serpent.phaseBase=(e.id||0)*.173+.4;
+      serpent.phaseBase=.72;
       serpent.motionTime=0;
       serpent.lastReal=performance.now()*.001;
       const definitions=PART_KEYS.map((key,i)=>({key,label:key.toUpperCase(),dx:0,dy:0,r:i===0?98:i===PART_KEYS.length-1?42:76,active:true,visible:true}));
@@ -227,6 +239,16 @@
     }
     ctx.closePath();
   }
+  function drawBodySkin(run,manifest,solid){
+    if(!bodySkin||run.length<3)return;
+    ctx.save();traceBodyPolygon(run,1);ctx.clip();ctx.globalAlpha=manifest*solid*.76;ctx.filter='saturate(.72) contrast(1.04) brightness(.82)';
+    const stride=3,sw=26,maxX=Math.max(1,bodySkin.width-sw);
+    for(let k=0;k<run.length-1;k+=stride){
+      const cur=run[k],next=run[Math.min(run.length-1,k+stride)],p=cur.p,q=next.p,len=Math.max(12,Math.hypot(q.sx-p.sx,q.sy-p.sy)+10),half=bodyHalfWidth(p,cur.i,1)*.98,sx=Math.floor((p.tailT||0)*maxX);
+      ctx.save();ctx.translate(p.sx,p.sy);ctx.rotate(p.a||0);ctx.drawImage(bodySkin,sx,0,sw,bodySkin.height,-len*.56,-half,len*1.12,half*2);ctx.restore();
+    }
+    ctx.restore();
+  }
   function drawCarapaceSurface(run,manifest,solid){
     if(run.length<5)return;
     ctx.save();ctx.lineJoin='round';ctx.lineCap='round';
@@ -240,11 +262,11 @@
     for(let k=step;k<run.length-step;k+=step){
       const {p,i,weight}=run[k],flip=((Math.floor((p.tailT||0)*73))&1)?1:-1,half=bodyHalfWidth(p,i,1)*.76,nx=-Math.sin(p.a),ny=Math.cos(p.a),tx=Math.cos(p.a),ty=Math.sin(p.a),diag=12*p.scaleUnit*flip;
       const ax=p.sx+nx*half-tx*diag,ay=p.sy+ny*half-ty*diag,bx=p.sx-nx*half+tx*diag,by=p.sy-ny*half+ty*diag;
-      ctx.globalAlpha=manifest*weight*.31;ctx.strokeStyle='#050812';ctx.lineWidth=Math.max(4,5*p.scaleUnit);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
-      ctx.globalAlpha=manifest*weight*.17;ctx.strokeStyle='#5d6f8d';ctx.lineWidth=Math.max(1,1.3*p.scaleUnit);ctx.beginPath();ctx.moveTo(ax+tx*2,ay+ty*2);ctx.lineTo(bx+tx*2,by+ty*2);ctx.stroke();
+      ctx.globalAlpha=manifest*weight*.22;ctx.strokeStyle='#050812';ctx.lineWidth=Math.max(3,4*p.scaleUnit);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+      ctx.globalAlpha=manifest*weight*.12;ctx.strokeStyle='#5d6f8d';ctx.lineWidth=Math.max(1,1.3*p.scaleUnit);ctx.beginPath();ctx.moveTo(ax+tx*2,ay+ty*2);ctx.lineTo(bx+tx*2,by+ty*2);ctx.stroke();
       if((k/step)%2<1.1){
         const side=flip,crackHalf=half*.34,cx=p.sx+nx*crackHalf*side,cy=p.sy+ny*crackHalf*side;
-        ctx.globalAlpha=manifest*weight*.20;ctx.strokeStyle='#9ed7e6';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(cx-tx*10*p.scaleUnit,cy-ty*10*p.scaleUnit);ctx.lineTo(cx+nx*8*side,cy+ny*8*side);ctx.lineTo(cx+tx*16*p.scaleUnit,cy+ty*16*p.scaleUnit);ctx.stroke();
+        ctx.globalAlpha=manifest*weight*.16;ctx.strokeStyle='#9ed7e6';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(cx-tx*10*p.scaleUnit,cy-ty*10*p.scaleUnit);ctx.lineTo(cx+nx*8*side,cy+ny*8*side);ctx.lineTo(cx+tx*16*p.scaleUnit,cy+ty*16*p.scaleUnit);ctx.stroke();
       }
     }
     ctx.restore();
@@ -257,6 +279,7 @@
       traceBodyPolygon(run,1.055);ctx.globalAlpha=manifest*solid*.84;ctx.fillStyle='#273249';ctx.fill();
       traceBodyPolygon(run,1);ctx.globalAlpha=manifest*solid;ctx.fillStyle='#030610';ctx.fill();
       traceBodyPolygon(run,1.01);ctx.globalAlpha=manifest*solid*.20;ctx.strokeStyle='#62718b';ctx.lineWidth=2.2;ctx.stroke();
+      drawBodySkin(run,manifest,solid);
       drawCarapaceSurface(run,manifest,solid);
     }
     ctx.restore();
@@ -327,5 +350,5 @@
   };
 
   window.stackfallAtroposVisualVersion=VERSION;
-  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-serpent-nonbacktrack-v5',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
+  window.stackfallAtroposArtDiagnostics=()=>{const e=serpentEnemy(),serpent=e?.atroposReborn?.worldDevourer;return{version:VERSION,assets:{head:atlas.complete&&atlas.naturalWidth>1,body:atlas.complete&&atlas.naturalWidth>1,bodyVariants:['neckA','neckB','bodyA','bodyB','bodyC','bodyD','rear'].map(()=>atlas.complete&&atlas.naturalWidth>1),tail:atlas.complete&&atlas.naturalWidth>1,atlas:atlas.complete&&atlas.naturalWidth>1,production:true,source:production.version},scene:chronoSceneActive(),anchor:serpent?{x:Math.round(serpent.anchorX),y:Math.round(serpent.anchorY)}:null,renderMode:'canvas-textured-meshrope-v6',renderSamples:serpent?.renderPoints?.length||0,segments:serpent?.points?.map(p=>({key:p.key,x:Math.round(p.x),y:Math.round(p.y),sx:Math.round(p.sx),sy:Math.round(p.sy),angle:+p.a.toFixed(2),depth:+p.depth.toFixed(2)}))||[],entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,performance:{poseBuilds:PERF.poseBuilds,historySegmentsVisited:PERF.historySegmentsVisited,maxHistoryLength:PERF.maxHistoryLength,historyLimit:HISTORY_LIMIT},clock:window.stackfallApexClockDiagnostics?.()||null};};
 })();
