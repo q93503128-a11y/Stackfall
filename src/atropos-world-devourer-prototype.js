@@ -1,7 +1,7 @@
 // Atropos World Devourer — world-anchored serpent with continuous body, stable depth layers and final-art vector plates.
 // The combat branch remains a prototype until visual review and player approval; these assets are the first final-art pass.
 (()=>{
-  const VERSION='atropos-world-devourer-colossal-pass-v3';
+  const VERSION='atropos-world-devourer-colossal-pass-v4';
   const BODY_COUNT=19;
   const SAMPLE_SPACING=78;
   const HISTORY_LIMIT=900;
@@ -22,7 +22,7 @@
 
   function artManifest(){
     const tr=entryTransition();
-    if(tr){const p=tr.elapsed/Math.max(.001,tr.duration);return smooth(clamp((p-.495)/.12,0,1));}
+    if(tr){const p=tr.elapsed/Math.max(.001,tr.duration);return smooth(clamp((p-.46)/.10,0,1));}
     return serpentEnemy()?1:0;
   }
 
@@ -136,14 +136,20 @@
   }
   function drawSpine(points,manifest,layer){
     ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
-    for(let i=points.length-1;i>0;i--){
-      const p=points[i],q=points[i-1],weight=(layerWeights(p.depth)[layer]+layerWeights(q.depth)[layer])*.5;
-      if(weight<=.01)continue;
-      const tailT=i/(points.length-1),width=274*lerp(1,.46,tailT)*p.scaleUnit,solid=clamp(weight*1.65,0,1);
-      ctx.globalAlpha=manifest*solid*.96;ctx.strokeStyle='#33415f';ctx.lineWidth=width+13;ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
-      ctx.globalAlpha=manifest*solid;ctx.strokeStyle='#050914';ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
-      ctx.globalAlpha=manifest*solid*.82;ctx.strokeStyle='#0d1730';ctx.lineWidth=width*.76;ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
-      ctx.globalAlpha=manifest*solid*.42;ctx.strokeStyle='#172341';ctx.lineWidth=width*.45;ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
+    const passes=[
+      {scale:1,extra:13,color:'#33415f',alpha:.96},
+      {scale:1,extra:0,color:'#050914',alpha:1},
+      {scale:.76,extra:0,color:'#0d1730',alpha:.82},
+      {scale:.45,extra:0,color:'#172341',alpha:.42}
+    ];
+    for(const pass of passes){
+      for(let i=points.length-1;i>0;i--){
+        const p=points[i],q=points[i-1],weight=(layerWeights(p.depth)[layer]+layerWeights(q.depth)[layer])*.5;
+        if(weight<=.01)continue;
+        const tailT=i/(points.length-1),base=274*lerp(1,.46,tailT)*p.scaleUnit,solid=clamp(weight*1.65,0,1);
+        ctx.globalAlpha=manifest*solid*pass.alpha;ctx.strokeStyle=pass.color;ctx.lineWidth=base*pass.scale+pass.extra;
+        ctx.beginPath();ctx.moveTo(p.sx,p.sy);ctx.lineTo(q.sx,q.sy);ctx.stroke();
+      }
     }
     const edge=[];
     for(let i=1;i<points.length-1;i++){
