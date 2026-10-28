@@ -19,13 +19,23 @@ jobs:
       - name: Rebuild static WebP asset
         run: |
           mkdir -p assets
-          cat scripts/atropos-art-chunks/chunk*.txt | tr -d '\n\r' | base64 -d > assets/atropos-production.webp
           python - <<'PY'
           from pathlib import Path
-          b=Path('assets/atropos-production.webp').read_bytes()
+          import base64
+          alphabet=set('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=')
+          parts=[]
+          for p in sorted(Path('scripts/atropos-art-chunks').glob('chunk*.txt')):
+              raw=p.read_text()
+              cleaned=''.join(ch for ch in raw if ch in alphabet)
+              dropped=len(raw)-len(cleaned)
+              print(p.name, 'raw', len(raw), 'clean', len(cleaned), 'dropped', dropped)
+              parts.append(cleaned)
+          encoded=''.join(parts)
+          b=base64.b64decode(encoded, validate=True)
           assert len(b)==49262, len(b)
           assert b[:4]==b'RIFF', b[:4]
           assert b[8:12]==b'WEBP', b[8:12]
+          Path('assets/atropos-production.webp').write_bytes(b)
           print('validated WebP', len(b))
           PY
       - name: Point runtime at static WebP and align frames
