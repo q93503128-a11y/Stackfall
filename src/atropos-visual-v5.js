@@ -1,101 +1,43 @@
-// Branch-only loader for the world-devourer Atropos prototype.
+// Branch-only loader for the simplified Atropos prototype.
 (()=>{
   if(typeof BOSS_NAMES==='object'&&BOSS_NAMES?.chronophage){
     BOSS_NAMES.chronophage.ko='세계포식자 아트로포스';
     BOSS_NAMES.chronophage.en='Atropos, World Devourer';
   }
-  if(document.querySelector('script[data-atropos-world-devourer]'))return;
-  const script=document.createElement('script');
-  script.src='src/atropos-world-devourer-prototype.js';
-  script.dataset.atroposWorldDevourer='1';
-  script.addEventListener('load',()=>{
-    if(typeof updateAtroposEntryControl==='function')updateAtroposEntryControl=function disableLegacyAtroposEntryControl(){return false;};
-    if(typeof apexBossSkill==='function'){
-      const baseApexBossSkill=apexBossSkill;
-      apexBossSkill=function worldDevourerAttackGate(e,dt){
-        if((e?.apexForm||e?.eliteForm)==='chronophage'&&e?.atroposReborn?.worldDevourer){
-          if(typeof window.stackfallUpdateWorldDevourerCombat==='function')return window.stackfallUpdateWorldDevourerCombat(e,dt);
-          if(typeof window.stackfallUpdateWorldDevourerCrossing==='function')return window.stackfallUpdateWorldDevourerCrossing(e,dt);
-          e.apexElapsed=(e.apexElapsed||0)+dt;const health=e.hp/Math.max(1,e.maxHp);e.apexPhase=health<.25?4:health<.50?3:health<.75?2:1;e.timeLock=0;
-          if(e.atroposReborn){e.atroposReborn.slash=null;e.atroposReborn.slashCd=1e9;}return;
-        }
-        return baseApexBossSkill(e,dt);
-      };
-    }
-    if(typeof drawAtroposSpaceCut==='function'){
-      const baseSpaceCut=drawAtroposSpaceCut;
-      drawAtroposSpaceCut=function worldDevourerLegacySpaceCutGate(e){if(e?.apexForm==='chronophage'&&e?.atroposReborn?.worldDevourer)return;return baseSpaceCut(e);};
-    }
+  if(document.querySelector('script[data-atropos-simple]'))return;
 
-    const entryScript=document.createElement('script');
-    entryScript.src='src/atropos-world-devourer-entry.js';
-    entryScript.dataset.atroposWorldDevourerEntry='swallow';
-    entryScript.addEventListener('load',()=>{
-      // Gravity wells are updated outside updateWeapons(). Preserve them visually but freeze
-      // their lifetime/damage ticks during the Atropos time-stop entrance.
-      if(typeof updateWells==='function'){
-        const baseEntryUpdateWells=updateWells;
-        updateWells=function pauseGravityWellsForWorldDevourerEntry(dt){
-          const tr=state.realmTransition;
-          if(tr?.owner==='apex-entry'&&tr?.to==='apex-chrono'&&tr?.form==='chronophage')return;
-          return baseEntryUpdateWells(dt);
+  const load=(src,tag)=>new Promise((resolve,reject)=>{
+    const s=document.createElement('script');s.src=src;s.dataset.atroposSimple=tag||src;
+    s.onload=()=>resolve(s);s.onerror=()=>reject(new Error(`Atropos script load failed: ${src}`));document.body.appendChild(s);
+  });
+
+  (async()=>{
+    try{
+      await load('src/atropos-world-devourer-prototype.js','core');
+      if(typeof updateAtroposEntryControl==='function')updateAtroposEntryControl=function disableLegacyAtroposEntryControl(){return false;};
+      if(typeof drawAtroposSpaceCut==='function'){
+        const base=drawAtroposSpaceCut;
+        drawAtroposSpaceCut=function simpleAtroposSpaceCutGate(e){if(e?.apexForm==='chronophage'&&e?.atroposReborn?.worldDevourer)return;return base(e);};
+      }
+      await load('src/atropos-world-devourer-damage.js','damage');
+      await load('src/atropos-world-devourer-attack-crossing.js','charge');
+      await load('src/atropos-world-devourer-attack-maw.js','devour');
+      await load('src/atropos-world-devourer-attack-ring.js','tail');
+      await load('src/atropos-world-devourer-attack-past.js','compat');
+      await load('src/atropos-world-devourer-attack-world.js','world-bite');
+      await load('src/atropos-world-devourer-director.js','director');
+      await load('src/atropos-world-devourer-entry.js','entry');
+
+      if(typeof apexBossSkill==='function'){
+        const baseApexBossSkill=apexBossSkill;
+        apexBossSkill=function simpleAtroposSkillGate(e,dt){
+          if((e?.apexForm||e?.eliteForm)==='chronophage'&&typeof window.stackfallUpdateAtroposSimpleBoss==='function')return window.stackfallUpdateAtroposSimpleBoss(e,dt);
+          return baseApexBossSkill(e,dt);
         };
       }
-      const damageScript=document.createElement('script');
-      damageScript.src='src/atropos-world-devourer-damage.js';
-      damageScript.dataset.atroposWorldDevourerDamage='boss-scaled';
-      damageScript.addEventListener('load',()=>{
-        const attackScript=document.createElement('script');
-        attackScript.src='src/atropos-world-devourer-attack-crossing.js';
-        attackScript.dataset.atroposWorldDevourerAttack='giant-crossing-tail-sever';
-        attackScript.addEventListener('load',()=>{
-          const mawScript=document.createElement('script');
-          mawScript.src='src/atropos-world-devourer-attack-maw.js';
-          mawScript.dataset.atroposWorldDevourerAttack='void-maw';
-          mawScript.addEventListener('load',()=>{
-            const ringScript=document.createElement('script');
-            ringScript.src='src/atropos-world-devourer-attack-ring.js';
-            ringScript.dataset.atroposWorldDevourerAttack='devourer-ring';
-            ringScript.addEventListener('load',()=>{
-              const pastScript=document.createElement('script');
-              pastScript.src='src/atropos-world-devourer-attack-past.js';
-              pastScript.dataset.atroposWorldDevourerAttack='past-trajectory';
-              pastScript.addEventListener('load',()=>{
-                const worldScript=document.createElement('script');
-                worldScript.src='src/atropos-world-devourer-attack-world.js';
-                worldScript.dataset.atroposWorldDevourerAttack='world-devour';
-                worldScript.addEventListener('load',()=>{
-                  const directorScript=document.createElement('script');
-                  directorScript.src='src/atropos-world-devourer-director.js';
-                  directorScript.dataset.atroposWorldDevourerDirector='phase-aware';
-                  document.body.appendChild(directorScript);
-                  window.stackfallAtroposPrototypeAttackState='director-loading';
-                });
-                document.body.appendChild(worldScript);
-                window.stackfallAtroposPrototypeAttackState='world-devour-loading';
-              });
-              document.body.appendChild(pastScript);
-              window.stackfallAtroposPrototypeAttackState='past-trajectory-loading';
-            });
-            document.body.appendChild(ringScript);
-            window.stackfallAtroposPrototypeAttackState='devourer-ring-loading';
-          });
-          document.body.appendChild(mawScript);
-          window.stackfallAtroposPrototypeAttackState='void-maw-loading';
-        });
-        document.body.appendChild(attackScript);
-        window.stackfallAtroposPrototypeAttackState='crossing-tail-loading';
-      });
-      document.body.appendChild(damageScript);
-      window.stackfallAtroposPrototypeAttackState='damage-model-loading';
-    });
-    document.body.appendChild(entryScript);
-    window.stackfallAtroposPrototypeAttackState='entry-loading';
-  });
-  const artData=document.createElement('script');
-  artData.src='src/atropos-production-art-data.js';
-  artData.dataset.atroposProductionArt='raster-v1';
-  artData.addEventListener('load',()=>document.body.appendChild(script),{once:true});
-  artData.addEventListener('error',()=>{window.stackfallAtroposPrototypeAttackState='production-art-load-failed';},{once:true});
-  document.body.appendChild(artData);
+      window.stackfallAtroposPrototypeAttackState='simple-four-pattern-v1';
+    }catch(err){
+      console.error(err);window.stackfallAtroposPrototypeAttackState='simple-load-failed';
+    }
+  })();
 })();
