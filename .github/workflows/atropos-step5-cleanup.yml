@@ -31,10 +31,11 @@ jobs:
           node --check src/atropos-world-devourer-damage.js
           node --check src/atropos-visual-v5.js
           node --check scripts/atropos-code-audit.mjs
-      - name: Commit cleanup
+      - name: Commit code cleanup
         run: |
+          git checkout -- .github/workflows/atropos-visual-audit.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/atropos-world-devourer-prototype.js src/atropos-world-devourer-attack-maw.js src/atropos-world-devourer-damage.js src/atropos-visual-v5.js scripts/atropos-code-audit.mjs .github/workflows/atropos-visual-audit.yml
+          git add src/atropos-world-devourer-prototype.js src/atropos-world-devourer-attack-maw.js src/atropos-world-devourer-damage.js src/atropos-visual-v5.js scripts/atropos-code-audit.mjs
           git commit -m "Optimize Atropos renderer and isolate legacy runtime"
           git push origin HEAD:feature/atropos-world-devourer-prototype
