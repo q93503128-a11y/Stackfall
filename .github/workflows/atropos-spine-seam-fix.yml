@@ -1,0 +1,33 @@
+name: Atropos spine seam repair
+
+on:
+  push:
+    branches:
+      - feature/atropos-world-devourer-prototype
+    paths:
+      - scripts/atropos-spine-seam-fix.py
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/atropos-world-devourer-prototype
+          fetch-depth: 0
+      - name: Apply spine seam repair
+        run: python scripts/atropos-spine-seam-fix.py
+      - name: Validate runtime
+        run: |
+          node --check src/atropos-world-devourer-prototype.js
+          node scripts/atropos-code-audit.mjs
+      - name: Commit repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/atropos-world-devourer-prototype.js
+          git commit -m "Remove Atropos body ring seams"
+          git push origin HEAD:feature/atropos-world-devourer-prototype
