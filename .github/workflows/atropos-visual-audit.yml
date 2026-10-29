@@ -19,14 +19,14 @@ jobs:
           node-version: '22'
       - name: Run Atropos code/performance audit
         run: node scripts/atropos-code-audit.mjs
+      - name: Trace Apex offscreen guide owner
+        run: node scripts/apex-guide-trace.mjs
       - name: Run Atropos runtime visual capture
         run: node scripts/atropos-visual-audit.mjs
       - name: Run Apex combat identity audit
         run: node scripts/apex-combat-identity-audit.mjs
       - name: Run Atropos P1-P4 production audit
         run: node scripts/atropos-phase-production-audit.mjs
-      - name: Trace Apex offscreen guide owner
-        run: node scripts/apex-guide-trace.mjs
       - name: Upload Atropos visual audit
         if: always()
         uses: actions/upload-artifact@v4
