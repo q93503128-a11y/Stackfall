@@ -1,0 +1,30 @@
+name: Boss gallery capture
+
+on:
+  push:
+    branches: [feature/atropos-world-devourer-prototype]
+    paths:
+      - scripts/boss-gallery-capture.mjs
+      - .github/workflows/boss-gallery-capture.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture boss gallery
+        run: node scripts/boss-gallery-capture.mjs
+      - name: Upload gallery
+        uses: actions/upload-artifact@v4
+        with:
+          name: boss-gallery
+          path: test-results/boss-gallery
+          if-no-files-found: error
