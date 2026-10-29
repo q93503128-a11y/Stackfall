@@ -5,24 +5,30 @@ const srcDir='src';
 const files=fs.readdirSync(srcDir).filter(name=>/^atropos.*\.js$/i.test(name));
 const sources=Object.fromEntries(files.map(name=>[name,fs.readFileSync(path.join(srcDir,name),'utf8')]));
 const all=Object.values(sources).join('\n');
-const proto=sources['atropos-world-devourer-prototype.js']||'';
-const loader=sources['atropos-visual-v5.js']||'';
+const restore=sources['atropos-visual-v5.js']||'';
 const damage=sources['atropos-world-devourer-damage.js']||'';
 const failures=[];
 const check=(ok,msg)=>{if(!ok)failures.push(msg);};
+
 check(!/player\s*\.\s*maxHp/.test(all),'Atropos source references player.maxHp');
 check(!/ctx\.drawImage\s*=/.test(all),'Atropos source globally overrides ctx.drawImage');
 check(!/hurtPlayer\s*=/.test(damage),'Atropos damage module overrides hurtPlayer');
-check(proto.includes("atropos-simple-six-part-v1"),'Simple six-part runtime is not active');
-check(proto.includes("const PARTS=['head','body-1','body-2','body-3','rear','tail']"),'Six-part body contract is missing');
-check(proto.includes("renderMode:'six-part-canvas-chain'"),'Simple canvas-chain renderer is missing');
-check(proto.includes("startAttack(e,'")===false,'Unexpected hard-coded attack start found');
-check(loader.includes("simple-four-pattern-v1"),'Simplified four-pattern loader state is missing');
-check(!loader.includes('atropos-production-art-data.js'),'Legacy production raster loader is still active');
-check(!proto.includes('ART_FRAMES')&&!proto.includes('bodySkin')&&!proto.includes('HISTORY_LIMIT=900'),'Oversized raster/rope implementation is still active');
-check((sources['atropos-world-devourer-attack-past.js']||'').includes('removed'),'Past Trajectory compatibility shell is missing');
-check((sources['atropos-world-devourer-entry.js']||'').includes('standard Apex entrance'),'Custom giant entrance was not removed');
-check(damage.includes('worldBite:1.55'),'Simplified World Bite damage tuning is missing');
-const report={files:files.length,bodyParts:6,patterns:['charge','devour','tail','worldBite'],renderer:'six-part-canvas-chain',legacyOversizedRuntime:false,customGiantEntrance:false,damage:{playerMaxHpReferences:false,globalHurtPlayerOverride:false},status:failures.length?'FAIL':'PASS',failures};
+check(restore.includes("stackfallApexVisualRestore='pre-9af0cdec-2026-07-20'"),'Historical Apex restore marker is missing');
+check(restore.includes('drawChronophage20260720'),'Historical Chronophage renderer is missing');
+check(restore.includes('drawStarforge20260720'),'Historical Starforge renderer is missing');
+check(restore.includes('drawLastConstellation20260720'),'Historical Last Constellation renderer is missing');
+check(!restore.includes("load('src/atropos-world-devourer-prototype.js'"),'Abandoned World Devourer runtime loader is still active');
+check(!restore.includes('simple-four-pattern-v1'),'Abandoned simplified four-pattern state is still active');
+check(!restore.includes("BOSS_NAMES.chronophage.ko='세계포식자 아트로포스'"),'World Devourer rename is still active');
+
+const report={
+  files:files.length,
+  visualBaseline:'79afd49b / pre-9af0cdec / 2026-07-20',
+  restored:['chronophage','starforge','lastconstellation'],
+  abandonedPrototypeRuntime:false,
+  damage:{playerMaxHpReferences:false,globalHurtPlayerOverride:false},
+  status:failures.length?'FAIL':'PASS',
+  failures
+};
 console.log(JSON.stringify(report,null,2));
 if(failures.length)process.exit(1);
