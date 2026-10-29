@@ -6,7 +6,7 @@
   window.stackfallAtroposProductionPolish='v2';
 
   const FORM='chronophage';
-  const DESKTOP_ARENA=663,COMPACT_ARENA=440;
+  const DESKTOP_ARENA=663,COMPACT_ARENA=440,P4_HAND_STEP=.30;
   const isAtropos=e=>!!(e&&!e.dead&&(e.apexForm||e.eliteForm)===FORM);
   const arenaRadius=()=>compactDevice()?COMPACT_ARENA:DESKTOP_ARENA;
   const screenPoint=(x,y)=>({x:x-player.x+vw/2,y:y-player.y+vh/2});
@@ -40,6 +40,7 @@
       lockAtropos(e);expandArena(e);
       const result=baseApexBossSkill(e,dt);
       lockAtropos(e);expandArena(e);
+      if((e.apexPhase||1)>=4&&e.atroposClockHand?.active&&!e.atroposClockHand.offTimer&&!e.atroposClockHand.breakAfter&&e.atroposClockHand.stepTimer>P4_HAND_STEP)e.atroposClockHand.stepTimer=P4_HAND_STEP;
       return result;
     };
   }
@@ -129,8 +130,15 @@
     ctx.restore();
   };
 
+  const baseCombatDiagnostics=window.stackfallAtroposCombatEscalationDiagnostics;
+  if(typeof baseCombatDiagnostics==='function')window.stackfallAtroposCombatEscalationDiagnostics=()=>{
+    const data=baseCombatDiagnostics();
+    if(data?.phase===4&&data.clockHand)data.clockHand.stepSeconds=P4_HAND_STEP;
+    return data;
+  };
+
   window.stackfallAtroposProductionPolishDiagnostics=()=>{
     const e=state.entities.enemies?.find(isAtropos)||null,arena=state.apexArena;
-    return e?{version:'v2',fixed:{x:e.x,y:e.y,speed:e.speed},arena:arena?{x:arena.x,y:arena.y,r:arena.r}:null,p4:(e.apexPhase||1)>=4?{active:!!e.atroposP4TimeStopActive,spin:p4SpinAmount(e)}:null,fields:(e.atroposTimeFields||[]).length}:null;
+    return e?{version:'v2',fixed:{x:e.x,y:e.y,speed:e.speed},arena:arena?{x:arena.x,y:arena.y,r:arena.r}:null,p4:(e.apexPhase||1)>=4?{active:!!e.atroposP4TimeStopActive,spin:p4SpinAmount(e),handStep:P4_HAND_STEP}:null,fields:(e.atroposTimeFields||[]).length}:null;
   };
 })();
