@@ -1,5 +1,7 @@
-// Restore the three Endless Apex silhouettes from immediately before 9af0cdec (2026-07-20).
-// This file intentionally changes visuals only. It does not replace the canonical Apex combat/pattern systems.
+// Restore the Endless Apex identities while keeping later combat/pattern systems intact.
+// Omega and Last Constellation stay on the pre-9af0cdec silhouettes. Chronophage keeps that
+// combat-era identity but reintroduces the stronger 2026-07-14 clockwork DNA so it no longer
+// reads as another radial plate/star boss.
 (()=>{
   const baseDrawEliteShape=typeof drawEliteShape==='function'?drawEliteShape:null;
   if(!baseDrawEliteShape)return;
@@ -15,55 +17,94 @@
     ctx.lineJoin='round';
   }
 
+  // Historical function name is intentionally retained for the restore audit. The visual itself
+  // is a refined hybrid: 7/14 broken clockwork + current rendering polish, without Omega-like plates.
   function drawChronophage20260720(e,t,enraged){
-    const blades=enraged?12:9;
+    const phase=Math.max(1,Number(e.apexPhase)||1),pulse=.5+.5*Math.sin(t*.72),hit=!!e.hit;
+    const rings=[
+      {r:.64,speed:.155,offset:.12,width:3.2,alpha:.94,gap:.19,ticks:12},
+      {r:.93,speed:-.104,offset:.78,width:2.7,alpha:.78,gap:.24,ticks:12},
+      {r:1.24,speed:.066,offset:1.56,width:2.2,alpha:.60,gap:.31,ticks:12},
+      {r:1.57,speed:-.038,offset:2.31,width:1.8,alpha:.42,gap:.39,ticks:12}
+    ];
+    if(enraged||phase>=3)rings.push({r:1.84,speed:.024,offset:.46,width:1.45,alpha:.28,gap:.47,ticks:12});
+
+    // Dim temporal halo: broad and circular, not a solid central mass.
     ctx.save();
-    ctx.rotate(-t*.045);
-    for(let i=0;i<blades;i++){
-      ctx.save();
-      ctx.rotate(i/blades*TAU+(i%2?-.08:.08));
-      ctx.globalAlpha=i%3===0?.95:.62;
-      ctx.fillStyle=i%2?'#163b3e':'#0a2428';
-      ctx.strokeStyle=i%3===0?'#e3fffa':e.color;
-      ctx.lineWidth=i%3===0?3.2:2;
-      ctx.beginPath();
-      ctx.moveTo(e.r*.30,-e.r*.10);
-      ctx.lineTo(e.r*(i%2?1.55:1.30),-e.r*.25);
-      ctx.lineTo(e.r*(i%2?1.82:1.58),0);
-      ctx.lineTo(e.r*(i%2?1.55:1.30),e.r*.25);
-      ctx.lineTo(e.r*.30,e.r*.10);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
+    const halo=ctx.createRadialGradient(0,0,e.r*.18,0,0,e.r*1.92);
+    halo.addColorStop(0,`rgba(160,255,240,${hit?.22:.09})`);
+    halo.addColorStop(.46,`rgba(70,220,207,${.055+.025*pulse})`);
+    halo.addColorStop(1,'rgba(40,170,165,0)');
+    ctx.fillStyle=halo;ctx.beginPath();ctx.arc(0,0,e.r*1.92,0,TAU);ctx.fill();
+    ctx.restore();
+
+    // Four/five independently rotating broken clock rings. Every ring has one deliberately missing
+    // quadrant plus smaller cuts, so the silhouette reads as damaged time rather than a sun/flower.
+    for(let ringIndex=0;ringIndex<rings.length;ringIndex++){
+      const ring=rings[ringIndex],rr=e.r*ring.r,rot=t*ring.speed+ring.offset;
+      ctx.save();ctx.rotate(rot);ctx.strokeStyle=hit?'#ffffff':ringIndex<2?'#dffff9':e.color;ctx.lineWidth=ring.width;ctx.globalAlpha=ring.alpha;
+      const segments=6,missing=(ringIndex*2+1)%segments;
+      for(let seg=0;seg<segments;seg++){
+        if(seg===missing)continue;
+        const wobble=(seg%2?.018:-.014)*(ringIndex+1),start=seg/segments*TAU+ring.gap+wobble,end=(seg+1)/segments*TAU-ring.gap*.72+wobble;
+        ctx.beginPath();ctx.arc(0,0,rr,start,end);ctx.stroke();
+      }
+
+      // Twelve hour marks, with damaged/ghost marks omitted or displaced on outer rings.
+      ctx.setLineDash([]);
+      for(let i=0;i<ring.ticks;i++){
+        if((i+ringIndex*3)%7===0&&ringIndex>0)continue;
+        const a=i/ring.ticks*TAU,major=i%3===0,ghost=ringIndex>1&&(i+ringIndex)%5===0;
+        const inner=rr-e.r*(major?.085:.052),outer=rr+e.r*(major?.055:.032),shift=ghost?e.r*.055:0;
+        ctx.globalAlpha=ring.alpha*(ghost?.28:major?.92:.58);
+        ctx.lineWidth=major?2.5:1.35;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a)*inner+Math.cos(a+Math.PI/2)*shift,Math.sin(a)*inner+Math.sin(a+Math.PI/2)*shift);
+        ctx.lineTo(Math.cos(a)*outer+Math.cos(a+Math.PI/2)*shift,Math.sin(a)*outer+Math.sin(a+Math.PI/2)*shift);
+        ctx.stroke();
+      }
       ctx.restore();
+    }
+
+    // Detached time fragments at irregular angles. They are thin clock shards, never broad radial plates.
+    const shardAngles=[-.38,1.18,2.74,4.38];
+    ctx.save();ctx.strokeStyle=hit?'#fff':'#aaffef';ctx.fillStyle=hit?'rgba(255,255,255,.35)':'rgba(74,215,202,.10)';
+    for(let i=0;i<shardAngles.length;i++){
+      const a=shardAngles[i]-t*(i%2?.018:-.012),rr=e.r*(1.68+(i%2)*.16),w=e.r*(i%2?.11:.075),h=e.r*(i%2?.23:.17);
+      ctx.save();ctx.translate(Math.cos(a)*rr,Math.sin(a)*rr);ctx.rotate(a+.45*(i%2?1:-1));ctx.globalAlpha=.30+i*.07;
+      ctx.beginPath();ctx.moveTo(-w,-h);ctx.lineTo(w*.72,-h*.72);ctx.lineTo(w,h*.64);ctx.lineTo(-w*.52,h);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
     }
     ctx.restore();
 
-    ctx.save();
-    ctx.rotate(t*.11);
-    ctx.setLineDash([18,9]);
-    ctx.lineWidth=3;
-    ctx.beginPath();ctx.arc(0,0,e.r*.92,.25,Math.PI-.18);ctx.stroke();
-    ctx.beginPath();ctx.arc(0,0,e.r*.92,Math.PI+.32,TAU-.12);ctx.stroke();
-    ctx.restore();
-    ctx.setLineDash([]);
+    // Clock hands dominate the interior silhouette. Their very different lengths/speeds are inherited
+    // from the original July 14 Chronophage and make the boss readable even at small scale.
+    const longAngle=t*.31-.72,shortAngle=-t*.115+1.16,fractureAngle=t*.041+2.48;
+    const drawHand=(angle,length,back,width,alpha,color,tip=0)=>{
+      ctx.save();ctx.rotate(angle);ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=width;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(-e.r*back,0);ctx.lineTo(e.r*length,0);ctx.stroke();
+      if(tip>0){ctx.beginPath();ctx.moveTo(e.r*length,0);ctx.lineTo(e.r*(length-tip),-e.r*tip*.34);ctx.lineTo(e.r*(length-tip),e.r*tip*.34);ctx.closePath();ctx.fill();}
+      ctx.restore();
+    };
 
-    ctx.fillStyle='#061417';
+    // Temporal afterimages show where the long hand was, instead of adding more physical mass.
+    for(let ghost=3;ghost>=1;ghost--)drawHand(longAngle-ghost*.075,1.48,.18,1.4,.07*(4-ghost),e.color,0);
+    drawHand(longAngle,1.53,.22,4.6,.96,hit?'#fff':'#eafffb',.16);
+    drawHand(shortAngle,.88,.15,6.0,.88,hit?'#fff':'#8fffe7',.13);
+    ctx.save();ctx.rotate(fractureAngle);ctx.setLineDash([e.r*.13,e.r*.095]);ctx.globalAlpha=.38;ctx.strokeStyle='#b9fff3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-e.r*.42,0);ctx.lineTo(e.r*1.30,0);ctx.stroke();ctx.restore();ctx.setLineDash([]);
+
+    // Small asymmetric time-core. The core is intentionally much smaller than Omega's furnace.
+    ctx.save();ctx.rotate(-t*.072);
+    const core=ctx.createRadialGradient(-e.r*.08,-e.r*.10,1,0,0,e.r*.42);
+    core.addColorStop(0,'#ffffff');core.addColorStop(.22,'#cffff7');core.addColorStop(.52,'#43c7b8');core.addColorStop(1,'#031619');
+    ctx.fillStyle=core;ctx.strokeStyle=hit?'#fff':'#dffff9';ctx.lineWidth=3;
     ctx.beginPath();
-    ctx.moveTo(0,-e.r*.62);
-    ctx.lineTo(e.r*.34,-e.r*.12);
-    ctx.lineTo(e.r*.18,e.r*.62);
-    ctx.lineTo(-e.r*.18,e.r*.62);
-    ctx.lineTo(-e.r*.34,-e.r*.12);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle='#dffff9';
-    ctx.lineWidth=4;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(-e.r*.24,-e.r*.18);ctx.lineTo(e.r*.24,e.r*.18);
-    ctx.moveTo(e.r*.24,-e.r*.18);ctx.lineTo(-e.r*.24,e.r*.18);
-    ctx.stroke();
+    ctx.moveTo(0,-e.r*.38);ctx.lineTo(e.r*.29,-e.r*.08);ctx.lineTo(e.r*.17,e.r*.34);ctx.lineTo(-e.r*.23,e.r*.29);ctx.lineTo(-e.r*.34,-e.r*.10);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.70)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-e.r*.10,-e.r*.27);ctx.lineTo(e.r*.09,e.r*.23);ctx.stroke();
+    ctx.restore();
+
+    // Central pin and tiny counter-rotating inner ring.
+    ctx.save();ctx.rotate(t*.19);ctx.globalAlpha=.74;ctx.strokeStyle='#ffffff';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,e.r*.49,.18,Math.PI-.24);ctx.stroke();ctx.beginPath();ctx.arc(0,0,e.r*.49,Math.PI+.28,TAU-.16);ctx.stroke();ctx.restore();
+    ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(0,0,e.r*.055,0,TAU);ctx.fill();
   }
 
   function drawStarforge20260720(e,t,enraged){
@@ -148,7 +189,7 @@
   }
 
   function chronophageProbe(e){
-    const screenX=e.x-player.x+vw/2,screenY=e.y-player.y+vh/2,visualRadius=e.r*1.82;
+    const screenX=e.x-player.x+vw/2,screenY=e.y-player.y+vh/2,visualRadius=e.r*2.05;
     chronophageRenderCount++;
     lastChronophageRender={
       count:chronophageRenderCount,
