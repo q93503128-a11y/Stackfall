@@ -4,6 +4,9 @@
   const baseDrawEliteShape=typeof drawEliteShape==='function'?drawEliteShape:null;
   if(!baseDrawEliteShape)return;
 
+  let chronophageRenderCount=0;
+  let lastChronophageRender=null;
+
   function setup(e){
     ctx.strokeStyle=e.hit?'#fff':e.color;
     ctx.fillStyle=e.hit?'#fff':e.color;
@@ -144,10 +147,24 @@
     ctx.beginPath();ctx.arc(0,0,e.r*.18,0,TAU);ctx.fill();
   }
 
+  function chronophageProbe(e){
+    const screenX=e.x-player.x+vw/2,screenY=e.y-player.y+vh/2,visualRadius=e.r*1.82;
+    chronophageRenderCount++;
+    lastChronophageRender={
+      count:chronophageRenderCount,
+      worldX:e.x,worldY:e.y,
+      screenX,screenY,
+      r:e.r,visualRadius,
+      bbox:{left:screenX-visualRadius,top:screenY-visualRadius,right:screenX+visualRadius,bottom:screenY+visualRadius},
+      apexPhase:e.apexPhase||null
+    };
+  }
+
   drawEliteShape=function restoredApexVisuals(e){
     const f=e?.eliteForm||e?.apexForm||e?.variant;
     if(!['chronophage','starforge','lastconstellation'].includes(f))return baseDrawEliteShape(e);
     const t=e.phase||0,enraged=e.kind==='apex'&&e.apexPhase===2;
+    if(f==='chronophage')chronophageProbe(e);
     ctx.save();
     setup(e);
     if(f==='chronophage')drawChronophage20260720(e,t,enraged);
@@ -159,7 +176,36 @@
     ctx.restore();
   };
 
-  // The abandoned World Devourer prototype must not layer an extra body or replace canonical Apex AI.
+  // Reborn v4 hides Chronophage from the ordinary enemy renderer by temporarily moving it to
+  // (1e9, 1e9), then draws a separate world body. That conflicts with this historical visual
+  // restore and also leaks the sentinel position into off-screen guidance. Use the renderer that
+  // existed immediately before that wrapper, so the real entity coordinates reach drawEliteShape.
+  // Keep the canonical Reborn combat/AI and its space-cut effect intact.
+  if(typeof baseDrawEnemiesAtropos==='function'){
+    drawEnemies=function drawEnemiesWithHistoricalChronophage(){
+      const result=baseDrawEnemiesAtropos();
+      const e=state.entities.enemies.find(enemy=>!enemy?.dead&&enemy.apexForm==='chronophage');
+      if(e&&typeof drawAtroposSpaceCut==='function')drawAtroposSpaceCut(e);
+      return result;
+    };
+  }
+
+  // The abandoned World Devourer body must not layer over the restored historical silhouette.
   if(typeof drawAtroposWorldBody==='function')drawAtroposWorldBody=function restoredChronophageHasNoPrototypeBody(){};
+
+  window.stackfallApexVisualRestoreDiagnostics=()=>{
+    const e=state.entities.enemies.find(enemy=>!enemy?.dead&&enemy.apexForm==='chronophage')||null;
+    const screenX=e?e.x-player.x+vw/2:null,screenY=e?e.y-player.y+vh/2:null;
+    return{
+      player:{x:player.x,y:player.y},
+      chronophage:e?{x:e.x,y:e.y,dx:e.x-player.x,dy:e.y-player.y,distance:Math.hypot(e.x-player.x,e.y-player.y),screenX,screenY,r:e.r,eliteForm:e.eliteForm||null,apexForm:e.apexForm||null,variant:e.variant||null,apexPhase:e.apexPhase||null}:null,
+      apexActiveId:state.apexActiveId||null,
+      pendingApexForm:state.pendingApexForm||null,
+      apexExitPending:!!state.apexExitPending,
+      realmTransition:state.realmTransition?{owner:state.realmTransition.owner||null,from:state.realmTransition.from||null,to:state.realmTransition.to||null,elapsed:Number(state.realmTransition.elapsed)||0,duration:Number(state.realmTransition.duration)||0,serial:state.realmTransition.serial??null}:null,
+      indicatorTarget:e?{x:e.x,y:e.y,dx:e.x-player.x,dy:e.y-player.y,distance:Math.hypot(e.x-player.x,e.y-player.y),source:'live-apex-entity'}:null,
+      render:lastChronophageRender
+    };
+  };
   window.stackfallApexVisualRestore='pre-9af0cdec-2026-07-20';
 })();
