@@ -148,7 +148,7 @@
 
   function clampFieldPoint(arena,p,r){const dx=p.x-arena.x,dy=p.y-arena.y,d=Math.hypot(dx,dy)||1,limit=Math.max(80,arena.r-r-30);if(d<=limit)return p;return{x:arena.x+dx/d*limit,y:arena.y+dy/d*limit};}
   function chooseFieldPoint(e,phase){
-    const arena=ensureAtroposArena(e),cycle=(e.atroposFieldCycle||0)++,recent=historyPoint(e,3),vx=player.x-recent.x,vy=player.y-recent.y;let p;
+    const arena=ensureAtroposArena(e),cycle=e.atroposFieldCycle||0,recent=historyPoint(e,3),vx=player.x-recent.x,vy=player.y-recent.y;let p;e.atroposFieldCycle=cycle+1;
     if(cycle%4===1)p={x:player.x+clamp(vx*2,-105,105),y:player.y+clamp(vy*2,-105,105)};
     else if(cycle%4===2)p={x:(player.x+arena.x)*.5,y:(player.y+arena.y)*.5};
     else if(cycle%4===3)p={x:player.x+Math.cos((e.phase||0)*.7)*72,y:player.y+Math.sin((e.phase||0)*.7)*72};
