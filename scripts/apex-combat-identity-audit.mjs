@@ -27,7 +27,7 @@ async function capture(name,meta={}){const r=await cdp.send('Page.captureScreens
 
 async function startForm(form){
   await cdp.send('Page.navigate',{url:`http://127.0.0.1:${port}/?dev=1&identity=${form}&t=${Date.now()}`});
-  await waitFor(`window.stackfallApexVisualRestore==='pre-9af0cdec-2026-07-20'&&window.stackfallApexIdentityCombat==='v1'&&typeof stackfallDeveloperTest==='object'&&typeof beginApexEncounter==='function'`);
+  await waitFor(`window.stackfallApexVisualRestore==='pre-9af0cdec-2026-07-20'&&window.stackfallApexIdentityCombat==='v1'&&(${JSON.stringify(form)}!=='starforge'||window.stackfallOmegaProduction==='v1')&&typeof stackfallDeveloperTest==='object'&&typeof beginApexEncounter==='function'`);
   const started=await evalJs(`(()=>{const api=stackfallDeveloperTest;api.startEndless();api.setInvincible(true);api.setLevelUpsDisabled(true);GAME_SETTINGS.audio.master=false;state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;state.mode='playing';ui.choice?.classList.add('hidden');state.spawnTimer=state.encounterTimer=99999;state.bossBags=state.bossBags||{};state.bossBags.apex=[${JSON.stringify(form)}];state.lastBossForms=state.lastBossForms||{};state.lastBossForms.apex=${JSON.stringify(form==='chronophage'?'starforge':'chronophage')};state.pendingApexForm=null;state.apexActiveId=null;state.apexExitPending=false;return beginApexEncounter();})()`);
   check(started,`${form}: encounter starts`);
   await waitFor(`state.entities.enemies.some(e=>!e?.dead&&e.apexForm===${JSON.stringify(form)})`);
@@ -57,11 +57,14 @@ async function auditChronophage(){
 
 async function auditStarforge(){
   const e=await startForm('starforge');check(!!e,'starforge: entity exists',e);
-  const result=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='starforge');e.apexPhase=3;const d=Math.max(8,e.damage*.32);apexVariantAttack(e,3);addCircle(player.x+125,player.y+35,84,d,'#ff7135',.92);return window.stackfallApexIdentityDiagnostics();})()`);report.starforge=result;
-  check(result?.customTelegraphs?.some(t=>t.style==='apex-id:forge-flare'),'starforge: flare telegraph uses custom identity',result);
-  check(result?.customTelegraphs?.some(t=>t.style==='apex-id:forge-pressure'),'starforge: pressure telegraph uses custom identity',result);
-  await sleep(220);await capture('starforge-flare-and-pressure',{diag:result});
-  await sleep(540);await capture('starforge-impact');
+  const before=await evalJs(`({telegraphs:state.entities.telegraphs.length,projectiles:state.entities.enemyProjectiles.length,diag:window.stackfallOmegaProductionDiagnostics?.()})`);
+  await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='starforge');apexBossSkill(e,.25);apexPhaseDirector(e,.25);apexVariantAttack(e,e.apexPhase||1);bossAntiIdleSkill(e,2);return true;})()`);await sleep(180);
+  const result=await evalJs(`({telegraphs:state.entities.telegraphs.length,projectiles:state.entities.enemyProjectiles.length,diag:window.stackfallOmegaProductionDiagnostics?.()})`);report.starforge={before,result};
+  check(result.diag?.legacyAttacksDisabled===true,'starforge: legacy attack kit is disabled',result);
+  check(result.diag?.plateCount===8,'starforge: P1 shell has eight plates',result.diag);
+  check(result.telegraphs===before.telegraphs&&result.projectiles===before.projectiles,'starforge: old attack entry points create no hazards',{before,result});
+  check(result.diag?.forgeTidalCore===false,'starforge: legacy tidal core remains disabled',result.diag);
+  await capture('starforge-clean-slate',{diag:result.diag});
 }
 
 async function auditConstellation(){
