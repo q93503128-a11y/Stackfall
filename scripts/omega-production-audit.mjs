@@ -43,18 +43,24 @@ try{
 
   let snap=await diag();report.phases.p1=snap;
   check(snap?.diag?.legacyAttacksDisabled===true,'Legacy Omega attacks are disabled',snap?.diag);
-  check(snap?.diag?.plateCount===8,'P1 Omega has eight armor plates',snap?.diag);
+  check(snap?.diag?.plateCount===8,'P1 Omega has eight outer armor plates',snap?.diag);
+  check(snap?.diag?.innerPlateCount===6,'P1 stellar core has six inner containment plates',snap?.diag);
   check(!/P[1-4]/.test(snap?.hud||''),'Omega HUD does not expose P1/P2/P3/P4 text',snap?.hud);
   const before=snap.counts;
   await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='starforge');apexBossSkill(e,.25);apexPhaseDirector(e,.25);apexVariantAttack(e,e.apexPhase||1);bossAntiIdleSkill(e,2);return true;})()`);await sleep(180);
   const after=await diag();check(after.counts.telegraphs===before.telegraphs&&after.counts.projectiles===before.projectiles,'Old Omega attack entry points create no attacks',{before,after:after.counts});check(!after.tidal,'Legacy tidal core stays disabled',after);
   await capture('p1-settled',{phase:1});
 
-  for(const [phase,ratio,plates] of [[2,.70,6],[3,.45,4],[4,.20,2]]){
+  for(const [phase,ratio,outer,inner] of [[2,.70,6,4],[3,.45,4,2],[4,.20,0,0]]){
     await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='starforge');e.hp=e.maxHp*${ratio};apexBossSkill(e,.05);return e.apexPhase;})()`);
     await waitFor(`window.stackfallOmegaProductionDiagnostics?.()?.phase===${phase}`,4000);await sleep(950);
-    snap=await diag();report.phases['p'+phase]=snap;check(snap?.diag?.plateCount===plates,`P${phase} exposes the stellar core by reducing armor to ${plates} plates`,snap?.diag);check(!snap.tidal,`P${phase} has no legacy tidal core`,snap);await capture(`p${phase}-shell`,{phase,plates});
+    snap=await diag();report.phases['p'+phase]=snap;
+    check(snap?.diag?.plateCount===outer,`P${phase} exposes the stellar core by reducing outer armor to ${outer} plates`,snap?.diag);
+    check(snap?.diag?.innerPlateCount===inner,`P${phase} reduces inner containment armor to ${inner} plates`,snap?.diag);
+    check(!snap.tidal,`P${phase} has no legacy tidal core`,snap);
+    await capture(`p${phase}-shell`,{phase,outer,inner});
   }
+  check(report.phases.p4?.diag?.plateCount===0&&report.phases.p4?.diag?.innerPlateCount===0,'P4 is a fully exposed stellar core with no armor remaining',report.phases.p4?.diag);
   check(report.exceptions.length===0,'No runtime exceptions during Omega production audit',report.exceptions);report.status='PASS';
 }catch(error){report.status='FAIL';report.error=String(error?.stack||error);throw error;
 }finally{writeFileSync(join(out,'omega-production.json'),JSON.stringify(report,null,2));try{cdp?.close();}catch{}try{browser.kill('SIGTERM');}catch{}await sleep(120);try{server.close();}catch{}try{rmSync(profile,{recursive:true,force:true});}catch{}}
