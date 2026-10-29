@@ -1,5 +1,5 @@
 // Last Constellation reset v1.
-// Temporary clean slate while its production patterns are redesigned.
+// Clean combat slate: legacy patterns stay disabled while production structure owns phase progression.
 (()=>{
   if(window.stackfallLastConstellationReset==='v1')return;
   window.stackfallLastConstellationReset='v1';
@@ -7,8 +7,8 @@
   const isLC=e=>!!(e&&!e.dead&&(e.apexForm||e.eliteForm)===FORM);
   const phaseOnly=(e,dt)=>{
     e.apexElapsed=(e.apexElapsed||0)+Math.max(0,Number(dt)||0);
-    const health=e.hp/Math.max(1,e.maxHp),healthPhase=health<.25?4:health<.50?3:health<.75?2:1,timePhase=e.apexElapsed>=240?4:e.apexElapsed>=180?3:e.apexElapsed>=105?2:1;
-    e.apexPhase=Math.max(healthPhase,timePhase);e.timeLock=0;
+    // v2 structure advances only when every exposed node in the current layer is destroyed.
+    e.apexPhase=Math.max(1,Math.min(4,Number(e.lcStructure?.phase)||Number(e.apexPhase)||1));e.timeLock=0;
     e.skillCd=999;e.burstCd=999;e.pulseCd=999;e.signatureCd=999;e.apexVariantCd=999;e.apexSetpieceCd=999;
     e.constellationSweep=null;e.teleportQueued=false;
   };
@@ -21,7 +21,7 @@
     };
   }
 
-  // Suppress every legacy Last Constellation combat producer while preserving phase progression.
+  // Suppress every legacy Last Constellation combat producer while preserving structural phase progression.
   const baseApexBossSkill=typeof apexBossSkill==='function'?apexBossSkill:null;
   if(baseApexBossSkill)apexBossSkill=function lastConstellationNoPatterns(e,dt){if(isLC(e)){phaseOnly(e,dt);return;}return baseApexBossSkill(e,dt);};
   const baseApexPhaseDirector=typeof apexPhaseDirector==='function'?apexPhaseDirector:null;
@@ -44,5 +44,5 @@
   const baseUpdateEnemies=typeof updateEnemies==='function'?updateEnemies:null;
   if(baseUpdateEnemies)updateEnemies=function updateEnemiesWithConstellationReset(dt){cleanupLegacyObjects();return baseUpdateEnemies(dt);};
 
-  window.stackfallLastConstellationResetDiagnostics=()=>{const e=state.entities.enemies?.find(isLC)||null;return{version:'v1',active:!!e,phase:e?.apexPhase||null,patternsSuppressed:true,screenSpaceConstellationBackground:false};};
+  window.stackfallLastConstellationResetDiagnostics=()=>{const e=state.entities.enemies?.find(isLC)||null;return{version:'v1',active:!!e,phase:e?.lcStructure?.phase||e?.apexPhase||null,patternsSuppressed:true,screenSpaceConstellationBackground:false,phaseSource:e?.lcStructure?'node-destruction':'pending-structure'};};
 })();
