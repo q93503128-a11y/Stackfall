@@ -233,18 +233,45 @@
   // 6) Impact language: same collision, boss-specific result/recovery.
   // ---------------------------------------------------------------------------
   function radialFlareBurst(t,strong=false){
-    const spokes=strong?10:7;
+    const spokes=strong?12:8;
     for(let i=0;i<spokes;i++){
-      const a=i/spokes*TAU+(t.phase||0),inner=t.r*.16,outer=t.r*(strong?.92:.72);
-      if(typeof spawnBeamEffect==='function')spawnBeamEffect(t.x+Math.cos(a)*inner,t.y+Math.sin(a)*inner,t.x+Math.cos(a)*outer,t.y+Math.sin(a)*outer,strong?.20:.14,i%2?'#ffd36f':'#ff8a38',strong?4.2:2.8);
+      const a=i/spokes*TAU+(t.phase||0),inner=t.r*(strong?.10:.12),outer=t.r*(strong?1.02:.82);
+      if(typeof spawnBeamEffect==='function'){
+        spawnBeamEffect(t.x+Math.cos(a)*inner,t.y+Math.sin(a)*inner,t.x+Math.cos(a)*outer,t.y+Math.sin(a)*outer,strong?.18:.13,i%3===0?'#fff2bd':i%2?'#ffd36f':'#ff7a32',strong?4.6:3.1);
+        if(i%3===0){
+          const flareA=a+(strong?.10:.14);
+          spawnBeamEffect(t.x+Math.cos(flareA)*t.r*.20,t.y+Math.sin(flareA)*t.r*.20,t.x+Math.cos(flareA)*t.r*(strong?.76:.60),t.y+Math.sin(flareA)*t.r*(strong?.76:.60),strong?.13:.10,'#ff5e24',strong?2.8:2.1);
+        }
+      }
     }
-    if(typeof spawnParticle==='function')spawnParticle(t.x,t.y,strong?'#fff0ae':'#ffb04e',strong?14:9,strong?185:135,strong?4.3:3.2);
+    if(typeof spawnParticle==='function'){
+      spawnParticle(t.x,t.y,'#fff7d1',strong?7:5,strong?78:62,strong?5.6:4.5);
+      spawnParticle(t.x,t.y,strong?'#ffd36f':'#ffb04e',strong?16:11,strong?205:152,strong?4.5:3.4);
+      spawnParticle(t.x,t.y,'#ff6b2b',strong?10:6,strong?265:190,strong?3.4:2.7);
+    }
+  }
+  function omegaExplosionResult(t,strong=false){
+    if(typeof shockwave==='function'){
+      // A tight white-hot ignition, a fast thermal shell, then a darker slower after-pressure ring.
+      shockwave(t.x,t.y,'#fff9dc',t.r*(strong?.48:.40),strong?.13:.11,strong?5.6:4.8);
+      shockwave(t.x,t.y,'#ffd36f',t.r*(strong?.96:.84),strong?.24:.21,strong?4.8:4.0);
+      shockwave(t.x,t.y,'#ff7b35',t.r*(strong?1.26:1.12),strong?.38:.33,strong?4.2:3.6);
+      shockwave(t.x,t.y,'#7a1708',t.r*(strong?1.48:1.30),strong?.54:.47,strong?2.2:1.8);
+    }
+    radialFlareBurst(t,strong);
+    if(typeof spawnBeamEffect==='function'){
+      const offset=(t.phase||0)+.22;
+      for(let i=0;i<4;i++){
+        const a=offset+i*TAU/4,len=t.r*(strong?1.06:.86);
+        spawnBeamEffect(t.x-Math.cos(a)*len*.16,t.y-Math.sin(a)*len*.16,t.x+Math.cos(a)*len,t.y+Math.sin(a)*len,strong?.16:.12,i%2?'#fff1b0':'#ff8a38',strong?5.0:3.5);
+      }
+    }
   }
   const baseTriggerCircleImpactIdentity=typeof triggerCircleImpact==='function'?triggerCircleImpact:null;
   if(baseTriggerCircleImpactIdentity){
     triggerCircleImpact=function triggerApexIdentityCircleImpact(t){
-      if(t?.impactStyle===FORGE_METEOR){shockwave(t.x,t.y,'#ff7b35',t.r*.82,.25,2.8);shockwave(t.x,t.y,'#ffd36f',t.r*1.08,.34,3.6);radialFlareBurst(t,false);state.camera.shake=Math.max(state.camera.shake,4.2);state.flash=Math.max(state.flash,.075);if(typeof playBossImpactAudio==='function')playBossImpactAudio(.86);return;}
-      if(t?.impactStyle===FORGE_PRESSURE){shockwave(t.x,t.y,'#6b1005',t.r*.62,.22,2.4);shockwave(t.x,t.y,'#ff9d42',t.r*1.18,.38,4.4);radialFlareBurst(t,true);state.camera.shake=Math.max(state.camera.shake,5.8);state.flash=Math.max(state.flash,.10);if(typeof playBossImpactAudio==='function')playBossImpactAudio(1.02);return;}
+      if(t?.impactStyle===FORGE_METEOR){omegaExplosionResult(t,false);state.camera.shake=Math.max(state.camera.shake,4.8);state.flash=Math.max(state.flash,.095);if(typeof playBossImpactAudio==='function')playBossImpactAudio(.92);return;}
+      if(t?.impactStyle===FORGE_PRESSURE){omegaExplosionResult(t,true);state.camera.shake=Math.max(state.camera.shake,6.4);state.flash=Math.max(state.flash,.13);if(typeof playBossImpactAudio==='function')playBossImpactAudio(1.10);return;}
       return baseTriggerCircleImpactIdentity(t);
     };
   }
