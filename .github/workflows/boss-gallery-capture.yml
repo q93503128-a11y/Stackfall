@@ -21,7 +21,10 @@ jobs:
         with:
           node-version: '22'
       - name: Capture boss gallery
-        run: node scripts/boss-gallery-capture.mjs
+        shell: bash
+        run: |
+          sed -i 's/updateBossBar?.(e);//' scripts/boss-gallery-capture.mjs
+          node scripts/boss-gallery-capture.mjs
       - name: Upload gallery
         uses: actions/upload-artifact@v4
         with:
