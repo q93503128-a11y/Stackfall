@@ -1,0 +1,32 @@
+name: Historical Atropos render
+on:
+  push:
+    branches: [feature/atropos-world-devourer-prototype]
+    paths:
+      - scripts/historical-atropos-render.mjs
+      - .github/workflows/historical-atropos-render.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Preserve renderer
+        run: cp scripts/historical-atropos-render.mjs /tmp/historical-atropos-render.mjs
+      - name: Checkout pre-redesign commit
+        run: |
+          git fetch --depth=1 origin 79afd49b3d37dda6a43e0063527c32b8267245df
+          git checkout --detach 79afd49b3d37dda6a43e0063527c32b8267245df
+      - name: Render historical Atropos
+        run: node /tmp/historical-atropos-render.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: historical-atropos-pre-9af
+          path: test-results/historical-atropos
+          if-no-files-found: error
