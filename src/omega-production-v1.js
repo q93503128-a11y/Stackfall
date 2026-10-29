@@ -18,7 +18,6 @@
   const clamp01=v=>clamp(v,0,1);
   const easeOut=t=>1-Math.pow(1-clamp01(t),3);
   const entryTransition=()=>{const tr=state.realmTransition;return tr?.owner==='apex-entry'&&(state.apexArena?.form||state.pendingApexForm||tr?.form)===FORM?tr:null;};
-  const entryProgress=()=>{const tr=entryTransition();return tr?clamp01((Number(tr.elapsed)||0)/Math.max(.001,Number(tr.duration)||1)):1;};
 
   function currentOmega(){return state.entities.enemies?.find(isOmega)||null;}
   function computePhase(e,dt){
@@ -80,15 +79,13 @@
     if(!Number.isFinite(e.omegaPhaseVisualStartedAt))return 1;
     return clamp01((performance.now()-e.omegaPhaseVisualStartedAt)/850);
   }
-  function assemblyState(){
-    const tr=entryTransition();
-    if(!tr)return{active:false,core:1,plates:1,progress:1};
-    const p=entryProgress();
-    // Hold a clear core-only beat after the camera arrives: the red sun forms first,
-    // then armor starts locking on roughly half a second later.
-    const core=easeOut(clamp01((p-.30)/.16));
-    const plates=easeOut(clamp01((p-.48)/.20));
-    return{active:true,progress:p,core,plates};
+  function assemblyState(e=currentOmega()){
+    const started=Number(e?.apexEntryRevealStartedAt);
+    if(!Number.isFinite(started))return{active:!!entryTransition(),core:0,plates:0,elapsed:0};
+    const elapsed=Math.max(0,(performance.now()-started)/1000);
+    const core=easeOut(clamp01(elapsed/.42));
+    const plates=easeOut(clamp01((elapsed-.48)/.72));
+    return{active:!!entryTransition()||elapsed<1.24,core,plates,elapsed};
   }
   function plateAssemblyAmount(index,platesProgress){
     const order=ASSEMBLY_ORDER.indexOf(index),segment=1/PLATE_COUNT;
@@ -101,7 +98,6 @@
     halo.addColorStop(0,'rgba(255,255,235,.95)');halo.addColorStop(.18,'rgba(255,221,102,.82)');halo.addColorStop(.48,`rgba(255,87,28,${.48+.14*pulse})`);halo.addColorStop(1,'rgba(130,8,0,0)');
     ctx.fillStyle=halo;ctx.beginPath();ctx.arc(0,0,haloR,0,TAU);ctx.fill();
 
-    // Uneven flame crown makes the center read as a contained red sun, not a gauge.
     ctx.save();ctx.rotate(-t*.24);ctx.fillStyle=`rgba(255,90,28,${.48+.22*pulse})`;
     const flames=14;
     ctx.beginPath();
@@ -126,10 +122,9 @@
     ctx.beginPath();ctx.moveTo(inner,-half*.42);ctx.lineTo(outer-e.r*.32,-half);ctx.lineTo(outer,0);ctx.lineTo(outer-e.r*.32,half);ctx.lineTo(inner,half*.42);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
   }
   function drawOmegaBody(e){
-    const t=e.phase||0,phase=Math.max(1,Math.min(4,e.apexPhase||1)),assembly=assemblyState(),active=activePlateSet(phase),prev=previousPlateSet(e),transition=plateTransition(e);
+    const t=e.phase||0,phase=Math.max(1,Math.min(4,e.apexPhase||1)),assembly=assemblyState(e),active=activePlateSet(phase),prev=previousPlateSet(e),transition=plateTransition(e);
     ctx.save();
     drawSolarCore(e,t,assembly,phase);
-
     for(let i=0;i<PLATE_COUNT;i++){
       const assemble=assembly.active?plateAssemblyAmount(i,assembly.plates):1;
       if(active.has(i))drawArmorPlate(e,i,t,assemble,1);
@@ -145,7 +140,6 @@
     drawEliteShape=function drawOmegaProductionShape(e){if(isOmega(e))return drawOmegaBody(e);return baseDrawEliteShape(e);};
   }
 
-  // Phase is communicated by shell exposure, not P1/P2/P3/P4 text.
   function cleanOmegaHud(){
     const e=currentOmega();if(!e)return;
     const name=typeof bossName==='function'?bossName(FORM):'종말 항성 오메가';
@@ -158,8 +152,8 @@
   if(baseUpdateHUD)updateHUD=function updateHudWithoutOmegaPhase(){const result=baseUpdateHUD();cleanOmegaHud();return result;};
 
   window.stackfallOmegaProductionDiagnostics=()=>{
-    const e=currentOmega(),a=assemblyState();if(!e)return null;
+    const e=currentOmega(),a=assemblyState(e);if(!e)return null;
     const phase=Math.max(1,Math.min(4,e.apexPhase||1));
-    return{version:'v1',phase,activePlates:[...activePlateSet(phase)],plateCount:activePlateSet(phase).size,entry:{active:a.active,progress:a.progress,core:a.core,plates:a.plates},legacyAttacksDisabled:true,forgeTidalCore:!!e.forgeTidalCore};
+    return{version:'v1',phase,activePlates:[...activePlateSet(phase)],plateCount:activePlateSet(phase).size,entry:{active:a.active,elapsed:a.elapsed,core:a.core,plates:a.plates},legacyAttacksDisabled:true,forgeTidalCore:!!e.forgeTidalCore};
   };
 })();
