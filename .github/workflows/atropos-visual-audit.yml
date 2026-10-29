@@ -29,6 +29,8 @@ jobs:
         run: node scripts/omega-production-audit.mjs
       - name: Run Omega production combat audit
         run: node scripts/omega-combat-audit.mjs
+      - name: Run Last Constellation layered structure audit
+        run: node scripts/last-constellation-structure-audit.mjs
       - name: Upload Apex visual audit
         if: always()
         uses: actions/upload-artifact@v4
