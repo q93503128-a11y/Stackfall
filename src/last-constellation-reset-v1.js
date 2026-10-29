@@ -46,11 +46,23 @@
 
   window.stackfallLastConstellationResetDiagnostics=()=>{const e=state.entities.enemies?.find(isLC)||null;return{version:'v1',active:!!e,phase:e?.lcStructure?.phase||e?.apexPhase||null,patternsSuppressed:true,screenSpaceConstellationBackground:false,phaseSource:e?.lcStructure?'node-destruction':'pending-structure'};};
 
-  // Load final geometry/render override last so the monumental layout owns the visible structure and hit proxies.
+  // Load final geometry/render override last, then add the new authored P1 combat layer.
   if(!document.querySelector('script[data-last-constellation-presentation-v3]')){
     const script=document.createElement('script');
     script.src='src/last-constellation-presentation-v3.js';
     script.dataset.lastConstellationPresentationV3='1';
+    script.onload=()=>{
+      if(document.querySelector('script[data-last-constellation-combat-v1]'))return;
+      const combat=document.createElement('script');
+      combat.src='src/last-constellation-combat-v1.js';
+      combat.dataset.lastConstellationCombatV1='1';
+      document.body.appendChild(combat);
+    };
     document.body.appendChild(script);
+  }else if(!document.querySelector('script[data-last-constellation-combat-v1]')){
+    const combat=document.createElement('script');
+    combat.src='src/last-constellation-combat-v1.js';
+    combat.dataset.lastConstellationCombatV1='1';
+    document.body.appendChild(combat);
   }
 })();
