@@ -33,7 +33,7 @@
     if(form==='chronophage'&&e.atroposReborn){
       e.atroposReborn.anchorX=p.x;e.atroposReborn.anchorY=p.y;e.speed=0;
     }
-    e.apexEntryCameraPlaced=true;e.apexEntryManifestX=p.x;e.apexEntryManifestY=p.y;e.apexEntryRevealStarted=false;e.apexEntryRevealImpactPlayed=false;
+    e.apexEntryCameraPlaced=true;e.apexEntryManifestX=p.x;e.apexEntryManifestY=p.y;e.apexEntryRevealStarted=false;e.apexEntryRevealStartedAt=null;e.apexEntryRevealImpactPlayed=false;
     return e;
   }
   function resetCameraForTransition(tr,form,arena){
@@ -65,7 +65,6 @@
     const p=entryProgress(tr);
     if(p>=.20&&p<.30&&mix>.72){
       const q=clamp((p-.20)/.10,0,1);
-      // Current renderer only shows shake above ~11, so keep this intentionally just above that gate.
       state.camera.shake=Math.max(state.camera.shake,11.2+q*3.0+Math.sin(performance.now()/38)*.65);
       if(!camera.buildupPlayed){camera.buildupPlayed=true;if(typeof audio?.tone==='function'){audio.tone(34,.42,'sawtooth',.021,8);audio.tone(68,.26,'sine',.010,-18);}}
     }
@@ -80,9 +79,7 @@
   function bossShouldRender(tr,e,mix){
     if(!e)return false;
     if(e.apexEntryRevealStarted)return true;
-    // Do not expose the entity during creation. Reveal only after the camera has fully arrived;
-    // after that, keep it visible for the remainder of the cinematic.
-    if(entryProgress(tr)>=.30&&mix>=.985){e.apexEntryRevealStarted=true;return true;}
+    if(entryProgress(tr)>=.30&&mix>=.985){e.apexEntryRevealStarted=true;e.apexEntryRevealStartedAt=performance.now();return true;}
     return false;
   }
   function renderWithoutBoss(boss,action){
@@ -121,11 +118,10 @@
     };
   }
 
-  // Reinforce the safe spawn position each cinematic frame after the midpoint has created the boss.
   const raf=()=>{
     const tr=entryTransition();if(tr){const form=entryForm(tr),arena=state.apexArena,e=placeBossSafely(form,arena);if(e&&form==='chronophage'&&e.atroposReborn&&e.apexEntryManifestX!=null){e.atroposReborn.anchorX=e.apexEntryManifestX;e.atroposReborn.anchorY=e.apexEntryManifestY;e.x=e.apexEntryManifestX;e.y=e.apexEntryManifestY;}}
     requestAnimationFrame(raf);
   };requestAnimationFrame(raf);
 
-  window.stackfallApexEntryCameraDiagnostics=()=>{const tr=entryTransition(),arena=state.apexArena,form=entryForm(tr),e=findApex();return{version:'v1',active:!!tr,form,mix:tr?panMix(tr):0,progress:tr?entryProgress(tr):0,focus:camera.focusLocked?{x:camera.focusX,y:camera.focusY}:manifestationPoint(form,arena),buildupPlayed:camera.buildupPlayed,impactPlayed:camera.impactPlayed,boss:e?{x:e.x,y:e.y,safeUntil:e.contactSafeUntil||0,placed:!!e.apexEntryCameraPlaced,revealed:!!e.apexEntryRevealStarted}:null};};
+  window.stackfallApexEntryCameraDiagnostics=()=>{const tr=entryTransition(),arena=state.apexArena,form=entryForm(tr),e=findApex();return{version:'v1',active:!!tr,form,mix:tr?panMix(tr):0,progress:tr?entryProgress(tr):0,focus:camera.focusLocked?{x:camera.focusX,y:camera.focusY}:manifestationPoint(form,arena),buildupPlayed:camera.buildupPlayed,impactPlayed:camera.impactPlayed,boss:e?{x:e.x,y:e.y,safeUntil:e.contactSafeUntil||0,placed:!!e.apexEntryCameraPlaced,revealed:!!e.apexEntryRevealStarted,revealStartedAt:e.apexEntryRevealStartedAt||null}:null};};
 })();
