@@ -25,7 +25,9 @@ jobs:
         run: node scripts/apex-combat-identity-audit.mjs
       - name: Run Atropos P1-P4 production audit
         run: node scripts/atropos-phase-production-audit.mjs
-      - name: Upload Atropos visual audit
+      - name: Run Omega production reset audit
+        run: node scripts/omega-production-audit.mjs
+      - name: Upload Apex visual audit
         if: always()
         uses: actions/upload-artifact@v4
         with:
