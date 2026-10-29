@@ -41,7 +41,7 @@ check(escalation.includes('const cutCounts=[0,1,2,3,4]'),'Space Cut chain count 
 check(escalation.includes('const volleyCooldown=[0,4.85,4.10,3.45,3.05]'),'Space Cut volley cooldown does not shorten by phase');
 check(escalation.includes('const stillThreshold=[0,1.20,.92,.62,0]'),'Anti-idle trigger window does not tighten through P4');
 check(escalation.includes("if(phase<4&&(e.antiIdleStill||0)<stillThreshold[phase])return"),'P4 anti-idle does not ignore player movement');
-check(escalation.includes('CLOCK_STEPS=12')&&escalation.includes('const handStepSeconds=[0,0,2.0,1.0,.50]'),'Clock hand is not a twelve-step P2/P3/P4 mechanic');
+check(escalation.includes('CLOCK_STEPS=12')&&escalation.includes('const handStepSeconds=[0,0,2.0,1.0,.50]'),'Clock hand base timing is not a twelve-step P2/P3/P4 mechanic');
 check(escalation.includes('hand.burstSteps>=3')&&escalation.includes('hand.offTimer=2.0'),'P4 broken clock does not pause after three reverse steps');
 check(escalation.includes('const fieldCooldown=[0,0,0,3.0,1.65]'),'P3/P4 time-field cooldowns are not production values');
 check(escalation.includes('function spawnTimeField')&&escalation.includes('function drawTimeFields'),'Time-field mechanic or clock-face rendering is missing');
@@ -54,6 +54,7 @@ check(escalation.includes('historyPoint(e,5)')&&escalation.includes('historyPoin
 
 check(polish.includes("stackfallAtroposProductionPolish='v2'"),'Atropos production polish v2 is missing');
 check(polish.includes('DESKTOP_ARENA=663')&&polish.includes('COMPACT_ARENA=440'),'Atropos arena is not enlarged by roughly thirty percent');
+check(polish.includes('P4_HAND_STEP=.30')&&polish.includes('e.atroposClockHand.stepTimer=P4_HAND_STEP'),'P4 clock-hand override is not 0.30 seconds');
 check(polish.includes('e.x=r.anchorX;e.y=r.anchorY;e.speed=0'),'Atropos world anchor is not hard-locked');
 check(polish.includes("ctx.globalCompositeOperation='color'"),'P4 time stop does not apply grayscale/desaturation presentation');
 check(polish.includes("return 70.5+(t-3)*70"),'P4 reverse clock does not maintain high-speed spin after the time stop');
@@ -61,6 +62,8 @@ check(polish.includes("['12',-Math.PI/2]")&&polish.includes('for(let i=0;i<60;i+
 
 check(entryCamera.includes("stackfallApexEntryCamera='v1'"),'Apex entry camera module is missing');
 check(entryCamera.includes("tr?.owner==='apex-entry'")&&entryCamera.includes('function panMix'),'Apex entry camera is not bound to the entry cinematic');
+check(entryCamera.includes('entryProgress(tr)>=.30&&mix>=.985')&&entryCamera.includes('e.apexEntryRevealStarted=true'),'Apex reveal is not gated until the entry camera is settled');
+check(entryCamera.includes('renderWithoutBoss')&&entryCamera.includes('e.apexEntryRevealStarted'),'Apex pre-reveal frames do not suppress the boss render');
 check(entryCamera.includes('e.contactSafeUntil')&&entryCamera.includes('2.25'),'Apex entry does not provide post-reveal contact safety');
 check(entryCamera.includes('player.x=camera.camX;player.y=camera.camY')&&entryCamera.includes('player.x=realX;player.y=realY'),'Apex entry camera does not restore the real player position after rendering');
 
@@ -79,9 +82,9 @@ const report={
   canonicalSpaceCutPreserved:true,
   abandonedPrototypeRuntime:false,
   attackGrammar:['space-cut','anti-idle-scar','clock-hand','time-field'],
-  combatEscalation:{spaceCutChains:[1,2,3,4],volleyCooldowns:[4.85,4.10,3.45,3.05],antiIdleStillThresholds:[1.20,.92,.62,0],clockHandStepSeconds:{p2:2,p3:1,p4:.5},p4ClockBurst:{steps:3,offSeconds:2,direction:'reverse'},timeFieldCooldowns:{p3:3,p4:1.65},p4TimeStopSeconds:3,postStopDistortion:true},
+  combatEscalation:{spaceCutChains:[1,2,3,4],volleyCooldowns:[4.85,4.10,3.45,3.05],antiIdleStillThresholds:[1.20,.92,.62,0],clockHandStepSeconds:{p2:2,p3:1,p4:.3},p4ClockBurst:{steps:3,offSeconds:2,direction:'reverse'},timeFieldCooldowns:{p3:3,p4:1.65},p4TimeStopSeconds:3,postStopDistortion:true},
   productionPolish:{fixedBoss:true,arenaRadius:{desktop:663,compact:440},p4GrayStop:true,p4PersistentReverseSpin:true,timeFieldClockFace:true},
-  apexEntryCamera:{cinematicPan:true,safeContactSeconds:2.25},
+  apexEntryCamera:{cinematicPan:true,safeContactSeconds:2.25,revealAfterSettledCamera:true},
   guidance:{eliteArrowPolicy:'visual-bounds'},
   explicitPhaseHud:false,
   damage:{playerMaxHpReferences:false,globalHurtPlayerOverride:false},
