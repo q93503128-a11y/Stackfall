@@ -21,26 +21,22 @@ async function endpoint(path,timeout=15000){const st=Date.now();while(Date.now()
 class Cdp{constructor(url){this.id=0;this.pending=new Map();this.events=new Map();this.ready=new Promise((ok,fail)=>{this.ws=new WebSocket(url);this.ws.addEventListener('open',ok,{once:true});this.ws.addEventListener('error',fail,{once:true});this.ws.addEventListener('message',ev=>{const m=JSON.parse(ev.data);if(m.id){const p=this.pending.get(m.id);if(!p)return;this.pending.delete(m.id);clearTimeout(p.timer);m.error?p.fail(new Error(m.error.message)):p.ok(m.result);return;}for(const fn of this.events.get(m.method)||[])fn(m.params);});});}async send(method,params={},timeout=20000){await this.ready;const id=++this.id;return new Promise((ok,fail)=>{const timer=setTimeout(()=>{this.pending.delete(id);fail(new Error(`CDP timeout ${method}`));},timeout);this.pending.set(id,{ok,fail,timer});this.ws.send(JSON.stringify({id,method,params}));});}on(name,fn){const a=this.events.get(name)||[];a.push(fn);this.events.set(name,a);}close(){this.ws?.close();}}
 let cdp;const observations={startedAt:new Date().toISOString(),frames:[],console:[],exceptions:[]};
 async function evalJs(expression){const r=await cdp.send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true,userGesture:true});if(r.exceptionDetails)throw new Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result?.value;}
-async function waitFor(expression,timeout=15000,interval=80){const st=Date.now();while(Date.now()-st<timeout){try{const v=await evalJs(expression);if(v)return v;}catch{}await sleep(interval);}throw new Error(`waitFor timeout: ${expression}`);}
-async function capture(name,meta={}){const r=await cdp.send('Page.captureScreenshot',{format:'jpeg',quality:78,captureBeyondViewport:false,fromSurface:true});const file=`${String(observations.frames.length+1).padStart(2,'0')}-${name}.jpg`;writeFileSync(join(out,file),Buffer.from(r.data,'base64'));observations.frames.push({file,...meta});}
+async function waitFor(expression,timeout=18000,interval=80){const st=Date.now();while(Date.now()-st<timeout){try{const v=await evalJs(expression);if(v)return v;}catch{}await sleep(interval);}throw new Error(`waitFor timeout: ${expression}`);}
+async function capture(name,meta={}){const r=await cdp.send('Page.captureScreenshot',{format:'jpeg',quality:80,captureBeyondViewport:false,fromSurface:true});const file=`${String(observations.frames.length+1).padStart(2,'0')}-${name}.jpg`;writeFileSync(join(out,file),Buffer.from(r.data,'base64'));observations.frames.push({file,...meta});}
 
-async function drawGallery(phase,label){
-  const meta=await evalJs(`(()=>{
-    for(const el of document.querySelectorAll('#menu,#hud,#choiceScreen,#resonanceBanner,#bossNotice,#pauseScreen,#gameOverScreen,#settingsScreen,#touchControls,#galaxyMapScreen,#profileScreen,#upgradeScreen,#sortiePrepScreen'))el.style.display='none';
-    const W=innerWidth,H=innerHeight;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
-    const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#07101d');bg.addColorStop(1,'#010207');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    ctx.strokeStyle='rgba(128,170,220,.08)';ctx.lineWidth=1;for(let x=80;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let y=80;y<H;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-    const forms=['chronophage','starforge','lastconstellation'],xs=[W*.18,W*.50,W*.82],base=54;
-    const radii=[];
-    for(let i=0;i<forms.length;i++){
-      const form=forms[i],e={eliteForm:form,apexForm:form,kind:'apex',r:base*BOSS_STATS[form].r,phase:14.2,color:BOSS_STATS[form].color,hit:false,apexPhase:${phase}};
-      radii.push(e.r);ctx.save();ctx.translate(xs[i],H*.51);drawEliteShape(e);ctx.restore();
-      ctx.fillStyle='#eef4ff';ctx.font='700 17px sans-serif';ctx.textAlign='center';ctx.fillText(form.toUpperCase(),xs[i],70);
-    }
-    ctx.fillStyle='#93a8c9';ctx.font='13px monospace';ctx.fillText('pre-9af0cdec visual restore · ${label}',W*.5,H-24);
-    return{restore:window.stackfallApexVisualRestore,prototype:window.stackfallAtroposPrototypeAttackState||null,radii};
-  })()`);
-  await capture(`restored-${label}`,meta);
+async function launchApex(form){
+  await cdp.send('Page.navigate',{url:`http://127.0.0.1:${port}/?dev=1&restore=${form}&t=${Date.now()}`});
+  await waitFor(`window.stackfallApexVisualRestore==='pre-9af0cdec-2026-07-20'&&typeof stackfallDeveloperTest==='object'&&typeof beginApexEncounter==='function'`);
+  const setup=await evalJs(`(()=>{const api=stackfallDeveloperTest;api.startEndless();api.setInvincible(true);api.setLevelUpsDisabled(true);GAME_SETTINGS.audio.master=false;state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;state.mode='playing';ui.choice?.classList.add('hidden');state.spawnTimer=state.encounterTimer=99999;state.bossBags=state.bossBags||{};state.bossBags.apex=[${JSON.stringify(form)}];state.lastBossForms=state.lastBossForms||{};state.lastBossForms.apex=${JSON.stringify(form==='chronophage'?'starforge':'chronophage')};state.pendingApexForm=null;state.apexActiveId=null;state.apexExitPending=false;return{ok:beginApexEncounter(),restore:window.stackfallApexVisualRestore,prototype:window.stackfallAtroposPrototypeAttackState||null};})()`);
+  if(!setup.ok)throw new Error(`${form} Apex start failed ${JSON.stringify(setup)}`);
+  if(setup.prototype)throw new Error(`abandoned prototype runtime active: ${setup.prototype}`);
+  await waitFor(`state.entities.enemies.some(e=>!e?.dead&&e.apexForm===${JSON.stringify(form)})`,18000);
+  await waitFor(`!ui.bossNotice||ui.bossNotice.classList.contains('hidden')`,18000);
+  await sleep(650);
+  const meta=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x?.dead&&x.apexForm===${JSON.stringify(form)});return e?{name:e.name,form:e.apexForm,phase:e.apexPhase,x:e.x,y:e.y,r:e.r,hp:e.hp,maxHp:e.maxHp,prototypeBody:!!e.atroposReborn?.worldDevourer,restore:window.stackfallApexVisualRestore}:null;})()`);
+  if(!meta)throw new Error(`${form} missing after entry`);
+  if(meta.prototypeBody)throw new Error(`${form} has abandoned World Devourer body state`);
+  await capture(`${form}-live`,meta);
   return meta;
 }
 
@@ -49,22 +45,9 @@ try{
   cdp.on('Runtime.consoleAPICalled',e=>observations.console.push({type:e.type,text:(e.args||[]).map(a=>String(a.value??a.description??'')).join(' ')}));
   cdp.on('Runtime.exceptionThrown',e=>observations.exceptions.push(e.exceptionDetails?.exception?.description||e.exceptionDetails?.text||'unknown'));
   await Promise.all([cdp.send('Page.enable'),cdp.send('Runtime.enable'),cdp.send('Network.enable')]);
-  await cdp.send('Page.navigate',{url:`http://127.0.0.1:${port}/?dev=1`});
-  await waitFor(`window.stackfallApexVisualRestore==='pre-9af0cdec-2026-07-20'&&typeof drawEliteShape==='function'&&typeof BOSS_STATS==='object'`);
-  observations.galleryP1=await drawGallery(1,'phase-1');
-  observations.galleryP2=await drawGallery(2,'enraged');
-  if(observations.galleryP1.prototype)throw new Error(`abandoned Atropos prototype still active: ${observations.galleryP1.prototype}`);
-
-  await cdp.send('Page.navigate',{url:`http://127.0.0.1:${port}/?dev=1&integration=1`});
-  await waitFor(`window.stackfallApexVisualRestore==='pre-9af0cdec-2026-07-20'&&typeof stackfallDeveloperTest==='object'`);
-  const setup=await evalJs(`(()=>{const api=stackfallDeveloperTest;api.startEndless();api.setInvincible(true);api.setLevelUpsDisabled(true);GAME_SETTINGS.audio.master=false;state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;state.mode='playing';ui.choice?.classList.add('hidden');state.spawnTimer=state.encounterTimer=99999;state.bossBags=state.bossBags||{};state.bossBags.apex=['chronophage'];state.lastBossForms=state.lastBossForms||{};state.lastBossForms.apex='starforge';state.pendingApexForm=null;state.apexActiveId=null;state.apexExitPending=false;return{ok:beginApexEncounter(),restore:window.stackfallApexVisualRestore,prototype:window.stackfallAtroposPrototypeAttackState||null};})()`);
-  observations.setup=setup;if(!setup.ok)throw new Error(`Apex start failed ${JSON.stringify(setup)}`);if(setup.prototype)throw new Error(`prototype runtime active during integration: ${setup.prototype}`);
-  await waitFor(`state.entities.enemies.some(e=>!e?.dead&&e.apexForm==='chronophage')`,15000);await sleep(1100);
-  observations.integration=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x?.dead&&x.apexForm==='chronophage');return e?{name:e.name,form:e.apexForm,phase:e.apexPhase,x:e.x,y:e.y,r:e.r,hasPrototypeBody:!!e.atroposReborn?.worldDevourer,restore:window.stackfallApexVisualRestore}:null;})()`);
-  if(!observations.integration)throw new Error('Chronophage integration boss missing');
-  if(observations.integration.hasPrototypeBody)throw new Error('abandoned World Devourer body state was created');
-  await capture('chronophage-live-integration',{boss:observations.integration});
-
+  observations.chronophage=await launchApex('chronophage');
+  observations.starforge=await launchApex('starforge');
+  observations.lastconstellation=await launchApex('lastconstellation');
   if(observations.exceptions.length)throw new Error(`runtime exceptions: ${JSON.stringify(observations.exceptions)}`);
   observations.status='PASS';
 }catch(err){observations.status='FAIL';observations.error=String(err?.stack||err);throw err;
