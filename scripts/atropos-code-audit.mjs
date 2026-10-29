@@ -6,7 +6,9 @@ const files=fs.readdirSync(srcDir).filter(name=>/^atropos.*\.js$/i.test(name));
 const sources=Object.fromEntries(files.map(name=>[name,fs.readFileSync(path.join(srcDir,name),'utf8')]));
 const all=Object.values(sources).join('\n');
 const restore=sources['atropos-visual-v5.js']||'';
+const phase=sources['atropos-phase-production-v1.js']||'';
 const escalation=sources['atropos-combat-escalation-v1.js']||'';
+const hud=sources['atropos-hud-cleanup-v1.js']||'';
 const damage=sources['atropos-world-devourer-damage.js']||'';
 const guidance=fs.readFileSync(path.join(srcDir,'build-audit-ui.js'),'utf8');
 const catalog=fs.readFileSync(path.join(srcDir,'boss-catalog.js'),'utf8');
@@ -28,17 +30,27 @@ check(!restore.includes('simple-four-pattern-v1'),'Abandoned simplified four-pat
 check(!restore.includes("BOSS_NAMES.chronophage.ko='세계포식자 아트로포스'"),'World Devourer rename is still active');
 check(catalog.includes("chronophage:{ko:'시간포식자 아트로포스'"),'Chronophage Korean name is not 시간포식자 아트로포스');
 
+check(!phase.includes('fireTemporalEcho')&&!phase.includes('fireSplitTimeline')&&!phase.includes('fireCausalityReversal'),'Removed hidden Atropos history patterns are still present');
+check(!phase.includes('showBossNotice(')&&!phase.includes('PHASE_NAMES'),'Atropos phase progression still announces explicit phase text');
+check(phase.includes("attackGrammar:['space-cut','anti-idle-scar'"),'Phase diagnostics do not expose the simplified four-mechanic grammar');
+
 check(escalation.includes("stackfallAtroposCombatEscalation='v1'"),'Atropos combat escalation module is missing');
 check(escalation.includes('const cutCounts=[0,1,2,3,4]'),'Space Cut chain count does not escalate P1→P4');
 check(escalation.includes('const volleyCooldown=[0,4.85,4.10,3.45,3.05]'),'Space Cut volley cooldown does not shorten by phase');
 check(escalation.includes('const stillThreshold=[0,1.20,.92,.62,0]'),'Anti-idle trigger window does not tighten through P4');
 check(escalation.includes("if(phase<4&&(e.antiIdleStill||0)<stillThreshold[phase])return"),'P4 anti-idle does not ignore player movement');
+check(escalation.includes('CLOCK_STEPS=12')&&escalation.includes('const handStepSeconds=[0,0,2.0,1.0,.50]'),'Clock hand is not a twelve-step P2/P3/P4 mechanic');
+check(escalation.includes('hand.burstSteps>=3')&&escalation.includes('hand.offTimer=2.0'),'P4 broken clock does not pause after three reverse steps');
+check(escalation.includes('const fieldCooldown=[0,0,0,3.0,1.65]'),'P3/P4 time-field cooldowns are not production values');
+check(escalation.includes('function spawnTimeField')&&escalation.includes('function drawTimeFields'),'Time-field mechanic or clock-face rendering is missing');
+check(escalation.includes('function updateArenaBoundary')&&escalation.includes('function drawArenaBoundary'),'Chronophage soft arena boundary is missing');
 check(escalation.includes('durationMs:3000')&&escalation.includes('tr.duration=3.0'),'P4 time stop is not fixed at three seconds');
 check(escalation.includes('e.atroposP4TimeStopActive')&&escalation.includes('r.spaceCutVolley=null'),'P4 time stop does not suppress active Space Cut chains');
 check(escalation.includes('base-elapsed*18.5'),'P4 clock does not visibly reverse during time stop');
 check(escalation.includes('p4Distorted:phase===4&&!!e.atroposP4TimeStopDone'),'P4 post-stop Space Cuts are not marked for distorted timing/direction');
 check(escalation.includes('historyPoint(e,5)')&&escalation.includes('historyPoint(e,9)'),'P4 post-stop cuts do not retarget historical player positions');
 
+check(hud.includes("kind.textContent=GAME_SETTINGS.language==='ko'?'초월체':'APEX'"),'Atropos HUD does not hide explicit P-number labels');
 check(guidance.includes('function eliteGuideVisualRadius'),'Elite/Apex guidance does not use visual bounds');
 check(guidance.includes('function eliteBodyVisibleOnScreen'),'Elite/Apex guidance does not test visible body intersection');
 check(guidance.includes('window.stackfallGuidanceShouldShowEliteArrow=shouldShowEliteGuide'),'Elite/Apex guidance visibility policy is not inspectable');
@@ -52,8 +64,10 @@ const report={
   sentinelLeakBlocked:true,
   canonicalSpaceCutPreserved:true,
   abandonedPrototypeRuntime:false,
-  combatEscalation:{spaceCutChains:[1,2,3,4],volleyCooldowns:[4.85,4.10,3.45,3.05],antiIdleStillThresholds:[1.20,.92,.62,0],p4TimeStopSeconds:3,postStopDistortion:true},
+  attackGrammar:['space-cut','anti-idle-scar','clock-hand','time-field'],
+  combatEscalation:{spaceCutChains:[1,2,3,4],volleyCooldowns:[4.85,4.10,3.45,3.05],antiIdleStillThresholds:[1.20,.92,.62,0],clockHandStepSeconds:{p2:2,p3:1,p4:.5},p4ClockBurst:{steps:3,offSeconds:2,direction:'reverse'},timeFieldCooldowns:{p3:3,p4:1.65},p4TimeStopSeconds:3,postStopDistortion:true},
   guidance:{eliteArrowPolicy:'visual-bounds'},
+  explicitPhaseHud:false,
   damage:{playerMaxHpReferences:false,globalHurtPlayerOverride:false},
   status:failures.length?'FAIL':'PASS',
   failures
