@@ -17,6 +17,9 @@ check(restore.includes("stackfallApexVisualRestore='pre-9af0cdec-2026-07-20'"),'
 check(restore.includes('drawChronophage20260720'),'Historical Chronophage renderer is missing');
 check(restore.includes('drawStarforge20260720'),'Historical Starforge renderer is missing');
 check(restore.includes('drawLastConstellation20260720'),'Historical Last Constellation renderer is missing');
+check(restore.includes('baseDrawEnemiesAtropos'),'Chronophage historical renderer does not bypass the Reborn sentinel draw wrapper');
+check(restore.includes('drawAtroposSpaceCut'),'Chronophage restore does not preserve the canonical space-cut effect');
+check(restore.includes('stackfallApexVisualRestoreDiagnostics'),'Chronophage live-position/render diagnostics are missing');
 check(!restore.includes("load('src/atropos-world-devourer-prototype.js'"),'Abandoned World Devourer runtime loader is still active');
 check(!restore.includes('simple-four-pattern-v1'),'Abandoned simplified four-pattern state is still active');
 check(!restore.includes("BOSS_NAMES.chronophage.ko='세계포식자 아트로포스'"),'World Devourer rename is still active');
@@ -25,6 +28,9 @@ const report={
   files:files.length,
   visualBaseline:'79afd49b / pre-9af0cdec / 2026-07-20',
   restored:['chronophage','starforge','lastconstellation'],
+  chronophageRenderPath:'live entity -> pre-Reborn drawEnemies -> restored drawEliteShape',
+  sentinelLeakBlocked:true,
+  canonicalSpaceCutPreserved:true,
   abandonedPrototypeRuntime:false,
   damage:{playerMaxHpReferences:false,globalHurtPlayerOverride:false},
   status:failures.length?'FAIL':'PASS',
