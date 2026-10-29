@@ -99,9 +99,17 @@ window.stackfallDeveloperTest?.enabled&&Object.assign(window.stackfallDeveloperT
 });
 if(window.stackfallDeveloperTest?.enabled){const panel=document.querySelector('#stackfallDevPanel');if(panel&&!panel.querySelector('#devApexFoundation')){const box=document.createElement('section');box.id='devApexFoundation';box.className='dev-mode-section';box.innerHTML='<header><strong>APEX FOUNDATION</strong><small>world / clock / body target</small></header><div class="dev-grid"><button id="devApexFoundationRefresh" type="button">초월체 상태 읽기</button><button id="devApexPartsFixture" type="button">DEBUG 부위 fixture</button></div><pre id="devApexFoundationReadout" style="white-space:pre-wrap;font-size:10px;max-height:130px;overflow:auto"></pre>';panel.appendChild(box);const output=box.querySelector('pre');box.querySelector('#devApexFoundationRefresh').onclick=()=>{output.textContent=JSON.stringify({clock:window.stackfallApexClockDiagnostics?.(),boss:window.stackfallBossPartDiagnostics?.()},null,2);};box.querySelector('#devApexPartsFixture').onclick=()=>{const result=window.stackfallDeveloperTest.defineMultipartFixture();output.textContent=JSON.stringify(result,null,2);};}}
 
-// DEV-only visual fixture marker; never adds render or collision geometry.
+// Disable the legacy renderer-wide breathing scale. Individual enemies/bosses may still animate
+// their own internal parts, but the entire entity is no longer uniformly scaled by ±5%.
 const baseDrawBossParts=typeof drawEnemies==='function'?drawEnemies:null;
-if(baseDrawBossParts)drawEnemies=function drawEnemiesWithDevBossParts(){baseDrawBossParts();if(!window.stackfallDeveloperTest?.enabled)return;for(const enemy of state.entities.enemies){if(enemy.dead||!enemy.bodyParts)continue;for(const part of activeBossBodyParts(enemy)){if(part.omegaPlateProxy||part.lcNodeProxy)continue;const p=worldToScreen(part.x,part.y);ctx.save();ctx.strokeStyle='#ff365f';ctx.fillStyle='#ff365f';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();ctx.arc(p.x,p.y,part.r,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.font='900 10px monospace';ctx.textAlign='center';ctx.fillText(`DEBUG ${part.label}`,p.x,p.y-part.r-7);ctx.restore();}}};
+if(baseDrawBossParts)drawEnemies=function drawEnemiesWithoutSharedScalePulse(){
+  const staged=[];
+  for(const enemy of state.entities.enemies){const own=Object.prototype.hasOwnProperty.call(enemy,'stageProduction');staged.push([enemy,own,enemy.stageProduction]);enemy.stageProduction=true;}
+  try{baseDrawBossParts();}finally{for(const [enemy,own,value] of staged){if(own)enemy.stageProduction=value;else delete enemy.stageProduction;}}
+  if(!window.stackfallDeveloperTest?.enabled)return;
+  for(const enemy of state.entities.enemies){if(enemy.dead||!enemy.bodyParts)continue;for(const part of activeBossBodyParts(enemy)){if(part.omegaPlateProxy||part.lcNodeProxy)continue;const p=worldToScreen(part.x,part.y);ctx.save();ctx.strokeStyle='#ff365f';ctx.fillStyle='#ff365f';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();ctx.arc(p.x,p.y,part.r,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.font='900 10px monospace';ctx.textAlign='center';ctx.fillText(`DEBUG ${part.label}`,p.x,p.y-part.r-7);ctx.restore();}}
+};
+window.stackfallSharedEnemyScalePulseDisabled='v1';
 
 // Visual-only Apex presentation chain. Chronophage restores first; Last Constellation installs
 // after that restore so its renderer cannot be overwritten by the historical Apex visual pass.
