@@ -134,10 +134,18 @@
   function drawArmorPlate(e,index,t,amount,alpha=1,outward=0,drift=0){
     if(amount<=.001||alpha<=.001)return;
     const combat=window.stackfallOmegaCombatPlateTransform?.(e,index);if(combat){outward+=Number(combat.outward)||0;drift+=Number(combat.drift)||0;alpha*=Number.isFinite(combat.alpha)?combat.alpha:1;}
-    const a=index/PLATE_COUNT*TAU+t*.025+drift,finalInner=e.r*.45,spawnInner=e.r*2.45,inner=spawnInner+(finalInner-spawnInner)*amount+outward;
-    const long=index%2===0,outer=inner+e.r*(long?1.68:1.28),half=e.r*.42;
-    ctx.save();ctx.rotate(a);ctx.globalAlpha=alpha*amount;ctx.fillStyle=long?'#3d0d07':'#190706';ctx.strokeStyle=long?'#ffe09a':'#ff6a32';ctx.lineWidth=4;
-    ctx.beginPath();ctx.moveTo(inner,-half*.42);ctx.lineTo(outer-e.r*.32,-half);ctx.lineTo(outer,0);ctx.lineTo(outer-e.r*.32,half);ctx.lineTo(inner,half*.42);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+    const split=clamp01(Number(combat?.split)||0),a=index/PLATE_COUNT*TAU+t*.025+drift,finalInner=e.r*.45,spawnInner=e.r*2.45,inner=spawnInner+(finalInner-spawnInner)*amount+outward;
+    const long=index%2===0,outer=inner+e.r*(long?1.68:1.28),half=e.r*.42,fill=long?'#3d0d07':'#190706',stroke=long?'#ffe09a':'#ff6a32';
+    ctx.save();ctx.rotate(a);ctx.globalAlpha=alpha*amount;ctx.fillStyle=fill;ctx.strokeStyle=stroke;ctx.lineWidth=4;
+    if(split>.001){
+      const shift=e.r*.20*split,gap=e.r*(.035+.095*split);
+      ctx.save();ctx.translate(0,-shift);ctx.beginPath();ctx.moveTo(inner,-half*.42);ctx.lineTo(outer-e.r*.32,-half);ctx.lineTo(outer,-gap);ctx.lineTo(inner,-gap);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+      ctx.save();ctx.translate(0,shift);ctx.beginPath();ctx.moveTo(inner,gap);ctx.lineTo(outer,gap);ctx.lineTo(outer-e.r*.32,half);ctx.lineTo(inner,half*.42);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+      ctx.globalCompositeOperation='lighter';ctx.globalAlpha*=.75;ctx.strokeStyle='#fff0a0';ctx.lineWidth=2+split*3;ctx.shadowColor='#ff6a20';ctx.shadowBlur=10+split*12;ctx.beginPath();ctx.moveTo(inner+e.r*.05,-gap*.35);ctx.lineTo(outer-e.r*.10,-gap*.12);ctx.moveTo(inner+e.r*.05,gap*.35);ctx.lineTo(outer-e.r*.10,gap*.12);ctx.stroke();ctx.shadowBlur=0;
+    }else{
+      ctx.beginPath();ctx.moveTo(inner,-half*.42);ctx.lineTo(outer-e.r*.32,-half);ctx.lineTo(outer,0);ctx.lineTo(outer-e.r*.32,half);ctx.lineTo(inner,half*.42);ctx.closePath();ctx.fill();ctx.stroke();
+    }
+    ctx.restore();
   }
   function drawOmegaBody(e){
     const t=e.phase||0,phase=Math.max(1,Math.min(4,e.apexPhase||1)),assembly=assemblyState(e),active=activePlateSet(phase),prev=previousPlateSet(e),transition=plateTransition(e);ctx.save();drawSolarCore(e,t,assembly,phase);
