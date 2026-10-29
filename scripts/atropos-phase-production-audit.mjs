@@ -24,52 +24,57 @@ async function evalJs(expression){const r=await cdp.send('Runtime.evaluate',{exp
 async function waitFor(expression,timeout=15000,interval=70){const st=Date.now();while(Date.now()-st<timeout){try{const v=await evalJs(expression);if(v)return v;}catch{}await sleep(interval);}throw new Error(`waitFor timeout: ${expression}`);}
 function check(ok,label,details=null){report.checks.push({ok:!!ok,label,details});if(!ok)throw new Error(`${label}: ${JSON.stringify(details)}`);}
 async function capture(name,meta={}){const r=await cdp.send('Page.captureScreenshot',{format:'jpeg',quality:86,captureBeyondViewport:false,fromSurface:true});const file=`atropos-${name}.jpg`;writeFileSync(join(out,file),Buffer.from(r.data,'base64'));report.frames.push({file,...meta});}
-async function diag(){return evalJs(`window.stackfallAtroposPhaseDiagnostics?.()`);}
-async function phaseSnapshot(phase,label){const d=await diag();const combat=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='chronophage');return e?{hp:e.hp,maxHp:e.maxHp,phase:e.apexPhase,bodyParts:Array.isArray(e.bodyParts)?e.bodyParts.length:0,telegraphs:state.entities.telegraphs.filter(t=>t?.impactStyle==='temporal-shear').map(t=>({life:t.life,max:t.max,width:t.width,damage:t.damage})),x:e.x,y:e.y}:null;})()`);report.phases[phase]??={};report.phases[phase][label]={diagnostics:d,combat};return{d,combat};}
+async function snapshot(phase,label){const data=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='chronophage'),p=window.stackfallAtroposPhaseDiagnostics?.(),c=window.stackfallAtroposCombatEscalationDiagnostics?.(),hud=document.querySelector('#multiBossBars')?.textContent||'';return e?{phase:p,combat:c,hud,hp:e.hp,maxHp:e.maxHp,bodyParts:Array.isArray(e.bodyParts)?e.bodyParts.length:0,player:{x:player.x,y:player.y},arena:state.apexArena?{x:state.apexArena.x,y:state.apexArena.y,r:state.apexArena.r}:null}:null;})()`);report.phases[phase]??={};report.phases[phase][label]=data;return data;}
 
 try{
   const target=await endpoint(`/json/new?${encodeURIComponent(`http://127.0.0.1:${port}/?dev=1&atroposPhaseAudit=1`)}`);cdp=new Cdp(target.webSocketDebuggerUrl);await cdp.ready;
   cdp.on('Runtime.exceptionThrown',e=>report.exceptions.push(e.exceptionDetails?.exception?.description||e.exceptionDetails?.text||'unknown'));
   cdp.on('Runtime.consoleAPICalled',e=>report.console.push({type:e.type,text:(e.args||[]).map(a=>String(a.value??a.description??'')).join(' ')}));
   await Promise.all([cdp.send('Page.enable'),cdp.send('Runtime.enable'),cdp.send('Network.enable')]);
-  await waitFor(`window.stackfallAtroposPhaseProduction==='v1'&&window.stackfallApexIdentityCombat==='v1'&&window.stackfallApexVisualRestore==='pre-9af0cdec-2026-07-20'&&typeof stackfallDeveloperTest==='object'&&typeof beginApexEncounter==='function'`,18000);
+  await waitFor(`window.stackfallAtroposPhaseProduction==='v1'&&window.stackfallAtroposCombatEscalation==='v1'&&window.stackfallAtroposHudCleanup==='v1'&&window.stackfallApexVisualRestore==='pre-9af0cdec-2026-07-20'&&typeof stackfallDeveloperTest==='object'&&typeof beginApexEncounter==='function'`,18000);
   const started=await evalJs(`(()=>{const api=stackfallDeveloperTest;api.startEndless();api.setInvincible(true);api.setLevelUpsDisabled(true);GAME_SETTINGS.audio.master=false;state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;state.mode='playing';ui.choice?.classList.add('hidden');state.spawnTimer=state.encounterTimer=99999;state.bossBags=state.bossBags||{};state.bossBags.apex=['chronophage'];state.lastBossForms=state.lastBossForms||{};state.lastBossForms.apex='starforge';state.pendingApexForm=null;state.apexActiveId=null;state.apexExitPending=false;return beginApexEncounter();})()`);
   check(started,'Chronophage encounter started',started);
   await waitFor(`state.entities.enemies.some(e=>!e.dead&&e.apexForm==='chronophage')`,18000);
   await waitFor(`!ui.bossNotice||ui.bossNotice.classList.contains('hidden')`,18000);
-  await waitFor(`window.stackfallAtroposPhaseDiagnostics?.()?.visualPhase===1`,8000);
-  let snap=await phaseSnapshot(1,'settled');
-  check(snap.d?.phase===1&&snap.d?.visualPhase===1,'P1 visual/combat phase aligned',snap.d);
-  check(snap.combat?.bodyParts===0,'P1 visible body remains direct weapon target',snap.combat);
-  check(Array.isArray(snap.d?.availablePatterns)&&snap.d.availablePatterns.length===0,'P1 has no added history pattern',snap.d?.availablePatterns);
-  await capture('p1-settled',{phase:1});
+  await waitFor(`window.stackfallAtroposPhaseDiagnostics?.()?.visualPhase===1&&window.stackfallAtroposCombatEscalationDiagnostics?.()?.arena?.r>300`,9000);
+  let snap=await snapshot(1,'settled');
+  check(snap.phase?.phase===1&&snap.phase?.visualPhase===1,'P1 visual/combat phase aligned',snap.phase);
+  check(JSON.stringify(snap.phase?.attackGrammar)===JSON.stringify(['space-cut','anti-idle-scar']),'P1 contains only Space Cut and anti-idle scar',snap.phase?.attackGrammar);
+  check(snap.bodyParts===0,'P1 direct body targeting preserved',snap.bodyParts);
+  check(!/P[1-4]/.test(snap.hud),'Chronophage HUD hides explicit phase number',snap.hud);
+  check((snap.arena?.r||0)>=318,'Chronophage arena is not cramped',snap.arena);
+  await capture('p1-arena',{phase:1});
 
-  const expectations={2:['temporal-echo'],3:['temporal-echo','split-timeline'],4:['temporal-echo','split-timeline','causality-reversal']};
-  const showcase={2:'temporal-echo',3:'split-timeline',4:'causality-reversal'};
+  const pull=await evalJs(`(()=>{const a=state.apexArena;player.x=a.x+a.r+120;player.y=a.y;return{before:Math.hypot(player.x-a.x,player.y-a.y),r:a.r};})()`);await sleep(900);
+  const pullAfter=await evalJs(`(()=>{const a=state.apexArena;const after=Math.hypot(player.x-a.x,player.y-a.y);player.x=a.x;player.y=a.y+a.r*.34;return after;})()`);
+  check(pullAfter<pull.before-20,'Soft arena boundary pulls an escaped player back inward',{before:pull.before,after:pullAfter,r:pull.r});
+
   for(const phase of[2,3,4]){
     const set=await evalJs(`stackfallDeveloperTest.atroposSetPhase(${phase})`);check(set,`P${phase} HP threshold forced`,set);
     await waitFor(`window.stackfallAtroposPhaseDiagnostics?.()?.phase===${phase}`,7000);
     await waitFor(`window.stackfallAtroposPhaseDiagnostics?.()?.transition?.phase===${phase}`,9000);
-    await waitFor(`(()=>{const d=window.stackfallAtroposPhaseDiagnostics?.();return d?.transition?.phase===${phase}&&d.transition.age/d.transition.duration>.36&&d.transition.age/d.transition.duration<.82;})()`,5000);
-    await phaseSnapshot(phase,'transition');await capture(`p${phase}-transition`,{phase,transition:true});
-    await waitFor(`(()=>{const d=window.stackfallAtroposPhaseDiagnostics?.();return d?.phase===${phase}&&d.visualPhase===${phase}&&!d.pending&&!d.transition;})()`,9000);
-    snap=await phaseSnapshot(phase,'settled');
-    check(JSON.stringify(snap.d?.availablePatterns)===JSON.stringify(expectations[phase]),`P${phase} exposes intended pattern grammar`,snap.d?.availablePatterns);
-    check(snap.combat?.bodyParts===0,`P${phase} direct body targeting preserved`,snap.combat);
-    await capture(`p${phase}-settled`,{phase});
-    const fired=await evalJs(`stackfallDeveloperTest.atroposFirePattern(${JSON.stringify(showcase[phase])})`);check(fired,`P${phase} showcase pattern fired`,showcase[phase]);
-    await sleep(phase===4?330:90);
-    const active=await phaseSnapshot(phase,'pattern');
-    check(active.d?.lastPattern===showcase[phase],`P${phase} lastPattern records showcase`,active.d);
-    check((active.combat?.telegraphs?.length||0)>0,`P${phase} showcase produced temporal-shear warnings`,active.combat?.telegraphs);
-    if(phase===4){
-      const maxima=[...new Set(active.combat.telegraphs.map(t=>Math.round((t.max||0)*100)/100))];
-      check(maxima.length>=3,'P4 reversal has staggered warning lifetimes',maxima);
+    if(phase<4){
+      await waitFor(`(()=>{const d=window.stackfallAtroposPhaseDiagnostics?.();return d?.transition?.phase===${phase}&&d.transition.age/d.transition.duration>.30&&d.transition.age/d.transition.duration<.82;})()`,5000);
+      await capture(`p${phase}-transition`,{phase,transition:true});
+    }else{
+      await waitFor(`window.stackfallAtroposCombatEscalationDiagnostics?.()?.p4TimeStopActive===true`,5000);
+      const stop=await snapshot(phase,'time-stop');check(Math.abs((stop.combat?.transition?.duration||0)-3)<.02,'P4 transition freezes time for three seconds',stop.combat?.transition);await sleep(900);await capture('p4-time-stop',{phase:4,timeStop:true});
     }
-    await capture(`p${phase}-${showcase[phase]}`,{phase,pattern:showcase[phase]});
-    await sleep(1250);
+    await waitFor(`(()=>{const d=window.stackfallAtroposPhaseDiagnostics?.();return d?.phase===${phase}&&d.visualPhase===${phase}&&!d.pending&&!d.transition;})()`,phase===4?9000:6000);
+    snap=await snapshot(phase,'settled');check(snap.bodyParts===0,`P${phase} direct body targeting preserved`,snap.bodyParts);check(!/P[1-4]/.test(snap.hud),`P${phase} remains unlabeled in HUD`,snap.hud);
+    if(phase===2){
+      check(snap.combat?.clockHand?.stepSeconds===2,'P2 clock hand advances one hour every two seconds',snap.combat?.clockHand);const before=snap.combat.clockHand.index;check(await evalJs(`stackfallDeveloperTest.atroposForceClockStep()`),'P2 forced hand step accepted');await sleep(260);const after=await snapshot(phase,'hand-step');check(after.combat?.clockHand?.index!==before,'P2 hand advances discretely across twelve sectors',{before,after:after.combat?.clockHand});await capture('p2-clock-hand',{phase:2});
+    }
+    if(phase===3){
+      check(snap.combat?.clockHand?.stepSeconds===1,'P3 clock hand accelerates to one second per hour',snap.combat?.clockHand);check(Math.abs((snap.combat?.fieldCooldown||0)-3)<.01,'P3 time-field cooldown is three seconds',snap.combat?.fieldCooldown);check(await evalJs(`stackfallDeveloperTest.atroposSpawnTimeField()`),'P3 time field spawned');await sleep(720);const field=await snapshot(phase,'time-field');check((field.combat?.timeFields?.length||0)>0&&field.combat.timeFields.some(f=>f.age>f.warn&&f.age<f.total),'P3 time field persists as an active circular clock zone',field.combat?.timeFields);await capture('p3-time-field',{phase:3});
+    }
+    if(phase===4){
+      check(snap.combat?.p4TimeStopDone===true,'P4 time stop completed before combat resumes',snap.combat);check(snap.combat?.clockHand?.stepSeconds===.5,'P4 clock hand reverses at half-second steps',snap.combat?.clockHand);check(Math.abs((snap.combat?.fieldCooldown||0)-1.65)<.01,'P4 nominal time-field cooldown is 1.65 seconds',snap.combat?.fieldCooldown);
+      for(let i=0;i<3;i++){check(await evalJs(`stackfallDeveloperTest.atroposForceClockStep()`),`P4 forced reverse hand step ${i+1} accepted`);await sleep(190);}await sleep(280);const broken=await snapshot(phase,'broken-clock');check((broken.combat?.clockHand?.offTimer||0)>1,'P4 clock hand turns off for two seconds after three reverse steps',broken.combat?.clockHand);await capture('p4-broken-clock',{phase:4});
+      check(await evalJs(`stackfallDeveloperTest.atroposSpawnTimeField()`),'P4 time field spawned');await sleep(620);const field=await snapshot(phase,'time-field');check((field.combat?.timeFields?.length||0)>0,'P4 keeps short-lived clock fields active',field.combat?.timeFields);await capture('p4-time-field',{phase:4});
+    }
+    await capture(`p${phase}-settled`,{phase});
   }
-  check(report.exceptions.length===0,'No runtime exceptions during P1-P4 audit',report.exceptions);
-  report.status='PASS';
+  check(report.exceptions.length===0,'No runtime exceptions during P1-P4 audit',report.exceptions);report.status='PASS';
 }catch(error){report.status='FAIL';report.error=String(error?.stack||error);throw error;
 }finally{writeFileSync(join(out,'atropos-phase-production.json'),JSON.stringify(report,null,2));try{cdp?.close();}catch{}try{browser.kill('SIGTERM');}catch{}await sleep(120);try{server.close();}catch{}try{rmSync(profile,{recursive:true,force:true});}catch{}}
