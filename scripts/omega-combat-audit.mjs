@@ -1,0 +1,49 @@
+import {spawn} from 'node:child_process';
+import {existsSync,mkdirSync,mkdtempSync,rmSync,writeFileSync} from 'node:fs';
+import {createServer} from 'node:http';
+import {tmpdir} from 'node:os';
+import {dirname,extname,join,normalize,resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+const out=resolve(root,'test-results','atropos-visual');mkdirSync(out,{recursive:true});
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const profile=mkdtempSync(join(tmpdir(),'stackfall-omega-combat-'));
+const port=8014,debugPort=9238;
+const chromeCandidates=[process.env.STACKFALL_CHROME,process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].filter(Boolean);
+const chromePath=chromeCandidates.find(existsSync);if(!chromePath)throw new Error('Chrome not found');
+const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.webmanifest':'application/manifest+json'};
+const server=createServer(async(req,res)=>{try{const u=new URL(req.url||'/',`http://127.0.0.1:${port}`);let rel=decodeURIComponent(u.pathname);if(rel==='/'||rel==='')rel='/index.html';const safe=normalize(rel).replace(/^([/\\])+/,'');const path=resolve(root,safe);if(!path.startsWith(root)){res.writeHead(403);res.end('forbidden');return;}const {readFile}=await import('node:fs/promises');const body=await readFile(path);res.writeHead(200,{'content-type':mime[extname(path)]||'application/octet-stream','cache-control':'no-store'});res.end(body);}catch{res.writeHead(404);res.end('not found');}});
+await new Promise((ok,fail)=>{server.once('error',fail);server.listen(port,'127.0.0.1',ok);});
+const browser=spawn(chromePath,['--headless=new',`--remote-debugging-port=${debugPort}`,'--remote-debugging-address=127.0.0.1',`--user-data-dir=${profile}`,'--window-size=1280,720','--force-device-scale-factor=1','--disable-background-timer-throttling','--disable-renderer-backgrounding','--disable-backgrounding-occluded-windows','--autoplay-policy=no-user-gesture-required','--mute-audio','--no-first-run','--no-default-browser-check','--no-sandbox','--disable-dev-shm-usage','about:blank'],{stdio:['ignore','pipe','pipe']});
+let chromeLog='';browser.stderr.on('data',d=>chromeLog+=String(d));
+async function endpoint(path,timeout=15000){const st=Date.now();while(Date.now()-st<timeout){try{const r=await fetch(`http://127.0.0.1:${debugPort}${path}`,path.startsWith('/json/new?')?{method:'PUT'}:{});if(r.ok)return r.json();}catch{}await sleep(100);}throw new Error(`Chrome endpoint timeout ${path}\n${chromeLog.slice(-1600)}`);}
+class Cdp{constructor(url){this.id=0;this.pending=new Map();this.events=new Map();this.ready=new Promise((ok,fail)=>{this.ws=new WebSocket(url);this.ws.addEventListener('open',ok,{once:true});this.ws.addEventListener('error',fail,{once:true});this.ws.addEventListener('message',ev=>{const m=JSON.parse(ev.data);if(m.id){const p=this.pending.get(m.id);if(!p)return;this.pending.delete(m.id);clearTimeout(p.timer);m.error?p.fail(new Error(m.error.message)):p.ok(m.result);return;}for(const fn of this.events.get(m.method)||[])fn(m.params);});});}async send(method,params={},timeout=20000){await this.ready;const id=++this.id;return new Promise((ok,fail)=>{const timer=setTimeout(()=>{this.pending.delete(id);fail(new Error(`CDP timeout ${method}`));},timeout);this.pending.set(id,{ok,fail,timer});this.ws.send(JSON.stringify({id,method,params}));});}on(name,fn){const a=this.events.get(name)||[];a.push(fn);this.events.set(name,a);}close(){this.ws?.close();}}
+let cdp;const report={startedAt:new Date().toISOString(),checks:[],captures:[],exceptions:[],phases:{}};
+async function evalJs(expression){const r=await cdp.send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true,userGesture:true});if(r.exceptionDetails)throw new Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result?.value;}
+async function waitFor(expression,timeout=16000,interval=50){const st=Date.now();while(Date.now()-st<timeout){try{const v=await evalJs(expression);if(v)return v;}catch{}await sleep(interval);}throw new Error(`waitFor timeout: ${expression}`);}
+function check(ok,label,details=null){report.checks.push({ok:!!ok,label,details});if(!ok)throw new Error(`${label}: ${JSON.stringify(details)}`);}
+async function capture(name,meta={}){const r=await cdp.send('Page.captureScreenshot',{format:'jpeg',quality:88,captureBeyondViewport:false,fromSurface:true});const file=`omega-combat-${name}.jpg`;writeFileSync(join(out,file),Buffer.from(r.data,'base64'));report.captures.push({file,...meta});}
+async function diag(){return evalJs(`(()=>({combat:window.stackfallOmegaCombatDiagnostics?.(),production:window.stackfallOmegaProductionDiagnostics?.(),runtime:window.stackfallRuntimeDiagnostics?.()}))()`);}
+async function setPhase(ratio,phase){await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='starforge');e.hp=e.maxHp*${ratio};apexBossSkill(e,.05);return e.apexPhase;})()`);await waitFor(`window.stackfallOmegaCombatDiagnostics?.()?.phase===${phase}`,4000);await sleep(120);}
+
+try{
+  const target=await endpoint(`/json/new?${encodeURIComponent(`http://127.0.0.1:${port}/?dev=1&omegaCombatAudit=1`)}`);cdp=new Cdp(target.webSocketDebuggerUrl);await cdp.ready;
+  cdp.on('Runtime.exceptionThrown',e=>report.exceptions.push(e.exceptionDetails?.exception?.description||e.exceptionDetails?.text||'unknown'));
+  await Promise.all([cdp.send('Page.enable'),cdp.send('Runtime.enable'),cdp.send('Network.enable')]);
+  await waitFor(`window.stackfallOmegaCombat==='v1'&&window.stackfallOmegaProduction==='v1'&&typeof stackfallDeveloperTest==='object'&&typeof beginApexEncounter==='function'`,18000);
+  const started=await evalJs(`(()=>{const api=stackfallDeveloperTest;api.startEndless();api.setInvincible(true);api.setLevelUpsDisabled(true);GAME_SETTINGS.audio.master=false;state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;state.mode='playing';ui.choice?.classList.add('hidden');state.spawnTimer=state.encounterTimer=99999;state.bossBags=state.bossBags||{};state.bossBags.apex=['starforge'];state.lastBossForms=state.lastBossForms||{};state.lastBossForms.apex='chronophage';state.pendingApexForm=null;state.apexActiveId=null;state.apexExitPending=false;return beginApexEncounter();})()`);check(started,'Omega encounter starts',started);
+  await waitFor(`!state.realmTransition&&state.mode==='playing'&&state.entities.enemies.some(e=>!e.dead&&e.apexForm==='starforge')`,14000);await sleep(180);
+
+  let snap=await diag();report.phases.p1=snap;check(snap.combat?.phase===1,'P1 combat diagnostics active',snap.combat);check(snap.combat?.arenaRadius===620,'Omega desktop arena radius is production size',snap.combat);check(snap.combat?.cannonCooldown===3,'P1 armor cannon uses 3s cadence',snap.combat);check(snap.combat?.droneInterval===5&&snap.combat?.droneCap===5,'P1 drone cadence/cap is 5s / 5',snap.combat);
+  await evalJs(`stackfallOmegaCombatTest.forcePattern('cannon');stackfallOmegaCombatTest.forcePattern('drone');true`);await sleep(120);snap=await diag();check(snap.combat?.active?.cannon,'P1 armor cannon can be forced active',snap.combat);check(snap.combat?.droneCount>=1,'P1 can summon weak laser drone',snap.combat);await capture('p1-cannon-drone',{combat:snap.combat});
+
+  await setPhase(.70,2);await evalJs(`stackfallOmegaCombatTest.forcePattern('wind')`);await sleep(120);snap=await diag();report.phases.p2=snap;check(snap.combat?.windEnabled&&snap.combat?.active?.wind,'P2 adds coronal pressure / solar-wind control',snap.combat);check(snap.combat?.droneInterval===4&&snap.combat?.droneCap===7,'P2 drone cadence/cap is 4s / 7',snap.combat);await capture('p2-wind',{combat:snap.combat});
+
+  await setPhase(.45,3);await evalJs(`stackfallOmegaCombatTest.forcePattern('fan')`);await sleep(120);snap=await diag();report.phases.p3=snap;check(snap.combat?.fanEnabled&&snap.combat?.active?.fan,'P3 adds armor-gap fan heat',snap.combat);check(snap.combat?.cannonCooldown===1.65,'P3 armor cannon accelerates to 1.65s',snap.combat);check(snap.combat?.droneInterval===3&&snap.combat?.droneCap===9,'P3 drone cadence/cap is 3s / 9',snap.combat);await capture('p3-fan',{combat:snap.combat});
+
+  await setPhase(.20,4);await evalJs(`stackfallOmegaCombatTest.forceDebris();stackfallOmegaCombatTest.forcePattern('heat');true`);await sleep(160);snap=await diag();report.phases.p4=snap;check(snap.production?.plateCount===0,'P4 has zero external armor plates',snap.production);check(snap.combat?.cannonCooldown===999,'P4 disables armor cannon',snap.combat);check(snap.combat?.debrisCount===8,'P4 has eight orbiting armor debris shields',snap.combat);check(snap.combat?.globalHeatEnabled&&snap.combat?.active?.heat,'P4 uses arena-wide heat burst',snap.combat);check(snap.combat?.droneInterval===2&&snap.combat?.droneCap===10,'P4 drone cadence/cap is 2s / 10',snap.combat);await capture('p4-heat-cover',{combat:snap.combat});
+
+  check((snap.runtime?.errorCount||0)===0,'No runtime stage errors during Omega combat audit',snap.runtime?.errors||[]);check(report.exceptions.length===0,'No uncaught exceptions during Omega combat audit',report.exceptions);report.status='PASS';
+}catch(error){report.status='FAIL';report.error=String(error?.stack||error);throw error;
+}finally{writeFileSync(join(out,'omega-combat.json'),JSON.stringify(report,null,2));try{cdp?.close();}catch{}try{browser.kill('SIGTERM');}catch{}await sleep(120);try{server.close();}catch{}try{rmSync(profile,{recursive:true,force:true});}catch{}}
