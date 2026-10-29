@@ -8,7 +8,7 @@ import {fileURLToPath} from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const out=resolve(root,'test-results','atropos-visual');mkdirSync(out,{recursive:true});
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const profile=mkdtempSync(join(tmpdir(),'stackfall-lc-hit-'));
+const profile=mkdtempSync(join(tmpdir(),'stackfall-lc-combat-v2-'));
 const port=8007,debugPort=9231;
 const chromeCandidates=[process.env.STACKFALL_CHROME,process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].filter(Boolean);
 const chromePath=chromeCandidates.find(existsSync);if(!chromePath)throw new Error('Chrome not found');
@@ -19,23 +19,50 @@ const browser=spawn(chromePath,['--headless=new',`--remote-debugging-port=${debu
 let chromeLog='';browser.stderr.on('data',d=>chromeLog+=String(d));
 async function endpoint(path,timeout=15000){const st=Date.now();while(Date.now()-st<timeout){try{const r=await fetch(`http://127.0.0.1:${debugPort}${path}`,path.startsWith('/json/new?')?{method:'PUT'}:{});if(r.ok)return r.json();}catch{}await sleep(100);}throw new Error(`Chrome endpoint timeout ${path}\n${chromeLog.slice(-1800)}`);}
 class Cdp{constructor(url){this.id=0;this.pending=new Map();this.ready=new Promise((ok,fail)=>{this.ws=new WebSocket(url);this.ws.addEventListener('open',ok,{once:true});this.ws.addEventListener('error',fail,{once:true});this.ws.addEventListener('message',ev=>{const m=JSON.parse(ev.data);if(!m.id)return;const p=this.pending.get(m.id);if(!p)return;this.pending.delete(m.id);clearTimeout(p.timer);m.error?p.fail(new Error(m.error.message)):p.ok(m.result);});});}async send(method,params={},timeout=20000){await this.ready;const id=++this.id;return new Promise((ok,fail)=>{const timer=setTimeout(()=>{this.pending.delete(id);fail(new Error(`CDP timeout ${method}`));},timeout);this.pending.set(id,{ok,fail,timer});this.ws.send(JSON.stringify({id,method,params}));});}close(){this.ws?.close();}}
-let cdp;const report={startedAt:new Date().toISOString(),checks:[]};
+let cdp;const report={startedAt:new Date().toISOString(),checks:[],captures:[]};
 async function evalJs(expression){const r=await cdp.send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true,userGesture:true});if(r.exceptionDetails)throw new Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result?.value;}
 async function waitFor(expression,timeout=18000){const st=Date.now();while(Date.now()-st<timeout){try{const v=await evalJs(expression);if(v)return v;}catch{}await sleep(70);}throw new Error(`waitFor timeout: ${expression}`);}
 function check(ok,label,details=null){report.checks.push({ok:!!ok,label,details});if(!ok)throw new Error(`${label}: ${JSON.stringify(details)}`);}
+async function capture(name){const r=await cdp.send('Page.captureScreenshot',{format:'jpeg',quality:90,captureBeyondViewport:false,fromSurface:true});const file=`lastconstellation-${name}.jpg`;writeFileSync(join(out,file),Buffer.from(r.data,'base64'));report.captures.push(file);}
+async function diag(){return evalJs(`window.stackfallLastConstellationCombatDiagnostics?.()`);}
+async function destroyLayer(){return evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='lastconstellation');if(!e)return null;const before=e.lcStructure.phase;const parts=(e.bodyParts||[]).filter(p=>p.lcNodeProxy&&p.active);for(const p of parts)dealDamage(p,1e12,{source:'lc-audit-destroy'});return{before,count:parts.length,after:e.lcStructure.phase};})()`);}
 
 try{
-  const target=await endpoint(`/json/new?${encodeURIComponent(`http://127.0.0.1:${port}/?dev=1&lchit=${Date.now()}`)}`);cdp=new Cdp(target.webSocketDebuggerUrl);await cdp.ready;await Promise.all([cdp.send('Page.enable'),cdp.send('Runtime.enable')]);
-  await cdp.send('Page.navigate',{url:`http://127.0.0.1:${port}/?dev=1&lchit=${Date.now()}`});
-  await waitFor(`window.stackfallLastConstellationHitRouting==='v1'&&typeof stackfallDeveloperTest==='object'&&typeof beginApexEncounter==='function'`);
+  const target=await endpoint(`/json/new?${encodeURIComponent(`http://127.0.0.1:${port}/?dev=1&lccombat=${Date.now()}`)}`);cdp=new Cdp(target.webSocketDebuggerUrl);await cdp.ready;await Promise.all([cdp.send('Page.enable'),cdp.send('Runtime.enable')]);
+  await cdp.send('Page.navigate',{url:`http://127.0.0.1:${port}/?dev=1&lccombat=${Date.now()}`});
+  await waitFor(`window.stackfallLastConstellationCombat==='v2'&&window.stackfallLastConstellationHitRouting==='v1'&&window.stackfallPlayerHitInvulnerability==='v2'&&typeof stackfallDeveloperTest==='object'&&typeof beginApexEncounter==='function'`);
   const started=await evalJs(`(()=>{const api=stackfallDeveloperTest;api.startEndless();api.setInvincible(true);api.setLevelUpsDisabled(true);GAME_SETTINGS.audio.master=false;state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;state.mode='playing';ui.choice?.classList.add('hidden');state.spawnTimer=state.encounterTimer=99999;state.bossBags=state.bossBags||{};state.bossBags.apex=['lastconstellation'];state.lastBossForms=state.lastBossForms||{};state.lastBossForms.apex='chronophage';return beginApexEncounter();})()`);
-  check(started,'encounter starts');await waitFor(`state.entities.enemies.some(e=>!e.dead&&e.apexForm==='lastconstellation')`);await waitFor(`!state.realmTransition&&state.mode==='playing'`);await sleep(250);
-  const hit=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='lastconstellation');const part=(e.bodyParts||[]).find(p=>p.lcNodeProxy&&p.active);if(!part)return{ok:false,reason:'no-active-part'};const node=e.lcStructure.nodes[part.lcNodeKey],before=node.hp,bossBefore=e.hp;spawnPlayerProjectile({x:part.x,y:part.y,vx:0,vy:0,r:6,life:.25,maxRange:60,damage:Math.max(1,node.maxHp*.08),color:'#ffffff',pierce:0,source:'lc-audit-shot'});updateProjectiles(.016);return{ok:true,key:part.lcNodeKey,before,after:node.hp,bossBefore,bossAfter:e.hp,projectiles:state.entities.projectiles.length};})()`);
-  check(hit?.ok&&hit.after<hit.before&&hit.bossAfter<hit.bossBefore,'real player projectile damages active outer node',hit);
-  const routing=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='lastconstellation');const p=(e.bodyParts||[]).find(x=>x.lcNodeProxy&&x.active);const list=performanceNearbyEnemies(p.x,p.y,16,[]);return{key:p.lcNodeKey,found:list.some(x=>x?.lcNodeProxy&&x.id===p.id),ids:list.map(x=>x.id)};})()`);
-  check(routing?.found===true,'performance collision query includes distant active node proxy',routing);
-  const noPatterns=await evalJs(`({combatLoaded:window.stackfallLastConstellationCombat||null,enemyProjectiles:state.entities.enemyProjectiles.length,telegraphs:state.entities.telegraphs.length})`);
-  check(noPatterns.combatLoaded===null,'no authored Last Constellation combat layer is loaded',noPatterns);
+  check(started,'encounter starts');await waitFor(`state.entities.enemies.some(e=>!e.dead&&e.apexForm==='lastconstellation')`);await waitFor(`!state.realmTransition&&state.mode==='playing'`);await sleep(300);
+
+  const hit=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='lastconstellation');const part=(e.bodyParts||[]).find(p=>p.lcNodeProxy&&p.active);if(!part)return{ok:false};const node=e.lcStructure.nodes[part.lcNodeKey],before=node.hp,bossBefore=e.hp;spawnPlayerProjectile({x:part.x,y:part.y,vx:0,vy:0,r:6,life:.25,maxRange:60,damage:Math.max(1,node.maxHp*.08),color:'#fff',pierce:0,source:'lc-audit-shot'});updateProjectiles(.016);return{ok:true,before,after:node.hp,bossBefore,bossAfter:e.hp};})()`);
+  check(hit?.ok&&hit.after<hit.before&&hit.bossAfter<hit.bossBefore,'active node receives real player projectile damage',hit);
+  check((await evalJs(`window.stackfallPlayerHitInvulnerabilitySeconds`))===.4,'global hit invulnerability shortened to 0.40s');
+
+  let d=await diag();check(d?.version==='v2'&&d.phase===1&&d.cometPerNode===1&&d.connectionMaxNodes===2,'P1 configuration',d);
+  await evalJs(`stackfallLastConstellationCombatDebug.clear();stackfallLastConstellationCombatDebug.forceComets();stackfallLastConstellationCombatDebug.forceConnection(2);stackfallLastConstellationCombatDebug.forceBeam();`);
+  await sleep(100);d=await diag();
+  check(d.activeComets>=4,'P1 one comet per surviving outer node',d);
+  check(d.activeLinkNodes===2,'P1 connection uses two nodes',d);
+  check(d.activeBeams===4,'P1 all four active nodes prepare tracking beams',d);
+  await capture('p1-authored-kit');
+
+  let step=await destroyLayer();check(step?.count===4&&step.after===2,'P1 destruction enters P2',step);await sleep(250);
+  d=await diag();check(d.phase===2&&d.cometPerNode===2&&d.connectionMaxNodes===3&&d.beamTrackSpeed>.34,'P2 escalates comet/link/beam settings',d);
+  await evalJs(`stackfallLastConstellationCombatDebug.clear();stackfallLastConstellationCombatDebug.forceComets();stackfallLastConstellationCombatDebug.forceConnection(3);stackfallLastConstellationCombatDebug.forceBeam();`);
+  await sleep(80);d=await diag();check(d.activeComets>=6&&d.activeLinkNodes===3&&d.activeBeams===3,'P2 three-node connection and volleys are live',d);
+
+  step=await destroyLayer();check(step?.count===3&&step.after===3,'P2 destruction enters P3',step);await sleep(250);
+  d=await diag();check(d.phase===3&&d.cometPerNode===2&&d.connectionMode==='permanent'&&d.beamTrackSpeed>.39,'P3 permanent-link escalation',d);
+  await capture('p3-permanent-links');
+
+  step=await destroyLayer();check(step?.count===3&&step.after===4,'P3 destruction awakens core',step);await sleep(450);
+  d=await diag();check(d.phase===4&&d.debrisAnchors>=10&&d.debrisCount>=30,'destroyed nodes persist as floating debris',d);
+  await evalJs(`stackfallLastConstellationCombatDebug.clear();stackfallLastConstellationCombatDebug.forceComets();stackfallLastConstellationCombatDebug.forceBeam();`);
+  await sleep(80);d=await diag();
+  check(d.cometPerNode===5&&d.activeComets>=5,'P4 core fires five enhanced homing comets',d);
+  check(d.activeBeams===1&&d.beamWidth>=30&&d.p4Ricochet===true&&d.p4BounceCount>=3,'P4 core beam ricochets through shattered-node debris',d);
+  await capture('p4-ricochet-beam');
+
   report.status='PASS';
 }catch(error){report.status='FAIL';report.error=String(error?.stack||error);throw error;
-}finally{writeFileSync(join(out,'lastconstellation-hit-observations.json'),JSON.stringify(report,null,2));try{cdp?.close();}catch{}try{browser.kill('SIGTERM');}catch{}await sleep(80);try{server.close();}catch{}try{rmSync(profile,{recursive:true,force:true});}catch{}}
+}finally{writeFileSync(join(out,'lastconstellation-combat-observations.json'),JSON.stringify(report,null,2));try{cdp?.close();}catch{}try{browser.kill('SIGTERM');}catch{}await sleep(80);try{server.close();}catch{}try{rmSync(profile,{recursive:true,force:true});}catch{}}
