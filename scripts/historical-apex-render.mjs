@@ -1,0 +1,30 @@
+import {spawn} from 'node:child_process';
+import {existsSync,mkdirSync,mkdtempSync,rmSync,writeFileSync} from 'node:fs';
+import {createServer} from 'node:http';
+import {tmpdir} from 'node:os';
+import {dirname,extname,join,normalize,resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+
+const root=process.cwd();
+const label=process.env.HIST_LABEL||'historical';
+const out=resolve(root,'test-results','historical-apex');mkdirSync(out,{recursive:true});
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const profile=mkdtempSync(join(tmpdir(),'stackfall-hist-apex-'));
+const port=8020,debugPort=9244;
+const chromeCandidates=[process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].filter(Boolean);
+const chromePath=chromeCandidates.find(existsSync);if(!chromePath)throw new Error('Chrome not found');
+const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.webmanifest':'application/manifest+json'};
+const server=createServer(async(req,res)=>{try{const u=new URL(req.url||'/',`http://127.0.0.1:${port}`);let rel=decodeURIComponent(u.pathname);if(rel==='/'||rel==='')rel='/index.html';const safe=normalize(rel).replace(/^([/\\])+/,''),path=resolve(root,safe);if(!path.startsWith(root)){res.writeHead(403);res.end('forbidden');return;}const {readFile}=await import('node:fs/promises');const body=await readFile(path);res.writeHead(200,{'content-type':mime[extname(path)]||'application/octet-stream','cache-control':'no-store'});res.end(body);}catch{res.writeHead(404);res.end('not found');}});
+await new Promise((ok,fail)=>{server.once('error',fail);server.listen(port,'127.0.0.1',ok);});
+const browser=spawn(chromePath,['--headless=new',`--remote-debugging-port=${debugPort}`,'--remote-debugging-address=127.0.0.1',`--user-data-dir=${profile}`,'--window-size=1280,720','--force-device-scale-factor=1','--disable-background-timer-throttling','--disable-renderer-backgrounding','--disable-backgrounding-occluded-windows','--mute-audio','--no-first-run','--no-default-browser-check','--no-sandbox','--disable-dev-shm-usage','about:blank'],{stdio:['ignore','pipe','pipe']});
+let chromeLog='';browser.stderr.on('data',d=>chromeLog+=String(d));
+async function endpoint(path,timeout=15000){const st=Date.now();while(Date.now()-st<timeout){try{const r=await fetch(`http://127.0.0.1:${debugPort}${path}`,path.startsWith('/json/new?')?{method:'PUT'}:{});if(r.ok)return r.json();}catch{}await sleep(100);}throw new Error(`Chrome endpoint timeout ${path}\n${chromeLog.slice(-2000)}`);}
+class Cdp{constructor(url){this.id=0;this.pending=new Map();this.ready=new Promise((ok,fail)=>{this.ws=new WebSocket(url);this.ws.addEventListener('open',ok,{once:true});this.ws.addEventListener('error',fail,{once:true});this.ws.addEventListener('message',ev=>{const m=JSON.parse(ev.data);if(!m.id)return;const p=this.pending.get(m.id);if(!p)return;this.pending.delete(m.id);clearTimeout(p.timer);m.error?p.fail(new Error(m.error.message)):p.ok(m.result);});});}async send(method,params={},timeout=20000){await this.ready;const id=++this.id;return new Promise((ok,fail)=>{const timer=setTimeout(()=>{this.pending.delete(id);fail(new Error(`CDP timeout ${method}`));},timeout);this.pending.set(id,{ok,fail,timer});this.ws.send(JSON.stringify({id,method,params}));});}close(){this.ws?.close();}}
+let cdp;async function evalJs(expression){const r=await cdp.send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true,userGesture:true});if(r.exceptionDetails)throw new Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result?.value;}
+async function waitFor(expression,timeout=15000){const st=Date.now();while(Date.now()-st<timeout){try{const v=await evalJs(expression);if(v)return v;}catch{}await sleep(80);}throw new Error(`waitFor timeout: ${expression}`);}
+try{
+  const target=await endpoint(`/json/new?${encodeURIComponent(`http://127.0.0.1:${port}/`)}`);cdp=new Cdp(target.webSocketDebuggerUrl);await cdp.ready;await Promise.all([cdp.send('Page.enable'),cdp.send('Runtime.enable')]);await cdp.send('Page.navigate',{url:`http://127.0.0.1:${port}/`});await waitFor(`typeof drawEliteShape==='function'&&typeof ctx!=='undefined'&&typeof BOSS_STATS==='object'`);
+  await evalJs(`(()=>{window.requestAnimationFrame=()=>0;try{state.mode='paused';}catch{}return true;})()`);await sleep(120);
+  const meta=await evalJs(`(()=>{const c=document.querySelector('#game');const W=innerWidth,H=innerHeight;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#050814');bg.addColorStop(1,'#010207');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);ctx.strokeStyle='rgba(130,180,255,.08)';ctx.lineWidth=1;for(let x=80;x<W;x+=80){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let y=80;y<H;y+=80){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}const base=45;const draw=(form,x,y)=>{const e={eliteForm:form,apexForm:form,kind:'apex',r:base*BOSS_STATS[form].r,phase:13.5,color:BOSS_STATS[form].color,hit:false,apexPhase:1};ctx.save();ctx.translate(x,y);drawEliteShape(e);ctx.restore();return e.r;};const rs=draw('starforge',W*.29,H*.50),rl=draw('lastconstellation',W*.73,H*.50);ctx.fillStyle='#f2f6ff';ctx.font='700 22px sans-serif';ctx.textAlign='center';ctx.fillText('OMEGA / STARFORGE',W*.29,70);ctx.fillText('LAST CONSTELLATION',W*.73,70);ctx.font='14px monospace';ctx.fillStyle='#93a8c9';ctx.fillText(${JSON.stringify(label)},W*.5,H-28);return{W,H,starforgeR:rs,lastR:rl};})()`);
+  await sleep(50);const shot=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});writeFileSync(join(out,`${label}.png`),Buffer.from(shot.data,'base64'));writeFileSync(join(out,`${label}.json`),JSON.stringify(meta,null,2));
+}finally{try{cdp?.close();}catch{}try{browser.kill('SIGTERM');}catch{}await sleep(100);try{server.close();}catch{}try{rmSync(profile,{recursive:true,force:true});}catch{}}
