@@ -5,7 +5,7 @@
   if(window.stackfallLastConstellationCombat==='v2')return;
   window.stackfallLastConstellationCombat='v2';
 
-  const FORM='lastconstellation',TAU=Math.PI*2;
+  const FORM='lastconstellation',TAU=Math.PI*2,PULSE_WAVE_INTERVAL=1.0;
   const CFG={
     1:{cometCount:1,cometSpeed:220,cometTurn:.42,cometCd:4.25,beamCd:11.4,beamWarn:1.00,beamLife:1.80,beamTargetSpeed:104,beamWidth:12,linkCd:5.8,linkWarn:.72,linkLife:2.45,linkNodes:2,pulseCd:0,pulseSpeed:0,pulseGaps:0,pulseWaves:0},
     2:{cometCount:2,cometSpeed:235,cometTurn:.50,cometCd:3.80,beamCd:9.4,beamWarn:.94,beamLife:1.90,beamTargetSpeed:116,beamWidth:14,linkCd:4.15,linkWarn:.66,linkLife:2.70,linkNodes:3,pulseCd:9.6,pulseSpeed:118,pulseGaps:3,pulseWaves:1},
@@ -27,6 +27,11 @@
     return{x:x+dx/d*maxStep,y:y+dy/d*maxStep};
   };
   const angleDelta=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
+  const sourceFxVisible=(x,y,margin=100)=>{
+    const p=typeof worldToScreen==='function'?worldToScreen(x,y):{x:x-player.x+vw/2,y:y-player.y+vh/2};
+    return p.x>=-margin&&p.x<=vw+margin&&p.y>=-margin&&p.y<=vh+margin;
+  };
+  const sourceShockwave=(x,y,color,maxR,life,width)=>{if(typeof shockwave==='function'&&sourceFxVisible(x,y))shockwave(x,y,color,maxR,life,width);};
 
   function ensureCombat(e){
     if(e.lcCombat?.version===3)return e.lcCombat;
@@ -82,7 +87,7 @@
         });
         byNode[part.lcNodeKey]++;spawned++;
       }
-      if(typeof shockwave==='function')shockwave(part.x,part.y,phase===4?'#f4f7ff':'#a8bcff',phase===4?70:52,.23,1.7);
+      sourceShockwave(part.x,part.y,phase===4?'#f4f7ff':'#a8bcff',phase===4?70:52,.23,1.7);
     }
     c.lastCometVolley={phase,expectedPerNode:cfg.cometCount,activeNodes:parts.length,spawned,byNode};c.serial++;
     if(c.comets.length>60)c.comets.splice(0,c.comets.length-60);
@@ -134,10 +139,10 @@
       const sourcePart=partByKey(e,b.key);if(!sourcePart?.active){b.stage='dead';b.life=0;continue;}
       const next=movePoint(b.targetX,b.targetY,player.x,player.y,cfg.beamTargetSpeed*dt);b.targetX=next.x;b.targetY=next.y;
       if(b.stage==='warn'){
-        b.timer-=dt;if(b.timer<=0){b.stage='active';b.life=cfg.beamLife;b.fired=true;state.camera.shake=Math.max(state.camera.shake,phase===4?10:5.5);state.flash=Math.max(state.flash,phase===4?.14:.07);if(typeof shockwave==='function')shockwave(sourcePart.x,sourcePart.y,phase===4?'#ffffff':'#dce7ff',phase===4?150:90,.34,phase===4?5:3);if(typeof audio?.tone==='function')audio.tone(phase===4?72:108,.22,'sawtooth',phase===4?.022:.012,phase===4?85:45);}
+        b.timer-=dt;if(b.timer<=0){b.stage='active';b.life=cfg.beamLife;b.fired=true;state.camera.shake=Math.max(state.camera.shake,phase===4?10:5.5);state.flash=Math.max(state.flash,phase===4?.14:.07);sourceShockwave(sourcePart.x,sourcePart.y,phase===4?'#ffffff':'#dce7ff',phase===4?150:90,.34,phase===4?5:3);if(typeof audio?.tone==='function')audio.tone(phase===4?72:108,.22,'sawtooth',phase===4?.022:.012,phase===4?85:45);}
       }else{
         b.life-=dt;const path=beamPath(e,b);if(player.invuln<=0&&segDist(player.x,player.y,path[0].x,path[0].y,path[1].x,path[1].y)<=b.width*.52+player.r)hurt(e,b.damage);
-        if(Math.random()<dt*(phase===4?20:9)&&typeof spawnParticle==='function')spawnParticle(sourcePart.x+rand(-10,10),sourcePart.y+rand(-10,10),phase===4?'#ffffff':'#c4d3ff',1,phase===4?80:45,phase===4?4:2.5);
+        if(Math.random()<dt*(phase===4?20:9)&&typeof spawnParticle==='function'&&sourceFxVisible(sourcePart.x,sourcePart.y))spawnParticle(sourcePart.x+rand(-10,10),sourcePart.y+rand(-10,10),phase===4?'#ffffff':'#c4d3ff',1,phase===4?80:45,phase===4?4:2.5);
       }
     }
     c.beams=c.beams.filter(b=>b.stage!=='dead'&&(b.stage==='warn'||b.life>0));c.beamCd-=dt;if(!c.beams.length&&c.beamCd<=0){startBeamVolley(e,phase);c.beamCd=cfg.beamCd;}
@@ -152,13 +157,13 @@
   }
   function spawnPulseBurst(e,phase){
     const c=ensureCombat(e),cfg=CFG[phase];if(phase<2||!cfg.pulseWaves)return;
-    const sources=pulseSourceParts(e,phase);let waveIndex=0;
+    const sources=pulseSourceParts(e,phase);let waveIndex=0,emissionIndex=0;
     for(const source of sources){
       for(let i=0;i<cfg.pulseWaves;i++){
         const gaps=cfg.pulseGaps,base=(c.serial*.37+i*.51+waveIndex*.29)%TAU,gapAngles=[];
         for(let g=0;g<gaps;g++)gapAngles.push(base+g*TAU/gaps+(g%2?.055:-.035));
         const distance=Math.hypot(player.x-source.x,player.y-source.y),maxR=Math.max(520,distance+420);
-        c.pulses.push({sourceKey:source.lcNodeKey,x:source.x,y:source.y,phase,delay:i*(phase===4?.92:.98)+waveIndex*.32,age:0,r:0,speed:cfg.pulseSpeed,maxR,gapAngles,gapHalf:phase===2?.31:phase===3?.28:.27,band:phase===4?24:20,damage:Math.max(4,(Number(e.damage)||18)*(.25+phase*.025)),hit:false});
+        c.pulses.push({sourceKey:source.lcNodeKey,x:source.x,y:source.y,phase,delay:emissionIndex++*PULSE_WAVE_INTERVAL,age:0,r:0,speed:cfg.pulseSpeed,maxR,gapAngles,gapHalf:phase===2?.31:phase===3?.28:.27,band:phase===4?24:20,damage:Math.max(4,(Number(e.damage)||18)*(.25+phase*.025)),hit:false});
       }
       waveIndex++;
     }
@@ -190,7 +195,7 @@
   function updateRicochet(e,c,phase,dt){
     if(phase!==4){c.ricochet=null;c.ricochetCd=999;return;}
     const r=c.ricochet;if(r){
-      if(r.stage==='warn'){r.timer-=dt;if(r.timer<=0){r.stage='fire';state.camera.shake=Math.max(state.camera.shake,12);state.flash=Math.max(state.flash,.13);if(typeof audio?.tone==='function')audio.tone(64,.18,'sawtooth',.028,80);const path=ricochetPath(e,c,r);if(typeof shockwave==='function')for(let i=0;i<path.length-1;i++)shockwave(path[i].x,path[i].y,'#dce7ff',58,.20,2.4);}}
+      if(r.stage==='warn'){r.timer-=dt;if(r.timer<=0){r.stage='fire';state.camera.shake=Math.max(state.camera.shake,12);state.flash=Math.max(state.flash,.13);if(typeof audio?.tone==='function')audio.tone(64,.18,'sawtooth',.028,80);const path=ricochetPath(e,c,r);for(let i=0;i<path.length-1;i++)sourceShockwave(path[i].x,path[i].y,'#dce7ff',58,.20,2.4);}}
       else{
         if(!r.hitApplied){r.hitApplied=true;const path=ricochetPath(e,c,r);if(player.invuln<=0)for(let i=0;i<path.length-1;i++)if(segDist(player.x,player.y,path[i].x,path[i].y,path[i+1].x,path[i+1].y)<=player.r+r.width*.55){hurt(e,r.damage);break;}}
         r.life-=dt;if(r.life<=0)c.ricochet=null;
@@ -239,12 +244,13 @@
   window.stackfallLastConstellationCombatDiagnostics=()=>{
     const e=liveLC();if(!e?.lcStructure)return null;const c=ensureCombat(e),phase=e.lcStructure.phase,cfg=CFG[phase],volley=c.lastCometVolley||{};
     return{
-      version:'v2',revision:3,phase,
+      version:'v2',revision:4,phase,
       cometPerNode:cfg.cometCount,activeNodeCount:activeParts(e).length,activeComets:c.comets.length,lastCometVolley:volley,
       cometVolleyCountCorrect:volley.phase!==phase||volley.spawned===volley.activeNodes*volley.expectedPerNode,
       beamCooldown:cfg.beamCd,beamTargetSpeed:cfg.beamTargetSpeed,beamWidth:cfg.beamWidth,activeBeams:c.beams.length,beamEndpointTracking:true,
       connectionMode:phase===3?'permanent':phase===4?'none':'cooldown',connectionMaxNodes:cfg.linkNodes,activeLinkNodes:c.linkHazard?.keys?.length||0,
-      pulseUnlocked:phase>=2,pulseSpeed:cfg.pulseSpeed,pulseGapCount:cfg.pulseGaps,pulseWaveCount:cfg.pulseWaves,activePulses:c.pulses.length,
+      pulseUnlocked:phase>=2,pulseSpeed:cfg.pulseSpeed,pulseGapCount:cfg.pulseGaps,pulseWaveCount:cfg.pulseWaves,pulseWaveInterval:PULSE_WAVE_INTERVAL,pulseDelays:c.pulses.map(p=>p.delay).sort((a,b)=>a-b),activePulses:c.pulses.length,
+      sourceShockwaveViewportCulling:true,
       debrisCount:c.debris.length,debrisAnchors:debrisAnchors(c).length,
       p4TrackingBeamRicochet:false,p4RicochetStage:c.ricochet?.stage||null,p4RicochetBounceCount:c.ricochet?.bounceCount||0,p4RicochetPathFixed:!!c.ricochet?.points,
       patterns:['node-links','weak-homing-comets-per-node','endpoint-tracking-beams','multi-gap-pulse-wave','p4-telegraphed-ricochet']
