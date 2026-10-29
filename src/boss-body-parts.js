@@ -115,6 +115,13 @@ window.addEventListener('load',()=>{
     const constellation=document.createElement('script');
     constellation.src='src/last-constellation-production-v1.js';
     constellation.dataset.lastConstellationProductionV1='1';
+    constellation.onload=()=>{
+      if(document.querySelector('script[data-last-constellation-reset-v1]'))return;
+      const reset=document.createElement('script');
+      reset.src='src/last-constellation-reset-v1.js';
+      reset.dataset.lastConstellationResetV1='1';
+      document.body.appendChild(reset);
+    };
     document.body.appendChild(constellation);
   };
   document.body.appendChild(script);
