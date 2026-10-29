@@ -19,6 +19,14 @@ jobs:
           node-version: '22'
       - name: Run Atropos code/performance audit
         run: node scripts/atropos-code-audit.mjs
+      - name: Locate Apex guide source
+        run: |
+          echo '--- Korean Apex labels ---'
+          grep -RIn --include='*.js' --include='*.mjs' --include='*.html' '초월체' src scripts index.html || true
+          echo '--- star glyph ---'
+          grep -RIn --include='*.js' --include='*.mjs' --include='*.html' '★' src scripts index.html || true
+          echo '--- distance label candidates ---'
+          grep -RInE --include='*.js' --include='*.mjs' 'Math\.round\(Math\.hypot|roundRect\(|distance.*apex|apex.*distance|kind.*apex.*short|short.*apex' src scripts || true
       - name: Trace Apex offscreen guide owner
         run: node scripts/apex-guide-trace.mjs
       - name: Run Atropos runtime visual capture
