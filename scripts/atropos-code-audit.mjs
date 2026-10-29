@@ -8,9 +8,11 @@ const all=Object.values(sources).join('\n');
 const restore=sources['atropos-visual-v5.js']||'';
 const phase=sources['atropos-phase-production-v1.js']||'';
 const escalation=sources['atropos-combat-escalation-v1.js']||'';
+const polish=sources['atropos-production-polish-v2.js']||'';
 const hud=sources['atropos-hud-cleanup-v1.js']||'';
 const damage=sources['atropos-world-devourer-damage.js']||'';
 const guidance=fs.readFileSync(path.join(srcDir,'build-audit-ui.js'),'utf8');
+const entryCamera=fs.readFileSync(path.join(srcDir,'apex-entry-camera-v1.js'),'utf8');
 const catalog=fs.readFileSync(path.join(srcDir,'boss-catalog.js'),'utf8');
 const failures=[];
 const check=(ok,msg)=>{if(!ok)failures.push(msg);};
@@ -50,6 +52,18 @@ check(escalation.includes('base-elapsed*18.5'),'P4 clock does not visibly revers
 check(escalation.includes('p4Distorted:phase===4&&!!e.atroposP4TimeStopDone'),'P4 post-stop Space Cuts are not marked for distorted timing/direction');
 check(escalation.includes('historyPoint(e,5)')&&escalation.includes('historyPoint(e,9)'),'P4 post-stop cuts do not retarget historical player positions');
 
+check(polish.includes("stackfallAtroposProductionPolish='v2'"),'Atropos production polish v2 is missing');
+check(polish.includes('DESKTOP_ARENA=663')&&polish.includes('COMPACT_ARENA=440'),'Atropos arena is not enlarged by roughly thirty percent');
+check(polish.includes('e.x=r.anchorX;e.y=r.anchorY;e.speed=0'),'Atropos world anchor is not hard-locked');
+check(polish.includes("ctx.globalCompositeOperation='color'"),'P4 time stop does not apply grayscale/desaturation presentation');
+check(polish.includes("return 70.5+(t-3)*70"),'P4 reverse clock does not maintain high-speed spin after the time stop');
+check(polish.includes("['12',-Math.PI/2]")&&polish.includes('for(let i=0;i<60;i++)'),'Time-field face does not contain explicit clock numerals/minute marks');
+
+check(entryCamera.includes("stackfallApexEntryCamera='v1'"),'Apex entry camera module is missing');
+check(entryCamera.includes("tr?.owner==='apex-entry'")&&entryCamera.includes('function panMix'),'Apex entry camera is not bound to the entry cinematic');
+check(entryCamera.includes('e.contactSafeUntil')&&entryCamera.includes('2.25'),'Apex entry does not provide post-reveal contact safety');
+check(entryCamera.includes('player.x=camera.camX;player.y=camera.camY')&&entryCamera.includes('player.x=realX;player.y=realY'),'Apex entry camera does not restore the real player position after rendering');
+
 check(hud.includes("kind.textContent=GAME_SETTINGS.language==='ko'?'초월체':'APEX'"),'Atropos HUD does not hide explicit P-number labels');
 check(guidance.includes('function eliteGuideVisualRadius'),'Elite/Apex guidance does not use visual bounds');
 check(guidance.includes('function eliteBodyVisibleOnScreen'),'Elite/Apex guidance does not test visible body intersection');
@@ -66,6 +80,8 @@ const report={
   abandonedPrototypeRuntime:false,
   attackGrammar:['space-cut','anti-idle-scar','clock-hand','time-field'],
   combatEscalation:{spaceCutChains:[1,2,3,4],volleyCooldowns:[4.85,4.10,3.45,3.05],antiIdleStillThresholds:[1.20,.92,.62,0],clockHandStepSeconds:{p2:2,p3:1,p4:.5},p4ClockBurst:{steps:3,offSeconds:2,direction:'reverse'},timeFieldCooldowns:{p3:3,p4:1.65},p4TimeStopSeconds:3,postStopDistortion:true},
+  productionPolish:{fixedBoss:true,arenaRadius:{desktop:663,compact:440},p4GrayStop:true,p4PersistentReverseSpin:true,timeFieldClockFace:true},
+  apexEntryCamera:{cinematicPan:true,safeContactSeconds:2.25},
   guidance:{eliteArrowPolicy:'visual-bounds'},
   explicitPhaseHud:false,
   damage:{playerMaxHpReferences:false,globalHurtPlayerOverride:false},
