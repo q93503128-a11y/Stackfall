@@ -8,7 +8,7 @@ import {fileURLToPath} from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const out=resolve(root,'test-results','atropos-visual');mkdirSync(out,{recursive:true});
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const profile=mkdtempSync(join(tmpdir(),'stackfall-lc-combat-v3-'));
+const profile=mkdtempSync(join(tmpdir(),'stackfall-lc-combat-v4-'));
 const port=8007,debugPort=9231;
 const chromeCandidates=[process.env.STACKFALL_CHROME,process.env.CHROME_PATH,'/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].filter(Boolean);
 const chromePath=chromeCandidates.find(existsSync);if(!chromePath)throw new Error('Chrome not found');
@@ -26,8 +26,10 @@ function check(ok,label,details=null){report.checks.push({ok:!!ok,label,details}
 async function capture(name){const r=await cdp.send('Page.captureScreenshot',{format:'jpeg',quality:90,captureBeyondViewport:false,fromSurface:true});const file=`lastconstellation-${name}.jpg`;writeFileSync(join(out,file),Buffer.from(r.data,'base64'));report.captures.push(file);}
 async function diag(){return evalJs(`window.stackfallLastConstellationCombatDiagnostics?.()`);}
 async function prodDiag(){return evalJs(`window.stackfallLastConstellationProductionDiagnostics?.()`);}
+async function routeDiag(){return evalJs(`window.stackfallLastConstellationHitRoutingDiagnostics?.()`);}
 async function destroyLayer(){return evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='lastconstellation');if(!e)return null;const before=e.lcStructure.phase;const parts=(e.bodyParts||[]).filter(p=>p.lcNodeProxy&&p.active);for(const p of parts)dealDamage(p,1e12,{source:'lc-audit-destroy',canCrit:false});return{before,count:parts.length,after:e.lcStructure.phase};})()`);}
 function exactVolley(d,expectedPerNode,expectedNodes){const v=d?.lastCometVolley||{},counts=Object.values(v.byNode||{});return v.expectedPerNode===expectedPerNode&&v.activeNodes===expectedNodes&&v.spawned===expectedPerNode*expectedNodes&&counts.length===expectedNodes&&counts.every(n=>n===expectedPerNode);}
+function pulseSpacingOk(d,min=.95){const delays=[...(d?.pulseDelays||[])].sort((a,b)=>a-b);if(delays.length<2)return true;for(let i=1;i<delays.length;i++)if(delays[i]-delays[i-1]<min)return false;return true;}
 
 try{
   const target=await endpoint(`/json/new?${encodeURIComponent(`http://127.0.0.1:${port}/?dev=1&lccombat=${Date.now()}`)}`);cdp=new Cdp(target.webSocketDebuggerUrl);await cdp.ready;await Promise.all([cdp.send('Page.enable'),cdp.send('Runtime.enable')]);
@@ -42,7 +44,15 @@ try{
   check(hit.ownerX===hit.xBefore&&hit.ownerY===hit.yBefore,'temporary node FX routing restores owner position',hit);
   let pd=await prodDiag();check(pd?.healthSynchronized===true&&pd?.wideWorldCulling===true,'production health/culling invariants are active',pd);
 
-  let d=await diag();check(d?.version==='v2'&&d?.revision>=3&&d.phase===1&&d.cometPerNode===1,'P1 combat revision loaded',d);
+  const blade=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='lastconstellation'),part=(e?.bodyParts||[]).find(p=>p.lcNodeProxy&&p.active);if(!e||!part)return{ok:false};const node=e.lcStructure.nodes[part.lcNodeKey],before=node.hp,overlap=enemyCircleOverlap(e,part.x,part.y,1);if(overlap)dealDamage(e,1,{source:'blade',canCrit:false});const wave=spawnPlayerProjectile({x:e.x,y:e.y,vx:455,vy:0,r:7,life:.28,maxRange:155,damage:1,color:'#fff',pierce:0,source:'wave'}),result={ok:true,overlap,nodeDelta:before-node.hp,partX:part.x,partY:part.y,waveX:wave.x,waveY:wave.y};wave.life=0;return result;})()`);
+  check(blade?.ok&&blade.overlap===true&&blade.nodeDelta>0,'Pulse Blade boolean overlap routes damage into the touched exposed node',blade);
+  check(Math.hypot(blade.waveX-blade.partX,blade.waveY-blade.partY)<.01,'Pulse Blade level-4+ follow-up wave originates at the struck node, not the dormant core',blade);
+  const rd=await routeDiag();check(rd?.revision>=2&&rd.bladeContactRouting===true&&rd.bladeWaveOriginRouting===true,'Pulse Blade routing diagnostics are active',rd);
+
+  const offscreenFx=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='lastconstellation');if(!e)return null;const ox=player.x,oy=player.y;stackfallLastConstellationCombatDebug.clear();state.entities.shockwaves.length=0;player.x=e.x+10000;player.y=e.y+10000;stackfallLastConstellationCombatDebug.forceComets();const emitted=state.entities.shockwaves.length;player.x=ox;player.y=oy;stackfallLastConstellationCombatDebug.clear();return{emitted};})()`);
+  check(offscreenFx?.emitted===0,'offscreen Last Constellation source attacks do not create stray shockwave circles',offscreenFx);
+
+  let d=await diag();check(d?.version==='v2'&&d?.revision>=4&&d.phase===1&&d.cometPerNode===1&&d.sourceShockwaveViewportCulling===true,'P1 combat revision loaded with source-FX viewport culling',d);
   await evalJs(`stackfallLastConstellationCombatDebug.clear();stackfallLastConstellationCombatDebug.forceComets();stackfallLastConstellationCombatDebug.forceConnection(2);stackfallLastConstellationCombatDebug.forceBeam();`);await sleep(80);d=await diag();
   check(exactVolley(d,1,4),'P1 fires exactly one homing comet from each of four active nodes',d?.lastCometVolley);
   check(d.activeLinkNodes===2&&d.activeBeams===4&&d.beamEndpointTracking===true,'P1 links and endpoint-tracking beams are live',d);
@@ -58,6 +68,7 @@ try{
   await evalJs(`stackfallLastConstellationCombatDebug.clear();stackfallLastConstellationCombatDebug.forceComets();stackfallLastConstellationCombatDebug.forcePulse();`);await sleep(80);d=await diag();
   check(exactVolley(d,2,3),'P3 fires exactly two homing comets from each of three active nodes',d?.lastCometVolley);
   check(d.connectionMode==='permanent'&&d.pulseGapCount===4&&d.pulseWaveCount===2&&d.pulseSpeed<=150,'P3 keeps permanent links and four-gap slow pulse waves',d);
+  check(d.pulseWaveInterval>=.95&&pulseSpacingOk(d),'P3 consecutive pulse emissions are spaced by about one second',d?.pulseDelays);
   await capture('p3-permanent-links-pulse');
 
   step=await destroyLayer();check(step?.count===3&&step.after===4,'P3 destruction awakens core',step);await sleep(260);
@@ -66,6 +77,7 @@ try{
   check(d.activeBeams===1&&d.beamWidth>=30&&d.p4TrackingBeamRicochet===false,'P4 tracking beam remains a distinct non-ricochet attack',d);
   check(d.p4RicochetStage==='warn'&&d.p4RicochetBounceCount>=3&&d.p4RicochetPathFixed===true,'P4 ricochet is a separate fixed telegraphed one-shot path',d);
   check(d.pulseGapCount===4&&d.pulseWaveCount===3&&d.pulseSpeed>0&&d.pulseSpeed<=150,'P4 pulse waves retain four gaps and remain deliberately slow',d);
+  check(d.pulseWaveInterval>=.95&&pulseSpacingOk(d),'P4 consecutive pulse emissions are spaced by about one second',d?.pulseDelays);
   await capture('p4-separated-beams-pulse');
 
   pd=await prodDiag();check(pd?.healthSynchronized===true&&Math.abs(pd.ownerHp-pd.nodeHpSum)<.001,'health remains synchronized after phase transitions',pd);
