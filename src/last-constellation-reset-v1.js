@@ -45,4 +45,12 @@
   if(baseUpdateEnemies)updateEnemies=function updateEnemiesWithConstellationReset(dt){cleanupLegacyObjects();return baseUpdateEnemies(dt);};
 
   window.stackfallLastConstellationResetDiagnostics=()=>{const e=state.entities.enemies?.find(isLC)||null;return{version:'v1',active:!!e,phase:e?.lcStructure?.phase||e?.apexPhase||null,patternsSuppressed:true,screenSpaceConstellationBackground:false,phaseSource:e?.lcStructure?'node-destruction':'pending-structure'};};
+
+  // Load final geometry/render override last so the monumental layout owns the visible structure and hit proxies.
+  if(!document.querySelector('script[data-last-constellation-presentation-v3]')){
+    const script=document.createElement('script');
+    script.src='src/last-constellation-presentation-v3.js';
+    script.dataset.lastConstellationPresentationV3='1';
+    document.body.appendChild(script);
+  }
 })();
