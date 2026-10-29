@@ -7,21 +7,15 @@
   const isLC=e=>!!(e&&!e.dead&&(e.apexForm||e.eliteForm)===FORM);
   const phaseOnly=(e,dt)=>{
     e.apexElapsed=(e.apexElapsed||0)+Math.max(0,Number(dt)||0);
-    // v2 structure advances only when every exposed node in the current layer is destroyed.
     e.apexPhase=Math.max(1,Math.min(4,Number(e.lcStructure?.phase)||Number(e.apexPhase)||1));e.timeLock=0;
     e.skillCd=999;e.burstCd=999;e.pulseCd=999;e.signatureCd=999;e.apexVariantCd=999;e.apexSetpieceCd=999;
     e.constellationSweep=null;e.teleportQueued=false;
   };
 
-  // Remove the screen-space constellation drawing/pentagram. Keep only the authored dark star field.
   if(typeof drawConstellationApex==='function'){
-    drawConstellationApex=function drawConstellationBackdropOnly(){
-      drawCachedBackdrop('apex-constellation',paintConstellationBackdrop);
-      drawStars(CONSTELLATION_STAR_PALETTE,1);
-    };
+    drawConstellationApex=function drawConstellationBackdropOnly(){drawCachedBackdrop('apex-constellation',paintConstellationBackdrop);drawStars(CONSTELLATION_STAR_PALETTE,1);};
   }
 
-  // Suppress every legacy Last Constellation combat producer while preserving structural phase progression.
   const baseApexBossSkill=typeof apexBossSkill==='function'?apexBossSkill:null;
   if(baseApexBossSkill)apexBossSkill=function lastConstellationNoPatterns(e,dt){if(isLC(e)){phaseOnly(e,dt);return;}return baseApexBossSkill(e,dt);};
   const baseApexPhaseDirector=typeof apexPhaseDirector==='function'?apexPhaseDirector:null;
@@ -46,23 +40,15 @@
 
   window.stackfallLastConstellationResetDiagnostics=()=>{const e=state.entities.enemies?.find(isLC)||null;return{version:'v1',active:!!e,phase:e?.lcStructure?.phase||e?.apexPhase||null,patternsSuppressed:true,screenSpaceConstellationBackground:false,phaseSource:e?.lcStructure?'node-destruction':'pending-structure'};};
 
-  // Load final geometry/render override last, then add the new authored P1 combat layer.
+  const loadCombat=()=>{
+    if(document.querySelector('script[data-last-constellation-combat-v1]'))return;
+    const combat=document.createElement('script');combat.src='src/last-constellation-combat-v1.js';combat.dataset.lastConstellationCombatV1='1';document.body.appendChild(combat);
+  };
+  const loadRouting=()=>{
+    if(window.stackfallLastConstellationHitRouting==='v1'||document.querySelector('script[data-last-constellation-hit-routing-v1]')){loadCombat();return;}
+    const routing=document.createElement('script');routing.src='src/last-constellation-hit-routing-v1.js';routing.dataset.lastConstellationHitRoutingV1='1';routing.onload=loadCombat;document.body.appendChild(routing);
+  };
   if(!document.querySelector('script[data-last-constellation-presentation-v3]')){
-    const script=document.createElement('script');
-    script.src='src/last-constellation-presentation-v3.js';
-    script.dataset.lastConstellationPresentationV3='1';
-    script.onload=()=>{
-      if(document.querySelector('script[data-last-constellation-combat-v1]'))return;
-      const combat=document.createElement('script');
-      combat.src='src/last-constellation-combat-v1.js';
-      combat.dataset.lastConstellationCombatV1='1';
-      document.body.appendChild(combat);
-    };
-    document.body.appendChild(script);
-  }else if(!document.querySelector('script[data-last-constellation-combat-v1]')){
-    const combat=document.createElement('script');
-    combat.src='src/last-constellation-combat-v1.js';
-    combat.dataset.lastConstellationCombatV1='1';
-    document.body.appendChild(combat);
-  }
+    const script=document.createElement('script');script.src='src/last-constellation-presentation-v3.js';script.dataset.lastConstellationPresentationV3='1';script.onload=loadRouting;document.body.appendChild(script);
+  }else loadRouting();
 })();
