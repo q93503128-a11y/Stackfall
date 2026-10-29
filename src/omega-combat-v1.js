@@ -36,7 +36,7 @@
     const base=index/ASTEROID_COUNT*TAU2;
     const angle=base+time*(.0115+(index%4)*.00075);
     const rad=arena.r*(.885+((index%2)?-.010:.010)+.009*Math.sin(index*2.17+time*.07));
-    const size=55+((index*23)%28);
+    const size=60+((index*23)%30);
     return{x:arena.x+Math.cos(angle)*rad,y:arena.y+Math.sin(angle)*rad,size,angle,spin:time*(.045+(index%5)*.006)+index*.73};
   }
   function debrisPose(e,d){const arena=arenaFor(e);return{x:arena.x+Math.cos(d.angle)*d.radius,y:arena.y+Math.sin(d.angle)*d.radius,size:d.size,angle:d.angle};}
@@ -312,31 +312,46 @@
     for(let i=0;i<plumeCount;i++){
       const aa=i/plumeCount*TAU2+Math.sin(performance.now()*.0015+i*1.37)*.010,stop=plumeStopDistance(e,s,aa,arena),inner=e.r*.68;
       if(stop<=inner+8)continue;
-      const width=i%5===0?9:i%2===0?5.2:3.2;
+      const width=i%5===0?11:i%2===0?6.4:4.0;
       const ex=p.x+Math.cos(aa)*stop,ey=p.y+Math.sin(aa)*stop,m1=inner+(stop-inner)*.38,m2=inner+(stop-inner)*.72;
-      ctx.globalAlpha=(i%5===0?.34:.18)*(.76+.24*pulse);ctx.strokeStyle=i%5===0?'#ff4a12':'#ff6d1d';ctx.lineWidth=width*2.5;ctx.beginPath();ctx.moveTo(p.x+Math.cos(aa)*inner,p.y+Math.sin(aa)*inner);ctx.bezierCurveTo(p.x+Math.cos(aa+.028)*m1,p.y+Math.sin(aa+.028)*m1,p.x+Math.cos(aa-.022)*m2,p.y+Math.sin(aa-.022)*m2,ex,ey);ctx.stroke();
-      ctx.globalAlpha=i%5===0?.92:.52;ctx.strokeStyle=i%5===0?'#fff3b3':'#ffb247';ctx.lineWidth=width;ctx.stroke();
+      ctx.globalAlpha=(i%5===0?.42:.23)*(.76+.24*pulse);ctx.strokeStyle=i%5===0?'#ff3d0c':'#ff6419';ctx.lineWidth=width*3.1;ctx.beginPath();ctx.moveTo(p.x+Math.cos(aa)*inner,p.y+Math.sin(aa)*inner);ctx.bezierCurveTo(p.x+Math.cos(aa+.028)*m1,p.y+Math.sin(aa+.028)*m1,p.x+Math.cos(aa-.022)*m2,p.y+Math.sin(aa-.022)*m2,ex,ey);ctx.stroke();
+      ctx.globalAlpha=i%5===0?.96:.62;ctx.strokeStyle=i%5===0?'#fff8cf':'#ffc35b';ctx.lineWidth=width;ctx.stroke();
       if(i%5===0&&stop<arena.r*.90){ctx.globalAlpha=.72;ctx.fillStyle='#fff1a4';ctx.shadowColor='#ff5017';ctx.shadowBlur=14;ctx.beginPath();ctx.arc(ex,ey,4.5+2*pulse,0,TAU2);ctx.fill();ctx.shadowBlur=0;}
     }
     const core=ctx.createRadialGradient(p.x,p.y,e.r*.25,p.x,p.y,e.r*1.7);core.addColorStop(0,`rgba(255,255,224,${.34+.14*pulse})`);core.addColorStop(.32,`rgba(255,118,34,${.24+.10*pulse})`);core.addColorStop(1,'rgba(255,50,12,0)');ctx.fillStyle=core;ctx.fillRect(p.x-e.r*1.8,p.y-e.r*1.8,e.r*3.6,e.r*3.6);ctx.restore();
   }
+  function drawHeatImpacts(e,s){
+    if(!s.heat||s.heat.warn>0)return;
+    const pulse=.5+.5*Math.sin(performance.now()*.028);
+    for(const d of s.debris){
+      const wp=debrisPose(e,d),dx=wp.x-e.x,dy=wp.y-e.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len;
+      const sp=worldToScreen(wp.x-ux*d.size*.72,wp.y-uy*d.size*.72);
+      ctx.save();ctx.globalCompositeOperation='lighter';
+      const g=ctx.createRadialGradient(sp.x,sp.y,1,sp.x,sp.y,d.size*.56);
+      g.addColorStop(0,`rgba(255,255,220,${.80+.18*pulse})`);g.addColorStop(.22,'rgba(255,210,95,.72)');g.addColorStop(.55,'rgba(255,88,24,.34)');g.addColorStop(1,'rgba(255,60,12,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(sp.x,sp.y,d.size*.56,0,TAU2);ctx.fill();
+      ctx.strokeStyle='#fff2a8';ctx.globalAlpha=.72;ctx.lineWidth=2.4;ctx.beginPath();ctx.arc(sp.x,sp.y,d.size*.30,-1.0,1.0);ctx.stroke();ctx.restore();
+    }
+  }
   function drawOmegaCombat(){
-    const e=currentOmega();if(!e||state.mode!=='playing')return;const s=combatState(e);ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);drawArena(e);drawDebris(e,s);drawCannon(e,s);drawWind(e,s);drawFan(e,s);drawDroneBodies(e);drawDroneLasers(e);drawGlobalHeat(e,s);ctx.restore();
+    const e=currentOmega();if(!e||state.mode!=='playing')return;const s=combatState(e);ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);
+    drawArena(e);drawGlobalHeat(e,s);drawDebris(e,s);drawHeatImpacts(e,s);drawCannon(e,s);drawWind(e,s);drawFan(e,s);drawDroneBodies(e);drawDroneLasers(e);
+    ctx.restore();
   }
   const baseForeground=typeof window.drawForegroundCombat==='function'?window.drawForegroundCombat:null;
   if(baseForeground)window.drawForegroundCombat=function omegaForeground(){baseForeground();drawOmegaCombat();};
 
   window.stackfallOmegaCombatTest={
     forcePattern(name){const e=currentOmega();if(!e)return false;const s=combatState(e);if(name==='cannon')startPlateCannon(e,s);else if(name==='wind')startWind(e,s);else if(name==='fan')startFan(e,s);else if(name==='heat')startGlobalHeat(e,s);else if(name==='drone')spawnDrone(e,s);else return false;return true;},
-    forceDebris(){const e=currentOmega();if(!e)return false;const s=combatState(e);for(let i=0;i<8;i++)if(!s.debris.some(d=>d.index===i))spawnDebris(e,s,i);return true;}
+    forceDebris(){const e=currentOmega();if(!e)return false;const s=combatState(e);for(let i=0;i<8;i++)if(!s.debris.some(d=>d.index===i))spawnDebris(e,s,i);return true;},
+    placePlayerBehindDebris(index=0){const e=currentOmega();if(!e)return false;const s=combatState(e),d=s.debris[index];if(!d)return false;const p=debrisPose(e,d),dx=p.x-e.x,dy=p.y-e.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len;player.x=p.x+ux*(d.size+player.r+34);player.y=p.y+uy*(d.size+player.r+34);return debrisBlocksPlayer(e,s);}
   };
   window.stackfallOmegaCombatDiagnostics=()=>{
     const e=currentOmega();if(!e)return null;const s=combatState(e),phase=phaseOf(e);
     return{
       version:'v3',phase,arenaRadius:arenaFor(e).r,asteroidWall:true,asteroidWallMode:'dense-physical',asteroidCount:ASTEROID_COUNT,
       droneCount:omegaDrones(e).length,droneCap:DRONE_CAP[phase],droneInterval:DRONE_INTERVAL[phase],dedicatedDroneVisual:true,
-      cannonCooldown:CANNON_CD[phase],cannonSingleSplitPlate:Number.isInteger(s.cannon?.plate),
-      windEnabled:phase>=2,windMode:'arena-wide-radial',windKnockback:false,
+      cannonCooldown:CANNON_CD[phase],cannonSingleSplitPlate:Number.isInteger(s.cannon?.plate),windEnabled:phase>=2,windMode:'arena-wide-radial',windKnockback:false,
       fanEnabled:phase===3,fanGapIndex:s.fan?.gapIndex??null,fanFromMissingSector:phase===3?missingPlates(phase).includes(s.fan?.gapIndex):true,
       globalHeatEnabled:phase===4,heatOcclusionMode:'physical-plume-truncation',heatShadowOverlay:false,debrisCoverScale:1.02,
       debrisCount:s.debris.length,pendingDebris:s.pendingDebris.length,active:{cannon:!!s.cannon,wind:!!s.wind,fan:!!s.fan,heat:!!s.heat},stats:{...s.stats}
