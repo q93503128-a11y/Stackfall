@@ -180,11 +180,16 @@
   // (1e9, 1e9), then draws a separate world body. That conflicts with this historical visual
   // restore and also leaks the sentinel position into off-screen guidance. Use the renderer that
   // existed immediately before that wrapper, so the real entity coordinates reach drawEliteShape.
-  // Keep the canonical Reborn combat/AI and its space-cut effect intact.
+  // DEV body-part circles/labels are presentation-only, so hide those proxies only for this draw
+  // call; the multipart targeting state remains intact for combat. Keep the canonical space-cut.
   if(typeof baseDrawEnemiesAtropos==='function'){
     drawEnemies=function drawEnemiesWithHistoricalChronophage(){
-      const result=baseDrawEnemiesAtropos();
       const e=state.entities.enemies.find(enemy=>!enemy?.dead&&enemy.apexForm==='chronophage');
+      const parts=e?.bodyParts||null;
+      if(e)e.bodyParts=null;
+      let result;
+      try{result=baseDrawEnemiesAtropos();}
+      finally{if(e)e.bodyParts=parts;}
       if(e&&typeof drawAtroposSpaceCut==='function')drawAtroposSpaceCut(e);
       return result;
     };
