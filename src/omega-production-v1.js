@@ -83,8 +83,12 @@
   function assemblyState(){
     const tr=entryTransition();
     if(!tr)return{active:false,core:1,plates:1,progress:1};
-    const p=entryProgress(),q=clamp01((p-.30)/.37);
-    return{active:true,progress:p,core:easeOut(clamp01(q/.30)),plates:easeOut(clamp01((q-.24)/.76))};
+    const p=entryProgress();
+    // Hold a clear core-only beat after the camera arrives: the red sun forms first,
+    // then armor starts locking on roughly half a second later.
+    const core=easeOut(clamp01((p-.30)/.16));
+    const plates=easeOut(clamp01((p-.48)/.20));
+    return{active:true,progress:p,core,plates};
   }
   function plateAssemblyAmount(index,platesProgress){
     const order=ASSEMBLY_ORDER.indexOf(index),segment=1/PLATE_COUNT;
