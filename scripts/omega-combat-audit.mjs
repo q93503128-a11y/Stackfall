@@ -32,47 +32,25 @@ try{
   const target=await endpoint(`/json/new?${encodeURIComponent(`http://127.0.0.1:${port}/?dev=1&omegaCombatAudit=1`)}`);cdp=new Cdp(target.webSocketDebuggerUrl);await cdp.ready;
   cdp.on('Runtime.exceptionThrown',e=>report.exceptions.push(e.exceptionDetails?.exception?.description||e.exceptionDetails?.text||'unknown'));
   await Promise.all([cdp.send('Page.enable'),cdp.send('Runtime.enable'),cdp.send('Network.enable')]);
-  await waitFor(`window.stackfallOmegaCombat==='v3'&&window.stackfallOmegaProduction==='v1'&&typeof stackfallDeveloperTest==='object'&&typeof beginApexEncounter==='function'`,18000);
+  await waitFor(`window.stackfallOmegaCombat==='v4'&&window.stackfallOmegaProduction==='v1'&&typeof stackfallDeveloperTest==='object'&&typeof beginApexEncounter==='function'`,18000);
   const started=await evalJs(`(()=>{const api=stackfallDeveloperTest;api.startEndless();api.setInvincible(true);api.setLevelUpsDisabled(true);GAME_SETTINGS.audio.master=false;state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;state.mode='playing';ui.choice?.classList.add('hidden');state.spawnTimer=state.encounterTimer=99999;state.bossBags=state.bossBags||{};state.bossBags.apex=['starforge'];state.lastBossForms=state.lastBossForms||{};state.lastBossForms.apex='chronophage';state.pendingApexForm=null;state.apexActiveId=null;state.apexExitPending=false;return beginApexEncounter();})()`);
-  check(started,'Omega encounter starts',started);
-  await waitFor(`!state.realmTransition&&state.mode==='playing'&&state.entities.enemies.some(e=>!e.dead&&e.apexForm==='starforge')`,14000);await sleep(200);
+  check(started,'Omega encounter starts',started);await waitFor(`!state.realmTransition&&state.mode==='playing'&&state.entities.enemies.some(e=>!e.dead&&e.apexForm==='starforge')`,14000);await sleep(200);
 
   let snap=await diag();report.phases.p1=snap;
-  check(snap.combat?.version==='v3','Omega combat v3 loaded',snap.combat);
-  check(snap.combat?.phase===1,'P1 combat diagnostics active',snap.combat);
-  check(snap.combat?.arenaRadius===620,'Omega desktop arena radius is production size',snap.combat);
-  check(snap.combat?.asteroidWallMode==='dense-physical'&&snap.combat?.asteroidCount===30,'Omega uses a near-continuous physical asteroid wall',snap.combat);
-  check(snap.combat?.dedicatedDroneVisual,'Omega uses dedicated ember-drone visual',snap.combat);
-  check(snap.combat?.cannonCooldown===3,'P1 armor cannon uses 3s cadence',snap.combat);
-  await clearActive();await evalJs(`stackfallOmegaCombatTest.forcePattern('cannon');stackfallOmegaCombatTest.forcePattern('drone');true`);await sleep(790);snap=await diag();
-  check(snap.combat?.active?.cannon&&snap.combat?.cannonSingleSplitPlate,'P1 cannon uses one split armor plate and reaches beam frame',snap.combat);
-  check(snap.combat?.droneCount>=1,'P1 can summon weak dedicated laser drone',snap.combat);
-  await capture('p1-cannon-drone',{combat:snap.combat});
+  check(snap.combat?.version==='v4','Omega combat v4 loaded',snap.combat);check(snap.combat?.phase===1,'P1 combat diagnostics active',snap.combat);
+  check(snap.combat?.omegaStationary===true,'Omega is stationary',snap.combat);check(snap.combat?.arenaRadius===806,'Omega desktop arena is 30 percent larger',snap.combat);
+  check(snap.combat?.asteroidWallMode==='dense-cached-physical'&&snap.combat?.asteroidCount===36,'Omega uses near-continuous cached asteroid wall',snap.combat);check(snap.combat?.cachedAsteroidSprites===true,'Omega asteroid rendering uses cached sprites',snap.combat);
+  check(snap.combat?.debrisCollisionMode==='visual-polygon-slide','Armor debris collision matches visible polygon and slides',snap.combat);check(snap.combat?.dedicatedDroneVisual,'Omega uses dedicated ember-drone visual',snap.combat);check(snap.combat?.cannonCooldown===3,'P1 armor cannon uses 3s cadence',snap.combat);
+  const bossStart=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='starforge');return{x:e.x,y:e.y};})()`);await sleep(350);await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='starforge');apexBossSkill(e,.16);return true;})()`);const bossAfter=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='starforge');return{x:e.x,y:e.y};})()`);check(Math.hypot(bossAfter.x-bossStart.x,bossAfter.y-bossStart.y)<.1,'Omega does not drift or chase',{bossStart,bossAfter});
+  await clearActive();await evalJs(`stackfallOmegaCombatTest.forcePattern('cannon');stackfallOmegaCombatTest.forcePattern('drone');true`);await sleep(790);snap=await diag();check(snap.combat?.active?.cannon&&snap.combat?.cannonSingleSplitPlate,'P1 cannon uses one split armor plate and reaches beam frame',snap.combat);check(snap.combat?.droneCount>=1,'P1 can summon weak dedicated laser drone',snap.combat);await capture('p1-cannon-drone',{combat:snap.combat});
 
-  await setPhase(.70,2);await clearActive();
-  const beforeWind=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='starforge');player.x=e.x-180;player.y=e.y+70;return{x:player.x,y:player.y};})()`);
-  await evalJs(`stackfallOmegaCombatTest.forcePattern('wind')`);await sleep(1180);snap=await diag();const afterWind=await evalJs(`({x:player.x,y:player.y})`);report.phases.p2=snap;
-  check(snap.combat?.windEnabled&&snap.combat?.active?.wind,'P2 adds active arena-wide stellar wind',snap.combat);
-  check(snap.combat?.windMode==='arena-wide-radial'&&snap.combat?.windKnockback===false,'P2 stellar wind is arena-wide and has no knockback',snap.combat);
-  check(Math.hypot(afterWind.x-beforeWind.x,afterWind.y-beforeWind.y)<10,'P2 stellar wind does not forcibly displace the player',{beforeWind,afterWind});
-  await capture('p2-wind',{combat:snap.combat});
+  await setPhase(.70,2);await clearActive();const beforeWind=await evalJs(`(()=>{const e=state.entities.enemies.find(x=>!x.dead&&x.apexForm==='starforge');player.x=e.x-180;player.y=e.y+70;return{x:player.x,y:player.y};})()`);await evalJs(`stackfallOmegaCombatTest.forcePattern('wind')`);await sleep(1180);snap=await diag();const afterWind=await evalJs(`({x:player.x,y:player.y})`);report.phases.p2=snap;
+  check(snap.combat?.windEnabled&&snap.combat?.active?.wind,'P2 adds active arena-wide stellar wind',snap.combat);check(snap.combat?.windMode==='arena-wide-horizontal'&&snap.combat?.windKnockback===false,'P2 stellar wind crosses the arena horizontally and has no knockback',snap.combat);check(Math.hypot(afterWind.x-beforeWind.x,afterWind.y-beforeWind.y)<10,'P2 stellar wind does not forcibly displace the player',{beforeWind,afterWind});await capture('p2-wind',{combat:snap.combat});
 
-  await setPhase(.45,3);await clearActive();await evalJs(`stackfallOmegaCombatTest.forcePattern('fan')`);await sleep(980);snap=await diag();report.phases.p3=snap;
-  check(snap.combat?.fanEnabled&&snap.combat?.active?.fan,'P3 adds active missing-sector heat burst',snap.combat);
-  check(snap.combat?.fanFromMissingSector,'P3 fan can only originate from a missing armor sector',snap.combat);
-  check(snap.combat?.cannonCooldown===1.65,'P3 armor cannon accelerates to 1.65s',snap.combat);
-  await capture('p3-fan',{combat:snap.combat});
+  await setPhase(.45,3);await clearActive();await evalJs(`stackfallOmegaCombatTest.forcePattern('fan')`);await sleep(980);snap=await diag();report.phases.p3=snap;check(snap.combat?.fanEnabled&&snap.combat?.active?.fan,'P3 adds active missing-sector heat burst',snap.combat);check(snap.combat?.fanFromMissingSector,'P3 fan can only originate from a missing armor sector',snap.combat);check(snap.combat?.cannonCooldown===1.65,'P3 armor cannon accelerates to 1.65s',snap.combat);await capture('p3-fan',{combat:snap.combat});
 
-  await setPhase(.20,4);await waitFor(`(()=>{const d=window.stackfallOmegaCombatDiagnostics?.();return d?.debrisCount===8&&d.pendingDebris===0;})()`,5000);await clearActive();await evalJs(`stackfallOmegaCombatTest.forcePattern('heat')`);await sleep(1410);snap=await diag();report.phases.p4=snap;
-  check(snap.production?.plateCount===0,'P4 has zero external armor plates',snap.production);
-  check(snap.combat?.cannonCooldown===999,'P4 disables armor cannon',snap.combat);
-  check(snap.combat?.debrisCount===8,'P4 has eight orbiting armor debris shields',snap.combat);
-  check(snap.combat?.globalHeatEnabled&&snap.combat?.active?.heat,'P4 reaches active 360-degree plasma exhaust',snap.combat);
-  check(snap.combat?.heatOcclusionMode==='physical-plume-truncation'&&snap.combat?.heatShadowOverlay===false,'P4 debris blocks real plasma plumes instead of drawing fake shadow wedges',snap.combat);
-  await capture('p4-heat-cover',{combat:snap.combat});
+  await setPhase(.20,4);await waitFor(`(()=>{const d=window.stackfallOmegaCombatDiagnostics?.();return d?.debrisCount===8&&d.pendingDebris===0;})()`,5000);await clearActive();await evalJs(`stackfallOmegaCombatTest.forcePattern('heat')`);await sleep(1410);snap=await diag();report.phases.p4=snap;check(snap.production?.plateCount===0,'P4 has zero external armor plates',snap.production);check(snap.combat?.cannonCooldown===999,'P4 disables armor cannon',snap.combat);check(snap.combat?.debrisCount===8,'P4 has eight orbiting armor debris shields',snap.combat);check(snap.combat?.globalHeatEnabled&&snap.combat?.active?.heat,'P4 reaches active plasma exhaust',snap.combat);check(snap.combat?.heatOcclusionMode==='polygon-plume-truncation'&&snap.combat?.heatShadowOverlay===false,'P4 visible armor polygons truncate real plasma plumes without fake shadow wedges',snap.combat);await capture('p4-heat-cover',{combat:snap.combat});
 
-  check((snap.runtime?.errorCount||0)===0,'No runtime stage errors during Omega combat audit',snap.runtime?.errors||[]);
-  check(report.exceptions.length===0,'No uncaught exceptions during Omega combat audit',report.exceptions);
-  report.status='PASS';
+  check((snap.runtime?.errorCount||0)===0,'No runtime stage errors during Omega combat audit',snap.runtime?.errors||[]);check(report.exceptions.length===0,'No uncaught exceptions during Omega combat audit',report.exceptions);report.status='PASS';
 }catch(error){report.status='FAIL';report.error=String(error?.stack||error);throw error;
 }finally{writeFileSync(join(out,'omega-combat.json'),JSON.stringify(report,null,2));try{cdp?.close();}catch{}try{browser.kill('SIGTERM');}catch{}await sleep(120);try{server.close();}catch{}try{rmSync(profile,{recursive:true,force:true});}catch{}}
