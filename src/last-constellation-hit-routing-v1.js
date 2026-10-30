@@ -7,6 +7,8 @@
   const isLC=e=>!!(e&&!e.dead&&(e.apexForm||e.eliteForm)===FORM);
   const liveLC=()=>state.entities.enemies.filter(isLC);
   const activeParts=e=>(e?.bodyParts||[]).filter(p=>p?.lcNodeProxy&&p.active&&p.visible&&!p.dead);
+  let pendingBladeWave=null;
+  let installedWaveRouter=null;
   function nearestPart(e,x,y,range=Infinity){let best=null,bestD=Number.isFinite(range)?range*range:Infinity;for(const p of activeParts(e)){const d=(p.x-x)**2+(p.y-y)**2;if(d<=bestD){bestD=d;best=p;}}return best;}
   function partAt(e,x,y,r=0){for(const p of activeParts(e))if((p.x-x)**2+(p.y-y)**2<=(p.r+r)**2)return p;return null;}
   function segDist(px,py,x1,y1,x2,y2){if(typeof segmentDistance==='function')return segmentDistance(px,py,x1,y1,x2,y2);const dx=x2-x1,dy=y2-y1,l=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/l));return Math.hypot(px-(x1+dx*t),py-(y1+dy*t));}
@@ -49,35 +51,56 @@
       if(isLC(target)&&String(options?.source||'')==='blade'){
         const contact=target.__lcLastCircleContact;target.__lcLastCircleContact=null;
         const part=contact&&(target.bodyParts||[]).find(p=>p.id===contact.partId&&p.lcNodeProxy&&p.active&&!p.dead);
-        if(part){target.__lcLastBladeHit={x:part.x,y:part.y,at:performance.now()};return base(part,amount,options);}
+        if(part){
+          const hit={ownerId:target.id,x:part.x,y:part.y,at:performance.now()};
+          target.__lcLastBladeHit=hit;pendingBladeWave=hit;
+          return base(part,amount,options);
+        }
       }
       return base(target,amount,options);
     };
   }
 
-  // Blade level 4+ emits its follow-up wave immediately after the blade hit. The owner entity is
-  // the dormant constellation center, so consume the freshest pending LC blade contact directly
-  // instead of requiring the projectile's requested origin to still match that center. Some combat
-  // wrappers can restore/rewrite the owner coordinates before this call reaches us.
-  if(typeof spawnPlayerProjectile==='function'){
+  // Blade level 4+ emits its follow-up wave immediately after the blade hit. Keep a closure-local
+  // pending origin so owner health/FX wrappers cannot erase the contact, and re-install this wrapper
+  // after late dynamic loaders so the final projectile path always sees it.
+  function installWaveRouter(){
+    if(typeof spawnPlayerProjectile!=='function')return false;
+    if(spawnPlayerProjectile?.__lcBladeWaveRouter===true){installedWaveRouter=spawnPlayerProjectile;return true;}
     const base=spawnPlayerProjectile;
-    spawnPlayerProjectile=function lastConstellationBladeWaveOrigin(data){
+    const routed=function lastConstellationBladeWaveOrigin(data){
       let next=data;
       if(String(data?.source||'')==='wave'){
-        let chosen=null;
-        for(const e of liveLC()){
-          const hit=e.__lcLastBladeHit,age=hit?performance.now()-hit.at:Infinity;
-          if(!hit||age>500)continue;
-          if(!chosen||hit.at>chosen.hit.at)chosen={e,hit};
+        const now=performance.now();
+        let hit=pendingBladeWave;
+        if(!hit||now-hit.at>500){
+          hit=null;
+          for(const e of liveLC()){
+            const candidate=e.__lcLastBladeHit,age=candidate?now-candidate.at:Infinity;
+            if(!candidate||age>500)continue;
+            if(!hit||candidate.at>hit.at)hit=candidate;
+          }
         }
-        if(chosen){
-          const {e,hit}=chosen,dx=hit.x-player.x,dy=hit.y-player.y,d=Math.hypot(dx,dy)||1,speed=Math.max(1,Math.hypot(Number(data.vx)||0,Number(data.vy)||0));
-          next={...data,x:hit.x,y:hit.y,vx:dx/d*speed,vy:dy/d*speed};e.__lcLastBladeHit=null;
+        if(hit){
+          const dx=hit.x-player.x,dy=hit.y-player.y,d=Math.hypot(dx,dy)||1,speed=Math.max(1,Math.hypot(Number(data.vx)||0,Number(data.vy)||0));
+          next={...data,x:hit.x,y:hit.y,vx:dx/d*speed,vy:dy/d*speed};
+          pendingBladeWave=null;
+          for(const e of liveLC())if(e.id===hit.ownerId)e.__lcLastBladeHit=null;
         }
       }
       return base(next);
     };
+    Object.defineProperty(routed,'__lcBladeWaveRouter',{value:true});
+    spawnPlayerProjectile=routed;
+    try{window.spawnPlayerProjectile=routed;}catch{}
+    installedWaveRouter=routed;
+    return true;
   }
+  installWaveRouter();
+  queueMicrotask(installWaveRouter);
+  setTimeout(installWaveRouter,0);
+  setTimeout(installWaveRouter,250);
+  setTimeout(installWaveRouter,1000);
 
   // Direct player projectiles perform a performance-grid query before overlap testing. Add a local
   // post-update collision pass so a projectile crossing a remote exposed node can never tunnel through it.
@@ -108,6 +131,6 @@
 
   window.stackfallLastConstellationHitRoutingDiagnostics=()=>{
     const e=state.entities.enemies.find(isLC)||null;
-    return{version:'v1',revision:3,active:!!e,phase:e?.lcStructure?.phase||null,activeProxyCount:e?activeParts(e).length:0,projectileFallback:true,nearbyCandidateRouting:true,bladeContactRouting:true,bladeWaveOriginRouting:true};
+    return{version:'v1',revision:4,active:!!e,phase:e?.lcStructure?.phase||null,activeProxyCount:e?activeParts(e).length:0,projectileFallback:true,nearbyCandidateRouting:true,bladeContactRouting:true,bladeWaveOriginRouting:true,bladeWaveRouterInstalled:spawnPlayerProjectile?.__lcBladeWaveRouter===true,pendingBladeWave:!!pendingBladeWave};
   };
 })();
