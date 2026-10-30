@@ -49,7 +49,7 @@
     const unlockedCount=rows.filter(row=>row.status?.unlocked).length;
     title.innerHTML=`${text.title}<b>${unlockedCount} / ${defs.length}</b>`;
     if(expand)expand.textContent=text.expand;
-    if(toolbar){toolbar.replaceChildren();toolbar.hidden=true;}
+    if(toolbar)toolbar.hidden=true;
     grid.innerHTML='';
     for(const {def,status}of rows){
       if(!status)continue;
