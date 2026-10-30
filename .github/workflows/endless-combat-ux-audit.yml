@@ -1,0 +1,26 @@
+name: Endless combat UX audit
+
+on:
+  pull_request:
+    paths:
+      - 'src/endless-combat-ux-fixes-v1.js'
+      - 'src/run-modes.js'
+      - 'scripts/endless-combat-ux-browser.mjs'
+      - '.github/workflows/endless-combat-ux-audit.yml'
+  workflow_dispatch:
+
+jobs:
+  endless-combat-ux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/endless-combat-ux-fixes-v1.js
+          node --check src/run-modes.js
+          node --check scripts/endless-combat-ux-browser.mjs
+      - name: Validate combat UX and special abilities in browser
+        run: node scripts/endless-combat-ux-browser.mjs
