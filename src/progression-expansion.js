@@ -39,6 +39,7 @@
   window.applyStackfallStellarLifeGrowth=applyStellarLifeGrowth;
 
   const currentChain=()=>Math.max(0,Number(state.combo)||0);
+  const apexCoreMultiplier=()=>Math.pow(1.10,Math.max(0,Math.min(3,Math.floor(Number(state.apexCoreStacks)||0))));
   const curvedStackPower=(stacks,base=.55,growth=1.06,exponent=1.20)=>stacks>0?base+Math.pow(Math.max(0,stacks-1),exponent)*growth:0;
   function chainDurationBonus(){const n=stat('chain');if(!n)return 0;return .04+Math.max(0,n-1)*.08+Math.max(0,n-4)*.02;}
   window.chainDurationMultiplier=function chainDurationMultiplier(){return(1+chainDurationBonus())*(1+(state.nebulaExtras?.chain||0)*.20);};
@@ -46,9 +47,9 @@
   function chainDriveReduction(){const n=stat('chainDrive'),milestones=Math.min(5,Math.floor(currentChain()/12));if(!n||!milestones)return 0;const perMilestone=.008+n*.0055;return Math.min(.38,milestones*perMilestone);}
   window.weaponCycleMultiplier=function weaponCycleMultiplier(){return 1-chainDriveReduction();};
   const baseDamageMult=damageMult;
-  damageMult=function progressionDamageMult(){return baseDamageMult()*(1+chainDamageBonus());};
+  damageMult=function progressionDamageMult(){return baseDamageMult()*(1+chainDamageBonus())*apexCoreMultiplier();};
   const baseHasteMult=hasteMult;
-  hasteMult=function progressionHasteMult(){return Math.max(.18,baseHasteMult()*weaponCycleMultiplier());};
+  hasteMult=function progressionHasteMult(){return Math.max(.18,baseHasteMult()*weaponCycleMultiplier()/apexCoreMultiplier());};
 
   const baseMagnet=magnetRange;
   magnetRange=function progressionMagnet(){const stacks=stat('chainField'),power=curvedStackPower(stacks);if(!power)return baseMagnet();const bonus=Math.min(20+power*28,currentChain()*(.10+power*.10));return baseMagnet()+bonus;};
