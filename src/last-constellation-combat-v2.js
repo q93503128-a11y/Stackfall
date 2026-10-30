@@ -130,19 +130,29 @@
   // ---- Sustained tracking beams: a finite endpoint chases the player slowly -------------------
   function startBeamVolley(e,phase){
     const c=ensureCombat(e),cfg=CFG[phase],parts=activeParts(e);if(!parts.length)return;c.beams.length=0;
-    for(const part of parts)c.beams.push({key:part.lcNodeKey,phase,stage:'warn',timer:cfg.beamWarn,life:cfg.beamLife,width:cfg.beamWidth,damage:Math.max(5,(Number(e.damage)||18)*(phase===4?.42:.31+.02*phase)),targetX:player.x,targetY:player.y,fired:false});
+    for(const part of parts)c.beams.push({key:part.lcNodeKey,phase,stage:'warn',timer:cfg.beamWarn,life:cfg.beamLife,width:cfg.beamWidth,damage:Math.max(5,(Number(e.damage)||18)*(phase===4?.42:.31+.02*phase)),targetX:player.x,targetY:player.y,fired:false,impactCd:0});
   }
   function beamPath(e,b){const origin=partByKey(e,b.key)||{x:e.x,y:e.y};return[{x:origin.x,y:origin.y},{x:b.targetX,y:b.targetY}];}
+  function emitP4BeamImpact(b){
+    if(!sourceFxVisible(b.targetX,b.targetY,120))return;
+    sourceShockwave(b.targetX,b.targetY,'#f5f8ff',42+Math.random()*18,.16,2.4+Math.random()*.9);
+    if(typeof spawnParticle==='function'){
+      spawnParticle(b.targetX+rand(-8,8),b.targetY+rand(-8,8),'#ffffff',3,95,3.5);
+      spawnParticle(b.targetX+rand(-10,10),b.targetY+rand(-10,10),'#9fb7ff',2,72,2.7);
+    }
+    state.camera.shake=Math.max(state.camera.shake,1.65);state.flash=Math.max(state.flash,.018);
+  }
   function updateBeams(e,c,phase,dt){
     const cfg=CFG[phase];
     for(const b of c.beams){
       const sourcePart=partByKey(e,b.key);if(!sourcePart?.active){b.stage='dead';b.life=0;continue;}
       const next=movePoint(b.targetX,b.targetY,player.x,player.y,cfg.beamTargetSpeed*dt);b.targetX=next.x;b.targetY=next.y;
       if(b.stage==='warn'){
-        b.timer-=dt;if(b.timer<=0){b.stage='active';b.life=cfg.beamLife;b.fired=true;state.camera.shake=Math.max(state.camera.shake,phase===4?10:5.5);state.flash=Math.max(state.flash,phase===4?.14:.07);sourceShockwave(sourcePart.x,sourcePart.y,phase===4?'#ffffff':'#dce7ff',phase===4?150:90,.34,phase===4?5:3);if(typeof audio?.tone==='function')audio.tone(phase===4?72:108,.22,'sawtooth',phase===4?.022:.012,phase===4?85:45);}
+        b.timer-=dt;if(b.timer<=0){b.stage='active';b.life=cfg.beamLife;b.fired=true;b.impactCd=0;state.camera.shake=Math.max(state.camera.shake,phase===4?10:5.5);state.flash=Math.max(state.flash,phase===4?.14:.07);sourceShockwave(sourcePart.x,sourcePart.y,phase===4?'#ffffff':'#dce7ff',phase===4?150:90,.34,phase===4?5:3);if(typeof audio?.tone==='function')audio.tone(phase===4?72:108,.22,'sawtooth',phase===4?.022:.012,phase===4?85:45);}
       }else{
         b.life-=dt;const path=beamPath(e,b);if(player.invuln<=0&&segDist(player.x,player.y,path[0].x,path[0].y,path[1].x,path[1].y)<=b.width*.52+player.r)hurt(e,b.damage);
         if(Math.random()<dt*(phase===4?20:9)&&typeof spawnParticle==='function'&&sourceFxVisible(sourcePart.x,sourcePart.y))spawnParticle(sourcePart.x+rand(-10,10),sourcePart.y+rand(-10,10),phase===4?'#ffffff':'#c4d3ff',1,phase===4?80:45,phase===4?4:2.5);
+        if(phase===4){b.impactCd-=dt;if(b.impactCd<=0){b.impactCd=.12+Math.random()*.04;emitP4BeamImpact(b);}}
       }
     }
     c.beams=c.beams.filter(b=>b.stage!=='dead'&&(b.stage==='warn'||b.life>0));c.beamCd-=dt;if(!c.beams.length&&c.beamCd<=0){startBeamVolley(e,phase);c.beamCd=cfg.beamCd;}
@@ -244,12 +254,12 @@
   window.stackfallLastConstellationCombatDiagnostics=()=>{
     const e=liveLC();if(!e?.lcStructure)return null;const c=ensureCombat(e),phase=e.lcStructure.phase,cfg=CFG[phase],volley=c.lastCometVolley||{};
     return{
-      version:'v2',revision:4,phase,
+      version:'v2',revision:5,phase,
       cometPerNode:cfg.cometCount,activeNodeCount:activeParts(e).length,activeComets:c.comets.length,lastCometVolley:volley,
       cometVolleyCountCorrect:volley.phase!==phase||volley.spawned===volley.activeNodes*volley.expectedPerNode,
-      beamCooldown:cfg.beamCd,beamTargetSpeed:cfg.beamTargetSpeed,beamWidth:cfg.beamWidth,activeBeams:c.beams.length,beamEndpointTracking:true,
+      beamCooldown:cfg.beamCd,beamTargetSpeed:cfg.beamTargetSpeed,beamWidth:cfg.beamWidth,activeBeams:c.beams.length,beamEndpointTracking:true,p4TrackingBeamImpactFx:true,p4TrackingBeamImpactCadence:[.12,.16],
       connectionMode:phase===3?'permanent':phase===4?'none':'cooldown',connectionMaxNodes:cfg.linkNodes,activeLinkNodes:c.linkHazard?.keys?.length||0,
-      pulseUnlocked:phase>=2,pulseSpeed:cfg.pulseSpeed,pulseGapCount:cfg.pulseGaps,pulseWaveCount:cfg.pulseWaves,pulseWaveInterval:PULSE_WAVE_INTERVAL,pulseDelays:c.pulses.map(p=>p.delay).sort((a,b)=>a-b),activePulses:c.pulses.length,
+      pulseUnlocked:phase>=2,pulseSpeed:cfg.pulseSpeed,pulseGapCount:cfg.pulseGaps,pulseWaveCount:cfg.pulseWaves,pulseWaveInterval:PULSE_WAVE_INTERVAL,pulseDecelerates:false,pulseDelays:c.pulses.map(p=>p.delay).sort((a,b)=>a-b),activePulses:c.pulses.length,
       sourceShockwaveViewportCulling:true,
       debrisCount:c.debris.length,debrisAnchors:debrisAnchors(c).length,
       p4TrackingBeamRicochet:false,p4RicochetStage:c.ricochet?.stage||null,p4RicochetBounceCount:c.ricochet?.bounceCount||0,p4RicochetPathFixed:!!c.ricochet?.points,
