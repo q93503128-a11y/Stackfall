@@ -5,7 +5,7 @@ on:
     paths:
       - 'src/endless-combat-ux-fixes-v2.js'
       - 'src/run-modes.js'
-      - 'scripts/endless-combat-ux-browser-v2.mjs'
+      - 'scripts/endless-combat-ux-browser-v3.mjs'
       - '.github/workflows/endless-combat-ux-audit.yml'
   workflow_dispatch:
 
@@ -21,6 +21,6 @@ jobs:
         run: |
           node --check src/endless-combat-ux-fixes-v2.js
           node --check src/run-modes.js
-          node --check scripts/endless-combat-ux-browser-v2.mjs
+          node --check scripts/endless-combat-ux-browser-v3.mjs
       - name: Validate Endless combat UX and special abilities in browser
-        run: node scripts/endless-combat-ux-browser-v2.mjs
+        run: node scripts/endless-combat-ux-browser-v3.mjs
