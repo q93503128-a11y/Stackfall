@@ -27,7 +27,7 @@ async function navigate(tag){const url=`http://127.0.0.1:${port}/?dev=1&achievem
 try{
   const target=await endpoint(`/json/new?${encodeURIComponent(`http://127.0.0.1:${port}/?dev=1&achievementAudit=boot`)}`);cdp=new Cdp(target.webSocketDebuggerUrl);await cdp.ready;await Promise.all([cdp.send('Page.enable'),cdp.send('Runtime.enable')]);
   await navigate('clean');
-  let snapshot=await evalJs(`(()=>({version:stackfallMeta.version,count:STACKFALL_ACHIEVEMENTS.length,achievements:!!stackfallMeta.achievements,stats:!!stackfallMeta.achievementStats,ui:!!document.querySelector('#profileAchievements'),filters:document.querySelectorAll('.achievement-filter').length,cards:document.querySelectorAll('.achievement-card').length}))()`);
+  let snapshot=await evalJs(`(()=>({version:stackfallMeta.version,count:STACKFALL_ACHIEVEMENTS.length,achievements:!!stackfallMeta.achievements,stats:!!stackfallMeta.achievementStats,ui:!!document.querySelector('#profileAchievements'),filters:document.querySelectorAll('.achievement-filter').length,cards:document.querySelectorAll('#profileAchievementGrid .achievement-card').length}))()`);
   check(snapshot.version===8&&snapshot.count===37&&snapshot.achievements&&snapshot.stats,'v8 achievement meta schema loads',snapshot);
   check(snapshot.ui&&snapshot.filters===6&&snapshot.cards===37,'profile achievement browser renders all definitions',snapshot);
 
@@ -43,7 +43,7 @@ try{
   const apex=await evalJs(`(()=>{stackfallRecordBossDefeat({kind:'apex',type:'boss',apexForm:'chronophage'});return{apex:stackfallAchievementProgress('apex-first'),form:stackfallAchievementProgress('chronophage-first'),count:stackfallMeta.achievementStats.apexForms.chronophage,bosses:stackfallMeta.bossRecords.apex};})()`);
   check(apex.apex?.unlocked===true&&apex.form?.unlocked===true&&apex.count===1&&apex.bosses===1,'Apex form defeat tracking unlocks form-specific achievements',apex);
 
-  const filter=await evalJs(`(()=>{const buttons=[...document.querySelectorAll('.achievement-filter')],button=buttons.find(b=>b.textContent.includes('초월체')||b.textContent==='APEX');button?.click();return{active:document.querySelector('.achievement-filter.active')?.textContent,cards:document.querySelectorAll('.achievement-card').length};})()`);
+  const filter=await evalJs(`(()=>{const buttons=[...document.querySelectorAll('.achievement-filter')],button=buttons.find(b=>b.textContent.includes('초월체')||b.textContent==='APEX');button?.click();return{active:document.querySelector('.achievement-filter.active')?.textContent,cards:document.querySelectorAll('#profileAchievementGrid .achievement-card').length};})()`);
   check(filter.cards===8,'category filter limits profile list to Apex achievements',filter);
 
   await evalJs(`(()=>{localStorage.setItem('stackfall.meta.dev.v1',JSON.stringify({version:7,profileName:'',unlockedWeapons:['blade','ember','bulwark','gravity'],unlockedFeatures:[],clearedStages:['stage-01'],bestStageTimes:{'stage-01':300},stageClearCounts:{'stage-01':1},currencies:{stardust:0,coreShard:0},upgrades:{},bossRecords:{mini:0,boss:10,apex:3,void:0,crash:0},lifetime:{runs:50,kills:1000,bosses:13}}));location.reload();return true;})()`);
