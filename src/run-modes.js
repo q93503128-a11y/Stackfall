@@ -4,7 +4,8 @@
   const ENDLESS_PROGRESSION_SCRIPTS=Object.freeze(['src/endless-progression-v2.js','src/achievement-profile-entry-v2.js','src/achievement-card-ui-rollback-v2.js','src/endless-combat-ux-fixes-v2.js']);
   const SHARED_STAGE_RUNTIME_STYLES=Object.freeze(['stage-runtime.css']);
   const SHARED_STAGE_RUNTIME_SCRIPTS=Object.freeze([
-    'src/stage-constellation-backgrounds.js'
+    'src/stage-constellation-backgrounds.js',
+    'src/stage-core-shard-fix-v1.js'
   ]);
   const STAGE_RUNTIME_SCRIPTS=Object.freeze({
     'stage-01':Object.freeze(['src/stage01-remodel.js','src/stage01-polish.js'])
