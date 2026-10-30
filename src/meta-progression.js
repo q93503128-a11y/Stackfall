@@ -149,7 +149,7 @@
     }
   }
   const meta=load();
-  let achievementUiReady=false,achievementFilter='all';
+  let achievementUiReady=false,achievementFilter='all',achievementBackfillComplete=false;
   const achievementToastQueue=[];
   const achievementById=id=>ACHIEVEMENT_DEFS.find(def=>def.id===id)||null;
   const achievementGoal=def=>Math.max(1,Math.floor(Number(typeof def.goal==='function'?def.goal(meta):def.goal)||1));
@@ -179,7 +179,7 @@
     if(notify)for(const def of newly)showAchievementToast(def);return newly;
   }
   function persistMeta(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(meta));if(meta.profileName)localStorage.setItem(PROFILE_NAME_KEY,meta.profileName);}catch{}syncFeatureEntries();window.renderStackfallMetaUi?.();window.renderStackfallAchievements?.();}
-  function save(options={}){if(options.evaluateAchievements!==false)evaluateAchievements({notify:options.notifyAchievements!==false});persistMeta();}
+  function save(options={}){if(options.evaluateAchievements!==false)evaluateAchievements({notify:achievementBackfillComplete&&options.notifyAchievements!==false});persistMeta();}
   function captureRunAchievementStats(){
     const stats=meta.achievementStats=normalizeAchievementStats(meta.achievementStats);
     stats.maxLevel=Math.max(stats.maxLevel,sanitizeNumber(state?.level));stats.maxCombo=Math.max(stats.maxCombo,sanitizeNumber(state?.maxCombo),sanitizeNumber(state?.combo));
@@ -288,7 +288,7 @@
     for(const def of rows){const unlocked=achievementUnlocked(def.id),goal=achievementGoal(def),progress=Math.min(goal,achievementProgress(def)),pct=unlocked?100:Math.min(100,progress/goal*100),card=document.createElement('div');card.className='achievement-card'+(unlocked?' unlocked':'');card.innerHTML=`<div class="achievement-icon" aria-hidden="true">${categoryGlyph(def.category)}</div><div class="achievement-copy"><small>${text[def.category]||def.category}</small><strong>${localizedAchievement(def.name)}</strong><p>${localizedAchievement(def.desc)}</p></div><div class="achievement-progress" style="--achievement-progress:${pct.toFixed(1)}%"><i></i><span>${unlocked?text.unlocked:`${formatAchievementValue(progress,def.format)} / ${formatAchievementValue(goal,def.format)}`}</span></div>`;grid.appendChild(card);}
   }
   function initializeAchievementsAfterLoad(){
-    ensureAchievementUi();evaluateAchievements({notify:false});persistMeta();renderAchievements();
+    ensureAchievementUi();evaluateAchievements({notify:false});achievementBackfillComplete=true;persistMeta();renderAchievements();
   }
 
   window.STACKFALL_INITIAL_WEAPONS=INITIAL_WEAPONS;
@@ -316,7 +316,7 @@
   window.stackfallStageStatus=stageStatus;
   window.stackfallRecordStageClear=recordStageClear;
   window.stackfallAchievementProgress=id=>{const def=achievementById(id);return def?{progress:achievementProgress(def),goal:achievementGoal(def),unlocked:achievementUnlocked(id)}:null;};
-  window.stackfallEvaluateAchievements=()=>{const newly=evaluateAchievements({notify:true});persistMeta();return newly.map(def=>def.id);};
+  window.stackfallEvaluateAchievements=()=>{const newly=evaluateAchievements({notify:achievementBackfillComplete});persistMeta();return newly.map(def=>def.id);};
   window.stackfallRefreshFeatureUi=()=>{syncFeatureEntries();window.renderStackfallGalaxyMap?.();window.renderStackfallMetaUi?.();window.stackfallSyncAwakeningCoreHud?.();window.renderStackfallAchievements?.();};
   syncFeatureEntries();save({evaluateAchievements:false});
   if(document.readyState==='complete')queueMicrotask(initializeAchievementsAfterLoad);else window.addEventListener('load',initializeAchievementsAfterLoad,{once:true});
