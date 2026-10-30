@@ -4,8 +4,10 @@ on:
   pull_request:
     paths:
       - 'src/endless-combat-ux-fixes-v2.js'
+      - 'src/stage-core-shard-fix-v1.js'
       - 'src/run-modes.js'
       - 'scripts/endless-combat-ux-browser-v3.mjs'
+      - 'scripts/stage-core-shard-browser.mjs'
       - '.github/workflows/endless-combat-ux-audit.yml'
   workflow_dispatch:
 
@@ -20,7 +22,11 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check src/endless-combat-ux-fixes-v2.js
+          node --check src/stage-core-shard-fix-v1.js
           node --check src/run-modes.js
           node --check scripts/endless-combat-ux-browser-v3.mjs
+          node --check scripts/stage-core-shard-browser.mjs
       - name: Validate Endless combat UX and special abilities in browser
         run: node scripts/endless-combat-ux-browser-v3.mjs
+      - name: Validate first-clear Core Shard stage rewards
+        run: node scripts/stage-core-shard-browser.mjs
