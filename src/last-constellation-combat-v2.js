@@ -5,7 +5,7 @@
   if(window.stackfallLastConstellationCombat==='v2')return;
   window.stackfallLastConstellationCombat='v2';
 
-  const FORM='lastconstellation',TAU=Math.PI*2,PULSE_WAVE_INTERVAL=1.0;
+  const FORM='lastconstellation',TAU=Math.PI*2,PULSE_WAVE_INTERVAL=1.5;
   const CFG={
     1:{cometCount:1,cometSpeed:220,cometTurn:.42,cometCd:4.25,beamCd:11.4,beamWarn:1.00,beamLife:1.80,beamTargetSpeed:104,beamWidth:12,linkCd:5.8,linkWarn:.72,linkLife:2.45,linkNodes:2,pulseCd:0,pulseSpeed:0,pulseGaps:0,pulseWaves:0},
     2:{cometCount:2,cometSpeed:235,cometTurn:.50,cometCd:3.80,beamCd:9.4,beamWarn:.94,beamLife:1.90,beamTargetSpeed:116,beamWidth:14,linkCd:4.15,linkWarn:.66,linkLife:2.70,linkNodes:3,pulseCd:9.6,pulseSpeed:118,pulseGaps:3,pulseWaves:1},
