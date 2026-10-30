@@ -64,9 +64,11 @@
         const contact=target.__lcLastCircleContact;target.__lcLastCircleContact=null;
         const part=contact&&(target.bodyParts||[]).find(p=>p.id===contact.partId&&p.lcNodeProxy&&p.active&&!p.dead);
         if(part){
+          const result=base(part,amount,options);
+          // Production damage syncs the constellation proxy positions. The follow-up wave must use
+          // the node's post-sync position, not the pre-damage visual position that was just struck.
           const hit={ownerId:target.id,x:part.x,y:part.y,at:performance.now()};
           target.__lcLastBladeHit=hit;pendingBladeWave=hit;
-          const result=base(part,amount,options);
           exposeImmediateBladeOrigin(target,hit);
           return result;
         }
@@ -125,6 +127,6 @@
 
   window.stackfallLastConstellationHitRoutingDiagnostics=()=>{
     const e=state.entities.enemies.find(isLC)||null;
-    return{version:'v1',revision:6,active:!!e,phase:e?.lcStructure?.phase||null,activeProxyCount:e?activeParts(e).length:0,projectileFallback:true,nearbyCandidateRouting:true,bladeContactRouting:true,bladeWaveOriginRouting:true,bladeWaveRouterInstalled:spawnPlayerProjectile?.__lcBladeWaveRouter===true,pendingBladeWave:!!pendingBladeWave,temporaryOwnerAnchor:!!e?.__lcBladeWaveOwnerRestore};
+    return{version:'v1',revision:7,active:!!e,phase:e?.lcStructure?.phase||null,activeProxyCount:e?activeParts(e).length:0,projectileFallback:true,nearbyCandidateRouting:true,bladeContactRouting:true,bladeWaveOriginRouting:true,bladeWaveRouterInstalled:spawnPlayerProjectile?.__lcBladeWaveRouter===true,pendingBladeWave:!!pendingBladeWave,temporaryOwnerAnchor:!!e?.__lcBladeWaveOwnerRestore};
   };
 })();
