@@ -22,15 +22,22 @@ let cdp;
 async function evalJs(expression){const r=await cdp.send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true,userGesture:true});if(r.exceptionDetails)throw new Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result?.value;}
 async function waitFor(expression,timeout=20000){const st=Date.now();while(Date.now()-st<timeout){try{const value=await evalJs(expression);if(value)return value;}catch{}await sleep(80);}throw new Error(`waitFor timeout: ${expression}`);}
 function check(ok,label,details=null){if(!ok)throw new Error(`${label}: ${JSON.stringify(details)}`);console.log(`PASS ${label}`);}
-async function waitBoot(){await waitFor(`document.readyState==='complete'&&window.stackfallEndlessProgression?.achievements?.length===40&&document.querySelector('#profileAchievementDetails')&&document.querySelectorAll('.profile-achievement-card').length===40`);await sleep(120);}
+async function waitBoot(){await waitFor(`document.readyState==='complete'&&window.stackfallEndlessProgression?.achievements?.length===40&&document.querySelector('#profileAchievementDetails')&&document.querySelectorAll('.profile-achievement-card').length===40&&document.querySelector('#profileClearCount')?.textContent?.includes('/ 40')`);await sleep(120);}
 
 try{
   const target=await endpoint(`/json/new?${encodeURIComponent(`http://127.0.0.1:${port}/?dev=1&achievementV2Audit=boot`)}`);cdp=new Cdp(target.webSocketDebuggerUrl);await cdp.ready;await Promise.all([cdp.send('Page.enable'),cdp.send('Runtime.enable')]);
   await waitBoot();
-  let snapshot=await evalJs(`(()=>({count:stackfallEndlessProgression.achievements.length,hub:!!document.querySelector('#achievementHubBtn'),screen:!!document.querySelector('#achievementScreen'),profile:!!document.querySelector('#profileAchievementDetails'),cards:document.querySelectorAll('.profile-achievement-card').length,filters:document.querySelectorAll('.achievement-filter,.achievement-toolbar').length,menuCards:document.querySelectorAll('#menu .hub-mode-card').length}))()`);
+  let snapshot=await evalJs(`(()=>{const stage=document.querySelector('#stageMapBtn'),style=getComputedStyle(stage),hub=document.querySelector('#hubProfile');return{count:stackfallEndlessProgression.achievements.length,hub:!!document.querySelector('#achievementHubBtn'),screen:!!document.querySelector('#achievementScreen'),profile:!!document.querySelector('#profileAchievementDetails'),cards:document.querySelectorAll('.profile-achievement-card').length,filters:document.querySelectorAll('.achievement-filter,.achievement-toolbar').length,menuCards:document.querySelectorAll('#menu .hub-mode-card').length,hubLabel:hub?.querySelector('.hub-profile-copy>small>span')?.textContent?.trim(),hubCount:document.querySelector('#profileClearCount')?.textContent?.trim(),stageColumn:[style.gridColumnStart,style.gridColumnEnd]};})()`);
   check(snapshot.count===40&&snapshot.profile&&snapshot.cards===40,'profile renders one forty-achievement list',snapshot);
   check(!snapshot.hub&&!snapshot.screen&&snapshot.filters===0,'no standalone achievement hub, screen, categories, or filters',snapshot);
   check(snapshot.menuCards===3,'main menu remains the original three-card layout',snapshot);
+  check(snapshot.hubLabel==='업적'&&snapshot.hubCount==='0 / 40','main profile card exposes achievement progress',snapshot);
+  check(snapshot.stageColumn[0]==='8'&&snapshot.stageColumn[1]==='13','stage card fills the retired achievement slot',snapshot);
+  const opened=await evalJs(`(()=>{document.querySelector('#hubProfile')?.click();return true;})()`);check(opened,'profile card click requested');
+  await waitFor(`!document.querySelector('#profileScreen')?.classList.contains('hidden')&&document.querySelector('#profileAchievementDetails')?.open===true`);
+  const profileOrder=await evalJs(`(()=>{const modal=document.querySelector('#profileScreen .profile-modal'),details=[...modal.querySelectorAll('.profile-details')];return{open:document.querySelector('#profileAchievementDetails')?.open,first:details[0]?.id||'',summary:document.querySelector('#profileAchievementSummary')?.textContent?.trim()};})()`);
+  check(profileOrder.open&&profileOrder.first==='profileAchievementDetails'&&profileOrder.summary==='0 / 40','profile opens with achievements visible first',profileOrder);
+  await evalJs(`document.querySelector('#profileCloseBtn')?.click()`);
 
   await evalJs(`(()=>{localStorage.removeItem('stackfall.meta.dev.v1');localStorage.removeItem('stackfall.endless.progression.dev.v1');location.reload();return true;})()`);await waitBoot();
   const clean=await evalJs(`(()=>({weapons:[...stackfallMeta.unlockedWeapons],features:[...stackfallMeta.unlockedFeatures],shards:stackfallCurrency('coreShard'),progress:stackfallEndlessProgression.progress.version}))()`);
