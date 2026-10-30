@@ -55,18 +55,25 @@
     };
   }
 
-  // Blade level 4+ emits its follow-up wave from the enemy entity. For Last Constellation that
-  // entity is the dormant center, so re-anchor only the immediate blade follow-up to the node that
-  // was actually struck. This also prevents visual effects from appearing at an unrelated core.
+  // Blade level 4+ emits its follow-up wave immediately after the blade hit. The owner entity is
+  // the dormant constellation center, so consume the freshest pending LC blade contact directly
+  // instead of requiring the projectile's requested origin to still match that center. Some combat
+  // wrappers can restore/rewrite the owner coordinates before this call reaches us.
   if(typeof spawnPlayerProjectile==='function'){
     const base=spawnPlayerProjectile;
     spawnPlayerProjectile=function lastConstellationBladeWaveOrigin(data){
       let next=data;
-      if(String(data?.source||'')==='wave')for(const e of liveLC()){
-        const hit=e.__lcLastBladeHit,age=hit?performance.now()-hit.at:Infinity;
-        if(!hit||age>90||Math.hypot((Number(data.x)||0)-e.x,(Number(data.y)||0)-e.y)>1)continue;
-        const dx=hit.x-player.x,dy=hit.y-player.y,d=Math.hypot(dx,dy)||1,speed=Math.max(1,Math.hypot(Number(data.vx)||0,Number(data.vy)||0));
-        next={...data,x:hit.x,y:hit.y,vx:dx/d*speed,vy:dy/d*speed};e.__lcLastBladeHit=null;break;
+      if(String(data?.source||'')==='wave'){
+        let chosen=null;
+        for(const e of liveLC()){
+          const hit=e.__lcLastBladeHit,age=hit?performance.now()-hit.at:Infinity;
+          if(!hit||age>500)continue;
+          if(!chosen||hit.at>chosen.hit.at)chosen={e,hit};
+        }
+        if(chosen){
+          const {e,hit}=chosen,dx=hit.x-player.x,dy=hit.y-player.y,d=Math.hypot(dx,dy)||1,speed=Math.max(1,Math.hypot(Number(data.vx)||0,Number(data.vy)||0));
+          next={...data,x:hit.x,y:hit.y,vx:dx/d*speed,vy:dy/d*speed};e.__lcLastBladeHit=null;
+        }
       }
       return base(next);
     };
@@ -101,6 +108,6 @@
 
   window.stackfallLastConstellationHitRoutingDiagnostics=()=>{
     const e=state.entities.enemies.find(isLC)||null;
-    return{version:'v1',revision:2,active:!!e,phase:e?.lcStructure?.phase||null,activeProxyCount:e?activeParts(e).length:0,projectileFallback:true,nearbyCandidateRouting:true,bladeContactRouting:true,bladeWaveOriginRouting:true};
+    return{version:'v1',revision:3,active:!!e,phase:e?.lcStructure?.phase||null,activeProxyCount:e?activeParts(e).length:0,projectileFallback:true,nearbyCandidateRouting:true,bladeContactRouting:true,bladeWaveOriginRouting:true};
   };
 })();
