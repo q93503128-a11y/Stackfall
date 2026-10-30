@@ -1,0 +1,64 @@
+// Last Constellation reset v1.
+// Legacy patterns stay disabled while the authored 4 -> 3 -> 3 -> 1 production structure owns progression.
+(()=>{
+  if(window.stackfallLastConstellationReset==='v1')return;
+  window.stackfallLastConstellationReset='v1';
+  const FORM='lastconstellation';
+  const isLC=e=>!!(e&&!e.dead&&(e.apexForm||e.eliteForm)===FORM);
+  const phaseOnly=(e,dt)=>{
+    e.apexElapsed=(e.apexElapsed||0)+Math.max(0,Number(dt)||0);
+    e.apexPhase=Math.max(1,Math.min(4,Number(e.lcStructure?.phase)||Number(e.apexPhase)||1));e.timeLock=0;
+    e.skillCd=999;e.burstCd=999;e.pulseCd=999;e.signatureCd=999;e.apexVariantCd=999;e.apexSetpieceCd=999;
+    e.constellationSweep=null;e.teleportQueued=false;
+  };
+
+  if(typeof drawConstellationApex==='function'){
+    drawConstellationApex=function drawConstellationBackdropOnly(){drawCachedBackdrop('apex-constellation',paintConstellationBackdrop);drawStars(CONSTELLATION_STAR_PALETTE,1);};
+  }
+
+  const baseApexBossSkill=typeof apexBossSkill==='function'?apexBossSkill:null;
+  if(baseApexBossSkill)apexBossSkill=function lastConstellationNoLegacyPatterns(e,dt){if(isLC(e)){phaseOnly(e,dt);return;}return baseApexBossSkill(e,dt);};
+  const baseApexPhaseDirector=typeof apexPhaseDirector==='function'?apexPhaseDirector:null;
+  if(baseApexPhaseDirector)apexPhaseDirector=function lastConstellationNoLegacyDirector(e,dt){if(isLC(e))return;return baseApexPhaseDirector(e,dt);};
+  const baseBossAntiIdleSkill=typeof bossAntiIdleSkill==='function'?bossAntiIdleSkill:null;
+  if(baseBossAntiIdleSkill)bossAntiIdleSkill=function lastConstellationNoLegacyAntiIdle(e,dt){if(isLC(e))return;return baseBossAntiIdleSkill(e,dt);};
+
+  let cleaned=false;
+  function cleanupLegacyObjects(){
+    const e=state.entities.enemies?.find(isLC);if(!e)return;
+    if(!cleaned){cleaned=true;clearPendingCombatActions?.();}
+    e.constellationSweep=null;e.teleportQueued=false;
+    if(Array.isArray(state.entities.telegraphs))state.entities.telegraphs=state.entities.telegraphs.filter(t=>!String(t?.impactStyle||'').includes('constellation')&&t?.impactStyle!=='teleport-arrival');
+    for(const key of['enemyProjectiles','hostileProjectiles','enemyBullets']){
+      const arr=state.entities?.[key];if(!Array.isArray(arr))continue;
+      for(let i=arr.length-1;i>=0;i--){const p=arr[i],tag=String(p?.visual||p?.style||p?.kind||p?.type||'');if(tag.includes('constellation'))arr.splice(i,1);}
+    }
+    for(const m of state.entities.enemies||[])if(m?.eventKind==='apex-herald')m.dead=true;
+  }
+  const baseUpdateEnemies=typeof updateEnemies==='function'?updateEnemies:null;
+  if(baseUpdateEnemies)updateEnemies=function updateEnemiesWithConstellationReset(dt){cleanupLegacyObjects();return baseUpdateEnemies(dt);};
+
+  window.stackfallLastConstellationResetDiagnostics=()=>{const e=state.entities.enemies?.find(isLC)||null;return{version:'v1',active:!!e,phase:e?.lcStructure?.phase||e?.apexPhase||null,legacyPatternsSuppressed:true,patternsSuppressed:true,screenSpaceConstellationBackground:false,phaseSource:e?.lcStructure?'node-destruction':'pending-structure'};};
+
+  const loadApexRewardBalance=()=>{
+    if(document.querySelector('script[data-apex-reward-balance-v1]'))return;
+    const balance=document.createElement('script');balance.src='src/apex-reward-balance-v1.js';balance.dataset.apexRewardBalanceV1='1';document.body.appendChild(balance);
+  };
+  const loadCombat=()=>{
+    if(window.stackfallLastConstellationCombat==='v2'||document.querySelector('script[data-last-constellation-combat-v2]')){loadApexRewardBalance();return;}
+    const combat=document.createElement('script');combat.src='src/last-constellation-combat-v2.js';combat.dataset.lastConstellationCombatV2='1';combat.onload=loadApexRewardBalance;document.body.appendChild(combat);
+  };
+  const loadRouting=()=>{
+    if(window.stackfallLastConstellationHitRouting==='v1'||document.querySelector('script[data-last-constellation-hit-routing-v1]')){loadCombat();return;}
+    const routing=document.createElement('script');routing.src='src/last-constellation-hit-routing-v1.js';routing.dataset.lastConstellationHitRoutingV1='1';routing.onload=loadCombat;document.body.appendChild(routing);
+  };
+  const loadInvulnerabilityTune=()=>{
+    if(window.stackfallPlayerHitInvulnerability==='v2'||document.querySelector('script[data-player-hit-invulnerability-v2]'))return;
+    const script=document.createElement('script');script.src='src/player-hit-invulnerability-v2.js';script.dataset.playerHitInvulnerabilityV2='1';document.body.appendChild(script);
+  };
+
+  loadInvulnerabilityTune();
+  if(!document.querySelector('script[data-last-constellation-presentation-v3]')){
+    const script=document.createElement('script');script.src='src/last-constellation-presentation-v3.js';script.dataset.lastConstellationPresentationV3='1';script.onload=loadRouting;document.body.appendChild(script);
+  }else loadRouting();
+})();

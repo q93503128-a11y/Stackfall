@@ -1,210 +1,257 @@
-// Atropos art pass v12 — transparent stylized game asset, whole-body targeting,
-// and an Atropos-only frozen gray entrance. No photographic texture or visible core markers.
+// Restore the Endless Apex identities while keeping later combat/pattern systems intact.
+// Omega and Last Constellation stay on the pre-9af0cdec silhouettes. Chronophage keeps that
+// combat-era identity but reintroduces the stronger 2026-07-14 clockwork DNA so it no longer
+// reads as another radial plate/star boss.
 (()=>{
-  const VERSION='atropos-art-v12';
-  const ENTRY_DURATION=6.2;
-  const bodyArt=new Image();
-  bodyArt.decoding='async';
-  bodyArt.src='assets/atropos-body.svg';
+  const baseDrawEliteShape=typeof drawEliteShape==='function'?drawEliteShape:null;
+  if(!baseDrawEliteShape)return;
 
-  // These are invisible combat proxies distributed across the visible body. They are
-  // intentionally broad and always active: the player attacks Atropos itself, not gems/cores.
-  const HIT_ZONES={
-    'west-blade':{x:.18,y:.47,scale:1.05},
-    'crown-anchor':{x:.39,y:.25,scale:1.00},
-    'rift-core':{x:.61,y:.24,scale:1.08},
-    'keel-anchor':{x:.70,y:.65,scale:1.00},
-    'east-blade':{x:.83,y:.47,scale:1.04}
-  };
-  const APEX_ENTRY={serial:null,mobs:[],removed:false,form:null};
+  let chronophageRenderCount=0;
+  let lastChronophageRender=null;
 
-  function smooth(t){t=clamp(t,0,1);return t*t*(3-2*t);}
-  function partOf(e,key){return typeof atroposPart==='function'?atroposPart(e,key):e?.bodyParts?.find(p=>p.key===key);}
-  function entryTransition(){const tr=state.realmTransition;return tr?.owner==='apex-entry'&&tr?.to==='apex-chrono'&&tr?.form==='chronophage'?tr:null;}
-  function chronoSceneActive(){return state.realmTheme==='apex-chrono'||state.pendingApexForm==='chronophage'||state.realmTransition?.to==='apex-chrono'||!!state.entities.enemies?.some(e=>!e.dead&&e.apexForm==='chronophage');}
-  function artManifest(){
-    const tr=state.realmTransition;
-    if(tr?.to==='apex-chrono'&&tr?.owner==='apex-entry'){
-      const p=tr.elapsed/Math.max(.001,tr.duration);
-      return smooth(clamp((p-.50)/.30,0,1));
-    }
-    return state.entities.enemies?.some(e=>!e.dead&&e.apexForm==='chronophage')?1:0;
+  function setup(e){
+    ctx.strokeStyle=e.hit?'#fff':e.color;
+    ctx.fillStyle=e.hit?'#fff':e.color;
+    ctx.lineWidth=4;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
   }
 
-  const baseEnsure=ensureRebornAtropos;
-  ensureRebornAtropos=function ensureAtroposWholeBodyAnchor(e){
-    const ok=baseEnsure(e);if(!ok)return false;
-    const r=e.atroposReborn;
-    if(!r.artAnchorV12){
-      r.artScreenAnchorX=0;
-      r.artScreenAnchorY=-Math.min(170,vh*.18);
-      r.anchorX=player.x+r.artScreenAnchorX;
-      r.anchorY=player.y+r.artScreenAnchorY;
-      e.x=r.anchorX;e.y=r.anchorY;r.artAnchorV12=true;
-      r.slashCd=Math.max(r.slashCd||0,3.8);
-    }
-    return true;
-  };
+  // Historical function name is intentionally retained for the restore audit. The visual itself
+  // is a refined hybrid: 7/14 broken clockwork + current rendering polish, without Omega-like plates.
+  function drawChronophage20260720(e,t,enraged){
+    const phase=Math.max(1,Number(e.apexPhase)||1),pulse=.5+.5*Math.sin(t*.72),hit=!!e.hit;
+    const rings=[
+      {r:.64,speed:.155,offset:.12,width:3.2,alpha:.94,gap:.19,ticks:12},
+      {r:.93,speed:-.104,offset:.78,width:2.7,alpha:.78,gap:.24,ticks:12},
+      {r:1.24,speed:.066,offset:1.56,width:2.2,alpha:.60,gap:.31,ticks:12},
+      {r:1.57,speed:-.038,offset:2.31,width:1.8,alpha:.42,gap:.39,ticks:12}
+    ];
+    if(enraged||phase>=3)rings.push({r:1.84,speed:.024,offset:.46,width:1.45,alpha:.28,gap:.47,ticks:12});
 
-  // Keep the old structural animation only as attack timing data, then replace its tiny
-  // weak-point geometry with broad invisible body coverage. No zone is visually rendered.
-  const basePose=updateAtroposPose;
-  updateAtroposPose=function updateAtroposWholeBodyPose(e){
-    basePose(e);if(!e?.atroposReborn||e.apexForm!=='chronophage')return;
-    const anchorX=e.atroposReborn.artScreenAnchorX||0,anchorY=e.atroposReborn.artScreenAnchorY||0;
-    const baseR=Math.max(112,Math.min(vw,vh)*.175);
-    for(const [key,cfg] of Object.entries(HIT_ZONES)){
-      const part=partOf(e,key);if(!part)continue;
-      part.dx=(cfg.x-.5)*vw-anchorX;
-      part.dy=(cfg.y-.5)*vh-anchorY;
-      part.r=baseR*cfg.scale;
-      part.active=true;part.visible=true;part.dead=false;
-    }
-    refreshBossBodyParts(e);
-  };
-
-  function artPlacement(e){
-    const r=e?.atroposReborn;
-    const initialX=r?.artScreenAnchorX||0,initialY=r?.artScreenAnchorY||0;
-    const ox=r?(r.anchorX-player.x-initialX):0,oy=r?(r.anchorY-player.y-initialY):0;
-    const t=performance.now()*.001,breathe=1.015+Math.sin(t*.25)*.0022;
-    const dw=vw*1.06*breathe,dh=vh*1.06*breathe;
-    return{x:(vw-dw)*.5+ox,y:(vh-dh)*.5+oy, w:dw,h:dh};
-  }
-  function drawAtroposBodyArt(manifest){
-    if(!bodyArt.complete||bodyArt.naturalWidth<2||manifest<=.001)return;
-    const e=state.entities.enemies?.find(enemy=>!enemy.dead&&enemy.apexForm==='chronophage');
-    const place=artPlacement(e),lastHit=Number(e?.atroposReborn?.lastHitAt),now=Number(state.time)||0;
-    const hitPulse=Number.isFinite(lastHit)?clamp(1-(now-lastHit)/.14,0,1):0;
+    // Dim temporal halo: broad and circular, not a solid central mass.
     ctx.save();
-    // Transparent vector art: source-over only. No baked space background, screen blend,
-    // photo texture, blur, noise or rectangular image boundary.
-    ctx.globalAlpha=.96*manifest;
-    ctx.drawImage(bodyArt,place.x,place.y,place.w,place.h);
-    if(hitPulse>0){ctx.globalCompositeOperation='screen';ctx.globalAlpha=.14*manifest*hitPulse;ctx.drawImage(bodyArt,place.x,place.y,place.w,place.h);}
+    const halo=ctx.createRadialGradient(0,0,e.r*.18,0,0,e.r*1.92);
+    halo.addColorStop(0,`rgba(160,255,240,${hit?.22:.09})`);
+    halo.addColorStop(.46,`rgba(70,220,207,${.055+.025*pulse})`);
+    halo.addColorStop(1,'rgba(40,170,165,0)');
+    ctx.fillStyle=halo;ctx.beginPath();ctx.arc(0,0,e.r*1.92,0,TAU);ctx.fill();
     ctx.restore();
+
+    // Four/five independently rotating broken clock rings. Every ring has one deliberately missing
+    // quadrant plus smaller cuts, so the silhouette reads as damaged time rather than a sun/flower.
+    for(let ringIndex=0;ringIndex<rings.length;ringIndex++){
+      const ring=rings[ringIndex],rr=e.r*ring.r,rot=t*ring.speed+ring.offset;
+      ctx.save();ctx.rotate(rot);ctx.strokeStyle=hit?'#ffffff':ringIndex<2?'#dffff9':e.color;ctx.lineWidth=ring.width;ctx.globalAlpha=ring.alpha;
+      const segments=6,missing=(ringIndex*2+1)%segments;
+      for(let seg=0;seg<segments;seg++){
+        if(seg===missing)continue;
+        const wobble=(seg%2?.018:-.014)*(ringIndex+1),start=seg/segments*TAU+ring.gap+wobble,end=(seg+1)/segments*TAU-ring.gap*.72+wobble;
+        ctx.beginPath();ctx.arc(0,0,rr,start,end);ctx.stroke();
+      }
+
+      // Twelve hour marks, with damaged/ghost marks omitted or displaced on outer rings.
+      ctx.setLineDash([]);
+      for(let i=0;i<ring.ticks;i++){
+        if((i+ringIndex*3)%7===0&&ringIndex>0)continue;
+        const a=i/ring.ticks*TAU,major=i%3===0,ghost=ringIndex>1&&(i+ringIndex)%5===0;
+        const inner=rr-e.r*(major?.085:.052),outer=rr+e.r*(major?.055:.032),shift=ghost?e.r*.055:0;
+        ctx.globalAlpha=ring.alpha*(ghost?.28:major?.92:.58);
+        ctx.lineWidth=major?2.5:1.35;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a)*inner+Math.cos(a+Math.PI/2)*shift,Math.sin(a)*inner+Math.sin(a+Math.PI/2)*shift);
+        ctx.lineTo(Math.cos(a)*outer+Math.cos(a+Math.PI/2)*shift,Math.sin(a)*outer+Math.sin(a+Math.PI/2)*shift);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // Detached time fragments at irregular angles. They are thin clock shards, never broad radial plates.
+    const shardAngles=[-.38,1.18,2.74,4.38];
+    ctx.save();ctx.strokeStyle=hit?'#fff':'#aaffef';ctx.fillStyle=hit?'rgba(255,255,255,.35)':'rgba(74,215,202,.10)';
+    for(let i=0;i<shardAngles.length;i++){
+      const a=shardAngles[i]-t*(i%2?.018:-.012),rr=e.r*(1.68+(i%2)*.16),w=e.r*(i%2?.11:.075),h=e.r*(i%2?.23:.17);
+      ctx.save();ctx.translate(Math.cos(a)*rr,Math.sin(a)*rr);ctx.rotate(a+.45*(i%2?1:-1));ctx.globalAlpha=.30+i*.07;
+      ctx.beginPath();ctx.moveTo(-w,-h);ctx.lineTo(w*.72,-h*.72);ctx.lineTo(w,h*.64);ctx.lineTo(-w*.52,h);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+    }
+    ctx.restore();
+
+    // Clock hands dominate the interior silhouette. Their very different lengths/speeds are inherited
+    // from the original July 14 Chronophage and make the boss readable even at small scale.
+    const longAngle=t*.31-.72,shortAngle=-t*.115+1.16,fractureAngle=t*.041+2.48;
+    const drawHand=(angle,length,back,width,alpha,color,tip=0)=>{
+      ctx.save();ctx.rotate(angle);ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=width;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(-e.r*back,0);ctx.lineTo(e.r*length,0);ctx.stroke();
+      if(tip>0){ctx.beginPath();ctx.moveTo(e.r*length,0);ctx.lineTo(e.r*(length-tip),-e.r*tip*.34);ctx.lineTo(e.r*(length-tip),e.r*tip*.34);ctx.closePath();ctx.fill();}
+      ctx.restore();
+    };
+
+    // Temporal afterimages show where the long hand was, instead of adding more physical mass.
+    for(let ghost=3;ghost>=1;ghost--)drawHand(longAngle-ghost*.075,1.48,.18,1.4,.07*(4-ghost),e.color,0);
+    drawHand(longAngle,1.53,.22,4.6,.96,hit?'#fff':'#eafffb',.16);
+    drawHand(shortAngle,.88,.15,6.0,.88,hit?'#fff':'#8fffe7',.13);
+    ctx.save();ctx.rotate(fractureAngle);ctx.setLineDash([e.r*.13,e.r*.095]);ctx.globalAlpha=.38;ctx.strokeStyle='#b9fff3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-e.r*.42,0);ctx.lineTo(e.r*1.30,0);ctx.stroke();ctx.restore();ctx.setLineDash([]);
+
+    // Small asymmetric time-core. The core is intentionally much smaller than Omega's furnace.
+    ctx.save();ctx.rotate(-t*.072);
+    const core=ctx.createRadialGradient(-e.r*.08,-e.r*.10,1,0,0,e.r*.42);
+    core.addColorStop(0,'#ffffff');core.addColorStop(.22,'#cffff7');core.addColorStop(.52,'#43c7b8');core.addColorStop(1,'#031619');
+    ctx.fillStyle=core;ctx.strokeStyle=hit?'#fff':'#dffff9';ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.moveTo(0,-e.r*.38);ctx.lineTo(e.r*.29,-e.r*.08);ctx.lineTo(e.r*.17,e.r*.34);ctx.lineTo(-e.r*.23,e.r*.29);ctx.lineTo(-e.r*.34,-e.r*.10);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.70)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-e.r*.10,-e.r*.27);ctx.lineTo(e.r*.09,e.r*.23);ctx.stroke();
+    ctx.restore();
+
+    // Central pin and tiny counter-rotating inner ring.
+    ctx.save();ctx.rotate(t*.19);ctx.globalAlpha=.74;ctx.strokeStyle='#ffffff';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,e.r*.49,.18,Math.PI-.24);ctx.stroke();ctx.beginPath();ctx.arc(0,0,e.r*.49,Math.PI+.28,TAU-.16);ctx.stroke();ctx.restore();
+    ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(0,0,e.r*.055,0,TAU);ctx.fill();
   }
 
-  // Atropos is a distant colossus layer. The world background remains Stackfall's own art.
-  const baseBackground=drawBackground;
-  drawBackground=function drawBackgroundWithAtroposBody(){
-    const tr=entryTransition();
-    if(tr){
-      const p=clamp(tr.elapsed/Math.max(.001,tr.duration),0,1),blend=smooth(clamp((p-.50)/.36,0,1));
-      drawTheme(normalizedRealmTheme(tr.from));
-      if(blend>0){ctx.save();ctx.globalAlpha=blend;drawTheme(normalizedRealmTheme(tr.to));ctx.restore();}
-      drawAtroposBodyArt(artManifest());
-      return;
+  function drawStarforge20260720(e,t,enraged){
+    const plates=enraged?10:8;
+    ctx.save();
+    ctx.rotate(t*.028);
+    for(let i=0;i<plates;i++){
+      ctx.save();
+      ctx.rotate(i/plates*TAU);
+      const long=i%2===0;
+      ctx.fillStyle=long?'#431006':'#1b0905';
+      ctx.strokeStyle=long?'#ffe7a0':'#ff7b35';
+      ctx.lineWidth=4;
+      ctx.beginPath();
+      ctx.moveTo(e.r*.40,-e.r*.18);
+      ctx.lineTo(e.r*(long?1.72:1.32),-e.r*.44);
+      ctx.lineTo(e.r*(long?2.12:1.64),0);
+      ctx.lineTo(e.r*(long?1.72:1.32),e.r*.44);
+      ctx.lineTo(e.r*.40,e.r*.18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
     }
-    const result=baseBackground();if(chronoSceneActive())drawAtroposBodyArt(artManifest());return result;
-  };
+    ctx.restore();
 
-  // No rendered weak points, jewels or center core. All hit proxies stay invisible.
-  drawAtroposWorldBody=function drawAtroposWholeBodyTargets(e){if(ensureRebornAtropos(e))updateAtroposPose(e);};
+    ctx.fillStyle='#160603';
+    ctx.strokeStyle='#fff0b0';
+    ctx.lineWidth=5;
+    ctx.beginPath();
+    for(let i=0;i<6;i++){
+      const a=i/6*TAU-Math.PI/2,x=Math.cos(a)*e.r*.72,y=Math.sin(a)*e.r*.72;
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    }
+    ctx.closePath();ctx.fill();ctx.stroke();
 
-  // Never move the owner to fake coordinates for rendering. That legacy trick created the
-  // bogus off-screen Apex arrow. Exclude it from the ordinary enemy render list instead.
-  const baseDrawEnemiesWithLegacyAtropos=drawEnemies;
-  drawEnemies=function drawEnemiesWithoutAtroposMarker(){
-    const list=state.entities.enemies||[],e=list.find(enemy=>!enemy?.dead&&enemy.apexForm==='chronophage');
-    if(!e)return baseDrawEnemiesWithLegacyAtropos();
-    const index=list.indexOf(e);if(index<0)return baseDrawEnemiesWithLegacyAtropos();
-    list.splice(index,1);
-    try{baseDrawEnemiesWithLegacyAtropos();}
-    finally{list.splice(Math.min(index,list.length),0,e);}
-    drawAtroposWorldBody(e);drawAtroposSpaceCut(e);
-  };
-
-  function clearEntryTransientCombat(){
-    clearEnemyProjectiles?.();
-    if(Array.isArray(state.entities.telegraphs))state.entities.telegraphs.length=0;
-    if(Array.isArray(state.entities.projectiles))state.entities.projectiles.length=0;
-    state.entities.curves?.splice(0);clearBeamEffects?.();
-    if(Array.isArray(state.entities.wells))state.entities.wells.length=0;
-    clearPendingCombatActions?.();
+    const furnace=ctx.createLinearGradient(0,-e.r*.48,0,e.r*.48);
+    furnace.addColorStop(0,'#fff8d8');
+    furnace.addColorStop(.30,'#ffcf57');
+    furnace.addColorStop(.72,'#ff5d22');
+    furnace.addColorStop(1,'#5b0c02');
+    ctx.fillStyle=furnace;
+    ctx.fillRect(-e.r*.19,-e.r*.48,e.r*.38,e.r*.96);
+    ctx.fillStyle='#fff';
+    ctx.fillRect(-e.r*.055,-e.r*.54,e.r*.11,e.r*1.08);
   }
-  function prepareEntryMobs(form){
-    APEX_ENTRY.form=form;APEX_ENTRY.serial=null;APEX_ENTRY.removed=false;APEX_ENTRY.mobs.length=0;
-    const cx=player.x,cy=player.y,edge=Math.max(vw,vh)*.72+280;
-    let i=0;
-    for(const e of state.entities.enemies||[]){
-      if(!e||e.dead||e.kind==='apex'||e.apexForm)continue;
-      const dx=e.x-cx,dy=e.y-cy,d=Math.hypot(dx,dy)||1,a=d>3?Math.atan2(dy,dx):i*2.399;
-      APEX_ENTRY.mobs.push({e,x:e.x,y:e.y,ux:Math.cos(a),uy:Math.sin(a),push:Math.max(220,edge-d)+(i%4)*28});i++;
+
+  function drawLastConstellation20260720(e,t,enraged){
+    const count=enraged?10:8,pts=[];
+    for(let i=0;i<count;i++){
+      const a=i/count*TAU+t*(i%2?.024:-.018),rr=e.r*(i%3===0?3.35:i%2?2.55:1.75);
+      pts.push({x:Math.cos(a)*rr,y:Math.sin(a)*rr});
     }
-    clearEntryTransientCombat();state.bossActiveId=null;ui.bossBar?.classList.add('hidden');state.camera.shake=0;state.flash=0;
+    ctx.globalAlpha=.52;
+    ctx.lineWidth=1.5;
+    for(let i=0;i<pts.length;i++){
+      const a=pts[i],b=pts[(i+(i%2?3:2))%pts.length];
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+    for(const [i,p] of pts.entries()){
+      ctx.fillStyle=i%3===0?'#ffffff':'#aebfff';
+      ctx.shadowBlur=18;
+      ctx.shadowColor=e.color;
+      ctx.beginPath();
+      ctx.moveTo(p.x,p.y-7);ctx.lineTo(p.x+5,p.y);ctx.lineTo(p.x,p.y+7);ctx.lineTo(p.x-5,p.y);
+      ctx.closePath();ctx.fill();
+    }
+    ctx.shadowBlur=0;
+    ctx.fillStyle='#02030a';
+    ctx.strokeStyle='#edf2ff';
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.moveTo(0,-e.r*.95);
+    ctx.lineTo(e.r*.58,-e.r*.10);
+    ctx.lineTo(e.r*.20,e.r*.78);
+    ctx.lineTo(-e.r*.42,e.r*.54);
+    ctx.lineTo(-e.r*.62,-e.r*.22);
+    ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle='#b7c9ff';
+    ctx.beginPath();ctx.arc(0,0,e.r*.18,0,TAU);ctx.fill();
   }
-  function updateEntryMobs(tr){
-    if(!tr||tr.owner!=='apex-entry'||tr.to!=='apex-chrono'||tr.form!=='chronophage')return;
-    if(APEX_ENTRY.serial===null)APEX_ENTRY.serial=tr.serial;
-    if(APEX_ENTRY.serial!==tr.serial)return;
-    const p=clamp(tr.elapsed/Math.max(.001,tr.duration),0,1),move=smooth(clamp((p-.08)/.30,0,1));
-    for(const item of APEX_ENTRY.mobs){const e=item.e;if(!e||e.dead)continue;e.x=item.x+item.ux*item.push*move;e.y=item.y+item.uy*item.push*move;e.timeLock=Math.max(Number(e.timeLock)||0,1);e.contactSafeUntil=1e12;}
-    if(p>=.40&&!APEX_ENTRY.removed){
-      APEX_ENTRY.removed=true;for(const item of APEX_ENTRY.mobs)if(item.e)item.e.dead=true;
-      if(typeof compactInPlace==='function')compactInPlace(state.entities.enemies,e=>e&&!e.dead);else state.entities.enemies=state.entities.enemies.filter(e=>e&&!e.dead);
-      APEX_ENTRY.mobs.length=0;
-    }
+
+  function chronophageProbe(e){
+    const screenX=e.x-player.x+vw/2,screenY=e.y-player.y+vh/2,visualRadius=e.r*2.05;
+    chronophageRenderCount++;
+    lastChronophageRender={
+      count:chronophageRenderCount,
+      worldX:e.x,worldY:e.y,
+      screenX,screenY,
+      r:e.r,visualRadius,
+      bbox:{left:screenX-visualRadius,top:screenY-visualRadius,right:screenX+visualRadius,bottom:screenY+visualRadius},
+      apexPhase:e.apexPhase||null
+    };
   }
-  function resetEntryMobs(){APEX_ENTRY.serial=null;APEX_ENTRY.mobs.length=0;APEX_ENTRY.removed=false;APEX_ENTRY.form=null;}
 
-  // Preserve the canonical entrance for every non-Atropos Apex.
-  const baseBeginApexEncounter=beginApexEncounter;
-  beginApexEncounter=function beginAtroposScopedEncounter(){
-    if(state.apexActiveId||state.pendingApexForm)return false;
-    const previousLast=state.lastBossForms?.apex;
-    const form=bossBag('apex');
-    if(form!=='chronophage'){
-      state.bossBags=state.bossBags||{};state.bossBags.apex=state.bossBags.apex||[];state.bossBags.apex.push(form);
-      state.lastBossForms=state.lastBossForms||{};
-      if(previousLast==null)delete state.lastBossForms.apex;else state.lastBossForms.apex=previousLast;
-      return baseBeginApexEncounter();
-    }
-    if(state.realmTransition)cancelRealmTransition('space');
-    state.pendingApexForm=form;
-    if(!forceApexPriority()){state.pendingApexForm=null;return false;}
-    prepareEntryMobs(form);
-    const radius=compactDevice()?318:486,arena={x:player.x,y:player.y,r:radius,form,createdAt:state.time||0},title=bossName(form);
-    state.apexArena=arena;
-    const serial=startRealmTransition(apexTheme(form),{
-      duration:ENTRY_DURATION,title,subtitle:'',apex:true,form,owner:'apex-entry',introStyle:null,
-      onMidpoint:()=>{
-        const liveArena=state.apexArena;if(!liveArena){state.pendingApexForm=null;cancelRealmTransition('space');return;}
-        const e=spawnEnemy('apex');
-        if(!e){state.pendingApexForm=null;state.nextApexAt=(typeof runProgressionTime==='function'?runProgressionTime():state.time||0)+30;cancelRealmTransition('space');return;}
-        e.eliteForm=form;e.apexForm=form;e.name=title;e.color=BOSS_STATS[form].color;e.timeLock=0;e.apexElapsed=0;
-        e.speed*=.82;e.x=liveArena.x+liveArena.r*.24;e.y=liveArena.y-liveArena.r*.10;
-        state.apexActiveId=e.id;state.apexCount++;state.nextApexAt=(state.apexCount+1)*APEX_INTERVAL_SECONDS;
-      },
-      onComplete:()=>{state.pendingApexForm=null;stabilizeRealmTheme(apexTheme(form));resetEntryMobs();}
-    });
-    APEX_ENTRY.serial=serial;return true;
+  drawEliteShape=function restoredApexVisuals(e){
+    const f=e?.eliteForm||e?.apexForm||e?.variant;
+    if(!['chronophage','starforge','lastconstellation'].includes(f))return baseDrawEliteShape(e);
+    const t=e.phase||0,enraged=e.kind==='apex'&&e.apexPhase===2;
+    if(f==='chronophage')chronophageProbe(e);
+    ctx.save();
+    setup(e);
+    if(f==='chronophage')drawChronophage20260720(e,t,enraged);
+    else if(f==='starforge')drawStarforge20260720(e,t,enraged);
+    else drawLastConstellation20260720(e,t,enraged);
+    ctx.globalAlpha=1;
+    ctx.shadowBlur=0;
+    ctx.setLineDash([]);
+    ctx.restore();
   };
 
-  const baseTransition=updateRealmTransition;
-  updateRealmTransition=function updateRealmTransitionWithAtroposEntry(dt){
-    const tr=entryTransition();if(tr)updateEntryMobs(tr);
-    const result=baseTransition(dt);
-    const after=entryTransition();if(after)updateEntryMobs(after);return result;
-  };
-  if(typeof updateAtroposEntryControl==='function')updateAtroposEntryControl=function disableLegacyAtroposEntryControl(){return false;};
+  // Reborn v4 hides Chronophage from the ordinary enemy renderer by temporarily moving it to
+  // (1e9, 1e9), then draws a separate world body. That conflicts with this historical visual
+  // restore and also leaks the sentinel position into off-screen guidance. Use the renderer that
+  // existed immediately before that wrapper, so the real entity coordinates reach drawEliteShape.
+  // DEV body-part circles/labels are presentation-only, so hide those proxies only for this draw
+  // call; the multipart targeting state remains intact for combat. Keep the canonical space-cut.
+  if(typeof baseDrawEnemiesAtropos==='function'){
+    drawEnemies=function drawEnemiesWithHistoricalChronophage(){
+      const e=state.entities.enemies.find(enemy=>!enemy?.dead&&enemy.apexForm==='chronophage');
+      const parts=e?.bodyParts||null;
+      if(e)e.bodyParts=null;
+      let result;
+      try{result=baseDrawEnemiesAtropos();}
+      finally{if(e)e.bodyParts=parts;}
+      if(e&&typeof drawAtroposSpaceCut==='function')drawAtroposSpaceCut(e);
+      return result;
+    };
+  }
 
-  // Quiet Atropos-only entrance: gray frozen world, mob evacuation, name panel, then reveal.
-  const baseCinematicOverlay=drawRealmCinematicOverlay;
-  drawRealmCinematicOverlay=function drawAtroposEntryOverlay(){
-    const tr=entryTransition();if(!tr)return baseCinematicOverlay();
-    const p=clamp(tr.elapsed/Math.max(.001,tr.duration),0,1),restore=smooth(clamp((p-.82)/.15,0,1));
-    ctx.save();ctx.globalCompositeOperation='saturation';ctx.globalAlpha=1-restore;ctx.fillStyle='#777';ctx.fillRect(0,0,vw,vh);
-    ctx.globalCompositeOperation='source-over';ctx.globalAlpha=(1-restore)*.20;ctx.fillStyle='#02050a';ctx.fillRect(0,0,vw,vh);ctx.restore();
-    const fadeIn=smooth(clamp((p-.08)/.13,0,1)),fadeOut=1-smooth(clamp((p-.76)/.16,0,1)),alpha=fadeIn*fadeOut;
-    if(alpha<=.002)return;
-    const w=Math.min(560,vw*.72),h=94,x=(vw-w)*.5,y=vh*.48-h*.5;
-    ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle='rgba(6,9,16,.80)';ctx.strokeStyle='rgba(220,230,242,.20)';ctx.lineWidth=1;
-    ctx.beginPath();if(typeof ctx.roundRect==='function')ctx.roundRect(x,y,w,h,12);else ctx.rect(x,y,w,h);ctx.fill();ctx.stroke();
-    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(210,218,228,.66)';ctx.font='800 11px IBM Plex Sans KR, sans-serif';ctx.fillText(GAME_SETTINGS?.language==='ko'?'초월체':'APEX',vw*.5,y+25);
-    ctx.fillStyle='#f2f5f8';ctx.font=`900 ${Math.min(32,Math.max(20,vw*.033))}px Black Han Sans, sans-serif`;ctx.fillText(tr.title||bossName(tr.form),vw*.5,y+59,w-28);ctx.restore();
-  };
+  // The abandoned World Devourer body must not layer over the restored historical silhouette.
+  if(typeof drawAtroposWorldBody==='function')drawAtroposWorldBody=function restoredChronophageHasNoPrototypeBody(){};
 
-  window.stackfallAtroposVisualVersion=VERSION;
-  window.stackfallAtroposArtDiagnostics=()=>({version:VERSION,bodyReady:bodyArt.complete&&bodyArt.naturalWidth>1,scene:chronoSceneActive(),entry:entryTransition()?{form:state.realmTransition.form,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration,mobs:APEX_ENTRY.mobs.length}:null,clock:window.stackfallApexClockDiagnostics?.()||null});
+  window.stackfallApexVisualRestoreDiagnostics=()=>{
+    const e=state.entities.enemies.find(enemy=>!enemy?.dead&&enemy.apexForm==='chronophage')||null;
+    const screenX=e?e.x-player.x+vw/2:null,screenY=e?e.y-player.y+vh/2:null;
+    return{
+      player:{x:player.x,y:player.y},
+      chronophage:e?{x:e.x,y:e.y,dx:e.x-player.x,dy:e.y-player.y,distance:Math.hypot(e.x-player.x,e.y-player.y),screenX,screenY,r:e.r,eliteForm:e.eliteForm||null,apexForm:e.apexForm||null,variant:e.variant||null,apexPhase:e.apexPhase||null}:null,
+      apexActiveId:state.apexActiveId||null,
+      pendingApexForm:state.pendingApexForm||null,
+      apexExitPending:!!state.apexExitPending,
+      realmTransition:state.realmTransition?{owner:state.realmTransition.owner||null,from:state.realmTransition.from||null,to:state.realmTransition.to||null,elapsed:Number(state.realmTransition.elapsed)||0,duration:Number(state.realmTransition.duration)||0,serial:state.realmTransition.serial??null}:null,
+      indicatorTarget:e?{x:e.x,y:e.y,dx:e.x-player.x,dy:e.y-player.y,distance:Math.hypot(e.x-player.x,e.y-player.y),source:'live-apex-entity'}:null,
+      render:lastChronophageRender
+    };
+  };
+  window.stackfallApexVisualRestore='pre-9af0cdec-2026-07-20';
 })();

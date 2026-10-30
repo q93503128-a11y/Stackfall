@@ -1,0 +1,42 @@
+name: Atropos visual audit
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  visual-audit:
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'feature/atropos-world-devourer-prototype'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run Atropos code/performance audit
+        run: node scripts/atropos-code-audit.mjs
+      - name: Run Atropos runtime visual capture
+        run: node scripts/atropos-visual-audit.mjs
+      - name: Run Apex combat identity audit
+        run: node scripts/apex-combat-identity-audit.mjs
+      - name: Run Atropos P1-P4 production audit
+        run: node scripts/atropos-phase-production-audit.mjs
+      - name: Run Omega production reset audit
+        run: node scripts/omega-production-audit.mjs
+      - name: Run Omega production combat audit
+        run: node scripts/omega-combat-audit.mjs
+      - name: Run Last Constellation layered structure audit
+        run: node scripts/last-constellation-structure-audit.mjs
+      - name: Run Last Constellation live hit and P1 combat audit
+        run: node scripts/last-constellation-combat-audit.mjs
+      - name: Upload Apex visual audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atropos-visual-audit
+          path: test-results/atropos-visual
+          if-no-files-found: error
