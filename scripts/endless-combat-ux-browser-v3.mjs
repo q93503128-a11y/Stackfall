@@ -46,7 +46,7 @@ try{
   check(achievementCopy.checks.length>0&&achievementCopy.checks.every(x=>x.expected.every(name=>x.text.includes(name)))&&!achievementCopy.generic,'achievement cards name every exact unlocked feature instead of generic feature text',achievementCopy);
   await evalJs(`document.querySelector('#achievementCloseBtn')?.click()`);
 
-  const stellar=await evalJs(`(()=>{resetGame();state.mode='playing';state.entities.enemies.length=0;state.weaponStacks={core:1};state.weaponSlots=[];player.coreCd=999;state.bossTraits={stellar:true};state.rewardTimers={stellar:0,aegis:999,chrono:999};const e=spawnEnemy('normal');e.x=player.x+90;e.y=player.y;e.hp=e.maxHp=1000;const before=e.hp,beamsBefore=state.entities.beams.length;updateWeapons(.016);return{damage:before-e.hp,beams:state.entities.beams.length-beamsBefore};})()`);
+  const stellar=await evalJs(`(()=>{resetGame();state.mode='playing';state.entities.enemies.length=0;state.weaponStacks={core:1};state.weaponSlots=[];player.coreCd=999;state.bossTraits={stellar:true};state.rewardTimers={stellar:0,aegis:999,chrono:999};const e=spawnEnemy('normal');e.x=player.x+90;e.y=player.y;e.hp=e.maxHp=1000;window.rebuildEnemyIndex?.();const before=e.hp,beamsBefore=state.entities.beams.length;updateWeapons(.016);return{damage:before-e.hp,beams:state.entities.beams.length-beamsBefore};})()`);
   check(stellar.damage>0&&stellar.beams>0,'Stellar Crown damages nearby enemies and produces its ray',stellar);
 
   const aegis=await evalJs(`(()=>{resetGame();state.mode='playing';state.entities.enemies.length=0;state.weaponStacks={core:1};state.weaponSlots=[];player.coreCd=999;state.bossTraits={aegis:true};state.rewardTimers={stellar:999,aegis:0,chrono:999};player.shield=0;updateWeapons(.016);return{shield:player.shield};})()`);
