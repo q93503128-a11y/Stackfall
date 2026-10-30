@@ -67,7 +67,7 @@
     const alive=enemy&&!enemy.dead,kind=enemy?.kind,isRewardTwin=!enemy?.twinGroup||(enemy?.twinSide??-1)<0;
     baseKillEnemy(enemy,opts);
     if(!alive||!enemy?.dead)return;
-    if(kind==='apex'){grantRunCurrency('coreShard',1);grantRunCurrency('stardust',Math.floor(80*window.stackfallCurrencyMultiplier()));}
+    if(kind==='apex'){grantRunCurrency('coreShard',2);grantRunCurrency('stardust',Math.floor(80*window.stackfallCurrencyMultiplier()));}
     else if(kind==='void'&&isRewardTwin)grantRunCurrency('stardust',Math.floor(30*window.stackfallCurrencyMultiplier()));
   };
 
