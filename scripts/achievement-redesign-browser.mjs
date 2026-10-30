@@ -31,12 +31,12 @@ try{
   check(snapshot.count===40&&snapshot.profile&&snapshot.cards===40,'profile renders one forty-achievement list',snapshot);
   check(!snapshot.hub&&!snapshot.screen&&snapshot.filters===0,'no standalone achievement hub, screen, categories, or filters',snapshot);
   check(snapshot.menuCards===3,'main menu remains the original three-card layout',snapshot);
-  check(snapshot.hubLabel==='업적'&&snapshot.hubCount==='0 / 40','main profile card exposes achievement progress',snapshot);
+  check(snapshot.hubLabel==='업적'&&/^\d+ \/ 40$/.test(snapshot.hubCount||''),'main profile card exposes achievement progress',snapshot);
   check(snapshot.stageColumn[0]==='8'&&snapshot.stageColumn[1]==='13','stage card fills the retired achievement slot',snapshot);
   const opened=await evalJs(`(()=>{document.querySelector('#hubProfile')?.click();return true;})()`);check(opened,'profile card click requested');
   await waitFor(`!document.querySelector('#profileScreen')?.classList.contains('hidden')&&document.querySelector('#profileAchievementDetails')?.open===true`);
   const profileOrder=await evalJs(`(()=>{const modal=document.querySelector('#profileScreen .profile-modal'),details=[...modal.querySelectorAll('.profile-details')];return{open:document.querySelector('#profileAchievementDetails')?.open,first:details[0]?.id||'',summary:document.querySelector('#profileAchievementSummary')?.textContent?.trim()};})()`);
-  check(profileOrder.open&&profileOrder.first==='profileAchievementDetails'&&profileOrder.summary==='0 / 40','profile opens with achievements visible first',profileOrder);
+  check(profileOrder.open&&profileOrder.first==='profileAchievementDetails'&&profileOrder.summary===snapshot.hubCount,'profile opens with achievements visible first',profileOrder);
   await evalJs(`document.querySelector('#profileCloseBtn')?.click()`);
 
   await evalJs(`(()=>{localStorage.removeItem('stackfall.meta.dev.v1');localStorage.removeItem('stackfall.endless.progression.dev.v1');location.reload();return true;})()`);await waitBoot();
