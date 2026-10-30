@@ -6,9 +6,9 @@
 
   const MAX_STACKS=3;
   const PROFILES=Object.freeze({
-    1:Object.freeze({cooldown:12.0,nodes:6,strikes:3,radius:270,preview:.22,gap:.58,halfWidth:8,damageMult:1.00}),
-    2:Object.freeze({cooldown:10.5,nodes:8,strikes:4,radius:310,preview:.20,gap:.54,halfWidth:10,damageMult:1.45}),
-    3:Object.freeze({cooldown:9.0,nodes:10,strikes:5,radius:350,preview:.18,gap:.50,halfWidth:12,damageMult:1.90})
+    1:Object.freeze({nodes:6,strikes:3,radius:270,preview:.22,gap:.58,loopGap:.32,halfWidth:8,damageMult:1.00}),
+    2:Object.freeze({nodes:8,strikes:4,radius:310,preview:.20,gap:.54,loopGap:.28,halfWidth:10,damageMult:1.45}),
+    3:Object.freeze({nodes:10,strikes:5,radius:350,preview:.18,gap:.50,loopGap:.24,halfWidth:12,damageMult:1.90})
   });
 
   const profileFor=value=>PROFILES[Math.max(1,Math.min(MAX_STACKS,Math.floor(Number(value)||1)))];
@@ -126,21 +126,17 @@
     state.camera.shake=Math.max(state.camera.shake,14+stack*2.5);
     state.hitStop=Math.max(state.hitStop,.045+stack*.01);
     state.flash=Math.max(state.flash,.22+stack*.03);
-    state.apexLegacyConstellation=null;
+    network.phase='loop';network.phaseTimer=profile.loopGap;network.previewTick=0;
   }
 
-  updateConstellationLegacy=function updateReconfiguringConstellationLegacy(stack,dt){
+  updateConstellationLegacy=function updateContinuousConstellationLegacy(stack,dt){
     stack=Math.max(0,Math.min(MAX_STACKS,Math.floor(Number(stack)||0)));
     if(!stack){state.apexLegacyConstellation=null;return;}
     const profile=profileFor(stack);
-    state.apexBoonTimers.constellation-=dt;
     let network=state.apexLegacyConstellation;
-    if(!network&&state.apexBoonTimers.constellation<=0){
-      state.apexBoonTimers.constellation=profile.cooldown;
-      startNetwork(stack,profile);network=state.apexLegacyConstellation;
-    }
+    if(!network){startNetwork(stack,profile);network=state.apexLegacyConstellation;}
     if(!network)return;
-    if(network.stack!==stack){state.apexLegacyConstellation=null;state.apexBoonTimers.constellation=0;return;}
+    if(network.stack!==stack){state.apexLegacyConstellation=null;startNetwork(stack,profile);network=state.apexLegacyConstellation;}
 
     network.phaseTimer-=dt;
     if(network.phase==='preview'){
@@ -151,7 +147,9 @@
     if(network.phase==='gap'&&network.phaseTimer<=0){
       if(network.strikesLeft<=0)collapseNetwork(network,profile);
       else reconfigure(network,profile);
+      return;
     }
+    if(network.phase==='loop'&&network.phaseTimer<=0)startNetwork(stack,profile);
   };
 
   if(typeof resetBossSystems==='function'){
@@ -169,7 +167,7 @@
       const result=baseApplyApexReward(form);
       if(form==='lastconstellation'){
         state.apexLegacyConstellation=null;state.apexBoonTimers.constellation=0;
-        if(ui?.resonanceDesc)ui.resonanceDesc.textContent='무명의 천구: 전장에 성좌를 새기고 연결선을 재배열해 반복 절단하며 적 탄환을 지운다.';
+        if(ui?.resonanceDesc)ui.resonanceDesc.textContent='무명의 천구: 전장에 성좌를 끊임없이 새기고 재배열하며 연결선으로 적을 반복 절단하고 적 탄환을 지운다.';
       }
       return result;
     };
@@ -185,8 +183,8 @@
           const before=Math.max(0,Math.min(MAX_STACKS,Math.floor(Number(state.apexBoons?.lastconstellation)||0)));
           const after=Math.min(MAX_STACKS,before+1);
           desc.textContent=before>=MAX_STACKS
-            ?'무명의 천구: 성좌 생성 → 연결선 일제 절단 → 재배열 반복 → 최종 붕괴 · 적 탄환 삭제 · 유산 최대 3/3'
-            :`무명의 천구: 성좌 생성 → 연결선 일제 절단 → 재배열 반복 → 최종 붕괴 · 적 탄환 삭제 · 유산 ${after}/3중첩`;
+            ?'무명의 천구: 상시 성좌 생성 → 연결선 일제 절단 → 재배열 반복 → 천구 붕괴 후 즉시 재생성 · 적 탄환 삭제 · 유산 최대 3/3'
+            :`무명의 천구: 상시 성좌 생성 → 연결선 일제 절단 → 재배열 반복 → 천구 붕괴 후 즉시 재생성 · 적 탄환 삭제 · 유산 ${after}/3중첩`;
         }
       }
       return result;
@@ -199,7 +197,7 @@
     if(!card)return;
     setTimeout(()=>{
       const detail=ledger.querySelector('.ledger-detail-layer:not(.hidden) .ledger-detail-card p');
-      if(detail)detail.textContent='무명의 천구: 넓은 전장에 성좌 노드를 새긴 뒤 연결선을 한꺼번에 점화해 적을 절단하고 적 탄환을 지운다. 성좌는 여러 차례 완전히 재배열되며 마지막에는 천구 전체가 붕괴한다.';
+      if(detail)detail.textContent='무명의 천구: 넓은 전장에 성좌 노드를 상시 유지한다. 연결선이 일제히 점화되어 적을 절단하고 적 탄환을 지운 뒤 별자리가 즉시 재구성되며, 한 주기가 끝나면 천구 전체가 붕괴하고 곧바로 새로운 성좌가 생성된다.';
     },0);
   });
 })();
