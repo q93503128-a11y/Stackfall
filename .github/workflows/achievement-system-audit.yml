@@ -1,0 +1,21 @@
+name: Achievement system audit
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  achievement-audit:
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'feature/achievement-system-foundation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run achievement persistence and UI audit
+        run: node scripts/achievement-system-audit.mjs
