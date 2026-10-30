@@ -113,7 +113,7 @@
   }
   function patchAchievementRewards(){
     const rows=window.stackfallEndlessProgression?.achievements||[],cards=[...document.querySelectorAll('#achievementScreen .achievement-row')],ko=(GAME_SETTINGS?.language||'ko')==='ko';
-    cards.forEach((card,index)=>{const row=rows[index],small=card.querySelector('.achievement-copy>small');if(!row||!small)return;small.textContent=`${ko?'보상':'Reward'} · ${(row.rewards||[]).map(rewardLabel).join(' · ')}`;});
+    cards.forEach((card,index)=>{const row=rows[index],small=card.querySelector('.achievement-copy>small');if(!row||!small)return;const next=`${ko?'보상':'Reward'} · ${(row.rewards||[]).map(rewardLabel).join(' · ')}`;if(small.textContent!==next)small.textContent=next;});
   }
   function patchPlayerCopy(){
     for(const selector of['#abilityLedgerScreen','#apexRewardScreen','#resonanceBanner'])replacePlayerText(document.querySelector(selector));
