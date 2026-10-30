@@ -5,10 +5,12 @@ on:
     paths:
       - 'src/endless-progression-v2.js'
       - 'src/achievement-profile-entry-v2.js'
+      - 'src/achievement-card-ui-rollback-v2.js'
       - 'src/run-modes.js'
       - 'scripts/achievement-redesign-contract.mjs'
       - 'scripts/achievement-redesign-hub-browser.mjs'
       - 'scripts/achievement-redesign-advanced-browser.mjs'
+      - 'scripts/achievement-card-ui-browser.mjs'
       - '.github/workflows/achievement-redesign-audit.yml'
   workflow_dispatch:
 
@@ -24,9 +26,12 @@ jobs:
         run: |
           node --check src/endless-progression-v2.js
           node --check src/achievement-profile-entry-v2.js
+          node --check src/achievement-card-ui-rollback-v2.js
       - name: Validate achievement redesign contract
         run: node scripts/achievement-redesign-contract.mjs
       - name: Validate restored achievement hub behavior
         run: node scripts/achievement-redesign-hub-browser.mjs
+      - name: Validate restored achievement card presentation
+        run: node scripts/achievement-card-ui-browser.mjs
       - name: Validate advanced achievement conditions
         run: node scripts/achievement-redesign-advanced-browser.mjs
