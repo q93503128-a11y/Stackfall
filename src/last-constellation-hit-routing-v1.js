@@ -8,10 +8,15 @@
   const liveLC=()=>state.entities.enemies.filter(isLC);
   const activeParts=e=>(e?.bodyParts||[]).filter(p=>p?.lcNodeProxy&&p.active&&p.visible&&!p.dead);
   let pendingBladeWave=null;
-  let installedWaveRouter=null;
   function nearestPart(e,x,y,range=Infinity){let best=null,bestD=Number.isFinite(range)?range*range:Infinity;for(const p of activeParts(e)){const d=(p.x-x)**2+(p.y-y)**2;if(d<=bestD){bestD=d;best=p;}}return best;}
   function partAt(e,x,y,r=0){for(const p of activeParts(e))if((p.x-x)**2+(p.y-y)**2<=(p.r+r)**2)return p;return null;}
   function segDist(px,py,x1,y1,x2,y2){if(typeof segmentDistance==='function')return segmentDistance(px,py,x1,y1,x2,y2);const dx=x2-x1,dy=y2-y1,l=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/l));return Math.hypot(px-(x1+dx*t),py-(y1+dy*t));}
+  function restoreBladeOwner(e){
+    const restore=e?.__lcBladeWaveOwnerRestore;if(!restore)return;
+    e.x=Number.isFinite(e.lcStructure?.anchorX)?e.lcStructure.anchorX:restore.x;
+    e.y=Number.isFinite(e.lcStructure?.anchorY)?e.lcStructure.anchorY:restore.y;
+    e.__lcBladeWaveOwnerRestore=null;
+  }
 
   // Area, beam, trail and aura weapons use this candidate iterator. Convert an LC owner candidate
   // into the nearest exposed node proxy so dealDamage receives the actual node, not the dormant center.
@@ -26,7 +31,6 @@
         }
         if(target&&!visited.has(target.id)){visited.add(target.id);visit(target);}
       });
-      // The performance grid can omit the LC owner entirely because its center is extremely far away.
       for(const e of liveLC()){
         const p=nearestPart(e,x,y,range+220);if(!p||visited.has(p.id))continue;
         if(Math.hypot(p.x-x,p.y-y)<=range+p.r){visited.add(p.id);visit(p);}
@@ -34,10 +38,9 @@
     };
   }
 
-  // Pulse Blade is the one legacy melee path that asks only for a boolean multipart overlap and
-  // then damages the owner. Remember the exact exposed node touched by that overlap so the owner
-  // damage call can be routed back to the node. This keeps P1-P3 hittable without changing the
-  // weapon's cadence, damage, or ordinary multipart-boss behavior.
+  // Pulse Blade asks only for boolean multipart overlap, then damages the owner. Route that owner
+  // hit into the exact exposed node and briefly expose that node as the owner's immediate follow-up
+  // origin so the level-4 wave cannot launch from the dormant constellation center.
   if(typeof enemyCircleOverlap==='function'){
     const base=enemyCircleOverlap;
     enemyCircleOverlap=function lastConstellationCircleContact(enemy,x,y,r=0){
@@ -54,53 +57,46 @@
         if(part){
           const hit={ownerId:target.id,x:part.x,y:part.y,at:performance.now()};
           target.__lcLastBladeHit=hit;pendingBladeWave=hit;
-          return base(part,amount,options);
+          const result=base(part,amount,options);
+          const anchorX=Number.isFinite(target.lcStructure?.anchorX)?target.lcStructure.anchorX:target.x;
+          const anchorY=Number.isFinite(target.lcStructure?.anchorY)?target.lcStructure.anchorY:target.y;
+          target.__lcBladeWaveOwnerRestore={x:anchorX,y:anchorY,at:hit.at};
+          target.x=hit.x;target.y=hit.y;
+          queueMicrotask(()=>restoreBladeOwner(target));
+          return result;
         }
       }
       return base(target,amount,options);
     };
   }
 
-  // Blade level 4+ emits its follow-up wave immediately after the blade hit. Keep a closure-local
-  // pending origin so owner health/FX wrappers cannot erase the contact, and re-install this wrapper
-  // after late dynamic loaders so the final projectile path always sees it.
+  // Also wrap the projectile factory when possible. The temporary owner anchor above is the
+  // canonical fallback; this wrapper restores the owner immediately after the wave is emitted.
   function installWaveRouter(){
     if(typeof spawnPlayerProjectile!=='function')return false;
-    if(spawnPlayerProjectile?.__lcBladeWaveRouter===true){installedWaveRouter=spawnPlayerProjectile;return true;}
+    if(spawnPlayerProjectile?.__lcBladeWaveRouter===true)return true;
     const base=spawnPlayerProjectile;
     const routed=function lastConstellationBladeWaveOrigin(data){
-      let next=data;
+      let next=data,ownerToRestore=null;
       if(String(data?.source||'')==='wave'){
-        const now=performance.now();
-        let hit=pendingBladeWave;
-        if(!hit||now-hit.at>500){
-          hit=null;
-          for(const e of liveLC()){
-            const candidate=e.__lcLastBladeHit,age=candidate?now-candidate.at:Infinity;
-            if(!candidate||age>500)continue;
-            if(!hit||candidate.at>hit.at)hit=candidate;
-          }
-        }
+        const now=performance.now();let hit=pendingBladeWave;
+        if(!hit||now-hit.at>500){hit=null;for(const e of liveLC()){const candidate=e.__lcLastBladeHit,age=candidate?now-candidate.at:Infinity;if(!candidate||age>500)continue;if(!hit||candidate.at>hit.at)hit=candidate;}}
         if(hit){
           const dx=hit.x-player.x,dy=hit.y-player.y,d=Math.hypot(dx,dy)||1,speed=Math.max(1,Math.hypot(Number(data.vx)||0,Number(data.vy)||0));
-          next={...data,x:hit.x,y:hit.y,vx:dx/d*speed,vy:dy/d*speed};
-          pendingBladeWave=null;
-          for(const e of liveLC())if(e.id===hit.ownerId)e.__lcLastBladeHit=null;
+          next={...data,x:hit.x,y:hit.y,vx:dx/d*speed,vy:dy/d*speed};pendingBladeWave=null;
+          ownerToRestore=liveLC().find(e=>e.id===hit.ownerId)||null;
+          if(ownerToRestore)ownerToRestore.__lcLastBladeHit=null;
         }
       }
-      return base(next);
+      const result=base(next);
+      if(ownerToRestore)restoreBladeOwner(ownerToRestore);
+      return result;
     };
     Object.defineProperty(routed,'__lcBladeWaveRouter',{value:true});
-    spawnPlayerProjectile=routed;
-    try{window.spawnPlayerProjectile=routed;}catch{}
-    installedWaveRouter=routed;
+    spawnPlayerProjectile=routed;try{window.spawnPlayerProjectile=routed;}catch{}
     return true;
   }
-  installWaveRouter();
-  queueMicrotask(installWaveRouter);
-  setTimeout(installWaveRouter,0);
-  setTimeout(installWaveRouter,250);
-  setTimeout(installWaveRouter,1000);
+  installWaveRouter();queueMicrotask(installWaveRouter);setTimeout(installWaveRouter,0);setTimeout(installWaveRouter,250);setTimeout(installWaveRouter,1000);
 
   // Direct player projectiles perform a performance-grid query before overlap testing. Add a local
   // post-update collision pass so a projectile crossing a remote exposed node can never tunnel through it.
@@ -131,6 +127,6 @@
 
   window.stackfallLastConstellationHitRoutingDiagnostics=()=>{
     const e=state.entities.enemies.find(isLC)||null;
-    return{version:'v1',revision:4,active:!!e,phase:e?.lcStructure?.phase||null,activeProxyCount:e?activeParts(e).length:0,projectileFallback:true,nearbyCandidateRouting:true,bladeContactRouting:true,bladeWaveOriginRouting:true,bladeWaveRouterInstalled:spawnPlayerProjectile?.__lcBladeWaveRouter===true,pendingBladeWave:!!pendingBladeWave};
+    return{version:'v1',revision:5,active:!!e,phase:e?.lcStructure?.phase||null,activeProxyCount:e?activeParts(e).length:0,projectileFallback:true,nearbyCandidateRouting:true,bladeContactRouting:true,bladeWaveOriginRouting:true,bladeWaveRouterInstalled:spawnPlayerProjectile?.__lcBladeWaveRouter===true,pendingBladeWave:!!pendingBladeWave,temporaryOwnerAnchor:!!e?.__lcBladeWaveOwnerRestore};
   };
 })();
