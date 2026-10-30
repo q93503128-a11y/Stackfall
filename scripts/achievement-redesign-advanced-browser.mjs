@@ -35,7 +35,7 @@ try{
 
   const loadout=await evalJs(`(()=>{state.mode='playing';state.runSelection={mode:'endless',stageId:null};state.weaponStacks={blade:6,ember:6,bulwark:6,gravity:1,comet:1,prism:1};const rows=stackfallEndlessProgression.evaluateAchievements();return{ids:rows.map(r=>r.id),max:stackfallEndlessProgression.progress.stats.maxWeaponStack,maxed:stackfallEndlessProgression.progress.stats.maxedWeapons,filled:stackfallEndlessProgression.progress.stats.filledWeapons};})()`);
   check(loadout.max>=6&&loadout.maxed>=3&&loadout.filled>=6,'loadout statistics track stack and six-weapon challenges',loadout);
-  check(['weapon-stack-6','three-maxed-weapons','six-weapons'].every(id=>stackfallEndlessProgression.progress.completed.includes(id)),'loadout achievements unlock together when conditions are met',loadout);
+  check(['weapon-stack-6','three-maxed-weapons','six-weapons'].every(id=>loadout.ids.includes(id)),'loadout achievements unlock together when conditions are met',loadout);
 
   const apexPower=await evalJs(`(()=>{state.mode='playing';state.runSelection={mode:'endless',stageId:null};state.apexBoons={chronophage:3,starforge:0,lastconstellation:0};state.apexCoreStacks=3;const before=stackfallCurrency('coreShard');const rows=stackfallEndlessProgression.evaluateAchievements();return{ids:rows.map(r=>r.id),legacy:stackfallEndlessProgression.progress.stats.maxApexLegacyStack,core:stackfallEndlessProgression.progress.stats.maxApexCoreStack,before,after:stackfallCurrency('coreShard')};})()`);
   check(apexPower.legacy===3&&apexPower.core===3,'Apex legacy and core caps are recorded',apexPower);
