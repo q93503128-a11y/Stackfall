@@ -10,12 +10,12 @@ const checks=[];
 const expect=(name,condition)=>checks.push([name,Boolean(condition)]);
 const achievementDefs=[...progression.matchAll(/achievement\('([^']+)'/g)].map(match=>match[1]);
 
-expect('redesigned progression and its profile entry are the only Endless progression loaders',modes.includes("ENDLESS_PROGRESSION_SCRIPTS=Object.freeze(['src/endless-progression-v2.js','src/achievement-profile-entry-v2.js'])")&&!modes.includes("['src/endless-progression.js']"));
+expect('redesigned progression and achievement entry are the only Endless progression loaders',modes.includes("ENDLESS_PROGRESSION_SCRIPTS=Object.freeze(['src/endless-progression-v2.js','src/achievement-profile-entry-v2.js'])")&&!modes.includes("['src/endless-progression.js']"));
 expect('exactly forty production achievements are defined',achievementDefs.length===40&&new Set(achievementDefs).size===40);
-expect('achievement UI stays inside profile',progression.includes("#profileScreen .profile-modal")&&progression.includes('profileAchievementDetails')&&!progression.includes('achievementHubBtn')&&!progression.includes('achievementScreen'));
-expect('main profile exposes achievement progress',entry.includes("label.textContent=achievementLabel()")&&entry.includes("count.textContent=`${complete} / ${total}`")&&entry.includes("details.open=true"));
-expect('three-card hub fills the retired achievement slot without adding another card',entry.includes("#menu #stageMapBtn{grid-column:8/13!important;grid-row:2!important")&&!entry.includes('achievementHubBtn'));
-expect('no player-facing category taxonomy or filters',!progression.includes('achievement-toolbar')&&!progression.includes('achievement-filter')&&!progression.includes('원정 6')&&!progression.includes('전투 4')&&!progression.includes('category:'));
+expect('standalone achievement hub button and screen are restored',entry.includes("entry.id='achievementHubBtn'")&&entry.includes("screen.id='achievementScreen'")&&entry.includes('openAchievements'));
+expect('profile shows achievement count only',entry.includes("profileValue.textContent=`${complete} / ${total}`")&&entry.includes('removeProfileAchievementList')&&entry.includes('#profileAchievementDetails{display:none!important}'));
+expect('achievement button keeps original hub slot',!entry.includes('#menu #stageMapBtn{grid-column:8/13')&&entry.includes("insertAdjacentElement('afterend',entry)"));
+expect('no player-facing category taxonomy or filters',!entry.includes('achievement-filter')&&!entry.includes('achievement-toolbar')&&!entry.includes('category:')&&!entry.includes('원정 6')&&!entry.includes('전투 4'));
 expect('no future stage achievements are shipped',!progression.includes('stage-06')&&!progression.includes('stage-12')&&!progression.includes('stage-18')&&!progression.includes('STAGE 6')&&!progression.includes('STAGE 12')&&!progression.includes('STAGE 18'));
 expect('existing weapon unlock progression remains represented',['comet','prism','chrono','arc','ion','nova','drone','rail','spiral','mirror','vacuum','mine','missile','gate'].every(key=>progression.includes(`weapon('${key}')`)));
 expect('existing feature unlock progression remains represented',['special-ability','awakening','hard','very-hard','choice-4','start-level-3','core-development-iii','multiplicity-protocol'].every(key=>progression.includes(`feature('${key}')`)));
@@ -25,7 +25,7 @@ expect('all three Apex identities are tracked',progression.includes("['chronopha
 expect('Apex legacy and core cap achievements are tracked',progression.includes("achievement('legacy-max'")&&progression.includes("achievement('core-max'")&&progression.includes('maxApexLegacyStack')&&progression.includes('maxApexCoreStack'));
 expect('skill achievements are tracked from gameplay',progression.includes("achievement('boss-no-hit'")&&progression.includes("achievement('boss-fast-15'")&&progression.includes("achievement('kill-burst-100'"));
 expect('normal player UI contains no development commentary',![progression,entry].some(source=>source.includes('developer log')||source.includes('debug')||source.includes('implementation')||source.includes('TMI')||source.includes('내부')));
-expect('main menu markup has no achievement card',!index.includes('id="achievementHubBtn"'));
+expect('achievement button is runtime-created, not hardcoded into main markup',!index.includes('id="achievementHubBtn"'));
 
 let failures=0;
 for(const[name,ok]of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failures++;}
