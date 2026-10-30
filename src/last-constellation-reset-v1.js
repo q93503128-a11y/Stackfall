@@ -40,9 +40,13 @@
 
   window.stackfallLastConstellationResetDiagnostics=()=>{const e=state.entities.enemies?.find(isLC)||null;return{version:'v1',active:!!e,phase:e?.lcStructure?.phase||e?.apexPhase||null,legacyPatternsSuppressed:true,patternsSuppressed:true,screenSpaceConstellationBackground:false,phaseSource:e?.lcStructure?'node-destruction':'pending-structure'};};
 
+  const loadApexRewardBalance=()=>{
+    if(document.querySelector('script[data-apex-reward-balance-v1]'))return;
+    const balance=document.createElement('script');balance.src='src/apex-reward-balance-v1.js';balance.dataset.apexRewardBalanceV1='1';document.body.appendChild(balance);
+  };
   const loadCombat=()=>{
-    if(window.stackfallLastConstellationCombat==='v2'||document.querySelector('script[data-last-constellation-combat-v2]'))return;
-    const combat=document.createElement('script');combat.src='src/last-constellation-combat-v2.js';combat.dataset.lastConstellationCombatV2='1';document.body.appendChild(combat);
+    if(window.stackfallLastConstellationCombat==='v2'||document.querySelector('script[data-last-constellation-combat-v2]')){loadApexRewardBalance();return;}
+    const combat=document.createElement('script');combat.src='src/last-constellation-combat-v2.js';combat.dataset.lastConstellationCombatV2='1';combat.onload=loadApexRewardBalance;document.body.appendChild(combat);
   };
   const loadRouting=()=>{
     if(window.stackfallLastConstellationHitRouting==='v1'||document.querySelector('script[data-last-constellation-hit-routing-v1]')){loadCombat();return;}
