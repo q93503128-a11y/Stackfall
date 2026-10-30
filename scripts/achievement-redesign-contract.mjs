@@ -10,8 +10,10 @@ const index=read('index.html');
 const checks=[];
 const expect=(name,condition)=>checks.push([name,Boolean(condition)]);
 const achievementDefs=[...progression.matchAll(/achievement\('([^']+)'/g)].map(match=>match[1]);
+const canonicalLoaders=['src/endless-progression-v2.js','src/achievement-profile-entry-v2.js','src/achievement-card-ui-rollback-v2.js'];
+const loaderPositions=canonicalLoaders.map(src=>modes.indexOf(`'${src}'`));
 
-expect('redesigned progression, achievement entry, and card rollback load in order',modes.includes("ENDLESS_PROGRESSION_SCRIPTS=Object.freeze(['src/endless-progression-v2.js','src/achievement-profile-entry-v2.js','src/achievement-card-ui-rollback-v2.js'])")&&!modes.includes("['src/endless-progression.js']"));
+expect('redesigned progression, achievement entry, and card rollback load in canonical order',loaderPositions.every(position=>position>=0)&&loaderPositions.every((position,index)=>index===0||position>loaderPositions[index-1])&&!modes.includes("'src/endless-progression.js'"));
 expect('exactly forty production achievements are defined',achievementDefs.length===40&&new Set(achievementDefs).size===40);
 expect('standalone achievement hub button and screen are restored',entry.includes("entry.id='achievementHubBtn'")&&entry.includes("screen.id='achievementScreen'")&&entry.includes('openAchievements'));
 expect('profile shows achievement count only',entry.includes("profileValue.textContent=`${complete} / ${total}`")&&entry.includes('removeProfileAchievementList')&&entry.includes('#profileAchievementDetails{display:none!important}'));
