@@ -27,16 +27,8 @@
     return result;
   };
 
-  // Transcendence Core: multiplicative +10% to the game's scalable core stats.
-  // Existing hard caps remain authoritative for cooldown and damage reduction.
-  if(typeof damageMult==='function'){
-    const baseDamageMultApexCore=damageMult;
-    damageMult=function apexCoreDamageMult(){return baseDamageMultApexCore()*coreMultiplier();};
-  }
-  if(typeof hasteMult==='function'){
-    const baseHasteMultApexCore=hasteMult;
-    hasteMult=function apexCoreHasteMult(){return Math.max(.18,baseHasteMultApexCore()/coreMultiplier());};
-  }
+  // Transcendence Core: multiplicative +10% to scalable core stats.
+  // Damage and attack cycle are owned by canonical progression; hard caps remain authoritative.
   if(typeof damageReduction==='function'){
     const baseDamageReductionApexCore=damageReduction;
     damageReduction=function apexCoreDamageReduction(){
