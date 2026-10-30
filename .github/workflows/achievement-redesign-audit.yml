@@ -6,6 +6,7 @@ on:
       - 'src/endless-progression-v2.js'
       - 'src/run-modes.js'
       - 'scripts/achievement-redesign-contract.mjs'
+      - 'scripts/achievement-redesign-browser.mjs'
       - '.github/workflows/achievement-redesign-audit.yml'
   workflow_dispatch:
 
@@ -21,3 +22,5 @@ jobs:
         run: node --check src/endless-progression-v2.js
       - name: Validate achievement redesign contract
         run: node scripts/achievement-redesign-contract.mjs
+      - name: Validate achievement browser behavior
+        run: node scripts/achievement-redesign-browser.mjs
