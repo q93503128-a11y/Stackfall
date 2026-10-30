@@ -1,0 +1,20 @@
+name: Weapon augment runtime audit
+
+on:
+  push:
+    branches:
+      - audit/weapon-augment-runtime
+  workflow_dispatch:
+
+jobs:
+  weapon-augments:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check audit syntax
+        run: node --check scripts/weapon-augment-runtime-audit.mjs
+      - name: Validate all 19 weapon special effects in browser runtime
+        run: node scripts/weapon-augment-runtime-audit.mjs
