@@ -46,16 +46,16 @@ try{
   await evalJs(`document.querySelector('#achievementCloseBtn')?.click()`);
 
   await evalJs(`(()=>{localStorage.removeItem('stackfall.meta.dev.v1');localStorage.removeItem('stackfall.endless.progression.dev.v1');location.reload();return true;})()`);await waitBoot();
-  const clean=await evalJs(`(()=>({weapons:[...stackfallMeta.unlockedWeapons],features:[...stackfallMeta.unlockedFeatures],version:stackfallEndlessProgression.progress.version}))()`);
+  const clean=await evalJs(`(()=>({weapons:[...window.stackfallMeta.unlockedWeapons],features:[...window.stackfallMeta.unlockedFeatures],version:window.stackfallEndlessProgression.progress.version}))()`);
   check(clean.version===4&&['blade','ember','bulwark','gravity'].every(id=>clean.weapons.includes(id)),'clean progression boots with base equipment',clean);
   check(clean.features.includes('endless')&&clean.features.includes('core-development'),'baseline Endless features remain available',clean);
 
-  const unlock=await evalJs(`(()=>{state.mode='playing';state.runSelection={mode:'endless',stageId:null};state.runTime=181;state.time=181;state.kills=200;state.level=10;state.maxCombo=20;const rows=stackfallEndlessProgression.evaluateAchievements();return{ids:rows.map(r=>r.id),comet:stackfallIsWeaponUnlocked('comet'),chrono:stackfallIsWeaponUnlocked('chrono'),arc:stackfallIsWeaponUnlocked('arc'),ion:stackfallIsWeaponUnlocked('ion')};})()`);
+  const unlock=await evalJs(`(()=>{state.mode='playing';state.runSelection={mode:'endless',stageId:null};state.runTime=181;state.time=181;state.kills=200;state.level=10;state.maxCombo=20;const rows=window.stackfallEndlessProgression.evaluateAchievements();return{ids:rows.map(r=>r.id),comet:window.stackfallIsWeaponUnlocked('comet'),chrono:window.stackfallIsWeaponUnlocked('chrono'),arc:window.stackfallIsWeaponUnlocked('arc'),ion:window.stackfallIsWeaponUnlocked('ion')};})()`);
   check(unlock.comet&&unlock.chrono&&unlock.arc&&unlock.ion,'live milestones still unlock their intended weapons',unlock);
   check(['survive-3m','level-10','chain-20','run-kills-200'].every(id=>unlock.ids.includes(id)),'live milestones still complete their achievements',unlock);
 
   await evalJs(`(()=>{localStorage.setItem('stackfall.meta.dev.v1',JSON.stringify({version:7,unlockedWeapons:['blade','ember','bulwark','gravity','comet','gate'],unlockedFeatures:['endless','core-development','hard'],clearedStages:[],bestStageTimes:{},stageClearCounts:{},currencies:{stardust:0,coreShard:0},upgrades:{},bossRecords:{mini:0,boss:0,apex:1,void:0,crash:0},lifetime:{runs:2,kills:100}}));localStorage.setItem('stackfall.endless.progression.dev.v1',JSON.stringify({version:3,completed:['survive-3m','apex-1'],weaponUnlocks:['comet','gate'],featureUnlocks:['hard'],rewardClaims:[],bestSurvival:200,bestHardSurvival:0,bestLevel:3,bestCombo:5,bestRunKills:30}));location.reload();return true;})()`);await waitBoot();
-  const migrated=await evalJs(`(()=>({version:stackfallEndlessProgression.progress.version,comet:stackfallIsWeaponUnlocked('comet'),gate:stackfallIsWeaponUnlocked('gate'),hard:stackfallIsFeatureAcquired('hard'),toasts:document.querySelectorAll('#achievementToastStackV2 .achievement-toast-v2').length}))()`);
+  const migrated=await evalJs(`(()=>({version:window.stackfallEndlessProgression.progress.version,comet:window.stackfallIsWeaponUnlocked('comet'),gate:window.stackfallIsWeaponUnlocked('gate'),hard:window.stackfallIsFeatureAcquired('hard'),toasts:document.querySelectorAll('#achievementToastStackV2 .achievement-toast-v2').length}))()`);
   check(migrated.version===4&&migrated.comet&&migrated.gate&&migrated.hard,'legacy progression migrates without losing unlocks',migrated);
   check(migrated.toasts===0,'migration remains silent',migrated);
 
