@@ -37,6 +37,26 @@ jobs:
           STACKFALL_ALLOW_GPU_SKIP: '0'
           STACKFALL_ALLOW_CONTEXT_SKIP: '0'
         run: node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/?dev=1
+      - name: Persist smoke diagnostic
+        if: always()
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const p='test-results/stackfall-smoke.json';
+          let out={missing:true};
+          if(fs.existsSync(p)){
+            const r=JSON.parse(fs.readFileSync(p,'utf8'));
+            out={ok:r.ok,failures:r.failures,skips:r.skips,scenarios:(r.scenarios||[]).map(s=>({name:s.name,ok:s.ok,failures:s.failures}))};
+          }
+          fs.mkdirSync('.validation',{recursive:true});
+          fs.writeFileSync('.validation/smoke-diagnostic.json',JSON.stringify(out,null,2)+'\n');
+          NODE
+          git config user.name 'Stackfall validation bot'
+          git config user.email 'stackfall-validation@users.noreply.github.com'
+          git add .validation/smoke-diagnostic.json
+          git commit -m 'Record cleanup 7 smoke diagnostic [skip ci]' || true
+          git push origin HEAD:validation/canonical-cleanup-7-final
       - name: Report smoke result
         shell: bash
         run: |
