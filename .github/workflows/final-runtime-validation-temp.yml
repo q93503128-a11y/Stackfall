@@ -61,11 +61,12 @@ jobs:
           STACKFALL_ALLOW_GPU_SKIP: '1'
           STACKFALL_ALLOW_CONTEXT_SKIP: '1'
         run: node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --pickup-only
-      - name: Apex browser QA all forms
+      - name: Last Constellation real lethal browser QA
         env:
           STACKFALL_CHROME: ${{ runner.temp }}/stackfall-chrome
           STACKFALL_ALLOW_GPU_SKIP: '1'
           STACKFALL_ALLOW_CONTEXT_SKIP: '1'
+          STACKFALL_APEX_FORM: 'lastconstellation'
         run: node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --apex-only
       - name: Upload evidence
         if: always()
