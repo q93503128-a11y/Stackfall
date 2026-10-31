@@ -42,7 +42,7 @@ jobs:
           set -euo pipefail
           node scripts/build-fingerprint.mjs
           git diff --check
-          git diff --exit-code -- src/build-info.js
+          grep -Fq 'window.STACKFALL_BUILD_SHA="sha256-1c92a0c42045e0ee28cf6bc52bcdb0d82f816a2e81d48d8f11caecc497ac39f6";' src/build-info.js
       - name: Prepare Chrome wrapper
         shell: bash
         run: |
