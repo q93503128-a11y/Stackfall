@@ -21,8 +21,8 @@
     achievement('level-10','level',10,'레벨 10','Level 10','한 출격에서 레벨 10에 도달한다.','Reach level 10 in one run.',[weapon('chrono')]),
     achievement('chain-20','chain',20,'연쇄 20','Chain 20','한 출격에서 20 연쇄를 달성한다.','Reach a 20 chain in one run.',[weapon('arc')]),
     achievement('run-kills-200','runKills',200,'200기 격추','Two Hundred','한 출격에서 적 200기를 처치한다.','Defeat 200 enemies in one run.',[weapon('ion')]),
-    achievement('boss-1','boss',1,'보스 격파','Boss Down','보스를 처음 격파한다.','Defeat your first boss.',[weapon('nova'),feature('special-ability'),shard(1)]),
-    achievement('survive-5m','survive',300,'5분 생존','Five Minutes','엔드리스에서 5분 생존한다.','Survive 5 minutes in Endless.',[weapon('drone')],'time'),
+    achievement('boss-1','boss',1,'보스 격파','Boss Down','보스를 처음 격파한다.','Defeat your first boss.',[weapon('nova'),feature('special-ability')]),
+    achievement('survive-5m','survive',300,'5분 생존','Five Minutes','엔드리스에서 5분 생존한다.','Survive 5 minutes in Endless.',[weapon('drone'),shard(1)],'time'),
     achievement('run-kills-400','runKills',400,'400기 격추','Four Hundred','한 출격에서 적 400기를 처치한다.','Defeat 400 enemies in one run.',[weapon('rail')]),
     achievement('level-20','level',20,'레벨 20','Level 20','한 출격에서 레벨 20에 도달한다.','Reach level 20 in one run.',[weapon('spiral')]),
     achievement('chain-50','chain',50,'연쇄 50','Chain 50','한 출격에서 50 연쇄를 달성한다.','Reach a 50 chain in one run.',[weapon('mirror')]),
@@ -293,7 +293,7 @@
   renderStarterOptions=finalRenderStarterOptions;
 
   const baseRenderMetaUi=window.renderStackfallMetaUi;
-  if(typeof baseRenderMetaUi==='function'&&!baseRenderMetaUi.__achievementV2){const wrapped=function(){const result=baseRenderMetaUi();renderEndlessProfile();return result;};wrapped.__achievementV2=true;window.renderStackfallMetaUi=wrapped;}
+  if(typeof baseRenderMetaUi==='function'&&!baseRenderMetaUi.__achievementV2){const wrapped=function(){const result=baseRenderMetaUi();renderEndlessProfile();return result;};wrapped.__achievementV2=true;window.stackfallRenderMetaUi=wrapped;}
   document.querySelector('#hubProfile')?.addEventListener('click',()=>queueMicrotask(renderEndlessProfile));
   document.querySelector('#profileNameSaveBtn')?.addEventListener('click',()=>queueMicrotask(renderEndlessProfile));
 
