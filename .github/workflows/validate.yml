@@ -2,7 +2,7 @@ name: Validate Stackfall
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/magnet-apex-runtime-audit]
   pull_request:
 
 permissions:
@@ -84,3 +84,10 @@ jobs:
         run: node scripts/awakening-second-set-contract.mjs
       - name: Check awakening A14-A19 contract
         run: node scripts/awakening-final-set-contract.mjs
+      - name: Export workspace for direct test session
+        uses: actions/upload-artifact@v4
+        with:
+          name: stackfall-workspace-${{ github.sha }}
+          path: .
+          include-hidden-files: true
+          retention-days: 1
