@@ -2,13 +2,20 @@
 
 ## 문서 정본 계층
 
-- **현재 설계·구현 계약의 최종 정본은 이 문서(`docs/GAME_DESIGN.md`)다.** 코드와 충돌하면 실제 `main` 코드를 먼저 조사하고, 의도된 변경인지 확인한 뒤 이 문서를 함께 갱신한다.
+- **현재 설계·구현 계약의 최종 정본은 이 문서(`docs/GAME_DESIGN.md`)다.** 코드와 충돌하면 현재 canonical development branch의 실제 소스를 먼저 조사하고, 의도된 변경인지 확인한 뒤 이 문서를 함께 갱신한다.
 - `docs/WIKI.md`는 플레이어에게 설명하기 위한 파생 문서다. 수치·규칙을 독립적으로 새로 정의하지 않는다.
 - 날짜가 붙은 AUDIT 문서와 `awakening-audit-results.json`은 해당 시점의 검사 기록이다. 과거 fingerprint·성능 수치·타이밍을 현재 정본 값으로 재사용하지 않는다.
-- 현재 코드/문서 정합성 조사 결과는 `docs/CANONICAL_AUDIT_2026-09-28.md`에 기록한다.
+- 날짜가 붙은 `CANONICAL_AUDIT_*`, `RUNTIME_ARCHITECTURE_AUDIT_*` 등은 해당 시점의 역사적 스냅샷이다. 현재 상태 판정에는 이 문서와 실제 canonical source/contract를 우선한다.
 - 승인된 무기·각성·스테이지 디자인은 버그 수정 명목으로 임의 재디자인하지 않는다. 변경이 필요한 경우 기존 의도와 충돌 여부를 먼저 확인한다.
 
-마지막 동기화: 2026-10-02
+마지막 동기화: 2026-10-31
+
+### 현재 런타임 상태 — 2026-10-31
+
+- **활성 플레이 런타임은 Endless 하나다.** `ACTIVE_STAGE_RUNTIMES=[]`, `STACKFALL_STAGE_MODE_ENABLED=false`, `stackfallHasStageRuntime()=>false`, `stackfallIsStageRun()=>false`가 현재 불변조건이다.
+- **활성 Endless 월드 이벤트는 정확히 3종**: `vault / crash / void`. `distress / meteor / predator / relay / storm`은 active Endless에서 폐기되었으며 stale-state 정리용 식별자 또는 봉인된 Stage authored source에만 남을 수 있다.
+- **Void Rift 보스 풀은 5종**: `maw / oracle / weaver / grave / paradox`.
+- 아래의 Stage 1–18 설계, Stage 보스, Stage 이벤트 플랜, Stage-clear unlock 표는 삭제하지 않은 **보존 authored design**이다. Stage gate가 다시 열리기 전까지 현재 플레이 가능 기능처럼 해석하지 않는다.
 
 이 문서는 STACKFALL의 실제 게임 규칙, 밸런스 기준, 소유권과 회귀 방지 조건을 정리한 공식 기준 문서다. `README.md`, 이 문서, `WIKI.md`를 함께 관리한다. 현재 코드와 충돌하는 과거 문서·채팅 요약·주석은 기준으로 사용하지 않는다.
 
@@ -658,11 +665,11 @@ UI 모듈은 `damageMult`, `hasteMult`, 연쇄 계산을 재정의하지 않는�
 - 개발 TMI를 선택 카드 설명에 다시 넣지 않는다.
 - 배포 지문 생성 전에 JavaScript 문법·영구 계약·소유권 검사를 실행한다.
 
-## Run modes and finite stages (2026-09-22)
+## Run modes and preserved finite-Stage design (authored 2026-09-22; runtime sealed 2026-10-31)
 
-- `endless` remains non-finite, keeps random world events, exposes the full enemy family pool, and keeps the 600-second (10-minute) Apex cadence.
+- `endless` is the only active run runtime. It remains non-finite, keeps the canonical three random world events, exposes the full enemy family pool, and keeps the 600-second (10-minute) Apex cadence.
 - Endless의 일반 적 스폰은 기본 4종만 반복하지 않는다. **75초부터 파손 항로(route), 240초부터 심연 개화(bloom), 420초부터 침묵 중계망(array)**의 Stage 일반 적 변형이 시간 경과에 따라 기존 풀에 섞인다. 이 혼합은 Stage 클리어/해금 상태와 무관하며, 스테이지 전용 보스·환경 기믹·전장 구조물까지 가져오는 규칙은 아니다.
-- `stage` is a separate finite operation mode. The **random** Endless event scheduler and Apex scheduling are suppressed, but curated world-event instances can be authored directly into each Stage.
+- `stage` 관련 아래 규칙은 보존된 authored finite-operation 설계다. 현재 Stage runtime은 봉인되어 실행되지 않는다. 보존 설계상 random Endless scheduler/Apex scheduling은 억제하고 curated world-event instances를 Stage에 직접 배치한다.
 - Stage clear is **boss-death gated**, never timer gated. Reaching the authored duration spawns the final boss; the run continues until the player dies or that boss is defeated.
 - Every authored stage has fixed milestone incidents plus a persistent environmental gimmick loop that accelerates toward the final boss.
 - 스테이지 환경 기믹은 보스 공격과 같은 텔레그래프 문법을 사용하지 않는다. Stage 1–6은 **파손된 항로 레일·브레이스·셔터**, Stage 7–12는 **뿌리·꽃잎·생체 격벽**, Stage 13–18은 **중계 회로·스캔 섹터·데이터 셔터**를 공통 시각 언어로 사용한다. 같은 별자리 안에서는 계열감을 유지하되 `environmentVariant`에 따라 회전·노드·배치가 달라진다.
@@ -721,7 +728,7 @@ Collapse Warden은 손상된 검역 인양 기계다. 티타늄 쐐기 흉부, �
 등장은 3.05초의 비대칭 양안 혈류 응집으로 실제 전투와 같은 심장을 형성하며, 마지막에 해당 위치에 보스를 생성한다. 68%에서는 0.9초 동안 양 심실이 벌어지고, 32%에서는 두 심실이 서로 다른 리듬으로 뛰고 흐름이 반전된다. 페이즈 토큰이 이전 예약 방전/흡기를 취소한다. 격파는 3.6초의 핵 소등→두 심실이 반대 방향으로 찢어져 유체 유출→해구 투명화이며 공용 원형 폭발은 실행하지 않는다. 탐험 trench / 전투 heart의 오리지널 WebAudio 장면과 흡기·분출·분리·배액 효과음을 사용한다. 남은 응결 결정은 다음 유리별 묘역의 전조다.
 
 
-**이벤트와 초월체 분리:** 월드 이벤트 자체에서는 Apex를 소환하지 않는다. 추락 우주선 누적 조우처럼 이벤트 고유 강적/보스는 유지할 수 있지만 Apex 등장은 Stage 최종전 또는 Endless 10분 주기 같은 Apex 계층에서만 처리한다. 성운 보관소·우주선·공허 균열·폭풍 등 이벤트의 세계관/시각 컨셉은 향후 Stage/Endless Apex의 모티프로 재사용할 수 있다.
+**이벤트와 초월체 분리:** 활성 Endless 월드 이벤트 자체에서는 Apex를 소환하지 않는다. 추락 우주선 누적 조우처럼 이벤트 고유 강적/보스는 유지할 수 있지만 Apex 등장은 현재 Endless 10분 주기의 Apex 계층에서 처리한다. 활성 이벤트 모티프는 성운 보관소·추락 우주선·공허 균열 3종이다. 폐기된 `distress / meteor / predator / relay / storm` 컨셉은 봉인된 Stage authored source나 역사 기록에 남을 수 있으나 active Endless 이벤트로 복구하지 않는다.
 
 - 스테이지 일반 적 압박은 진행도와 Stage 번호에 따라 상승하지만, 성능 단계와 화면 규모를 반영한 동시 적 spawn budget으로 상한을 둔다. 후반 난이도는 단순 적 개체 수 폭증보다 적 조합·기믹·중간보스·보스 패턴으로 올린다.
 - 경험치 결정은 엔티티 상한에 도달한 뒤에만 압축하지 않는다. 새 결정이 가까운 기존 결정과 합쳐질 때 **플레이어에게 더 가까운 쪽 결정을 남기고 먼 쪽의 XP 값을 그쪽으로 이전**한다. hard-cap 압축도 플레이어 거리순으로 가까운 결정을 보존하고 먼 결정을 가까운 결정에 흡수한다. XP 총량은 보존하며 누적값이 클수록 결정 크기도 로그형으로 증가한다.
@@ -927,9 +934,11 @@ Implementation status: all four reward keys are connected only after their defin
 ### World-event cadence
 
 - **Endless event cadence uses independent per-type clocks plus a shared minimum gap.** 각 이벤트는 자기 재등장 쿨다운을 가지며, 여러 이벤트 시계가 동시에 만료되어도 한 번에 하나만 무작위 선택한다. 공통 최소 간격은 58초로 두어 이벤트가 2~3개 연달아 겹쳐 뜨지 않게 한다.
-- 신규 5종은 조난 신호, 유성 광맥, 포식성 성운, 중계기 복구, 항성 폭풍의 눈이다. 현상금 신호와 중력 난파장은 추가하지 않는다.
+- **활성 이벤트 패밀리는 정확히 3종**: 성운 보관소(`vault`), 추락한 우주선(`crash`), 공허 균열(`void`). 조난 신호(`distress`), 유성 광맥(`meteor`), 포식성 성운(`predator`), 중계기 복구(`relay`), 항성 폭풍의 눈(`storm`)은 active Endless에서 폐기되었다. 현상금 신호와 중력 난파장도 활성 스케줄에 없다.
 
-### Campaign system unlocks
+### Preserved Campaign system unlock plan
+
+> 현재 Stage runtime은 봉인되어 있으므로 아래 Stage-clear 해금 조건은 **보존된 authored progression plan**이다. 현재 플레이에서 Stage 클리어로 발생하는 해금 경로로 취급하지 않는다.
 
 - **Stage 1**: Core Development / 코어 성장.
 - **Stage 3**: Boss Special Abilities / 보스 특수능력. 이 해금 전 일반보스는 특수능력 선택창 대신 현재 보유 무기 또는 패시브 +1 성장 보상을 준다.
@@ -942,7 +951,7 @@ Implementation status: all four reward keys are connected only after their defin
 - **설정 > 해금 관리**는 기본 접힘 상태이며, 이미 획득한 **자동 적용형** 해금만 개별 ON/OFF할 수 있다. 현재 대상은 무기 각성, 보스 특수능력, 4중 재구성, 선행 재구성 +3, 다중 투영 프로토콜이다. 코어 성장, Endless, Hard, 코어 성장 3차 돌파처럼 별도 메뉴/선택 행동이 필요한 해금은 토글 목록에서 제외한다.
 - DEV 프로필(`?dev=1`)은 테스트 편의를 위해 획득 조건을 우회한다. 장착 슬롯 V/VI는 기존 Core Development 확장 노드로 유지한다.
 - Boss Rush는 추후 별도 모드로 검토하며 현재 구현하지 않는다.
-- Stage 모드는 계속 `randomWorldEvents:false`라 Endless의 무작위 스케줄러는 돌지 않는다. 대신 같은 8종 이벤트 런타임을 **작가 배치형 Stage 이벤트**로 사용한다. 첫 등장은 **S1 성운 보관소 → S3 추락한 우주선 → S4 조난 신호 → S6 유성 광맥 → S8 포식성 성운 → S10 공허 균열 → S12 중계기 복구 → S14 항성 폭풍의 눈** 순서로 간격을 두고 소개한다. 이미 등장한 이벤트는 이후 Stage에서 반복되며 한 Stage에 여러 이벤트가 들어갈 수 있고, 후반으로 갈수록 횟수가 늘어난다. Stage 이벤트 표식은 최종보스/외부 정예 이벤트와 겹치지 않게 생성한다. 기존 Stage 서브보스가 남아 있더라도 표식은 먼저 나타날 수 있고, 표식이 존재하는 동안 다음 Stage 서브보스 조우를 보류한다. 작가 배치형 표식은 150초 유지되어 현재 전투를 정리한 뒤 진입할 수 있다.
+- 봉인된 Stage authored source에는 `randomWorldEvents:false`와 과거 8-family 작가 배치 계획이 보존되어 있다. 이 플랜은 현재 실행되지 않으며, active Endless에서 폐기된 `distress / meteor / predator / relay / storm`을 재활성화하는 근거가 아니다. Stage gate를 향후 다시 열 경우 해당 5종은 현재 3-event canon에 맞춰 재검토한 뒤 명시적으로 승인·구현·검증해야 한다.
 
 ### Galaxy map
 
