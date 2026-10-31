@@ -2,11 +2,12 @@ import fs from 'node:fs';
 
 const read=path=>fs.readFileSync(path,'utf8');
 const director=read('src/enemy-director-v1.js');
+const guide=read('src/event-guide-refinement-v1.js');
 const modes=read('src/run-modes.js');
 const checks=[];
 const expect=(name,ok)=>checks.push([name,Boolean(ok)]);
 
-expect('Enemy Director is a final Endless runtime module',modes.includes("const ENDLESS_SYSTEM_SCRIPTS=Object.freeze(['src/enemy-director-v1.js'])")&&modes.indexOf('ENDLESS_PROGRESSION_SCRIPTS')<modes.indexOf('ENDLESS_SYSTEM_SCRIPTS'));
+expect('Enemy Director and event guide refinements load in final Endless runtime order',modes.includes("const ENDLESS_SYSTEM_SCRIPTS=Object.freeze(['src/enemy-director-v1.js','src/event-guide-refinement-v1.js'])")&&modes.indexOf('ENDLESS_PROGRESSION_SCRIPTS')<modes.indexOf('ENDLESS_SYSTEM_SCRIPTS'));
 expect('time-segmented density replaces pure random background spawning',director.includes("id:'opening'")&&director.includes("id:'skirmish'")&&director.includes("id:'formation'")&&director.includes("id:'crossfire'")&&director.includes("id:'siege'")&&director.includes("id:'deep-space'")&&director.includes("id:'overrun'")&&director.includes('lateProfile(t)'));
 expect('role composition is soft rather than a fixed ranged population cap',director.includes('desired=Math.max(.75,profile.target*weight)')&&director.includes('current>desired*1.45?.42:1')&&!director.includes('rangedAlive>=')&&!director.includes('MAX_RANGED')&&!director.includes('artilleryCap'));
 expect('ranged pressure uses attack slots instead of enemy-count caps',director.includes('rangedSlots')&&director.includes('slotState.active>=profile.rangedSlots')&&director.includes('directorShotWindup'));
@@ -16,6 +17,7 @@ expect('charger role telegraphs before a committed dash',director.includes("dire
 expect('director preserves Apex world-event and encounter ownership boundaries',director.includes("updateApexSystems==='function'&&updateApexSystems(dt)")&&director.includes("worldEventBlocksSpawning==='function'&&worldEventBlocksSpawning()")&&director.includes("updateEncounterDirector==='function')updateEncounterDirector(dt)"));
 expect('regular boss pressure is deliberately reduced without disabling the horde',director.includes("boss?.76:1")&&director.includes("firstBoss?.45:1")&&director.includes('profile.boss)rt.pulseRemaining=0'));
 expect('director exposes non-UI inspection data for real playtest diagnosis',director.includes('window.stackfallEnemyDirectorSnapshot')&&director.includes('window.stackfallEnemyDirectorVersion'));
+expect('offscreen event guide is pulled modestly toward the player without moving active events',guide.includes("const PULL_TOWARD_PLAYER=.12")&&guide.includes('if(state.mapEventActive')&&guide.includes('ctx.translate(shift.x,shift.y)')&&guide.includes('window.drawMapEvents=refined'));
 
 let failures=0;
 for(const[name,ok] of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failures++;}
