@@ -279,8 +279,7 @@
     if(attempt&&regularBoss({...enemy,dead:false})){if(!attempt.hit)progress.stats.bossNoHit=1;if(now-attempt.startedAt<=15)progress.stats.bossFast=1;bossAttempt=null;}
     return result;
   };
-  const baseUpdatePlayer=updatePlayer;
-  updatePlayer=function achievementUpdatePlayer(dt){const result=baseUpdatePlayer(dt);if(state.mode!=='playing'||!isEndless())return result;poll-=dt;if(poll>0)return result;poll=.35;ensureBossAttempt();const rows=evaluateAchievements(snapshotRun());if(rows.length){renderEndlessProfile();window.renderStackfallMetaUi?.();}return result;};
+  registerPlayerUpdateInterceptor('endless-progression-v2.js:achievementUpdatePlayer',function achievementUpdatePlayer(next,dt){const result=next(dt);if(state.mode!=='playing'||!isEndless())return result;poll-=dt;if(poll>0)return result;poll=.35;ensureBossAttempt();const rows=evaluateAchievements(snapshotRun());if(rows.length){renderEndlessProfile();window.renderStackfallMetaUi?.();}return result;});
   registerEndGameInterceptor('endless-progression-v2.js:achievementEndGame',function achievementEndGame(next,...args){if(state.mode==='gameover')return;const endless=isEndless(),run=snapshotRun(),result=next(...args);if(endless){captureRunStats(run);const rows=evaluateAchievements(run,{silent:true});renderResultUnlocks(rows);if(rows.length)announceAchievements(rows);saveProgress();renderEndlessProfile();}return result;});
 
   registerShowMainMenuInterceptor('endless-progression-v2.js:achievementMainMenu',function achievementMainMenu(next,...args){const result=next(...args);applyStageSeal();finalRenderStarterOptions();renderEndlessProfile();return result;});

@@ -1,10 +1,14 @@
-function updatePlayer(dt){
+const STACKFALL_PLAYER_UPDATE_INTERCEPTORS=[];
+function registerPlayerUpdateInterceptor(name,handler){if(typeof name!=='string'||!name||typeof handler!=='function')throw new TypeError('Invalid updatePlayer interceptor');STACKFALL_PLAYER_UPDATE_INTERCEPTORS.push({name,handler});}
+function runPlayerUpdateInterceptor(index,dt){if(index<0)return updatePlayerCore(dt);const entry=STACKFALL_PLAYER_UPDATE_INTERCEPTORS[index];return entry.handler((nextDt=dt)=>runPlayerUpdateInterceptor(index-1,nextDt),dt);}
+function updatePlayerCore(dt){
   player.stagePreviousX=player.x;player.stagePreviousY=player.y;
   let x=0,y=0;if(state.input.keys.has('KeyA')||state.input.keys.has('ArrowLeft'))x--;if(state.input.keys.has('KeyD')||state.input.keys.has('ArrowRight'))x++;if(state.input.keys.has('KeyW')||state.input.keys.has('ArrowUp'))y--;if(state.input.keys.has('KeyS')||state.input.keys.has('ArrowDown'))y++;x+=state.input.touchX;y+=state.input.touchY;const len=Math.hypot(x,y);if(len>0){x/=Math.max(1,len);y/=Math.max(1,len);}
   const navigation=1+(state.nebulaExtras?.navigation||0)*.08,speed=player.speed*(1+stat('speed')*.09)*navigation,targetVX=x*speed,targetVY=y*speed,response=1-Math.exp(-dt*14);player.moveVX=lerp(player.moveVX||0,targetVX,response);player.moveVY=lerp(player.moveVY||0,targetVY,response);player.moveIntensity=lerp(player.moveIntensity||0,len>0?clamp(speed/360,.28,1):0,1-Math.exp(-dt*(len>0?9:5)));if(len>.08)player.facingAngle=Math.atan2(y,x);player.x+=targetVX*dt;player.y+=targetVY*dt;player.invuln=Math.max(0,player.invuln-dt);player.hitPulse=Math.max(0,player.hitPulse-dt);
   window.updateEventBarrier?.(dt);
   if(typeof updateMapEventPlayer==='function')updateMapEventPlayer(dt);
 }
+function updatePlayer(dt){return runPlayerUpdateInterceptor(STACKFALL_PLAYER_UPDATE_INTERCEPTORS.length-1,dt);}
 function updateHomingProjectile(p,dt){
   if(!p.homingTargetId&&!p.homingReacquire)return;
   let target=p.homingTargetId?enemyById(p.homingTargetId):null;

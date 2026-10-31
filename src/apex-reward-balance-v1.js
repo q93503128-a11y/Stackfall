@@ -60,13 +60,12 @@
     const baseRechargeShieldApexCore=rechargeShield;
     rechargeShield=function apexCoreRechargeShield(amount,fallbackCap=0){return baseRechargeShieldApexCore(amount*coreMultiplier(),fallbackCap);};
   }
-  if(typeof updatePlayer==='function'){
-    const baseUpdatePlayerApexCore=updatePlayer;
-    updatePlayer=function apexCoreMovementSpeed(dt){
+  if(typeof registerPlayerUpdateInterceptor==='function'){
+    registerPlayerUpdateInterceptor('apex-reward-balance-v1.js:apexCoreMovementSpeed',function apexCoreMovementSpeed(next,dt){
       const baseSpeed=player.speed,mult=coreMultiplier();
       player.speed=baseSpeed*mult;
-      try{return baseUpdatePlayerApexCore(dt);}finally{player.speed=baseSpeed;}
-    };
+      try{return next(dt);}finally{player.speed=baseSpeed;}
+    });
   }
 
   function applyCoreStack(){

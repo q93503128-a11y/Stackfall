@@ -117,7 +117,11 @@ const STACKFALL_SHOCKWAVE_POOL_MARK=Symbol('stackfallShockwavePool'),SHOCKWAVE_P
 function acquireShockwaveEffect(x,y,color,maxR,life,width){const effect=SHOCKWAVE_POOL.pop()||{[STACKFALL_SHOCKWAVE_POOL_MARK]:true,x:0,y:0,r:6,maxR:100,life:0,max:0,color:'#fff',width:3};effect.x=x;effect.y=y;effect.r=6;effect.maxR=maxR;effect.life=life;effect.max=life;effect.color=color;effect.width=width;return effect;}
 function recycleShockwaveEffect(effect){if(effect?.[STACKFALL_SHOCKWAVE_POOL_MARK]===true&&SHOCKWAVE_POOL.length<SHOCKWAVE_POOL_LIMIT)SHOCKWAVE_POOL.push(effect);}
 function trimPooledEffects(list,max,recycle){if(list.length<=max)return;const remove=list.length-max;for(let i=0;i<remove;i++)recycle?.(list[i]);list.splice(0,remove);}
-function addText(x,y,text,color='#fff',size=13){if(state.entities.texts.length>=entityCap('texts'))recycleTextEffect(state.entities.texts.shift());state.entities.texts.push(acquireTextEffect(x,y,text,color,size));}
+const STACKFALL_ADD_TEXT_INTERCEPTORS=[];
+function registerAddTextInterceptor(name,handler){if(typeof name!=='string'||!name||typeof handler!=='function')throw new TypeError('Invalid addText interceptor');STACKFALL_ADD_TEXT_INTERCEPTORS.push({name,handler});}
+function runAddTextInterceptor(index,args){if(index<0)return addTextCore(...args);const entry=STACKFALL_ADD_TEXT_INTERCEPTORS[index];return entry.handler((...nextArgs)=>runAddTextInterceptor(index-1,nextArgs),...args);}
+function addTextCore(x,y,text,color='#fff',size=13){if(state.entities.texts.length>=entityCap('texts'))recycleTextEffect(state.entities.texts.shift());state.entities.texts.push(acquireTextEffect(x,y,text,color,size));}
+function addText(...args){return runAddTextInterceptor(STACKFALL_ADD_TEXT_INTERCEPTORS.length-1,args);}
 function shockwave(x,y,color,maxR=100,life=.35,width=3){if(state.entities.shockwaves.length>=entityCap('shockwaves'))recycleShockwaveEffect(state.entities.shockwaves.shift());state.entities.shockwaves.push(acquireShockwaveEffect(x,y,color,maxR,life,width));}
 const STACKFALL_BEAM_POOL_MARK=Symbol('stackfallBeamPool'),BEAM_EFFECT_POOL=[],BEAM_EFFECT_POOL_LIMIT=192;
 function acquireBeamEffect(x1,y1,x2,y2,life,color,width){const effect=BEAM_EFFECT_POOL.pop()||{[STACKFALL_BEAM_POOL_MARK]:true,x1:0,y1:0,x2:0,y2:0,life:0,max:0,color:'#fff',width:1};effect.x1=x1;effect.y1=y1;effect.x2=x2;effect.y2=y2;effect.life=life;effect.max=life;effect.color=color;effect.width=width;return effect;}
