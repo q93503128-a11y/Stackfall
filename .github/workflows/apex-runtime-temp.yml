@@ -1,0 +1,36 @@
+name: Apex runtime temp
+
+on:
+  push:
+    branches:
+      - fix/magnet-apex-runtime-audit
+
+permissions:
+  contents: read
+
+jobs:
+  apex-browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Start static server
+        run: |
+          python3 -m http.server 8000 > /tmp/stackfall-http.log 2>&1 &
+          echo $! > /tmp/stackfall-http.pid
+          sleep 1
+      - name: Run real Apex browser QA
+        env:
+          STACKFALL_ALLOW_GPU_SKIP: '1'
+          STACKFALL_ALLOW_CONTEXT_SKIP: '1'
+        run: node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --apex-only
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-runtime-evidence-${{ github.sha }}
+          path: test-results
+          if-no-files-found: ignore
+          retention-days: 3
