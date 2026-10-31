@@ -32,6 +32,17 @@ jobs:
           p.write_text(s)
           PY
           node .validation/canonical-cleanup-7-transform.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/runtime-ownership-contract.mjs')
+          s=p.read_text()
+          anchor="const buildInfo=read('src/build-info.js');"
+          assert anchor in s
+          aggregate="const allRuntimeSource=fs.readdirSync('src').filter(name=>name.endsWith('.js')).map(name=>read('src/'+name)).join('\\n');"
+          if aggregate not in s:
+              s=s.replace(anchor,anchor+'\n'+aggregate,1)
+          p.write_text(s)
+          PY
       - name: Check transformed ownership surface
         shell: bash
         run: |
