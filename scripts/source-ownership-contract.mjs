@@ -25,6 +25,7 @@ const validate=read('.github/workflows/validate.yml');
 const index=read('index.html');
 const catalog=read('src/boss-catalog.js');
 const bosses=read('src/bosses.js');
+const systems=read('src/systems.js');
 const selected=process.env.OWNERSHIP_GROUP||'all';
 
 function javascriptSources(root='src'){
@@ -66,7 +67,7 @@ expect('prism','old lower smoke values are not source truth',browserSmoke.includ
 
 expect('targeting','manual aim and farthest boomerang owner',targeting.includes('id="manualAim"')&&targeting.includes("if(key==='arc')return farthestWeaponTarget")&&targeting.includes('cursorD2+d2*.002')&&targeting.includes('drawPlayerWithManualAim'));
 expect('targeting','manual aim survives settings bootstrap save',settings.includes('GAME_SETTINGS.manualAim=saved.manualAim===true')&&settings.includes('saveGameSettings();')&&targeting.includes('GAME_SETTINGS.manualAim'));
-expect('targeting','magnet attraction speed owner',targeting.includes('pullSpeed=1+magnetStacks*.22')&&core.includes('끌어오는 속도 증가')&&bootstrap.includes('끌어오는 속도 증가'));
+expect('targeting','magnet attraction speed owner',systems.includes('pullSpeed=1+magnetStacks*.22')&&!targeting.includes('updateGems=function')&&core.includes('끌어오는 속도 증가')&&bootstrap.includes('끌어오는 속도 증가'));
 expect('targeting','vault elite exception owner',targeting.includes('vaultDuringEliteEncounters')&&targeting.includes("enemy.type='vault-elite'")&&wiki.includes('Stage 서브보스가 살아 있어도 표식이 먼저 나타날 수 있다'));
 expect('targeting','multiplicity functionality stays focused without player-facing TMI',endgame.includes('homingTargetId:target.id')&&!endgame.includes('const multiplicityTargets=')&&endgame.includes("ko:['다중 투영 코어','일부 장비의 동시 공격 수 +1.']")&&!endgame.includes('추가 공격체는 원본과 같은 적을 노린다')&&weapons.includes('function fireIonChain'));
 expect('targeting','multiplicity is campaign capped and event gated before its protocol',endgame.includes('max:3,eventOnly:true')&&endgame.includes("multiplicity-protocol')===true?3:2")&&endgame.includes("Math.min(multiplicityMax(),passiveStacks('multiplicity'))")&&events.includes('window.stackfallMultiplicityMax?.()||2'));

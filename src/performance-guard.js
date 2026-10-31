@@ -227,7 +227,7 @@
   }
 
   function gemSprite(radius){const key=Math.max(2,Math.min(18,Math.round(radius*2)/2));let entry=gemSpriteCache.get(key);if(entry)return entry;const pad=12,size=Math.ceil((key+pad)*2),surface=makeSurface(size,size),g=surface.getContext('2d'),c=size/2;g.translate(c,c);g.shadowColor='#72e69a';g.shadowBlur=7;g.fillStyle='#72e69a';g.strokeStyle='#dfffe9';g.lineWidth=1.1;g.beginPath();for(let i=0;i<6;i++){const a=i/6*TAU-Math.PI/2,x=Math.cos(a)*key,y=Math.sin(a)*key;i?g.lineTo(x,y):g.moveTo(x,y);}g.closePath();g.fill();g.stroke();g.shadowBlur=0;g.fillStyle='rgba(255,255,255,.86)';g.beginPath();g.arc(-key*.18,-key*.2,Math.max(.8,key*.2),0,TAU);g.fill();entry={surface,anchorX:c,anchorY:c};gemSpriteCache.set(key,entry);trimCache(gemSpriteCache,32);return entry;}
-  drawGems=function cachedGemRenderer(){const list=state.entities.gems||[];for(let i=0;i<list.length;i++){const gem=list[i];if(!gem||gem.life<=0)continue;const sx=gem.x-player.x+vw/2,sy=gem.y-player.y+vh/2;if(sx<-32||sx>vw+32||sy<-32||sy>vh+32)continue;const entry=gemSprite(gem.r||4);ctx.drawImage(entry.surface,roundPixel(sx-entry.anchorX),roundPixel(sy-entry.anchorY));}};
+  drawGems=function cachedGemRenderer(){const list=state.entities.gems||[];for(let i=0;i<list.length;i++){const gem=list[i];if(!experienceGemActive(gem))continue;const sx=gem.x-player.x+vw/2,sy=gem.y-player.y+vh/2;if(sx<-32||sx>vw+32||sy<-32||sy>vh+32)continue;const entry=gemSprite(gem.r||4);ctx.drawImage(entry.surface,roundPixel(sx-entry.anchorX),roundPixel(sy-entry.anchorY));}};
 
   function enemySprite(e){
     if(e.stageVariant&&typeof stageEnemyRaster==='function'){const surface=stageEnemyRaster(e),radius=Math.max(7,Math.min(40,Number(e.r)||13));return{surface,anchorX:80,anchorY:80,scale:Math.max(.35,radius/28)};}

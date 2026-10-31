@@ -66,9 +66,7 @@
   function liveNormalCount(){let count=0;for(const e of state.entities.enemies)if(managedNormal(e))count++;return count;}
   function startPulse(rt,profile){if(profile.pulseEvery<=0||profile.boss)return;rt.pulseRemaining=Math.max(rt.pulseRemaining,profile.pulseSize);rt.pulseCd=profile.pulseEvery*rand(.90,1.12);}
 
-  updateSpawning=function enemyDirectorSpawning(dt){
-    if(typeof updateApexSystems==='function'&&updateApexSystems(dt))return;
-    if(typeof worldEventBlocksSpawning==='function'&&worldEventBlocksSpawning())return;
+  function updateDirectorSpawning(dt){
     const rt=runtime(),profile=scaledProfile(state.time||0);rt.lastProfileId=profile.id;rt.spawnCd-=dt;rt.pulseCd-=dt;
     if(rt.pulseCd<=0)startPulse(rt,profile);
     if(profile.boss)rt.pulseRemaining=0;
@@ -81,8 +79,8 @@
     }else if(rt.spawnCd<=0)rt.spawnCd=.12;
     state.spawnTimer=rt.spawnCd;
     if(typeof updateEncounterDirector==='function')updateEncounterDirector(dt);
-  };
-  updateSpawning.__stackfallEnemyDirectorV1=true;
+    return true;
+  }
 
   function onScreenForAttack(e,padding=56){const halfW=Math.max(160,vw*.5-padding),halfH=Math.max(120,vh*.5-padding);return Math.abs(e.x-player.x)<=halfW&&Math.abs(e.y-player.y)<=halfH;}
   function artilleryCooldown(){const threat=1+Math.floor((state.time||0)/60),key=difficultyKey(),difficulty=key==='very-hard'?.88:key==='hard'?.94:key==='easy'?1.08:1;return Math.max(1.55,(2.55-Math.min(.65,threat*.045))*difficulty)*rand(.90,1.12);}
@@ -102,24 +100,19 @@
     if(e.directorChargeCd>0||!onScreenForAttack(e,72))return;const d=Math.hypot(player.x-e.x,player.y-e.y);if(d>=175&&d<=520)beginCharge(e);
   }
 
-  const baseUpdateEnemies=updateEnemies;
-  updateEnemies=function enemyDirectorActions(dt){
-    const held=[];for(const e of state.entities.enemies){if(!e||e.dead||!e.directorManaged)continue;if(e.directorRole==='artillery')e.rangedCd=9999;if(e.directorRole==='charger'&&(e.directorChargeWindup||0)>0){held.push([e,e.speed]);e.speed=0;}}
-    baseUpdateEnemies(dt);
-    for(const[e,speed]of held)if(e&&!e.dead)e.speed=speed;
+  function directorMovementSpeed(enemy,speed){if(!enemy?.directorManaged)return speed;if(enemy.directorRole==='charger'&&(enemy.directorChargeWindup||0)>0)return 0;return speed;}
+  function suppressGenericRanged(enemy){return!!(enemy?.directorManaged&&enemy.directorRole==='artillery');}
+  function updateDirectorActions(dt){
     const profile=scaledProfile(state.time||0),slotState={active:0};for(const e of state.entities.enemies)if(e&&!e.dead&&e.directorRole==='artillery'&&(e.directorShotWindup||0)>0)slotState.active++;
     for(const e of state.entities.enemies){if(!e||e.dead||!e.directorManaged)continue;if(e.directorRole==='artillery')updateArtillery(e,dt,profile,slotState);else if(e.directorRole==='charger')updateCharger(e,dt);}
-  };
-  updateEnemies.__stackfallEnemyDirectorV1=true;
+  }
+  function onEnemyKilled(enemy){
+    const role=enemy?.directorRole;if(!role)return;const refill=ROLE_REFILL[role]||0;if(refill<=0)return;const rt=runtime(),until=(state.time||0)+refill;rt.nextRoleAllowed[role]=Math.max(Number(rt.nextRoleAllowed[role])||0,until);
+  }
 
-  const baseKillEnemy=killEnemy;
-  killEnemy=function enemyDirectorKill(enemy,opts={}){
-    const alive=!!(enemy&&!enemy.dead),role=enemy?.directorRole;baseKillEnemy(enemy,opts);if(!alive||!enemy?.dead||!role)return;
-    const refill=ROLE_REFILL[role]||0;if(refill>0){const rt=runtime(),until=(state.time||0)+refill;rt.nextRoleAllowed[role]=Math.max(Number(rt.nextRoleAllowed[role])||0,until);}
-  };
-  killEnemy.__stackfallEnemyDirectorV1=true;
-
+  const service=Object.freeze({version:VERSION,updateSpawning:updateDirectorSpawning,movementSpeed:directorMovementSpeed,suppressGenericRanged,updateActions:updateDirectorActions,onEnemyKilled,profile:()=>scaledProfile(state.time||0),snapshot:()=>{const rt=runtime(),profile=scaledProfile(state.time||0),roles=roleCounts();return{version:VERSION,runSerial:state.runSerial,time:state.time||0,profile:profile.id,target:profile.target,live:roles.total,roles:roles.counts,pulseRemaining:rt.pulseRemaining,rangedSlots:profile.rangedSlots,nextRoleAllowed:{...rt.nextRoleAllowed}};}});
+  window.stackfallEnemyDirectorV1=service;
   window.stackfallEnemyDirectorVersion=VERSION;
-  window.stackfallEnemyDirectorProfile=()=>scaledProfile(state.time||0);
-  window.stackfallEnemyDirectorSnapshot=()=>{const rt=runtime(),profile=scaledProfile(state.time||0),roles=roleCounts();return{version:VERSION,runSerial:state.runSerial,time:state.time||0,profile:profile.id,target:profile.target,live:roles.total,roles:roles.counts,pulseRemaining:rt.pulseRemaining,rangedSlots:profile.rangedSlots,nextRoleAllowed:{...rt.nextRoleAllowed}};};
+  window.stackfallEnemyDirectorProfile=service.profile;
+  window.stackfallEnemyDirectorSnapshot=service.snapshot;
 })();
