@@ -58,8 +58,6 @@ jobs:
           if qa_file is None:
               raise SystemExit('field-pickup browser QA source not found')
           t=qa_file.read_text()
-          # The pickup must still use normal gainXp(), but the QA must not let that
-          # normal path open a level-up choice and consume the observed XP counter.
           if 'api.setLevelUpsDisabled(true);' not in t:
               marker='api.startEndless();'
               pos=t.find(marker)
@@ -77,6 +75,19 @@ jobs:
           qa_file.write_text(t)
           print('Normalized pickup QA:',qa_file)
           PY
+      - name: Pack patched workspace for recovery
+        if: env.STACKFALL_APPLIED_PATCH == '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar --exclude=.git --exclude=test-results -czf /tmp/stackfall-patched-workspace.tgz .
+      - name: Upload patched workspace for recovery
+        if: env.STACKFALL_APPLIED_PATCH == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: stackfall-patched-workspace-${{ github.sha }}
+          path: /tmp/stackfall-patched-workspace.tgz
+          retention-days: 1
       - name: Validate build and contracts
         run: node scripts/build-fingerprint.mjs
       - name: Start static server
