@@ -8,10 +8,7 @@ const ownPath=fileURLToPath(import.meta.url);
 export const BUILD_INFO_PATH='src/build-info.js';
 export const REQUIRED_PUBLIC_ASSETS=['googlea1b39620fd8849c7.html'];
 export const DYNAMIC_PUBLIC_ASSETS=[
-  'stage-runtime.css','src/stage-constellation-backgrounds.js','src/stage-audio.js','src/stage01-remodel.js','src/stage01-polish.js','src/endless-progression.js','src/dev-tools-endless.js',
-  'src/apex-constellation-legacy-v2.js','src/apex-entry-camera-v1.js','src/apex-entry-cleanup-v1.js','src/apex-identity-combat-v1.js','src/apex-reward-balance-v1.js','src/apex-starforge-legacy-v2.js',
-  'src/atropos-combat-escalation-v1.js','src/atropos-hud-cleanup-v1.js','src/atropos-phase-production-v1.js','src/atropos-production-polish-v2.js','src/atropos-time-shear-v1.js',
-  'src/omega-combat-v1.js','src/omega-production-v1.js'
+  'stage-runtime.css','src/stage-constellation-backgrounds.js','src/stage-audio.js','src/stage01-remodel.js','src/stage01-polish.js','src/endless-progression.js','src/dev-tools-endless.js'
 ];
 const TEXT_ASSET_PATTERN=/\.(?:css|html|js|json|svg|webmanifest)$/i;
 const CONTRACTS=['polish-contract-check.mjs','meta-upgrade-contract.mjs','level-choice-contract.mjs','stage-catalog-contract.mjs','stage-geometry-contract.mjs','stage-craft-contract.mjs','sortie-prep-contract.mjs','boss-identity-contract.mjs','stage-map-contract.mjs','run-mode-contract.mjs','canonical-state-contract.mjs','field-pickup-contract.mjs','runtime-ownership-contract.mjs','void-boss-contract.mjs','apex-encounter-contract.mjs','endgame-balance-contract.mjs','realm-specials-contract.mjs','community-feedback-contract.mjs','damage-results-contract.mjs','dev-tools-contract.mjs','performance-audit-contract.mjs','legacy-chat-requirements-contract.mjs','awakening-first-set-contract.mjs','awakening-second-set-contract.mjs','awakening-final-set-contract.mjs'];
@@ -49,10 +46,8 @@ export function computeBuildFingerprint(projectRoot){
 }
 export function writeBuildInfo(projectRoot){
   const info=computeBuildFingerprint(projectRoot),target=resolve(projectRoot,BUILD_INFO_PATH);
-  const existing=existsSync(target)?readFileSync(target,'utf8'):'';
-  const tail=existing.replace(/^window\.STACKFALL_BUILD_SHA=.*\nwindow\.STACKFALL_BUILD_ASSETS=.*\n?/,'');
   const header=`window.STACKFALL_BUILD_SHA=${JSON.stringify(info.sha)};\nwindow.STACKFALL_BUILD_ASSETS=${JSON.stringify(info.assets)};\n`;
-  writeFileSync(target,header+tail);
+  writeFileSync(target,header);
   return info;
 }
 if(process.argv[1]&&resolve(process.argv[1])===resolve(ownPath)){
