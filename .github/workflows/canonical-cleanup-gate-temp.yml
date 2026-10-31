@@ -27,7 +27,7 @@ jobs:
         run: |
           set -euo pipefail
           git checkout --detach 5baf1ca3fdda7c8f4caba04dc17cc00e33db6fa0
-          base64 -d "$RUNNER_TEMP/canonical-cleanup.b64" | gzip -d > "$RUNNER_TEMP/canonical-cleanup.patch"
+          base64 -d "$RUNNER_TEMP/canonical-cleanup.b64" | xz -d > "$RUNNER_TEMP/canonical-cleanup.patch"
           git apply --check "$RUNNER_TEMP/canonical-cleanup.patch"
           git apply "$RUNNER_TEMP/canonical-cleanup.patch"
           test ! -e src/event-guide-refinement-v1.js
