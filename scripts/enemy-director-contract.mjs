@@ -1,0 +1,23 @@
+import fs from 'node:fs';
+
+const read=path=>fs.readFileSync(path,'utf8');
+const director=read('src/enemy-director-v1.js');
+const modes=read('src/run-modes.js');
+const checks=[];
+const expect=(name,ok)=>checks.push([name,Boolean(ok)]);
+
+expect('Enemy Director is a final Endless runtime module',modes.includes("const ENDLESS_SYSTEM_SCRIPTS=Object.freeze(['src/enemy-director-v1.js'])")&&modes.indexOf('ENDLESS_PROGRESSION_SCRIPTS')<modes.indexOf('ENDLESS_SYSTEM_SCRIPTS'));
+expect('time-segmented density replaces pure random background spawning',director.includes("id:'opening'")&&director.includes("id:'skirmish'")&&director.includes("id:'formation'")&&director.includes("id:'crossfire'")&&director.includes("id:'siege'")&&director.includes("id:'deep-space'")&&director.includes("id:'overrun'")&&director.includes('lateProfile(t)'));
+expect('role composition is soft rather than a fixed ranged population cap',director.includes('desired=Math.max(.75,profile.target*weight)')&&director.includes('current>desired*1.45?.42:1')&&!director.includes('rangedAlive>=')&&!director.includes('MAX_RANGED')&&!director.includes('artilleryCap'));
+expect('ranged pressure uses attack slots instead of enemy-count caps',director.includes('rangedSlots')&&director.includes('slotState.active>=profile.rangedSlots')&&director.includes('directorShotWindup'));
+expect('ranged attacks require on-screen readable engagement',director.includes('onScreenForAttack(e)')&&director.includes('d<270||d>620')&&director.includes('beginArtilleryWindup(e)')&&director.includes("shockwave(e.x,e.y,'#76e6ff'"));
+expect('killing a ranged enemy creates refill breathing room',director.includes("artillery:2.6")&&director.includes('nextRoleAllowed[role]')&&director.includes('killEnemy=function enemyDirectorKill'));
+expect('charger role telegraphs before a committed dash',director.includes("directorRole==='charger'")&&director.includes('directorChargeWindup')&&director.includes("shockwave(e.x,e.y,'#ff7daf'")&&director.includes('e.dash=.34'));
+expect('director preserves Apex world-event and encounter ownership boundaries',director.includes("updateApexSystems==='function'&&updateApexSystems(dt)")&&director.includes("worldEventBlocksSpawning==='function'&&worldEventBlocksSpawning()")&&director.includes("updateEncounterDirector==='function')updateEncounterDirector(dt)"));
+expect('regular boss pressure is deliberately reduced without disabling the horde',director.includes("boss?.76:1")&&director.includes("firstBoss?.45:1")&&director.includes('profile.boss)rt.pulseRemaining=0'));
+expect('director exposes non-UI inspection data for real playtest diagnosis',director.includes('window.stackfallEnemyDirectorSnapshot')&&director.includes('window.stackfallEnemyDirectorVersion'));
+
+let failures=0;
+for(const[name,ok] of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failures++;}
+console.log(`Checked ${checks.length} Enemy Director contracts; failures=${failures}`);
+if(failures)process.exit(1);
