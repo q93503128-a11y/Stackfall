@@ -33,17 +33,9 @@
     return arena;
   }
 
-  const baseApexBossSkill=typeof apexBossSkill==='function'?apexBossSkill:null;
-  if(baseApexBossSkill){
-    apexBossSkill=function apexBossSkillWithAtroposPolish(e,dt){
-      if(!isAtropos(e))return baseApexBossSkill(e,dt);
-      lockAtropos(e);expandArena(e);
-      const result=baseApexBossSkill(e,dt);
-      lockAtropos(e);expandArena(e);
-      if((e.apexPhase||1)>=4&&e.atroposClockHand?.active&&!e.atroposClockHand.offTimer&&!e.atroposClockHand.breakAfter&&e.atroposClockHand.stepTimer>P4_HAND_STEP)e.atroposClockHand.stepTimer=P4_HAND_STEP;
-      return result;
-    };
-  }
+  const atroposPolishService=registerApexCombatService(FORM);
+  atroposPolishService.polishBefore=function atroposPolishBefore(e){lockAtropos(e);expandArena(e);};
+  atroposPolishService.polishAfter=function atroposPolishAfter(e){lockAtropos(e);expandArena(e);if((e.apexPhase||1)>=4&&e.atroposClockHand?.active&&!e.atroposClockHand.offTimer&&!e.atroposClockHand.breakAfter&&e.atroposClockHand.stepTimer>P4_HAND_STEP)e.atroposClockHand.stepTimer=P4_HAND_STEP;};
 
   function drawClockFieldFace(field){
     const p=screenPoint(field.x,field.y),warning=field.age<field.warn,active=!warning&&field.age<field.total;

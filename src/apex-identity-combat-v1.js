@@ -171,14 +171,7 @@
       fireClockworkEcho(e,phase);
     }
   }
-  const baseApexBossSkillIdentity=typeof apexBossSkill==='function'?apexBossSkill:null;
-  if(baseApexBossSkillIdentity){
-    apexBossSkill=function apexBossSkillWithIdentity(e,dt){
-      const result=baseApexBossSkillIdentity(e,dt);
-      if((e?.apexForm||e?.eliteForm)==='chronophage')updateClockworkIdentity(e,dt);
-      return result;
-    };
-  }
+  registerApexCombatService('chronophage').identity=updateClockworkIdentity;
 
   // ---------------------------------------------------------------------------
   // 5) Draw custom warnings instead of generic circles / white laser strips.

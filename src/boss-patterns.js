@@ -262,7 +262,17 @@ function constellationNodeVolley(e,d,arena,phase){
 function constellationSignature(e,d,arena,phase){
   constellationCage(e,d,arena,phase,1.06);bossLater(e,430,()=>{if(!e.dead)constellationNodeVolley(e,d*.92,arena,phase);});if(phase>=2)teleportConstellation(e,phase,.56);
 }
+const STACKFALL_APEX_COMBAT_SERVICES=window.stackfallApexCombatServices||(window.stackfallApexCombatServices=Object.create(null));
+function registerApexCombatService(form,patch=null){
+  const key=String(form||'');if(!key)throw new Error('Apex combat service requires a form');
+  const service=STACKFALL_APEX_COMBAT_SERVICES[key]||(STACKFALL_APEX_COMBAT_SERVICES[key]=Object.create(null));
+  if(patch&&typeof patch==='object')Object.assign(service,patch);return service;
+}
+function apexCombatService(target){
+  const form=typeof target==='string'?target:(target?.apexForm||target?.eliteForm);return form?STACKFALL_APEX_COMBAT_SERVICES[form]||null:null;
+}
 function apexBossSkill(e,dt){
+  const service=apexCombatService(e);if(typeof service?.skill==='function')return service.skill(e,dt);
   e.apexElapsed=(e.apexElapsed||0)+dt;rememberApexPlayer(e,dt);
   const health=e.hp/Math.max(1,e.maxHp),healthPhase=health<.25?4:health<.50?3:health<.75?2:1,timePhase=e.apexElapsed>=240?4:e.apexElapsed>=180?3:e.apexElapsed>=105?2:1,phase=Math.max(healthPhase,timePhase),terminal=phase===4&&e.apexElapsed>=240,k=terminal?.42:[1,.86,.72,.58][phase-1];
   e.apexPhase=phase;e.timeLock=0;if((e.attackLockUntil||0)>state.time)return;

@@ -69,7 +69,7 @@ if(typeof enemyById==='function'){const baseEnemyById=enemyById;enemyById=functi
 const baseGuidedMissileUpdate=updateGuidedMissiles;
 updateGuidedMissiles=function handoffInactiveBossPartMissiles(dt){for(const missile of state.entities.guidedMissiles){if(!missile||!String(missile.targetId||'').startsWith(BOSS_PART_ID_PREFIX)||bossPartById(missile.targetId))continue;const next=nearestEnemy(missile.x,missile.y,weaponRange('missile'));if(next){missile.targetId=next.id;missile.reacquired=true;}}return baseGuidedMissileUpdate(dt);};
 const baseDealDamageWithParts=dealDamage;
-dealDamage=function routeBossPartDamageToSharedPool(target,amount,options={}){return baseDealDamageWithParts(bossPartOwner(target),amount,options);};
+dealDamage=function routeBossPartDamageToSharedPool(target,amount,options={}){const owner=bossPartOwner(target);if(target?.bodyPart)apexCombatService(owner)?.onBodyPartHit?.(target,owner,amount,options);return baseDealDamageWithParts(owner,amount,options);};
 const baseEnemyCircleOverlapWithParts=enemyCircleOverlap;
 enemyCircleOverlap=function multipartEnemyCircleOverlap(enemy,x,y,r=0){
   if(enemy?.bodyPart)return enemy.active&&Math.hypot(enemy.x-x,enemy.y-y)<=enemy.r+r;

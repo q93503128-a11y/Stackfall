@@ -2,7 +2,12 @@ function bossSkill(enemy,dt){
   if(enemy.kind==='stage-boss'&&typeof window.updateStageBossSkill==='function')return window.updateStageBossSkill(enemy,dt);
   if(enemy.eventVariant==='dreadnought'&&typeof window.updateCrashDreadnoughtSkill==='function')return window.updateCrashDreadnoughtSkill(enemy,dt);
   if(enemy.type==='mini')return miniSkill(enemy,dt);if(enemy.type!=='boss')return;
-  if(enemy.kind==='apex'){apexBossSkill(enemy,dt);apexPhaseDirector(enemy,dt);}else if(enemy.kind==='void'||enemy.eventKind==='void')voidBossSkill(enemy,dt);else normalBossSkill(enemy,dt);
+  if(enemy.kind==='apex'){
+    const service=apexCombatService(enemy);apexBossSkill(enemy,dt);apexPhaseDirector(enemy,dt);
+    if(typeof service?.antiIdle==='function')service.antiIdle(enemy,dt);else if(service?.suppressAntiIdle!==true&&typeof bossAntiIdleSkill==='function')bossAntiIdleSkill(enemy,dt);
+    return;
+  }
+  if(enemy.kind==='void'||enemy.eventKind==='void')voidBossSkill(enemy,dt);else normalBossSkill(enemy,dt);
   if(typeof bossAntiIdleSkill==='function')bossAntiIdleSkill(enemy,dt);
 }
 function apexPhaseTransition(e,phase){
@@ -28,13 +33,15 @@ function startConstellationSweep(e,phase,d){e.constellationSweep={life:3.0+phase
 function updateConstellationSweep(e,dt){const sweep=e.constellationSweep;if(!sweep)return;if(sweep.life<=0){e.constellationSweep=null;return;}sweep.life-=dt;sweep.warmup-=dt;sweep.cageCd-=dt;if(sweep.warmup>0)return;if(sweep.cageCd>0)return;sweep.cageCd=Math.max(.62,.92-sweep.phase*.055);sweep.cycle++;const arena=state.apexArena||{x:player.x,y:player.y,r:480};constellationCage(e,sweep.damage,arena,sweep.phase,.72);if(sweep.cycle%2===0)bossLater(e,260,()=>{if(!e.dead)constellationNodeVolley(e,sweep.damage*.62,arena,sweep.phase);});}
 function apexSetpieceDirector(e,dt){const form=e.apexForm||e.eliteForm,phase=Math.max(1,e.apexPhase||1),pressure=Math.max(1,e.apexEscalation||1),d=Math.max(8,e.damage*.34);if(form==='chronophage')updateChronoPursuit(e,dt);else if(form==='starforge')updateForgeTidalCore(e,dt);else updateConstellationSweep(e,dt);e.apexSetpieceCd=(e.apexSetpieceCd??5.2)-dt;if(e.apexSetpieceCd>0)return;const active=form==='chronophage'?e.chronoPursuit:form==='starforge'?e.forgeTidalCore:e.constellationSweep;if(active){e.apexSetpieceCd=.7;return;}e.apexSetpieceCd=Math.max(4.2,(10.8-phase*.82)/Math.pow(pressure,.16));if(form==='chronophage')startChronoPursuit(e,phase,d);else if(form==='starforge')startForgeTidalCore(e,phase,d);else{e.constellationSetpieceCycle=(e.constellationSetpieceCycle||0)+1;if(e.constellationSetpieceCycle%2)summonConstellationHeralds(e,phase);else startConstellationSweep(e,phase,d);}}
 function apexPhaseDirector(e,dt){
+  const service=apexCombatService(e);if(typeof service?.director==='function')return service.director(e,dt);
   if(!e||e.dead||e.kind!=='apex'||state.mode!=='playing')return;const phase=Math.max(1,Math.min(4,e.apexPhase||1)),pressure=Math.max(1,e.apexEscalation||1);apexSetpieceDirector(e,dt);
   if((e.apexPhaseEntered||0)<phase){e.apexPhaseEntered=phase;e.apexVariantCd=.75;apexPhaseTransition(e,phase);return;}
   e.apexVariantCd=(e.apexVariantCd??4.0)-dt;if(e.apexVariantCd<=0){e.apexVariantCd=Math.max(1.65,(5.35-phase*.56)/Math.pow(pressure,.18));apexVariantAttack(e,phase);}
 }
 const APEX_MOTION_BUFFER={x:0,y:0};
 function apexMotionVelocity(e){
-  const out=APEX_MOTION_BUFFER,arena=state.apexArena;if(!arena){out.x=0;out.y=0;return out;}const form=e.apexForm||e.eliteForm,dx=arena.x-e.x,dy=arena.y-e.y,centerD=Math.hypot(dx,dy)||1;
+  const out=APEX_MOTION_BUFFER;if(apexCombatService(e)?.motion?.(e,out)===true)return out;
+  const arena=state.apexArena;if(!arena){out.x=0;out.y=0;return out;}const form=e.apexForm||e.eliteForm,dx=arena.x-e.x,dy=arena.y-e.y,centerD=Math.hypot(dx,dy)||1;
   if(form==='starforge'){out.x=0;out.y=0;return out;}
   if(form==='chronophage'){const a=e.phase*.065+(e.id%7)*.31,rr=arena.r*.28,targetX=arena.x+Math.cos(a)*rr,targetY=arena.y+Math.sin(a)*rr*.58,tx=targetX-e.x,ty=targetY-e.y,d=Math.hypot(tx,ty)||1;out.x=tx/d*e.speed*.94;out.y=ty/d*e.speed*.94;return out;}
   const desired=arena.r*.46,radial=(centerD-desired)*1.8,tangent=e.speed*(e.apexPhase>=3?1.48:e.apexPhase===2?1.35:1.08);out.x=dx/centerD*radial+(-dy/centerD)*tangent;out.y=dy/centerD*radial+(dx/centerD)*tangent;return out;
@@ -44,6 +51,7 @@ function keepLiveEnemy(e){return!!(e&&!e.dead&&Number.isFinite(e.x)&&Number.isFi
 function keepLiveEnemyProjectile(p){return!!(p&&p.life>0&&Number.isFinite(p.x)&&Number.isFinite(p.y));}
 function keepLiveTelegraph(t){return!!(validTelegraph(t)&&!t.invalid&&t.life>-.28);}
 function updateEnemies(dt){
+  const encounterService=apexCombatService(state.apexArena?.form||state.pendingApexForm||state.realmTransition?.form);if(encounterService?.beforeEnemies?.(dt)===false)return;
   const gravWells=state.entities.wells,chronoN=weaponCount('chrono'),chronoRadius=145+chronoN*18,threat=1+Math.floor((state.time||0)/60),legacyTimeScale=typeof stackfallEnemyTimeScale==='function'?stackfallEnemyTimeScale():1;
   for(const e of state.entities.enemies){
     if(!e||e.dead)continue;if(!Number.isFinite(e.x)||!Number.isFinite(e.y)||!Number.isFinite(e.speed)){e.dead=true;continue;}if(Number.isFinite(e.apexSummonLife)){e.apexSummonLife-=dt;if(e.apexSummonLife<=0){e.dead=true;shockwave(e.x,e.y,e.color||'#b7c9ff',62,.28,2);continue;}}

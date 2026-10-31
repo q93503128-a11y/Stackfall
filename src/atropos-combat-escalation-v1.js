@@ -100,10 +100,8 @@
     ctx.restore();
   };
 
-  const baseBossAntiIdleEscalation=typeof bossAntiIdleSkill==='function'?bossAntiIdleSkill:null;
-  if(baseBossAntiIdleEscalation){
-    bossAntiIdleSkill=function bossAntiIdleAtroposEscalation(e,dt){
-      if(!isAtropos(e))return baseBossAntiIdleEscalation(e,dt);if(e.atroposPhaseTransition||e.atroposP4TimeStopActive)return;const phase=phaseOf(e);
+  const atroposCombatService=registerApexCombatService(FORM);
+  atroposCombatService.antiIdleUpdate=function bossAntiIdleAtroposEscalation(e,dt){if(e.atroposPhaseTransition||e.atroposP4TimeStopActive)return;const phase=phaseOf(e);
       e.antiIdleSampleCd=(e.antiIdleSampleCd||0)-dt;e.antiIdleCd=(e.antiIdleCd??antiIdleCooldown[phase])-dt;
       if(e.antiIdleSampleCd<=0){e.antiIdleSampleCd=.20;const lx=Number.isFinite(e.antiIdlePlayerX)?e.antiIdlePlayerX:player.x,ly=Number.isFinite(e.antiIdlePlayerY)?e.antiIdlePlayerY:player.y,moved=Math.hypot(player.x-lx,player.y-ly);e.antiIdleStill=moved<7?(e.antiIdleStill||0)+.20:Math.max(0,(e.antiIdleStill||0)-.60);e.antiIdlePlayerX=player.x;e.antiIdlePlayerY=player.y;}
       if(e.antiIdleCd>0)return;if(phase<4&&(e.antiIdleStill||0)<stillThreshold[phase])return;
@@ -111,8 +109,7 @@
       chronophageScar(x,y,72+phase*3,d*1.02,'#79ffe1',phase>=4?.62:.76,base+(phase>=4?.42:0));
       const secondDelay=phase>=4?145:Math.max(150,260-phase*20);bossLater(e,secondDelay,()=>{if(e.dead)return;chronophageScar(player.x,player.y,86+phase*3,d*.62,'#c6fff4',phase>=4?.58:.70,base+(phase>=4?-1.02:.88));});
       if(phase>=4)bossLater(e,410,()=>{if(e.dead||e.atroposP4TimeStopActive)return;const p=historyPoint(e,6);chronophageScar(p.x,p.y,74,d*.46,'#9fffea',.66,base+1.36);});
-    };
-  }
+  };
 
   function ensureAtroposArena(e){
     let arena=state.apexArena;if(!arena||arena.form!==FORM){arena={x:e.x,y:e.y,r:compactDevice()?338:510,form:FORM,createdAt:state.time||0};state.apexArena=arena;}
@@ -202,7 +199,6 @@
     if(baseDrawApexArena)baseDrawApexArena();const e=state.entities.enemies.find(isAtropos);if(!e)return;const arena=ensureAtroposArena(e);drawArenaBoundary(e,arena);drawTimeFields(e);drawClockHand(e,arena);
   };
 
-  const baseApexBossSkillEscalation=typeof apexBossSkill==='function'?apexBossSkill:null;
   function startP4Stop(e,tr){
     if(tr.p4TimeStop)return;tr.duration=3.0;tr.age=0;tr.p4TimeStop={startedAt:performance.now(),durationMs:3000,freezePhase:Number(e.phase)||0};e.clockworkVisualPhase=4;e.atroposP4TimeStopActive=true;e.atroposP4TimeStopDone=false;e.atroposP4FreezePhase=tr.p4TimeStop.freezePhase;e.atroposTimeFields=[];e.atroposClockHand=null;
     if(e.atroposReborn){e.atroposReborn.spaceCutVolley=null;e.atroposReborn.spaceCutChainDelay=0;e.atroposReborn.slash=null;e.atroposReborn.slashCd=Math.max(e.atroposReborn.slashCd||0,1.2);}
@@ -211,11 +207,8 @@
   function syncP4StopBefore(e){
     const tr=e.atroposPhaseTransition;if(!tr||tr.phase!==4)return;if(!tr.p4TimeStop)startP4Stop(e,tr);const stop=tr.p4TimeStop,elapsed=Math.max(0,(performance.now()-stop.startedAt)/1000);tr.duration=3.0;tr.age=Math.min(tr.duration,elapsed);if(elapsed<3){e.atroposP4TimeStopActive=true;state.hitStop=Math.max(state.hitStop,.10);}else{e.atroposP4TimeStopActive=false;e.atroposP4TimeStopDone=true;state.hitStop=0;tr.age=tr.duration;}
   }
-  if(baseApexBossSkillEscalation){
-    apexBossSkill=function apexBossSkillWithAtroposTimeStop(e,dt){
-      if(!isAtropos(e))return baseApexBossSkillEscalation(e,dt);syncP4StopBefore(e);const result=baseApexBossSkillEscalation(e,dt);const tr=e.atroposPhaseTransition;if(tr?.phase===4)syncP4StopBefore(e);else if(e.atroposP4TimeStopActive){e.atroposP4TimeStopActive=false;e.atroposP4TimeStopDone=true;state.hitStop=0;}updateArenaMechanics(e,dt);return result;
-    };
-  }
+  atroposCombatService.escalationBefore=function atroposEscalationBefore(e){syncP4StopBefore(e);};
+  atroposCombatService.escalationAfter=function atroposEscalationAfter(e,dt){const tr=e.atroposPhaseTransition;if(tr?.phase===4)syncP4StopBefore(e);else if(e.atroposP4TimeStopActive){e.atroposP4TimeStopActive=false;e.atroposP4TimeStopDone=true;state.hitStop=0;}updateArenaMechanics(e,dt);};
 
   const baseDrawEliteShapeEscalation=typeof drawEliteShape==='function'?drawEliteShape:null;
   if(baseDrawEliteShapeEscalation){
