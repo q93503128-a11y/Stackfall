@@ -41,14 +41,15 @@ function makeEnemyRoom(kind){
   }
   return true;
 }
-const EXPERIENCE_ANCHORS=[],EXPERIENCE_ANCHOR_D2=[];
+const EXPERIENCE_FORCED=[],EXPERIENCE_NORMAL=[],EXPERIENCE_OUTPUT=[];
+function experienceGemActive(g){return!!(g&&g.active!==false);}
 function experienceGemRadius(value,base=4){return Math.min(13.5,Math.max(base,3.7+Math.log2(1+Math.max(0,Number(value)||0))*1.05));}
-function mergeExperienceGem(x,y,value,baseRadius=4,vx=0,vy=0){
-  const gems=state.entities.gems,amount=Math.max(0,Number(value)||0);if(!amount)return null;
+function mergeExperienceGem(x,y,value,baseRadius=4,vx=0,vy=0,forceCollect=false){
+  const gems=state.entities.gems,amount=Math.max(0,Number(value)||0),forced=forceCollect===true;if(!amount)return null;
   const newPlayerD2=(x-player.x)**2+(y-player.y)**2;
   let anchor=null,anchorIndex=-1,bestSpatial=Infinity,anchorPlayerD2=Infinity;
   for(let i=0;i<gems.length;i++){
-    const g=gems[i];if(!g||g.life<=0)continue;const dx=g.x-x,dy=g.y-y,d2=dx*dx+dy*dy,mergeRadius=42+Math.min(54,(Number(g.r)||4)*4);
+    const g=gems[i];if(!experienceGemActive(g)||(g.forceCollect===true)!==forced)continue;const dx=g.x-x,dy=g.y-y,d2=dx*dx+dy*dy,mergeRadius=42+Math.min(54,(Number(g.r)||4)*4);
     if(d2>mergeRadius*mergeRadius)continue;
     const pd2=(g.x-player.x)**2+(g.y-player.y)**2;
     if(pd2<anchorPlayerD2-1e-6||(Math.abs(pd2-anchorPlayerD2)<1e-6&&d2<bestSpatial)){anchor=g;anchorIndex=i;anchorPlayerD2=pd2;bestSpatial=d2;}
@@ -56,26 +57,40 @@ function mergeExperienceGem(x,y,value,baseRadius=4,vx=0,vy=0){
   if(anchor){
     if(anchorPlayerD2<=newPlayerD2){
       const before=Math.max(0,Number(anchor.value)||0),total=before+amount;
-      anchor.value=total;anchor.compressedValue=(anchor.compressedValue||0)+amount;anchor.r=experienceGemRadius(total,Math.max(baseRadius,Number(anchor.r)||4));anchor.life=Math.max(Number(anchor.life)||0,35);anchor.pulse=(anchor.pulse||0)+.72;
+      anchor.value=total;anchor.compressedValue=(anchor.compressedValue||0)+amount;anchor.r=experienceGemRadius(total,Math.max(baseRadius,Number(anchor.r)||4));anchor.active=true;anchor.forceCollect=forced;anchor.pulse=(anchor.pulse||0)+.72;
       return anchor;
     }
     const inherited=Math.max(0,Number(anchor.value)||0),total=inherited+amount;
     gems.splice(anchorIndex,1);
-    const gem={x,y,vx,vy,r:experienceGemRadius(total,Math.max(baseRadius,Number(anchor.r)||4)),value:total,life:35,pulse:(anchor.pulse||Math.random()*TAU)+.72,compressedValue:(anchor.compressedValue||0)+inherited};
+    const gem={x,y,vx,vy,r:experienceGemRadius(total,Math.max(baseRadius,Number(anchor.r)||4)),value:total,active:true,forceCollect:forced,pulse:(anchor.pulse||Math.random()*TAU)+.72,compressedValue:(anchor.compressedValue||0)+inherited};
     gems.push(gem);return gem;
   }
-  const gem={x,y,vx,vy,r:experienceGemRadius(amount,baseRadius),value:amount,life:35,pulse:Math.random()*TAU,compressedValue:0};gems.push(gem);return gem;
+  const gem={x,y,vx,vy,r:experienceGemRadius(amount,baseRadius),value:amount,active:true,forceCollect:forced,pulse:Math.random()*TAU,compressedValue:0};gems.push(gem);return gem;
+}
+function mergeCompressedExperience(anchor,far){
+  const amount=Math.max(0,Number(far?.value)||0);if(!anchor||!amount)return;
+  anchor.value=(Number(anchor.value)||0)+amount;anchor.compressedValue=(anchor.compressedValue||0)+amount;anchor.r=experienceGemRadius(anchor.value,Math.max(Number(anchor.r)||4,Number(far.r)||4));anchor.active=true;anchor.pulse=(anchor.pulse||0)+.55;
+}
+function compressExperienceGroup(group,keepCount,out){
+  if(!group.length||keepCount<=0)return;
+  group.sort((a,b)=>((a.x-player.x)**2+(a.y-player.y)**2)-((b.x-player.x)**2+(b.y-player.y)**2));
+  keepCount=Math.min(keepCount,group.length);
+  for(let farIndex=keepCount;farIndex<group.length;farIndex++){
+    const far=group[farIndex];let anchor=group[0],best=Infinity;
+    for(let nearIndex=0;nearIndex<keepCount;nearIndex++){const near=group[nearIndex],dx=near.x-far.x,dy=near.y-far.y,d2=dx*dx+dy*dy;if(d2<best){best=d2;anchor=near;}}
+    mergeCompressedExperience(anchor,far);
+  }
+  for(let i=0;i<keepCount;i++)out.push(group[i]);
 }
 function compressExperience(){
-  const gems=state.entities.gems,cap=entityCap('gems');if(!gems||gems.length<=cap)return;if(cap<=0){gems.length=0;return;}
-  const ranked=EXPERIENCE_ANCHORS;ranked.length=0;for(let i=0;i<gems.length;i++){const gem=gems[i];if(gem)ranked.push(gem);}ranked.sort((a,b)=>((a.x-player.x)**2+(a.y-player.y)**2)-((b.x-player.x)**2+(b.y-player.y)**2));
-  const keepCount=Math.min(cap,ranked.length);
-  if(keepCount>0)for(let farIndex=keepCount;farIndex<ranked.length;farIndex++){
-    const far=ranked[farIndex];let anchor=ranked[0],best=Infinity;
-    for(let nearIndex=0;nearIndex<keepCount;nearIndex++){const near=ranked[nearIndex],dx=near.x-far.x,dy=near.y-far.y,d2=dx*dx+dy*dy;if(d2<best){best=d2;anchor=near;}}
-    const amount=Math.max(0,Number(far.value)||0);anchor.value=(Number(anchor.value)||0)+amount;anchor.compressedValue=(anchor.compressedValue||0)+amount;anchor.r=experienceGemRadius(anchor.value,Math.max(Number(anchor.r)||4,Number(far.r)||4));anchor.life=Math.max(Number(anchor.life)||0,Number(far.life)||0,35);anchor.pulse=(anchor.pulse||0)+.55;
-  }
-  gems.length=keepCount;for(let i=0;i<keepCount;i++)gems[i]=ranked[i];ranked.length=0;
+  const gems=state.entities.gems,cap=Math.max(2,entityCap('gems'));if(!gems)return;
+  let liveCount=0;for(const gem of gems)if(experienceGemActive(gem))liveCount++;
+  if(liveCount<=cap&&liveCount===gems.length)return;
+  const forced=EXPERIENCE_FORCED,normal=EXPERIENCE_NORMAL,out=EXPERIENCE_OUTPUT;forced.length=0;normal.length=0;out.length=0;
+  for(const gem of gems){if(!experienceGemActive(gem))continue;(gem.forceCollect===true?forced:normal).push(gem);}
+  const forcedKeep=Math.min(forced.length,normal.length?cap-1:cap),normalBudget=normal.length?cap-forcedKeep:0;
+  compressExperienceGroup(forced,forcedKeep,out);compressExperienceGroup(normal,normalBudget,out);
+  gems.length=out.length;for(let i=0;i<out.length;i++)gems[i]=out[i];forced.length=0;normal.length=0;out.length=0;
 }
 function createEliteTwin(enemy){
   if(!enemy||!ELITE_TWIN_FORMS.has(enemy.eliteForm))return null;
@@ -111,7 +126,7 @@ function spawnBeamEffect(x1,y1,x2,y2,life,color,width){const beams=state.entitie
 function trimBeamEffects(beams,max){if(beams.length<=max)return;const remove=beams.length-max;for(let i=0;i<remove;i++)recycleBeamEffect(beams[i]);beams.splice(0,remove);}
 function clearBeamEffects(beams=state.entities.beams){if(!beams)return;for(let i=0;i<beams.length;i++)recycleBeamEffect(beams[i]);beams.length=0;}
 function releaseRunTransientEffects(){const entities=state.entities||{},particles=entities.particles||[],texts=entities.texts||[],shockwaves=entities.shockwaves||[],beams=entities.beams||[],projectiles=entities.projectiles||[],enemyProjectiles=entities.enemyProjectiles||[];for(let i=0;i<particles.length;i++)recycleParticleObject(particles[i]);for(let i=0;i<texts.length;i++)recycleTextEffect(texts[i]);for(let i=0;i<shockwaves.length;i++)recycleShockwaveEffect(shockwaves[i]);particles.length=0;texts.length=0;shockwaves.length=0;clearBeamEffects(beams);clearEnemyProjectiles(enemyProjectiles);const projectilePool=window.stackfallProjectilePool;if(Array.isArray(projectilePool)){for(let i=0;i<projectiles.length&&projectilePool.length<320;i++){const projectile=projectiles[i];if(!projectile)continue;projectile.hitIds?.clear?.();projectilePool.push(projectile);}}projectiles.length=0;}
-function dealDamage(enemy,amount,opts={}){if(!enemy||enemy.dead)return;const critChance=clamp(.05+stat('crit')*.06,.05,1),crit=opts.canCrit!==false&&Math.random()<critChance,elite=enemy.type==='mini'||enemy.type==='boss';amount*=damageMult()*(elite?1+stat('eliteHunter')*.15:1)*(crit?1.8:1);const hpBefore=enemy.hp;enemy.hp-=amount;const inflicted=Math.max(0,Math.min(hpBefore,amount));if(typeof registerRunDamage==='function')registerRunDamage(inflicted,opts.source);if(elite&&typeof registerStackfallBossChainDamage==='function')registerStackfallBossChainDamage(enemy,inflicted,opts);enemy.hit=.09;const color=crit?COLORS.amber:(opts.color||COLORS.white),stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed(),showNumbers=GAME_SETTINGS.damageNumbers!==false&&(!stressed||crit||elite);if(showNumbers)addText(enemy.x,enemy.y-enemy.r,Math.round(amount),color,crit?18:12);if(crit||elite||(!stressed&&Math.random()<.20))spawnParticle(enemy.x,enemy.y,color,crit?6:elite?2:1,crit?150:85,crit?4:2.2);audio.hit(crit||elite,opts.source||'');if(enemy.hp<=0)killEnemy(enemy,opts);}
+function dealDamage(enemy,amount,opts={}){if(!enemy||enemy.dead)return;const critChance=clamp(.05+stat('crit')*.06,.05,1),crit=opts.canCrit!==false&&Math.random()<critChance,elite=enemy.type==='mini'||enemy.type==='boss';amount*=damageMult()*(elite?1+stat('eliteHunter')*.15:1)*(crit?1.8:1);const hpBefore=enemy.hp;enemy.hp-=amount;const inflicted=Math.max(0,Math.min(hpBefore,amount));if(typeof registerRunDamage==='function')registerRunDamage(inflicted,opts.source);if(elite&&typeof registerStackfallBossChainDamage==='function')registerStackfallBossChainDamage(enemy,inflicted,opts);enemy.hit=.09;const color=crit?COLORS.amber:(opts.color||COLORS.white),stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed(),showNumbers=GAME_SETTINGS.damageNumbers!==false&&(!stressed||crit||elite);if(showNumbers)addText(enemy.x,enemy.y-enemy.r,Math.round(amount),color,crit?18:12);if(crit||elite||(!stressed&&Math.random()<.20))spawnParticle(enemy.x,enemy.y,color,crit?6:elite?2:1,crit?150:85,crit?4:2.2);audio.hit(crit||elite,opts.source||'');const lethal=enemy.hp<=0;if(lethal){if(opts.deferKill===true)enemy.dead=true;else killEnemy(enemy,opts);}return{inflicted,remainingHp:enemy.hp,lethal};}
 function killEnemy(enemy,opts={}){
   if(!enemy||enemy.dead)return;enemy.dead=true;let survivingTwin=null;if(enemy.twinGroup){for(const e of state.entities.enemies){if(e!==enemy&&!e.dead&&e.twinGroup===enemy.twinGroup){survivingTwin=e;break;}}}const lastTwin=!enemy.twinGroup||!survivingTwin;if(enemy.twinGroup&&lastTwin)enemy.noEliteReward=false;
   state.kills++;state.combo++;
@@ -119,10 +134,11 @@ function killEnemy(enemy,opts={}){
   state.comboTimer=2.15*durationMult;state.maxCombo=Math.max(state.maxCombo,state.combo);
   const authoredStageDeath=enemy.kind==='stage-boss'&&(enemy.stageProduction||['stage-01','stage-02'].includes(enemy.eventKind)),isBoss=enemy.type==='boss',isMini=enemy.type==='mini',isApex=enemy.kind==='apex',stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed(),burst=authoredStageDeath?0:isApex?64:isBoss?34:isMini?18:stressed?1:enemy.type==='tank'?7:4;spawnParticle(enemy.x,enemy.y,enemy.color,burst,isApex?380:isBoss?290:isMini?220:130,isApex?9:isBoss?7:isMini?5:3.5);if(!authoredStageDeath&&(isBoss||isMini||!stressed))shockwave(enemy.x,enemy.y,enemy.color,isApex?400:isBoss?260:isMini?160:enemy.type==='tank'?76:44,isApex?1.05:isBoss?.72:isMini?.50:.24,isApex?10:isBoss?6:isMini?4:2);
   if((isBoss||isMini)&&lastTwin){state.camera.shake+=isApex?25:isBoss?15:10;state.hitStop=isApex?.20:isBoss?.11:.07;state.flash=isApex?.32:isBoss?.20:.11;audio.resonance();}else if(!isBoss&&!isMini&&state.combo%40===0){state.hitStop=.018;}
-  const gemCount=isApex?(stressed?10:18):isBoss?(stressed?7:12):isMini?(stressed?4:6):enemy.type==='tank'?2:1;for(let i=0;i<gemCount;i++)mergeExperienceGem(enemy.x+rand(-18,18),enemy.y+rand(-18,18),enemy.xp/gemCount,isApex?8:isBoss?7:isMini?6:4,rand(-75,75),rand(-75,75));compressExperience();
+  const gemCount=isApex?(stressed?10:18):isBoss?(stressed?7:12):isMini?(stressed?4:6):enemy.type==='tank'?2:1;for(let i=0;i<gemCount;i++)mergeExperienceGem(enemy.x+rand(-18,18),enemy.y+rand(-18,18),enemy.xp/gemCount,isApex?8:isBoss?7:isMini?6:4,rand(-75,75),rand(-75,75));compressExperience();if(typeof maybeDropFieldPickup==='function')maybeDropFieldPickup(enemy,opts);
   if(isBoss){if(survivingTwin)state.bossActiveId=survivingTwin.id;else{state.bossActiveId=null;ui.bossBar.classList.add('hidden');if(isApex)state.apexActiveId=null;}}
   if(weaponCount('blade')>=6&&opts.source==='blade'&&state.combo%6===0)areaDamage(enemy.x,enemy.y,130,42,COLORS.cyan,'blade-burst');if(typeof handleAnyEnemyKill==='function')handleAnyEnemyKill(enemy,opts);if((isBoss||isMini)&&lastTwin&&typeof handleEliteDeath==='function')handleEliteDeath(enemy,opts);
   if(enemy.kind==='stage-boss'&&typeof window.handleStageBossDefeated==='function')window.handleStageBossDefeated(enemy);
+  window.stackfallEnemyDirectorV1?.onEnemyKilled?.(enemy,opts);
 }
 function areaDamage(x,y,r,damage,color,source='area',options={}){shockwave(x,y,color,r,.34,4);if(options.shake===true)state.camera.shake+=3;forEachNearbyEnemyCandidate(x,y,r+130,e=>{if(!e.dead&&enemyCircleOverlap(e,x,y,r))dealDamage(e,damage,{color,source});});}
 const STACKFALL_PROJECTILE_DESCRIPTOR_MARK=Symbol('stackfallProjectileDescriptor'),PROJECTILE_SPAWN_DESCRIPTOR_POOL=[],PROJECTILE_SPAWN_DESCRIPTOR_POOL_LIMIT=160;

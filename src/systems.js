@@ -47,17 +47,23 @@ function updateProjectiles(dt){
 function normalizeWell(w){if(!w||!Number.isFinite(w.x)||!Number.isFinite(w.y))return false;w.r=Number.isFinite(w.r)?clamp(w.r,24,320):120;w.life=Number.isFinite(w.life)?w.life:0;w.max=Number.isFinite(w.max)&&w.max>0?w.max:Math.max(.1,w.life);w.strength=Number.isFinite(w.strength)?clamp(w.strength,0,900):0;w.damage=Number.isFinite(w.damage)?Math.max(0,w.damage):0;w.tick=Number.isFinite(w.tick)?w.tick:0;w.color=typeof w.color==='string'?w.color:COLORS.violet;return w.life>0;}
 function updateWells(dt){return updateWellBodies(dt);}
 function updateWellBodies(dt){const wells=state.entities.wells;for(const w of wells){if(!normalizeWell(w)){if(w)w.life=0;continue;}w.life-=dt;w.tick-=dt;if(w.damage>0&&w.tick<=0){w.tick=.3;const hitRadius=w.r*.42;forEachNearbyEnemyCandidate(w.x,w.y,hitRadius+130,e=>{if(!e.dead&&enemyCircleOverlap(e,w.x,w.y,hitRadius))dealDamage(e,w.damage,{color:w.color,source:'well',canCrit:false});});}}compactInPlace(wells,w=>w&&w.life>0);}
-function keepLiveGem(g){return!!(g&&g.life>0);}
+function keepLiveGem(g){return experienceGemActive(g);}
 function updateGems(dt){
-  const range=Math.max(24,Number(magnetRange())||74),range2=range*range,pickupRange2=(player.r+10)**2,magnetStacks=stat('magnet'),gems=state.entities.gems,drag=Math.pow(.04,dt);
+  const range=Math.max(24,Number(magnetRange())||74),range2=range*range,magnetStacks=stat('magnet'),eventMagnet=state.nebulaBoosts?.magnet||0,pullSpeed=1+magnetStacks*.22+eventMagnet*.10,gems=state.entities.gems,drag=Math.pow(.04,dt),pickupRange=player.r+10;
   for(const g of gems){
-    if(!g||!Number.isFinite(g.x)||!Number.isFinite(g.y)){if(g)g.life=0;continue;}
-    g.life=Number.isFinite(g.life)?g.life-dt:0;g.pulse=Number.isFinite(g.pulse)?g.pulse+dt*5:dt*5;g.vx=Number.isFinite(g.vx)?g.vx:0;g.vy=Number.isFinite(g.vy)?g.vy:0;g.r=Number.isFinite(g.r)?clamp(g.r,2,14):4;g.value=Number.isFinite(g.value)?Math.max(0,g.value):0;g.x+=g.vx*dt;g.y+=g.vy*dt;g.vx*=drag;g.vy*=drag;
+    if(!experienceGemActive(g))continue;
+    if(!Number.isFinite(g.x)||!Number.isFinite(g.y)){g.active=false;continue;}
+    g.pulse=Number.isFinite(g.pulse)?g.pulse+dt*5:dt*5;g.vx=Number.isFinite(g.vx)?g.vx:0;g.vy=Number.isFinite(g.vy)?g.vy:0;g.r=Number.isFinite(g.r)?clamp(g.r,2,14):4;g.value=Number.isFinite(g.value)?Math.max(0,g.value):0;
     const dx=player.x-g.x,dy=player.y-g.y,d2=dx*dx+dy*dy;
-    if(d2<range2){const d=Math.sqrt(d2)||1,force=270+(range-d)*(7.5+magnetStacks*.4);g.vx+=dx/d*force*dt;g.vy+=dy/d*force*dt;}
-    if(d2<pickupRange2){g.life=0;gainXp(g.value*xpMult());audio.pickup();spawnParticle(g.x,g.y,COLORS.cyan,3,70,2);}
+    if(g.forceCollect===true){
+      const d=Math.sqrt(d2)||1,targetSpeed=Math.min(8000,900+d*1.6),steer=1-Math.exp(-dt*11);g.vx=lerp(g.vx,dx/d*targetSpeed,steer);g.vy=lerp(g.vy,dy/d*targetSpeed,steer);
+    }else{
+      g.vx*=drag;g.vy*=drag;if(d2<range2){const d=Math.sqrt(d2)||1,force=(270+(range-d)*(7.5+magnetStacks*.55))*pullSpeed;g.vx+=dx/d*force*dt;g.vy+=dy/d*force*dt;}
+    }
+    g.x+=g.vx*dt;g.y+=g.vy*dt;
+    const collectDx=player.x-g.x,collectDy=player.y-g.y;if(collectDx*collectDx+collectDy*collectDy<pickupRange*pickupRange){g.active=false;gainXp(g.value*xpMult());audio.pickup();spawnParticle(g.x,g.y,COLORS.cyan,3,70,2);}
   }
-  compactInPlace(gems,keepLiveGem);
+  compactInPlace(gems,keepLiveGem);compressExperience();
 }
 function tryLevelUp(){if(state.mode!=='playing'||state.choiceLocked||state.xp<state.xpNeed)return false;state.xp-=state.xpNeed;state.level++;state.xpNeed=levelXpRequirement(state.level);openChoices();return true;}
 function gainXp(v){const amount=Number(v);if(!Number.isFinite(amount)||amount<=0)return;state.xp+=amount;tryLevelUp();}
@@ -96,4 +102,4 @@ function updateBoomerangs(dt){
   }
   compactInPlace(curves,keepLiveBoomerang);trimOldest(curves,32);
 }
-function updateSpawning(dt){if(typeof updateApexSystems==='function'&&updateApexSystems(dt))return;if(typeof worldEventBlocksSpawning==='function'&&worldEventBlocksSpawning())return;state.spawnTimer-=dt;let rate;if(state.time<60)rate=1.65-state.time*.006;else if(state.time<300)rate=1.29-(state.time-60)*.0018;else rate=Math.max(.58,.86-(state.time-300)*.0004);if(state.spawnTimer<=0){state.spawnTimer=rate;const count=1+Math.min(compactDevice()?2:3,Math.floor(state.time/300));for(let i=0;i<count;i++)spawnEnemy('normal');}if(typeof updateEncounterDirector==='function')updateEncounterDirector(dt);}
+function updateSpawning(dt){if(typeof updateApexSystems==='function'&&updateApexSystems(dt))return;if(typeof worldEventBlocksSpawning==='function'&&worldEventBlocksSpawning())return;if(window.stackfallEnemyDirectorV1?.updateSpawning?.(dt)===true)return;state.spawnTimer-=dt;const elapsed=Math.max(0,state.time||0),compact=compactDevice(),rate=Math.max(compact?.46:.38,1.58/(1+elapsed/130));if(state.spawnTimer<=0){state.spawnTimer=rate;const count=1+Math.min(compact?2:3,Math.floor(elapsed/120));for(let i=0;i<count;i++)spawnEnemy('normal');}if(typeof updateEncounterDirector==='function')updateEncounterDirector(dt);}

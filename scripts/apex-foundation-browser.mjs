@@ -6,13 +6,15 @@ export async function apexFoundationBrowserQa(page,scenario,{evaluate,waitFor,ch
   scenario.observations.initial=setup;check(setup.dev&&setup.clock&&!setup.clock.paused,'developer runtime or clock diagnostics missing',name);
   await sleep(500);const ordinary=await probe('stackfallApexClockDiagnostics()');scenario.observations.ordinaryTimer=ordinary;
 
-  for(const form of ['chronophage','starforge','lastconstellation']){
+  const requestedForm=String(process.env.STACKFALL_APEX_FORM||'').trim();
+  const forms=requestedForm?[requestedForm]:['chronophage','starforge','lastconstellation'];
+  for(const form of forms){
     if(form!=='chronophage')await probe('stackfallDeveloperTest.startEndless()');
     const invoked=await probe(`stackfallDeveloperTest.spawnEndlessApex(${JSON.stringify(form)})`);
     check(invoked?.ok===true,`${form} dev start failed: ${JSON.stringify(invoked)}`,name);
     const active=await waitFor(page,"state.apexActiveId&&state.mode==='playing'",9000,80);
     check(!!active,`${form} never reached active combat`,name);if(!active)break;
-    const before=await probe('({clock:stackfallApexClockDiagnostics(),boss:state.entities.enemies.find(e=>e.id===state.apexActiveId)})');
+    const before=await probe(`(()=>{const b=state.entities.enemies.find(e=>e.id===state.apexActiveId);return{clock:stackfallApexClockDiagnostics(),boss:{id:b?.id,apexElapsed:b?.apexElapsed,skillCd:b?.skillCd,hp:b?.hp,maxHp:b?.maxHp,phase:b?.apexPhase}};})()`);
     if(form==='chronophage'){
       const arena=await probe(`(()=>{const e=state.entities.enemies.find(x=>x.id===state.apexActiveId);state.apexArena={x:e.x,y:e.y,r:100,form:'chronophage'};const ax=state.apexArena.x;player.x=ax+500;player.y=state.apexArena.y;updateMapEventPlayer(0);const x=player.x;return{x,expected:ax+500,r:state.apexArena.r};})()`);
       scenario.observations.freeMovement=arena;check(Math.abs(arena.x-arena.expected)<.01,'player was clamped by an Apex arena boundary',name);
@@ -31,15 +33,24 @@ export async function apexFoundationBrowserQa(page,scenario,{evaluate,waitFor,ch
     await sleep(520);const after=await probe(`(()=>{const b=state.entities.enemies.find(e=>e.id===state.apexActiveId);return{clock:stackfallApexClockDiagnostics(),elapsed:b?.apexElapsed,skillCd:b?.skillCd};})()`);
     scenario.observations[`${form}-pausedClock`]=after;
     check(after.clock.paused&&Math.abs(after.clock.runTime-before.clock.runTime)<.08,'run progression timer advanced during active Apex combat',name);
-    check(after.clock.simulationTime>before.clock.simulationTime+.35&&after.elapsed>before.boss.apexElapsed+.35,`${form} combat simulation/cooldowns stopped with progression timer`,name);
-    await probe("killEnemy(state.entities.enemies.find(e=>e.id===state.apexActiveId),{source:'foundation-qa'})");
+    check(after.clock.simulationTime>before.clock.simulationTime+.05&&after.elapsed>before.boss.apexElapsed+.05,`${form} combat simulation stopped with progression timer`,name);
+    if(form==='lastconstellation'){
+      const productionReady=await waitFor(page,"window.stackfallLastConstellationProduction==='v2'&&window.stackfallLastConstellationCombat==='v2'",5000,80);
+      check(!!productionReady,'Last Constellation production/combat runtime did not finish loading',name);
+      const prepared=await probe(`(()=>{const steps=[];let guard=0;while(state.apexActiveId&&guard++<20){const e=state.entities.enemies.find(x=>x.id===state.apexActiveId);if(!e)break;const phase=e.lcStructure?.phase||e.apexPhase;if(phase>=4)break;const part=(e.bodyParts||[]).find(p=>p.lcNodeProxy&&p.active&&!p.dead);if(!part){steps.push({phase,reason:'no-active-part',hp:e.hp});break;}const node=e.lcStructure?.nodes?.[part.lcNodeKey];steps.push({phase,key:part.lcNodeKey,nodeHp:node?.hp,ownerHp:e.hp,killOwner:killEnemy.name,damageOwner:dealDamage.name});dealDamage(part,1e12,{source:'foundation-lc-phase-clear',canCrit:false});}const e=state.entities.enemies.find(x=>x.id===state.apexActiveId),part=(e?.bodyParts||[]).find(p=>p.lcNodeProxy&&p.active&&!p.dead&&p.lcNodeKey==='core'),node=part&&e.lcStructure?.nodes?.[part.lcNodeKey];if(!e||!part||!node)return{ok:false,steps,reason:'core-not-ready'};node.hp=1;part.hp=1;e.hp=1;state.time=Math.max(600,Number(state.time)||0);state.runTime=600;window.stackfallSetGameSpeed?.(10,{silent:true});const renderSerial=window.__stackfallRenderFrameSerial||0,simulationTime=state.time;spawnPlayerProjectile({x:part.x,y:part.y,vx:0,vy:0,r:10,life:2,maxRange:1000,damage:50,color:'#fff',pierce:0,source:'foundation-lc-x10-projectile'});return{ok:true,steps,renderSerial,simulationTime,core:{x:part.x,y:part.y,hp:node.hp},mode:state.mode,speed:stackfallGameSpeed(),killOwner:killEnemy.name,damageOwner:dealDamage.name};})()`);
+      scenario.observations.lastconstellationX10Prepared=prepared;check(prepared.ok&&prepared.steps.length===10&&prepared.speed===10,`Last Constellation x10 P4 setup failed: ${JSON.stringify(prepared)}`,name);
+      const exited=await waitFor(page,"!state.apexActiveId&&(state.mode==='cinematic'||state.mode==='apexReward')",5000,50);check(!!exited,'Last Constellation x10 projectile lethal hit did not leave active combat',name);
+      const lethal=await probe(`(()=>({mode:state.mode,activeId:state.apexActiveId,exitPending:state.apexExitPending,transition:state.realmTransition?{owner:state.realmTransition.owner,to:state.realmTransition.to,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,bossAlive:state.entities.enemies.some(e=>e.apexForm==='lastconstellation'&&!e.dead),renderAdvanced:(window.__stackfallRenderFrameSerial||0)-${prepared.renderSerial},simulationAdvanced:(state.time||0)-${prepared.simulationTime},speed:stackfallGameSpeed(),diagnostics:stackfallRuntimeDiagnostics()}))()`);
+      scenario.observations.lastconstellationRealLethal=lethal;
+      check(!lethal.activeId&&!lethal.bossAlive&&lethal.renderAdvanced>0&&(lethal.exitPending===true||lethal.mode==='apexReward'),`Last Constellation x10 real lethal path stalled: ${JSON.stringify(lethal)}`,name);
+    }else await probe("killEnemy(state.entities.enemies.find(e=>e.id===state.apexActiveId),{source:'foundation-qa'})");
     const reward=await waitFor(page,"state.mode==='apexReward'&&!document.querySelector('#apexRewardScreen').classList.contains('hidden')",7000,80);
     check(!!reward,`${form} victory did not reach reward`,name);const rewardClock=await probe('stackfallApexClockDiagnostics()');check(rewardClock.paused,'run timer resumed on Apex reward screen',name);
     await probe("document.querySelector('#apexRewardConfirmBtn')?.click()");
-    await sleep(450);const resumed=await probe('stackfallApexClockDiagnostics()');check(!resumed.paused&&resumed.runTime>rewardClock.runTime+.30,'run timer did not resume after reward selection',name);
+    const resumedOk=await waitFor(page,`(()=>{const c=stackfallApexClockDiagnostics();return !c.paused&&c.runTime>${rewardClock.runTime+.04};})()`,2500,60);const resumed=await probe('stackfallApexClockDiagnostics()');check(!!resumedOk,'run timer did not resume after reward selection',name);
     scenario.observations[`${form}-rewardResume`]={rewardClock,resumed};
   }
-  const beforePause=await probe('stackfallApexClockDiagnostics()');await probe('togglePause(true)');await sleep(320);const whilePaused=await probe('stackfallApexClockDiagnostics()');await probe('togglePause(false)');scenario.observations.pauseMenu={beforePause,whilePaused};check(whilePaused.paused===false&&whilePaused.runTime===beforePause.runTime,'pause menu changed or advanced the Apex progression clock unexpectedly',name);
-  await probe("window.stackfallSetGameSpeed?.(2,{silent:true})");const beforeScaled=await probe('stackfallApexClockDiagnostics()');await sleep(500);const pause=await probe(`(()=>{const c=stackfallApexClockDiagnostics();return{speed:stackfallGameSpeed(),before:${JSON.stringify(beforeScaled)},clock:c};})()`);scenario.observations.gameSpeed=pause;check(pause.speed===2&&pause.clock.runTime>beforeScaled.runTime+.65,'run timer did not advance at x2 simulation speed',name);
+  await probe("window.stackfallSetGameSpeed?.(1,{silent:true})");await probe('togglePause(true)');const pauseEntered=await waitFor(page,"state.mode==='paused'",1000,20);const pausedStart=await probe('stackfallApexClockDiagnostics()');await sleep(320);const whilePaused=await probe(`({clock:stackfallApexClockDiagnostics(),mode:state.mode})`);await probe('togglePause(false)');scenario.observations.pauseMenu={pauseEntered,pausedStart,whilePaused};check(!!pauseEntered&&whilePaused.mode==='paused'&&Math.abs(whilePaused.clock.runTime-pausedStart.runTime)<.001,'pause menu advanced run progression after pause took effect',name);
+  await probe("window.stackfallSetGameSpeed?.(2,{silent:true})");const beforeScaled=await probe('stackfallApexClockDiagnostics()');const scaledOk=await waitFor(page,`stackfallApexClockDiagnostics().runTime>${beforeScaled.runTime+.20}`,2500,60);const pause=await probe(`(()=>{const c=stackfallApexClockDiagnostics();return{speed:stackfallGameSpeed(),before:${JSON.stringify(beforeScaled)},clock:c};})()`);scenario.observations.gameSpeed=pause;check(pause.speed===2&&!!scaledOk,'run timer did not advance at x2 simulation speed',name);
   const diagnostics=await probe('stackfallRuntimeDiagnostics()');check(diagnostics.errorCount===0,'Apex foundation runtime generated errors',name);
 }

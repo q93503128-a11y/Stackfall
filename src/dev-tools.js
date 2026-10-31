@@ -300,7 +300,7 @@
   renderSlotEditor();updateStatus();window.renderStackfallMetaUi?.();
   window.stackfallDeveloperTest={
     enabled:true,togglePanel:toggleDevPanel,
-    equipOnly,equipAll,assignSlot:assignDevSlot,setSlotLevel:setDevSlotLevel,setSlotAwakening:setDevSlotAwakening,setCoreLevel:setDevCoreLevel,setCoreAwakening:setDevCoreAwakening,setInfiniteCurrency,setInvincible,setLevelUpsDisabled,completeAllStages,startStage,startEndless,jumpStageBoss,giveCores,clearAwakenings,openSpecialReward,
+    equipOnly,equipAll,assignSlot:assignDevSlot,setSlotLevel:setDevSlotLevel,setSlotAwakening:setDevSlotAwakening,setCoreLevel:setDevCoreLevel,setCoreAwakening:setDevCoreAwakening,setInfiniteCurrency,setInvincible,setLevelUpsDisabled,completeAllStages,startStage,startEndless,jumpStageBoss,giveCores,clearAwakenings,openSpecialReward,spawnSuctionMagnet:()=>typeof spawnFieldPickup==='function'?spawnFieldPickup('suctionMagnet',player.x+72,player.y,{source:'dev'}):null,
     snapshot:()=>({run:window.stackfallCurrentRunConfig?.(),weaponSlots:[...(state.weaponSlots||[])],weaponStacks:{...(state.weaponStacks||{})},awakened:{...(state.awakenedWeapons||{})},cores:state.awakeningCores||0,infiniteCurrency:window.stackfallDevInfiniteCurrency===true,invincible:window.stackfallDevInvincible===true,disableLevelUps:window.stackfallDevDisableLevelUps===true,railCycle:player.awRailCycle||0,canonicalVisuals:window.stackfallCanonicalWeaponVisualDiagnostics?.()||null,renderer:window.stackfallRendererInfo?.()||null})
   };
 })();
