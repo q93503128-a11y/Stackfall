@@ -25,6 +25,15 @@ jobs:
             capture {sub(/^          /, ""); print}
           ' .github/workflows/canonical-cleanup-5-validate.yml >/tmp/cleanup5-transform.js
           test -s /tmp/cleanup5-transform.js
+          python3 - <<'PY'
+          path='/tmp/cleanup5-transform.js'
+          text=open(path,encoding='utf-8').read()
+          old=r"if\(isLC\(e\)\{0,1\}\)\{"
+          new=r"if\(isLC\(e\)\)\{"
+          if old not in text:
+              raise SystemExit('expected Last Constellation motion regex typo not found')
+          open(path,'w',encoding='utf-8').write(text.replace(old,new,1))
+          PY
           node /tmp/cleanup5-transform.js
       - name: Check transformed ownership surface
         shell: bash
