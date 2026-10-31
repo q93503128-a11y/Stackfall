@@ -5,10 +5,12 @@ const director=read('src/enemy-director-v1.js');
 const systems=read('src/systems.js');
 const base=read('src/systems-base.js');
 const bosses=read('src/bosses.js');
+const weapons=read('src/weapons.js');
 const render=read('src/render.js');
 const targeting=read('src/targeting-motion-refinement.js');
 const constellation=read('src/last-constellation-production-v1.js');
 const rewards=read('src/reward-refinement.js');
+const allRuntimeSource=fs.readdirSync('src').filter(name=>name.endsWith('.js')).map(name=>read('src/'+name)).join('\n');
 const checks=[];
 const expect=(name,ok)=>checks.push([name,Boolean(ok)]);
 const replaces=(text,name)=>new RegExp(`\\b${name}\\s*=\\s*function\\b`).test(text);
@@ -20,6 +22,10 @@ expect('canonical enemy death dispatch notifies Director explicitly',base.includ
 expect('magnet attraction has one canonical update owner in systems',systems.includes('function updateGems(dt)')&&!replaces(targeting,'updateGems'));
 expect('Last Constellation no longer mutates global killEnemy during node damage',constellation.includes('deferKill:true')&&constellation.includes('killEnemy(owner,options)')&&!constellation.includes('suppressIntermediateConstellationKill')&&!constellation.includes('realKill=killEnemy'));
 expect('Apex reward UI is prepared before the blocking mode is committed',rewards.indexOf('cards.replaceChildren(fragment)')<rewards.indexOf("state.mode='apexReward'")&&rewards.indexOf('confirm.onclick=claim')<rewards.indexOf("state.mode='apexReward'"));
+expect('player damage dispatch has one canonical owner with captured-base interceptor semantics',bosses.includes('const STACKFALL_PLAYER_DAMAGE_INTERCEPTORS=[]')&&bosses.includes('function registerPlayerDamageInterceptor(name,handler)')&&bosses.includes('function hurtPlayerCore(amount,source)')&&bosses.includes('function hurtPlayer(amount,source){return runPlayerDamageInterceptor'));
+expect('player damage feature layers register interceptors instead of replacing hurtPlayer',!allRuntimeSource.includes('hurtPlayer=function')&&allRuntimeSource.includes("registerPlayerDamageInterceptor('dev-invincibility'")&&allRuntimeSource.includes("registerPlayerDamageInterceptor('achievement-hit-tracking'")&&allRuntimeSource.includes("registerPlayerDamageInterceptor('reward-bulwark'")&&allRuntimeSource.includes("registerPlayerDamageInterceptor('awakening-bastion'")&&allRuntimeSource.includes("registerPlayerDamageInterceptor('global-hit-invulnerability'"));
+expect('weapon update dispatch has one canonical owner with captured-base interceptor semantics',weapons.includes('const STACKFALL_WEAPON_UPDATE_INTERCEPTORS=[]')&&weapons.includes('function registerWeaponUpdateInterceptor(name,handler)')&&weapons.includes('function updateWeaponsCore(dt)')&&weapons.includes('function updateWeapons(dt){return runWeaponUpdateInterceptor'));
+expect('weapon update feature layers register interceptors instead of replacing updateWeapons',!allRuntimeSource.includes('updateWeapons=function')&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('reward-traits'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('multiplicity-orbits'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('awakening-first-set'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('awakening-second-set'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('awakening-third-set'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('echo-blade-cooldown'"));
 
 let failures=0;
 for(const[name,ok]of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failures++;}

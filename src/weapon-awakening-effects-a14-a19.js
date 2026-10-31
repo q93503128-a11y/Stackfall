@@ -300,9 +300,8 @@
   };
 
   // Shared updates.
-  const baseUpdateWeapons=updateWeapons;
-  updateWeapons=function awakeningThirdSetWeapons(dt){
-    baseUpdateWeapons(dt);
+  registerWeaponUpdateInterceptor('awakening-third-set',function awakeningThirdSetWeapons(next,dt){
+    next(dt);
     updateLotusFields(dt);
     for(const node of starrailNodes)node.life-=dt;compactInPlace(starrailNodes,node=>node&&node.life>0);
     if(!awake('spiral'))player.awSpiralCycle=0;
@@ -310,7 +309,7 @@
     if(!awake('mine')){starrailNodes.length=0;player.awMineDeployCycle=0;}
     if(!awake('missile'))player.awMissileCycle=0;
     if(!awake('vacuum'))lotusFields.length=0;
-  };
+  });
 
   // Third-set render layer.
   const AW3_RASTER_CACHE=new Map();

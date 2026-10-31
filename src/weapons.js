@@ -282,7 +282,10 @@ function updatePostRosterWeapons(dt){
   const gateN=weaponCount('gate');if(gateN){player.gateCd-=dt;if(player.gateCd<=0){player.gateCd=6.4*hasteMult();deployOrbitalGate(gateN);echoTrigger(()=>deployOrbitalGate(gateN,true));}}else state.entities.gateNetworks.length=0;updateGateNetworks(dt);
 }
 
-function updateWeapons(dt){
+const STACKFALL_WEAPON_UPDATE_INTERCEPTORS=[];
+function registerWeaponUpdateInterceptor(name,handler){if(typeof handler!=='function')return null;const entry={name:String(name||('weapon-update-'+STACKFALL_WEAPON_UPDATE_INTERCEPTORS.length)),handler};STACKFALL_WEAPON_UPDATE_INTERCEPTORS.push(entry);return entry;}
+function runWeaponUpdateInterceptor(index,dt){if(index<0)return updateWeaponsCore(dt);const entry=STACKFALL_WEAPON_UPDATE_INTERCEPTORS[index],next=(nextDt=dt)=>runWeaponUpdateInterceptor(index-1,nextDt);return entry.handler(next,dt);}
+function updateWeaponsCore(dt){
   const bladeN=weaponCount('blade'),prismN=weaponCount('prism'),bladeAwakened=window.stackfallIsWeaponAwakened?.('blade')===true,bladeOrbitSpeed=bladeAwakened?(Number(window.stackfallAwakenedBladeOrbitSpeedMultiplier?.())||1):1;player.angle+=dt*(2.05+bladeN*.12+prismN*.05+(bladeN>=3?.42:0))/hasteMult()*(1+stat('projectileSpeed')*.08)*bladeOrbitSpeed;
   player.coreCd-=dt;if(player.coreCd<=0){player.coreCd=CORE_PULSE_COOLDOWN*hasteMult();const target=nearestWeaponTarget('core');if(target){spawnCoreShot(target);echoTrigger(()=>spawnCoreShot(target,true));}}
   if(bladeN){player.bladeTick-=dt;if(player.bladeTick<=0){player.bladeTick=.13*hasteMult();const baseCount=bladeN>=5?3:bladeN>=2?2:1,count=baseCount+(bladeAwakened?2:0),orbit=orbitRadiusFor('blade'),bladeR=(bladeN>=6?31:bladeN>=3?25:22)*weaponSizeMultiplier();for(const e of state.entities.enemies){if(e.dead)continue;for(let i=0;i<count;i++){const a=player.angle+i*TAU/count,bx=player.x+Math.cos(a)*orbit,by=player.y+Math.sin(a)*orbit;if(enemyCircleOverlap(e,bx,by,bladeR)){dealDamage(e,5+bladeN*1.7,{color:COLORS.cyan,source:'blade'});if(bladeN>=4){const dx=e.x-player.x,dy=e.y-player.y,d=Math.hypot(dx,dy)||1;spawnPlayerProjectile({x:e.x,y:e.y,vx:dx/d*455,vy:dy/d*455,r:7,life:.28,maxRange:155,damage:7+bladeN*1.4,color:COLORS.cyan,pierce:2+(bladeN>=5?1:0),source:'wave'});}break;}}}}}
@@ -301,6 +304,7 @@ function updateWeapons(dt){
   const mirrorN=weaponCount('mirror');if(mirrorN){player.mirrorCd-=dt;if(player.mirrorCd<=0){player.mirrorCd=(5.35-Math.min(1.35,mirrorN*.18))*hasteMult();fireReflector(mirrorN);echoTrigger(()=>fireReflector(mirrorN,true));}}
   updatePostRosterWeapons(dt);
 }
+function updateWeapons(dt){return runWeaponUpdateInterceptor(STACKFALL_WEAPON_UPDATE_INTERCEPTORS.length-1,dt);}
 function echoTrigger(fn){
   const n=stat('echo');if(!n||typeof fn!=='function')return;
   state.echoCycle++;
