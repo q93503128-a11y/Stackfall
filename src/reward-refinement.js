@@ -204,16 +204,16 @@
     if(state.bossTraits.chrono){state.rewardTimers.chrono-=dt;if(state.rewardTimers.chrono<=0){state.rewardTimers.chrono=9;shockwave(player.x,player.y,'#8fffe0',220,.55,4);for(const e of state.entities.enemies)if(!e.dead&&e.kind!=='apex'&&Math.hypot(e.x-player.x,e.y-player.y)<220)e.timeLock=Math.max(e.timeLock||0,e.type==='boss'?.55:1.35);}}
   };
 
-  const rrDeal=dealDamage;let chainGuard=false,bladeGuard=false,augmentBurstGuard=false;
-  dealDamage=function(enemy,amount,opts={}){
-    const wasAlive=enemy&&!enemy.dead,source=opts.source||'',locked=enemy?.timeLock>0,x=enemy?.x||0,y=enemy?.y||0;amount*=1+eclipseDamageBonus();rrDeal(enemy,amount,opts);
+  let chainGuard=false,bladeGuard=false,augmentBurstGuard=false;
+  registerDamageInterceptor('reward-refinement',function rewardRefinementDamage(next,enemy,amount,opts={}){
+    const wasAlive=enemy&&!enemy.dead,source=opts.source||'',locked=enemy?.timeLock>0,x=enemy?.x||0,y=enemy?.y||0;amount*=1+eclipseDamageBonus();next(enemy,amount,opts);
     if(!wasAlive||augmentBurstGuard)return;
     const gameTime=state.time||0;
     if(state.weaponAugments.blade&&source==='blade'&&!bladeGuard&&gameTime>=(player.strongBladeBurstReadyAt||0)){player.strongBladeBurstReadyAt=gameTime+.43;bladeGuard=true;augmentBurstGuard=true;areaDamage(x,y,88*weaponSizeMultiplier(),18+weaponCount('blade')*4.5,COLORS.cyan,'blade-burst');augmentBurstGuard=false;bladeGuard=false;}
-    if(state.weaponAugments.ember&&(source==='ember'||source==='echo-star')&&!chainGuard){const targets=nearestEnemies(x,y,4,new Set([enemy.id])).slice(0,2);chainGuard=true;for(const [i,target]of targets.entries()){rrDeal(target,amount*(i?.30:.42),{color:'#ff9aba',source:'ember-strong-chain',canCrit:false});state.entities.beams.push({x1:x,y1:y,x2:target.x,y2:target.y,life:.17,max:.17,color:'#ff9aba',width:2.1*weaponSizeMultiplier()});}chainGuard=false;}
+    if(state.weaponAugments.ember&&(source==='ember'||source==='echo-star')&&!chainGuard){const targets=nearestEnemies(x,y,4,new Set([enemy.id])).slice(0,2);chainGuard=true;for(const [i,target]of targets.entries()){next(target,amount*(i?.30:.42),{color:'#ff9aba',source:'ember-strong-chain',canCrit:false});state.entities.beams.push({x1:x,y1:y,x2:target.x,y2:target.y,life:.17,max:.17,color:'#ff9aba',width:2.1*weaponSizeMultiplier()});}chainGuard=false;}
     if(state.weaponAugments.arc&&source==='arc-return'){for(let i=-2;i<=2;i++){const target=nearestEnemy(x,y);if(!target)break;const a=Math.atan2(target.y-y,target.x-x)+i*.24;spawnPlayerProjectile({x,y,vx:Math.cos(a)*430,vy:Math.sin(a)*430,r:4.2,life:.82,damage:amount*.31,color:'#c8fff1',pierce:1,source:'arc-strong-shard'});}}
     if(state.weaponAugments.chrono&&locked&&enemy.dead){augmentBurstGuard=true;areaDamage(x,y,118*weaponSizeMultiplier(),24+weaponCount('chrono')*4.2,COLORS.chrono,'chrono-burst');augmentBurstGuard=false;}
-  };
+  });
 
   const rrHurt=hurtPlayer;hurtPlayer=function(amount,source){
     rrHurt(amount,source);if(!state.weaponAugments?.bulwark||state.mode==='gameover')return;

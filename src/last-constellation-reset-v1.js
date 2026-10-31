@@ -33,8 +33,7 @@
     }
     for(const m of state.entities.enemies||[])if(m?.eventKind==='apex-herald')m.dead=true;
   }
-  const baseUpdateEnemies=typeof updateEnemies==='function'?updateEnemies:null;
-  if(baseUpdateEnemies)updateEnemies=function updateEnemiesWithConstellationReset(dt){cleanupLegacyObjects();return baseUpdateEnemies(dt);};
+  registerEnemyUpdateInterceptor('last-constellation-reset',function updateEnemiesWithConstellationReset(next,dt){cleanupLegacyObjects();return next(dt);});
 
   window.stackfallLastConstellationResetDiagnostics=()=>{const e=state.entities.enemies?.find(isLC)||null;return{version:'v1',active:!!e,phase:e?.lcStructure?.phase||e?.apexPhase||null,legacyPatternsSuppressed:true,patternsSuppressed:true,screenSpaceConstellationBackground:false,phaseSource:e?.lcStructure?'node-destruction':'pending-structure'};};
 })();

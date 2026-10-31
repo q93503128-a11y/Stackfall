@@ -19,5 +19,5 @@
     }));
   };
   function leashEnemies(){for(const e of state.entities.enemies){if(e.dead)continue;const dx=e.x-player.x,dy=e.y-player.y,d=Math.hypot(dx,dy)||1,elite=e.type==='boss'||e.type==='mini',limit=elite?1650:1850;if(d<=limit)continue;const a=Math.atan2(dy,dx)+rand(-.13,.13),radius=elite?rand(700,820):rand(820,980);e.x=player.x+Math.cos(a)*radius;e.y=player.y+Math.sin(a)*radius;e.dash=0;e.dashX=0;e.dashY=0;if(elite)shockwave(e.x,e.y,e.color,74,.26,2);}}
-  const baseUpdateEnemies=updateEnemies;updateEnemies=function(dt){leashEnemies();baseUpdateEnemies(dt);};
+  registerEnemyUpdateInterceptor('combat-guidance',function combatGuidanceEnemyUpdate(next,dt){leashEnemies();next(dt);});
 })();

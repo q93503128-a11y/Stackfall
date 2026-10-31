@@ -223,8 +223,7 @@
     c.cometCd-=dt;if(c.cometCd<=0){spawnComets(e,phase);c.cometCd=cfg.cometCd;}updateComets(e,c,dt);updateConnections(e,c,phase,dt);updateBeams(e,c,phase,dt);updatePulses(e,c,phase,dt);updateRicochet(e,c,phase,dt);
   }
 
-  const baseUpdateEnemies=typeof updateEnemies==='function'?updateEnemies:null;
-  if(baseUpdateEnemies)updateEnemies=function updateEnemiesWithLastConstellationCombatV2(dt){const result=baseUpdateEnemies(dt);for(const e of state.entities.enemies||[])if(isLC(e))updateCombat(e,dt);return result;};
+  registerEnemyUpdateInterceptor('last-constellation-combat-v2',function updateEnemiesWithLastConstellationCombatV2(next,dt){const result=next(dt);for(const e of state.entities.enemies||[])if(isLC(e))updateCombat(e,dt);return result;});
 
   // ---- Rendering -----------------------------------------------------------------------------
   function local(e,p){return{x:p.x-e.x,y:p.y-e.y};}

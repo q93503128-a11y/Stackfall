@@ -25,6 +25,15 @@ const atroposPhase=read('src/atropos-phase-production-v1.js');
 const atroposEscalation=read('src/atropos-combat-escalation-v1.js');
 const atroposPolish=read('src/atropos-production-polish-v2.js');
 const constellationReset=read('src/last-constellation-reset-v1.js');
+const constellationHitRouting=read('src/last-constellation-hit-routing-v1.js');
+const constellationPresentation=read('src/last-constellation-presentation-v3.js');
+const constellationCombat=read('src/last-constellation-combat-v2.js');
+const combatGuidance=read('src/combat-guidance-refinement.js');
+const awakeningFirst=read('src/weapon-awakening-effects-a1-a7.js');
+const awakeningSecond=read('src/weapon-awakening-effects-a8-a13.js');
+const communityFeedback=read('src/community-feedback-refinement.js');
+const endgameBalance=read('src/endgame-balance-expansion.js');
+const featurePack=read('src/feature-pack.js');
 const buildFingerprint=read('scripts/build-fingerprint.mjs');
 const buildInfo=read('src/build-info.js');
 const checks=[];
@@ -47,6 +56,12 @@ expect('Apex production layers do not replace canonical skill/director/motion ow
 expect('Chronophage combat stages are explicit service slots',runClock.includes("registerApexCombatService('chronophage')")&&identityCombat.includes("registerApexCombatService('chronophage').identity=updateClockworkIdentity")&&atroposPhase.includes('atroposPhaseService.phaseBefore=')&&atroposPhase.includes('atroposPhaseService.phaseAfter=')&&atroposEscalation.includes('atroposCombatService.escalationBefore=')&&atroposEscalation.includes('atroposCombatService.escalationAfter=')&&atroposPolish.includes('atroposPolishService.polishBefore=')&&atroposPolish.includes('atroposPolishService.polishAfter='));
 expect('Omega and Last Constellation suppress legacy combat through services',omegaProduction.includes('omegaCombatService.skill=')&&omegaCombat.includes('registerApexCombatService(FORM).combat=updateOmegaCombat')&&constellationReset.includes('lastConstellationCombatService.skill=phaseOnly')&&constellation.includes('registerApexCombatService(FORM).motion='));
 expect('Chronophage entry and multipart hit reactions use explicit hooks',bosses.includes('encounterService?.beforeEnemies?.(dt)===false')&&runClock.includes('ATROPOS_COMBAT_SERVICE.beforeEnemies=')&&bossParts.includes('onBodyPartHit?.(target,owner,amount,options)')&&!replaces(runClock,'updateEnemies')&&!replaces(runClock,'dealDamage'));
+const damageInterceptorFiles=[bossParts,constellation,constellationHitRouting,rewards,awakeningFirst,awakeningSecond,communityFeedback,endgameBalance,featurePack];
+expect('damage dispatch has one canonical owner with captured-base interceptor semantics',base.includes('function registerDamageInterceptor(id,handler)')&&base.includes('function applyDamageCore(enemy,amount,opts={})')&&base.includes('runDamageInterceptor(index-1')&&base.includes('entry.handler(next,enemy,amount,opts)')&&base.includes('function dealDamage(enemy,amount,opts={})'));
+expect('damage feature layers register interceptors instead of replacing dealDamage',!damageInterceptorFiles.some(text=>replaces(text,'dealDamage'))&&bossParts.includes("registerDamageInterceptor('boss-body-parts'")&&constellation.includes("registerDamageInterceptor('last-constellation-production'")&&constellationHitRouting.includes("registerDamageInterceptor('last-constellation-hit-routing'")&&rewards.includes("registerDamageInterceptor('reward-refinement'")&&awakeningFirst.includes("registerDamageInterceptor('awakening-first-set'")&&awakeningSecond.includes("registerDamageInterceptor('awakening-second-set'")&&communityFeedback.includes("registerDamageInterceptor('community-feedback'")&&endgameBalance.includes("registerDamageInterceptor('endgame-balance'")&&featurePack.includes("registerDamageInterceptor('feature-pack'"));
+const enemyUpdateInterceptorFiles=[constellation,constellationReset,constellationPresentation,constellationCombat,combatGuidance];
+expect('enemy update dispatch has one canonical owner with captured-base interceptor semantics',bosses.includes('function registerEnemyUpdateInterceptor(id,handler)')&&bosses.includes('function updateEnemiesCore(dt)')&&bosses.includes('runEnemyUpdateInterceptor(index-1')&&bosses.includes('entry.handler(next,dt)')&&bosses.includes('function updateEnemies(dt)'));
+expect('enemy update feature layers register interceptors instead of replacing updateEnemies',!enemyUpdateInterceptorFiles.some(text=>replaces(text,'updateEnemies'))&&constellation.includes("registerEnemyUpdateInterceptor('last-constellation-production'")&&constellationReset.includes("registerEnemyUpdateInterceptor('last-constellation-reset'")&&constellationPresentation.includes("registerEnemyUpdateInterceptor('last-constellation-presentation'")&&constellationCombat.includes("registerEnemyUpdateInterceptor('last-constellation-combat-v2'")&&combatGuidance.includes("registerEnemyUpdateInterceptor('combat-guidance'"));
 
 
 const apexStaticOrder=[
