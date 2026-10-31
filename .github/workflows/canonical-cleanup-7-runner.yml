@@ -61,6 +61,16 @@ jobs:
           node --check src/player-hit-invulnerability-v2.js
           node --check src/combat-balance-refinement.js
           node scripts/runtime-ownership-contract.mjs
+      - name: Diagnose projectile dependency and script order
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '=== buildCurveProjectile refs ==='
+          grep -REn --include='*.js' 'buildCurveProjectile' src || true
+          echo '=== spawnCoreShot assignments ==='
+          grep -REn --include='*.js' '\bspawnCoreShot\s*=\s*function\b' src || true
+          echo '=== script order for related files ==='
+          grep -nE 'weapons\.js|feature-pack\.js|canonical-weapon-visuals\.js|combat-guidance-refinement\.js|weapon-awakening' index.html || true
       - name: Validate full source and write build fingerprint
         run: node scripts/build-fingerprint.mjs
       - name: Start local server
