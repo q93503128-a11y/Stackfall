@@ -74,6 +74,17 @@ legacy=replaceUniqueLine(legacy,"expect('Endless event cadence covers eight vari
 legacy=replaceUniqueLine(legacy,"expect('five added Endless events have distinct playable mechanics",`expect('discarded Endless event mechanics stay out of the active runtime',!['startDistress','updateMeteor','startPredator','updateRelay','startStorm'].some(name=>mapEvents.includes('function '+name))&&mapEvents.includes("EVENT_CLOCK_KEYS=Object.freeze(['vault','crash','void'])"));`,'legacy discarded event mechanics');
 write('scripts/legacy-chat-requirements-contract.mjs',legacy);
 
+let awakening=read('scripts/awakening-runtime-checks.mjs');
+const oldStageAudit="  const stages=[],activeStages=[...(window.STACKFALL_ACTIVE_STAGE_RUNTIMES||['stage-01'])];\n  check(activeStages.length>0,'active Stage runtime list is empty');\n  for(const theme of activeStages){";
+const newStageAudit="  const stages=[],activeStages=[...(window.STACKFALL_ACTIVE_STAGE_RUNTIMES||[])];\n  if(activeStages.length===0){\n    check(window.STACKFALL_STAGE_MODE_ENABLED===false&&window.stackfallHasStageRuntime?.()===false,'sealed Stage runtime state is inconsistent');\n  }\n  for(const theme of activeStages){";
+expect(awakening.includes(oldStageAudit),'awakening Stage assertion block missing');awakening=awakening.replace(oldStageAudit,newStageAudit);write('scripts/awakening-runtime-checks.mjs',awakening);
+
+let apexBrowser=read('scripts/apex-foundation-browser.mjs');
+const multipartNeedle="      const partFixture=await probe(`(()=>{const result=stackfallDeveloperTest.defineMultipartFixture";
+expect(apexBrowser.includes(multipartNeedle),'Apex multipart fixture start missing');apexBrowser=apexBrowser.replace(multipartNeedle,"      await probe(\"state.mode='paused'\");\n      const partFixture=await probe(`(()=>{const result=stackfallDeveloperTest.defineMultipartFixture");
+const screenshotNeedle="      await capture(page,join(screenshotDir,'apex-foundation-debug-parts.png')).then(path=>scenario.screenshots.push(path));";
+expect(apexBrowser.includes(screenshotNeedle),'Apex multipart fixture end missing');apexBrowser=apexBrowser.replace(screenshotNeedle,"      await probe(\"state.mode='playing'\");");write('scripts/apex-foundation-browser.mjs',apexBrowser);
+
 let contract=read('scripts/runtime-ownership-contract.mjs');
 if(!contract.includes("const weapons=read('src/weapons.js');")){
   const readAnchor="const bosses=read('src/bosses.js');";expect(contract.includes(readAnchor),'contract read anchor missing');contract=contract.replace(readAnchor,readAnchor+"\nconst weapons=read('src/weapons.js');");
@@ -89,6 +100,6 @@ expect('weapon update dispatch has one canonical owner with captured-base interc
 expect('weapon update feature layers register interceptors instead of replacing updateWeapons',!allRuntimeSource.includes('updateWeapons=function')&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('reward-traits'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('multiplicity-orbits'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('awakening-first-set'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('awakening-second-set'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('awakening-third-set'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('echo-blade-cooldown'"));`;
 contract=contract.replace(insertAfter,insertAfter+extra);write('scripts/runtime-ownership-contract.mjs',contract);
 
-const changed=['src/bosses.js','src/weapons.js','src/map-event-expansion.js',...new Set([...hurtWrappers.map(x=>x.path),...weaponWrappers.map(x=>x.path)]),'scripts/runtime-ownership-contract.mjs','scripts/legacy-chat-requirements-contract.mjs'];
+const changed=['src/bosses.js','src/weapons.js','src/map-event-expansion.js',...new Set([...hurtWrappers.map(x=>x.path),...weaponWrappers.map(x=>x.path)]),'scripts/runtime-ownership-contract.mjs','scripts/legacy-chat-requirements-contract.mjs','scripts/awakening-runtime-checks.mjs','scripts/apex-foundation-browser.mjs'];
 for(const path of changed.filter(path=>path.endsWith('.js'))){const text=read(path);expect(!/\bhurtPlayer\s*=\s*function\b/.test(text),`${path}: hurtPlayer replacement remains`);expect(!/\bupdateWeapons\s*=\s*function\b/.test(text),`${path}: updateWeapons replacement remains`);}
 console.log(JSON.stringify({changed},null,2));
