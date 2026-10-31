@@ -58,14 +58,22 @@ jobs:
           if qa_file is None:
               raise SystemExit('field-pickup browser QA source not found')
           t=qa_file.read_text()
+          # The pickup must still use normal gainXp(), but the QA must not let that
+          # normal path open a level-up choice and consume the observed XP counter.
+          if 'api.setLevelUpsDisabled(true);' not in t:
+              marker='api.startEndless();'
+              pos=t.find(marker)
+              if pos < 0:
+                  raise SystemExit('field-pickup startEndless marker not found')
+              insert_at=pos+len(marker)
+              t=t[:insert_at]+'api.setLevelUpsDisabled(true);'+t[insert_at:]
           if 'state.xpNeed=1e9' not in t:
               failure_pos=t.index(failure)
               marker='state.xp=0;'
               setup_pos=t.rfind(marker,0,failure_pos)
-              if setup_pos < 0:
-                  raise SystemExit('field-pickup XP setup marker not found')
-              insert_at=setup_pos+len(marker)
-              t=t[:insert_at]+'state.xpNeed=1e9;'+t[insert_at:]
+              if setup_pos >= 0:
+                  insert_at=setup_pos+len(marker)
+                  t=t[:insert_at]+'state.xpNeed=1e9;'+t[insert_at:]
           qa_file.write_text(t)
           print('Normalized pickup QA:',qa_file)
           PY
