@@ -379,10 +379,8 @@
   const baseUpdateEffects=updateEffects;
   updateEffects=function awakeningThirdFxUpdate(dt){baseUpdateEffects(dt);for(const e of fx)e.life-=dt;compactInPlace(fx,keepThirdFx);};
 
-  const baseReset=resetGame;
-  resetGame=function awakeningThirdSetReset(){resetThirdAwakeningState();const result=baseReset();resetThirdAwakeningState();return result;};
-  const baseMenu=showMainMenu;
-  showMainMenu=function awakeningThirdSetMenu(){resetThirdAwakeningState();return baseMenu();};
+  registerResetGameInterceptor('weapon-awakening-effects-a14-a19.js:awakeningThirdSetReset',function awakeningThirdSetReset(next,...args){resetThirdAwakeningState();const result=next();resetThirdAwakeningState();return result;});
+  registerShowMainMenuInterceptor('weapon-awakening-effects-a14-a19.js:awakeningThirdSetMenu',function awakeningThirdSetMenu(next,...args){resetThirdAwakeningState();return next();});
 
   window.stackfallAwakeningThirdSetDebug=()=>({
     spiralCycle:player.awSpiralCycle||0,mirrorFaces:ensureMirrorFaces().filter(v=>v!==null).length,lotusFields:lotusFields.length,

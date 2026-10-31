@@ -330,8 +330,8 @@
   const baseDrawAlliedEffects=drawAlliedEffects;
   drawAlliedEffects=function awakeningFirstSetEffects(){baseDrawAlliedEffects();drawAwakeningFx();};
 
-  const baseReset=resetGame;resetGame=function awakeningFirstSetReset(){resetAwakeningCombatState();const result=baseReset();resetAwakeningCombatState();return result;};
-  const baseMenu=showMainMenu;showMainMenu=function awakeningFirstSetMenu(){resetAwakeningCombatState();return baseMenu();};
+  registerResetGameInterceptor('weapon-awakening-effects-a1-a7.js:awakeningFirstSetReset',function awakeningFirstSetReset(next,...args){resetAwakeningCombatState();const result=next();resetAwakeningCombatState();return result;});
+  registerShowMainMenuInterceptor('weapon-awakening-effects-a1-a7.js:awakeningFirstSetMenu',function awakeningFirstSetMenu(next,...args){resetAwakeningCombatState();return next();});
 
   window.stackfallAwakeningFirstSetDebug=()=>({
     bladeOrbitSpeed:bladeOrbitSpeedMultiplier(),bladeNativeCount:awake('blade')?5:(weaponCount('blade')>=5?3:weaponCount('blade')>=2?2:1),

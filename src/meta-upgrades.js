@@ -35,13 +35,12 @@
   magnetRange=function metaUpgradeMagnetRange(){return baseMagnetRange()+valueAt(byId('magnet'));};
   const baseDamageReduction=damageReduction;
   damageReduction=function metaUpgradeDamageReduction(){return Math.min(.82,baseDamageReduction()+valueAt(byId('armor'))*.01);};
-  const baseResetGame=resetGame;
-  resetGame=function metaUpgradeResetGame(){
-    baseResetGame();state.runCurrencyEarned={stardust:0,coreShard:0};
+  registerResetGameInterceptor('meta-upgrades.js:metaUpgradeResetGame',function metaUpgradeResetGame(next,...args){
+    next();state.runCurrencyEarned={stardust:0,coreShard:0};
     const hpBonus=1+valueAt(byId('vitality'))*.01;
     if(hpBonus>1){player.maxHp=Math.max(1,Math.round(player.maxHp*hpBonus));player.hp=player.maxHp;updateHUD?.();}
     if(window.stackfallIsFeatureUnlocked?.('start-level-3')===true)window.stackfallBeginStartLevelBonus?.(3);
-  };
+  });
 
   function runStardustReward(){
     const raw=Math.floor(Math.max(0,state.time||0)/12)+Math.floor(Math.max(0,state.kills||0)*.55);
@@ -51,16 +50,15 @@
     const granted=window.stackfallGrantCurrency?.(key,amount)||0;if(!granted)return 0;
     state.runCurrencyEarned=state.runCurrencyEarned||{stardust:0,coreShard:0};state.runCurrencyEarned[key]=(state.runCurrencyEarned[key]||0)+granted;return granted;
   }
-  const baseEndGame=endGame;
-  endGame=function metaRewardEndGame(){
+  registerEndGameInterceptor('meta-upgrades.js:metaRewardEndGame',function metaRewardEndGame(next,...args){
     if(state.mode==='gameover')return;
     const reward=runStardustReward(),kills=state.kills||0;
     if(reward>0)grantRunCurrency('stardust',reward);
     window.stackfallRecordRun?.(kills);
     state.lastMetaReward={...(state.runCurrencyEarned||{stardust:reward,coreShard:0})};
-    baseEndGame();
+    next();
     renderResultReward();
-  };
+  });
 
   const baseKillEnemy=killEnemy;
   killEnemy=function metaRewardKillEnemy(enemy,opts={}){
@@ -240,8 +238,7 @@
   function startCoreAnimation(){if(animationFrame)return;animationFrame=requestAnimationFrame(animateCore);}
   function stopCoreAnimation(){if(animationFrame)cancelAnimationFrame(animationFrame);animationFrame=0;}
 
-  const baseShowMainMenu=showMainMenu;
-  showMainMenu=function metaAwareMainMenu(){baseShowMainMenu();close();closeProfile(false);renderProfile();};
+  registerShowMainMenuInterceptor('meta-upgrades.js:metaAwareMainMenu',function metaAwareMainMenu(next,...args){next();close();closeProfile(false);renderProfile();});
   const baseApplyLanguage=applyLanguage;
   applyLanguage=function metaAwareLanguage(){baseApplyLanguage();renderUpgradeUi();};
 

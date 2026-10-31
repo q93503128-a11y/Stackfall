@@ -5,9 +5,9 @@
   const multishotStacks=()=>Math.min(2,Math.max(0,Number(stat('multiplicity'))||0));
   const clampScale=(n,table)=>table[Math.max(0,Math.min(table.length-1,n))]??1;
   function resetCommunityRunState(){player.communityCoreRicochetCycle=0;}
-  const previousResetGame=resetGame;resetGame=function communityResetGame(){const result=previousResetGame();resetCommunityRunState();return result;};
-  const previousShowMainMenu=showMainMenu;showMainMenu=function communityShowMainMenu(){const result=previousShowMainMenu();resetCommunityRunState();return result;};
-  const previousEndGame=endGame;endGame=function communityEndGame(){const result=previousEndGame();resetCommunityRunState();return result;};
+  registerResetGameInterceptor('community-feedback-refinement.js:communityResetGame',function communityResetGame(next,...args){const result=next();resetCommunityRunState();return result;});
+  registerShowMainMenuInterceptor('community-feedback-refinement.js:communityShowMainMenu',function communityShowMainMenu(next,...args){const result=next();resetCommunityRunState();return result;});
+  registerEndGameInterceptor('community-feedback-refinement.js:communityEndGame',function communityEndGame(next,...args){const result=next();resetCommunityRunState();return result;});
 
   const sourceFamily=source=>{
     const s=String(source||'');

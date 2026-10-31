@@ -122,9 +122,9 @@
   registerShieldCapacitySource('trait-aegis',()=>state.bossTraits?.aegis?AEGIS_SHIELD_PROFILE.cap:0);
   registerShieldCapacitySource('augment-bulwark',()=>state.weaponAugments?.bulwark?bulwarkAugmentShieldProfile(weaponCount('bulwark')).cap:0);
   registerShieldCapacitySource('augment-mirror',()=>state.weaponAugments?.mirror?mirrorAugmentShieldProfile(weaponCount('mirror')).cap:0);
-  const rrReset=resetGame;resetGame=function(){rrReset();state.bossTraits={};state.weaponAugments={};state.rewardQueue=[];state.rewardTimers={stellar:6,aegis:8,chrono:7};state.rewardKills=0;rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;player.reflectBarrierRechargeReadyAt=0;rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');};
-  const rrShowMenu=showMainMenu;showMainMenu=function(){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;player.reflectBarrierRechargeReadyAt=0;return rrShowMenu();};
-  const rrEnd=endGame;endGame=function(){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];return rrEnd();};
+  registerResetGameInterceptor('reward-refinement.js:resetGameInterceptor',function resetGameInterceptor(next,...args){next();state.bossTraits={};state.weaponAugments={};state.rewardQueue=[];state.rewardTimers={stellar:6,aegis:8,chrono:7};state.rewardKills=0;rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;player.reflectBarrierRechargeReadyAt=0;rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');});
+  registerShowMainMenuInterceptor('reward-refinement.js:showMainMenuInterceptor',function showMainMenuInterceptor(next,...args){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;player.reflectBarrierRechargeReadyAt=0;return next();});
+  registerEndGameInterceptor('reward-refinement.js:endGameInterceptor',function endGameInterceptor(next,...args){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];return next();});
 
   function rewardOptionPool(){
     const pool=[];for(const [key,d]of Object.entries(traitDefs))if(!state.bossTraits[key])pool.push({kind:'trait',key,...d});

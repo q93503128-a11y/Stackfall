@@ -407,10 +407,8 @@
   const baseUpdateEffects=updateEffects;
   updateEffects=function awakeningSecondFxUpdate(dt){baseUpdateEffects(dt);for(const e of fx)e.life-=dt;compactInPlace(fx,keepSecondFx);};
 
-  const baseReset=resetGame;
-  resetGame=function awakeningSecondSetReset(){resetSecondAwakeningState();const result=baseReset();resetSecondAwakeningState();return result;};
-  const baseMenu=showMainMenu;
-  showMainMenu=function awakeningSecondSetMenu(){resetSecondAwakeningState();return baseMenu();};
+  registerResetGameInterceptor('weapon-awakening-effects-a8-a13.js:awakeningSecondSetReset',function awakeningSecondSetReset(next,...args){resetSecondAwakeningState();const result=next();resetSecondAwakeningState();return result;});
+  registerShowMainMenuInterceptor('weapon-awakening-effects-a8-a13.js:awakeningSecondSetMenu',function awakeningSecondSetMenu(next,...args){resetSecondAwakeningState();return next();});
 
   window.stackfallAwakeningSecondSetDebug=()=>({
     prismTarget:player.awPrismTargetId||null,chronoPhase:player.awChronoPhase||0,ionNodes:ionNodes.length,

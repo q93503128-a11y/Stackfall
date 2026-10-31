@@ -269,8 +269,7 @@
   function findRegularBoss(){return(state.entities?.enemies||[]).find(regularBoss)||null;}
   function ensureBossAttempt(){const boss=findRegularBoss();if(!boss){bossAttempt=null;return null;}if(bossAttempt?.enemy!==boss)bossAttempt={enemy:boss,startedAt:runSeconds(),hit:false};return bossAttempt;}
 
-  const baseResetGame=resetGame;
-  resetGame=function achievementResetGame(){killTimes=[];bossAttempt=null;poll=0;const result=baseResetGame(...arguments);return result;};
+  registerResetGameInterceptor('endless-progression-v2.js:achievementResetGame',function achievementResetGame(next,...args){killTimes=[];bossAttempt=null;poll=0;const result=next(...args);return result;});
   registerPlayerDamageInterceptor('achievement-hit-tracking',function achievementHurtPlayer(next,...args){const attempt=ensureBossAttempt(),before=Number(player.hp)||0,result=next(...args);if(attempt&&(Number(player.hp)||0)<before)attempt.hit=true;return result;});
   const baseKillEnemy=killEnemy;
   killEnemy=function achievementKillEnemy(enemy,opts={}){
@@ -282,11 +281,9 @@
   };
   const baseUpdatePlayer=updatePlayer;
   updatePlayer=function achievementUpdatePlayer(dt){const result=baseUpdatePlayer(dt);if(state.mode!=='playing'||!isEndless())return result;poll-=dt;if(poll>0)return result;poll=.35;ensureBossAttempt();const rows=evaluateAchievements(snapshotRun());if(rows.length){renderEndlessProfile();window.renderStackfallMetaUi?.();}return result;};
-  const baseEndGame=endGame;
-  endGame=function achievementEndGame(){if(state.mode==='gameover')return;const endless=isEndless(),run=snapshotRun(),result=baseEndGame(...arguments);if(endless){captureRunStats(run);const rows=evaluateAchievements(run,{silent:true});renderResultUnlocks(rows);if(rows.length)announceAchievements(rows);saveProgress();renderEndlessProfile();}return result;};
+  registerEndGameInterceptor('endless-progression-v2.js:achievementEndGame',function achievementEndGame(next,...args){if(state.mode==='gameover')return;const endless=isEndless(),run=snapshotRun(),result=next(...args);if(endless){captureRunStats(run);const rows=evaluateAchievements(run,{silent:true});renderResultUnlocks(rows);if(rows.length)announceAchievements(rows);saveProgress();renderEndlessProfile();}return result;});
 
-  const baseShowMainMenu=showMainMenu;
-  showMainMenu=function achievementMainMenu(){const result=baseShowMainMenu(...arguments);applyStageSeal();finalRenderStarterOptions();renderEndlessProfile();return result;};
+  registerShowMainMenuInterceptor('endless-progression-v2.js:achievementMainMenu',function achievementMainMenu(next,...args){const result=next(...args);applyStageSeal();finalRenderStarterOptions();renderEndlessProfile();return result;});
   const baseApplyLanguage=applyLanguage;
   applyLanguage=function achievementLanguage(){const result=baseApplyLanguage(...arguments);applyStageSeal();finalRenderStarterOptions();renderEndlessProfile();window.renderStackfallDifficulty?.();return result;};
   renderStarterOptions=finalRenderStarterOptions;

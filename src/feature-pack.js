@@ -1,9 +1,8 @@
 player.arcCd=player.arcCd||0;
 
-const sf2BaseResetGame=resetGame;
-resetGame=function resetGameWithBasicCore(){
+registerResetGameInterceptor('feature-pack.js:resetGameWithBasicCore',function resetGameWithBasicCore(next,...args){
   resetRuntimeWeaponState();
-  sf2BaseResetGame();
+  next();
   resetRuntimeWeaponState();
   state.weaponStacks.core=1;
   state.entities.curves.length=0;
@@ -14,7 +13,7 @@ resetGame=function resetGameWithBasicCore(){
   renderLoadout();
   updateHUD();
   audio.syncAmbient();
-};
+});
 
 const sf2BaseAddText=addText;
 addText=function addTextWithSetting(...args){
