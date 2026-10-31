@@ -13,7 +13,18 @@ jobs:
         with:
           node-version: '22'
       - name: Apply guarded ownership transform
-        run: node .validation/canonical-cleanup-7-transform.mjs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.validation/canonical-cleanup-7-transform.mjs')
+          s=p.read_text()
+          s=s.replace(r"\`player-damage-${STACKFALL_PLAYER_DAMAGE_INTERCEPTORS.length}\`", "'player-damage-'+STACKFALL_PLAYER_DAMAGE_INTERCEPTORS.length")
+          s=s.replace(r"\`weapon-update-${STACKFALL_WEAPON_UPDATE_INTERCEPTORS.length}\`", "'weapon-update-'+STACKFALL_WEAPON_UPDATE_INTERCEPTORS.length")
+          p.write_text(s)
+          PY
+          node .validation/canonical-cleanup-7-transform.mjs
       - name: Check transformed ownership surface
         shell: bash
         run: |
