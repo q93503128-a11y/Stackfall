@@ -32,7 +32,13 @@ export async function apexFoundationBrowserQa(page,scenario,{evaluate,waitFor,ch
     scenario.observations[`${form}-pausedClock`]=after;
     check(after.clock.paused&&Math.abs(after.clock.runTime-before.clock.runTime)<.08,'run progression timer advanced during active Apex combat',name);
     check(after.clock.simulationTime>before.clock.simulationTime+.35&&after.elapsed>before.boss.apexElapsed+.35,`${form} combat simulation/cooldowns stopped with progression timer`,name);
-    await probe("killEnemy(state.entities.enemies.find(e=>e.id===state.apexActiveId),{source:'foundation-qa'})");
+    if(form==='lastconstellation'){
+      const productionReady=await waitFor(page,"window.stackfallLastConstellationProduction==='v2'&&window.stackfallLastConstellationCombat==='v2'",5000,80);
+      check(!!productionReady,'Last Constellation production/combat runtime did not finish loading',name);
+      const lethal=await probe(`(()=>{const steps=[];let guard=0;while(state.apexActiveId&&guard++<20){const e=state.entities.enemies.find(x=>x.id===state.apexActiveId);if(!e)break;const part=(e.bodyParts||[]).find(p=>p.lcNodeProxy&&p.active&&!p.dead);if(!part){steps.push({phase:e.lcStructure?.phase||e.apexPhase,reason:'no-active-part',hp:e.hp});break;}const node=e.lcStructure?.nodes?.[part.lcNodeKey];steps.push({phase:e.lcStructure?.phase||e.apexPhase,key:part.lcNodeKey,nodeHp:node?.hp,ownerHp:e.hp,killOwner:killEnemy.name,damageOwner:dealDamage.name});dealDamage(part,1e12,{source:'foundation-lc-real-lethal',canCrit:false});}return{steps,mode:state.mode,activeId:state.apexActiveId,exitPending:state.apexExitPending,transition:state.realmTransition?{owner:state.realmTransition.owner,to:state.realmTransition.to,elapsed:state.realmTransition.elapsed,duration:state.realmTransition.duration}:null,bossAlive:state.entities.enemies.some(e=>e.apexForm==='lastconstellation'&&!e.dead),diagnostics:stackfallRuntimeDiagnostics()};})()`);
+      scenario.observations.lastconstellationRealLethal=lethal;
+      check(lethal.steps.length>=11&&!lethal.activeId&&lethal.exitPending===true&&lethal.transition?.owner==='apex-exit',`Last Constellation real lethal path did not start Apex exit: ${JSON.stringify(lethal)}`,name);
+    }else await probe("killEnemy(state.entities.enemies.find(e=>e.id===state.apexActiveId),{source:'foundation-qa'})");
     const reward=await waitFor(page,"state.mode==='apexReward'&&!document.querySelector('#apexRewardScreen').classList.contains('hidden')",7000,80);
     check(!!reward,`${form} victory did not reach reward`,name);const rewardClock=await probe('stackfallApexClockDiagnostics()');check(rewardClock.paused,'run timer resumed on Apex reward screen',name);
     await probe("document.querySelector('#apexRewardConfirmBtn')?.click()");
