@@ -9,6 +9,12 @@ const render=read('src/render.js');
 const targeting=read('src/targeting-motion-refinement.js');
 const constellation=read('src/last-constellation-production-v1.js');
 const rewards=read('src/reward-refinement.js');
+const core=read('src/core.js');
+const bossCatalog=read('src/boss-catalog.js');
+const runClock=read('src/apex-run-clock.js');
+const rewardBalance=read('src/apex-reward-balance-v1.js');
+const starforgeLegacy=read('src/apex-starforge-legacy-v2.js');
+const constellationLegacy=read('src/apex-constellation-legacy-v2.js');
 const index=read('index.html');
 const bossParts=read('src/boss-body-parts.js');
 const constellationReset=read('src/last-constellation-reset-v1.js');
@@ -25,6 +31,10 @@ expect('canonical enemy death dispatch notifies Director explicitly',base.includ
 expect('magnet attraction has one canonical update owner in systems',systems.includes('function updateGems(dt)')&&!replaces(targeting,'updateGems'));
 expect('Last Constellation no longer mutates global killEnemy during node damage',constellation.includes('deferKill:true')&&constellation.includes('killEnemy(owner,options)')&&!constellation.includes('suppressIntermediateConstellationKill')&&!constellation.includes('realKill=killEnemy'));
 expect('Apex reward UI is prepared before the blocking mode is committed',rewards.indexOf('cards.replaceChildren(fragment)')<rewards.indexOf("state.mode='apexReward'")&&rewards.indexOf('confirm.onclick=claim')<rewards.indexOf("state.mode='apexReward'"));
+expect('Apex progression timing is canonical and wrapper-free',core.includes('function progressionTime()')&&core.includes('state.runTime=0')&&bosses.includes('progressionTime()>=(state.nextApexAt||APEX_INTERVAL_SECONDS)')&&!['resetGame','spawnEnemy','updateSpawning','updateMapEvents','updateHUD','endGame','updateApexSystems'].some(name=>replaces(runClock,name))&&!runClock.includes('withProgressionClock'));
+expect('Apex reward lifecycle uses explicit services instead of replacement chains',bossCatalog.includes('stackfallApexRewardBalance?.reset?.()')&&bosses.includes('balance?.applyLegacy')&&rewards.includes('balance?.applyCoreStack')&&rewardBalance.includes('window.stackfallApexRewardBalance=Object.freeze')&&!replaces(rewardBalance,'resetBossSystems')&&!replaces(rewardBalance,'applyApexReward')&&!rewardBalance.includes('Object.defineProperty(player')&&!replaces(starforgeLegacy,'resetBossSystems')&&!replaces(starforgeLegacy,'applyApexReward')&&!starforgeLegacy.includes('window.openApexRewardSelection=function')&&!replaces(constellationLegacy,'resetBossSystems')&&!replaces(constellationLegacy,'applyApexReward')&&!constellationLegacy.includes('window.openApexRewardSelection=function'));
+expect('Apex identity reward extensions are explicit services',starforgeLegacy.includes('window.stackfallStarforgeLegacyV2=Object.freeze')&&constellationLegacy.includes('window.stackfallConstellationLegacyV2=Object.freeze')&&bosses.includes('apexRewardIdentityService(form)?.afterReward?.(form)'));
+
 
 const apexStaticOrder=[
   'src/apex-run-clock.js',

@@ -4,7 +4,7 @@ const catalog=read('src/boss-catalog.js'),core=read('src/core.js'),render=read('
 const checks=[
  ['apex interval is 600 game seconds',catalog.includes('APEX_INTERVAL_SECONDS=600')&&core.includes('nextApexAt:600')&&core.includes('state.nextApexAt=600')],
  ['paused wall clock cannot advance apex',!render.includes('state.apexClock=')&&!catalog.includes('state.apexClock=0')],
- ['apex scheduling uses game time',bosses.includes('createdAt:state.time||0')&&bosses.includes('(state.time||0)>=(state.nextApexAt||APEX_INTERVAL_SECONDS)')&&events.includes('(state.nextApexAt||Infinity)-(state.time||0)')],
+ ['apex scheduling uses run progression time',core.includes('function progressionTime()')&&bosses.includes('createdAt:progressionTime()')&&bosses.includes('progressionTime()>=(state.nextApexAt||APEX_INTERVAL_SECONDS)')&&events.includes('(state.nextApexAt||Infinity)-(progressionTime())')],
  ['pause smoke checks apex invariant',smoke.includes('pausedApexDue')&&smoke.includes('!cooldown.pausedApexDue')],
  ['boss anti idle targeting exists',patterns.includes('function bossAntiIdleSkill')&&bosses.includes('bossAntiIdleSkill(enemy,dt)')],
  ['three distinct apex signatures',['chronophageSignature','starforgeSignature','constellationSignature'].every(name=>patterns.includes(`function ${name}`))],
@@ -30,8 +30,8 @@ const checks=[
  ['overall base difficulty slightly reduced',difficulty.includes('c.hp*=.88*d.enemyHp')&&difficulty.includes('c.damage*=.94*d.enemyDamage')&&difficulty.includes('c.speed*=.98*d.enemySpeed')],
  ['hard late scaling increased progressively',endgame.includes("hardLate=hard?(minutes*.014+Math.pow(minutes,1.08)*.0040):0")&&endgame.includes("hardLate=hard?(minutes*.0065+Math.pow(minutes,1.06)*.0022):0")],
  ['balance audit reports 600',endgame.includes("APEX_INTERVAL_SECONDS==='number'?APEX_INTERVAL_SECONDS:600")]
- ,['Apex progression clock freezes while the combat simulation clock keeps advancing',render.includes('state.time+=dt;if(!isApexProgressionClockPaused())state.runTime')&&runClock.includes("['apex-entry','apex-exit']")&&runClock.includes("['apexReward']")&&runClock.includes('state.apexExitPending')&&runClock.includes('function updateApexAtProgressionTime')]
- ,['Apex progression resumes after reward and reset clears run time',runClock.includes('resetGameWithRunClock')&&runClock.includes('state.runTime=0;return apexClockResetBase()')&&runClock.includes('updateHudWithRunClock')]
+ ,['Apex progression clock freezes while the combat simulation clock keeps advancing',render.includes('state.time+=dt;if(!isApexProgressionClockPaused())state.runTime')&&runClock.includes("['apex-entry','apex-exit']")&&runClock.includes("['apexReward']")&&runClock.includes('state.apexExitPending')&&!runClock.includes('withProgressionClock')]
+ ,['Apex progression resumes after reward and canonical reset clears run time',core.includes('state.time=0;state.runTime=0')&&core.includes('function progressionTime()')&&bosses.includes('progressionTime()>=(state.nextApexAt||APEX_INTERVAL_SECONDS)')]
  ,['multipart boss parts share one owner and one health pool',bodyParts.includes('function defineBossBodyParts')&&bodyParts.includes('function bossPartOwner')&&bodyParts.includes('routeBossPartDamageToSharedPool')&&bodyParts.includes('multipartEnemyCircleOverlap')]
  ,['multipart queries cover extended spatial bounds and active parts only',bodyParts.includes('function nearestBossBodyPart')&&bodyParts.includes('includeMultipartBossBounds')&&bodyParts.includes('if(!enemy||enemy.dead||!enemy.bodyParts?.length')&&bodyParts.includes('handOffInactiveBossPartMissiles')===false&&bodyParts.includes('handoffInactiveBossPartMissiles')]
  ,['Apex debug fixture is dev-only and never draws new production art',bodyParts.includes("if(!window.stackfallDeveloperTest?.enabled)return")&&bodyParts.includes('DEBUG ${part.label}')]

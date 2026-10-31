@@ -66,13 +66,13 @@
   killEnemy=function progressionKill(enemy,opts={}){baseKill(enemy,opts);if(chainEffectGuard||!enemy)return;applyChainMilestones(currentChain(),enemy.x,enemy.y);};
 
   window.updateEncounterDirector=function updateEncounterDirector(dt){
-    if((state.nextApexAt||Infinity)-state.time<38)return;
+    if((state.nextApexAt||Infinity)-progressionTime()<38)return;
     state.encounterTimer=(state.encounterTimer??58)-dt;if(state.encounterTimer>0)return;
     const active=state.entities.enemies.filter(e=>!e.dead&&(e.type==='mini'||e.type==='boss')).length;
     if(active>=4){state.encounterTimer=10;return;}
     const step=(state.encounterStep||0)%3;
     if(step<2)spawnEnemy('mini');else spawnEnemy('boss');
-    state.encounterStep=(step+1)%3;state.encounterTimer=Math.max(38,56-Math.min(18,state.time/240));
+    state.encounterStep=(step+1)%3;state.encounterTimer=Math.max(38,56-Math.min(18,progressionTime()/240));
   };
   function choiceText(c){const weaponLike=c.kind==='weapon'||c.kind==='core';return weaponLike?weaponText(c.key):passiveText(c.key);}
   function normalizeChoice(c){if(!c||!['core','weapon','passive'].includes(c.kind)||!c.key)return null;if(c.kind==='weapon'&&window.stackfallIsWeaponUnlocked&&!window.stackfallIsWeaponUnlocked(c.key))return null;if(c.kind==='passive'&&window.stackfallIsPassiveChoiceUnlocked&&!window.stackfallIsPassiveChoiceUnlocked(c.key))return null;const source=c.kind==='passive'?PASSIVES[c.key]:WEAPONS[c.key];if(!source)return null;if(c.kind==='passive'&&source.eventOnly&&window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')!==true)return null;return{...source,...c,color:c.color||source.color||'#aeeeff',icon:c.icon||source.icon||'✦'};}

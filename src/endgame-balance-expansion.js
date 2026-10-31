@@ -7,8 +7,8 @@
   const multiplicityMax=()=>window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')===true?3:2;
   const multishotStacks=()=>Math.min(multiplicityMax(),passiveStacks('multiplicity'));window.stackfallMultiplicityStacks=multishotStacks;window.stackfallMultiplicityMax=multiplicityMax;
   const repeatedTargets=(primary,count,key)=>{const target=primary||nearestWeaponTarget(key);return Array.from({length:count},()=>target).filter(Boolean);};
-  const lateSeconds=()=>Math.max(0,(state.time||0)-240);
-  const threatLevel=()=>1+Math.floor((state.time||0)/60);
+  const lateSeconds=()=>Math.max(0,progressionTime()-240);
+  const threatLevel=()=>1+Math.floor(progressionTime()/60);
 
   PASSIVES.multiplicity={name:'다중 투영 코어',icon:'✣',color:'#9fe8ff',max:3,eventOnly:true,desc:'일부 장비의 동시 공격 수 +1. 성운 보관소에서는 2중첩, 프로토콜 해금 후 최대 3중첩.'};
   PASSIVE_TEXT.multiplicity={ko:['다중 투영 코어','일부 장비의 동시 공격 수 +1.'],en:['Projection Core','Some equipment gains +1 simultaneous attack.'],ja:['投影コア','一部装備の同時攻撃数 +1。'],'zh-CN':['投影核心','部分装备的同时攻击数 +1。'],es:['Núcleo de Proyección','Algunos equipos obtienen +1 ataque simultáneo.'],fr:['Noyau de Projection','Certains équipements gagnent +1 attaque simultanée.']};

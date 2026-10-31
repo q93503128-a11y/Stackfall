@@ -19,13 +19,7 @@
   window.stackfallApexLegacyMaxStacks=APEX_LEGACY_MAX_STACKS;
 
   state.apexCoreStacks=coreStacks();
-  const resetBossSystemsBeforeApexRewardBalance=resetBossSystems;
-  resetBossSystems=function resetBossSystemsWithApexRewardBalance(){
-    const result=resetBossSystemsBeforeApexRewardBalance(...arguments);
-    state.apexCoreStacks=0;
-    state.apexChronoClockVisual=null;
-    return result;
-  };
+  function resetApexRewardBalance(){state.apexCoreStacks=0;state.apexChronoClockVisual=null;}
 
   // Transcendence Core: multiplicative +10% to scalable core stats.
   // Damage and attack cycle are owned by canonical progression; hard caps remain authoritative.
@@ -79,63 +73,27 @@
     return true;
   }
 
-  // Keep the old all-passives-max fallback, but remove the previous fixed +8% Apex Core HP bonus.
-  // The replacement core stack is applied after the original reward bundle finishes.
-  const openApexRewardSelectionBeforeBalance=window.openApexRewardSelection;
-  if(typeof openApexRewardSelectionBeforeBalance==='function')window.openApexRewardSelection=function openBalancedApexReward(form){
-    const result=openApexRewardSelectionBeforeBalance(form);
-    const cards=document.querySelector('#apexRewardCards'),confirm=document.querySelector('#apexRewardConfirmBtn');
-    if(!cards||!confirm||typeof confirm.onclick!=='function')return result;
-
-    const legacyBefore=legacyStacks(form),legacyAfter=Math.min(APEX_LEGACY_MAX_STACKS,legacyBefore+1),legacyCard=cards.children[0];
-    if(legacyCard?.querySelector('p'))legacyCard.querySelector('p').textContent+=(legacyBefore>=APEX_LEGACY_MAX_STACKS?' · 유산 최대 3/3':` · 유산 ${legacyAfter}/3중첩`);
-    const passiveFallback=String(cards.children[1]?.querySelector('p')?.textContent||'').includes('모든 패시브가 최대치');
-    const coreBefore=coreStacks(),coreAfter=Math.min(APEX_CORE_MAX_STACKS,coreBefore+1),coreCard=cards.children[2];
-    if(coreCard?.querySelector('p'))coreCard.querySelector('p').textContent=coreBefore>=APEX_CORE_MAX_STACKS
+  function corePreview(){
+    const before=coreStacks(),after=Math.min(APEX_CORE_MAX_STACKS,before+1);
+    return before>=APEX_CORE_MAX_STACKS
       ?'핵심 능력치 강화 최대 3/3 · 완전 회복 · 모든 장비 즉시 재점화 · 전장 붕괴파'
-      :`핵심 능력치 ×1.10 (곱연산) · ${coreAfter}/3중첩 · 완전 회복 · 모든 장비 즉시 재점화 · 전장 붕괴파`;
-
-    const originalConfirm=confirm.onclick;
-    confirm.onclick=function claimBalancedApexReward(){
-      if(confirm.disabled||state.mode!=='apexReward')return;
-      const descriptor=Object.getOwnPropertyDescriptor(player,'maxHp');
-      let maxHpValue=Math.max(1,Number(player.maxHp)||1),suppressedLegacyHpBoosts=0;
-      if(descriptor?.configurable!==false&&!descriptor?.get&&!descriptor?.set){
-        Object.defineProperty(player,'maxHp',{configurable:true,enumerable:descriptor?.enumerable!==false,get(){return maxHpValue;},set(raw){
-          const next=Number(raw),legacyBoost=Math.max(maxHpValue+1,Math.round(maxHpValue*1.08));
-          if(Number.isFinite(next)&&next===legacyBoost){suppressedLegacyHpBoosts++;return;}
-          if(Number.isFinite(next))maxHpValue=next;
-        }});
-      }
-      try{originalConfirm();}
-      finally{
-        if(descriptor?.configurable!==false&&!descriptor?.get&&!descriptor?.set)Object.defineProperty(player,'maxHp',{...descriptor,value:maxHpValue});
-      }
-      if(passiveFallback&&suppressedLegacyHpBoosts>0){const before=player.maxHp;player.maxHp=Math.max(before+1,Math.round(before*1.08));}
-      applyCoreStack();
-      player.hp=player.maxHp;
-      renderLoadout?.();updateHUD?.();
-    };
-    return result;
-  };
-
-  // Apex legacies are endgame powers, but each identity caps at three meaningful tiers.
-  applyApexReward=function applyCappedApexReward(form){
+      :`핵심 능력치 ×1.10 (곱연산) · ${after}/3중첩 · 완전 회복 · 모든 장비 즉시 재점화 · 전장 붕괴파`;
+  }
+  function legacyPreview(form,fallback=''){
+    const identity=form==='starforge'?window.stackfallStarforgeLegacyV2:form==='lastconstellation'?window.stackfallConstellationLegacyV2:null;
+    const custom=identity?.rewardPreview?.(form);if(custom)return custom;
+    const before=legacyStacks(form),after=Math.min(APEX_LEGACY_MAX_STACKS,before+1);
+    return `${fallback}${before>=APEX_LEGACY_MAX_STACKS?' · 유산 최대 3/3':` · 유산 ${after}/3중첩`}`;
+  }
+  function applyLegacy(form){
     state.apexBoons=state.apexBoons||{};
-    const stack=Math.min(APEX_LEGACY_MAX_STACKS,legacyStacks(form)+1);
-    state.apexBoons[form]=stack;
-    if(form==='chronophage'){
-      state.apexBoonTimers.chrono=0;state.apexChronoActiveUntil=0;state.apexChronoClockVisual=null;
-    }else if(form==='starforge')state.apexBoonTimers.forge=0;
+    const stack=Math.min(APEX_LEGACY_MAX_STACKS,legacyStacks(form)+1);state.apexBoons[form]=stack;
+    if(form==='chronophage'){state.apexBoonTimers.chrono=0;state.apexChronoActiveUntil=0;state.apexChronoClockVisual=null;}
+    else if(form==='starforge')state.apexBoonTimers.forge=0;
     else{state.apexBoonTimers.constellation=0;state.apexLegacyConstellation=null;}
-    ui.resonanceTitle.textContent=`${bossName(form)} · ${stack}중첩${stack>=APEX_LEGACY_MAX_STACKS?' MAX':''}`;
-    ui.resonanceDesc.textContent=form==='chronophage'
-      ?'시간 탈취: 적과 탄환의 시간을 늦추고 모든 장비를 과가속한다.'
-      :form==='starforge'
-        ?'미니어처 항성: 공전 항성이 추적 광선·방사탄·붕괴 폭발을 반복한다.'
-        :'살아 있는 성좌망: 공격선을 연결해 적을 절단하고 적 탄환을 지운다.';
-    showTimedResonance(4800);renderLoadout();updateHUD();
-  };
+    return stack;
+  }
+  window.stackfallApexRewardBalance=Object.freeze({maxLegacyStacks:APEX_LEGACY_MAX_STACKS,maxCoreStacks:APEX_CORE_MAX_STACKS,reset:resetApexRewardBalance,coreStacks,coreMultiplier,legacyStacks,corePreview,legacyPreview,applyCoreStack,applyLegacy});
 
   function drawChronoClockEffect(stacks,dt){
     const profile=chronoProfile(stacks),stressed=typeof stackfallPerformanceStressed==='function'&&stackfallPerformanceStressed();

@@ -152,44 +152,20 @@
     if(network.phase==='loop'&&network.phaseTimer<=0)startNetwork(stack,profile);
   };
 
-  if(typeof resetBossSystems==='function'){
-    const baseResetBossSystems=resetBossSystems;
-    resetBossSystems=function resetBossSystemsWithConstellationLegacy(){
-      const result=baseResetBossSystems(...arguments);
-      state.apexLegacyConstellation=null;state.apexConstellationSerial=0;
-      return result;
-    };
+  function resetConstellationLegacy(){state.apexLegacyConstellation=null;state.apexConstellationSerial=0;}
+  function applyConstellationRewardIdentity(form){
+    if(form!=='lastconstellation')return null;
+    resetConstellationLegacy();state.apexBoonTimers.constellation=0;
+    return '무명의 천구: 전장에 성좌를 끊임없이 새기고 재배열하며 연결선으로 적을 반복 절단하고 적 탄환을 지운다.';
   }
-
-  if(typeof applyApexReward==='function'){
-    const baseApplyApexReward=applyApexReward;
-    applyApexReward=function applyApexRewardWithSkyLattice(form){
-      const result=baseApplyApexReward(form);
-      if(form==='lastconstellation'){
-        state.apexLegacyConstellation=null;state.apexBoonTimers.constellation=0;
-        if(ui?.resonanceDesc)ui.resonanceDesc.textContent='무명의 천구: 전장에 성좌를 끊임없이 새기고 재배열하며 연결선으로 적을 반복 절단하고 적 탄환을 지운다.';
-      }
-      return result;
-    };
+  function constellationRewardPreview(form){
+    if(form!=='lastconstellation')return null;
+    const before=Math.max(0,Number(state.apexBoons?.lastconstellation)||0),after=Math.min(MAX_STACKS,before+1);
+    return before>=MAX_STACKS
+      ?'무명의 천구: 상시 성좌 생성 → 연결선 일제 절단 → 재배열 반복 → 천구 붕괴 후 즉시 재생성 · 적 탄환 삭제 · 유산 최대 3/3'
+      :`무명의 천구: 상시 성좌 생성 → 연결선 일제 절단 → 재배열 반복 → 천구 붕괴 후 즉시 재생성 · 적 탄환 삭제 · 유산 ${after}/3중첩`;
   }
-
-  if(typeof window.openApexRewardSelection==='function'){
-    const baseOpenApexRewardSelection=window.openApexRewardSelection;
-    window.openApexRewardSelection=function openApexRewardSelectionWithSkyLattice(form){
-      const result=baseOpenApexRewardSelection(form);
-      if(form==='lastconstellation'){
-        const card=document.querySelector('#apexRewardCards')?.children?.[0],desc=card?.querySelector('p');
-        if(desc){
-          const before=Math.max(0,Math.min(MAX_STACKS,Math.floor(Number(state.apexBoons?.lastconstellation)||0)));
-          const after=Math.min(MAX_STACKS,before+1);
-          desc.textContent=before>=MAX_STACKS
-            ?'무명의 천구: 상시 성좌 생성 → 연결선 일제 절단 → 재배열 반복 → 천구 붕괴 후 즉시 재생성 · 적 탄환 삭제 · 유산 최대 3/3'
-            :`무명의 천구: 상시 성좌 생성 → 연결선 일제 절단 → 재배열 반복 → 천구 붕괴 후 즉시 재생성 · 적 탄환 삭제 · 유산 ${after}/3중첩`;
-        }
-      }
-      return result;
-    };
-  }
+  window.stackfallConstellationLegacyV2=Object.freeze({reset:resetConstellationLegacy,afterReward:applyConstellationRewardIdentity,rewardPreview:constellationRewardPreview});
 
   const ledger=document.querySelector('#abilityLedgerScreen');
   if(ledger)ledger.addEventListener('click',event=>{

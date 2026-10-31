@@ -206,46 +206,20 @@
     };
   }
 
-  if(typeof resetBossSystems==='function'){
-    const baseResetBossSystems=resetBossSystems;
-    resetBossSystems=function resetBossSystemsWithForgeCore(){
-      const result=baseResetBossSystems(...arguments);
-      state.apexForgeCoreState=null;
-      clearLegacyStars();
-      return result;
-    };
+  function resetStarforgeLegacy(){state.apexForgeCoreState=null;clearLegacyStars();}
+  function applyStarforgeRewardIdentity(form){
+    if(form!=='starforge')return null;
+    resetStarforgeLegacy();
+    return '동력핵 융합: 항성 동력핵이 플레이어를 과열시키고 주기적으로 지속형 전방위 레이저를 방출한다.';
   }
-
-  if(typeof applyApexReward==='function'){
-    const baseApplyApexReward=applyApexReward;
-    applyApexReward=function applyApexRewardWithForgeCore(form){
-      const result=baseApplyApexReward(form);
-      if(form==='starforge'){
-        state.apexForgeCoreState=null;
-        clearLegacyStars();
-        if(ui?.resonanceDesc)ui.resonanceDesc.textContent='동력핵 융합: 항성 동력핵이 플레이어를 과열시키고 주기적으로 지속형 전방위 레이저를 방출한다.';
-      }
-      return result;
-    };
+  function starforgeRewardPreview(form){
+    if(form!=='starforge')return null;
+    const before=stacks(),after=Math.min(MAX_STACKS,before+1),profile=profileFor(after||1);
+    return before>=MAX_STACKS
+      ?'동력핵 융합: 상시 과열 광휘 · 지속형 전방위 레이저 7연타 · 유산 최대 3/3'
+      :`동력핵 융합: 상시 과열 광휘 · 지속형 전방위 레이저 ${profile.hits}연타 · 유산 ${after}/3중첩`;
   }
-
-  if(typeof window.openApexRewardSelection==='function'){
-    const baseOpenApexRewardSelection=window.openApexRewardSelection;
-    window.openApexRewardSelection=function openApexRewardSelectionWithForgeCore(form){
-      const result=baseOpenApexRewardSelection(form);
-      if(form==='starforge'){
-        const card=document.querySelector('#apexRewardCards')?.children?.[0],desc=card?.querySelector('p');
-        if(desc){
-          const before=Math.max(0,Math.min(MAX_STACKS,Math.floor(Number(state.apexBoons?.starforge)||0)));
-          const after=Math.min(MAX_STACKS,before+1),profile=profileFor(after||1);
-          desc.textContent=before>=MAX_STACKS
-            ?'동력핵 융합: 상시 과열 광휘 · 지속형 전방위 레이저 7연타 · 유산 최대 3/3'
-            :`동력핵 융합: 상시 과열 광휘 · 지속형 전방위 레이저 ${profile.hits}연타 · 유산 ${after}/3중첩`;
-        }
-      }
-      return result;
-    };
-  }
+  window.stackfallStarforgeLegacyV2=Object.freeze({reset:resetStarforgeLegacy,afterReward:applyStarforgeRewardIdentity,rewardPreview:starforgeRewardPreview});
 
   const ledger=document.querySelector('#abilityLedgerScreen');
   if(ledger)ledger.addEventListener('click',event=>{
