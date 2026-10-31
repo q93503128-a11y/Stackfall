@@ -52,7 +52,10 @@
       const named=typeof weaponText==='function'?weaponText(item.key)?.name:WEAPONS?.[item.key]?.name;
       return named||copy().reward;
     }
-    if(item.type==='unlock_feature')return copy().feature;
+    if(item.type==='unlock_feature'){
+      const named=window.stackfallFeatureName?.(item.key)||window.STACKFALL_FEATURE_DEFS?.[item.key]?.[lang()]||window.STACKFALL_FEATURE_DEFS?.[item.key]?.en||window.STACKFALL_FEATURE_DEFS?.[item.key]?.ko;
+      return named||copy().feature;
+    }
     if(item.type==='currency')return`${item.key==='coreShard'?copy().shard:copy().stardust} +${Math.max(1,Math.floor(Number(item.amount)||1)).toLocaleString()}`;
     return copy().reward;
   }
