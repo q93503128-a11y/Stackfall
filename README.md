@@ -319,11 +319,15 @@ node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-r
 
 부하 검사의 p95 `50.5ms`, 50ms 이상 프레임 비율 `8%`, 최대 `100ms` 기준은 급격한 회귀를 막는 상한이며 60FPS 보장 기준이 아닙니다. 결과에는 평균 프레임 시간과 그 값으로 계산한 추정 FPS를 함께 기록합니다.
 
-### Run modes and finite stages
+### Current runtime mode and preserved Stage source
 
-`ENDLESS` remains the default infinite mode with random world events, the full enemy family pool, and the 600-second (10-minute) Apex cadence. Finite stages use their own catalog timelines and do not inherit the Endless encounter director.
+As of **2026-10-31**, production gameplay is **Endless-only**. `src/run-modes.js` keeps `ACTIVE_STAGE_RUNTIMES=[]`, `STACKFALL_STAGE_MODE_ENABLED=false`, `stackfallHasStageRuntime()=>false`, and normalizes runtime selection back to Endless. Endless keeps the full enemy-family mixing rules and the 600-second (10-minute) Apex cadence.
 
-Stage 1 now starts at **5 minutes**, and the campaign rises to **15 minutes at Stage 18**. Fixed incidents and the recurring stage gimmick are compressed with the new operation length rather than being cut off. Reaching the listed time only spawns the final boss; the operation ends only when that boss is defeated.
+Active random world events are exactly **Nebula Vault / 성운 보관소 (`vault`)**, **Crashed Starship / 추락한 우주선 (`crash`)**, and **Void Rift / 공허 균열 (`void`)**. The former field-event experiments `distress / meteor / predator / relay / storm` are retired from active Endless runtime; compatibility cleanup may still recognize those IDs only to discard stale state.
+
+The Stage 1–18 tables and production notes below are **preserved authored source, not a currently playable runtime path**. Their files remain in the repository so the work is not lost, but Stage gameplay must not be described as active until the Stage gate is deliberately reopened and revalidated.
+
+In the preserved authored design, Stage 1 starts at **5 minutes** and the campaign rises to **15 minutes at Stage 18**. Reaching the listed time spawns the final boss; authored Stage completion remains boss-death gated.
 
 | Stage | 작전 | 최종보스 등장 |
 |---|---|---:|
@@ -364,13 +368,15 @@ The **in-combat stage fields** also carry those identities independently of Endl
 
 The galaxy map follows the same identity split. Shardway uses straight route links and angular nodes, Abyssal Bloom uses curved organic branches and petal-like nodes, while Silent Array uses right-angle circuit paths and relay nodes. Background patterns change with the page rather than only recoloring one template.
 
-#### Post-roster weapon expansion
+#### Preserved post-roster Stage unlock plan
 
-Stage 11/13/15/17 now unlock four fully implemented equipment families. Vacuum Bloom is a kill-fed delayed collapse network; Phase Minefield turns the player's movement trail into armed territory; Interstellar Missile Pods use visible left/right side ejection, delayed ignition, curved homing, terminal burn, and a full-damage main MIRV warhead; Orbital Gate installs a stationary world-space gate network at enemy lines or the cast-time player position. The event-only Projection Core / 다중 투영 코어 adds primary attack bodies without recursively multiplying child payloads: extra seeds, mines, main missiles, or gate pulses. MIRV children, phantom mines, forced blooms, and gate-crossfeed copies never multiply themselves.
+The following Stage-clear unlock timing is dormant while Stage runtime is sealed. The equipment implementations remain in source, but these Stage-clear routes are not currently active.
 
-#### Galaxy map
+Stage 11/13/15/17 are authored to unlock four fully implemented equipment families. Vacuum Bloom is a kill-fed delayed collapse network; Phase Minefield turns the player's movement trail into armed territory; Interstellar Missile Pods use visible left/right side ejection, delayed ignition, curved homing, terminal burn, and a full-damage main MIRV warhead; Orbital Gate installs a stationary world-space gate network at enemy lines or the cast-time player position. The event-only Projection Core / 다중 투영 코어 adds primary attack bodies without recursively multiplying child payloads: extra seeds, mines, main missiles, or gate pulses. MIRV children, phantom mines, forced blooms, and gate-crossfeed copies never multiply themselves.
 
-Stages are grouped into constellation pages. Only the active constellation is drawn at once; finishing the final stage of a constellation unlocks access to the next constellation page when that page is added to the catalog. Connections are driven by explicit predecessor links rather than cross-page catalog order.
+#### Galaxy map / Stage preview
+
+The galaxy map currently represents preserved Stage planning/preview data: Stage status is gated to `planned`, and runtime selection does not activate a Stage run. The authored map groups stages into constellation pages. Only the active constellation is drawn at once; finishing the final stage of a constellation unlocks access to the next constellation page when that page is added to the catalog. Connections are driven by explicit predecessor links rather than cross-page catalog order.
 
 The main menu is a mode hub: `GALACTIC OPERATIONS`, `ENDLESS`, and `CORE DEVELOPMENT`. The upper-left local pilot card is now interactive and opens detailed local-save stats: clears, runs, kills, equipment capacity, unlocked weapons, Stage 1 best time, and currencies. Core Development keeps the **same shared player-core renderer used in combat** centered inside an orbital upgrade field with floating nodes and is viewport-contained on normal desktop screens; compact/mobile layouts may scroll. Future skins therefore only need to change the shared player renderer to update both combat and the growth preview. Skins themselves are intentionally deferred. Starter weapon and difficulty selection still live in the shared sortie screen. Galaxy-map stage nodes use luminous stellar points with separate number badges.
 
