@@ -16,6 +16,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Isolate Last Constellation repro
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/apex-foundation-browser.mjs')
+          s=p.read_text()
+          old="for(const form of ['chronophage','starforge','lastconstellation']){"
+          new="for(const form of ['lastconstellation']){"
+          if old not in s:
+              raise SystemExit('expected Apex form loop not found')
+          p.write_text(s.replace(old,new,1))
+          PY
       - name: Start static server
         run: |
           python3 -m http.server 8000 > /tmp/stackfall-http.log 2>&1 &
