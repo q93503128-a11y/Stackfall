@@ -150,7 +150,7 @@
     if(!s.cannon&&!s.fan&&phase<4){s.cannonCd-=dt;if(s.cannonCd<=0){startPlateCannon(e,s);s.cannonCd=CANNON_CD[phase];}}if(!s.wind&&phase>=2){s.windCd-=dt;if(s.windCd<=0){startWind(e,s);s.windCd=WIND_CD[phase];}}if(phase===3&&!s.fan&&!s.cannon){s.fanCd-=dt;if(s.fanCd<=0){startFan(e,s);s.fanCd=FAN_CD[phase];}}if(phase===4&&!s.heat){s.heatCd-=dt;if(s.heatCd<=0){startGlobalHeat(e,s);s.heatCd=HEAT_CD[phase];}}
   }
 
-  const baseApexBossSkill=typeof apexBossSkill==='function'?apexBossSkill:null;if(baseApexBossSkill)apexBossSkill=function omegaProductionCombatSkill(e,dt){const result=baseApexBossSkill(e,dt);if(isOmega(e))updateOmegaCombat(e,dt);return result;};
+  registerApexCombatService(FORM).combat=updateOmegaCombat;
 
   const rockSpriteCache=[];
   function drawRock(g,size,seed){

@@ -42,29 +42,11 @@
     e.forgeTidalCore=null;e.apexSetpieceCd=999;e.apexVariantCd=999;e.signatureCd=999;e.skillCd=999;e.burstCd=999;e.pulseCd=999;e.apexFrenzyCd=999;
   }
 
-  // Disable the old shared Omega pattern grammar. omega-combat-v1 owns the replacement attacks.
-  const baseApexBossSkill=typeof apexBossSkill==='function'?apexBossSkill:null;
-  if(baseApexBossSkill){
-    apexBossSkill=function omegaResetApexBossSkill(e,dt){
-      if(!isOmega(e))return baseApexBossSkill(e,dt);
-      computePhase(e,dt);e.timeLock=0;clearLegacyOmegaState(e);
-    };
-  }
-  const baseApexPhaseDirector=typeof apexPhaseDirector==='function'?apexPhaseDirector:null;
-  if(baseApexPhaseDirector){
-    apexPhaseDirector=function omegaResetPhaseDirector(e,dt){
-      if(!isOmega(e))return baseApexPhaseDirector(e,dt);
-      e.apexPhaseEntered=e.apexPhase||1;clearLegacyOmegaState(e);
-    };
-  }
-  const baseApexVariantAttack=typeof apexVariantAttack==='function'?apexVariantAttack:null;
-  if(baseApexVariantAttack){
-    apexVariantAttack=function omegaResetVariantAttack(e,phase){if(isOmega(e))return;return baseApexVariantAttack(e,phase);};
-  }
-  const baseBossAntiIdleSkill=typeof bossAntiIdleSkill==='function'?bossAntiIdleSkill:null;
-  if(baseBossAntiIdleSkill){
-    bossAntiIdleSkill=function omegaResetAntiIdle(e,dt){if(isOmega(e))return;return baseBossAntiIdleSkill(e,dt);};
-  }
+  // Canonical form dispatch owns Omega combat; this service suppresses the legacy grammar explicitly.
+  const omegaCombatService=registerApexCombatService(FORM);
+  omegaCombatService.skill=function omegaProductionSkill(e,dt){computePhase(e,dt);e.timeLock=0;clearLegacyOmegaState(e);omegaCombatService.combat?.(e,dt);};
+  omegaCombatService.director=function omegaProductionDirector(e){e.apexPhaseEntered=e.apexPhase||1;clearLegacyOmegaState(e);};
+  omegaCombatService.suppressAntiIdle=true;
 
   // Remove the screen-locked hex/ray overlay. Keep only the warm stellar backdrop and stars.
   if(typeof drawForgeApex==='function'){

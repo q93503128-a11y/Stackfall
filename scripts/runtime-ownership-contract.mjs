@@ -17,6 +17,13 @@ const starforgeLegacy=read('src/apex-starforge-legacy-v2.js');
 const constellationLegacy=read('src/apex-constellation-legacy-v2.js');
 const index=read('index.html');
 const bossParts=read('src/boss-body-parts.js');
+const patterns=read('src/boss-patterns.js');
+const identityCombat=read('src/apex-identity-combat-v1.js');
+const omegaProduction=read('src/omega-production-v1.js');
+const omegaCombat=read('src/omega-combat-v1.js');
+const atroposPhase=read('src/atropos-phase-production-v1.js');
+const atroposEscalation=read('src/atropos-combat-escalation-v1.js');
+const atroposPolish=read('src/atropos-production-polish-v2.js');
 const constellationReset=read('src/last-constellation-reset-v1.js');
 const buildFingerprint=read('scripts/build-fingerprint.mjs');
 const buildInfo=read('src/build-info.js');
@@ -34,6 +41,12 @@ expect('Apex reward UI is prepared before the blocking mode is committed',reward
 expect('Apex progression timing is canonical and wrapper-free',core.includes('function progressionTime()')&&core.includes('state.runTime=0')&&bosses.includes('progressionTime()>=(state.nextApexAt||APEX_INTERVAL_SECONDS)')&&!['resetGame','spawnEnemy','updateSpawning','updateMapEvents','updateHUD','endGame','updateApexSystems'].some(name=>replaces(runClock,name))&&!runClock.includes('withProgressionClock'));
 expect('Apex reward lifecycle uses explicit services instead of replacement chains',bossCatalog.includes('stackfallApexRewardBalance?.reset?.()')&&bosses.includes('balance?.applyLegacy')&&rewards.includes('balance?.applyCoreStack')&&rewardBalance.includes('window.stackfallApexRewardBalance=Object.freeze')&&!replaces(rewardBalance,'resetBossSystems')&&!replaces(rewardBalance,'applyApexReward')&&!rewardBalance.includes('Object.defineProperty(player')&&!replaces(starforgeLegacy,'resetBossSystems')&&!replaces(starforgeLegacy,'applyApexReward')&&!starforgeLegacy.includes('window.openApexRewardSelection=function')&&!replaces(constellationLegacy,'resetBossSystems')&&!replaces(constellationLegacy,'applyApexReward')&&!constellationLegacy.includes('window.openApexRewardSelection=function'));
 expect('Apex identity reward extensions are explicit services',starforgeLegacy.includes('window.stackfallStarforgeLegacyV2=Object.freeze')&&constellationLegacy.includes('window.stackfallConstellationLegacyV2=Object.freeze')&&bosses.includes('apexRewardIdentityService(form)?.afterReward?.(form)'));
+expect('Apex combat form dispatch has one canonical owner',patterns.includes('function registerApexCombatService(form,patch=null)')&&patterns.includes('function apexCombatService(target)')&&patterns.includes("if(typeof service?.skill==='function')return service.skill(e,dt)")&&bosses.includes("if(typeof service?.director==='function')return service.director(e,dt)")&&bosses.includes("apexCombatService(e)?.motion?.(e,out)===true"));
+const apexCombatLayerFiles=[runClock,identityCombat,omegaProduction,omegaCombat,atroposPhase,atroposEscalation,atroposPolish,constellationReset,constellation];
+expect('Apex production layers do not replace canonical skill/director/motion owners',!apexCombatLayerFiles.some(text=>replaces(text,'apexBossSkill')||replaces(text,'apexPhaseDirector')||replaces(text,'apexMotionVelocity')));
+expect('Chronophage combat stages are explicit service slots',runClock.includes("registerApexCombatService('chronophage')")&&identityCombat.includes("registerApexCombatService('chronophage').identity=updateClockworkIdentity")&&atroposPhase.includes('atroposPhaseService.phaseBefore=')&&atroposPhase.includes('atroposPhaseService.phaseAfter=')&&atroposEscalation.includes('atroposCombatService.escalationBefore=')&&atroposEscalation.includes('atroposCombatService.escalationAfter=')&&atroposPolish.includes('atroposPolishService.polishBefore=')&&atroposPolish.includes('atroposPolishService.polishAfter='));
+expect('Omega and Last Constellation suppress legacy combat through services',omegaProduction.includes('omegaCombatService.skill=')&&omegaCombat.includes('registerApexCombatService(FORM).combat=updateOmegaCombat')&&constellationReset.includes('lastConstellationCombatService.skill=phaseOnly')&&constellation.includes('registerApexCombatService(FORM).motion='));
+expect('Chronophage entry and multipart hit reactions use explicit hooks',bosses.includes('encounterService?.beforeEnemies?.(dt)===false')&&runClock.includes('ATROPOS_COMBAT_SERVICE.beforeEnemies=')&&bossParts.includes('onBodyPartHit?.(target,owner,amount,options)')&&!replaces(runClock,'updateEnemies')&&!replaces(runClock,'dealDamage'));
 
 
 const apexStaticOrder=[

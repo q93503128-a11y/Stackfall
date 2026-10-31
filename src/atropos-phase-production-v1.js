@@ -5,9 +5,8 @@
   window.stackfallAtroposPhaseProduction='v1';
 
   const FORM='chronophage';
-  const baseApexBossSkillProduction=typeof apexBossSkill==='function'?apexBossSkill:null;
   const baseDrawEliteShapeProduction=typeof drawEliteShape==='function'?drawEliteShape:null;
-  if(!baseApexBossSkillProduction||!baseDrawEliteShapeProduction)return;
+  if(!baseDrawEliteShapeProduction)return;
 
   function isAtropos(e){return!!(e&&!e.dead&&(e.apexForm||e.eliteForm)===FORM);}
   function phaseFromHealth(e){const h=e.hp/Math.max(1,e.maxHp);return h<.25?4:h<.50?3:h<.75?2:1;}
@@ -71,18 +70,10 @@
     updatePhaseTransition(e,dt);
   }
 
-  // Suppress the older lightweight history echo layer. Phase progression here is visual/transition only;
-  // combat mechanics live in atropos-combat-escalation-v1.js.
-  apexBossSkill=function apexBossSkillWithAtroposProduction(e,dt){
-    if(!isAtropos(e))return baseApexBossSkillProduction(e,dt);
-    const desired=phaseFromHealth(e);
-    e.clockworkIdentityPhase=desired;
-    e.clockworkEchoCd=1e9;
-    const result=baseApexBossSkillProduction(e,dt);
-    e.clockworkEchoCd=1e9;
-    updateAtroposProduction(e,dt);
-    return result;
-  };
+  // The canonical Chronophage service owns ordering; this file contributes only phase setup/finalization.
+  const atroposPhaseService=registerApexCombatService(FORM);
+  atroposPhaseService.phaseBefore=function atroposPhaseBefore(e){const desired=phaseFromHealth(e);e.clockworkIdentityPhase=desired;e.clockworkEchoCd=1e9;};
+  atroposPhaseService.phaseAfter=function atroposPhaseAfter(e,dt){e.clockworkEchoCd=1e9;updateAtroposProduction(e,dt);};
 
   function drawPhaseOverlay(e,t){
     const phase=Math.max(1,e.clockworkVisualPhase||e.apexPhase||1),tr=e.atroposPhaseTransition;

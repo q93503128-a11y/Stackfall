@@ -134,33 +134,21 @@ function updateRebornAtropos(e,dt){
   updateAtroposPose(e);
 }
 
-const baseApexBossSkillReborn=apexBossSkill;
-apexBossSkill=function apexBossSkillReborn(e,dt){
-  if((e?.apexForm||e?.eliteForm)==='chronophage')return updateRebornAtropos(e,dt);
-  return baseApexBossSkillReborn(e,dt);
+const ATROPOS_COMBAT_SERVICE=registerApexCombatService('chronophage');
+ATROPOS_COMBAT_SERVICE.skill=function chronophageCombatSkill(e,dt){
+  ATROPOS_COMBAT_SERVICE.polishBefore?.(e,dt);
+  ATROPOS_COMBAT_SERVICE.escalationBefore?.(e,dt);
+  ATROPOS_COMBAT_SERVICE.phaseBefore?.(e,dt);
+  updateRebornAtropos(e,dt);
+  ATROPOS_COMBAT_SERVICE.identity?.(e,dt);
+  ATROPOS_COMBAT_SERVICE.phaseAfter?.(e,dt);
+  ATROPOS_COMBAT_SERVICE.escalationAfter?.(e,dt);
+  ATROPOS_COMBAT_SERVICE.polishAfter?.(e,dt);
 };
-const baseApexPhaseDirectorReborn=apexPhaseDirector;
-apexPhaseDirector=function apexPhaseDirectorReborn(e,dt){
-  if((e?.apexForm||e?.eliteForm)==='chronophage')return;
-  return baseApexPhaseDirectorReborn(e,dt);
-};
-const baseApexMotionVelocityReborn=apexMotionVelocity;
-apexMotionVelocity=function apexMotionVelocityReborn(e){
-  if((e?.apexForm||e?.eliteForm)==='chronophage'){
-    APEX_MOTION_BUFFER.x=0;APEX_MOTION_BUFFER.y=0;return APEX_MOTION_BUFFER;
-  }
-  return baseApexMotionVelocityReborn(e);
-};
-
-const baseDealDamageAtropos=dealDamage;
-dealDamage=function dealDamageAtroposPartReaction(target,amount,options={}){
-  const owner=target?.bodyPart?target.owner:target;
-  if(target?.bodyPart&&owner?.apexForm==='chronophage'&&owner.atroposReborn){
-    owner.atroposReborn.lastHitPart=target.key;
-    owner.atroposReborn.lastHitAt=state.time||0;
-  }
-  return baseDealDamageAtropos(target,amount,options);
-};
+ATROPOS_COMBAT_SERVICE.director=function chronophageDirectorSuppressed(){};
+ATROPOS_COMBAT_SERVICE.motion=function chronophageAnchoredMotion(e,out){out.x=0;out.y=0;return true;};
+ATROPOS_COMBAT_SERVICE.antiIdle=function chronophageAntiIdle(e,dt){if(typeof ATROPOS_COMBAT_SERVICE.antiIdleUpdate==='function')return ATROPOS_COMBAT_SERVICE.antiIdleUpdate(e,dt);if(typeof bossAntiIdleSkill==='function')return bossAntiIdleSkill(e,dt);};
+ATROPOS_COMBAT_SERVICE.onBodyPartHit=function chronophageBodyPartHit(part,owner){if(!part?.bodyPart||owner?.apexForm!=='chronophage'||!owner.atroposReborn)return;owner.atroposReborn.lastHitPart=part.key;owner.atroposReborn.lastHitAt=state.time||0;};
 
 // Entry control: ordinary combat freezes, then the existing mob field is physically pushed away
 // from the manifestation point. No decorative line animation is used as a substitute for this event.
@@ -203,11 +191,7 @@ function updateAtroposEntryControl(dt=0){
   if(boss)ensureRebornAtropos(boss);
   return true;
 }
-const baseUpdateEnemiesAtroposEntry=updateEnemies;
-updateEnemies=function updateEnemiesWithAtroposEntryFreeze(dt){
-  if(updateAtroposEntryControl(dt))return;
-  return baseUpdateEnemiesAtroposEntry(dt);
-};
+ATROPOS_COMBAT_SERVICE.beforeEnemies=function chronophageEntryEnemyGate(dt){return !updateAtroposEntryControl(dt);};
 
 function atroposScreenPoint(x,y){return{x:x-player.x+vw/2,y:y-player.y+vh/2};}
 function atroposPartHitPulse(e,key){

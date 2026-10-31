@@ -70,8 +70,7 @@
     state.camera.shake=Math.max(state.camera.shake,node.group===3?9:7);state.flash=Math.max(state.flash,node.group===3?.11:.08);if(typeof shockwave==='function')shockwave(x,y,node.group===3?'#eef3ff':'#aebfff',86+node.group*18,.38,2.5+node.group*.4);if(typeof spawnParticle==='function')for(let i=0;i<14+node.group*4;i++)spawnParticle(x+rand(-16,16),y+rand(-16,16),i%3?'#b7c9ff':'#ffffff',1,42+Math.random()*56,2.2+Math.random()*2);syncParts(e);advancePhase(e);
   }
 
-  const baseApexMotionVelocity=typeof apexMotionVelocity==='function'?apexMotionVelocity:null;
-  if(baseApexMotionVelocity)apexMotionVelocity=function lastConstellationAnchoredMotion(e){if(isLC(e)){const s=initializeStructure(e);if(s){e.x=s.anchorX;e.y=s.anchorY;}return{x:0,y:0};}return baseApexMotionVelocity(e);};
+  registerApexCombatService(FORM).motion=function lastConstellationAnchoredMotion(e,out){const s=initializeStructure(e);if(s){e.x=s.anchorX;e.y=s.anchorY;}out.x=0;out.y=0;return true;};
 
   // Route the real, fully modified damage through the existing damage stack, but temporarily use
   // the exposed node as the owner's health/FX surface. This preserves all upstream damage modifiers

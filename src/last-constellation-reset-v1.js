@@ -16,12 +16,10 @@
     drawConstellationApex=function drawConstellationBackdropOnly(){drawCachedBackdrop('apex-constellation',paintConstellationBackdrop);drawStars(CONSTELLATION_STAR_PALETTE,1);};
   }
 
-  const baseApexBossSkill=typeof apexBossSkill==='function'?apexBossSkill:null;
-  if(baseApexBossSkill)apexBossSkill=function lastConstellationNoLegacyPatterns(e,dt){if(isLC(e)){phaseOnly(e,dt);return;}return baseApexBossSkill(e,dt);};
-  const baseApexPhaseDirector=typeof apexPhaseDirector==='function'?apexPhaseDirector:null;
-  if(baseApexPhaseDirector)apexPhaseDirector=function lastConstellationNoLegacyDirector(e,dt){if(isLC(e))return;return baseApexPhaseDirector(e,dt);};
-  const baseBossAntiIdleSkill=typeof bossAntiIdleSkill==='function'?bossAntiIdleSkill:null;
-  if(baseBossAntiIdleSkill)bossAntiIdleSkill=function lastConstellationNoLegacyAntiIdle(e,dt){if(isLC(e))return;return baseBossAntiIdleSkill(e,dt);};
+  const lastConstellationCombatService=registerApexCombatService(FORM);
+  lastConstellationCombatService.skill=phaseOnly;
+  lastConstellationCombatService.director=function lastConstellationDirectorSuppressed(){};
+  lastConstellationCombatService.suppressAntiIdle=true;
 
   let cleaned=false;
   function cleanupLegacyObjects(){
