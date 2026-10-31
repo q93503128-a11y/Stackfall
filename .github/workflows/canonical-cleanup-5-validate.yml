@@ -1,0 +1,230 @@
+name: Canonical cleanup 5 validation
+on:
+  push:
+    branches:
+      - validation/canonical-cleanup-5
+permissions:
+  contents: write
+jobs:
+  validate:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply canonical Apex combat dispatch transform
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const read=p=>fs.readFileSync(p,'utf8');
+          const write=(p,s)=>fs.writeFileSync(p,s);
+          function replaceOne(path,oldText,newText,label){
+            const src=read(path),first=src.indexOf(oldText),last=src.lastIndexOf(oldText);
+            if(first<0||first!==last)throw new Error(`${label}: expected exactly one source block in ${path}`);
+            write(path,src.slice(0,first)+newText+src.slice(first+oldText.length));
+          }
+          function replaceRegexOne(path,re,replacement,label){
+            const src=read(path),matches=[...src.matchAll(new RegExp(re.source,re.flags.includes('g')?re.flags:re.flags+'g'))];
+            if(matches.length!==1)throw new Error(`${label}: expected exactly one match in ${path}, got ${matches.length}`);
+            write(path,src.replace(re,replacement));
+          }
+
+          // 1) Canonical registry/dispatch owner lives with the canonical Apex pattern function.
+          replaceOne('src/boss-patterns.js',
+`function apexBossSkill(e,dt){
+  e.apexElapsed=(e.apexElapsed||0)+dt;rememberApexPlayer(e,dt);`,
+`const STACKFALL_APEX_COMBAT_SERVICES=window.stackfallApexCombatServices||(window.stackfallApexCombatServices=Object.create(null));
+function registerApexCombatService(form,patch=null){
+  const key=String(form||'');if(!key)throw new Error('Apex combat service requires a form');
+  const service=STACKFALL_APEX_COMBAT_SERVICES[key]||(STACKFALL_APEX_COMBAT_SERVICES[key]=Object.create(null));
+  if(patch&&typeof patch==='object')Object.assign(service,patch);return service;
+}
+function apexCombatService(target){
+  const form=typeof target==='string'?target:(target?.apexForm||target?.eliteForm);return form?STACKFALL_APEX_COMBAT_SERVICES[form]||null:null;
+}
+function apexBossSkill(e,dt){
+  const service=apexCombatService(e);if(typeof service?.skill==='function')return service.skill(e,dt);
+  e.apexElapsed=(e.apexElapsed||0)+dt;rememberApexPlayer(e,dt);`, 'install Apex combat service registry');
+
+          // 2) Canonical boss owners perform explicit form-service delegation.
+          replaceOne('src/bosses.js',
+`function bossSkill(enemy,dt){
+  if(enemy.kind==='stage-boss'&&typeof window.updateStageBossSkill==='function')return window.updateStageBossSkill(enemy,dt);
+  if(enemy.eventVariant==='dreadnought'&&typeof window.updateCrashDreadnoughtSkill==='function')return window.updateCrashDreadnoughtSkill(enemy,dt);
+  if(enemy.type==='mini')return miniSkill(enemy,dt);if(enemy.type!=='boss')return;
+  if(enemy.kind==='apex'){apexBossSkill(enemy,dt);apexPhaseDirector(enemy,dt);}else if(enemy.kind==='void'||enemy.eventKind==='void')voidBossSkill(enemy,dt);else normalBossSkill(enemy,dt);
+  if(typeof bossAntiIdleSkill==='function')bossAntiIdleSkill(enemy,dt);
+}`,
+`function bossSkill(enemy,dt){
+  if(enemy.kind==='stage-boss'&&typeof window.updateStageBossSkill==='function')return window.updateStageBossSkill(enemy,dt);
+  if(enemy.eventVariant==='dreadnought'&&typeof window.updateCrashDreadnoughtSkill==='function')return window.updateCrashDreadnoughtSkill(enemy,dt);
+  if(enemy.type==='mini')return miniSkill(enemy,dt);if(enemy.type!=='boss')return;
+  if(enemy.kind==='apex'){
+    const service=apexCombatService(enemy);apexBossSkill(enemy,dt);apexPhaseDirector(enemy,dt);
+    if(typeof service?.antiIdle==='function')service.antiIdle(enemy,dt);else if(service?.suppressAntiIdle!==true&&typeof bossAntiIdleSkill==='function')bossAntiIdleSkill(enemy,dt);
+    return;
+  }
+  if(enemy.kind==='void'||enemy.eventKind==='void')voidBossSkill(enemy,dt);else normalBossSkill(enemy,dt);
+  if(typeof bossAntiIdleSkill==='function')bossAntiIdleSkill(enemy,dt);
+}`, 'route Apex anti-idle through canonical boss owner');
+          replaceOne('src/bosses.js',
+`function apexPhaseDirector(e,dt){
+  if(!e||e.dead||e.kind!=='apex'||state.mode!=='playing')return;const phase=Math.max(1,Math.min(4,e.apexPhase||1)),pressure=Math.max(1,e.apexEscalation||1);apexSetpieceDirector(e,dt);`,
+`function apexPhaseDirector(e,dt){
+  const service=apexCombatService(e);if(typeof service?.director==='function')return service.director(e,dt);
+  if(!e||e.dead||e.kind!=='apex'||state.mode!=='playing')return;const phase=Math.max(1,Math.min(4,e.apexPhase||1)),pressure=Math.max(1,e.apexEscalation||1);apexSetpieceDirector(e,dt);`, 'route Apex phase director through canonical owner');
+          replaceOne('src/bosses.js',
+`function apexMotionVelocity(e){
+  const out=APEX_MOTION_BUFFER,arena=state.apexArena;if(!arena){out.x=0;out.y=0;return out;}const form=e.apexForm||e.eliteForm,dx=arena.x-e.x,dy=arena.y-e.y,centerD=Math.hypot(dx,dy)||1;`,
+`function apexMotionVelocity(e){
+  const out=APEX_MOTION_BUFFER;if(apexCombatService(e)?.motion?.(e,out)===true)return out;
+  const arena=state.apexArena;if(!arena){out.x=0;out.y=0;return out;}const form=e.apexForm||e.eliteForm,dx=arena.x-e.x,dy=arena.y-e.y,centerD=Math.hypot(dx,dy)||1;`, 'route Apex motion through canonical owner');
+          replaceOne('src/bosses.js',
+`function updateEnemies(dt){
+  const gravWells=state.entities.wells,chronoN=weaponCount('chrono'),chronoRadius=145+chronoN*18,threat=1+Math.floor((state.time||0)/60),legacyTimeScale=typeof stackfallEnemyTimeScale==='function'?stackfallEnemyTimeScale():1;`,
+`function updateEnemies(dt){
+  const encounterService=apexCombatService(state.apexArena?.form||state.pendingApexForm||state.realmTransition?.form);if(encounterService?.beforeEnemies?.(dt)===false)return;
+  const gravWells=state.entities.wells,chronoN=weaponCount('chrono'),chronoRadius=145+chronoN*18,threat=1+Math.floor((state.time||0)/60),legacyTimeScale=typeof stackfallEnemyTimeScale==='function'?stackfallEnemyTimeScale():1;`, 'route Apex pre-enemy lifecycle through canonical owner');
+
+          // 3) Chronophage base service replaces five late global replacements.
+          replaceRegexOne('src/apex-run-clock.js',/const baseApexBossSkillReborn=apexBossSkill;[\s\S]*?return baseDealDamageAtropos\(target,amount,options\);\n};\n/,
+`const ATROPOS_COMBAT_SERVICE=registerApexCombatService('chronophage');
+ATROPOS_COMBAT_SERVICE.skill=function chronophageCombatSkill(e,dt){
+  ATROPOS_COMBAT_SERVICE.polishBefore?.(e,dt);
+  ATROPOS_COMBAT_SERVICE.escalationBefore?.(e,dt);
+  ATROPOS_COMBAT_SERVICE.phaseBefore?.(e,dt);
+  updateRebornAtropos(e,dt);
+  ATROPOS_COMBAT_SERVICE.identity?.(e,dt);
+  ATROPOS_COMBAT_SERVICE.phaseAfter?.(e,dt);
+  ATROPOS_COMBAT_SERVICE.escalationAfter?.(e,dt);
+  ATROPOS_COMBAT_SERVICE.polishAfter?.(e,dt);
+};
+ATROPOS_COMBAT_SERVICE.director=function chronophageDirectorSuppressed(){};
+ATROPOS_COMBAT_SERVICE.motion=function chronophageAnchoredMotion(e,out){out.x=0;out.y=0;return true;};
+ATROPOS_COMBAT_SERVICE.antiIdle=function chronophageAntiIdle(e,dt){if(typeof ATROPOS_COMBAT_SERVICE.antiIdleUpdate==='function')return ATROPOS_COMBAT_SERVICE.antiIdleUpdate(e,dt);if(typeof bossAntiIdleSkill==='function')return bossAntiIdleSkill(e,dt);};
+ATROPOS_COMBAT_SERVICE.onBodyPartHit=function chronophageBodyPartHit(part,owner){if(!part?.bodyPart||owner?.apexForm!=='chronophage'||!owner.atroposReborn)return;owner.atroposReborn.lastHitPart=part.key;owner.atroposReborn.lastHitAt=state.time||0;};
+`, 'replace Chronophage combat wrappers with service');
+          replaceOne('src/apex-run-clock.js',
+`const baseUpdateEnemiesAtroposEntry=updateEnemies;
+updateEnemies=function updateEnemiesWithAtroposEntryFreeze(dt){
+  if(updateAtroposEntryControl(dt))return;
+  return baseUpdateEnemiesAtroposEntry(dt);
+};`,
+`ATROPOS_COMBAT_SERVICE.beforeEnemies=function chronophageEntryEnemyGate(dt){return !updateAtroposEntryControl(dt);};`, 'replace Chronophage enemy-update wrapper with service gate');
+
+          // 4) Multipart damage owner explicitly notifies the active Apex service before owner routing.
+          replaceOne('src/boss-body-parts.js',
+`const baseDealDamageWithParts=dealDamage;
+dealDamage=function routeBossPartDamageToSharedPool(target,amount,options={}){return baseDealDamageWithParts(bossPartOwner(target),amount,options);};`,
+`const baseDealDamageWithParts=dealDamage;
+dealDamage=function routeBossPartDamageToSharedPool(target,amount,options={}){const owner=bossPartOwner(target);if(target?.bodyPart)apexCombatService(owner)?.onBodyPartHit?.(target,owner,amount,options);return baseDealDamageWithParts(owner,amount,options);};`, 'notify Apex service from multipart damage owner');
+
+          // 5) Chronophage extensions register named phases instead of wrapping apexBossSkill.
+          replaceRegexOne('src/apex-identity-combat-v1.js',/  const baseApexBossSkillIdentity=typeof apexBossSkill==='function'\?apexBossSkill:null;\n  if\(baseApexBossSkillIdentity\)\{\n    apexBossSkill=function apexBossSkillWithIdentity\(e,dt\)\{\n      const result=baseApexBossSkillIdentity\(e,dt\);\n      if\(\(e\?\.apexForm\|\|e\?\.eliteForm\)==='chronophage'\)updateClockworkIdentity\(e,dt\);\n      return result;\n    };\n  }/,
+`  registerApexCombatService('chronophage').identity=updateClockworkIdentity;`, 'register Chronophage identity service');
+
+          replaceOne('src/atropos-phase-production-v1.js',
+`  const baseApexBossSkillProduction=typeof apexBossSkill==='function'?apexBossSkill:null;
+  const baseDrawEliteShapeProduction=typeof drawEliteShape==='function'?drawEliteShape:null;
+  if(!baseApexBossSkillProduction||!baseDrawEliteShapeProduction)return;`,
+`  const baseDrawEliteShapeProduction=typeof drawEliteShape==='function'?drawEliteShape:null;
+  if(!baseDrawEliteShapeProduction)return;`, 'remove phase production skill capture');
+          replaceRegexOne('src/atropos-phase-production-v1.js',/  \/\/ Suppress the older lightweight history echo layer\.[\s\S]*?  };\n\n  function drawPhaseOverlay/,
+`  // The canonical Chronophage service owns ordering; this file contributes only phase setup/finalization.
+  const atroposPhaseService=registerApexCombatService(FORM);
+  atroposPhaseService.phaseBefore=function atroposPhaseBefore(e){const desired=phaseFromHealth(e);e.clockworkIdentityPhase=desired;e.clockworkEchoCd=1e9;};
+  atroposPhaseService.phaseAfter=function atroposPhaseAfter(e,dt){e.clockworkEchoCd=1e9;updateAtroposProduction(e,dt);};
+
+  function drawPhaseOverlay`, 'replace phase production skill wrapper');
+
+          // 6) Chronophage escalation contributes anti-idle and pre/post skill hooks explicitly.
+          replaceRegexOne('src/atropos-combat-escalation-v1.js',/  const baseBossAntiIdleEscalation=typeof bossAntiIdleSkill==='function'\?bossAntiIdleSkill:null;\n  if\(baseBossAntiIdleEscalation\)\{\n    bossAntiIdleSkill=function bossAntiIdleAtroposEscalation\(e,dt\)\{\n      if\(!isAtropos\(e\)\)return baseBossAntiIdleEscalation\(e,dt\);([\s\S]*?)\n    };\n  }\n\n  function ensureAtroposArena/,
+(match,body)=>`  const atroposCombatService=registerApexCombatService(FORM);\n  atroposCombatService.antiIdleUpdate=function bossAntiIdleAtroposEscalation(e,dt){${body}\n  };\n\n  function ensureAtroposArena`, 'replace Chronophage anti-idle wrapper');
+          replaceRegexOne('src/atropos-combat-escalation-v1.js',/  const baseApexBossSkillEscalation=typeof apexBossSkill==='function'\?apexBossSkill:null;\n  function startP4Stop/,
+`  function startP4Stop`, 'remove escalation skill capture');
+          replaceRegexOne('src/atropos-combat-escalation-v1.js',/  if\(baseApexBossSkillEscalation\)\{\n    apexBossSkill=function apexBossSkillWithAtroposTimeStop\(e,dt\)\{\n      if\(!isAtropos\(e\)\)return baseApexBossSkillEscalation\(e,dt\);syncP4StopBefore\(e\);const result=baseApexBossSkillEscalation\(e,dt\);const tr=e\.atroposPhaseTransition;if\(tr\?\.phase===4\)syncP4StopBefore\(e\);else if\(e\.atroposP4TimeStopActive\)\{e\.atroposP4TimeStopActive=false;e\.atroposP4TimeStopDone=true;state\.hitStop=0;}updateArenaMechanics\(e,dt\);return result;\n    };\n  }/,
+`  atroposCombatService.escalationBefore=function atroposEscalationBefore(e){syncP4StopBefore(e);};
+  atroposCombatService.escalationAfter=function atroposEscalationAfter(e,dt){const tr=e.atroposPhaseTransition;if(tr?.phase===4)syncP4StopBefore(e);else if(e.atroposP4TimeStopActive){e.atroposP4TimeStopActive=false;e.atroposP4TimeStopDone=true;state.hitStop=0;}updateArenaMechanics(e,dt);};`, 'replace escalation skill wrapper');
+
+          // 7) Chronophage polish contributes explicit before/after stages.
+          replaceRegexOne('src/atropos-production-polish-v2.js',/  const baseApexBossSkill=typeof apexBossSkill==='function'\?apexBossSkill:null;\n  if\(baseApexBossSkill\)\{\n    apexBossSkill=function apexBossSkillWithAtroposPolish\(e,dt\)\{\n      if\(!isAtropos\(e\)\)return baseApexBossSkill\(e,dt\);\n      lockAtropos\(e\);expandArena\(e\);\n      const result=baseApexBossSkill\(e,dt\);\n      lockAtropos\(e\);expandArena\(e\);\n      if\(\(e\.apexPhase\|\|1\)>=4&&e\.atroposClockHand\?\.active&&!e\.atroposClockHand\.offTimer&&!e\.atroposClockHand\.breakAfter&&e\.atroposClockHand\.stepTimer>P4_HAND_STEP\)e\.atroposClockHand\.stepTimer=P4_HAND_STEP;\n      return result;\n    };\n  }/,
+`  const atroposPolishService=registerApexCombatService(FORM);
+  atroposPolishService.polishBefore=function atroposPolishBefore(e){lockAtropos(e);expandArena(e);};
+  atroposPolishService.polishAfter=function atroposPolishAfter(e){lockAtropos(e);expandArena(e);if((e.apexPhase||1)>=4&&e.atroposClockHand?.active&&!e.atroposClockHand.offTimer&&!e.atroposClockHand.breakAfter&&e.atroposClockHand.stepTimer>P4_HAND_STEP)e.atroposClockHand.stepTimer=P4_HAND_STEP;};`, 'replace Chronophage polish skill wrapper');
+
+          // 8) Omega production/combat become one explicit form service.
+          replaceRegexOne('src/omega-production-v1.js',/  \/\/ Disable the old shared Omega pattern grammar\.[\s\S]*?  \/\/ Remove the screen-locked hex\/ray overlay\./,
+`  // Canonical form dispatch owns Omega combat; this service suppresses the legacy grammar explicitly.
+  const omegaCombatService=registerApexCombatService(FORM);
+  omegaCombatService.skill=function omegaProductionSkill(e,dt){computePhase(e,dt);e.timeLock=0;clearLegacyOmegaState(e);omegaCombatService.combat?.(e,dt);};
+  omegaCombatService.director=function omegaProductionDirector(e){e.apexPhaseEntered=e.apexPhase||1;clearLegacyOmegaState(e);};
+  omegaCombatService.suppressAntiIdle=true;
+
+  // Remove the screen-locked hex/ray overlay.`, 'replace Omega pattern/director/anti-idle wrappers');
+          replaceRegexOne('src/omega-combat-v1.js',/  const baseApexBossSkill=typeof apexBossSkill==='function'\?apexBossSkill:null;if\(baseApexBossSkill\)apexBossSkill=function omegaProductionCombatSkill\(e,dt\)\{const result=baseApexBossSkill\(e,dt\);if\(isOmega\(e\)\)updateOmegaCombat\(e,dt\);return result;};/,
+`  registerApexCombatService(FORM).combat=updateOmegaCombat;`, 'register Omega production combat service');
+
+          // 9) Last Constellation pattern/director/anti-idle and motion ownership become explicit services.
+          replaceRegexOne('src/last-constellation-reset-v1.js',/  const baseApexBossSkill=typeof apexBossSkill==='function'\?apexBossSkill:null;\n  if\(baseApexBossSkill\)apexBossSkill=function lastConstellationNoLegacyPatterns\(e,dt\)\{if\(isLC\(e\)\)\{phaseOnly\(e,dt\);return;}return baseApexBossSkill\(e,dt\);};\n  const baseApexPhaseDirector=typeof apexPhaseDirector==='function'\?apexPhaseDirector:null;\n  if\(baseApexPhaseDirector\)apexPhaseDirector=function lastConstellationNoLegacyDirector\(e,dt\)\{if\(isLC\(e\)\)return;return baseApexPhaseDirector\(e,dt\);};\n  const baseBossAntiIdleSkill=typeof bossAntiIdleSkill==='function'\?bossAntiIdleSkill:null;\n  if\(baseBossAntiIdleSkill\)bossAntiIdleSkill=function lastConstellationNoLegacyAntiIdle\(e,dt\)\{if\(isLC\(e\)\)return;return baseBossAntiIdleSkill\(e,dt\);};/,
+`  const lastConstellationCombatService=registerApexCombatService(FORM);
+  lastConstellationCombatService.skill=phaseOnly;
+  lastConstellationCombatService.director=function lastConstellationDirectorSuppressed(){};
+  lastConstellationCombatService.suppressAntiIdle=true;`, 'replace Last Constellation combat wrappers');
+          replaceRegexOne('src/last-constellation-production-v1.js',/  const baseApexMotionVelocity=typeof apexMotionVelocity==='function'\?apexMotionVelocity:null;\n  if\(baseApexMotionVelocity\)apexMotionVelocity=function lastConstellationAnchoredMotion\(e\)\{if\(isLC\(e\)\{0,1\}\)\{const s=initializeStructure\(e\);if\(s\)\{e\.x=s\.anchorX;e\.y=s\.anchorY;}return\{x:0,y:0};}return baseApexMotionVelocity\(e\);};/,
+`  registerApexCombatService(FORM).motion=function lastConstellationAnchoredMotion(e,out){const s=initializeStructure(e);if(s){e.x=s.anchorX;e.y=s.anchorY;}out.x=0;out.y=0;return true;};`, 'replace Last Constellation motion wrapper');
+
+          // 10) Regression ownership contract: canonical functions must stay single-owner.
+          let contract=read('scripts/runtime-ownership-contract.mjs');
+          contract=contract.replace("const bossParts=read('src/boss-body-parts.js');", "const bossParts=read('src/boss-body-parts.js');\nconst patterns=read('src/boss-patterns.js');\nconst identityCombat=read('src/apex-identity-combat-v1.js');\nconst omegaProduction=read('src/omega-production-v1.js');\nconst omegaCombat=read('src/omega-combat-v1.js');\nconst atroposPhase=read('src/atropos-phase-production-v1.js');\nconst atroposEscalation=read('src/atropos-combat-escalation-v1.js');\nconst atroposPolish=read('src/atropos-production-polish-v2.js');");
+          const anchor="expect('Apex identity reward extensions are explicit services',starforgeLegacy.includes('window.stackfallStarforgeLegacyV2=Object.freeze')&&constellationLegacy.includes('window.stackfallConstellationLegacyV2=Object.freeze')&&bosses.includes('apexRewardIdentityService(form)?.afterReward?.(form)'));";
+          if(!contract.includes(anchor))throw new Error('runtime ownership contract anchor drifted');
+          const insert=`\nexpect('Apex combat form dispatch has one canonical owner',patterns.includes('function registerApexCombatService(form,patch=null)')&&patterns.includes('function apexCombatService(target)')&&patterns.includes("if(typeof service?.skill==='function')return service.skill(e,dt)")&&bosses.includes("if(typeof service?.director==='function')return service.director(e,dt)")&&bosses.includes("apexCombatService(e)?.motion?.(e,out)===true"));\nconst apexCombatLayerFiles=[runClock,identityCombat,omegaProduction,omegaCombat,atroposPhase,atroposEscalation,atroposPolish,constellationReset,constellation];\nexpect('Apex production layers do not replace canonical skill/director/motion owners',!apexCombatLayerFiles.some(text=>replaces(text,'apexBossSkill')||replaces(text,'apexPhaseDirector')||replaces(text,'apexMotionVelocity')));\nexpect('Chronophage combat stages are explicit service slots',runClock.includes("registerApexCombatService('chronophage')")&&identityCombat.includes("registerApexCombatService('chronophage').identity=updateClockworkIdentity")&&atroposPhase.includes('atroposPhaseService.phaseBefore=')&&atroposPhase.includes('atroposPhaseService.phaseAfter=')&&atroposEscalation.includes('atroposCombatService.escalationBefore=')&&atroposEscalation.includes('atroposCombatService.escalationAfter=')&&atroposPolish.includes('atroposPolishService.polishBefore=')&&atroposPolish.includes('atroposPolishService.polishAfter='));\nexpect('Omega and Last Constellation suppress legacy combat through services',omegaProduction.includes('omegaCombatService.skill=')&&omegaCombat.includes('registerApexCombatService(FORM).combat=updateOmegaCombat')&&constellationReset.includes('lastConstellationCombatService.skill=phaseOnly')&&constellation.includes('registerApexCombatService(FORM).motion='));\nexpect('Chronophage entry and multipart hit reactions use explicit hooks',bosses.includes('encounterService?.beforeEnemies?.(dt)===false')&&runClock.includes('ATROPOS_COMBAT_SERVICE.beforeEnemies=')&&bossParts.includes('onBodyPartHit?.(target,owner,amount,options)')&&!replaces(runClock,'updateEnemies')&&!replaces(runClock,'dealDamage'));`;
+          contract=contract.replace(anchor,anchor+insert);
+          write('scripts/runtime-ownership-contract.mjs',contract);
+          NODE
+      - name: Check transformed ownership surface
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'Assignments remaining to Apex canonical owners:'
+          grep -REn --include='*.js' '\b(apexBossSkill|apexPhaseDirector|apexMotionVelocity)\s*=\s*function\b' src || true
+          node --check src/boss-patterns.js
+          node --check src/bosses.js
+          node --check src/apex-run-clock.js
+          node --check src/apex-identity-combat-v1.js
+          node --check src/omega-production-v1.js
+          node --check src/omega-combat-v1.js
+          node --check src/atropos-phase-production-v1.js
+          node --check src/atropos-combat-escalation-v1.js
+          node --check src/atropos-production-polish-v2.js
+          node --check src/last-constellation-reset-v1.js
+          node --check src/last-constellation-production-v1.js
+          node --check scripts/runtime-ownership-contract.mjs
+      - name: Validate full source and write build fingerprint
+        run: node scripts/build-fingerprint.mjs
+      - name: Start local server
+        shell: bash
+        run: |
+          python3 -m http.server 8000 >/tmp/stackfall-server.log 2>&1 &
+          echo $! >/tmp/stackfall-server.pid
+          sleep 2
+      - name: Chromium full smoke
+        env:
+          STACKFALL_ALLOW_GPU_SKIP: '1'
+          STACKFALL_ALLOW_CONTEXT_SKIP: '1'
+        run: node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/canonical-cleanup-5-smoke.json
+      - name: Persist validated source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/canonical-cleanup-5-inspect.yml .github/workflows/canonical-cleanup-5-validate.yml
+          git config user.name 'Stackfall validation bot'
+          git config user.email 'stackfall-validation@users.noreply.github.com'
+          git add src scripts .github/workflows
+          git commit -m 'Persist validated canonical cleanup 5 [skip ci]'
+          git push origin HEAD:validation/canonical-cleanup-5
