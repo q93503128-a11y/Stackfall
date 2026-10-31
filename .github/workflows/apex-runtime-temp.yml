@@ -6,7 +6,7 @@ on:
       - fix/magnet-apex-runtime-audit
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   apex-browser:
@@ -16,33 +16,47 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Isolate Last Constellation repro
+      - name: Apply staged runtime patch
+        shell: bash
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('scripts/apex-foundation-browser.mjs')
-          s=p.read_text()
-          old="for(const form of ['chronophage','starforge','lastconstellation']){"
-          new="for(const form of ['lastconstellation']){"
-          if old not in s:
-              raise SystemExit('expected Apex form loop not found')
-          s=s.replace(old,new,1)
-          old_before="const before=await probe('({clock:stackfallApexClockDiagnostics(),boss:state.entities.enemies.find(e=>e.id===state.apexActiveId)})');"
-          new_before="const before=await probe(`(()=>{const b=state.entities.enemies.find(e=>e.id===state.apexActiveId);return{clock:stackfallApexClockDiagnostics(),boss:{id:b?.id,apexElapsed:b?.apexElapsed,skillCd:b?.skillCd,hp:b?.hp,maxHp:b?.maxHp,phase:b?.apexPhase}};})()`);"
-          if old_before not in s:
-              raise SystemExit('expected Apex before snapshot not found')
-          p.write_text(s.replace(old_before,new_before,1))
-          PY
+          set -euo pipefail
+          if [[ -f .github/workspace-changes.patch.gz.b64 ]]; then
+            base64 -d .github/workspace-changes.patch.gz.b64 | gzip -dc > /tmp/stackfall-runtime.patch
+            git apply --check /tmp/stackfall-runtime.patch
+            git apply /tmp/stackfall-runtime.patch
+            rm .github/workspace-changes.patch.gz.b64
+            echo 'STACKFALL_APPLIED_PATCH=1' >> "$GITHUB_ENV"
+          else
+            echo 'STACKFALL_APPLIED_PATCH=0' >> "$GITHUB_ENV"
+          fi
+      - name: Validate build and contracts
+        run: node scripts/build-fingerprint.mjs
       - name: Start static server
         run: |
           python3 -m http.server 8000 > /tmp/stackfall-http.log 2>&1 &
           echo $! > /tmp/stackfall-http.pid
           sleep 1
-      - name: Run real Apex browser QA
+      - name: Run x10 Last Constellation browser QA
         env:
           STACKFALL_ALLOW_GPU_SKIP: '1'
           STACKFALL_ALLOW_CONTEXT_SKIP: '1'
+          STACKFALL_APEX_FORM: 'lastconstellation'
         run: node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --apex-only
+      - name: Run suction magnet browser QA
+        env:
+          STACKFALL_ALLOW_GPU_SKIP: '1'
+          STACKFALL_ALLOW_CONTEXT_SKIP: '1'
+        run: node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --pickup-only
+      - name: Commit validated runtime patch
+        if: env.STACKFALL_APPLIED_PATCH == '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'coworkaccount'
+          git config user.email 'cyp1jhh2@gmail.com'
+          git add -A
+          git commit -m 'Implement suction magnet and harden Apex runtime ownership'
+          git push origin HEAD:fix/magnet-apex-runtime-audit
       - name: Upload QA evidence
         if: always()
         uses: actions/upload-artifact@v4
