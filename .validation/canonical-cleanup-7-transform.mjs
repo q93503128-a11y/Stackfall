@@ -35,6 +35,11 @@ function rewriteWrapper({path,baseDecl,assignPrefix,registration,baseName,bodyRe
   text=text.slice(0,start)+`${registration}${body}});`+text.slice(close+2);write(path,text);
 }
 
+function replaceUniqueLine(text,needle,replacement,label){
+  const lines=text.split('\n'),matches=[];for(let i=0;i<lines.length;i++)if(lines[i].includes(needle))matches.push(i);
+  expect(matches.length===1,`${label}: expected one line containing ${needle}, found ${matches.length}`);lines[matches[0]]=replacement;return lines.join('\n');
+}
+
 rewriteCanonical('src/bosses.js','function hurtPlayer(amount,source){',body=>`const STACKFALL_PLAYER_DAMAGE_INTERCEPTORS=[];\nfunction registerPlayerDamageInterceptor(name,handler){if(typeof handler!=='function')return null;const entry={name:String(name||('player-damage-'+STACKFALL_PLAYER_DAMAGE_INTERCEPTORS.length)),handler};STACKFALL_PLAYER_DAMAGE_INTERCEPTORS.push(entry);return entry;}\nfunction runPlayerDamageInterceptor(index,amount,source){if(index<0)return hurtPlayerCore(amount,source);const entry=STACKFALL_PLAYER_DAMAGE_INTERCEPTORS[index],next=(nextAmount=amount,nextSource=source)=>runPlayerDamageInterceptor(index-1,nextAmount,nextSource);return entry.handler(next,amount,source);}\nfunction hurtPlayerCore(amount,source){${body}}\nfunction hurtPlayer(amount,source){return runPlayerDamageInterceptor(STACKFALL_PLAYER_DAMAGE_INTERCEPTORS.length-1,amount,source);}`);
 
 rewriteCanonical('src/weapons.js','function updateWeapons(dt){',body=>`const STACKFALL_WEAPON_UPDATE_INTERCEPTORS=[];\nfunction registerWeaponUpdateInterceptor(name,handler){if(typeof handler!=='function')return null;const entry={name:String(name||('weapon-update-'+STACKFALL_WEAPON_UPDATE_INTERCEPTORS.length)),handler};STACKFALL_WEAPON_UPDATE_INTERCEPTORS.push(entry);return entry;}\nfunction runWeaponUpdateInterceptor(index,dt){if(index<0)return updateWeaponsCore(dt);const entry=STACKFALL_WEAPON_UPDATE_INTERCEPTORS[index],next=(nextDt=dt)=>runWeaponUpdateInterceptor(index-1,nextDt);return entry.handler(next,dt);}\nfunction updateWeaponsCore(dt){${body}}\nfunction updateWeapons(dt){return runWeaponUpdateInterceptor(STACKFALL_WEAPON_UPDATE_INTERCEPTORS.length-1,dt);}`);
@@ -59,6 +64,16 @@ const weaponWrappers=[
 ];
 for(const config of weaponWrappers)rewriteWrapper(config);
 
+let mapEvents=read('src/map-event-expansion.js');
+const oldCadence="  const INTERVALS={vault:[155,215],distress:[175,245],crash:[205,285],meteor:[185,255],predator:[220,305],relay:[235,325],storm:[255,350],void:[285,390]},FIRST={vault:42,distress:78,crash:118,meteor:154,predator:192,relay:232,storm:274,void:320},EVENT_GAP=58,TYPE_GAP={vault:145,distress:165,crash:195,meteor:175,predator:210,relay:225,storm:240,void:270};";
+expect(mapEvents.includes(oldCadence),'map-event stale eight-family cadence row missing');
+mapEvents=mapEvents.replace(oldCadence,"  const INTERVALS={vault:[155,215],crash:[205,285],void:[285,390]},FIRST={vault:42,crash:118,void:320},EVENT_GAP=58,TYPE_GAP={vault:145,crash:195,void:270};");write('src/map-event-expansion.js',mapEvents);
+
+let legacy=read('scripts/legacy-chat-requirements-contract.mjs');
+legacy=replaceUniqueLine(legacy,"expect('Endless event cadence covers eight varied event families",`expect('Endless event cadence uses exactly the canonical three world-event families with a shared anti-stack gap',mapEvents.includes("EVENT_CLOCK_KEYS=Object.freeze(['vault','crash','void'])")&&mapEvents.includes("INTERVALS={vault:[155,215],crash:[205,285],void:[285,390]}")&&mapEvents.includes("FIRST={vault:42,crash:118,void:320}")&&mapEvents.includes('EVENT_GAP=58')&&mapEvents.includes('state.eventGlobalCooldown=Math.max(state.eventGlobalCooldown||0,EVENT_GAP)')&&mapEvents.includes('eligible[Math.floor(Math.random()*eligible.length)]'));`,'legacy event cadence');
+legacy=replaceUniqueLine(legacy,"expect('five added Endless events have distinct playable mechanics",`expect('discarded Endless event mechanics stay out of the active runtime',!['startDistress','updateMeteor','startPredator','updateRelay','startStorm'].some(name=>mapEvents.includes('function '+name))&&mapEvents.includes("EVENT_CLOCK_KEYS=Object.freeze(['vault','crash','void'])"));`,'legacy discarded event mechanics');
+write('scripts/legacy-chat-requirements-contract.mjs',legacy);
+
 let contract=read('scripts/runtime-ownership-contract.mjs');
 if(!contract.includes("const weapons=read('src/weapons.js');")){
   const readAnchor="const bosses=read('src/bosses.js');";expect(contract.includes(readAnchor),'contract read anchor missing');contract=contract.replace(readAnchor,readAnchor+"\nconst weapons=read('src/weapons.js');");
@@ -74,6 +89,6 @@ expect('weapon update dispatch has one canonical owner with captured-base interc
 expect('weapon update feature layers register interceptors instead of replacing updateWeapons',!allRuntimeSource.includes('updateWeapons=function')&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('reward-traits'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('multiplicity-orbits'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('awakening-first-set'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('awakening-second-set'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('awakening-third-set'")&&allRuntimeSource.includes("registerWeaponUpdateInterceptor('echo-blade-cooldown'"));`;
 contract=contract.replace(insertAfter,insertAfter+extra);write('scripts/runtime-ownership-contract.mjs',contract);
 
-const changed=['src/bosses.js','src/weapons.js',...new Set([...hurtWrappers.map(x=>x.path),...weaponWrappers.map(x=>x.path)]),'scripts/runtime-ownership-contract.mjs'];
+const changed=['src/bosses.js','src/weapons.js','src/map-event-expansion.js',...new Set([...hurtWrappers.map(x=>x.path),...weaponWrappers.map(x=>x.path)]),'scripts/runtime-ownership-contract.mjs','scripts/legacy-chat-requirements-contract.mjs'];
 for(const path of changed.filter(path=>path.endsWith('.js'))){const text=read(path);expect(!/\bhurtPlayer\s*=\s*function\b/.test(text),`${path}: hurtPlayer replacement remains`);expect(!/\bupdateWeapons\s*=\s*function\b/.test(text),`${path}: updateWeapons replacement remains`);}
 console.log(JSON.stringify({changed},null,2));
