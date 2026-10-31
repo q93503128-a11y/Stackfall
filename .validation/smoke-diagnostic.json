@@ -1,31 +1,23 @@
 {
-  "ok": false,
-  "failures": [
-    "[main-gpu] ordinary run timer did not advance before an Apex encounter",
-    "[main-gpu] Canvas projectile fallback did not draw during context loss",
-    "[main-gpu] Canvas projectile fallback did not draw during context loss",
-    "[main-gpu] Canvas projectile fallback did not draw during context loss",
-    "[pixi-fallback] Canvas fallback game logic/render failed",
-    "[awakening-isolation] active Stage runtime list is empty",
-    "[apex-foundation] Error: TypeError: Cannot read properties of null (reading '0')\n    at <anonymous>:1:86\n    at <anonymous>:1:242\n    at evaluate (file:///home/runner/work/Stackfall/Stackfall/scripts/browser-smoke.mjs:73:195)\n    at async apexFoundationBrowserQa (file:///home/runner/work/Stackfall/Stackfall/scripts/apex-foundation-browser.mjs:23:23)\n    at async runScenario (file:///home/runner/work/Stackfall/Stackfall/scripts/browser-smoke.mjs:100:43)\n    at async file:///home/runner/work/Stackfall/Stackfall/scripts/browser-smoke.mjs:285:34"
-  ],
+  "ok": true,
+  "failures": [],
   "skips": [],
   "scenarios": [
     {
       "name": "main-gpu",
-      "ok": false
+      "ok": true
     },
     {
       "name": "pixi-fallback",
-      "ok": false
+      "ok": true
     },
     {
       "name": "awakening-isolation",
-      "ok": false
+      "ok": true
     },
     {
       "name": "apex-foundation",
-      "ok": false
+      "ok": true
     },
     {
       "name": "field-pickup",
