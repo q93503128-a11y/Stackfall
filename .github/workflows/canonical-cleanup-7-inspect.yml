@@ -1,0 +1,23 @@
+name: Canonical cleanup 7 inspect
+on:
+  push:
+    branches: [validation/canonical-cleanup-7]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect lifecycle and player runtime replacement chains
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in hurtPlayer updateWeapons resetGame endGame showMainMenu updatePlayer rollChoices addText spawnCoreShot; do
+            echo "=== ${name} assignments ==="
+            grep -REn --include='*.js' "\\b${name}\\s*=\\s*function\\b" src || true
+            echo "=== ${name} canonical definitions ==="
+            grep -REn --include='*.js' "^function ${name}\\b" src || true
+          done
+          echo '=== runtime ownership contract ==='
+          node scripts/runtime-ownership-contract.mjs
