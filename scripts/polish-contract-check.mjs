@@ -21,7 +21,7 @@ const checks=[
   ['bulwark has one segmented armor owner',read('src/canonical-weapon-visuals.js').includes('barrierSegmentPath')&&!read('src/render-space.js').includes('const spikes=')],
   ['no detached bulwark orbit',!read('src/render-entities.js').includes("orbitRadiusFor('bulwark')")],
   ['reflective barrier recharge cooldown',rewards.includes('reflectBarrierRechargeReadyAt=now+3')&&rewards.includes('피격 시 반격 창을 발사하고 보호막을 추가 충전한다.')&&core.includes('reflectBarrierRechargeReadyAt:0')],
-  ['browser favicon',read('index.html').includes('favicon.svg?v=3')],
+  ['browser favicon',read('index.html').includes('favicon.svg?v=4')&&read('index.html').includes('site.webmanifest?v=4')&&read('site.webmanifest').includes('/favicon.svg?v=4')],
   ['site manifest',read('index.html').includes('site.webmanifest')],
   ['difficulty selector module',read('index.html').includes('difficulty-augment-expansion.js')&&read('src/difficulty-augment-expansion.js').includes("normal:Object.freeze({key:'normal'")],
   ['level choice ledger access',read('src/ability-ledger-audit.js').includes("state.mode!=='playing'&&state.mode!=='paused'&&state.mode!=='choice'")&&read('src/ability-ledger-audit.js').includes('restoreChoice')],
