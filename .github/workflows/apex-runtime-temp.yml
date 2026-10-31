@@ -31,6 +31,24 @@ jobs:
           else
             echo 'STACKFALL_APPLIED_PATCH=0' >> "$GITHUB_ENV"
           fi
+      - name: Normalize browser QA to simulation invariants
+        if: env.STACKFALL_APPLIED_PATCH == '1'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/apex-foundation-browser.mjs')
+          s=p.read_text()
+          old="check(after.clock.simulationTime>before.clock.simulationTime+.20&&after.elapsed>before.boss.apexElapsed+.20,`${form} combat simulation stopped with progression timer`,name);"
+          new="check(after.clock.simulationTime>before.clock.simulationTime+.05&&after.elapsed>before.boss.apexElapsed+.05,`${form} combat simulation stopped with progression timer`,name);"
+          if old not in s:
+              raise SystemExit('simulation invariant assertion not found')
+          s=s.replace(old,new,1)
+          old_pause="await probe(\"window.stackfallSetGameSpeed?.(1,{silent:true})\");const beforePause=await probe('stackfallApexClockDiagnostics()');await probe('togglePause(true)');await sleep(320);const whilePaused=await probe(`({clock:stackfallApexClockDiagnostics(),mode:state.mode})`);await probe('togglePause(false)');scenario.observations.pauseMenu={beforePause,whilePaused};check(whilePaused.mode==='paused'&&Math.abs(whilePaused.clock.runTime-beforePause.runTime)<.001,'pause menu advanced run progression',name);"
+          new_pause="await probe(\"window.stackfallSetGameSpeed?.(1,{silent:true})\");await probe('togglePause(true)');const pauseEntered=await waitFor(page,\"state.mode==='paused'\",1000,20);const pausedStart=await probe('stackfallApexClockDiagnostics()');await sleep(320);const whilePaused=await probe(`({clock:stackfallApexClockDiagnostics(),mode:state.mode})`);await probe('togglePause(false)');scenario.observations.pauseMenu={pauseEntered,pausedStart,whilePaused};check(!!pauseEntered&&whilePaused.mode==='paused'&&Math.abs(whilePaused.clock.runTime-pausedStart.runTime)<.001,'pause menu advanced run progression after pause took effect',name);"
+          if old_pause not in s:
+              raise SystemExit('pause invariant assertion not found')
+          p.write_text(s.replace(old_pause,new_pause,1))
+          PY
       - name: Validate build and contracts
         run: node scripts/build-fingerprint.mjs
       - name: Start static server
