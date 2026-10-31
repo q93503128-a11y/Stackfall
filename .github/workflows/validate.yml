@@ -2,7 +2,7 @@ name: Validate Stackfall
 
 on:
   push:
-    branches: [main, fix/magnet-apex-runtime-audit]
+    branches: [main]
   pull_request:
 
 permissions:
@@ -48,6 +48,10 @@ jobs:
         run: node scripts/run-mode-contract.mjs
       - name: Check Enemy Director contract
         run: node scripts/enemy-director-contract.mjs
+      - name: Check field pickup contract
+        run: node scripts/field-pickup-contract.mjs
+      - name: Check runtime ownership contract
+        run: node scripts/runtime-ownership-contract.mjs
       - name: Check void boss contract
         run: node scripts/void-boss-contract.mjs
       - name: Check apex contract
@@ -84,10 +88,3 @@ jobs:
         run: node scripts/awakening-second-set-contract.mjs
       - name: Check awakening A14-A19 contract
         run: node scripts/awakening-final-set-contract.mjs
-      - name: Export workspace for direct test session
-        uses: actions/upload-artifact@v4
-        with:
-          name: stackfall-workspace-${{ github.sha }}
-          path: .
-          include-hidden-files: true
-          retention-days: 1
