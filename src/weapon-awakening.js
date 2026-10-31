@@ -137,16 +137,14 @@
   const baseTogglePause=togglePause;
   togglePause=function awakeningSafePause(force){if(state.mode==='awakeningChoice'||state.mode==='awakeningTransform')return;return baseTogglePause(force);};
 
-  const baseReset=resetGame;
-  resetGame=function awakeningReset(){
+  registerResetGameInterceptor('weapon-awakening.js:awakeningReset',function awakeningReset(next,...args){
     closeScreen();transform.classList.add('hidden');if((state.awakeningCores||0)>0&&state.mode!=='menu'&&state.mode!=='gameover'&&state.mode!=='stageComplete')cashOutAwakeningCores();state.awakeningCores=0;state.awakenedWeapons={};state.lastAwakeningCoreCashout=null;syncAwakeningCoreHud();
-    const result=baseReset();renderLoadout();return result;
-  };
-  const baseMenu=showMainMenu;
-  showMainMenu=function awakeningMenu(){
+    const result=next();renderLoadout();return result;
+  });
+  registerShowMainMenuInterceptor('weapon-awakening.js:awakeningMenu',function awakeningMenu(next,...args){
     closeScreen();transform.classList.add('hidden');cashOutAwakeningCores();state.awakeningCores=0;state.awakenedWeapons={};
-    return baseMenu();
-  };
+    return next();
+  });
   const AWAKENING_CORE_CASHOUT_STARDUST=40;
   function cashOutAwakeningCores(){
     const cores=Math.max(0,Math.floor(Number(state.awakeningCores)||0));
@@ -161,8 +159,7 @@
   }
   window.stackfallCashOutAwakeningCores=cashOutAwakeningCores;
   window.stackfallAwakeningCoreCashoutRate=AWAKENING_CORE_CASHOUT_STARDUST;
-  const baseEnd=endGame;
-  endGame=function awakeningEnd(){closeScreen();transform.classList.add('hidden');cashOutAwakeningCores();return baseEnd();};
+  registerEndGameInterceptor('weapon-awakening.js:awakeningEnd',function awakeningEnd(next,...args){closeScreen();transform.classList.add('hidden');cashOutAwakeningCores();return next();});
 
   window.stackfallGrantAwakeningCore=function grantAwakeningCore(amount=1){
     if(!awakeningEnabled())return state.awakeningCores||0;

@@ -312,9 +312,8 @@
   };
 
   // Shared timer/status layer for A8-A13.
-  const baseUpdateWeapons=updateWeapons;
-  updateWeapons=function awakeningSecondSetWeapons(dt){
-    baseUpdateWeapons(dt);
+  registerWeaponUpdateInterceptor('awakening-second-set',function awakeningSecondSetWeapons(next,dt){
+    next(dt);
     player.awChronoSeverFlash=Math.max(0,(player.awChronoSeverFlash||0)-dt);
     player.awIonCircuitCd=Math.max(0,(player.awIonCircuitCd||0)-dt);
 
@@ -336,7 +335,7 @@
     player.awDroneVolleyFlash=Math.max(0,(player.awDroneVolleyFlash||0)-dt);
     if(!awake('drone')){player.awDroneFleetCycle=0;player.awDroneVolleyFlash=0;}
     if(!awake('rail'))player.awRailCycle=0;
-  };
+  });
 
   // A8/A12 orbit silhouettes.
   const baseDrawEquippedOrbits=drawEquippedOrbits;
@@ -408,10 +407,8 @@
   const baseUpdateEffects=updateEffects;
   updateEffects=function awakeningSecondFxUpdate(dt){baseUpdateEffects(dt);for(const e of fx)e.life-=dt;compactInPlace(fx,keepSecondFx);};
 
-  const baseReset=resetGame;
-  resetGame=function awakeningSecondSetReset(){resetSecondAwakeningState();const result=baseReset();resetSecondAwakeningState();return result;};
-  const baseMenu=showMainMenu;
-  showMainMenu=function awakeningSecondSetMenu(){resetSecondAwakeningState();return baseMenu();};
+  registerResetGameInterceptor('weapon-awakening-effects-a8-a13.js:awakeningSecondSetReset',function awakeningSecondSetReset(next,...args){resetSecondAwakeningState();const result=next();resetSecondAwakeningState();return result;});
+  registerShowMainMenuInterceptor('weapon-awakening-effects-a8-a13.js:awakeningSecondSetMenu',function awakeningSecondSetMenu(next,...args){resetSecondAwakeningState();return next();});
 
   window.stackfallAwakeningSecondSetDebug=()=>({
     prismTarget:player.awPrismTargetId||null,chronoPhase:player.awChronoPhase||0,ionNodes:ionNodes.length,

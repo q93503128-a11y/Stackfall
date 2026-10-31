@@ -179,9 +179,7 @@ function renderRunDamageResults(scope='gameover'){
 }
 
 resetRunDamageStats();
-const damageStatsResetBase=resetGame;
-resetGame=function resetGameWithDamageStats(){resetRunDamageStats();return damageStatsResetBase();};
-const damageStatsEndBase=endGame;
-endGame=function endGameWithDamageStats(){const result=damageStatsEndBase();renderRunDamageResults('gameover');return result;};
+registerResetGameInterceptor('run-damage-stats.js:resetGameWithDamageStats',function resetGameWithDamageStats(next,...args){resetRunDamageStats();return next();});
+registerEndGameInterceptor('run-damage-stats.js:endGameWithDamageStats',function endGameWithDamageStats(next,...args){const result=next();renderRunDamageResults('gameover');return result;});
 window.stackfallRenderRunDamageResults=scope=>renderRunDamageResults(scope);
 window.stackfallDamageStats={snapshot:runDamageSnapshot,sourceKey:damageSourceWeaponKey};

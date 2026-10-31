@@ -1,9 +1,8 @@
 player.arcCd=player.arcCd||0;
 
-const sf2BaseResetGame=resetGame;
-resetGame=function resetGameWithBasicCore(){
+registerResetGameInterceptor('feature-pack.js:resetGameWithBasicCore',function resetGameWithBasicCore(next,...args){
   resetRuntimeWeaponState();
-  sf2BaseResetGame();
+  next();
   resetRuntimeWeaponState();
   state.weaponStacks.core=1;
   state.entities.curves.length=0;
@@ -14,12 +13,11 @@ resetGame=function resetGameWithBasicCore(){
   renderLoadout();
   updateHUD();
   audio.syncAmbient();
-};
+});
 
-const sf2BaseAddText=addText;
-addText=function addTextWithSetting(...args){
-  if(GAME_SETTINGS.damageNumbers!==false)sf2BaseAddText(...args);
-};
+registerAddTextInterceptor('feature-pack.js:addTextWithSetting',function addTextWithSetting(next,...args){
+  if(GAME_SETTINGS.damageNumbers!==false)next(...args);
+});
 
 const sf2BaseDealDamage=dealDamage;
 let sf2EchoBladeGuard=false;
@@ -48,7 +46,7 @@ dealDamage=function dealDamageWithDistinctBursts(enemy,amount,opts={}){
   scheduleWeaponAction(60,()=>{const target=enemyById(targetId);if(!target)return;sf2EchoBladeGuard=true;sf2BaseDealDamage(target,amount*.52,{color:COLORS.pink,source:'echo-blade',canCrit:false});sf2EchoBladeGuard=false;});
 };
 
-spawnCoreShot=function spawnStackedCoreShot(target,echoed=false){
+registerCoreShotInterceptor('feature-pack.js:spawnStackedCoreShot',function spawnStackedCoreShot(_next,target,echoed=false){
   if(!target)return;
   const stacks=Math.max(1,weaponCount('core'));
   if(!echoed)player.coreVolley=(player.coreVolley||0)+1;
@@ -64,7 +62,7 @@ spawnCoreShot=function spawnStackedCoreShot(target,echoed=false){
       color:echoed?COLORS.pink:'#d7f8ff',pierce:superShot?5:stacks>=3?1:0,source:echoed?'core-echo':'core'
     });
   }
-};
+});
 
 renderStarterOptions=function renderStarterOptionsWithoutCore(){
   ui.starterOptions.innerHTML='';
@@ -81,7 +79,7 @@ renderStarterOptions=function renderStarterOptionsWithoutCore(){
   const selected=weaponText(key);ui.starterName.textContent=selected.name;ui.starterDesc.textContent=selected.desc;
 };
 
-rollChoices=function rollChoicesWithBasicCore(n){
+registerRollChoicesInterceptor('feature-pack.js:rollChoicesWithBasicCore',function rollChoicesWithBasicCore(_next,n){
   const pool=[];
   const coreCount=weaponCount('core');
   if(coreCount<6)pool.push({kind:'core',key:'core',...WEAPONS.core,weight:coreCount<3?1.28:1.08});
@@ -98,7 +96,7 @@ rollChoices=function rollChoicesWithBasicCore(n){
     out.push(pool.splice(Math.min(index,pool.length-1),1)[0]);
   }
   return out;
-};
+});
 
 function sf2SlotMarkup(key,basic=false){
   const w=WEAPONS[key],text=weaponText(key),count=weaponCount(key);

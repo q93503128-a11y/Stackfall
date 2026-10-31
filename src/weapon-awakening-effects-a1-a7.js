@@ -20,9 +20,8 @@
   resetAwakeningCombatState();
 
   // A1 — Stellar Core: every Core Pulse is replaced by one central stellar lance plus three satellite lances.
-  const baseSpawnCoreShot=spawnCoreShot;
-  spawnCoreShot=function stellarCoreShot(target,echoed=false){
-    if(!awake('core'))return baseSpawnCoreShot(target,echoed);
+  registerCoreShotInterceptor('weapon-awakening-effects-a1-a7.js:stellarCoreShot',function stellarCoreShot(next,target,echoed=false){
+    if(!awake('core'))return next(target,echoed);
     if(!target||target.dead)return;
     const n=Math.max(1,weaponCount('core')),range=weaponRange('core'),size=weaponSizeMultiplier(),power=echoed?.72:1,
       baseDamage=corePulseDamage(n),phase=(state.time||0)*1.4,targetId=target.id,
@@ -41,7 +40,7 @@
       });
     }
     pushFx({kind:'stellar-volley',x:player.x,y:player.y,life:.30,max:.30});
-  };
+  });
 
   // A2 — Eclipse Blades: no periodic alignment attack. Five real blades orbit continuously with a breathing speed cycle.
   function bladeOrbitSpeedMultiplier(){
@@ -51,14 +50,13 @@
   }
   window.stackfallAwakenedBladeOrbitSpeedMultiplier=bladeOrbitSpeedMultiplier;
 
-  const baseUpdateWeapons=updateWeapons;
-  updateWeapons=function awakenedFirstSetWeapons(dt){
-    baseUpdateWeapons(dt);
+  registerWeaponUpdateInterceptor('awakening-first-set',function awakenedFirstSetWeapons(next,dt){
+    next(dt);
     player.awEmberChargeFlash=Math.max(0,(player.awEmberChargeFlash||0)-dt);
     player.awBulwarkHitFlash=Math.max(0,(player.awBulwarkHitFlash||0)-dt);
     player.awBulwarkStrong=Math.max(0,(player.awBulwarkStrong||0)-dt);
     if(awake('bulwark')){player.awBulwarkVolleyCd=(Number(player.awBulwarkVolleyCd)||0)-dt;if(player.awBulwarkVolleyCd<=0){player.awBulwarkVolleyCd=Math.max(1.55,2.75*hasteMult());fireBastionVolley();}}else player.awBulwarkVolleyCd=1.1;
-  };
+  });
 
   const baseFireEmber=fireEmber;
   fireEmber=function awakenedRedMeteorCaster(target,n,echoed=false){
@@ -113,10 +111,9 @@
     pushFx({kind:'bastion-volley',x:player.x,y:player.y,count,life:.34,max:.34});
     audio.weapon?.('bulwark',false,1.18);
   }
-  const baseHurtPlayer=hurtPlayer;
-  hurtPlayer=function celestialBastionHurt(amount,source='contact'){
+  registerPlayerDamageInterceptor('awakening-bastion',function celestialBastionHurt(next,amount,source='contact'){
     const beforeShield=Math.max(0,Number(player.shield)||0),beforeHp=Math.max(0,Number(player.hp)||0);
-    baseHurtPlayer(amount,source);
+    next(amount,source);
     if(!awake('bulwark')||state.mode==='gameover'||(player.shield>=beforeShield&&player.hp>=beforeHp))return;
     const threat=nearestEnemy(player.x,player.y,360),angle=threat?Math.atan2(threat.y-player.y,threat.x-player.x):(Number.isFinite(player.facingAngle)?player.facingAngle:0);
     player.awBulwarkHitAngle=angle;player.awBulwarkHitFlash=.32;
@@ -128,7 +125,7 @@
       for(let i=0;i<8;i++){const a=i*TAU/8;spawnParticle(player.x+Math.cos(a)*42,player.y+Math.sin(a)*42,'#baffdf',2,155,4.2);}
       pushFx({kind:'bastion-break',x:player.x,y:player.y,r:radius,life:.58,max:.58});
     }
-  };
+  });
 
   // A5 — Binary Collapse: native twin wells and augment collapses remain. The native pair gains one bounded final merger.
   let gravityGroupId=0;
@@ -332,8 +329,8 @@
   const baseDrawAlliedEffects=drawAlliedEffects;
   drawAlliedEffects=function awakeningFirstSetEffects(){baseDrawAlliedEffects();drawAwakeningFx();};
 
-  const baseReset=resetGame;resetGame=function awakeningFirstSetReset(){resetAwakeningCombatState();const result=baseReset();resetAwakeningCombatState();return result;};
-  const baseMenu=showMainMenu;showMainMenu=function awakeningFirstSetMenu(){resetAwakeningCombatState();return baseMenu();};
+  registerResetGameInterceptor('weapon-awakening-effects-a1-a7.js:awakeningFirstSetReset',function awakeningFirstSetReset(next,...args){resetAwakeningCombatState();const result=next();resetAwakeningCombatState();return result;});
+  registerShowMainMenuInterceptor('weapon-awakening-effects-a1-a7.js:awakeningFirstSetMenu',function awakeningFirstSetMenu(next,...args){resetAwakeningCombatState();return next();});
 
   window.stackfallAwakeningFirstSetDebug=()=>({
     bladeOrbitSpeed:bladeOrbitSpeedMultiplier(),bladeNativeCount:awake('blade')?5:(weaponCount('blade')>=5?3:weaponCount('blade')>=2?2:1),
