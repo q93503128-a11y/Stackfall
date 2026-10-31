@@ -31,10 +31,23 @@ jobs:
           cat /tmp/stackfall-http.log
           exit 1
       - name: Chromium full smoke
+        id: smoke
+        continue-on-error: true
         env:
           STACKFALL_ALLOW_GPU_SKIP: '0'
           STACKFALL_ALLOW_CONTEXT_SKIP: '0'
         run: node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/?dev=1
+      - name: Report smoke result
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const p='test-results/stackfall-smoke.json';
+          if(!fs.existsSync(p)){console.error('SMOKE_RESULT_MISSING');process.exit(1);}
+          const r=JSON.parse(fs.readFileSync(p,'utf8'));
+          console.log('SMOKE_DIAGNOSTIC='+JSON.stringify({ok:r.ok,failures:r.failures,skips:r.skips,scenarios:r.scenarios?.map(s=>({name:s.name,ok:s.ok,failures:s.failures}))}));
+          if(!r.ok)process.exit(1);
+          NODE
       - name: Persist validated source tree
         shell: bash
         run: |
