@@ -48,46 +48,22 @@ jobs:
               s=s.replace(old_pause,new_pause,1)
           p.write_text(s)
 
-          failure='흡입 자석 bypassed or changed the normal XP gain pipeline'
-          qa_file=None
-          for candidate in Path('scripts').glob('*.mjs'):
-              text=candidate.read_text()
-              if failure in text:
-                  qa_file=candidate
-                  break
-          if qa_file is None:
-              raise SystemExit('field-pickup browser QA source not found')
-          t=qa_file.read_text()
-          if 'api.setLevelUpsDisabled(true);' not in t:
-              marker='api.startEndless();'
-              pos=t.find(marker)
-              if pos < 0:
-                  raise SystemExit('field-pickup startEndless marker not found')
-              insert_at=pos+len(marker)
-              t=t[:insert_at]+'api.setLevelUpsDisabled(true);'+t[insert_at:]
-          if 'state.xpNeed=1e9' not in t:
-              failure_pos=t.index(failure)
-              marker='state.xp=0;'
-              setup_pos=t.rfind(marker,0,failure_pos)
-              if setup_pos >= 0:
-                  insert_at=setup_pos+len(marker)
-                  t=t[:insert_at]+'state.xpNeed=1e9;'+t[insert_at:]
-          qa_file.write_text(t)
-          print('Normalized pickup QA:',qa_file)
+          q=Path('scripts/field-pickup-browser.mjs')
+          t=q.read_text()
+          t=t.replace('api.setLevelUpsDisabled(true);','')
+          t=t.replace('state.xpNeed=1e9;','')
+          setup_old="GAME_SETTINGS.audio.master=false;state.spawnTimer=state.encounterTimer=99999;state.xp=0;"
+          setup_new="GAME_SETTINGS.audio.master=false;state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;state.mode='playing';ui.choice?.classList.add('hidden');state.spawnTimer=state.encounterTimer=99999;state.xp=0;"
+          if setup_old in t:
+              t=t.replace(setup_old,setup_new,1)
+          magnet_old="state.entities.gems.length=0;state.entities.fieldPickups.length=0;state.xp=0;"
+          magnet_new="state.entities.gems.length=0;state.entities.fieldPickups.length=0;state.xp=0;state.xpNeed=1e12;state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;state.mode='playing';ui.choice?.classList.add('hidden');"
+          if magnet_old in t:
+              t=t.replace(magnet_old,magnet_new,1)
+          t=t.replace('state.xpNeed=1e12;state.xpNeed=1e12;','state.xpNeed=1e12;')
+          q.write_text(t)
+          print('Normalized pickup QA:',q)
           PY
-      - name: Pack patched workspace for recovery
-        if: env.STACKFALL_APPLIED_PATCH == '1'
-        shell: bash
-        run: |
-          set -euo pipefail
-          tar --exclude=.git --exclude=test-results -czf /tmp/stackfall-patched-workspace.tgz .
-      - name: Upload patched workspace for recovery
-        if: env.STACKFALL_APPLIED_PATCH == '1'
-        uses: actions/upload-artifact@v4
-        with:
-          name: stackfall-patched-workspace-${{ github.sha }}
-          path: /tmp/stackfall-patched-workspace.tgz
-          retention-days: 1
       - name: Validate build and contracts
         run: node scripts/build-fingerprint.mjs
       - name: Start static server
