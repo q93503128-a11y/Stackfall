@@ -1,0 +1,70 @@
+name: Endless event canon cleanup temp
+
+on:
+  push:
+    branches:
+      - feature/enemy-director-v1
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/enemy-director-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Restore three-event Endless canon
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('src/map-event-expansion.js')
+          s=p.read_text()
+          old="const LIMITS={marker:46,choice:22,crash:82,void:108,distress:46,meteor:44,predator:52,relay:56,storm:42},EVENT_CLOCK_KEYS=['vault','crash','void','distress','meteor','predator','relay','storm'];"
+          new="const LIMITS={marker:46,choice:22,crash:82,void:108},EVENT_CLOCK_KEYS=Object.freeze(['vault','crash','void']);"
+          assert old in s
+          s=s.replace(old,new,1)
+          s,count=re.subn(r"\n  function finishFieldEvent\(type,cards\)\{.*?\n  function clearEventCombat", "\n  function clearEventCombat", s, count=1, flags=re.S)
+          assert count==1
+          old="function updateCombatTimer(){const ev=state.mapEventActive;if(!ev||!['crash','void','distress','meteor','predator','relay','storm'].includes(ev.type)||!Number.isFinite(ev.remainingTime)){combatTimer.classList.add('hidden');return;}"
+          new="function updateCombatTimer(){const ev=state.mapEventActive;if(!ev||!['crash','void'].includes(ev.type)||!Number.isFinite(ev.remainingTime)){combatTimer.classList.add('hidden');return;}"
+          assert old in s
+          s=s.replace(old,new,1)
+          old="if(marker.type==='void')openVoidChoice();else if(marker.type==='crash')startCrash();else if(marker.type==='vault')openVault();else startFieldEvent(marker.type);"
+          new="if(marker.type==='void')openVoidChoice();else if(marker.type==='crash')startCrash();else if(marker.type==='vault')openVault();"
+          assert old in s
+          s=s.replace(old,new,1)
+          old="function updateMapEvents(dt){initState();if(state.mapEventActive){state.entities.mapEvents.length=0;if(state.mapEventActive.type==='crash')updateCrash(dt);else if(state.mapEventActive.type==='void')updateVoid(dt);else updateFieldEvent(dt);updateCombatTimer();return;}"
+          new="function updateMapEvents(dt){initState();if(state.mapEventActive){state.entities.mapEvents.length=0;if(state.mapEventActive.type==='crash')updateCrash(dt);else if(state.mapEventActive.type==='void')updateVoid(dt);updateCombatTimer();return;}"
+          assert old in s
+          s=s.replace(old,new,1)
+          old="function worldEventBlocksSpawning(){return !!(state.mapEventActive&&['crash','void','distress','meteor','predator','relay','storm'].includes(state.mapEventActive.type));}"
+          new="function worldEventBlocksSpawning(){return !!(state.mapEventActive&&['crash','void'].includes(state.mapEventActive.type));}"
+          assert old in s
+          s=s.replace(old,new,1)
+          old="const EVENT_TYPES=Object.freeze([...EVENT_CLOCK_KEYS]);"
+          new="const EVENT_TYPES=Object.freeze([...EVENT_CLOCK_KEYS]);window.STACKFALL_ENDLESS_EVENT_TYPES=EVENT_TYPES;"
+          assert old in s
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+          node --check src/map-event-expansion.js
+          ! grep -q "function mapEventKillEnemy" src/map-event-expansion.js
+          grep -Fq "EVENT_CLOCK_KEYS=Object.freeze(['vault','crash','void'])" src/map-event-expansion.js
+      - name: Commit cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/map-event-expansion.js
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Restore three-event Endless runtime canon"
+          git push origin HEAD:feature/enemy-director-v1
