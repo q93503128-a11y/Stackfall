@@ -30,9 +30,47 @@ jobs:
           base64 -d "$RUNNER_TEMP/canonical-cleanup.b64" | xz -d > "$RUNNER_TEMP/canonical-cleanup.patch"
           git apply --check "$RUNNER_TEMP/canonical-cleanup.patch"
           git apply "$RUNNER_TEMP/canonical-cleanup.patch"
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path=Path('scripts/awakening-runtime-checks.mjs')
+          source=path.read_text()
+          old="""  const stages=[],activeStages=[...(window.STACKFALL_ACTIVE_STAGE_RUNTIMES||['stage-01'])];
+            check(activeStages.length>0,'active Stage runtime list is empty');
+            for(const theme of activeStages){
+          """
+          new="""  const stages=[],activeStages=[...(window.STACKFALL_ACTIVE_STAGE_RUNTIMES||[])];
+            if(activeStages.length===0){
+              check(window.STACKFALL_STAGE_MODE_ENABLED===false&&window.stackfallHasStageRuntime?.()===false,'sealed Stage runtime state is inconsistent');
+            }
+            for(const theme of activeStages){
+          """
+          if old not in source: raise SystemExit('awakening Stage assertion block not found')
+          path.write_text(source.replace(old,new,1))
+
+          path=Path('scripts/apex-foundation-browser.mjs')
+          source=path.read_text()
+          old="""      const partFixture=await probe(`(()=>{const result=stackfallDeveloperTest.defineMultipartFixture([{key:'left',label:'PART A',dx:-155,dy:0,r:38},{key:'shoulder',label:'PART B',dx:0,dy:0,r:54},{key:'right',label:'PART C',dx:155,dy:0,r:38}]);const e=state.entities.enemies.find(x=>x.id===state.apexActiveId);return{result,parts:stackfallBossPartDiagnostics(),sameOwner:e.bodyParts.every(p=>p.owner===e),separateCoordinates:new Set(e.bodyParts.map(p=>String(p.x)+','+String(p.y))).size};})()`);
+          """
+          new="""      await probe("state.mode='paused'");
+                const partFixture=await probe(`(()=>{const result=stackfallDeveloperTest.defineMultipartFixture([{key:'left',label:'PART A',dx:-155,dy:0,r:38},{key:'shoulder',label:'PART B',dx:0,dy:0,r:54},{key:'right',label:'PART C',dx:155,dy:0,r:38}]);const e=state.entities.enemies.find(x=>x.id===state.apexActiveId);return{result,parts:stackfallBossPartDiagnostics(),sameOwner:e.bodyParts.every(p=>p.owner===e),separateCoordinates:new Set(e.bodyParts.map(p=>String(p.x)+','+String(p.y))).size};})()`);
+          """
+          if old not in source: raise SystemExit('Apex multipart fixture start not found')
+          source=source.replace(old,new,1)
+          old="""      scenario.observations.attackPaths=attackPaths;check(attackPaths.pierce===1&&attackPaths.rail===1&&attackPaths.mine===1&&attackPaths.blade===1,'piercing, beam, mine or melee path did not route one hit to the shared boss',name);
+                await capture(page,join(screenshotDir,'apex-foundation-debug-parts.png')).then(path=>scenario.screenshots.push(path));
+          """
+          new="""      scenario.observations.attackPaths=attackPaths;check(attackPaths.pierce===1&&attackPaths.rail===1&&attackPaths.mine===1&&attackPaths.blade===1,'piercing, beam, mine or melee path did not route one hit to the shared boss',name);
+                await probe("state.mode='playing'");
+          """
+          if old not in source: raise SystemExit('Apex multipart fixture end not found')
+          path.write_text(source.replace(old,new,1))
+          PY
           test ! -e src/event-guide-refinement-v1.js
           grep -Fq "EVENT_CLOCK_KEYS=Object.freeze(['vault','crash','void'])" src/map-event-expansion.js
           ! grep -Eq 'drawMapEvents[[:space:]]*=[[:space:]]*function' src/dark-cosmic-polish.js src/build-audit-ui.js src/runtime-controls.js
+          node --check scripts/awakening-runtime-checks.mjs
+          node --check scripts/apex-foundation-browser.mjs
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
