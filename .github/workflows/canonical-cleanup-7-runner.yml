@@ -18,10 +18,16 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
+          import re
           p=Path('.validation/canonical-cleanup-7-transform.mjs')
           s=p.read_text()
           s=s.replace(r"\`player-damage-${STACKFALL_PLAYER_DAMAGE_INTERCEPTORS.length}\`", "'player-damage-'+STACKFALL_PLAYER_DAMAGE_INTERCEPTORS.length")
           s=s.replace(r"\`weapon-update-${STACKFALL_WEAPON_UPDATE_INTERCEPTORS.length}\`", "'weapon-update-'+STACKFALL_WEAPON_UPDATE_INTERCEPTORS.length")
+          pattern=r"const anchor=.*?;\nexpect\(contract\.includes\(anchor\),'runtime ownership contract anchor missing'\);"
+          replacement="const anchor=\"enemy update feature layers register interceptors instead of replacing updateEnemies\";\nconst anchorPos=contract.indexOf(anchor);expect(anchorPos>=0,'runtime ownership contract anchor missing');const anchorStart=contract.lastIndexOf('\\n',anchorPos)+1,anchorEnd=contract.indexOf('\\n',anchorPos),anchorLine=contract.slice(anchorStart,anchorEnd);"
+          s,n=re.subn(pattern,replacement,s,count=1)
+          assert n==1, 'failed to rewrite ownership contract anchor guard'
+          s=s.replace('contract=contract.replace(anchor,anchor+extra);','contract=contract.replace(anchorLine,anchorLine+extra);')
           p.write_text(s)
           PY
           node .validation/canonical-cleanup-7-transform.mjs
