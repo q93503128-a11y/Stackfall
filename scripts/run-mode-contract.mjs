@@ -14,7 +14,7 @@ const checks=[
  ['sortie launch still starts gameplay through the shared preparation flow',sortie.includes('audio.init();resetGame()')&&sortie.includes('stackfallSetRunSelection?.(mode,stageId)')],
  ['Stage selection requests are rejected before launch',modes.includes("if(mode!==MODES.ENDLESS||!['menu','gameover','stageComplete'].includes(state.mode))return false")],
  ['Endless remains non-finite with random events and all enemy families',modes.includes('finite:false')&&modes.includes('randomWorldEvents:true')&&modes.includes('allEnemyFamilies:true')],
- ['Endless stays campaign-gated without gating random events',modes.includes("stackfallIsFeatureUnlocked?.('endless')===false")&&catalog.includes("type:'feature',key:'endless'")&&events.includes("EVENT_CLOCK_KEYS=['vault','crash','void','distress','meteor','predator','relay','storm']")&&events.includes('EVENT_TYPES=Object.freeze([...EVENT_CLOCK_KEYS])')],
+ ['Endless stays campaign-gated with exactly the canonical three random events',modes.includes("stackfallIsFeatureUnlocked?.('endless')===false")&&catalog.includes("type:'feature',key:'endless'")&&events.includes("EVENT_CLOCK_KEYS=Object.freeze(['vault','crash','void'])")&&events.includes('EVENT_TYPES=Object.freeze([...EVENT_CLOCK_KEYS])')&&!events.includes('function mapEventKillEnemy')],
  ['Hard unlock remains separate from run mode in preserved progression data',catalog.includes("type:'feature',key:'hard'")],
  ['Endless apex cadence is ten minutes',modes.includes('apexIntervalSeconds:600')&&core.includes('nextApexAt:600')],
  ['all Stage statuses are gated to planned while sealed',modes.includes("const gatedStatus=()=> 'planned'")&&modes.includes('window.stackfallStageStatus=gatedStatus')],

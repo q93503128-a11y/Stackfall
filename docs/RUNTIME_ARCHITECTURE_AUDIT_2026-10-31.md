@@ -30,6 +30,7 @@ The immediate repair in this pass is deliberately incremental rather than a full
 - Last Constellation no longer temporarily replaces global `killEnemy` while routing node damage.
 - Apex reward entry is prepared before the game commits to `apexReward` mode.
 - Runtime ownership contracts were added so the repaired boundaries cannot silently regress to late wrappers.
+- Last Constellation production/presentation chain is loaded in one explicit static order instead of nested runtime script injection.
 
 ## Comparison matrix
 
@@ -126,7 +127,7 @@ Static contracts now guard the repaired ownership boundaries and field-pickup/XP
 ## Adopt later
 
 - Continue moving dynamic feature behavior behind explicit subsystem APIs instead of wrappers.
-- Consolidate Apex production loading so each form has an obvious gameplay owner and presentation owner.
+- Continue consolidating the remaining Apex production loaders (`build-info.js` still owns several Atropos/Omega/reward bootstrap scripts) so each form has an obvious gameplay owner and presentation owner.
 - Introduce an explicit event/observer surface for cross-cutting analytics/achievements where several systems currently want post-death notification.
 - Gradually reduce global mutable symbols, but only behind regression-tested boundaries. A single large ESM migration is not justified while the game is actively changing.
 - Split remaining oversized canonical files by domain when a clear ownership boundary exists; do not split merely to reduce line count.

@@ -124,6 +124,4 @@
     return{version:'v2',revision:3,phase:s.phase,totalNodes:11,distribution:{outer:4,middle:3,inner:3,core:1},activeNodes:active.map(n=>n.key),destroyedNodes:Object.values(s.nodes).filter(n=>n.destroyed).map(n=>n.key),coreActive:s.phase===4,anchored:true,patternsOwned:false,sharedScalePulse:false,ownerHp:Math.max(0,e.hp),nodeHpSum:health.hp,totalMaxHp:health.maxHp,healthSynchronized:Math.abs(e.hp-health.hp)<.001,wideWorldCulling:true,structureSpanR:{x:35.6,y:23.5},outerMaxRadiusR:18.2};
   };
 
-  const loadReset=()=>{if(window.stackfallLastConstellationReset==='v1'||document.querySelector('script[data-last-constellation-reset-v1]'))return;const script=document.createElement('script');script.src='src/last-constellation-reset-v1.js';script.dataset.lastConstellationResetV1='1';document.body.appendChild(script);};
-  if(document.readyState==='loading')window.addEventListener('load',loadReset,{once:true});else loadReset();
 })();

@@ -2,10 +2,10 @@
 const FIELD_PICKUP_TYPES=Object.freeze({
   suctionMagnet:Object.freeze({kind:'suctionMagnet',name:'흡입 자석',r:17,color:'#ffcc5c'})
 });
-const SUCTION_MAGNET_DROP_CHANCE=.0025,SUCTION_MAGNET_DROP_COOLDOWN=75;
+const SUCTION_MAGNET_MINI_DROP_CHANCE=.50;
 function fieldPickupRuntime(){
   let runtime=state.fieldPickupRuntime;
-  if(!runtime||runtime.runSerial!==state.runSerial)runtime=state.fieldPickupRuntime={runSerial:state.runSerial,nextSuctionMagnetAt:0,dropped:0,collected:0,lastPulled:0,lastPulledValue:0};
+  if(!runtime||runtime.runSerial!==state.runSerial)runtime=state.fieldPickupRuntime={runSerial:state.runSerial,dropped:0,collected:0,lastPulled:0,lastPulledValue:0};
   return runtime;
 }
 function spawnFieldPickup(kind,x,y,options={}){
@@ -27,10 +27,12 @@ function updateFieldPickups(dt){
   compactInPlace(pickups,p=>!!(p&&p.active!==false));
 }
 function maybeDropFieldPickup(enemy){
-  if(!enemy||enemy.kind!=='normal'||enemy.eventKind||enemy.type==='mini'||enemy.type==='boss')return null;
+  if(!enemy||enemy.dead!==true)return null;
+  const isMini=enemy.type==='mini',isRegularBoss=enemy.type==='boss'&&enemy.kind==='boss'&&!enemy.eventKind;
+  if(!isMini&&!isRegularBoss)return null;
+  if(isMini&&Math.random()>=SUCTION_MAGNET_MINI_DROP_CHANCE)return null;
   const pickups=state.entities.fieldPickups;if(pickups.some(p=>p?.active!==false&&p.kind==='suctionMagnet'))return null;
-  const runtime=fieldPickupRuntime(),now=Math.max(0,Number(state.time)||0);if(now<runtime.nextSuctionMagnetAt||Math.random()>=SUCTION_MAGNET_DROP_CHANCE)return null;
-  const pickup=spawnFieldPickup('suctionMagnet',enemy.x,enemy.y,{source:'enemy-drop'});if(pickup){runtime.dropped++;runtime.nextSuctionMagnetAt=now+SUCTION_MAGNET_DROP_COOLDOWN;}return pickup;
+  const pickup=spawnFieldPickup('suctionMagnet',enemy.x,enemy.y,{source:isMini?'mini-boss-drop':'boss-drop'});if(pickup)fieldPickupRuntime().dropped++;return pickup;
 }
 function drawFieldPickups(){
   const pickups=state.entities.fieldPickups||[],now=performance.now()*.004;for(const pickup of pickups){if(!pickup||pickup.active===false)continue;const sx=pickup.x-player.x+vw/2,sy=pickup.y-player.y+vh/2;if(sx<-48||sx>vw+48||sy<-48||sy>vh+48)continue;const def=FIELD_PICKUP_TYPES[pickup.kind];if(!def)continue;const r=def.r*(.96+.06*Math.sin(now+(pickup.pulse||0))),bob=Math.sin(now*.85+(pickup.pulse||0))*3;ctx.save();ctx.translate(Math.round(sx),Math.round(sy+bob));ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowColor=def.color;ctx.shadowBlur=GAME_SETTINGS.sparkles===false?0:13;ctx.strokeStyle=def.color;ctx.lineWidth=Math.max(5,r*.42);ctx.beginPath();ctx.moveTo(-r*.68,-r*.62);ctx.lineTo(-r*.68,0);ctx.quadraticCurveTo(-r*.68,r*.72,0,r*.72);ctx.quadraticCurveTo(r*.68,r*.72,r*.68,0);ctx.lineTo(r*.68,-r*.62);ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle='#f5f7ff';ctx.lineWidth=Math.max(3,r*.27);ctx.beginPath();ctx.moveTo(-r*.68,-r*.70);ctx.lineTo(-r*.68,-r*.43);ctx.moveTo(r*.68,-r*.70);ctx.lineTo(r*.68,-r*.43);ctx.stroke();ctx.restore();}
