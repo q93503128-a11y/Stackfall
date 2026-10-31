@@ -293,7 +293,7 @@
   renderStarterOptions=finalRenderStarterOptions;
 
   const baseRenderMetaUi=window.renderStackfallMetaUi;
-  if(typeof baseRenderMetaUi==='function'&&!baseRenderMetaUi.__achievementV2){const wrapped=function(){const result=baseRenderMetaUi();renderEndlessProfile();return result;};wrapped.__achievementV2=true;window.stackfallRenderMetaUi=wrapped;}
+  if(typeof baseRenderMetaUi==='function'&&!baseRenderMetaUi.__achievementV2){const wrapped=function(){const result=baseRenderMetaUi();renderEndlessProfile();return result;};wrapped.__achievementV2=true;window.renderStackfallMetaUi=wrapped;}
   document.querySelector('#hubProfile')?.addEventListener('click',()=>queueMicrotask(renderEndlessProfile));
   document.querySelector('#profileNameSaveBtn')?.addEventListener('click',()=>queueMicrotask(renderEndlessProfile));
 
