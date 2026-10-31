@@ -312,9 +312,8 @@
   };
 
   // Shared timer/status layer for A8-A13.
-  const baseUpdateWeapons=updateWeapons;
-  updateWeapons=function awakeningSecondSetWeapons(dt){
-    baseUpdateWeapons(dt);
+  registerWeaponUpdateInterceptor('awakening-second-set',function awakeningSecondSetWeapons(next,dt){
+    next(dt);
     player.awChronoSeverFlash=Math.max(0,(player.awChronoSeverFlash||0)-dt);
     player.awIonCircuitCd=Math.max(0,(player.awIonCircuitCd||0)-dt);
 
@@ -336,7 +335,7 @@
     player.awDroneVolleyFlash=Math.max(0,(player.awDroneVolleyFlash||0)-dt);
     if(!awake('drone')){player.awDroneFleetCycle=0;player.awDroneVolleyFlash=0;}
     if(!awake('rail'))player.awRailCycle=0;
-  };
+  });
 
   // A8/A12 orbit silhouettes.
   const baseDrawEquippedOrbits=drawEquippedOrbits;

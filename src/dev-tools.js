@@ -16,11 +16,10 @@
   let infiniteCurrency=false,refreshSlotEditor=()=>{};
   window.stackfallDevInvincible=false;
   window.stackfallDevDisableLevelUps=false;
-  const baseDevHurtPlayer=hurtPlayer;
-  hurtPlayer=function developerInvincibility(amount,source='contact'){
+  registerPlayerDamageInterceptor('dev-invincibility',function developerInvincibility(next,amount,source='contact'){
     if(window.stackfallDevInvincible===true){player.invuln=Math.max(Number(player.invuln)||0,.15);return;}
-    return baseDevHurtPlayer(amount,source);
-  };
+    return next(amount,source);
+  });
   const baseDevGainXp=gainXp,baseDevTryLevelUp=tryLevelUp;
   gainXp=function developerGainXp(value){if(window.stackfallDevDisableLevelUps===true){state.xp=0;return;}return baseDevGainXp(value);};
   tryLevelUp=function developerTryLevelUp(){if(window.stackfallDevDisableLevelUps===true){state.xp=0;return false;}return baseDevTryLevelUp();};

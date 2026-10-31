@@ -191,8 +191,10 @@ export function awakeningRuntimeChecks(){
   player.hp=1;document.querySelector('#devHeal').click();check(player.hp===player.maxHp,'DEV heal failed');
   scheduleWeaponAction(100,()=>spawnPlayerProjectile({x:0,y:0,vx:0,vy:0,life:1,source:'comet'}));
   document.querySelector('#devClearEnemies').click();drain();check(Object.values(state.entities).every(list=>!Array.isArray(list)||list.length===0)&&state.pendingActions.length===0,'DEV Clear left entities or delayed attacks');
-  const stages=[],activeStages=[...(window.STACKFALL_ACTIVE_STAGE_RUNTIMES||['stage-01'])];
-  check(activeStages.length>0,'active Stage runtime list is empty');
+  const stages=[],activeStages=[...(window.STACKFALL_ACTIVE_STAGE_RUNTIMES||[])];
+  if(activeStages.length===0){
+    check(window.STACKFALL_STAGE_MODE_ENABLED===false&&window.stackfallHasStageRuntime?.()===false,'sealed Stage runtime state is inconsistent');
+  }
   for(const theme of activeStages){
     const order=Math.max(1,Number(String(theme).split('-').at(-1))||1),started=dev.startStage(theme);
     check(started&&state.stageRun?.stage?.id===theme,`${theme} DEV stage start failed`);if(!started||!state.stageRun)continue;

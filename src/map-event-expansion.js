@@ -32,7 +32,7 @@
     @keyframes vaultOrbit{to{transform:translate(-50%,-50%) rotate(372deg)}}
     @media(max-width:720px){.world-event-shell{padding:18px 14px}.world-event-cards{grid-template-columns:1fr;max-height:66vh;overflow:auto}.world-event-card{min-height:145px;padding:16px}.world-event-card span{width:48px;height:48px;font-size:27px}.vault-orbit-a{width:520px}.vault-orbit-b{width:390px;height:390px}#worldEventCombatTimer{top:102px}}
   `;document.head.appendChild(style);
-  const INTERVALS={vault:[155,215],distress:[175,245],crash:[205,285],meteor:[185,255],predator:[220,305],relay:[235,325],storm:[255,350],void:[285,390]},FIRST={vault:42,distress:78,crash:118,meteor:154,predator:192,relay:232,storm:274,void:320},EVENT_GAP=58,TYPE_GAP={vault:145,distress:165,crash:195,meteor:175,predator:210,relay:225,storm:240,void:270};
+  const INTERVALS={vault:[155,215],crash:[205,285],void:[285,390]},FIRST={vault:42,crash:118,void:320},EVENT_GAP=58,TYPE_GAP={vault:145,crash:195,void:270};
   let choiceTimeout=null,choiceTicker=null,choiceToken=0;
   function clearChoiceClock(){choiceToken++;if(choiceTimeout){clearTimeout(choiceTimeout);choiceTimeout=null;}if(choiceTicker){clearInterval(choiceTicker);choiceTicker=null;}const timer=$('#worldEventTimer');if(timer)timer.textContent='';}
   function hideOverlay(){clearChoiceClock();overlay.classList.add('hidden');overlay.dataset.eventType='signal';}

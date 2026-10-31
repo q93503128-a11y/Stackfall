@@ -196,13 +196,13 @@
     }
   };
 
-  const rrUpdateWeapons=updateWeapons;updateWeapons=function(dt){
-    rrUpdateWeapons(dt);if(state.mode!=='playing')return;
+  registerWeaponUpdateInterceptor('reward-traits',function rewardTraitWeaponUpdate(next,dt){
+    next(dt);if(state.mode!=='playing')return;
     state.rewardTimers=state.rewardTimers||{stellar:6,aegis:8,chrono:7};
     if(state.bossTraits.stellar){state.rewardTimers.stellar-=dt;if(state.rewardTimers.stellar<=0){state.rewardTimers.stellar=7.5;const targets=nearestEnemies(player.x,player.y,6);for(const e of targets){dealDamage(e,32+state.level*1.5,{color:'#ffe49a',source:'stellar-crown'});state.entities.beams.push({x1:player.x,y1:player.y,x2:e.x,y2:e.y,life:.22,max:.22,color:'#ffe49a',width:2.6});}}}
     if(state.bossTraits.aegis){state.rewardTimers.aegis-=dt;if(state.rewardTimers.aegis<=0){state.rewardTimers.aegis=AEGIS_SHIELD_PROFILE.interval;if(rechargeShield(AEGIS_SHIELD_PROFILE.gain,AEGIS_SHIELD_PROFILE.cap)>0)shockwave(player.x,player.y,'#83ffd1',120,.42,4);}}
     if(state.bossTraits.chrono){state.rewardTimers.chrono-=dt;if(state.rewardTimers.chrono<=0){state.rewardTimers.chrono=9;shockwave(player.x,player.y,'#8fffe0',220,.55,4);for(const e of state.entities.enemies)if(!e.dead&&e.kind!=='apex'&&Math.hypot(e.x-player.x,e.y-player.y)<220)e.timeLock=Math.max(e.timeLock||0,e.type==='boss'?.55:1.35);}}
-  };
+  });
 
   const rrDeal=dealDamage;let chainGuard=false,bladeGuard=false,augmentBurstGuard=false;
   dealDamage=function(enemy,amount,opts={}){
@@ -215,12 +215,12 @@
     if(state.weaponAugments.chrono&&locked&&enemy.dead){augmentBurstGuard=true;areaDamage(x,y,118*weaponSizeMultiplier(),24+weaponCount('chrono')*4.2,COLORS.chrono,'chrono-burst');augmentBurstGuard=false;}
   };
 
-  const rrHurt=hurtPlayer;hurtPlayer=function(amount,source){
-    rrHurt(amount,source);if(!state.weaponAugments?.bulwark||state.mode==='gameover')return;
+  registerPlayerDamageInterceptor('reward-bulwark',function rewardBulwarkHurt(next,amount,source){
+    next(amount,source);if(!state.weaponAugments?.bulwark||state.mode==='gameover')return;
     const n=Math.max(1,weaponCount('bulwark')),now=state.time||0;
     if(now>=(player.reflectBarrierRechargeReadyAt||0)){player.reflectBarrierRechargeReadyAt=now+3;const profile=bulwarkAugmentShieldProfile(n);if(rechargeShield(profile.hitGain,profile.cap)>0)shockwave(player.x,player.y,'#b5ffe5',64+n*2,.22,1.5);}
     for(let i=0;i<4;i++){const a=i*TAU/4+Math.PI/4;spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*455,vy:Math.sin(a)*455,r:5.2,life:1.0,damage:18+n*4,color:'#b5ffe5',pierce:2,source:'barrier-lance'});}
-  };
+  });
   const rrSpawnCore=spawnCoreShot;spawnCoreShot=function(target,echoed=false){
     rrSpawnCore(target,echoed);
     if(state.weaponAugments.core&&!echoed&&player.coreVolley%5===0){

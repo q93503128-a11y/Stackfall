@@ -271,8 +271,7 @@
 
   const baseResetGame=resetGame;
   resetGame=function achievementResetGame(){killTimes=[];bossAttempt=null;poll=0;const result=baseResetGame(...arguments);return result;};
-  const baseHurtPlayer=hurtPlayer;
-  hurtPlayer=function achievementHurtPlayer(){const attempt=ensureBossAttempt(),before=Number(player.hp)||0,result=baseHurtPlayer(...arguments);if(attempt&&(Number(player.hp)||0)<before)attempt.hit=true;return result;};
+  registerPlayerDamageInterceptor('achievement-hit-tracking',function achievementHurtPlayer(next,...args){const attempt=ensureBossAttempt(),before=Number(player.hp)||0,result=next(...args);if(attempt&&(Number(player.hp)||0)<before)attempt.hit=true;return result;});
   const baseKillEnemy=killEnemy;
   killEnemy=function achievementKillEnemy(enemy,opts={}){
     const alive=enemy&&!enemy.dead,form=String(enemy?.apexForm||enemy?.eliteForm||''),attempt=bossAttempt?.enemy===enemy?{...bossAttempt}:null,result=baseKillEnemy(enemy,opts);if(!alive||!enemy?.dead||!isEndless())return result;
