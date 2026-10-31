@@ -5,7 +5,10 @@ import vm from 'node:vm';
 const read=path=>fs.readFileSync(path,'utf8');
 const index=read('index.html');
 const scripts=[...index.matchAll(/<script[^>]+src="(src\/[^"?]+)(?:[^"\s]*)"/g)].map(match=>match[1]);
-assert.equal(scripts.at(-1),'src/canonical-weapon-visuals.js','canonical must be the actual last runtime script');
+const canonicalIndex=scripts.indexOf('src/canonical-weapon-visuals.js');
+assert(canonicalIndex>=0,'canonical weapon visual module must be loaded');
+for(const owner of ['src/weapon-awakening-effects-a1-a7.js','src/weapon-awakening-effects-a8-a13.js','src/weapon-awakening-effects-a14-a19.js','src/dev-tools.js'])assert(canonicalIndex>scripts.indexOf(owner),`canonical weapon visuals must load after ${owner}`);
+for(const src of scripts.slice(canonicalIndex+1)){const source=read(src);assert(!/\b(?:drawProjectiles|drawEquippedOrbits|drawDefenseBarrier|drawGravityLens)\s*=/.test(source),`${src}: late script must not replace canonical weapon visual ownership`);}
 const keys=['core','blade','ember','bulwark','gravity','comet','arc','prism','chrono','ion','nova','drone','rail','spiral','mirror','vacuum','mine','missile','gate'];
 const effects=['a1-a7','a8-a13','a14-a19'].map(group=>read(`src/weapon-awakening-effects-${group}.js`));
 for(const key of keys)assert(effects.some(source=>source.includes(`awake('${key}')`)),`${key}: explicit signature/visual gate required`);
