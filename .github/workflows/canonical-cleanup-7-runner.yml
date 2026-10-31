@@ -28,6 +28,7 @@ jobs:
           s,n=re.subn(pattern,lambda _: replacement,s,count=1)
           assert n==1, 'failed to rewrite ownership contract anchor guard'
           s=s.replace('contract=contract.replace(anchor,anchor+extra);','contract=contract.replace(anchorLine,anchorLine+extra);')
+          s=s.replace("for(const path of changed){const text=read(path);", "for(const path of changed.filter(path=>path.endsWith('.js'))){const text=read(path);")
           p.write_text(s)
           PY
           node .validation/canonical-cleanup-7-transform.mjs
