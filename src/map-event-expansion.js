@@ -1,6 +1,6 @@
 (function(){
   const compact=()=>typeof compactDevice==='function'?compactDevice():innerWidth<760,lang=()=>GAME_SETTINGS?.language||'ko';
-  const LIMITS={marker:46,choice:22,crash:82,void:108,distress:46,meteor:44,predator:52,relay:56,storm:42},EVENT_CLOCK_KEYS=['vault','crash','void','distress','meteor','predator','relay','storm'];
+  const LIMITS={marker:46,choice:22,crash:82,void:108},EVENT_CLOCK_KEYS=Object.freeze(['vault','crash','void']);
   const L={
     ko:{voidName:'공허 균열',voidDesc:'균열 너머의 존재에게 도전.',enter:'균열 진입',enterDesc:'공허 차원으로 이동해 제한 시간 안에 전용 보스를 격파.',leave:'떠난다',leaveDesc:'균열을 닫고 이동.',voidReward:'공허 전리품',voidRewardPrompt:'균열의 힘 하나를 선택하세요',voidArsenal:'공허 병기 공명',voidArsenalDesc:'보유 중인 모든 무기 중첩 +1.',voidMutation:'공허 변이',voidMutationDesc:'서로 다른 무작위 패시브 3종 중첩 +1.',voidImprint:'공허 각인',voidImprintDesc:'모든 피해 +12%, 공격 주기 6% 단축.',crashName:'추락한 우주선',crashDesc:'제한 시간 안에 강화 방어 함대를 돌파하는 강제 교전.',crashWave:'격리 전장 가동',salvage:'잔해 회수',vaultName:'성운 보관소',vaultDesc:'봉인된 성운 기록에서 하나의 능력 계통을 복원.',choose:'하나를 선택하세요',passive:'회수 모듈',passiveDesc:'무작위 패시브 2종 중첩 +1.',weapon:'무기 공명',weaponDesc:'무작위 보유 무기 중첩 +2.',hull:'강화 선체',hullDesc:'최대 체력 12% 증가와 완전 회복.',barrier:'자동 방벽 발생기',barrierDesc:'더 강한 보호막을 주기적으로 재충전.',power:'출력 보정',powerDesc:'모든 피해 +10%.',haste:'시간 보정',hasteDesc:'공격 주기 -8%.',magnet:'중력 보정',magnetDesc:'자석 범위 +45.',vital:'생명 성운',vitalDesc:'최대 체력 +10%.',navigation:'항행 성운',navigationDesc:'이동 속도 +8%.',photon:'광자 성운',photonDesc:'투사체 속도 +12%, 공격 판정 크기 +8%.',ward:'방벽 성운',wardDesc:'보호막 충전량과 충전 속도 증가.',chain:'연쇄 성운',chainDesc:'처치 연쇄 유지시간 +20%.',maxHpPassive:'항성 생명핵',maxHpPassiveDesc:'최대 체력 +12%.',expired:'신호 소실',crashFailed:'격리 실패',voidFailed:'균열 붕괴',seconds:'초',eventDetected:'이벤트 신호 감지',distressName:'조난 신호',distressDesc:'고립된 구조 캡슐 주변을 확보해 구조 절차를 완료하세요.',meteorName:'유성 광맥',meteorDesc:'이동하는 광맥 핵을 따라가며 채굴 동기화를 유지하세요.',predatorName:'포식성 성운',predatorDesc:'성운 안에서 적을 처치해 포식핵을 역으로 포화시키세요.',relayName:'중계기 복구',relayDesc:'세 개의 고장난 중계 노드를 순서대로 복구하세요.',stormName:'항성 폭풍의 눈',stormDesc:'이동하는 폭풍의 눈을 따라가며 낙뢰 구간을 버티세요.',fieldComplete:'작전 완료',fieldFailed:'작전 실패'},
     en:{voidName:'VOID RIFT',voidDesc:'Challenge the presence beyond the rift.',enter:'ENTER RIFT',enterDesc:'Cross over and defeat the dedicated boss before the breach collapses.',leave:'LEAVE',leaveDesc:'Seal the rift and move on.',voidReward:'VOID SPOILS',voidRewardPrompt:'Choose one power from the rift',voidArsenal:'Void Arsenal Resonance',voidArsenalDesc:'All owned weapons gain +1 stack.',voidMutation:'Void Mutation',voidMutationDesc:'Three different random passives gain +1 stack.',voidImprint:'Void Imprint',voidImprintDesc:'All damage +12% and attack interval -6%.',crashName:'CRASHED STARSHIP',crashDesc:'Break through the defense fleet before quarantine collapses.',crashWave:'QUARANTINE FIELD ACTIVE',salvage:'RECOVER WRECKAGE',vaultName:'NEBULA VAULT',vaultDesc:'Restore one sealed ability branch from the nebula archive.',choose:'Choose one',passive:'Recovery Module',passiveDesc:'Two random passives gain +1 stack.',weapon:'Weapon Resonance',weaponDesc:'A random owned weapon gains +2 stacks.',hull:'Reinforced Hull',hullDesc:'Max health +12% and full recovery.',barrier:'Auto Barrier Generator',barrierDesc:'Periodically recharges a stronger shield.',power:'Output Calibration',powerDesc:'All damage +10%.',haste:'Time Calibration',hasteDesc:'Attack interval -8%.',magnet:'Gravity Calibration',magnetDesc:'Pickup radius +45.',vital:'Vital Nebula',vitalDesc:'Max health +10%.',navigation:'Navigation Nebula',navigationDesc:'Move speed +8%.',photon:'Photon Nebula',photonDesc:'Projectile speed +12% and attack size +8%.',ward:'Barrier Nebula',wardDesc:'Improves shield recharge amount and interval.',chain:'Chain Nebula',chainDesc:'Kill-chain duration +20%.',maxHpPassive:'Stellar Life Core',maxHpPassiveDesc:'Max health +12%.',expired:'SIGNAL LOST',crashFailed:'QUARANTINE FAILED',voidFailed:'BREACH COLLAPSED',seconds:'s',eventDetected:'EVENT SIGNAL DETECTED',distressName:'DISTRESS SIGNAL',distressDesc:'Secure the stranded rescue capsule until extraction completes.',meteorName:'METEOR VEIN',meteorDesc:'Track the moving ore core and maintain mining synchronization.',predatorName:'PREDATORY NEBULA',predatorDesc:'Kill enemies inside the nebula and overload its feeding core.',relayName:'RELAY RECOVERY',relayDesc:'Repair three failed relay nodes in sequence.',stormName:'STELLAR STORM EYE',stormDesc:'Stay with the moving eye and survive the lightning field.',fieldComplete:'EVENT COMPLETE',fieldFailed:'EVENT FAILED'}
@@ -46,7 +46,7 @@
   function updateEventBarrier(dt){const profile=eventBarrierProfile();if(!profile.stacks)return;state.salvageBarrierTimer=(Number.isFinite(state.salvageBarrierTimer)?state.salvageBarrierTimer:0)-Math.max(0,dt);if(state.salvageBarrierTimer<=0){state.salvageBarrierTimer=profile.interval;if(rechargeShield(profile.gain,profile.cap)>0)shockwave(player.x,player.y,'#79f6d1',76+profile.stacks*4,.30,2.2);}}
   window.resetMapEvents=resetMapEvents;window.closeMapEventOverlays=hideOverlay;
   function scheduleType(type,min,max){const[a,b]=INTERVALS[type];state.eventClocks[type]=rand(min??a,max??b);state.eventGlobalCooldown=Math.max(state.eventGlobalCooldown||0,EVENT_GAP);state.eventBlockedUntil[type]=Math.max(state.eventBlockedUntil[type]||0,(state.time||0)+(TYPE_GAP[type]||EVENT_GAP));state.mapEventActive=null;state.entities.mapEvents.length=0;combatTimer.classList.add('hidden');}
-  const EVENT_TYPES=Object.freeze([...EVENT_CLOCK_KEYS]);
+  const EVENT_TYPES=Object.freeze([...EVENT_CLOCK_KEYS]);window.STACKFALL_ENDLESS_EVENT_TYPES=EVENT_TYPES;
   function dueType(){const now=state.time||0,eligible=[];for(const type of EVENT_TYPES){const value=Number(state.eventClocks?.[type]);if(!Number.isFinite(value)||value>0||now<(state.eventBlockedUntil?.[type]||0)||type===state.lastMapEventType)continue;eligible.push(type);}return eligible.length?eligible[Math.floor(Math.random()*eligible.length)]:null;}
   function spawnMarker(type,options={}){
     if(state.mapEventActive||state.entities.mapEvents.length)return false;const a=Math.random()*TAU,d=rand(720,930),m=meta(type),authored=options.authored===true,life=authored?150:LIMITS.marker;
@@ -79,95 +79,6 @@
     const add=Math.max(0,Math.floor(Number(amount)||0));if(!add)return 0;const granted=window.stackfallGrantCurrency?.('stardust',add)||0;
     if(granted){state.runCurrencyEarned=state.runCurrencyEarned||{stardust:0,coreShard:0};state.runCurrencyEarned.stardust=(state.runCurrencyEarned.stardust||0)+granted;}return granted;
   }
-  function finishFieldEvent(type,cards){
-    compactInPlace(state.entities.enemies,e=>e&&e.eventKind!==type);state.mapEventActive=null;state.entities.mapEvents.length=0;combatTimer.classList.add('hidden');
-    showBossNotice(tx('fieldComplete'),meta(type).name);
-    if(cards?.length)scheduleUiAction(420,()=>openCards(meta(type).name,tx('choose'),cards,'FIELD REWARD',type,()=>cards[0]?.action()));
-    else scheduleType(type);
-  }
-  function fieldReward(type){
-    if(type==='distress')return[
-      card('◆',tx('passive'),tx('passiveDesc'),'#8feaff',()=>{const entries=grantRandomPassives(1);showUpgradeNotice('RESCUE CACHE',entries);finishChoice(type);}),
-      card('✚',tx('hull'),lang()==='ko'?'최대 체력 8% 증가와 완전 회복.':'Max health +8% and full recovery.','#7df0c4',()=>{maxHealth(1.08,true);finishChoice(type);}),
-      card('✦',lang()==='ko'?'구조 사례금':'RESCUE BOUNTY',lang()==='ko'?'성진 55 획득.':'Gain 55 Stardust.','#ffd06f',()=>{grantEventStardust(55);finishChoice(type);})
-    ];
-    if(type==='meteor')return[
-      card('✦',lang()==='ko'?'정제 성진':'REFINED STARDUST',lang()==='ko'?'성진 85 획득.':'Gain 85 Stardust.','#ffd06f',()=>{grantEventStardust(85);finishChoice(type);}),
-      card('➤',tx('navigation'),tx('navigationDesc'),'#9fb4ff',()=>{state.nebulaExtras.navigation++;finishChoice(type);}),
-      card('✦',tx('weapon'),lang()==='ko'?'무작위 보유 무기 중첩 +1.':'A random owned weapon gains +1 stack.','#89eaff',()=>{const w=grantRandomWeapon(1);showUpgradeNotice('METEOR FORGE',[w||grantWeaponFallback()]);finishChoice(type);})
-    ];
-    if(type==='predator')return[
-      card('▲',tx('power'),tx('powerDesc'),'#ff7f9f',()=>{state.nebulaBoosts.power++;finishChoice(type);}),
-      card('✚',tx('vital'),tx('vitalDesc'),'#ff9eaf',()=>{state.nebulaExtras.vital++;maxHealth(1.10,true);finishChoice(type);}),
-      card('◆',tx('passive'),lang()==='ko'?'무작위 보유 패시브 2종 +1.':'Two random owned passives gain +1.','#d47dff',()=>{const entries=grantRandomPassives(2);showUpgradeNotice('NEBULA DIGESTION',entries);finishChoice(type);})
-    ];
-    if(type==='relay')return[
-      card('◎',tx('haste'),tx('hasteDesc'),'#70e7ef',()=>{state.nebulaBoosts.haste++;finishChoice(type);}),
-      card('✦',tx('weapon'),lang()==='ko'?'무작위 보유 무기 중첩 +1.':'A random owned weapon gains +1 stack.','#89eaff',()=>{const w=grantRandomWeapon(1);showUpgradeNotice('RELAY SYNC',[w||grantWeaponFallback()]);finishChoice(type);}),
-      card('⬢',tx('ward'),tx('wardDesc'),'#7df0c4',()=>{state.nebulaExtras.ward++;const profile=eventBarrierProfile();rechargeShield(12,profile.cap);finishChoice(type);})
-    ];
-    return[
-      card('➤',tx('navigation'),tx('navigationDesc'),'#9fb4ff',()=>{state.nebulaExtras.navigation++;finishChoice(type);}),
-      card('⬢',tx('ward'),tx('wardDesc'),'#7df0c4',()=>{state.nebulaExtras.ward++;const profile=eventBarrierProfile();rechargeShield(14,profile.cap);finishChoice(type);}),
-      card('✦',lang()==='ko'?'폭풍 결정':'STORM CRYSTAL',lang()==='ko'?'성진 70 획득.':'Gain 70 Stardust.','#c2b4ff',()=>{grantEventStardust(70);finishChoice(type);})
-    ];
-  }
-  function startDistress(){
-    const a=Math.random()*TAU,d=rand(180,300),center={x:player.x+Math.cos(a)*d,y:player.y+Math.sin(a)*d};
-    state.mapEventActive={type:'distress',remainingTime:LIMITS.distress,maxTime:LIMITS.distress,center,hold:0,targetHold:11,spawnCd:.2};showBossNotice(tx('distressName'),tx('eventDetected'));
-  }
-  function updateDistress(dt){
-    const ev=state.mapEventActive;if(ev?.type!=='distress')return;ev.remainingTime-=dt;ev.spawnCd-=dt;
-    const distance=Math.hypot(player.x-ev.center.x,player.y-ev.center.y);if(distance<145)ev.hold+=dt;
-    if(ev.spawnCd<=0){ev.spawnCd=1.55;const e=spawnEnemy(Math.random()<.18?'fast':'normal');if(e){e.eventKind='distress';e.x=ev.center.x+Math.cos(Math.random()*TAU)*rand(260,390);e.y=ev.center.y+Math.sin(Math.random()*TAU)*rand(260,390);}}
-    if(ev.hold>=ev.targetHold){finishFieldEvent('distress',fieldReward('distress'));return;}if(ev.remainingTime<=0)failFieldEvent('distress');
-  }
-  function startMeteor(){
-    const a=Math.random()*TAU,d=rand(140,240);state.mapEventActive={type:'meteor',remainingTime:LIMITS.meteor,maxTime:LIMITS.meteor,center:{x:player.x+Math.cos(a)*d,y:player.y+Math.sin(a)*d},angle:a+.7,progress:0,target:12,strikeCd:.5};showBossNotice(tx('meteorName'),tx('eventDetected'));
-  }
-  function updateMeteor(dt){
-    const ev=state.mapEventActive;if(ev?.type!=='meteor')return;ev.remainingTime-=dt;ev.angle+=dt*.34;ev.center.x+=Math.cos(ev.angle)*34*dt;ev.center.y+=Math.sin(ev.angle)*34*dt;
-    const near=Math.hypot(player.x-ev.center.x,player.y-ev.center.y)<155;ev.progress=clamp(ev.progress+(near?dt:-dt*.18),0,ev.target);
-    ev.strikeCd-=dt;if(ev.strikeCd<=0){ev.strikeCd=1.6;const a=Math.random()*TAU,r=near?rand(170,300):rand(80,220);addCircle(ev.center.x+Math.cos(a)*r,ev.center.y+Math.sin(a)*r,46,Math.max(4,6+state.threat*.35),'#ffd06f',.95);}
-    if(ev.progress>=ev.target){for(let i=0;i<8;i++)mergeExperienceGem(ev.center.x+rand(-50,50),ev.center.y+rand(-50,50),5+state.threat,5);finishFieldEvent('meteor',fieldReward('meteor'));return;}if(ev.remainingTime<=0)failFieldEvent('meteor');
-  }
-  function startPredator(){
-    const center={x:player.x+rand(-120,120),y:player.y+rand(-120,120)};state.mapEventActive={type:'predator',remainingTime:LIMITS.predator,maxTime:LIMITS.predator,center,kills:0,target:10+Math.min(8,Math.floor(state.time/240)),spawnCd:.1,pulseCd:3.0};showBossNotice(tx('predatorName'),tx('eventDetected'));
-  }
-  function updatePredator(dt){
-    const ev=state.mapEventActive;if(ev?.type!=='predator')return;ev.remainingTime-=dt;ev.spawnCd-=dt;ev.pulseCd-=dt;
-    if(ev.spawnCd<=0){ev.spawnCd=1.25;const e=spawnEnemy(Math.random()<.28?'fast':'normal');if(e){e.eventKind='predator';const a=Math.random()*TAU;e.x=ev.center.x+Math.cos(a)*rand(210,330);e.y=ev.center.y+Math.sin(a)*rand(210,330);}}
-    if(ev.pulseCd<=0){ev.pulseCd=3.4;const dist=Math.hypot(player.x-ev.center.x,player.y-ev.center.y);if(dist<235)addCircle(player.x,player.y,58,Math.max(4,5+state.threat*.3),'#d47dff',.82);}
-    if(ev.kills>=ev.target){finishFieldEvent('predator',fieldReward('predator'));return;}if(ev.remainingTime<=0)failFieldEvent('predator');
-  }
-  function relayPoint(origin,index){const a=index*2.21+.4;return{x:origin.x+Math.cos(a)*(150+index*54),y:origin.y+Math.sin(a)*(150+index*54)};}
-  function startRelay(){
-    const origin={x:player.x,y:player.y};state.mapEventActive={type:'relay',remainingTime:LIMITS.relay,maxTime:LIMITS.relay,origin,index:0,hold:0,targetHold:2.2,point:relayPoint(origin,0),spawnCd:.4};showBossNotice(tx('relayName'),tx('eventDetected'));
-  }
-  function updateRelay(dt){
-    const ev=state.mapEventActive;if(ev?.type!=='relay')return;ev.remainingTime-=dt;ev.spawnCd-=dt;const near=Math.hypot(player.x-ev.point.x,player.y-ev.point.y)<78;ev.hold=near?ev.hold+dt:Math.max(0,ev.hold-dt*.45);
-    if(ev.spawnCd<=0){ev.spawnCd=2.0;const e=spawnEnemy(Math.random()<.25?'ranged':'normal');if(e)e.eventKind='relay';}
-    if(ev.hold>=ev.targetHold){shockwave(ev.point.x,ev.point.y,'#70e7ef',94,.36,3);ev.index++;ev.hold=0;if(ev.index>=3){finishFieldEvent('relay',fieldReward('relay'));return;}ev.point=relayPoint(ev.origin,ev.index);}
-    if(ev.remainingTime<=0)failFieldEvent('relay');
-  }
-  function startStorm(){
-    const a=Math.random()*TAU;state.mapEventActive={type:'storm',remainingTime:LIMITS.storm,maxTime:LIMITS.storm,center:{x:player.x,y:player.y},angle:a,strikeCd:.8};showBossNotice(tx('stormName'),tx('eventDetected'));
-  }
-  function updateStorm(dt){
-    const ev=state.mapEventActive;if(ev?.type!=='storm')return;ev.remainingTime-=dt;ev.angle+=dt*.31;const targetX=player.x+Math.cos(ev.angle)*150,targetY=player.y+Math.sin(ev.angle*.83)*110;ev.center.x=lerp(ev.center.x,targetX,1-Math.exp(-dt*.72));ev.center.y=lerp(ev.center.y,targetY,1-Math.exp(-dt*.72));
-    ev.strikeCd-=dt;if(ev.strikeCd<=0){ev.strikeCd=1.35;const inside=Math.hypot(player.x-ev.center.x,player.y-ev.center.y)<118;if(!inside){addCircle(player.x+rand(-45,45),player.y+rand(-45,45),54,Math.max(5,7+state.threat*.38),'#9fb4ff',.72);}for(let i=0;i<2;i++){const a=Math.random()*TAU,r=rand(150,310);addCircle(ev.center.x+Math.cos(a)*r,ev.center.y+Math.sin(a)*r,42,Math.max(4,5+state.threat*.28),'#768dff',.92);}}
-    if(ev.remainingTime<=0){finishFieldEvent('storm',fieldReward('storm'));return;}
-  }
-  function failFieldEvent(type){compactInPlace(state.entities.enemies,e=>e&&e.eventKind!==type);state.mapEventActive=null;state.entities.mapEvents.length=0;combatTimer.classList.add('hidden');showBossNotice(tx('fieldFailed'),meta(type).name);scheduleType(type,70,105);}
-  function updateFieldEvent(dt){const type=state.mapEventActive?.type;if(type==='distress')updateDistress(dt);else if(type==='meteor')updateMeteor(dt);else if(type==='predator')updatePredator(dt);else if(type==='relay')updateRelay(dt);else if(type==='storm')updateStorm(dt);}
-  function startFieldEvent(type){state.entities.mapEvents.length=0;if(type==='distress')startDistress();else if(type==='meteor')startMeteor();else if(type==='predator')startPredator();else if(type==='relay')startRelay();else if(type==='storm')startStorm();}
-  const baseEventKillEnemy=killEnemy;
-  killEnemy=function mapEventKillEnemy(enemy,opts={}){
-    const active=state.mapEventActive,qualifies=active?.type==='predator'&&enemy&&!enemy.dead&&Math.hypot(enemy.x-active.center.x,enemy.y-active.center.y)<245;
-    const result=baseEventKillEnemy(enemy,opts);
-    if(qualifies&&enemy.dead&&state.mapEventActive===active)active.kills=(active.kills||0)+1;
-    return result;
-  };
   function clearEventCombat(type){compactInPlace(state.entities.enemies,e=>{if(!e)return false;if(type&&e.eventKind===type)return false;if(type==='void'&&e.eventKind==='void-minion')return false;return true;});clearEnemyProjectiles();state.entities.telegraphs.length=0;clearBeamEffects();state.bossActiveId=null;ui.bossBar.classList.add('hidden');}
   function startVoid(){hideOverlay();state.entities.mapEvents.length=0;state.mapEventActive={type:'void',bossId:null,remainingTime:LIMITS.void,maxTime:LIMITS.void};startRealmTransition('void',{duration:2.45,owner:'void-entry',title:tx('voidName'),subtitle:'DIMENSIONAL BREACH',onMidpoint:()=>{const boss=spawnEnemy('void');if(!boss){state.mapEventActive=null;scheduleType('void',45,60);cancelRealmTransition('space');return;}state.mapEventActive.bossId=boss.id;state.mapEventActive.bossForm=boss.eliteForm||null;},onComplete:()=>stabilizeRealmTheme('void')});}
   function leaveVoid(){hideOverlay();cancelRealmTransition('space');state.mode='playing';scheduleType('void',125,165);if(compact())ui.touch.classList.remove('hidden');}
@@ -206,12 +117,12 @@
   function abortCrash(){if(state.mapEventActive?.type!=='crash')return;clearEventCombat('crash');state.mapEventActive=null;state.entities.mapEvents.length=0;combatTimer.classList.add('hidden');showBossNotice(tx('crashFailed'),tx('expired'));scheduleType('crash',95,130);}
   function updateCrash(dt){const ev=state.mapEventActive;if(!ev||ev.type!=='crash')return;ev.remainingTime-=dt;if(ev.remainingTime<=0){abortCrash();return;}let escorts=0,bossAlive=false;for(const e of state.entities.enemies)if(!e.dead&&e.eventKind==='crash'){if(e.eventVariant==='dreadnought')bossAlive=true;else escorts++;}if(ev.remaining>0){ev.spawnCd-=dt;if(ev.spawnCd<=0){ev.spawnCd=Math.max(.10,.20-(ev.scale?.strength||1)*.018);if(spawnCrashUnit())ev.remaining--;}}else if(escorts===0){ev.between-=dt;if(ev.between<=0){ev.wave++;if(ev.wave>=ev.waves.length){if(bossAlive)return;state.mapEventActive=null;state.entities.mapEvents.length=0;combatTimer.classList.add('hidden');openSalvage();return;}ev.remaining=ev.waves[ev.wave];ev.between=1.35;showBossNotice(`${tx('crashName')} ${ev.wave+1}/3`,tx('crashWave'));}}}
   function updateVoid(dt){const ev=state.mapEventActive;if(!ev||ev.type!=='void')return;ev.remainingTime-=dt;if(ev.remainingTime<=0)abortVoid();}
-  function updateCombatTimer(){const ev=state.mapEventActive;if(!ev||!['crash','void','distress','meteor','predator','relay','storm'].includes(ev.type)||!Number.isFinite(ev.remainingTime)){combatTimer.classList.add('hidden');return;}const m=meta(ev.type);combatTimer.style.setProperty('--timer-color',m.color);combatTimer.textContent=`${m.icon} ${m.short} · ${Math.max(0,Math.ceil(ev.remainingTime))}${tx('seconds')}`;combatTimer.classList.remove('hidden');}
-  function trigger(marker){if(!marker||marker.consumed||state.mapEventActive||state.entities.enemies.some(e=>!e.dead&&(e.type==='mini'||e.type==='boss')))return;const untilApex=(state.nextApexAt||Infinity)-(state.time||0);marker.consumed=true;state.entities.mapEvents.length=0;if(untilApex<15){scheduleType(marker.type,50,80);return;}state.lastMapEventType=marker.type;state.eventHistory.push({type:marker.type,time:state.time||0});if(state.eventHistory.length>6)state.eventHistory.shift();state.eventGlobalCooldown=EVENT_GAP;if(marker.type==='void')openVoidChoice();else if(marker.type==='crash')startCrash();else if(marker.type==='vault')openVault();else startFieldEvent(marker.type);}
-  function updateMapEvents(dt){initState();if(state.mapEventActive){state.entities.mapEvents.length=0;if(state.mapEventActive.type==='crash')updateCrash(dt);else if(state.mapEventActive.type==='void')updateVoid(dt);else updateFieldEvent(dt);updateCombatTimer();return;}combatTimer.classList.add('hidden');if(state.mode!=='playing')return;const randomEnabled=window.stackfallCurrentRunConfig?.().randomWorldEvents!==false;if(randomEnabled){state.eventGlobalCooldown=Math.max(0,state.eventGlobalCooldown-dt);for(const key of EVENT_CLOCK_KEYS)state.eventClocks[key]-=dt;if(state.eventGlobalCooldown<=0&&!state.entities.mapEvents.length&&!state.entities.enemies.some(e=>!e.dead&&(e.type==='mini'||e.type==='boss'))){const type=dueType();if(type)spawnMarker(type);}}const markers=state.entities.mapEvents;for(let i=0;i<markers.length;i++){const marker=markers[i];if(!marker||marker.consumed)continue;marker.pulse+=dt;marker.life=(Number.isFinite(marker.life)?marker.life:LIMITS.marker)-dt;if(marker.life<=0){if(randomEnabled)scheduleType(marker.type,38,62);else state.entities.mapEvents.length=0;break;}if(Math.hypot(marker.x-player.x,marker.y-player.y)<55+player.r){trigger(marker);break;}}}
+  function updateCombatTimer(){const ev=state.mapEventActive;if(!ev||!['crash','void'].includes(ev.type)||!Number.isFinite(ev.remainingTime)){combatTimer.classList.add('hidden');return;}const m=meta(ev.type);combatTimer.style.setProperty('--timer-color',m.color);combatTimer.textContent=`${m.icon} ${m.short} · ${Math.max(0,Math.ceil(ev.remainingTime))}${tx('seconds')}`;combatTimer.classList.remove('hidden');}
+  function trigger(marker){if(!marker||marker.consumed||state.mapEventActive||state.entities.enemies.some(e=>!e.dead&&(e.type==='mini'||e.type==='boss')))return;const untilApex=(state.nextApexAt||Infinity)-(state.time||0);marker.consumed=true;state.entities.mapEvents.length=0;if(untilApex<15){scheduleType(marker.type,50,80);return;}state.lastMapEventType=marker.type;state.eventHistory.push({type:marker.type,time:state.time||0});if(state.eventHistory.length>6)state.eventHistory.shift();state.eventGlobalCooldown=EVENT_GAP;if(marker.type==='void')openVoidChoice();else if(marker.type==='crash')startCrash();else if(marker.type==='vault')openVault();}
+  function updateMapEvents(dt){initState();if(state.mapEventActive){state.entities.mapEvents.length=0;if(state.mapEventActive.type==='crash')updateCrash(dt);else if(state.mapEventActive.type==='void')updateVoid(dt);updateCombatTimer();return;}combatTimer.classList.add('hidden');if(state.mode!=='playing')return;const randomEnabled=window.stackfallCurrentRunConfig?.().randomWorldEvents!==false;if(randomEnabled){state.eventGlobalCooldown=Math.max(0,state.eventGlobalCooldown-dt);for(const key of EVENT_CLOCK_KEYS)state.eventClocks[key]-=dt;if(state.eventGlobalCooldown<=0&&!state.entities.mapEvents.length&&!state.entities.enemies.some(e=>!e.dead&&(e.type==='mini'||e.type==='boss'))){const type=dueType();if(type)spawnMarker(type);}}const markers=state.entities.mapEvents;for(let i=0;i<markers.length;i++){const marker=markers[i];if(!marker||marker.consumed)continue;marker.pulse+=dt;marker.life=(Number.isFinite(marker.life)?marker.life:LIMITS.marker)-dt;if(marker.life<=0){if(randomEnabled)scheduleType(marker.type,38,62);else state.entities.mapEvents.length=0;break;}if(Math.hypot(marker.x-player.x,marker.y-player.y)<55+player.r){trigger(marker);break;}}}
   function clampPlayerToArena(arena,padding=12){if(!arena)return;const dx=player.x-arena.x,dy=player.y-arena.y,d=Math.hypot(dx,dy)||1,limit=Math.max(40,arena.r-player.r-padding);if(d>limit){player.x=arena.x+dx/d*limit;player.y=arena.y+dy/d*limit;}}
   function updateMapEventPlayer(){const ev=state.mapEventActive;if(ev?.type==='crash'&&ev.arena)clampPlayerToArena(ev.arena,12);if(state.apexArena)clampPlayerToArena(state.apexArena,20);}
-  function worldEventBlocksSpawning(){return !!(state.mapEventActive&&['crash','void','distress','meteor','predator','relay','storm'].includes(state.mapEventActive.type));}
+  function worldEventBlocksSpawning(){return !!(state.mapEventActive&&['crash','void'].includes(state.mapEventActive.type));}
   window.cancelMapEventForApex=function(){const wasVoid=state.mapEventActive?.type==='void'||state.realmTheme==='void'||state.realmTransition?.owner==='void-entry';hideOverlay();clearEventCombat(state.mapEventActive?.type);state.entities.mapEvents.length=0;state.mapEventActive=null;combatTimer.classList.add('hidden');if(wasVoid)cancelRealmTransition('space');if(state.eventClocks){for(const type of EVENT_TYPES)state.eventClocks[type]=Math.max(state.eventClocks[type]||0,type==='void'?205:type==='crash'?130:85);}if(state.mode==='worldEvent')state.mode='playing';};
   window.updateMapEvents=updateMapEvents;window.updateMapEventPlayer=updateMapEventPlayer;window.updateEventBarrier=updateEventBarrier;window.stackfallEventBarrierProfile=eventBarrierProfile;window.worldEventBlocksSpawning=worldEventBlocksSpawning;window.stackfallCrashScalingAt=crashScalingAt;window.stackfallIsDreadnoughtCrashEvent=isDreadnoughtCrashEvent;
 
