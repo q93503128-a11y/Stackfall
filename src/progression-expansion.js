@@ -56,8 +56,7 @@
   const baseWeaponRange=weaponRange;
   weaponRange=function progressionWeaponRange(key){return baseWeaponRange(key)*(1+stat('range')*.10);};
   xpMult=function progressionXp(){return 1+stat('greed')*.30+stat('wisdom')*.10;};
-  const baseUpdatePlayer=updatePlayer;
-  updatePlayer=function progressionPlayer(dt){baseUpdatePlayer(dt);const n=stat('regen');if(n&&dt>0)player.hp=Math.min(player.maxHp,player.hp+n*dt);};
+  registerPlayerUpdateInterceptor('progression-expansion.js:progressionPlayer',function progressionPlayer(next,dt){next(dt);const n=stat('regen');if(n&&dt>0)player.hp=Math.min(player.maxHp,player.hp+n*dt);});
 
   let chainEffectGuard=false;
   function applyChainMilestones(chain,x=player.x,y=player.y){const burst=stat('chainBurst'),recovery=stat('chainRecovery');if(burst&&chain>0&&chain%20===0){const power=curvedStackPower(burst,.48,1.18,1.22),radius=72+power*8+Math.min(82,chain*.68),damage=8+power*6.2+chain*(.14+power*.018)+state.level*.22;chainEffectGuard=true;areaDamage(x,y,radius,damage,'#ff7b9e','nova-chain-burst');chainEffectGuard=false;}if(recovery&&chain>0&&chain%30===0){const power=curvedStackPower(recovery,.80,1.08,1.16),fraction=Math.min(.30,.025+power*.018+Math.min(.10,chain*.00035));player.hp=Math.min(player.maxHp,player.hp+player.maxHp*fraction);shockwave(player.x,player.y,'#74f2a7',82+power*9+Math.min(76,chain*.46),.38,3.0);}}

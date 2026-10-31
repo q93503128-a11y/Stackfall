@@ -20,9 +20,8 @@
   resetAwakeningCombatState();
 
   // A1 — Stellar Core: every Core Pulse is replaced by one central stellar lance plus three satellite lances.
-  const baseSpawnCoreShot=spawnCoreShot;
-  spawnCoreShot=function stellarCoreShot(target,echoed=false){
-    if(!awake('core'))return baseSpawnCoreShot(target,echoed);
+  registerCoreShotInterceptor('weapon-awakening-effects-a1-a7.js:stellarCoreShot',function stellarCoreShot(next,target,echoed=false){
+    if(!awake('core'))return next(target,echoed);
     if(!target||target.dead)return;
     const n=Math.max(1,weaponCount('core')),range=weaponRange('core'),size=weaponSizeMultiplier(),power=echoed?.72:1,
       baseDamage=corePulseDamage(n),phase=(state.time||0)*1.4,targetId=target.id,
@@ -41,7 +40,7 @@
       });
     }
     pushFx({kind:'stellar-volley',x:player.x,y:player.y,life:.30,max:.30});
-  };
+  });
 
   // A2 — Eclipse Blades: no periodic alignment attack. Five real blades orbit continuously with a breathing speed cycle.
   function bladeOrbitSpeedMultiplier(){

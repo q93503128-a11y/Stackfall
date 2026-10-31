@@ -221,13 +221,13 @@
     if(now>=(player.reflectBarrierRechargeReadyAt||0)){player.reflectBarrierRechargeReadyAt=now+3;const profile=bulwarkAugmentShieldProfile(n);if(rechargeShield(profile.hitGain,profile.cap)>0)shockwave(player.x,player.y,'#b5ffe5',64+n*2,.22,1.5);}
     for(let i=0;i<4;i++){const a=i*TAU/4+Math.PI/4;spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*455,vy:Math.sin(a)*455,r:5.2,life:1.0,damage:18+n*4,color:'#b5ffe5',pierce:2,source:'barrier-lance'});}
   });
-  const rrSpawnCore=spawnCoreShot;spawnCoreShot=function(target,echoed=false){
-    rrSpawnCore(target,echoed);
+  registerCoreShotInterceptor('reward-refinement.js:rewardCoreShot',function rewardCoreShot(next,target,echoed=false){
+    next(target,echoed);
     if(state.weaponAugments.core&&!echoed&&player.coreVolley%5===0){
       for(let i=0;i<10;i++){const a=i*TAU/10;spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*420,vy:Math.sin(a)*420,r:4.2,life:.9,damage:10+weaponCount('core')*2.2,color:'#eafcff',pierce:1,source:'core-nova'});}
       shockwave(player.x,player.y,'#eafcff',105,.32,3);
     }
-  };
+  });
 
   const rrUpdateWells=updateWells,rrGravityExpiring=[],rrSingularityExpiring=[];updateWells=function(dt){
     rrGravityExpiring.length=0;rrSingularityExpiring.length=0;

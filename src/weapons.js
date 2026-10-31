@@ -14,10 +14,14 @@ function bulwarkAugmentShieldProfile(stacks){const n=Math.max(1,Math.min(6,Math.
 function mirrorAugmentShieldProfile(stacks){const n=Math.max(1,Math.min(6,Math.floor(Number(stacks)||1)));return{cap:52+n*8,gain:1.8+n*.35};}
 registerShieldCapacitySource('weapon-bulwark',()=>bulwarkRechargeProfile(weaponCount('bulwark'))?.cap||0);
 registerShieldCapacitySource('weapon-mirror',()=>mirrorShieldProfile(weaponCount('mirror'))?.cap||0);
-function spawnCoreShot(target,echoed=false){
+const STACKFALL_CORE_SHOT_INTERCEPTORS=[];
+function registerCoreShotInterceptor(name,handler){if(typeof name!=='string'||!name||typeof handler!=='function')throw new TypeError('Invalid spawnCoreShot interceptor');STACKFALL_CORE_SHOT_INTERCEPTORS.push({name,handler});}
+function runCoreShotInterceptor(index,target,echoed=false){if(index<0)return spawnCoreShotCore(target,echoed);const entry=STACKFALL_CORE_SHOT_INTERCEPTORS[index];return entry.handler((nextTarget=target,nextEchoed=echoed)=>runCoreShotInterceptor(index-1,nextTarget,nextEchoed),target,echoed);}
+function spawnCoreShotCore(target,echoed=false){
   if(!target)return;const a=Math.atan2(target.y-player.y,target.x-player.x),range=weaponRange('core');
   spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*CORE_PULSE_SPEED,vy:Math.sin(a)*CORE_PULSE_SPEED,r:CORE_PULSE_RADIUS,life:1.3,maxRange:range,damage:corePulseDamage(weaponCount('core'))*(echoed?.72:1),color:echoed?COLORS.pink:'#d7f8ff',pierce:weaponCount('core')>=4?1:0,source:echoed?'core-echo':'core'});
 }
+function spawnCoreShot(target,echoed=false){return runCoreShotInterceptor(STACKFALL_CORE_SHOT_INTERCEPTORS.length-1,target,echoed);}
 function fireEmber(target,emberN,echoed=false){
   if(!target)return;player.emberVolley=(player.emberVolley||0)+1;const base=Math.atan2(target.y-player.y,target.x-player.x),shots=emberN>=5?3:emberN>=2?2:1,superShot=emberN>=6&&player.emberVolley%7===0,range=weaponRange('ember');
   for(let i=0;i<shots;i++){const a=base+(i-(shots-1)/2)*(shots===3?.18:.15)+rand(-.012,.012);spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*(superShot?620:525),vy:Math.sin(a)*(superShot?620:525),r:superShot?12:5.7,life:1.45,maxRange:range,damage:(12+emberN*3.4)*(echoed?.68:1)*(superShot?1.9:1),color:echoed?COLORS.pink:'#ff789b',pierce:superShot?6:emberN>=3?1:0,source:echoed?'echo-star':'ember',split:emberN>=4});}

@@ -372,11 +372,10 @@
   `;document.head.appendChild(style);
 
   let liveAchievementPoll=0;
-  const baseAchievementUpdatePlayer=updatePlayer;
-  updatePlayer=function endlessAchievementUpdatePlayer(dt){
-    baseAchievementUpdatePlayer(dt);if(state.mode!=='playing'||!isEndless())return;liveAchievementPoll-=dt;if(liveAchievementPoll>0)return;liveAchievementPoll=.4;
+  registerPlayerUpdateInterceptor('endless-progression.js:endlessAchievementUpdatePlayer',function endlessAchievementUpdatePlayer(next,dt){
+    next(dt);if(state.mode!=='playing'||!isEndless())return;liveAchievementPoll-=dt;if(liveAchievementPoll>0)return;liveAchievementPoll=.4;
     const completed=evaluateAchievements(snapshotRun());if(!completed.length)return;showAchievementToasts(completed);renderAchievementUi();renderEndlessProfile();window.renderStackfallMetaUi?.();
-  };
+  });
 
   registerEndGameInterceptor('endless-progression.js:endlessProgressionEndGame',function endlessProgressionEndGame(next,...args){
     if(state.mode==='gameover')return;
