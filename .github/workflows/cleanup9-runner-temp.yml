@@ -33,6 +33,14 @@ jobs:
           body=source[start:end]
           code='\n'.join(line[10:] if line.startswith('          ') else line for line in body.splitlines())
           exec(compile(code,'cleanup9-transform','exec'),{})
+
+          contract_path=Path('scripts/awakening-first-set-contract.mjs')
+          contract=contract_path.read_text(encoding='utf-8')
+          old='source.includes("if(!awake(\'core\'))return baseSpawnCoreShot")'
+          new='source.includes("registerCoreShotInterceptor(\'weapon-awakening-effects-a1-a7.js:stellarCoreShot\'")&&source.includes("if(!awake(\'core\'))return next(target,echoed)")'
+          if contract.count(old)!=1:
+              raise SystemExit(f'awakening contract legacy assertion count={contract.count(old)}')
+          contract_path.write_text(contract.replace(old,new,1),encoding='utf-8')
           PY
       - name: Validate transformed tree
         shell: bash
