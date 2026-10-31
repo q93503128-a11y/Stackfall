@@ -1,5 +1,8 @@
 # Stackfall Runtime Architecture Audit — 2026-10-31
 
+> **Status: HISTORICAL AUDIT / EVIDENCE.** This records findings from a specific cleanup pass. Current runtime authority is `CURRENT_STATE.md` plus executing source/contracts.
+
+
 ## Scope
 
 This audit was performed while implementing the Suction Magnet field pickup, preserving unclaimed XP, and repairing the Apex defeat lifecycle on top of `feature/enemy-director-v1` (`a432b8d3819ec2a2bf85d866ffa5b91652f1a0df`).

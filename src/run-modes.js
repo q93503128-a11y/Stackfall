@@ -2,7 +2,7 @@
   const MODES=Object.freeze({ENDLESS:'endless',STAGE:'stage'});
   const ACTIVE_STAGE_RUNTIMES=Object.freeze([]);
   const ENDLESS_PROGRESSION_SCRIPTS=Object.freeze(['src/endless-progression-v2.js','src/achievement-profile-entry-v2.js','src/achievement-card-ui-rollback-v2.js']);
-  const ENDLESS_SYSTEM_SCRIPTS=Object.freeze(['src/enemy-director-v1.js','src/event-guide-refinement-v1.js']);
+  const ENDLESS_SYSTEM_SCRIPTS=Object.freeze(['src/enemy-director-v1.js']);
   const SHARED_STAGE_RUNTIME_STYLES=Object.freeze([]);
   const SHARED_STAGE_RUNTIME_SCRIPTS=Object.freeze([]);
   const STAGE_RUNTIME_SCRIPTS=Object.freeze({});

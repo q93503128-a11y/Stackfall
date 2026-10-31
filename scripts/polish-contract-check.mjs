@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
-const core=read('src/core.js'),bootstrap=read('src/bootstrap.js'),progression=read('src/progression-expansion.js'),targeting=read('src/targeting-motion-refinement.js'),systems=read('src/systems.js'),catalog=read('src/boss-catalog.js'),bosses=read('src/bosses.js'),endgame=read('src/endgame-balance-expansion.js'),rewards=read('src/reward-refinement.js'),combat=read('src/combat-balance-refinement.js'),auditUi=read('src/build-audit-ui.js');
+const core=read('src/core.js'),bootstrap=read('src/bootstrap.js'),progression=read('src/progression-expansion.js'),targeting=read('src/targeting-motion-refinement.js'),systems=read('src/systems.js'),events=read('src/map-event-expansion.js'),catalog=read('src/boss-catalog.js'),bosses=read('src/bosses.js'),endgame=read('src/endgame-balance-expansion.js'),rewards=read('src/reward-refinement.js'),combat=read('src/combat-balance-refinement.js'),auditUi=read('src/build-audit-ui.js');
 const checks=[
   ['ledger pauses',read('src/ability-ledger-audit.js').includes("resumeAfterLedger=originMode==='playing'")&&read('src/ability-ledger-audit.js').includes("state.mode='paused'")],
   ['copy chance starts at zero',read('src/weapons.js').includes('Math.min(.60,n*.075)')],
@@ -38,7 +38,7 @@ const checks=[
   ['manual aim setting exists',targeting.includes('id="manualAim"')&&targeting.includes('aimWorldX')&&targeting.includes('saveGameSettings()')],
   ['boomerang automatically selects farthest target',targeting.includes("if(key==='arc')return farthestWeaponTarget")&&auditUi.includes('사거리 안 가장 먼 적을 타격하고 귀환한다')],
   ['magnet accelerates gems',systems.includes('pullSpeed=1+magnetStacks*.22')&&!targeting.includes('updateGems=function')&&bootstrap.includes('끌어오는 속도 증가')],
-  ['vault can be collected during elite combat',targeting.includes('vaultDuringEliteEncounters')&&targeting.includes("enemy.type='vault-elite'")],
+  ['vault marker can appear during elite combat while interaction still waits',events.includes('function vaultDueDuringElite()')&&events.includes("if(eliteActive){if(vaultDueDuringElite())spawnMarker('vault');}")&&events.includes("state.entities.enemies.some(e=>!e.dead&&(e.type==='mini'||e.type==='boss'))")&&!targeting.includes('vaultDuringEliteEncounters')],
   ['chain descriptions contain no developer TMI',progression.includes("desc:'30연쇄마다 최대 체력 비례 회복.'")&&!progression.includes('첫 중첩은')&&!core.includes('1중첩 효과는 낮지만')&&!progression.includes('성장률')],
   ['projection core UI contains effect only',!auditUi.includes('sanitizeWorldEventCopy')&&endgame.includes("ko:['다중 투영 코어','일부 장비의 동시 공격 수 +1.']")&&!auditUi.includes('현재 복제 확률')&&!auditUi.includes('추가 흡인 속도')],
   ['chain recovery is stronger',progression.includes('Math.min(.30,.025+power*.018')],

@@ -1,5 +1,8 @@
 # Stackfall Refactor / Ownership Audit — 2026-10-17
 
+> **Status: HISTORICAL AUDIT.** This is a prior cleanup snapshot, not current runtime authority. Use `CURRENT_STATE.md` and executing source/contracts for current behavior.
+
+
 ## Current result
 
 This cleanup removes the remaining Stage-specific compatibility debt that was provably unreachable under the active production runtime. It does not mass-delete active refinement/expansion modules merely because their filenames are historical.

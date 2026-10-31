@@ -1,5 +1,8 @@
 # Stackfall Apex Rework — 2026-10-23
 
+> **Status: HISTORICAL.** This is a 2026-10-23 design snapshot. Current Apex production source and `CURRENT_STATE.md` supersede stale implementation details. Do not restore old mechanics solely from this file.
+
+
 ## Goal
 Current Apex encounters must stop sharing one generic warning-beam grammar. Each of the three current Apex entities needs a distinct silhouette, attack-reading language, movement rule, phase escalation, entrance and defeat identity.
 

@@ -1,5 +1,8 @@
 # Stackfall Stage Visual Canon — 2026-10-16
 
+> **Status: DORMANT STAGE REFERENCE.** Stage gameplay is currently sealed. This visual reference does not activate Stage runtime or override current Endless behavior.
+
+
 This document supersedes earlier per-stage/story-background art direction.
 
 ## Canonical rule

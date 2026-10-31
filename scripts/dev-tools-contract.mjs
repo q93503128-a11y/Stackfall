@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
-const dev=read('src/dev-tools.js'),stage=read('src/stage-runtime.js'),endless=read('src/dev-tools-endless.js'),controls=read('src/runtime-controls.js'),render=read('src/render.js');
+const dev=read('src/dev-tools.js'),stage=read('src/stage-runtime.js'),endless=read('src/dev-tools-endless.js'),controls=read('src/runtime-controls.js'),events=read('src/map-event-expansion.js'),render=read('src/render.js');
 const checks=[
   ['developer preview cancels startup choices before their microtask',stage.includes('state.startLevelBonusRemaining=0;state.choiceOpening=false;state.choiceLocked=false;')],
   ['Stage boss button targets the selected Stage',dev.includes("jumpStageBoss(stage.value)")&&dev.includes("stackfallDevSpawnStageBossNow(target.id)")],
@@ -18,7 +18,7 @@ const checks=[
   ['Endless developer tools expose only the canonical three world events',[
     "'vault','성운 보관소'","'crash','추락한 우주선'","'void','공허 균열'"
   ].every(token=>endless.includes(token))&&!["'distress','조난 신호'","'meteor','유성 광맥'","'predator','포식성 성운'","'relay','중계기 복구'","'storm','항성 폭풍의 눈'"].some(token=>endless.includes(token))],
-  ['runtime canonical world-event list matches developer source',controls.includes("Object.freeze(['vault','crash','void'])")&&endless.includes("['vault','성운 보관소'],['crash','추락한 우주선'],['void','공허 균열']")],
+  ['runtime canonical world-event list matches developer source',events.includes("EVENT_CLOCK_KEYS=Object.freeze(['vault','crash','void'])")&&endless.includes("['vault','성운 보관소'],['crash','추락한 우주선'],['void','공허 균열']")&&!controls.includes('__canonicalThree')],
   ['Endless developer tools can spawn mini boss boss void boss and apex',endless.includes("spawnElite('mini'")&&endless.includes("spawnElite('boss'")&&endless.includes("spawnElite('void'")&&endless.includes('spawnApex(apexSelect.value)')],
   ['developer apex spawn uses the normal Apex encounter director',endless.includes('state.bossBags.apex=[form]')&&endless.includes('updateApexSystems(0,true)')],
   ['developer tools can force Apex phases 1 through 4',endless.includes('PHASE 4 · TERMINAL')&&endless.includes('apexElapsed=settings.time')&&endless.includes('applyEndlessApexPhase')],

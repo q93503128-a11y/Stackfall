@@ -46,6 +46,8 @@ jobs:
         run: node scripts/stage-map-contract.mjs
       - name: Check run mode contract
         run: node scripts/run-mode-contract.mjs
+      - name: Check canonical runtime state
+        run: node scripts/canonical-state-contract.mjs
       - name: Check Enemy Director contract
         run: node scripts/enemy-director-contract.mjs
       - name: Check field pickup contract

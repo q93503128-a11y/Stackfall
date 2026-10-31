@@ -114,77 +114,8 @@
 
   syncSpeedButton();
 
-  // Keep the original three Endless world events as the canonical set.
-  // The later five field-event experiments are intentionally retired rather than
-  // competing with the stronger Vault / Crash / Void identities.
-  const canonicalWorldEvents=Object.freeze(['vault','crash','void']),canonicalWorldEventSet=new Set(canonicalWorldEvents),retiredWorldEvents=Object.freeze(['distress','meteor','predator','relay','storm']);
-  window.STACKFALL_WORLD_EVENT_TYPES=canonicalWorldEvents;
   if(WEAPONS?.drone)WEAPONS.drone.icon='⊛';
-
-  function installCanonicalWorldEvents(){
-    const combatTimer=document.querySelector('#worldEventCombatTimer');
-    const pruneRetiredEvents=()=>{
-      state.eventClocks=state.eventClocks||{};
-      for(const type of retiredWorldEvents)state.eventClocks[type]=Infinity;
-      const markers=state.entities?.mapEvents;
-      if(Array.isArray(markers))compactInPlace(markers,marker=>!marker||canonicalWorldEventSet.has(marker.type));
-      const active=state.mapEventActive;
-      if(active&&!canonicalWorldEventSet.has(active.type)){
-        const retiredType=active.type;
-        state.mapEventActive=null;
-        if(Array.isArray(state.entities?.enemies))compactInPlace(state.entities.enemies,enemy=>!enemy||enemy.eventKind!==retiredType);
-        if(Array.isArray(state.entities?.enemyProjectiles))clearEnemyProjectiles();
-        if(Array.isArray(state.entities?.telegraphs))state.entities.telegraphs.length=0;
-        if(Array.isArray(state.entities?.beams))state.entities.beams.length=0;
-        combatTimer?.classList.add('hidden');
-        if(state.mode==='worldEvent')state.mode='playing';
-      }
-    };
-
-    const baseUpdateMapEvents=window.updateMapEvents;
-    if(typeof baseUpdateMapEvents==='function'&&!baseUpdateMapEvents.__canonicalThree){
-      const canonicalUpdateMapEvents=function(dt){pruneRetiredEvents();const result=baseUpdateMapEvents(dt);pruneRetiredEvents();return result;};
-      canonicalUpdateMapEvents.__canonicalThree=true;
-      window.updateMapEvents=canonicalUpdateMapEvents;
-    }
-    const baseDrawMapEvents=window.drawMapEvents;
-    if(typeof baseDrawMapEvents==='function'&&!baseDrawMapEvents.__canonicalThree){
-      const canonicalDrawMapEvents=function(){pruneRetiredEvents();return baseDrawMapEvents();};
-      canonicalDrawMapEvents.__canonicalThree=true;
-      window.drawMapEvents=canonicalDrawMapEvents;
-    }
-    const baseAuthoredSpawn=window.stackfallSpawnAuthoredMapEvent;
-    if(typeof baseAuthoredSpawn==='function'&&!baseAuthoredSpawn.__canonicalThree){
-      const canonicalAuthoredSpawn=function(type){return canonicalWorldEventSet.has(type)?baseAuthoredSpawn(type):false;};
-      canonicalAuthoredSpawn.__canonicalThree=true;
-      window.stackfallSpawnAuthoredMapEvent=canonicalAuthoredSpawn;
-    }
-    pruneRetiredEvents();
-
-    const cards=document.querySelector('#worldEventCards');
-    const simplifyRecoveryCopy=()=>{
-      if(!cards)return;
-      for(const card of cards.querySelectorAll('.world-event-card')){
-        const heading=card.querySelector('b')?.textContent?.trim(),desc=card.querySelector('p');
-        if(!desc)continue;
-        const next=heading==='회수 모듈'?'무작위 보유 패시브 2종 +1. 대상이 없으면 선체 강화.':heading==='Recovery Module'?'Two random owned passives gain +1 stack. Reinforces the hull if none qualify.':'';
-        if(next&&desc.textContent!==next)desc.textContent=next;
-      }
-    };
-    if(cards){new MutationObserver(simplifyRecoveryCopy).observe(cards,{childList:true,subtree:true});simplifyRecoveryCopy();}
-
-    if(new URLSearchParams(location.search).get('dev')==='1'){
-      let attempts=0;
-      const trimDevEvents=()=>{
-        const select=document.querySelector('#devEndlessEvent');
-        if(select){for(const option of [...select.options])if(!canonicalWorldEventSet.has(option.value))option.remove();return;}
-        if(attempts++<600)requestAnimationFrame(trimDevEvents);
-      };
-      trimDevEvents();
-    }
-    queueMicrotask(()=>{try{renderStarterOptions?.();}catch{}try{window.renderStackfallAchievementHub?.();}catch{}});
-  }
-  if(document.readyState==='complete')installCanonicalWorldEvents();else window.addEventListener('load',installCanonicalWorldEvents,{once:true});
+  queueMicrotask(()=>{try{renderStarterOptions?.();}catch{}try{window.renderStackfallAchievementHub?.();}catch{}});
 
   if(new URLSearchParams(location.search).get('dev')==='1'&&!document.querySelector('script[data-stackfall-dev-endless]')){
     const extension=document.createElement('script');

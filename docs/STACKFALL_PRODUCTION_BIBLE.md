@@ -1,7 +1,10 @@
 # STACKFALL PRODUCTION BIBLE
 
+> **Status: DORMANT STAGE REFERENCE.** Stage gameplay is currently sealed. This file preserves Stage production direction only and does not define active Endless runtime behavior.
+
+
 2026-10-09 · Stage 1 vertical slice. Quality standard, not a Stage 1 cloning template.
-Gameplay timing, balance, unlocks, rewards, encounter cadence and victory ownership remain canonical in GAME_DESIGN/WIKI/runtime. Stage 2–18 production redesign is gated on the user's Stage 1 playtest approval.
+This file is preserved as Stage-production reference only. Active gameplay timing, balance, unlocks, rewards, encounter cadence, and victory ownership must be verified against `CURRENT_STATE.md` and executing runtime/contracts. Stage 2–18 production redesign remains dormant until Stage gameplay is explicitly reopened.
 
 ## Research and limits
 

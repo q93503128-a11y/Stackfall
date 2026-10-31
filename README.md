@@ -19,13 +19,14 @@ python -m http.server 8000
 
 ## 공식 문서
 
-현재 규칙은 아래 세 문서를 함께 기준으로 사용합니다.
+문서를 읽을 때는 먼저 `docs/INDEX.md`와 `docs/CURRENT_STATE.md`를 확인합니다.
 
-1. `README.md`
-2. `docs/GAME_DESIGN.md`
-3. `docs/WIKI.md`
+1. 실행 중인 소스와 통과하는 회귀 계약
+2. `docs/CURRENT_STATE.md` — 현재 런타임의 짧은 정본
+3. `docs/INDEX.md`에서 `REFERENCE`로 분류한 장문 도메인 문서
+4. `HISTORICAL` / `DORMANT` 문서
 
-게임 규칙·밸런스·UI·렌더링·성능 구조를 변경하면 세 문서를 같은 작업에서 동기화합니다. 과거 채팅 요약, 인수인계 문서나 오래된 주석보다 현재 `main` 코드와 공식 문서를 우선합니다.
+날짜가 붙은 감사·리워크 문서나 과거 Stage 설계가 현재 동작과 충돌하면 그것을 근거로 옛 동작을 복구하지 않습니다. 현재 구현 의도를 확인하고 낡은 문서를 갱신합니다.
 
 ## 핵심 규칙
 

@@ -1,6 +1,9 @@
 
 # Stackfall 현재 정본 정밀 감사 — 2026-09-28
 
+> **Status: HISTORICAL AUDIT.** This report describes the repository at an older snapshot. Use `CURRENT_STATE.md` and executing source/contracts for current behavior. Do not restore behavior solely from this audit.
+
+
 감사 기준 `main` HEAD: `140c749c4afc5af4c811a96ed47eb0e9631612db`
 
 이 문서는 2026-09-28 현재 `main`의 코드와 `docs/GAME_DESIGN.md`를 서로 대조한 현재 상태 감사다. 날짜가 붙은 이전 AUDIT 문서와 `awakening-audit-results.json`은 역사적 스냅샷이며 현재 수치·fingerprint의 정본이 아니다.
