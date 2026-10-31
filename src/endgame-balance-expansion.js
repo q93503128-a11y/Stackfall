@@ -22,18 +22,18 @@
   updatePlayer=function endgameBarrierPlayer(dt){baseUpdatePlayer(dt);if(state.weaponAugments?.bulwark){const n=Math.max(1,weaponCount('bulwark')),profile=bulwarkAugmentShieldProfile(n);player.augmentBarrierTimer=(player.augmentBarrierTimer??7.5)-dt;if(player.augmentBarrierTimer<=0){player.augmentBarrierTimer=profile.interval;if(rechargeShield(profile.periodicGain,profile.cap)>0)shockwave(player.x,player.y,'#9dffe2',72+n*3,.24,1.7);}}};
 
   const weaponSources=new Set(['core','core-echo','core-multiplicity','core-nova','core-ricochet','blade','blade-multiplicity','wave','blade-burst','blade-shear','ember','echo-star','ember-multiplicity','ember-burn','ember-strong-chain','star-spark','gravity-collapse','well','comet','echo-comet','comet-multiplicity','comet-afterimage','comet-fragment','comet-burst','comet-trail','arc','arc-return','arc-ricochet','arc-ricochet-return','arc-trail','arc-strong-shard','chrono-pulse','chrono-burst','ion-chain','ion-burst','echo-ion','nova-pulse','echo-nova','nova-collapse','drone','meteor-drone','drone-multiplicity','echo-drone','drone-burst','drone-meteor','rail','rail-multiplicity','rail-afterimage','rail-fracture','spiral-bolt','spiral-multiplicity','spiral-counter','echo-spiral','spiral-knot','mirror-return','mirror-counter','mirror-twin-reflect','mirror-burst','vacuum-bloom','vacuum-overbloom','phase-mine','phase-wire','phantom-mine','missile','missile-mirv','gate-pulse','gate-cross','gate-circuit','gate-exit','gate-crossfeed','barrier-lance','apex-starforge-legacy','apex-forge-star','apex-constellation-lattice','apex-constellation-node']);
-  const baseDealDamage=dealDamage;let secondaryDamageGuard=false;
-  dealDamage=function endgameWeaponDamage(enemy,amount,opts={}){
+  let secondaryDamageGuard=false;
+  registerDamageInterceptor('endgame-balance',function endgameWeaponDamage(next,enemy,amount,opts={}){
     const source=String(opts.source||'');if(weaponSources.has(source))amount*=1.08;if(state.weaponAugments?.chrono&&enemy?.timeLock>0)amount*=1.13;
-    const alive=enemy&&!enemy.dead,x=enemy?.x||0,y=enemy?.y||0;baseDealDamage(enemy,amount,opts);if(!alive||secondaryDamageGuard||!enemy)return;
+    const alive=enemy&&!enemy.dead,x=enemy?.x||0,y=enemy?.y||0;next(enemy,amount,opts);if(!alive||secondaryDamageGuard||!enemy)return;
     secondaryDamageGuard=true;try{
-      if(state.weaponAugments?.core&&['core','core-echo'].includes(source)&&!enemy.dead){player.coreRicochetCycle=(player.coreRicochetCycle||0)+1;if(player.coreRicochetCycle%4===0){baseDealDamage(enemy,amount*.42,{color:'#dffbff',source:'core-ricochet',canCrit:false});state.entities.beams.push({x1:x-20,y1:y-20,x2:x+20,y2:y+20,life:.10,max:.10,color:'#dffbff',width:1.8});}}
+      if(state.weaponAugments?.core&&['core','core-echo'].includes(source)&&!enemy.dead){player.coreRicochetCycle=(player.coreRicochetCycle||0)+1;if(player.coreRicochetCycle%4===0){next(enemy,amount*.42,{color:'#dffbff',source:'core-ricochet',canCrit:false});state.entities.beams.push({x1:x-20,y1:y-20,x2:x+20,y2:y+20,life:.10,max:.10,color:'#dffbff',width:1.8});}}
       if(state.weaponAugments?.blade&&source==='blade'&&!enemy.dead){player.bladeShearCycle=(player.bladeShearCycle||0)+1;if(player.bladeShearCycle%7===0){const a=Math.atan2(enemy.y-player.y,enemy.x-player.x);spawnPlayerProjectile({x,y,vx:Math.cos(a)*520,vy:Math.sin(a)*520,r:5.2,life:.72,maxRange:300,damage:amount*.55,color:'#d8fbff',pierce:3,source:'blade-shear'});}}
-      if(state.weaponAugments?.ember&&['ember','echo-star'].includes(source)&&!enemy.dead){enemy.emberMark=(enemy.emberMark||0)+1;if(enemy.emberMark%3===0){for(let i=1;i<=3;i++)scheduleWeaponAction(i*220,()=>{if(!enemy.dead){baseDealDamage(enemy,amount*.16,{color:'#ff9b78',source:'ember-burn',canCrit:false});spawnParticle(enemy.x,enemy.y,'#ff9b78',2,42,2.2);}});}}
+      if(state.weaponAugments?.ember&&['ember','echo-star'].includes(source)&&!enemy.dead){enemy.emberMark=(enemy.emberMark||0)+1;if(enemy.emberMark%3===0){for(let i=1;i<=3;i++)scheduleWeaponAction(i*220,()=>{if(!enemy.dead){next(enemy,amount*.16,{color:'#ff9b78',source:'ember-burn',canCrit:false});spawnParticle(enemy.x,enemy.y,'#ff9b78',2,42,2.2);}});}}
       if(state.weaponAugments?.spiral&&source.includes('spiral')&&!enemy.dead){player.spiralBurstCycle=(player.spiralBurstCycle||0)+1;if(player.spiralBurstCycle%8===0)areaDamage(x,y,52+weaponCount('spiral')*4,amount*.38,'#e8c0ff','spiral-knot',{shake:false});}
       if(state.weaponAugments?.mirror&&source.includes('mirror')){const profile=mirrorAugmentShieldProfile(weaponCount('mirror'));rechargeShield(profile.gain,profile.cap);}
     }finally{secondaryDamageGuard=false;}
-  };
+  });
 
   const prismBodyCount=prismN=>Math.min(5,(prismN>=6?3:prismN>=2?2:1)+multishotStacks());
   const PRISM_ACQUISITION_SECONDS=1.0,PRISM_RELEASE_GRACE_SECONDS=2.25;

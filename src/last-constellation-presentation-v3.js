@@ -60,12 +60,11 @@
     }
   }
 
-  const baseUpdateEnemies=typeof updateEnemies==='function'?updateEnemies:null;
-  if(baseUpdateEnemies)updateEnemies=function updateEnemiesWithMonumentalConstellation(dt){
-    const result=baseUpdateEnemies(dt);
+  registerEnemyUpdateInterceptor('last-constellation-presentation',function updateEnemiesWithMonumentalConstellation(next,dt){
+    const result=next(dt);
     for(const e of state.entities.enemies||[])if(isLC(e))syncProxyLayout(e);
     return result;
-  };
+  });
 
   function stateOf(e,key){
     const s=e.lcStructure,n=s?.nodes?.[key];if(!s||!n)return'future';

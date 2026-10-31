@@ -57,14 +57,12 @@
       const part=partAt(enemy,x,y,r);enemy.__lcLastCircleContact=part?{partId:part.id,at:performance.now()}:null;return!!part;
     };
   }
-  if(typeof dealDamage==='function'){
-    const base=dealDamage;
-    dealDamage=function lastConstellationMeleeDamageRouting(target,amount,options={}){
+  registerDamageInterceptor('last-constellation-hit-routing',function lastConstellationMeleeDamageRouting(next,target,amount,options={}){
       if(isLC(target)&&String(options?.source||'')==='blade'){
         const contact=target.__lcLastCircleContact;target.__lcLastCircleContact=null;
         const part=contact&&(target.bodyParts||[]).find(p=>p.id===contact.partId&&p.lcNodeProxy&&p.active&&!p.dead);
         if(part){
-          const result=base(part,amount,options);
+          const result=next(part,amount,options);
           // Production damage syncs the constellation proxy positions. The follow-up wave must use
           // the node's post-sync position, not the pre-damage visual position that was just struck.
           const hit={ownerId:target.id,x:part.x,y:part.y,at:performance.now()};
@@ -73,9 +71,8 @@
           return result;
         }
       }
-      return base(target,amount,options);
-    };
-  }
+      return next(target,amount,options);
+  });
 
   function installWaveRouter(){
     if(typeof spawnPlayerProjectile!=='function')return false;

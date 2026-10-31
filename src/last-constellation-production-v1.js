@@ -75,25 +75,23 @@
   // Route the real, fully modified damage through the existing damage stack, but temporarily use
   // the exposed node as the owner's health/FX surface. This preserves all upstream damage modifiers
   // while preventing dormant core FX and keeping owner HP exactly equal to the sum of node HP.
-  const baseDealDamage=typeof dealDamage==='function'?dealDamage:null;
-  if(baseDealDamage)dealDamage=function lastConstellationNodeDamage(target,amount,options={}){
-    const owner=target?.lcNodeProxy?target.owner:target;if(!isLC(owner))return baseDealDamage(target,amount,options);
-    const s=initializeStructure(owner);if(!s)return baseDealDamage(target,amount,options);let part=target?.lcNodeProxy?target:null;
+  registerDamageInterceptor('last-constellation-production',function lastConstellationNodeDamage(next,target,amount,options={}){
+    const owner=target?.lcNodeProxy?target.owner:target;if(!isLC(owner))return next(target,amount,options);
+    const s=initializeStructure(owner);if(!s)return next(target,amount,options);let part=target?.lcNodeProxy?target:null;
     if(!part){if(s.phase<4)return;part=(owner.bodyParts||[]).find(p=>p.lcNodeProxy&&p.lcNodeKey==='core')||null;}
     const node=part&&s.nodes[part.lcNodeKey];if(!node||node.destroyed||node.group!==s.phase)return;
     const requested=Math.max(0,Number(amount)||0);if(requested<=0)return;
     const before=node.hp,saved={x:owner.x,y:owner.y,r:owner.r,hp:owner.hp,maxHp:owner.maxHp,dead:owner.dead};let result,tempAfter=before;
     owner.x=part.x;owner.y=part.y;owner.r=part.r;owner.hp=before;owner.maxHp=node.maxHp;owner.dead=false;
-    try{result=baseDealDamage(owner,requested,{...options,deferKill:true});tempAfter=Number(owner.hp);}finally{owner.x=saved.x;owner.y=saved.y;owner.r=saved.r;owner.dead=saved.dead;}
+    try{result=next(owner,requested,{...options,deferKill:true});tempAfter=Number(owner.hp);}finally{owner.x=saved.x;owner.y=saved.y;owner.r=saved.r;owner.dead=saved.dead;}
     const inflicted=Math.min(before,Math.max(0,before-(Number.isFinite(tempAfter)?tempAfter:before)));node.hp=Math.max(0,before-inflicted);part.hp=node.hp;
     if(node.hp<=.0001)destroyNode(owner,node);const health=syncOwnerHealth(owner);syncParts(owner);
     if(health&&health.hp<=.0001&&!owner.dead)killEnemy(owner,options);
     return result;
-  };
+  });
 
   function updateStructure(e){const s=initializeStructure(e);if(!s)return;e.x=s.anchorX;e.y=s.anchorY;e.apexPhase=s.phase;e.timeLock=0;syncParts(e);advancePhase(e);syncOwnerHealth(e);}
-  const baseUpdateEnemies=typeof updateEnemies==='function'?updateEnemies:null;
-  if(baseUpdateEnemies)updateEnemies=function updateEnemiesWithLastConstellationStructure(dt){for(const e of state.entities.enemies||[])if(isLC(e))updateStructure(e);return baseUpdateEnemies(dt);};
+  registerEnemyUpdateInterceptor('last-constellation-production',function updateEnemiesWithLastConstellationStructure(next,dt){for(const e of state.entities.enemies||[])if(isLC(e))updateStructure(e);return next(dt);});
 
   // Fallback rendering. Presentation v3 replaces this once loaded, but keeping a production-safe
   // fallback prevents an invisible encounter if the presentation layer is delayed.

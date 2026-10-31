@@ -21,32 +21,31 @@ addText=function addTextWithSetting(...args){
   if(GAME_SETTINGS.damageNumbers!==false)sf2BaseAddText(...args);
 };
 
-const sf2BaseDealDamage=dealDamage;
 let sf2EchoBladeGuard=false;
-dealDamage=function dealDamageWithDistinctBursts(enemy,amount,opts={}){
+registerDamageInterceptor('feature-pack',function dealDamageWithDistinctBursts(next,enemy,amount,opts={}){
   if(!enemy||enemy.dead)return;
   const source=opts.source||'';
   const x=enemy.x,y=enemy.y;
-  sf2BaseDealDamage(enemy,amount,opts);
+  next(enemy,amount,opts);
   if(source==='ember'||source==='echo-star'){
     const stacks=weaponCount('ember');
     const radius=27+stacks*3.5;
     const splash=amount*(.16+stacks*.018);
     shockwave(x,y,source==='echo-star'?COLORS.pink:'#ff789b',radius,.20,2.2);
     spawnParticle(x,y,source==='echo-star'?COLORS.pink:'#ff9aba',4+Math.min(5,stacks),105,3.2);
-    forEachNearbyEnemyCandidate(x,y,radius+128,other=>{if(other===enemy||other.dead)return;if((other.x-x)**2+(other.y-y)**2<(other.r+radius)**2)sf2BaseDealDamage(other,splash,{color:'#ff9aba',source:'ember-burst',canCrit:false});});
+    forEachNearbyEnemyCandidate(x,y,radius+128,other=>{if(other===enemy||other.dead)return;if((other.x-x)**2+(other.y-y)**2<(other.r+radius)**2)next(other,splash,{color:'#ff9aba',source:'ember-burst',canCrit:false});});
   }
   if((source==='core'||source==='core-echo')&&weaponCount('core')>=4){
     const stacks=weaponCount('core');
     const radius=22+stacks*3;
     shockwave(x,y,source==='core-echo'?COLORS.pink:'#d7f8ff',radius,.16,1.6);
-    forEachNearbyEnemyCandidate(x,y,radius+128,other=>{if(other===enemy||other.dead)return;if((other.x-x)**2+(other.y-y)**2<(other.r+radius)**2)sf2BaseDealDamage(other,amount*(.12+stacks*.012),{color:'#d7f8ff',source:'core-burst',canCrit:false});});
+    forEachNearbyEnemyCandidate(x,y,radius+128,other=>{if(other===enemy||other.dead)return;if((other.x-x)**2+(other.y-y)**2<(other.r+radius)**2)next(other,amount*(.12+stacks*.012),{color:'#d7f8ff',source:'core-burst',canCrit:false});});
   }
   if(sf2EchoBladeGuard||enemy.dead||state.mode!=='playing'||source!=='blade'||!stat('echo')||(player.echoBladeCd||0)>0)return;
   const chance=Math.min(.36,.045+stat('echo')*.038);if(Math.random()>=chance)return;
   player.echoBladeCd=.46;const targetId=enemy.id;
-  scheduleWeaponAction(60,()=>{const target=enemyById(targetId);if(!target)return;sf2EchoBladeGuard=true;sf2BaseDealDamage(target,amount*.52,{color:COLORS.pink,source:'echo-blade',canCrit:false});sf2EchoBladeGuard=false;});
-};
+  scheduleWeaponAction(60,()=>{const target=enemyById(targetId);if(!target)return;sf2EchoBladeGuard=true;next(target,amount*.52,{color:COLORS.pink,source:'echo-blade',canCrit:false});sf2EchoBladeGuard=false;});
+});
 
 spawnCoreShot=function spawnStackedCoreShot(target,echoed=false){
   if(!target)return;

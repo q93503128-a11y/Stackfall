@@ -50,7 +50,10 @@ function clampApexToArena(e){const arena=state.apexArena;if(!arena||e.kind!=='ap
 function keepLiveEnemy(e){return!!(e&&!e.dead&&Number.isFinite(e.x)&&Number.isFinite(e.y));}
 function keepLiveEnemyProjectile(p){return!!(p&&p.life>0&&Number.isFinite(p.x)&&Number.isFinite(p.y));}
 function keepLiveTelegraph(t){return!!(validTelegraph(t)&&!t.invalid&&t.life>-.28);}
-function updateEnemies(dt){
+const STACKFALL_ENEMY_UPDATE_INTERCEPTORS=[];
+function registerEnemyUpdateInterceptor(id,handler){if(typeof handler!=='function')return false;const key=String(id||handler.name||'enemy-update-interceptor'),index=STACKFALL_ENEMY_UPDATE_INTERCEPTORS.findIndex(entry=>entry.id===key),entry={id:key,handler};if(index>=0)STACKFALL_ENEMY_UPDATE_INTERCEPTORS[index]=entry;else STACKFALL_ENEMY_UPDATE_INTERCEPTORS.push(entry);return true;}
+function runEnemyUpdateInterceptor(index,dt){if(index<0)return updateEnemiesCore(dt);const entry=STACKFALL_ENEMY_UPDATE_INTERCEPTORS[index],next=(nextDt=dt)=>runEnemyUpdateInterceptor(index-1,nextDt);return entry.handler(next,dt);}
+function updateEnemiesCore(dt){
   const encounterService=apexCombatService(state.apexArena?.form||state.pendingApexForm||state.realmTransition?.form);if(encounterService?.beforeEnemies?.(dt)===false)return;
   const gravWells=state.entities.wells,chronoN=weaponCount('chrono'),chronoRadius=145+chronoN*18,threat=1+Math.floor((state.time||0)/60),legacyTimeScale=typeof stackfallEnemyTimeScale==='function'?stackfallEnemyTimeScale():1;
   for(const e of state.entities.enemies){
@@ -64,6 +67,7 @@ function updateEnemies(dt){
   compactInPlace(state.entities.enemies,keepLiveEnemy);
   window.stackfallEnemyDirectorV1?.updateActions?.(dt);
 }
+function updateEnemies(dt){return runEnemyUpdateInterceptor(STACKFALL_ENEMY_UPDATE_INTERCEPTORS.length-1,dt);}
 function hurtPlayer(amount,source){const hadDefense=weaponCount('bulwark')>0||stat('armor')>0||player.shield>0;amount*=1-damageReduction();if(player.shield>0){const used=Math.min(player.shield,amount);player.shield-=used;amount-=used;}if(amount>0)player.hp-=amount;player.invuln=.5;player.hitPulse=.22;const heavyImpact=amount>=14;state.camera.shake=Math.max(state.camera.shake,heavyImpact?3.5:1.6);if(heavyImpact)state.flash=Math.max(state.flash,.045);audio.hurt();spawnParticle(player.x,player.y,COLORS.red,heavyImpact?8:4,heavyImpact?160:105,heavyImpact?3.8:2.7);if(hadDefense)shockwave(player.x,player.y,COLORS.green,78,.24,3);if(source&&state.entities.enemies.includes(source)){const dx=source.x-player.x,dy=source.y-player.y,d=Math.hypot(dx,dy)||1,f=enemyControlFactor(source);source.x+=dx/d*48*f;source.y+=dy/d*48*f;}if(weaponCount('bulwark')>=4)areaDamage(player.x,player.y,115,24+weaponCount('bulwark')*4,COLORS.green,'bulwark-counter');if(player.hp<=0)endGame();}
 function relativeProjectileSweepHitsPlayer(startX,startY,endX,endY,prevPlayerX,prevPlayerY,radius){const ax=startX-prevPlayerX,ay=startY-prevPlayerY,bx=endX-player.x,by=endY-player.y,dx=bx-ax,dy=by-ay,len=dx*dx+dy*dy;const t=len>1e-8?clamp(-(ax*dx+ay*dy)/len,0,1):0,cx=ax+dx*t,cy=ay+dy*t;return cx*cx+cy*cy<=radius*radius;}
 function updateEnemyProjectiles(dt){

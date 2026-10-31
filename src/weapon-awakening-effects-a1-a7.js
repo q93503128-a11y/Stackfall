@@ -86,10 +86,9 @@
     pushFx({kind:'starline-flash',x:target.x,y:target.y,life:.30,max:.30});
     audio.weapon?.('ember',false,1.5);
   }
-  const baseDealDamage=dealDamage;
-  dealDamage=function awakeningFirstSetDamage(enemy,amount,opts={}){
+  registerDamageInterceptor('awakening-first-set',function awakeningFirstSetDamage(next,enemy,amount,opts={}){
     const wasAlive=enemy&&!enemy.dead,source=String(opts.source||'');
-    baseDealDamage(enemy,amount,opts);
+    next(enemy,amount,opts);
     if(!emberSignatureGuard&&awake('ember')&&wasAlive&&source==='ember'){
       const targetId=enemy?.id??null;
       if(targetId!==player.awEmberTargetId){player.awEmberTargetId=targetId;player.awEmberHits=0;}
@@ -100,7 +99,7 @@
         if(target)fireNebulaStarline(target);
       }
     }
-  };
+  });
 
   // A4 — Celestial Bastion: hit-facing armor deployment plus a real break counterwave.
   function fireBastionVolley(){

@@ -29,10 +29,9 @@
     return 1;
   }
 
-  const previousDealDamage=dealDamage;
   let feedbackDamageGuard=false;
-  dealDamage=function communityBalancedDamage(enemy,amount,opts={}){
-    if(feedbackDamageGuard||!enemy||enemy.dead)return previousDealDamage(enemy,amount,opts);
+  registerDamageInterceptor('community-feedback',function communityBalancedDamage(next,enemy,amount,opts={}){
+    if(feedbackDamageGuard||!enemy||enemy.dead)return next(enemy,amount,opts);
     const source=String(opts.source||''),wasAlive=!enemy.dead,x=enemy.x,y=enemy.y,locked=enemy.timeLock>0;
     amount*=weaponDamageScale(source);
     const suppressCore=!!state.weaponAugments?.core&&['core','core-echo'].includes(source);
@@ -42,7 +41,7 @@
     try{
       if(suppressCore)state.weaponAugments.core=false;
       if(suppressChrono)state.weaponAugments.chrono=false;
-      previousDealDamage(enemy,amount,opts);
+      next(enemy,amount,opts);
     }finally{
       if(suppressCore)state.weaponAugments.core=savedCore;
       if(suppressChrono)state.weaponAugments.chrono=savedChrono;
@@ -51,11 +50,11 @@
       player.communityCoreRicochetCycle=(player.communityCoreRicochetCycle||0)+1;
       if(player.communityCoreRicochetCycle%4===0){
         const candidates=nearestEnemies(x,y,3,new Set([enemy.id]),260),target=candidates[0];
-        if(target){feedbackDamageGuard=true;try{previousDealDamage(target,amount*.42,{color:'#dffbff',source:'core-ricochet',canCrit:false});}finally{feedbackDamageGuard=false;}state.entities.beams.push({x1:x,y1:y,x2:target.x,y2:target.y,life:.12,max:.12,color:'#dffbff',width:2});}
+        if(target){feedbackDamageGuard=true;try{next(target,amount*.42,{color:'#dffbff',source:'core-ricochet',canCrit:false});}finally{feedbackDamageGuard=false;}state.entities.beams.push({x1:x,y1:y,x2:target.x,y2:target.y,life:.12,max:.12,color:'#dffbff',width:2});}
       }
     }
     if(suppressChrono&&wasAlive&&enemy.dead){const chronoSaved=state.weaponAugments.chrono;feedbackDamageGuard=true;state.weaponAugments.chrono=false;try{areaDamage(x,y,96*weaponSizeMultiplier(),20+weaponStacks('chrono')*3.6,COLORS.chrono,'chrono-burst');}finally{state.weaponAugments.chrono=chronoSaved;feedbackDamageGuard=false;}}
-  };
+  });
 
   const PRISM_ACQUISITION_SECONDS=1.0,PRISM_RELEASE_GRACE_SECONDS=2.25;
   const prismBodyCount=n=>Math.min(5,(n>=6?3:n>=2?2:1)+multishotStacks());

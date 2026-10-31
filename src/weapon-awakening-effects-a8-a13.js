@@ -115,14 +115,13 @@
     ionNodes.push({enemyId:enemy.id,x:enemy.x,y:enemy.y,life:2.65,max:2.65});
     if(ionNodes.length>7)ionNodes.shift();
   }
-  const baseDealDamage=dealDamage;
-  dealDamage=function awakeningSecondSetDamage(enemy,amount,opts={}){
+  registerDamageInterceptor('awakening-second-set',function awakeningSecondSetDamage(next,enemy,amount,opts={}){
     const source=String(opts.source||''),wasAlive=enemy&&!enemy.dead;
-    const result=baseDealDamage(enemy,amount,opts);
+    const result=next(enemy,amount,opts);
     if(ionCapture&&wasAlive&&source==='ion-chain')ionCapture.add(enemy.id);
     if(wasAlive&&!enemy?.dead&&(source==='ion-chain'||source==='ion-superconductive'))addIonNode(enemy);
     return result;
-  };
+  });
 
   function castSuperconductiveNetwork(n,excluded){
     const candidates=nearestEnemies(player.x,player.y,9,excluded,weaponRange('ion')),first=candidates[0];if(!first)return;
