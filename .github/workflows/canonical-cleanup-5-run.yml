@@ -1,0 +1,57 @@
+name: Canonical cleanup 5 runner
+on:
+  push:
+    branches:
+      - validation/canonical-cleanup-5
+permissions:
+  contents: write
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Extract and apply guarded transform
+        shell: bash
+        run: |
+          set -euo pipefail
+          awk '
+            /node <<.NODE./ {capture=1; next}
+            capture && /^[[:space:]]*NODE[[:space:]]*$/ {exit}
+            capture {sub(/^          /, ""); print}
+          ' .github/workflows/canonical-cleanup-5-validate.yml >/tmp/cleanup5-transform.js
+          test -s /tmp/cleanup5-transform.js
+          node /tmp/cleanup5-transform.js
+      - name: Check transformed ownership surface
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'Assignments remaining to Apex canonical owners:'
+          grep -REn --include='*.js' '\b(apexBossSkill|apexPhaseDirector|apexMotionVelocity)\s*=\s*function\b' src || true
+          for file in src/boss-patterns.js src/bosses.js src/apex-run-clock.js src/apex-identity-combat-v1.js src/omega-production-v1.js src/omega-combat-v1.js src/atropos-phase-production-v1.js src/atropos-combat-escalation-v1.js src/atropos-production-polish-v2.js src/last-constellation-reset-v1.js src/last-constellation-production-v1.js scripts/runtime-ownership-contract.mjs; do node --check "$file"; done
+      - name: Validate full source and write build fingerprint
+        run: node scripts/build-fingerprint.mjs
+      - name: Start local server
+        shell: bash
+        run: |
+          python3 -m http.server 8000 >/tmp/stackfall-server.log 2>&1 &
+          sleep 2
+      - name: Chromium full smoke
+        env:
+          STACKFALL_ALLOW_GPU_SKIP: '1'
+          STACKFALL_ALLOW_CONTEXT_SKIP: '1'
+        run: node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/canonical-cleanup-5-smoke.json
+      - name: Persist validated source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/canonical-cleanup-5-inspect.yml .github/workflows/canonical-cleanup-5-validate.yml .github/workflows/canonical-cleanup-5-run.yml
+          git config user.name 'Stackfall validation bot'
+          git config user.email 'stackfall-validation@users.noreply.github.com'
+          git add src scripts .github/workflows
+          git commit -m 'Persist validated canonical cleanup 5 [skip ci]'
+          git push origin HEAD:validation/canonical-cleanup-5
