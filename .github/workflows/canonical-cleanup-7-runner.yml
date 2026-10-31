@@ -1,0 +1,61 @@
+name: Canonical cleanup 7 runner
+on:
+  push:
+    branches: [validation/canonical-cleanup-7]
+permissions:
+  contents: write
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply guarded ownership transform
+        run: node .validation/canonical-cleanup-7-transform.mjs
+      - name: Check transformed ownership surface
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! grep -REn --include='*.js' '\bhurtPlayer\s*=\s*function\b' src
+          ! grep -REn --include='*.js' '\bupdateWeapons\s*=\s*function\b' src
+          node --check src/bosses.js
+          node --check src/weapons.js
+          node --check src/dev-tools.js
+          node --check src/endless-progression-v2.js
+          node --check src/reward-refinement.js
+          node --check src/endgame-balance-expansion.js
+          node --check src/weapon-awakening-effects-a1-a7.js
+          node --check src/weapon-awakening-effects-a8-a13.js
+          node --check src/weapon-awakening-effects-a14-a19.js
+          node --check src/player-hit-invulnerability-v2.js
+          node --check src/combat-balance-refinement.js
+          node scripts/runtime-ownership-contract.mjs
+      - name: Validate full source and write build fingerprint
+        run: node scripts/build-fingerprint.mjs
+      - name: Start local server
+        shell: bash
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/stackfall-http.log 2>&1 &
+          echo $! > /tmp/stackfall-http.pid
+          for i in {1..40}; do curl -fsS http://127.0.0.1:8000/ >/dev/null && exit 0; sleep .25; done
+          cat /tmp/stackfall-http.log
+          exit 1
+      - name: Chromium full smoke
+        env:
+          STACKFALL_ALLOW_GPU_SKIP: '0'
+          STACKFALL_ALLOW_CONTEXT_SKIP: '0'
+        run: node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/?dev=1
+      - name: Persist validated source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .validation
+          rm -f .github/workflows/canonical-cleanup-7-inspect.yml .github/workflows/canonical-cleanup-7-runner.yml
+          git config user.name 'Stackfall validation bot'
+          git config user.email 'stackfall-validation@users.noreply.github.com'
+          git add src scripts .github/workflows
+          git status --short
+          git commit -m 'Persist validated canonical cleanup 7 [skip ci]'
+          git push origin HEAD:validation/canonical-cleanup-7
