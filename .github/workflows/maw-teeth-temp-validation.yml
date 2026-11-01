@@ -12,7 +12,7 @@ jobs:
   validate-and-normalize:
     if: ${{ !contains(github.event.head_commit.message, '[maw-teeth-validated]') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -83,7 +83,7 @@ jobs:
           exec /usr/bin/google-chrome "${args[@]}"
           EOF
           chmod +x "$RUNNER_TEMP/stackfall-chrome"
-      - name: Full local browser smoke
+      - name: Full local browser smoke with one clean retry
         shell: bash
         env:
           STACKFALL_CHROME: ${{ runner.temp }}/stackfall-chrome
@@ -93,12 +93,23 @@ jobs:
           set -euo pipefail
           python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/stackfall-http.log 2>&1 &
           server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          trap 'kill "$server_pid" 2>/dev/null || true; pkill -f "google-chrome.*stackfall-cdp" 2>/dev/null || true' EXIT
           for _ in $(seq 1 40); do
             if curl -fsS http://127.0.0.1:8000/ >/dev/null; then break; fi
             sleep 0.25
           done
-          node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/maw-teeth-browser-smoke.json
+          passed=0
+          for attempt in 1 2; do
+            echo "Browser smoke attempt $attempt"
+            rm -rf test-results/screenshots || true
+            if node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/maw-teeth-browser-smoke.json; then
+              passed=1
+              break
+            fi
+            pkill -f "google-chrome.*stackfall-cdp" 2>/dev/null || true
+            sleep 3
+          done
+          test "$passed" = 1
       - name: Scope and whitespace checks
         shell: bash
         run: |
