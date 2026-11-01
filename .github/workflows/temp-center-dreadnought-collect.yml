@@ -1,0 +1,33 @@
+name: Temporary center Dreadnought collect CTA
+on:
+  push:
+    branches: [fix-dreadnought-ui-simple]
+permissions:
+  contents: write
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Apply alignment patch
+        run: python3 scripts/temp-center-dreadnought-collect.py
+      - name: Validate
+        run: |
+          node --check src/map-event-expansion.js
+          node scripts/combat-integrity-contract.mjs
+          node scripts/build-fingerprint.mjs
+          git diff --check
+          grep -F '.world-event-collect-all{position:relative;grid-column:1/-1;min-height:64px;display:flex;align-items:center;justify-content:center;gap:10px;' src/map-event-expansion.js
+          grep -F '.world-event-collect-all .choice-shortcut{position:static;flex:0 0 25px}' src/map-event-expansion.js
+      - name: Commit validated source state
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/map-event-expansion.js src/build-info.js
+          git commit -m 'Center Dreadnought collect-all shortcut'
+          git push origin HEAD:fix-dreadnought-ui-simple
