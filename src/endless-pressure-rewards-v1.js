@@ -11,22 +11,25 @@
   };
   window.stackfallDesktopEnemyCap=DESKTOP_ENEMY_CAP;
 
-  const baseDirector=window.stackfallEnemyDirectorV1;
-  if(baseDirector?.updateSpawning){
-    function pressureRuntime(){
-      let rt=state.endlessPressureV1;
-      if(!rt||rt.runSerial!==state.runSerial)rt=state.endlessPressureV1={runSerial:state.runSerial,overflowCd:.25,overflowSpawned:0};
-      return rt;
-    }
-    function desiredTarget(profile,time=state.time||0){
-      if(!profile||compactDevice()||profile.boss||time<900)return profile?.target||0;
-      const normalCap=Math.max(24,entityCap('enemies')-7);
-      let extra;
-      if(time<1200)extra=Math.floor((time-900)/30);
-      else extra=12+Math.floor((time-1200)/180)*4;
-      return Math.min(normalCap,DESKTOP_NORMAL_TARGET_CAP,(profile.target||0)+Math.max(0,extra));
-    }
-    function liveNormalCount(){let count=0;for(const enemy of state.entities.enemies)if(enemy&&!enemy.dead&&enemy.kind==='normal'&&!enemy.eventKind)count++;return count;}
+  function pressureRuntime(){
+    let rt=state.endlessPressureV1;
+    if(!rt||rt.runSerial!==state.runSerial)rt=state.endlessPressureV1={runSerial:state.runSerial,overflowCd:.25,overflowSpawned:0};
+    return rt;
+  }
+  function desiredTarget(profile,time=state.time||0){
+    if(!profile||compactDevice()||profile.boss||time<900)return profile?.target||0;
+    const normalCap=Math.max(24,entityCap('enemies')-7);
+    let extra;
+    if(time<1200)extra=Math.floor((time-900)/30);
+    else extra=12+Math.floor((time-1200)/180)*4;
+    return Math.min(normalCap,DESKTOP_NORMAL_TARGET_CAP,(profile.target||0)+Math.max(0,extra));
+  }
+  function liveNormalCount(){let count=0;for(const enemy of state.entities.enemies)if(enemy&&!enemy.dead&&enemy.kind==='normal'&&!enemy.eventKind)count++;return count;}
+
+  function installDirectorPressure(){
+    const baseDirector=window.stackfallEnemyDirectorV1;
+    if(!baseDirector?.updateSpawning)return false;
+    if(baseDirector.__stackfallPressureV1)return true;
     function updatePressureSpawning(dt){
       const result=baseDirector.updateSpawning(dt),profile=baseDirector.profile(),time=state.time||0,target=desiredTarget(profile,time);
       if(compactDevice()||profile?.boss||time<900)return result;
@@ -41,10 +44,11 @@
     }
     function pressureProfile(){const base=baseDirector.profile();return{...base,baseTarget:base.target,target:desiredTarget(base,state.time||0),swarmExtended:true};}
     function pressureSnapshot(){const snapshot=baseDirector.snapshot?.()||{},profile=pressureProfile(),rt=pressureRuntime();return{...snapshot,baseTarget:profile.baseTarget,target:profile.target,swarmExtended:true,desktopEnemyCap:DESKTOP_ENEMY_CAP,overflowSpawned:rt.overflowSpawned};}
-    const extended=Object.freeze({...baseDirector,version:`${baseDirector.version}+pressure-v1`,updateSpawning:updatePressureSpawning,profile:pressureProfile,snapshot:pressureSnapshot});
+    const extended=Object.freeze({...baseDirector,version:`${baseDirector.version}+pressure-v1`,__stackfallPressureV1:true,updateSpawning:updatePressureSpawning,profile:pressureProfile,snapshot:pressureSnapshot});
     window.stackfallEnemyDirectorV1=extended;
     window.stackfallEnemyDirectorProfile=pressureProfile;
     window.stackfallEnemyDirectorSnapshot=pressureSnapshot;
+    return true;
   }
 
   function grantDreadnoughtBonus(){
@@ -63,8 +67,10 @@
     if(!Array.isArray(ev.waves)||ev.wave<ev.waves.length-1||ev.remaining>0)return false;
     return !state.entities.enemies.some(enemy=>enemy&&!enemy.dead&&enemy.eventKind==='crash');
   }
-  const baseUpdateMapEvents=window.updateMapEvents;
-  if(typeof baseUpdateMapEvents==='function'){
+  function installDreadnoughtReward(){
+    const baseUpdateMapEvents=window.updateMapEvents;
+    if(typeof baseUpdateMapEvents!=='function')return false;
+    if(baseUpdateMapEvents.__stackfallDreadnoughtRewardV1)return true;
     const wrapped=function updateMapEventsWithDreadnoughtBonus(dt){
       const event=state.mapEventActive,completionReady=dreadnoughtCompletionReady(event);
       const result=baseUpdateMapEvents(dt);
@@ -74,11 +80,23 @@
       }
       return result;
     };
+    wrapped.__stackfallDreadnoughtRewardV1=true;
     window.updateMapEvents=wrapped;
     try{updateMapEvents=wrapped;}catch{}
+    return true;
+  }
+  function installRuntimeExtensions(){
+    const director=installDirectorPressure(),dreadnought=installDreadnoughtReward();
+    window.stackfallEndlessPressureInstallState={director,dreadnought};
+    return director&&dreadnought;
   }
 
-  window.stackfallEndlessPressureDiagnostics=()=>({
-    version:'v1',desktopEnemyCap:DESKTOP_ENEMY_CAP,normalTargetCap:DESKTOP_NORMAL_TARGET_CAP,compactUnchanged:compactDevice(),director:window.stackfallEnemyDirectorSnapshot?.()||null,dreadnoughtBonus:'coreShard:1'
-  });
+  installRuntimeExtensions();
+  if(document.readyState==='complete')queueMicrotask(installRuntimeExtensions);
+  else window.addEventListener('load',installRuntimeExtensions,{once:true});
+
+  window.stackfallEndlessPressureDiagnostics=()=>{
+    installRuntimeExtensions();
+    return{version:'v1',desktopEnemyCap:DESKTOP_ENEMY_CAP,normalTargetCap:DESKTOP_NORMAL_TARGET_CAP,compactUnchanged:compactDevice(),installState:{...window.stackfallEndlessPressureInstallState},director:window.stackfallEnemyDirectorSnapshot?.()||null,dreadnoughtBonus:'coreShard:1'};
+  };
 })();
