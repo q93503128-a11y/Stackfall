@@ -375,7 +375,7 @@ Stage 13~18의 환경 공격은 같은 방사형 선 패턴을 반복하지 않�
 ### Stage 1 production vertical slice — 2026-10-09
 
 
-실제 Chromium GPU·Canvas·390×844 모바일에서 등장, 4종 동작, 48% 전환, 격파/보상 결과, 고속 탄환의 외장 적중과 중앙 공백을 검사한다. `scripts/stage-production-browser.mjs --stage=1`의 이미지·JSON은 로컬 `test-results/production-stage-01`에 생성된다.
+이 항목은 Stage runtime이 활성 상태였던 시점의 역사적 QA 기록이다. 당시 Chromium GPU·Canvas·390×844 모바일에서 등장, 4종 동작, 48% 전환, 격파/보상 결과, 고속 탄환의 외장 적중과 중앙 공백을 검사했다. Stage 봉인 이후 전용 `stage-production-*` QA 도구는 제거되었으며 현재 production 검증 경로가 아니다.
 
 
 ### Stage 2 production remake — 2026-10-01
