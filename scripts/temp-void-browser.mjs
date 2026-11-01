@@ -63,6 +63,11 @@ try{
   if(!Array.isArray(result)||result.some(row=>!row.ok))throw new Error('Void Rift targeted browser validation failed');
   cdp.ws.close();
 }finally{
-  child.kill('SIGTERM');
-  rmSync(profile,{recursive:true,force:true});
+  const exited=new Promise(resolve=>child.once('exit',resolve));
+  if(child.exitCode===null)child.kill('SIGTERM');
+  if(child.exitCode===null)await Promise.race([exited,sleep(2500)]);
+  for(let attempt=0;attempt<5;attempt++){
+    try{rmSync(profile,{recursive:true,force:true,maxRetries:3,retryDelay:100});break;}
+    catch(error){if(attempt===4)console.warn('Void QA temp profile cleanup skipped:',error.code||error.message);await sleep(150);}
+  }
 }
