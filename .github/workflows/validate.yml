@@ -54,6 +54,8 @@ jobs:
         run: node scripts/runtime-ownership-contract.mjs
       - name: Check void boss contract
         run: node scripts/void-boss-contract.mjs
+      - name: Check Void Apex Answer prototype contract
+        run: node scripts/void-apex-answer-contract.mjs
       - name: Check apex contract
         run: node scripts/apex-encounter-contract.mjs
       - name: Check endgame contract
