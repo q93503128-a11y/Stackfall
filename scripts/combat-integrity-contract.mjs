@@ -5,6 +5,8 @@ const combat=read('src/combat-integrity-v1.js');
 const pressure=read('src/endless-pressure-rewards-v1.js');
 const body=read('src/boss-body-parts.js');
 const crash=read('src/map-event-expansion.js');
+const index=read('index.html');
+const awakeningA1A7=read('src/weapon-awakening-effects-a1-a7.js');
 
 const checks=[
   ['multipart surface resolver exposed',/stackfallResolveWeaponTargetSurface=resolveSurface/.test(combat)],
@@ -16,7 +18,9 @@ const checks=[
   ['boomerang firing no longer FIFO-trims active attacks',/integrityBoomerang/.test(combat)&&!combat.includes('trimOldest(state.entities.curves')],
   ['boomerang update no longer FIFO-trims active attacks',/integrityBoomerangLifecycle/.test(combat)&&/compactInPlace\(curves,keepLiveBoomerang\);/.test(combat)],
   ['duplicate kill side effects are blocked',/if\(!enemy\|\|enemy\.dead\)return;\s*return baseKillEnemy/.test(combat)],
-  ['runtime layers load after multipart owner',body.indexOf("src/combat-integrity-v1.js")>body.indexOf('stackfallSharedEnemyScalePulseDisabled')&&body.indexOf("src/endless-pressure-rewards-v1.js")>body.indexOf("src/combat-integrity-v1.js")],
+  ['combat integrity loads before awakening effect wrappers',index.indexOf('src/weapon-awakening.js')<index.indexOf('src/combat-integrity-v1.js')&&index.indexOf('src/combat-integrity-v1.js')<index.indexOf('src/weapon-awakening-effects-a1-a7.js')&&!body.includes('loadRuntimeIntegrityLayers')],
+  ['arc awakening remains the final boomerang update owner',/const baseUpdateBoomerangs=updateBoomerangs/.test(awakeningA1A7)&&/updateBoomerangs=function lunarReturnUpdate/.test(awakeningA1A7)],
+  ['endless pressure loads after multipart target ownership',index.indexOf('src/endless-pressure-rewards-v1.js')>index.indexOf('src/boss-body-parts.js')],
   ['desktop enemy ceiling is raised but bounded',/DESKTOP_ENEMY_CAP=168/.test(pressure)&&/DESKTOP_NORMAL_TARGET_CAP=156/.test(pressure)],
   ['compact enemy cap remains on canonical base path',/kind==='enemies'.*!compactDevice\(\)/.test(pressure)&&/return baseEntityCap\(kind\)/.test(pressure)],
   ['late pressure remains time gated',/time<900/.test(pressure)&&/time<1200/.test(pressure)],
@@ -24,7 +28,8 @@ const checks=[
   ['dreadnought grants one fixed core shard after successful salvage transition',/stackfallGrantCurrency\?\.\('coreShard',1\)/.test(pressure)&&/state\.mode==='worldEvent'/.test(pressure)],
   ['dreadnought reward stays idempotent across nested runtime wrappers',/completionReady&&!event\.__dreadnoughtBonusGranted&&state\.mapEventActive!==event/.test(pressure)&&/event\.__dreadnoughtBonusGranted=true;\s*grantDreadnoughtBonus\(\)/.test(pressure)],
   ['dreadnought salvage grants all three displayed rewards',/function openSalvage\(takeAll=false\)/.test(crash)&&/const takeAllAction=/.test(crash)&&/openSalvage\(ev\.dreadnought===true\)/.test(crash)],
-  ['dreadnought salvage uses a dedicated collect-all CTA',/world-event-collect-all/.test(crash)&&/world-event-preview/.test(crash)&&/openCards\(tx\('salvage'\),prompt,cards,'DREADNOUGHT SALVAGE','crash',null,takeAllAction\)/.test(crash)],
+  ['dreadnought salvage uses a dedicated collect-all CTA',/world-event-collect-all/.test(crash)&&/world-event-preview-card/.test(crash)&&/openCards\(tx\('salvage'\),prompt,cards,'DREADNOUGHT SALVAGE','crash',null,takeAllAction\)/.test(crash)],
+  ['dreadnought preview hides empty choice timer',/world-event-timer:empty\{display:none\}/.test(crash)],
   ['late desktop pressure continues above the old 124 target',/DESKTOP_NORMAL_TARGET_CAP=156/.test(pressure)&&/\(time-1200\)\/150/.test(pressure)],
 ];
 
