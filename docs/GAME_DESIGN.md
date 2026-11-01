@@ -1155,12 +1155,12 @@ Readability rule: Void attacks may be visually intense, but their warning geomet
 ### Endless late swarm pressure
 
 - 기존 Enemy Director의 role/cadence/pulse 소유권을 유지한다. 데스크톱에서만 900초 이후 추가 후반 밀도 압력을 적용한다.
-- 900~1200초는 점진적으로 목표를 추가하고, 1200초 이후에는 장기 생존 시간에 따라 더 증가한다. 최종 일반 적 목표 상한은 124, 전체 적 안전 hard cap은 136이다.
+- 900~1200초는 점진적으로 목표를 추가하고, 1200초 이후에는 장기 생존 시간에 따라 더 증가한다. 최종 일반 적 목표 상한은 156, 전체 적 안전 hard cap은 168이다.
 - 콤팩트 기기는 기존 cap/밀도 경로를 그대로 사용한다. 일반 보스가 활성 중일 때는 기존 boss-pressure 감쇠를 보존한다.
 - 성능 보호는 우선 장식/시각 예산을 조절하며, gameplay attack을 FIFO 삭제해 성능을 맞추지 않는다.
 
 ### Crash Dreadnought reward
 
 - 매 3번째 Crash event의 Dreadnought는 `noEliteReward` 정책을 유지해 일반 보스 특수능력 선택을 중복 생성하지 않는다.
-- 성공적으로 마지막 wave와 Dreadnought를 정리해 Salvage 단계로 전환될 때만 기존 Salvage 3택1 + 영구 Core Shard 1개를 지급한다. 실패/중단에는 지급하지 않으며 wrapper 중첩 여부와 무관하게 event당 정확히 1회만 지급한다.
+- 성공적으로 마지막 wave와 Dreadnought를 정리해 Salvage 단계로 전환될 때만 무작위로 표시된 Salvage 3개를 전부 지급하고 + 영구 Core Shard 1개를 지급한다. 실패/중단에는 지급하지 않으며 wrapper 중첩 여부와 무관하게 event당 정확히 1회만 지급한다.
 
