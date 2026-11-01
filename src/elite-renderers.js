@@ -35,7 +35,7 @@ function drawCollapseWardenBody(e){
   // Rear reactor, hydraulics, then chest. The same four authored poses own hits.
   for(const s of [...shapes].sort((a,b)=>[3,4,5,1,2,0].indexOf(a.part)-[3,4,5,1,2,0].indexOf(b.part))){ctx.save();ctx.translate(s.x-e.x,s.y-e.y);ctx.rotate(s.a);
     if(e.stageDefeatAge!=null&&s.part===3)ctx.globalAlpha*=Math.max(.18,1-e.stageDefeatAge*.85);
-    if(s.part>=4){if(e.stageDefeatAge!=null)ctx.globalAlpha*=1-frontierEase(e.stageDefeatAge/.45);const g=ctx.createLinearGradient(0,-s.hh,0,s.hh);g.addColorStop(0,'#171e23');g.addColorStop(.3,'#829096');g.addColorStop(.52,'#46515a');g.addColorStop(1,'#1c232b');ctx.fillStyle=g;ctx.fillRect(-s.hw,-s.hh,s.hw*2,s.hh*2);ctx.fillStyle='#b1a782';ctx.fillRect(-s.hw+3,-s.hh+2,5,s.hh*2-4);ctx.fillStyle='#161e26';g.fillRect(s.hw-8,-s.hh,7,s.hh*2);ctx.restore();continue;}
+    if(s.part>=4){if(e.stageDefeatAge!=null)ctx.globalAlpha*=1-frontierEase(e.stageDefeatAge/.45);const g=ctx.createLinearGradient(0,-s.hh,0,s.hh);g.addColorStop(0,'#171e23');g.addColorStop(.3,'#829096');g.addColorStop(.52,'#46515a');g.addColorStop(1,'#1c232b');ctx.fillStyle=g;ctx.fillRect(-s.hw,-s.hh,s.hw*2,s.hh*2);ctx.fillStyle='#b1a782';ctx.fillRect(-s.hw+3,-s.hh+2,5,s.hh*2-4);ctx.fillStyle='#161e26';ctx.fillRect(s.hw-8,-s.hh,7,s.hh*2);ctx.restore();continue;}
     frontierSprite(keys[s.part],-s.hw,-s.hh,s.hw*2,s.hh*2);
     if(e.hit){ctx.globalCompositeOperation='screen';ctx.globalAlpha*=.15;frontierSprite(keys[s.part],-s.hw,-s.hh,s.hw*2,s.hh*2);}
     ctx.restore();
