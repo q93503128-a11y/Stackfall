@@ -74,7 +74,7 @@
     const wrapped=function updateMapEventsWithDreadnoughtBonus(dt){
       const event=state.mapEventActive,completionReady=dreadnoughtCompletionReady(event);
       const result=baseUpdateMapEvents(dt);
-      if(completionReady&&state.mapEventActive!==event&&state.mode==='worldEvent'){
+      if(completionReady&&!event.__dreadnoughtBonusGranted&&state.mapEventActive!==event&&state.mode==='worldEvent'){
         event.__dreadnoughtBonusGranted=true;
         grantDreadnoughtBonus();
       }
