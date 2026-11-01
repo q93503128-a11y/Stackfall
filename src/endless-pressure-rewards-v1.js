@@ -57,7 +57,7 @@
       state.runCurrencyEarned=state.runCurrencyEarned||{stardust:0,coreShard:0};
       state.runCurrencyEarned.coreShard=(state.runCurrencyEarned.coreShard||0)+granted;
       const prompt=document.querySelector('#worldEventPrompt');
-      if(prompt)prompt.textContent=GAME_SETTINGS.language==='ko'?`기함 격파 보너스: 코어 조각 +${granted} · 표시된 회수품 3개 전부 획득`:`Dreadnought bonus: Core Shard +${granted} · Collect all 3 shown salvage rewards`;
+      if(prompt)prompt.textContent=GAME_SETTINGS.language==='ko'?`기함 격파 보너스: 코어 조각 +${granted} · 아래 모두 받기로 회수품 3개 획득`:`Dreadnought bonus: Core Shard +${granted} · Use COLLECT ALL for the 3 salvage rewards`;
       updateHUD?.();
     }
     return granted;

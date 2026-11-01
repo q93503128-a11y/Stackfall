@@ -24,6 +24,7 @@ const checks=[
   ['dreadnought grants one fixed core shard after successful salvage transition',/stackfallGrantCurrency\?\.\('coreShard',1\)/.test(pressure)&&/state\.mode==='worldEvent'/.test(pressure)],
   ['dreadnought reward stays idempotent across nested runtime wrappers',/completionReady&&!event\.__dreadnoughtBonusGranted&&state\.mapEventActive!==event/.test(pressure)&&/event\.__dreadnoughtBonusGranted=true;\s*grantDreadnoughtBonus\(\)/.test(pressure)],
   ['dreadnought salvage grants all three displayed rewards',/function openSalvage\(takeAll=false\)/.test(crash)&&/const takeAllAction=/.test(crash)&&/openSalvage\(ev\.dreadnought===true\)/.test(crash)],
+  ['dreadnought salvage uses a dedicated collect-all CTA',/world-event-collect-all/.test(crash)&&/world-event-preview/.test(crash)&&/openCards\(tx\('salvage'\),prompt,cards,'DREADNOUGHT SALVAGE','crash',null,takeAllAction\)/.test(crash)],
   ['late desktop pressure continues above the old 124 target',/DESKTOP_NORMAL_TARGET_CAP=156/.test(pressure)&&/\(time-1200\)\/150/.test(pressure)],
 ];
 
