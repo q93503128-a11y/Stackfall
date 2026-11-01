@@ -122,9 +122,9 @@
   registerShieldCapacitySource('trait-aegis',()=>state.bossTraits?.aegis?AEGIS_SHIELD_PROFILE.cap:0);
   registerShieldCapacitySource('augment-bulwark',()=>state.weaponAugments?.bulwark?bulwarkAugmentShieldProfile(weaponCount('bulwark')).cap:0);
   registerShieldCapacitySource('augment-mirror',()=>state.weaponAugments?.mirror?mirrorAugmentShieldProfile(weaponCount('mirror')).cap:0);
-  const rrReset=resetGame;resetGame=function(){rrReset();state.bossTraits={};state.weaponAugments={};state.rewardQueue=[];state.rewardTimers={stellar:6,aegis:8,chrono:7};state.rewardKills=0;rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;player.reflectBarrierRechargeReadyAt=0;rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');};
-  const rrShowMenu=showMainMenu;showMainMenu=function(){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;player.reflectBarrierRechargeReadyAt=0;return rrShowMenu();};
-  const rrEnd=endGame;endGame=function(){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];return rrEnd();};
+  registerResetGameInterceptor('reward-refinement.js:resetGameInterceptor',function resetGameInterceptor(next,...args){next();state.bossTraits={};state.weaponAugments={};state.rewardQueue=[];state.rewardTimers={stellar:6,aegis:8,chrono:7};state.rewardKills=0;rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;player.reflectBarrierRechargeReadyAt=0;rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');});
+  registerShowMainMenuInterceptor('reward-refinement.js:showMainMenuInterceptor',function showMainMenuInterceptor(next,...args){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];rewardChoiceLocked=false;player.strongBladeBurstReadyAt=0;player.reflectBarrierRechargeReadyAt=0;return next();});
+  registerEndGameInterceptor('reward-refinement.js:endGameInterceptor',function endGameInterceptor(next,...args){rewardScreen.classList.add('hidden');apexRewardScreen.classList.add('hidden');state.rewardQueue=[];return next();});
 
   function rewardOptionPool(){
     const pool=[];for(const [key,d]of Object.entries(traitDefs))if(!state.bossTraits[key])pool.push({kind:'trait',key,...d});
@@ -150,7 +150,21 @@
   function applyApexPassivePlan(entries){for(const entry of entries)while(stat(entry.key)<entry.after)applyMiniRewardPassive(entry.key);}
   function apexLegacyPreview(form){if(form==='chronophage')return'시간 탈취 · 적과 탄환 둔화 · 모든 장비 과가속 · 시간 파쇄';if(form==='starforge')return'미니어처 항성 · 추적 광선 · 방사형 관통탄 · 붕괴 폭발';return'살아 있는 성좌망 · 지속 절단 · 적 탄환 삭제 · 노드 포격';}
   function resetApexEquipmentCooldowns(){for(const key of['coreCd','emberCd','wellCd','fortressCd','cometCd','prismCd','chronoCd','arcCd','ionCd','novaCd','droneCd','railCd','spiralCd','mirrorCd'])if(Number.isFinite(player[key]))player[key]=Math.min(0,player[key]);}
-  window.openApexRewardSelection=function(form){if(state.mode==='gameover'||state.mode==='menu')return;closeAbilityLedger?.(true);const colors={chronophage:'#79ffe1',starforge:'#ffb04e',lastconstellation:'#b7c9ff'},color=colors[form]||'#fff2a6',cards=document.querySelector('#apexRewardCards'),confirm=document.querySelector('#apexRewardConfirmBtn'),passives=planApexPassiveRewards(3);pendingApexBundle={form,passives,claimed:false};state.mode='apexReward';ui.touch.classList.add('hidden');apexRewardScreen.style.setProperty('--apex-color',color);document.querySelector('#apexRewardTitle').textContent=bossName(form)+' 전리품';document.querySelector('#apexRewardPrompt').textContent='세 보상이 모두 지급됩니다. 내용을 충분히 확인한 뒤 모두 받기를 누르세요.';cards.innerHTML='';const passiveDesc=passives.length?passives.map(entry=>`${passiveText(entry.key).name} ${entry.before}→${entry.after}중첩`).join(' · '):'모든 패시브가 최대치여서 최대 체력 +8%로 전환됩니다.';const rewards=[{icon:'✶',name:'고유 유산 계승',desc:apexLegacyPreview(form)},{icon:'◆',name:'패시브 공명',desc:passiveDesc},{icon:'✹',name:'초월 동력핵',desc:'최대 체력 +8% · 완전 회복 · 모든 장비 즉시 재점화 · 전장 붕괴파'}];for(const reward of rewards){const card=document.createElement('article');card.className='apex-reward-card';card.style.setProperty('--apex-color',color);card.innerHTML='<span>'+reward.icon+'</span><h3>'+reward.name+'</h3><p>'+reward.desc+'</p>';cards.appendChild(card);}confirm.disabled=false;confirm.querySelector('span').textContent='모두 받기';confirm.onclick=()=>{const bundle=pendingApexBundle;if(!bundle||bundle.claimed||state.mode!=='apexReward')return;bundle.claimed=true;confirm.disabled=true;applyApexReward(bundle.form);if(bundle.passives.length)applyApexPassivePlan(bundle.passives);else{const before=player.maxHp;player.maxHp=Math.max(before+1,Math.round(before*1.08));player.hp+=player.maxHp-before;}player.maxHp=Math.max(player.maxHp+1,Math.round(player.maxHp*1.08));player.hp=player.maxHp;resetApexEquipmentCooldowns();areaDamage(player.x,player.y,300,58+state.level*2.4,color,'apex-core-awakening');shockwave(player.x,player.y,'#fff4c7',380,.78,7);pendingApexBundle=null;apexRewardScreen.classList.add('hidden');state.mode='playing';if(typeof compactDevice==='function'?compactDevice():innerWidth<760)ui.touch.classList.remove('hidden');audio.resonance();renderLoadout();updateHUD();};apexRewardScreen.classList.remove('hidden');};
+  window.openApexRewardSelection=function(form){
+    if(state.mode==='gameover'||state.mode==='menu')return;
+    const colors={chronophage:'#79ffe1',starforge:'#ffb04e',lastconstellation:'#b7c9ff'},color=colors[form]||'#fff2a6';
+    const cards=document.querySelector('#apexRewardCards'),confirm=document.querySelector('#apexRewardConfirmBtn'),confirmLabel=confirm?.querySelector('span'),title=document.querySelector('#apexRewardTitle'),prompt=document.querySelector('#apexRewardPrompt');
+    if(!cards||!confirm||!confirmLabel||!title||!prompt||!apexRewardScreen)throw new Error('Apex reward UI is incomplete');
+    closeAbilityLedger?.(true);
+    const passives=planApexPassiveRewards(3),bundle={form,passives,claimed:false},passiveDesc=passives.length?passives.map(entry=>`${passiveText(entry.key).name} ${entry.before}→${entry.after}중첩`).join(' · '):'모든 패시브가 최대치여서 최대 체력 +8%로 전환됩니다.';
+    const rewards=[{icon:'✶',name:'고유 유산 계승',desc:apexLegacyPreview(form)},{icon:'◆',name:'패시브 공명',desc:passiveDesc},{icon:'✹',name:'초월 동력핵',desc:'최대 체력 +8% · 완전 회복 · 모든 장비 즉시 재점화 · 전장 붕괴파'}],fragment=document.createDocumentFragment();
+    for(const reward of rewards){const card=document.createElement('article');card.className='apex-reward-card';card.style.setProperty('--apex-color',color);card.innerHTML='<span>'+reward.icon+'</span><h3>'+reward.name+'</h3><p>'+reward.desc+'</p>';fragment.appendChild(card);}
+    const claim=()=>{const current=pendingApexBundle;if(!current||current!==bundle||current.claimed||state.mode!=='apexReward')return;current.claimed=true;confirm.disabled=true;applyApexReward(current.form);if(current.passives.length)applyApexPassivePlan(current.passives);else{const before=player.maxHp;player.maxHp=Math.max(before+1,Math.round(before*1.08));player.hp+=player.maxHp-before;}player.maxHp=Math.max(player.maxHp+1,Math.round(player.maxHp*1.08));player.hp=player.maxHp;resetApexEquipmentCooldowns();areaDamage(player.x,player.y,300,58+state.level*2.4,color,'apex-core-awakening');shockwave(player.x,player.y,'#fff4c7',380,.78,7);pendingApexBundle=null;apexRewardScreen.classList.add('hidden');state.mode='playing';if(typeof compactDevice==='function'?compactDevice():innerWidth<760)ui.touch.classList.remove('hidden');audio.resonance();renderLoadout();updateHUD();};
+    // Prepare the full overlay while gameplay still owns the current mode. Only after every
+    // required node and handler is ready do we commit the blocking apexReward state.
+    apexRewardScreen.style.setProperty('--apex-color',color);title.textContent=bossName(form)+' 전리품';prompt.textContent='세 보상이 모두 지급됩니다. 내용을 충분히 확인한 뒤 모두 받기를 누르세요.';cards.replaceChildren(fragment);confirm.disabled=false;confirmLabel.textContent='모두 받기';confirm.onclick=claim;
+    pendingApexBundle=bundle;state.mode='apexReward';ui.touch.classList.add('hidden');apexRewardScreen.classList.remove('hidden');
+  };
 
   function applyMiniRewardPassive(key){
     state.passives[key]=stat(key)+1;
@@ -182,13 +196,13 @@
     }
   };
 
-  const rrUpdateWeapons=updateWeapons;updateWeapons=function(dt){
-    rrUpdateWeapons(dt);if(state.mode!=='playing')return;
+  registerWeaponUpdateInterceptor('reward-traits',function rewardTraitWeaponUpdate(next,dt){
+    next(dt);if(state.mode!=='playing')return;
     state.rewardTimers=state.rewardTimers||{stellar:6,aegis:8,chrono:7};
     if(state.bossTraits.stellar){state.rewardTimers.stellar-=dt;if(state.rewardTimers.stellar<=0){state.rewardTimers.stellar=7.5;const targets=nearestEnemies(player.x,player.y,6);for(const e of targets){dealDamage(e,32+state.level*1.5,{color:'#ffe49a',source:'stellar-crown'});state.entities.beams.push({x1:player.x,y1:player.y,x2:e.x,y2:e.y,life:.22,max:.22,color:'#ffe49a',width:2.6});}}}
     if(state.bossTraits.aegis){state.rewardTimers.aegis-=dt;if(state.rewardTimers.aegis<=0){state.rewardTimers.aegis=AEGIS_SHIELD_PROFILE.interval;if(rechargeShield(AEGIS_SHIELD_PROFILE.gain,AEGIS_SHIELD_PROFILE.cap)>0)shockwave(player.x,player.y,'#83ffd1',120,.42,4);}}
     if(state.bossTraits.chrono){state.rewardTimers.chrono-=dt;if(state.rewardTimers.chrono<=0){state.rewardTimers.chrono=9;shockwave(player.x,player.y,'#8fffe0',220,.55,4);for(const e of state.entities.enemies)if(!e.dead&&e.kind!=='apex'&&Math.hypot(e.x-player.x,e.y-player.y)<220)e.timeLock=Math.max(e.timeLock||0,e.type==='boss'?.55:1.35);}}
-  };
+  });
 
   const rrDeal=dealDamage;let chainGuard=false,bladeGuard=false,augmentBurstGuard=false;
   dealDamage=function(enemy,amount,opts={}){
@@ -201,19 +215,19 @@
     if(state.weaponAugments.chrono&&locked&&enemy.dead){augmentBurstGuard=true;areaDamage(x,y,118*weaponSizeMultiplier(),24+weaponCount('chrono')*4.2,COLORS.chrono,'chrono-burst');augmentBurstGuard=false;}
   };
 
-  const rrHurt=hurtPlayer;hurtPlayer=function(amount,source){
-    rrHurt(amount,source);if(!state.weaponAugments?.bulwark||state.mode==='gameover')return;
+  registerPlayerDamageInterceptor('reward-bulwark',function rewardBulwarkHurt(next,amount,source){
+    next(amount,source);if(!state.weaponAugments?.bulwark||state.mode==='gameover')return;
     const n=Math.max(1,weaponCount('bulwark')),now=state.time||0;
     if(now>=(player.reflectBarrierRechargeReadyAt||0)){player.reflectBarrierRechargeReadyAt=now+3;const profile=bulwarkAugmentShieldProfile(n);if(rechargeShield(profile.hitGain,profile.cap)>0)shockwave(player.x,player.y,'#b5ffe5',64+n*2,.22,1.5);}
     for(let i=0;i<4;i++){const a=i*TAU/4+Math.PI/4;spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*455,vy:Math.sin(a)*455,r:5.2,life:1.0,damage:18+n*4,color:'#b5ffe5',pierce:2,source:'barrier-lance'});}
-  };
-  const rrSpawnCore=spawnCoreShot;spawnCoreShot=function(target,echoed=false){
-    rrSpawnCore(target,echoed);
+  });
+  registerCoreShotInterceptor('reward-refinement.js:rewardCoreShot',function rewardCoreShot(next,target,echoed=false){
+    next(target,echoed);
     if(state.weaponAugments.core&&!echoed&&player.coreVolley%5===0){
       for(let i=0;i<10;i++){const a=i*TAU/10;spawnPlayerProjectile({x:player.x,y:player.y,vx:Math.cos(a)*420,vy:Math.sin(a)*420,r:4.2,life:.9,damage:10+weaponCount('core')*2.2,color:'#eafcff',pierce:1,source:'core-nova'});}
       shockwave(player.x,player.y,'#eafcff',105,.32,3);
     }
-  };
+  });
 
   const rrUpdateWells=updateWells,rrGravityExpiring=[],rrSingularityExpiring=[];updateWells=function(dt){
     rrGravityExpiring.length=0;rrSingularityExpiring.length=0;

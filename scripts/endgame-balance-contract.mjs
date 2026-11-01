@@ -61,7 +61,7 @@ expect('extra attack bodies focus original target without copy TMI',expansion.in
 expect('ion chain remains separate',weapons.includes('function fireIonChain')&&!expansion.includes('multiplicityIon'));
 expect('manual aim setting persists',targeting.includes("GAME_SETTINGS.manualAim=saved.manualAim===true")&&targeting.includes('id="manualAim"')&&targeting.includes('saveGameSettings()'));
 expect('manual aim uses cursor world target',targeting.includes('aimWorldX')&&targeting.includes('aimWorldY')&&targeting.includes('cursorD2'));
-expect('magnet increases attraction speed',targeting.includes('pullSpeed=1+magnetStacks*.22')&&targeting.includes('끌어오는 속도 증가'));
+expect('magnet increases attraction speed',systems.includes('pullSpeed=1+magnetStacks*.22')&&!targeting.includes('updateGems=function')&&read('src/core.js').includes('끌어오는 속도 증가'));
 expect('vault remains available during elites',targeting.includes('vaultDuringEliteEncounters')&&targeting.includes("marker.type==='vault'")&&targeting.includes("enemy.type='vault-elite'"));
 expect('reflective barrier has game-time cooldown',rewards.includes('reflectBarrierRechargeReadyAt=now+3')&&rewards.includes("now=state.time||0")&&rewards.includes('피격 시 반격 창을 발사하고 보호막을 추가 충전한다.')&&core.includes('reflectBarrierRechargeReadyAt:0'));
 expect('haste is seven percent',core.includes("stat('haste')*.07")&&bootstrap.includes('장비 발동 주기 -7%')&&!core.includes("stat('haste')*.10"));

@@ -77,20 +77,18 @@
   // the exposed node as the owner's health/FX surface. This preserves all upstream damage modifiers
   // while preventing dormant core FX and keeping owner HP exactly equal to the sum of node HP.
   const baseDealDamage=typeof dealDamage==='function'?dealDamage:null;
-  const baseKillEnemy=typeof killEnemy==='function'?killEnemy:null;
   if(baseDealDamage)dealDamage=function lastConstellationNodeDamage(target,amount,options={}){
     const owner=target?.lcNodeProxy?target.owner:target;if(!isLC(owner))return baseDealDamage(target,amount,options);
     const s=initializeStructure(owner);if(!s)return baseDealDamage(target,amount,options);let part=target?.lcNodeProxy?target:null;
     if(!part){if(s.phase<4)return;part=(owner.bodyParts||[]).find(p=>p.lcNodeProxy&&p.lcNodeKey==='core')||null;}
     const node=part&&s.nodes[part.lcNodeKey];if(!node||node.destroyed||node.group!==s.phase)return;
     const requested=Math.max(0,Number(amount)||0);if(requested<=0)return;
-    const before=node.hp,saved={x:owner.x,y:owner.y,r:owner.r,hp:owner.hp,maxHp:owner.maxHp,dead:owner.dead},realKill=killEnemy;let result,tempAfter=before;
+    const before=node.hp,saved={x:owner.x,y:owner.y,r:owner.r,hp:owner.hp,maxHp:owner.maxHp,dead:owner.dead};let result,tempAfter=before;
     owner.x=part.x;owner.y=part.y;owner.r=part.r;owner.hp=before;owner.maxHp=node.maxHp;owner.dead=false;
-    killEnemy=function suppressIntermediateConstellationKill(enemy,opts={}){if(enemy===owner){enemy.dead=true;return;}return realKill(enemy,opts);};
-    try{result=baseDealDamage(owner,requested,options);tempAfter=Number(owner.hp);}finally{killEnemy=realKill;owner.x=saved.x;owner.y=saved.y;owner.r=saved.r;owner.dead=saved.dead;}
+    try{result=baseDealDamage(owner,requested,{...options,deferKill:true});tempAfter=Number(owner.hp);}finally{owner.x=saved.x;owner.y=saved.y;owner.r=saved.r;owner.dead=saved.dead;}
     const inflicted=Math.min(before,Math.max(0,before-(Number.isFinite(tempAfter)?tempAfter:before)));node.hp=Math.max(0,before-inflicted);part.hp=node.hp;
     if(node.hp<=.0001)destroyNode(owner,node);const health=syncOwnerHealth(owner);syncParts(owner);
-    if(health&&health.hp<=.0001&&!owner.dead&&typeof baseKillEnemy==='function')baseKillEnemy(owner,options);
+    if(health&&health.hp<=.0001&&!owner.dead)killEnemy(owner,options);
     return result;
   };
 

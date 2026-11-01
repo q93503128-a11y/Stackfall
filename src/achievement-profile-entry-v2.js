@@ -52,7 +52,10 @@
       const named=typeof weaponText==='function'?weaponText(item.key)?.name:WEAPONS?.[item.key]?.name;
       return named||copy().reward;
     }
-    if(item.type==='unlock_feature')return copy().feature;
+    if(item.type==='unlock_feature'){
+      const named=window.stackfallFeatureName?.(item.key)||window.STACKFALL_FEATURE_DEFS?.[item.key]?.[lang()]||window.STACKFALL_FEATURE_DEFS?.[item.key]?.en||window.STACKFALL_FEATURE_DEFS?.[item.key]?.ko;
+      return named||copy().feature;
+    }
     if(item.type==='currency')return`${item.key==='coreShard'?copy().shard:copy().stardust} +${Math.max(1,Math.floor(Number(item.amount)||1)).toLocaleString()}`;
     return copy().reward;
   }
@@ -104,7 +107,7 @@
 
   const baseMetaRender=window.renderStackfallMetaUi;
   if(typeof baseMetaRender==='function'&&!baseMetaRender.__achievementHubV2){const wrapped=function(){const result=baseMetaRender(...arguments);renderProfileSummary();renderAchievementUi();return result;};wrapped.__achievementHubV2=true;window.renderStackfallMetaUi=wrapped;}
-  const baseShowMainMenu=showMainMenu;showMainMenu=function achievementHubMainMenu(){const result=baseShowMainMenu(...arguments);renderAchievementUi();return result;};
+  registerShowMainMenuInterceptor('achievement-profile-entry-v2.js:achievementHubMainMenu',function achievementHubMainMenu(next,...args){const result=next(...args);renderAchievementUi();return result;});
   const baseApplyLanguage=applyLanguage;applyLanguage=function achievementHubLanguage(){const result=baseApplyLanguage(...arguments);renderAchievementUi();return result;};
   window.addEventListener('keydown',e=>{const screen=document.querySelector('#achievementScreen');if(e.code==='Escape'&&screen&&!screen.classList.contains('hidden')){e.preventDefault();e.stopImmediatePropagation();closeAchievements();}},true);
 

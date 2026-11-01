@@ -22,13 +22,13 @@
     achievement('chain-20','chain',20,'연쇄 20','Chain 20','한 출격에서 20 연쇄를 달성한다.','Reach a 20 chain in one run.',[weapon('arc')]),
     achievement('run-kills-200','runKills',200,'200기 격추','Two Hundred','한 출격에서 적 200기를 처치한다.','Defeat 200 enemies in one run.',[weapon('ion')]),
     achievement('boss-1','boss',1,'보스 격파','Boss Down','보스를 처음 격파한다.','Defeat your first boss.',[weapon('nova'),feature('special-ability')]),
-    achievement('survive-5m','survive',300,'5분 생존','Five Minutes','엔드리스에서 5분 생존한다.','Survive 5 minutes in Endless.',[weapon('drone')],'time'),
+    achievement('survive-5m','survive',300,'5분 생존','Five Minutes','엔드리스에서 5분 생존한다.','Survive 5 minutes in Endless.',[weapon('drone'),shard(1)],'time'),
     achievement('run-kills-400','runKills',400,'400기 격추','Four Hundred','한 출격에서 적 400기를 처치한다.','Defeat 400 enemies in one run.',[weapon('rail')]),
     achievement('level-20','level',20,'레벨 20','Level 20','한 출격에서 레벨 20에 도달한다.','Reach level 20 in one run.',[weapon('spiral')]),
     achievement('chain-50','chain',50,'연쇄 50','Chain 50','한 출격에서 50 연쇄를 달성한다.','Reach a 50 chain in one run.',[weapon('mirror')]),
     achievement('lifetime-kills-1000','lifetimeKills',1000,'누적 1,000기','One Thousand','적을 누적 1,000기 처치한다.','Defeat 1,000 enemies in total.',[weapon('vacuum')]),
     achievement('mini-10','mini',10,'중간보스 10회','Ten Mini-Bosses','중간보스를 누적 10회 격파한다.','Defeat 10 mini-bosses.',[weapon('mine')]),
-    achievement('survive-10m','survive',600,'10분 생존','Ten Minutes','엔드리스에서 10분 생존한다.','Survive 10 minutes in Endless.',[weapon('missile'),feature('awakening')],'time'),
+    achievement('survive-10m','survive',600,'10분 생존','Ten Minutes','엔드리스에서 10분 생존한다.','Survive 10 minutes in Endless.',[weapon('missile'),feature('awakening'),shard(1)],'time'),
     achievement('apex-1','apex',1,'초월체 격파','Apex Down','초월체를 처음 격파한다.','Defeat your first Apex.',[weapon('gate'),feature('hard')]),
     achievement('level-25','level',25,'레벨 25','Level 25','한 출격에서 레벨 25에 도달한다.','Reach level 25 in one run.',[feature('choice-4')]),
     achievement('survive-15m','survive',900,'15분 생존','Fifteen Minutes','엔드리스에서 15분 생존한다.','Survive 15 minutes in Endless.',[feature('start-level-3')],'time'),
@@ -269,10 +269,8 @@
   function findRegularBoss(){return(state.entities?.enemies||[]).find(regularBoss)||null;}
   function ensureBossAttempt(){const boss=findRegularBoss();if(!boss){bossAttempt=null;return null;}if(bossAttempt?.enemy!==boss)bossAttempt={enemy:boss,startedAt:runSeconds(),hit:false};return bossAttempt;}
 
-  const baseResetGame=resetGame;
-  resetGame=function achievementResetGame(){killTimes=[];bossAttempt=null;poll=0;const result=baseResetGame(...arguments);return result;};
-  const baseHurtPlayer=hurtPlayer;
-  hurtPlayer=function achievementHurtPlayer(){const attempt=ensureBossAttempt(),before=Number(player.hp)||0,result=baseHurtPlayer(...arguments);if(attempt&&(Number(player.hp)||0)<before)attempt.hit=true;return result;};
+  registerResetGameInterceptor('endless-progression-v2.js:achievementResetGame',function achievementResetGame(next,...args){killTimes=[];bossAttempt=null;poll=0;const result=next(...args);return result;});
+  registerPlayerDamageInterceptor('achievement-hit-tracking',function achievementHurtPlayer(next,...args){const attempt=ensureBossAttempt(),before=Number(player.hp)||0,result=next(...args);if(attempt&&(Number(player.hp)||0)<before)attempt.hit=true;return result;});
   const baseKillEnemy=killEnemy;
   killEnemy=function achievementKillEnemy(enemy,opts={}){
     const alive=enemy&&!enemy.dead,form=String(enemy?.apexForm||enemy?.eliteForm||''),attempt=bossAttempt?.enemy===enemy?{...bossAttempt}:null,result=baseKillEnemy(enemy,opts);if(!alive||!enemy?.dead||!isEndless())return result;
@@ -281,13 +279,10 @@
     if(attempt&&regularBoss({...enemy,dead:false})){if(!attempt.hit)progress.stats.bossNoHit=1;if(now-attempt.startedAt<=15)progress.stats.bossFast=1;bossAttempt=null;}
     return result;
   };
-  const baseUpdatePlayer=updatePlayer;
-  updatePlayer=function achievementUpdatePlayer(dt){const result=baseUpdatePlayer(dt);if(state.mode!=='playing'||!isEndless())return result;poll-=dt;if(poll>0)return result;poll=.35;ensureBossAttempt();const rows=evaluateAchievements(snapshotRun());if(rows.length){renderEndlessProfile();window.renderStackfallMetaUi?.();}return result;};
-  const baseEndGame=endGame;
-  endGame=function achievementEndGame(){if(state.mode==='gameover')return;const endless=isEndless(),run=snapshotRun(),result=baseEndGame(...arguments);if(endless){captureRunStats(run);const rows=evaluateAchievements(run,{silent:true});renderResultUnlocks(rows);if(rows.length)announceAchievements(rows);saveProgress();renderEndlessProfile();}return result;};
+  registerPlayerUpdateInterceptor('endless-progression-v2.js:achievementUpdatePlayer',function achievementUpdatePlayer(next,dt){const result=next(dt);if(state.mode!=='playing'||!isEndless())return result;poll-=dt;if(poll>0)return result;poll=.35;ensureBossAttempt();const rows=evaluateAchievements(snapshotRun());if(rows.length){renderEndlessProfile();window.renderStackfallMetaUi?.();}return result;});
+  registerEndGameInterceptor('endless-progression-v2.js:achievementEndGame',function achievementEndGame(next,...args){if(state.mode==='gameover')return;const endless=isEndless(),run=snapshotRun(),result=next(...args);if(endless){captureRunStats(run);const rows=evaluateAchievements(run,{silent:true});renderResultUnlocks(rows);if(rows.length)announceAchievements(rows);saveProgress();renderEndlessProfile();}return result;});
 
-  const baseShowMainMenu=showMainMenu;
-  showMainMenu=function achievementMainMenu(){const result=baseShowMainMenu(...arguments);applyStageSeal();finalRenderStarterOptions();renderEndlessProfile();return result;};
+  registerShowMainMenuInterceptor('endless-progression-v2.js:achievementMainMenu',function achievementMainMenu(next,...args){const result=next(...args);applyStageSeal();finalRenderStarterOptions();renderEndlessProfile();return result;});
   const baseApplyLanguage=applyLanguage;
   applyLanguage=function achievementLanguage(){const result=baseApplyLanguage(...arguments);applyStageSeal();finalRenderStarterOptions();renderEndlessProfile();window.renderStackfallDifficulty?.();return result;};
   renderStarterOptions=finalRenderStarterOptions;
