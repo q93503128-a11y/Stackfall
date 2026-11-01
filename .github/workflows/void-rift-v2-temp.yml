@@ -19,7 +19,11 @@ jobs:
         with:
           node-version: '22'
       - name: Apply Void Rift combat rework
-        run: python3 scripts/temp-void-rework-transform.py
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/temp-void-rework-transform.py
+          python3 scripts/temp-void-rework-polish.py
       - name: Validate source and production contracts
         shell: bash
         run: |
@@ -36,21 +40,26 @@ jobs:
           server_pid=$!
           trap 'kill $server_pid 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep .2; done
-          STACKFALL_CHROME=/usr/bin/google-chrome node scripts/temp-void-browser.mjs
+          chrome=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)
+          test -n "$chrome"
+          STACKFALL_CHROME="$chrome" node scripts/temp-void-browser.mjs
       - name: Run full Chromium regression smoke
         shell: bash
         run: |
           set -euo pipefail
-          STACKFALL_CHROME=/usr/bin/google-chrome STACKFALL_ALLOW_GPU_SKIP=1 STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --soak-ms=0 --result=test-results/void-v2-full-smoke.json
+          chrome=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)
+          test -n "$chrome"
+          STACKFALL_CHROME="$chrome" STACKFALL_ALLOW_GPU_SKIP=1 STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --soak-ms=0 --result=test-results/void-v2-full-smoke.json
       - name: Commit clean validated tree
         shell: bash
         run: |
           set -euo pipefail
           rm -rf test-results
-          rm -f scripts/temp-void-rework-transform.py scripts/temp-void-browser.mjs .github/workflows/void-rift-v2-temp.yml
+          rm -f scripts/temp-void-rework-transform.py scripts/temp-void-rework-polish.py scripts/temp-void-browser.mjs .github/workflows/void-rift-v2-temp.yml
           git add -A
           git diff --cached --check
           test ! -e scripts/temp-void-rework-transform.py
+          test ! -e scripts/temp-void-rework-polish.py
           test ! -e scripts/temp-void-browser.mjs
           test ! -e .github/workflows/void-rift-v2-temp.yml
           git config user.name 'coworkaccount'
