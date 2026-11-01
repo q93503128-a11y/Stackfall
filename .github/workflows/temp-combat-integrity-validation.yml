@@ -1,0 +1,42 @@
+name: Temporary combat integrity validation
+
+on:
+  push:
+    branches: [combat-integrity-swarm-validation]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src -type f -name '*.js' -print0 | sort -z)
+          node --check scripts/temp-combat-integrity-browser.mjs
+      - name: Run combat integrity contract
+        run: node scripts/combat-integrity-contract.mjs
+      - name: Run existing critical contracts
+        run: |
+          node scripts/runtime-ownership-contract.mjs
+          node scripts/enemy-director-contract.mjs
+          node scripts/apex-encounter-contract.mjs
+          node scripts/last-constellation-structure-audit.mjs
+      - name: Run real Chromium combat integrity audit
+        run: node scripts/temp-combat-integrity-browser.mjs
+      - name: Upload observations
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: combat-integrity-validation
+          path: test-results/combat-integrity
+          if-no-files-found: warn
