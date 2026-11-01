@@ -1,0 +1,13 @@
+name: Temporary locate world event shortcut
+on:
+  push:
+    branches: [fix-dreadnought-ui-simple]
+permissions:
+  contents: read
+jobs:
+  locate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Locate shortcut source
+        run: bash scripts/temp-locate-worldevent-shortcut.sh
