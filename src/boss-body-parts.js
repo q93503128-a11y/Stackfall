@@ -111,6 +111,14 @@ if(baseDrawBossParts)drawEnemies=function drawEnemiesWithoutSharedScalePulse(){
 };
 window.stackfallSharedEnemyScalePulseDisabled='v1';
 
+// Runtime integrity layers load after multipart targeting owns the final target proxy semantics.
+(function loadRuntimeIntegrityLayers(){
+  if(document.querySelector('script[data-combat-integrity-v1]'))return;
+  const combat=document.createElement('script');combat.src='src/combat-integrity-v1.js';combat.async=false;combat.dataset.combatIntegrityV1='1';
+  combat.onload=()=>{if(document.querySelector('script[data-endless-pressure-rewards-v1]'))return;const pressure=document.createElement('script');pressure.src='src/endless-pressure-rewards-v1.js';pressure.async=false;pressure.dataset.endlessPressureRewardsV1='1';document.body.appendChild(pressure);};
+  document.body.appendChild(combat);
+})();
+
 // Visual-only Apex presentation chain. Chronophage restores first; Last Constellation installs
 // after that restore so its renderer cannot be overwritten by the historical Apex visual pass.
 window.addEventListener('load',()=>{
