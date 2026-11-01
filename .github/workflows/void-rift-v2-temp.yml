@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m http.server 8000 > /tmp/stackfall-http.log 2>&1 &
+          python3 -m http.server 8000 > /tmp/stackfall-http-targeted.log 2>&1 &
           server_pid=$!
           trap 'kill $server_pid 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep .2; done
@@ -47,6 +47,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python3 -m http.server 8000 > /tmp/stackfall-http-smoke.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep .2; done
           chrome=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)
           test -n "$chrome"
           STACKFALL_CHROME="$chrome" STACKFALL_ALLOW_GPU_SKIP=1 STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --soak-ms=0 --result=test-results/void-v2-full-smoke.json
