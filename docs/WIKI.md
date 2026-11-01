@@ -416,3 +416,15 @@ Stage 5 production 정본: 거대 비선형 자속 띠·철가루 정렬·드문
 | 18 | 거대 기록 장·접힌 주소 층·잃은 행 | 주소 수렴→누락→축 불일치→정적 | 편측 기록 장·비스듬한 등뼈·off-center 실행실 / 기준점 수렴 | 두 L 지형 중심/축 재작성·세 주소 재배정·실행실 압출·장 박리 | 74% 실행실 노출·36% 기록 장 이탈 / 6.2초 시간차 장치 해제·열린 항로 |
 
 개발 보스 진입은 정확히 5초 뒤 정상 등장 트리거를 사용하며 이전 사건/적을 몰아서 실행하지 않는다. x2는 60Hz 물리 스텝 두 번, 고속 공격은 swept/segment, 독립 위험 물체는 최대 6개다. GPU·Canvas·모바일·성능 단계에서 저마다의 authored 외장을 유지한다. 탐험/최종전별 오리지널 WebAudio 장면과 효과음을 사용하고 런 종료 시 음악을 정지한다. 음질/재미는 실제 청취·실플레이로 별도 평가한다.
+
+## Void Rift combat identities — HUNGER / PROPHECY / LOOM / GRAVE / PARADOX
+
+The five active Void Rift bosses share the same dark-cosmic event family but must ask different movement questions instead of reusing one ring/fan/circle cadence.
+
+- **Maw / Abyssal Devourer — HUNGER:** clearly telegraphs a committed feeding lane, consumes a capped number of nearby player projectiles during that visible window, then lunges along the committed line. It never silently rewrites player coordinates.
+- **Oracle / Void Oracle — PROPHECY:** marks projected movement with staggered future seals and crossing prophecy lines. Its dense ring has intentional escape gaps, so changing direction beats prediction rather than raw bullet density.
+- **Weaver / Lightless Weaver — LOOM:** rotates paired thread lanes and a cross-thread to create readable corridors; slow shuttle projectiles travel through the authored weave. The enclosing web is an occasional signature, not the whole rotation.
+- **Grave / Lord of the Star Grave — GRAVE:** occupies territory with three deliberate grave markers, delayed cardinal shard eruptions, and paired burial walls. Void sentinels are capped at three live units and summoned at most two at a time.
+- **Paradox / Paradox Twins — PARADOX:** the α twin coordinates shared crossfire, position swap, and mirrored frame attacks with β so the pair behaves as one encounter. If one twin dies, the survivor falls back to a deterministic solo rift pattern instead of breaking the fight.
+
+Readability rule: Void attacks may be visually intense, but their warning geometry, safe-space logic, and cadence must remain legible against Stackfall's existing cosmic battlefield. Do not turn Void bosses into puzzle intermissions, long invulnerability phases, or full-screen opaque bullet spam.

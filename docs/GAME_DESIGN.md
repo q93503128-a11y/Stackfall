@@ -1125,3 +1125,15 @@ S12 공급 조직 아래 거대한 접힌 평면 수신판과 도파관/케이�
 일반 60Hz·2배속 120 fixed steps/s를 목표로 누적 시간을 처리한다. 늦은 프레임의 시간을 유지하고 한 프레임의 catch-up은 최대 8개의 1/60초 step으로 제한한다. 큰 dt를 전투 함수에 넘기지 않는다. authored terrain은 full-resolution 불투명 프레임 캐시 3개/20Hz와 카메라·페이즈·작전 전환 무효화를 사용하며, 정적인 조직은 재사용한다. 배경 재질 캐시는 최대 64MiB/32개다. 전투 몸체·실제 물체·경고·swept 판정은 이 배경 캐시에 들어가지 않는다. GPU/Canvas 경로와 critical tier에서도 authored 몸체 디테일을 유지한다. 실제 표시 FPS는 장치/브라우저에 따라 달라지며 검사 통과를 60FPS 보장으로 표현하지 않는다.
 
 DEV의 보스 5초 전 점프는 queued startup-choice microtask까지 취소한다. 정상 보스 트리거를 사용하고 지난 고정/월드/서브보스 이벤트는 다시 재생하지 않는다. 정본 전체 Stage의 5초 countdown은 microtask를 정착시킨 뒤 검사한다.
+
+## Void Rift combat identities — HUNGER / PROPHECY / LOOM / GRAVE / PARADOX
+
+The five active Void Rift bosses share the same dark-cosmic event family but must ask different movement questions instead of reusing one ring/fan/circle cadence.
+
+- **Maw / Abyssal Devourer — HUNGER:** clearly telegraphs a committed feeding lane, consumes a capped number of nearby player projectiles during that visible window, then lunges along the committed line. It never silently rewrites player coordinates.
+- **Oracle / Void Oracle — PROPHECY:** marks projected movement with staggered future seals and crossing prophecy lines. Its dense ring has intentional escape gaps, so changing direction beats prediction rather than raw bullet density.
+- **Weaver / Lightless Weaver — LOOM:** rotates paired thread lanes and a cross-thread to create readable corridors; slow shuttle projectiles travel through the authored weave. The enclosing web is an occasional signature, not the whole rotation.
+- **Grave / Lord of the Star Grave — GRAVE:** occupies territory with three deliberate grave markers, delayed cardinal shard eruptions, and paired burial walls. Void sentinels are capped at three live units and summoned at most two at a time.
+- **Paradox / Paradox Twins — PARADOX:** the α twin coordinates shared crossfire, position swap, and mirrored frame attacks with β so the pair behaves as one encounter. If one twin dies, the survivor falls back to a deterministic solo rift pattern instead of breaking the fight.
+
+Readability rule: Void attacks may be visually intense, but their warning geometry, safe-space logic, and cadence must remain legible against Stackfall's existing cosmic battlefield. Do not turn Void bosses into puzzle intermissions, long invulnerability phases, or full-screen opaque bullet spam.
