@@ -1,0 +1,118 @@
+name: Temporary Maw Teeth Validation
+
+on:
+  push:
+    branches:
+      - maw-teeth-perimeter-validation
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-normalize:
+    if: ${{ !contains(github.event.head_commit.message, '[maw-teeth-validated]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: maw-teeth-perimeter-validation
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Normalize accidental non-Maw edit and assert scoped Maw geometry
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/elite-renderers.js')
+          s=p.read_text()
+          accidental="ctx.fillStyle='#161e26';g.fillRect(s.hw-8,-s.hh,7,s.hh*2);"
+          canonical="ctx.fillStyle='#161e26';ctx.fillRect(s.hw-8,-s.hh,7,s.hh*2);"
+          if s.count(accidental) != 1:
+              raise SystemExit(f'expected exactly one accidental renderer typo, found {s.count(accidental)}')
+          s=s.replace(accidental, canonical, 1)
+          required=[
+              "curve=Math.sqrt(Math.max(0,1-(x*x)/(rx*rx)))",
+              "for(const side of[-1,1])",
+              "nx=x/(rx*rx),ny=y/(ry*ry)",
+              "rootX=x+ix*inset,rootY=y+iy*inset",
+          ]
+          for needle in required:
+              if needle not in s:
+                  raise SystemExit(f'missing Maw perimeter geometry marker: {needle}')
+          forbidden=[
+              "ctx.moveTo(x-e.r*.07,-e.r*.68)",
+              "ctx.moveTo(x-e.r*.07,e.r*.68)",
+          ]
+          for needle in forbidden:
+              if needle in s:
+                  raise SystemExit(f'old straight-row Maw tooth geometry still present: {needle}')
+          p.write_text(s)
+          PY
+      - name: Validate sources, contracts, and regenerate build fingerprint
+        run: node scripts/build-fingerprint.mjs
+      - name: Prepare CI Chrome wrapper
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/stackfall-chrome" <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          profile=''
+          args=()
+          for arg in "$@"; do
+            case "$arg" in
+              --user-data-dir=*) profile="${arg#--user-data-dir=}"; args+=("$arg") ;;
+              --remote-debugging-port=0) args+=("--remote-debugging-port=9223" "--remote-debugging-address=127.0.0.1") ;;
+              *) args+=("$arg") ;;
+            esac
+          done
+          args+=("--no-sandbox" "--disable-dev-shm-usage")
+          if [[ -n "$profile" ]]; then
+            mkdir -p "$profile"
+            (
+              for _ in $(seq 1 100); do
+                printf '9223\n' > "$profile/DevToolsActivePort" 2>/dev/null || true
+                sleep 0.1
+              done
+            ) &
+          fi
+          exec /usr/bin/google-chrome "${args[@]}"
+          EOF
+          chmod +x "$RUNNER_TEMP/stackfall-chrome"
+      - name: Full local browser smoke
+        shell: bash
+        env:
+          STACKFALL_CHROME: ${{ runner.temp }}/stackfall-chrome
+          STACKFALL_ALLOW_GPU_SKIP: '1'
+          STACKFALL_ALLOW_CONTEXT_SKIP: '1'
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/stackfall-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8000/ >/dev/null; then break; fi
+            sleep 0.25
+          done
+          node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --result=test-results/maw-teeth-browser-smoke.json
+      - name: Scope and whitespace checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          changed=$(git diff --name-only | sort)
+          printf '%s\n' "$changed"
+          test "$changed" = $'src/build-info.js\nsrc/elite-renderers.js'
+      - name: Persist validated source state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'stackfall-validation-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add src/elite-renderers.js src/build-info.js
+          git commit -m 'Validate Maw teeth perimeter fix [maw-teeth-validated]'
+          git push origin HEAD:maw-teeth-perimeter-validation
