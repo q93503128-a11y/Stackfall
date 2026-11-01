@@ -428,3 +428,13 @@ The five active Void Rift bosses share the same dark-cosmic event family but mus
 - **Paradox / Paradox Twins — PARADOX:** the α twin coordinates shared crossfire, position swap, and mirrored frame attacks with β so the pair behaves as one encounter. If one twin dies, the survivor falls back to a deterministic solo rift pattern instead of breaking the fight.
 
 Readability rule: Void attacks may be visually intense, but their warning geometry, safe-space logic, and cadence must remain legible against Stackfall's existing cosmic battlefield. Do not turn Void bosses into puzzle intermissions, long invulnerability phases, or full-screen opaque bullet spam.
+
+<!-- COMBAT-INTEGRITY-V1 -->
+## 2026-11-01 전투·후반 Endless 규칙
+
+- 여러 부위가 단계별로 열리는 보스는 **현재 공격 가능한 부위만** 무기가 조준한다. 예를 들어 무명의 외곽 성좌가 남아 있으면 중앙 핵을 먼저 겨냥하지 않는다. 자동 조준뿐 아니라 수동 조준, 부메랑, 유도탄, 레일, 설치형 조준에도 같은 규칙이 적용된다.
+- 성운 부메랑은 화면에 많이 존재한다는 이유만으로 아직 비행 중인 오래된 부메랑을 강제로 지우지 않는다. 공격 속도가 빨라져도 그 이유로 앞선 공격이 잘려 손해 보지 않는다.
+- 동일 보스를 한 번 처치했을 때 보스 보상은 한 번만 발생한다.
+- 데스크톱 Endless는 오래 생존할수록 15분 이후 적 물량 압력이 더 높아진다. 장기 목표는 일반 적 최대 124체, 전체 안전 상한은 136체이며 모바일/콤팩트 기기는 기존 상한을 유지한다.
+- 추락한 우주선 이벤트의 3번째·6번째·9번째처럼 매 3회차에 등장하는 Dreadnought를 성공적으로 격파하면 **기존 우주선 Salvage 선택 + Core Shard 1개**를 추가로 받는다.
+

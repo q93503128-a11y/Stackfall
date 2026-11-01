@@ -1137,3 +1137,30 @@ The five active Void Rift bosses share the same dark-cosmic event family but mus
 - **Paradox / Paradox Twins — PARADOX:** the α twin coordinates shared crossfire, position swap, and mirrored frame attacks with β so the pair behaves as one encounter. If one twin dies, the survivor falls back to a deterministic solo rift pattern instead of breaking the fight.
 
 Readability rule: Void attacks may be visually intense, but their warning geometry, safe-space logic, and cadence must remain legible against Stackfall's existing cosmic battlefield. Do not turn Void bosses into puzzle intermissions, long invulnerability phases, or full-screen opaque bullet spam.
+
+<!-- COMBAT-INTEGRITY-V1 -->
+## Combat integrity / Endless pressure canon — 2026-11-01
+
+### Target-surface invariant
+
+- Multipart 또는 phase-gated boss의 owner 좌표는 조준점 자체가 아니다. 모든 직접 조준 무기는 현재 `active && visible && !dead`인 damage surface/body-part proxy를 선택해야 한다.
+- 이 규칙은 자동 조준, 수동 조준, Arc/boomerang, Rail boss priority, guided missile acquisition/reacquisition, Orbital Gate 설치 표적에 공통 적용한다.
+- 실제 피해는 proxy에서 shared owner HP로 라우팅한다. 현재 phase에서 비활성인 핵/부위를 겨냥해 허공에 공격을 소비하면 안 된다.
+
+### Attack lifetime and reward invariants
+
+- 실제 피해를 운반하는 boomerang curve는 단순 FIFO entity cap 때문에 비행 중 제거하지 않는다. 자연 수명/귀환 종료가 정리 기준이다. 시각 장식 cap과 gameplay attack lifetime을 혼동하지 않는다.
+- Elite/boss 사망 후처리는 alive → dead 전환 1회만 유효하다. 이미 dead인 동일 entity에 대한 재호출은 reward queue, trait, record side effect를 다시 발생시키지 않는다.
+
+### Endless late swarm pressure
+
+- 기존 Enemy Director의 role/cadence/pulse 소유권을 유지한다. 데스크톱에서만 900초 이후 추가 후반 밀도 압력을 적용한다.
+- 900~1200초는 점진적으로 목표를 추가하고, 1200초 이후에는 장기 생존 시간에 따라 더 증가한다. 최종 일반 적 목표 상한은 124, 전체 적 안전 hard cap은 136이다.
+- 콤팩트 기기는 기존 cap/밀도 경로를 그대로 사용한다. 일반 보스가 활성 중일 때는 기존 boss-pressure 감쇠를 보존한다.
+- 성능 보호는 우선 장식/시각 예산을 조절하며, gameplay attack을 FIFO 삭제해 성능을 맞추지 않는다.
+
+### Crash Dreadnought reward
+
+- 매 3번째 Crash event의 Dreadnought는 `noEliteReward` 정책을 유지해 일반 보스 특수능력 선택을 중복 생성하지 않는다.
+- 성공적으로 마지막 wave와 Dreadnought를 정리해 Salvage 단계로 전환될 때만 기존 Salvage 3택1 + 영구 Core Shard 1개를 지급한다. 실패/중단에는 지급하지 않으며 wrapper 중첩 여부와 무관하게 event당 정확히 1회만 지급한다.
+
