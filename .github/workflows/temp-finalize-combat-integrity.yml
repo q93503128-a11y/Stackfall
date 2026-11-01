@@ -1,0 +1,50 @@
+name: Temporary combat integrity finalizer
+
+on:
+  push:
+    branches: [combat-integrity-swarm-validation]
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Synchronize canonical docs
+        shell: python
+        run: |
+          from pathlib import Path
+          blocks = {
+            'README.md': '''\n\n<!-- COMBAT-INTEGRITY-V1 -->\n## 전투 정합성·Endless 후반 압력 — 2026-11-01\n\n- 다중 부위·다단계 보스는 현재 활성화된 타격 부위만 자동/수동 무기 표적으로 사용한다. 비활성 핵이나 이미 파괴된 외곽 부위는 조준하지 않는다.\n- 성운 부메랑의 실제 공격체는 단순 개수 FIFO 제한으로 조기 삭제하지 않는다. 공격 속도·다중 투영 증가가 기존 비행 중 부메랑을 잘라 실제 화력을 낮추지 않는다.\n- 보스급 처치 보상과 사망 후처리는 살아 있던 적이 사망 상태로 전환되는 1회에만 실행한다. 같은 적에 대한 중복 `killEnemy` 호출은 보상을 반복하지 않는다.\n- 데스크톱 Endless는 15분 이후 후반 압력이 추가로 증가해 일반 적 목표가 최대 124체까지 올라가며, 전체 적 안전 하드캡은 136체다. 콤팩트 기기 상한은 기존 값을 유지한다.\n- 추락한 우주선 이벤트의 3회차마다 등장하는 Dreadnought는 기존 Salvage 3택1에 더해 성공 격파 시 영구 **Core Shard 1개**를 확정 지급한다. 일반 보스 특수능력 보상은 별도로 중복 지급하지 않는다.\n''',
+            'docs/GAME_DESIGN.md': '''\n\n<!-- COMBAT-INTEGRITY-V1 -->\n## Combat integrity / Endless pressure canon — 2026-11-01\n\n### Target-surface invariant\n\n- Multipart 또는 phase-gated boss의 owner 좌표는 조준점 자체가 아니다. 모든 직접 조준 무기는 현재 `active && visible && !dead`인 damage surface/body-part proxy를 선택해야 한다.\n- 이 규칙은 자동 조준, 수동 조준, Arc/boomerang, Rail boss priority, guided missile acquisition/reacquisition, Orbital Gate 설치 표적에 공통 적용한다.\n- 실제 피해는 proxy에서 shared owner HP로 라우팅한다. 현재 phase에서 비활성인 핵/부위를 겨냥해 허공에 공격을 소비하면 안 된다.\n\n### Attack lifetime and reward invariants\n\n- 실제 피해를 운반하는 boomerang curve는 단순 FIFO entity cap 때문에 비행 중 제거하지 않는다. 자연 수명/귀환 종료가 정리 기준이다. 시각 장식 cap과 gameplay attack lifetime을 혼동하지 않는다.\n- Elite/boss 사망 후처리는 alive → dead 전환 1회만 유효하다. 이미 dead인 동일 entity에 대한 재호출은 reward queue, trait, record side effect를 다시 발생시키지 않는다.\n\n### Endless late swarm pressure\n\n- 기존 Enemy Director의 role/cadence/pulse 소유권을 유지한다. 데스크톱에서만 900초 이후 추가 후반 밀도 압력을 적용한다.\n- 900~1200초는 점진적으로 목표를 추가하고, 1200초 이후에는 장기 생존 시간에 따라 더 증가한다. 최종 일반 적 목표 상한은 124, 전체 적 안전 hard cap은 136이다.\n- 콤팩트 기기는 기존 cap/밀도 경로를 그대로 사용한다. 일반 보스가 활성 중일 때는 기존 boss-pressure 감쇠를 보존한다.\n- 성능 보호는 우선 장식/시각 예산을 조절하며, gameplay attack을 FIFO 삭제해 성능을 맞추지 않는다.\n\n### Crash Dreadnought reward\n\n- 매 3번째 Crash event의 Dreadnought는 `noEliteReward` 정책을 유지해 일반 보스 특수능력 선택을 중복 생성하지 않는다.\n- 성공적으로 마지막 wave와 Dreadnought를 정리해 Salvage 단계로 전환될 때만 기존 Salvage 3택1 + 영구 Core Shard 1개를 지급한다. 실패/중단에는 지급하지 않으며 wrapper 중첩 여부와 무관하게 event당 정확히 1회만 지급한다.\n''',
+            'docs/WIKI.md': '''\n\n<!-- COMBAT-INTEGRITY-V1 -->\n## 2026-11-01 전투·후반 Endless 규칙\n\n- 여러 부위가 단계별로 열리는 보스는 **현재 공격 가능한 부위만** 무기가 조준한다. 예를 들어 무명의 외곽 성좌가 남아 있으면 중앙 핵을 먼저 겨냥하지 않는다. 자동 조준뿐 아니라 수동 조준, 부메랑, 유도탄, 레일, 설치형 조준에도 같은 규칙이 적용된다.\n- 성운 부메랑은 화면에 많이 존재한다는 이유만으로 아직 비행 중인 오래된 부메랑을 강제로 지우지 않는다. 공격 속도가 빨라져도 그 이유로 앞선 공격이 잘려 손해 보지 않는다.\n- 동일 보스를 한 번 처치했을 때 보스 보상은 한 번만 발생한다.\n- 데스크톱 Endless는 오래 생존할수록 15분 이후 적 물량 압력이 더 높아진다. 장기 목표는 일반 적 최대 124체, 전체 안전 상한은 136체이며 모바일/콤팩트 기기는 기존 상한을 유지한다.\n- 추락한 우주선 이벤트의 3번째·6번째·9번째처럼 매 3회차에 등장하는 Dreadnought를 성공적으로 격파하면 **기존 우주선 Salvage 선택 + Core Shard 1개**를 추가로 받는다.\n'''
+          }
+          for name, block in blocks.items():
+              path = Path(name)
+              text = path.read_text(encoding='utf-8')
+              if '<!-- COMBAT-INTEGRITY-V1 -->' not in text:
+                  path.write_text(text.rstrip() + block + '\n', encoding='utf-8')
+      - name: Validate sources and regenerate build info
+        run: node scripts/build-fingerprint.mjs
+      - name: Commit synchronized production files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add README.md docs/GAME_DESIGN.md docs/WIKI.md src/build-info.js
+          if git diff --cached --quiet; then
+            echo 'No finalizer changes required.'
+            exit 0
+          fi
+          git commit -m 'Synchronize combat integrity docs and build info'
+          git push origin HEAD:combat-integrity-swarm-validation
