@@ -3,7 +3,7 @@
   if(window.stackfallEndlessPressureRewardsV1==='v1')return;
   window.stackfallEndlessPressureRewardsV1='v1';
 
-  const DESKTOP_ENEMY_CAP=136,DESKTOP_NORMAL_TARGET_CAP=124;
+  const DESKTOP_ENEMY_CAP=168,DESKTOP_NORMAL_TARGET_CAP=156;
   const baseEntityCap=entityCap;
   entityCap=function endlessPressureEntityCap(kind){
     if(kind==='enemies'&&typeof compactDevice==='function'&&!compactDevice())return DESKTOP_ENEMY_CAP;
@@ -21,7 +21,7 @@
     const normalCap=Math.max(24,entityCap('enemies')-7);
     let extra;
     if(time<1200)extra=Math.floor((time-900)/30);
-    else extra=12+Math.floor((time-1200)/180)*4;
+    else extra=12+Math.floor((time-1200)/150)*4;
     return Math.min(normalCap,DESKTOP_NORMAL_TARGET_CAP,(profile.target||0)+Math.max(0,extra));
   }
   function liveNormalCount(){let count=0;for(const enemy of state.entities.enemies)if(enemy&&!enemy.dead&&enemy.kind==='normal'&&!enemy.eventKind)count++;return count;}
@@ -57,7 +57,7 @@
       state.runCurrencyEarned=state.runCurrencyEarned||{stardust:0,coreShard:0};
       state.runCurrencyEarned.coreShard=(state.runCurrencyEarned.coreShard||0)+granted;
       const prompt=document.querySelector('#worldEventPrompt');
-      if(prompt)prompt.textContent=GAME_SETTINGS.language==='ko'?`기함 격파 보너스: 코어 조각 +${granted} · 하나를 선택하세요`:`Dreadnought bonus: Core Shard +${granted} · Choose one`;
+      if(prompt)prompt.textContent=GAME_SETTINGS.language==='ko'?`기함 격파 보너스: 코어 조각 +${granted} · 표시된 회수품 3개 전부 획득`:`Dreadnought bonus: Core Shard +${granted} · Collect all 3 shown salvage rewards`;
       updateHUD?.();
     }
     return granted;

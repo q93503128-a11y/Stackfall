@@ -17,12 +17,14 @@ const checks=[
   ['boomerang update no longer FIFO-trims active attacks',/integrityBoomerangLifecycle/.test(combat)&&/compactInPlace\(curves,keepLiveBoomerang\);/.test(combat)],
   ['duplicate kill side effects are blocked',/if\(!enemy\|\|enemy\.dead\)return;\s*return baseKillEnemy/.test(combat)],
   ['runtime layers load after multipart owner',body.indexOf("src/combat-integrity-v1.js")>body.indexOf('stackfallSharedEnemyScalePulseDisabled')&&body.indexOf("src/endless-pressure-rewards-v1.js")>body.indexOf("src/combat-integrity-v1.js")],
-  ['desktop enemy ceiling is raised but bounded',/DESKTOP_ENEMY_CAP=136/.test(pressure)&&/DESKTOP_NORMAL_TARGET_CAP=124/.test(pressure)],
+  ['desktop enemy ceiling is raised but bounded',/DESKTOP_ENEMY_CAP=168/.test(pressure)&&/DESKTOP_NORMAL_TARGET_CAP=156/.test(pressure)],
   ['compact enemy cap remains on canonical base path',/kind==='enemies'.*!compactDevice\(\)/.test(pressure)&&/return baseEntityCap\(kind\)/.test(pressure)],
   ['late pressure remains time gated',/time<900/.test(pressure)&&/time<1200/.test(pressure)],
   ['dreadnought keeps normal boss reward suppression',/eventVariant:'dreadnought'/.test(crash)&&/noEliteReward:true/.test(crash)],
   ['dreadnought grants one fixed core shard after successful salvage transition',/stackfallGrantCurrency\?\.\('coreShard',1\)/.test(pressure)&&/state\.mode==='worldEvent'/.test(pressure)],
   ['dreadnought reward stays idempotent across nested runtime wrappers',/completionReady&&!event\.__dreadnoughtBonusGranted&&state\.mapEventActive!==event/.test(pressure)&&/event\.__dreadnoughtBonusGranted=true;\s*grantDreadnoughtBonus\(\)/.test(pressure)],
+  ['dreadnought salvage grants all three displayed rewards',/function openSalvage\(takeAll=false\)/.test(crash)&&/const takeAllAction=/.test(crash)&&/openSalvage\(ev\.dreadnought===true\)/.test(crash)],
+  ['late desktop pressure continues above the old 124 target',/DESKTOP_NORMAL_TARGET_CAP=156/.test(pressure)&&/\(time-1200\)\/150/.test(pressure)],
 ];
 
 let failed=0;
