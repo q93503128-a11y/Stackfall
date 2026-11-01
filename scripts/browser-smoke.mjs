@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {computeBuildFingerprint} from './build-fingerprint.mjs';
 import {awakeningRuntimeChecks} from './awakening-runtime-checks.mjs';
 import {apexFoundationBrowserQa} from './apex-foundation-browser.mjs';
+import {fieldPickupBrowserQa} from './field-pickup-browser.mjs';
 
 const sleep=ms=>new Promise(done=>setTimeout(done,ms));
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
@@ -270,18 +271,19 @@ async function fallbackScenario(page,scenario){
 
 try{
   mkdirSync(screenshotDir,{recursive:true});chromePath=findChrome();browser=spawn(chromePath,browserArgs,{stdio:['ignore','ignore','pipe'],windowsHide:true});browser.stderr?.on('data',chunk=>{chromeStartupLog=(chromeStartupLog+chunk.toString()).slice(-6000);});debugPort=await waitForDebugPort();const version=await jsonEndpoint('/json/version');chromeVersion=version.Product||version['User-Agent']||'unknown';
-  const apexOnly=process.argv.includes('--apex-only');
-  if(!process.argv.includes('--awakening-only')&&!apexOnly){
+  const apexOnly=process.argv.includes('--apex-only'),pickupOnly=process.argv.includes('--pickup-only'),awakeningOnly=process.argv.includes('--awakening-only');
+  if(!awakeningOnly&&!apexOnly&&!pickupOnly){
     await runScenario('main-gpu',{allowWarnings:[],allowNetwork:[]},mainScenario);
     await runScenario('pixi-fallback',{blockPixi:true,allowWarnings:[/^\[Stackfall\] PixiJS download failed; Canvas 2D fallback remains active\.?$/, /^Failed to load resource: net::ERR_BLOCKED_BY_CLIENT$/],allowNetwork:[item=>isPixiUrl(item.url)]},fallbackScenario);
   }
-  if(!apexOnly)await runScenario('awakening-isolation',{dev:true,allowWarnings:[],allowNetwork:[]},async(page,scenario)=>{
+  if(!apexOnly&&!pickupOnly)await runScenario('awakening-isolation',{dev:true,allowWarnings:[],allowNetwork:[]},async(page,scenario)=>{
     const result=await evaluate(page,`(${awakeningRuntimeChecks.toString()})()`);scenario.observations.audit=result;
     const gallery=await evaluate(page,"window.stackfallAuditGallery?.toDataURL()||null");if(gallery){const path=join(screenshotDir,'awakening-gallery.png');writeFileSync(path,Buffer.from(gallery.split(',')[1],'base64'));scenario.screenshots.push(path);}
     for(const failure of result.failures)check(false,failure,page.name);
     scenario.screenshots.push(await capture(page,join(screenshotDir,'awakening-endless.png')));
   });
-  if(!process.argv.includes('--awakening-only'))await runScenario('apex-foundation',{dev:true,allowWarnings:[],allowNetwork:[]},(page,scenario)=>apexFoundationBrowserQa(page,scenario,{evaluate,waitFor,check,sleep,capture,screenshotDir}));
+  if(!awakeningOnly&&!pickupOnly)await runScenario('apex-foundation',{dev:true,allowWarnings:[],allowNetwork:[]},(page,scenario)=>apexFoundationBrowserQa(page,scenario,{evaluate,waitFor,check,sleep,capture,screenshotDir}));
+  if(!awakeningOnly&&!apexOnly)await runScenario('field-pickup',{dev:true,allowWarnings:[],allowNetwork:[]},(page,scenario)=>fieldPickupBrowserQa(page,scenario,{evaluate,check}));
 }catch(error){check(false,error.stack||error.message,'harness');}finally{
   if(browser&&browser.exitCode===null){browser.kill('SIGTERM');await Promise.race([new Promise(done=>browser.once('exit',done)),sleep(3000)]);if(browser.exitCode===null){browser.kill('SIGKILL');await Promise.race([new Promise(done=>browser.once('exit',done)),sleep(1200)]);}}
   const tempRoot=resolve(tmpdir())+sep,target=resolve(profile);if(target.startsWith(tempRoot)){let cleanupError=null;for(let attempt=0;attempt<8;attempt++){try{rmSync(target,{recursive:true,force:true,maxRetries:3,retryDelay:160});cleanupError=null;break;}catch(error){cleanupError=error;await sleep(180*(attempt+1));}}if(cleanupError&&existsSync(target))failures.push(`[harness] temporary profile cleanup failed after retries: ${cleanupError.message}`);}

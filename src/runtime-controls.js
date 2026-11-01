@@ -99,16 +99,14 @@
   window.stackfallSetGameSpeed=setGameSpeed;
   window.stackfallSyncRuntimeControls=syncSpeedButton;
 
-  const baseReset=resetGame;
-  resetGame=function runtimeControlReset(){
+  registerResetGameInterceptor('runtime-controls.js:runtimeControlReset',function runtimeControlReset(next,...args){
     queue.length=0;showing=false;noticeSerial++;notice.classList.add('hidden');notice.classList.remove('show');
-    return baseReset();
-  };
-  const baseMenu=showMainMenu;
-  showMainMenu=function runtimeControlMenu(){
+    return next();
+  });
+  registerShowMainMenuInterceptor('runtime-controls.js:runtimeControlMenu',function runtimeControlMenu(next,...args){
     queue.length=0;showing=false;noticeSerial++;notice.classList.add('hidden');notice.classList.remove('show');
-    return baseMenu();
-  };
+    return next();
+  });
   const baseApplyLanguage=applyLanguage;
   applyLanguage=function runtimeControlLanguage(){const result=baseApplyLanguage();syncSpeedButton();return result;};
 

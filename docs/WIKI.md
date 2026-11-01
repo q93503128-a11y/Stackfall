@@ -4,7 +4,9 @@
 
 이 문서는 플레이어용 설명서다. 설계·구현의 최종 정본은 `docs/GAME_DESIGN.md`이며, 코드 감사 기록은 별도 AUDIT 문서에 보존한다. 이 위키는 현재 정본에서 파생해 갱신하며 독립적인 새 규칙을 만들지 않는다.
 
-마지막 동기화: 2026-07-20
+마지막 동기화: 2026-10-31
+
+> **현재 플레이 가능 런타임:** Endless만 활성화되어 있다. Stage 1–18의 맵·보스·해금 설계는 저장소에 보존되어 있지만 Stage runtime은 봉인 상태이며 현재 플레이 경로가 아니다. Endless의 무작위 월드 이벤트는 성운 보관소 / 추락한 우주선 / 공허 균열 3종만 활성화된다.
 
 이 문서는 플레이 방법과 무기·이벤트·보스를 설명한다. 세부 계산과 개발 규칙은 `GAME_DESIGN.md`, 실행·검사 방법은 루트 `README.md`를 우선한다.
 
@@ -284,9 +286,10 @@ Stage 작가 배치형 성운 보관소는 **현재 Stage 서브보스가 살아
 
 ## Run modes
 
-- `endless`: infinite mode with one randomly selected eligible world-event signal at a time, all enemy families, and recurring Apex encounters. 기본 적에 더해 75초부터 route, 240초부터 bloom, 420초부터 array 계열의 Stage 일반 적 변형이 순차적으로 섞이며, Stage 해금 여부와는 무관하다.
-- `stage`: finite operations with authored enemy pools, milestone incidents, recurring environmental gimmicks, stage minibosses, and a stage final boss.
-- 최종보스 등장 시간은 Stage 1의 **5:00**에서 Stage 18의 **15:00**까지 증가한다. 시간에 도달하면 보스가 등장할 뿐이며, 실제 클리어는 보스를 처치해야 한다.
+- `endless`: **현재 유일하게 활성화된 런타임**. 한 번에 하나의 eligible world-event signal, 전체 적 계열 혼합, 10분 주기 Apex를 사용한다. 기본 적에 더해 75초부터 route, 240초부터 bloom, 420초부터 array 계열의 Stage 일반 적 변형이 순차적으로 섞이며 Stage 해금 여부와는 무관하다.
+- 활성 무작위 월드 이벤트는 **성운 보관소(`vault`) / 추락한 우주선(`crash`) / 공허 균열(`void`)** 3종이다. 과거의 조난 신호·유성 광맥·포식성 성운·중계기 복구·항성 폭풍의 눈은 active Endless에서 폐기되었다.
+- `stage`: authored finite-operation source는 보존되어 있으나 **현재 runtime은 봉인**되어 있다. 아래 Stage 표·보스·환경·해금 설명은 보존 설계 참고용이며 현재 플레이 가능한 모드 설명이 아니다.
+- 보존 설계상 최종보스 등장 시간은 Stage 1의 **5:00**에서 Stage 18의 **15:00**까지 증가하고, 실제 클리어는 보스 처치로 확정된다.
 - Stage 서브보스는 **중간보스 → 중간보스 → 일반보스** 3연전을 반복한다. S1~2는 2+1, S6은 6+3, S12는 10+5, S18은 16+8까지 증가한다. 동시 조우 상한은 Route 3 / Bloom 4 / Array 5다.
 - Stage 1~18의 최종보스는 모두 **초월체(Apex) 카테고리**다. 스테이지별 고유 이름·시그니처 공격·체력 스케일은 유지하지만, HUD/기록/안내에서는 초월체로 묶는다. 내부적으로는 Stage 클리어 흐름을 보존하기 위해 `kind:'stage-boss'`를 유지하고 `bossCategory:'apex'`로 분류한다.
 - Stage 1~18 최종 초월체는 공용 공격 패턴을 받지 않는다. 18개 보스가 각각 독립 기술을 소유하며 정지 플레이어도 반복적으로 안전하지 않게 현재 위치/과거 위치/실제 이동 경로/전장 중심을 직접 사용하는 기술을 섞는다. S6은 항로 수렴, S12는 외피가 열리는 개화핵, S18은 전장 중심 재작성과 메인프레임 코어 노출로 각 성좌의 피날레를 대표한다.
@@ -331,15 +334,15 @@ The three current constellations remain **Shardway**, **Abyssal Bloom**, and **S
 - **Orbital Gate / 궤도 문**: stationary installed gate networks alternate between enemy-side and cast-time-player-side placement. Pulses route through fixed gates; Photon Crossfeed can copy an allied projectile once from the next gate at 55% damage.
 - **Projection Core / 다중 투영 코어** compatibility is bounded: before Stage 18 it remains a Nebula Vault-only reward capped at 2 stacks. Stage 18 first clear also adds it to the ordinary level-up pool and raises the cap to 3. It adds primary seeds, mines, main missiles, or routed gate pulses; secondary MIRV warheads, phantom mines, forced blooms, and gate copies do not recursively multiply.
 
-### Galaxy map
+### Galaxy map / sealed Stage preview
 
-The galaxy map is divided into constellation pages. Only one constellation is displayed at a time; after a constellation is completed, the next constellation page becomes reachable when its first stage is unlocked.
+The galaxy map currently represents preserved Stage planning/preview data; Stage runtime selection remains disabled. The authored map is divided into constellation pages. Only one constellation is displayed at a time; after a constellation is completed, the next constellation page becomes reachable when its first stage is unlocked.
 
 The main menu is a mode hub rather than a direct loadout/start screen. `GALACTIC OPERATIONS` opens the galaxy map, `ENDLESS` opens sortie preparation, and `CORE DEVELOPMENT` opens the permanent upgrade field. 잠긴 Endless/Core Development 카드는 X자 금속 사슬과 중앙 자물쇠를 사용하지만, 은하 지도 잠금 노드는 별도 자물쇠 없이 회색 비활성 상태만 사용한다. The upper-left local-pilot card is clickable and shows a detailed local-save panel with clears, runs, kills, equipment slots, unlocked weapons, best Stage 1 time, Stardust, and Core Shards; it is not an online account. The upgrade field keeps the exact shared in-game player-core renderer centered with floating orbital nodes and fits within one normal desktop viewport; compact/mobile layouts may scroll. Future skins can therefore propagate through the shared renderer automatically. Skins are otherwise deferred.
 
-### Stage content identity
+### Preserved Stage content identity
 
-Stage environments are authored as distinct places rather than Endless background recolors. Ordinary enemies may be reused across stages, but encounter rhythm and final-Apex identity must change by Stage. Stage 중간 전투는 별자리별 공용 중간보스/일반보스 풀을 사용하되 **M→M→B** 순서를 반복하고 후반으로 갈수록 묶음 수를 늘린다. 보스 수를 늘린 목적에는 성장량 증가도 포함되므로 XP를 임의 삭감하지 않는다. 각성 코어는 일반보스 확정, 중간보스 35%다. 보스 HUD는 현재 살아 있는 조우별 HP 바를 모두 표시하며 쌍둥이 조우만 합산한다.
+The following Stage identity rules describe preserved authored source, not an active Stage runtime. Stage environments are authored as distinct places rather than Endless background recolors. Ordinary enemies may be reused across stages, but encounter rhythm and final-Apex identity must change by Stage. Stage 중간 전투는 별자리별 공용 중간보스/일반보스 풀을 사용하되 **M→M→B** 순서를 반복하고 후반으로 갈수록 묶음 수를 늘린다. 보스 수를 늘린 목적에는 성장량 증가도 포함되므로 XP를 임의 삭감하지 않는다. 각성 코어는 일반보스 확정, 중간보스 35%다. 보스 HUD는 현재 살아 있는 조우별 HP 바를 모두 표시하며 쌍둥이 조우만 합산한다.
 
 별자리별로 보스 폼을 공유할 수는 있지만 **별자리 공통 공격 패턴은 추가하지 않는다.** 균열의 기사/초신성 감시자/궤도 집행자/결정 거상/성운 수확자/쌍성의 거울 6종과 일식의 군주/성운의 세라프/맥동성의 심장/성간의 레비아탄/무한 기록자/태양관의 군주/성뢰의 여왕/무효기관 제로 8종은 각각 별도 공격 리듬과 기술을 갖는다. Stage 조우가 이 개별 기술 위에 Route/Bloom/Array 공통 선·꽃잎·격자 공격을 다시 얹지 않는다.
 
@@ -372,7 +375,7 @@ Stage 13~18의 환경 공격은 같은 방사형 선 패턴을 반복하지 않�
 ### Stage 1 production vertical slice — 2026-10-09
 
 
-실제 Chromium GPU·Canvas·390×844 모바일에서 등장, 4종 동작, 48% 전환, 격파/보상 결과, 고속 탄환의 외장 적중과 중앙 공백을 검사한다. `scripts/stage-production-browser.mjs --stage=1`의 이미지·JSON은 로컬 `test-results/production-stage-01`에 생성된다.
+이 항목은 Stage runtime이 활성 상태였던 시점의 역사적 QA 기록이다. 당시 Chromium GPU·Canvas·390×844 모바일에서 등장, 4종 동작, 48% 전환, 격파/보상 결과, 고속 탄환의 외장 적중과 중앙 공백을 검사했다. Stage 봉인 이후 전용 `stage-production-*` QA 도구는 제거되었으며 현재 production 검증 경로가 아니다.
 
 
 ### Stage 2 production remake — 2026-10-01
@@ -413,3 +416,25 @@ Stage 5 production 정본: 거대 비선형 자속 띠·철가루 정렬·드문
 | 18 | 거대 기록 장·접힌 주소 층·잃은 행 | 주소 수렴→누락→축 불일치→정적 | 편측 기록 장·비스듬한 등뼈·off-center 실행실 / 기준점 수렴 | 두 L 지형 중심/축 재작성·세 주소 재배정·실행실 압출·장 박리 | 74% 실행실 노출·36% 기록 장 이탈 / 6.2초 시간차 장치 해제·열린 항로 |
 
 개발 보스 진입은 정확히 5초 뒤 정상 등장 트리거를 사용하며 이전 사건/적을 몰아서 실행하지 않는다. x2는 60Hz 물리 스텝 두 번, 고속 공격은 swept/segment, 독립 위험 물체는 최대 6개다. GPU·Canvas·모바일·성능 단계에서 저마다의 authored 외장을 유지한다. 탐험/최종전별 오리지널 WebAudio 장면과 효과음을 사용하고 런 종료 시 음악을 정지한다. 음질/재미는 실제 청취·실플레이로 별도 평가한다.
+
+## Void Rift combat identities — HUNGER / PROPHECY / LOOM / GRAVE / PARADOX
+
+The five active Void Rift bosses share the same dark-cosmic event family but must ask different movement questions instead of reusing one ring/fan/circle cadence.
+
+- **Maw / Abyssal Devourer — HUNGER:** clearly telegraphs a committed feeding lane, consumes a capped number of nearby player projectiles during that visible window, then lunges along the committed line. It never silently rewrites player coordinates.
+- **Oracle / Void Oracle — PROPHECY:** marks projected movement with staggered future seals and crossing prophecy lines. Its dense ring has intentional escape gaps, so changing direction beats prediction rather than raw bullet density.
+- **Weaver / Lightless Weaver — LOOM:** rotates paired thread lanes and a cross-thread to create readable corridors; slow shuttle projectiles travel through the authored weave. The enclosing web is an occasional signature, not the whole rotation.
+- **Grave / Lord of the Star Grave — GRAVE:** occupies territory with three deliberate grave markers, delayed cardinal shard eruptions, and paired burial walls. Void sentinels are capped at three live units and summoned at most two at a time.
+- **Paradox / Paradox Twins — PARADOX:** the α twin coordinates shared crossfire, position swap, and mirrored frame attacks with β so the pair behaves as one encounter. If one twin dies, the survivor falls back to a deterministic solo rift pattern instead of breaking the fight.
+
+Readability rule: Void attacks may be visually intense, but their warning geometry, safe-space logic, and cadence must remain legible against Stackfall's existing cosmic battlefield. Do not turn Void bosses into puzzle intermissions, long invulnerability phases, or full-screen opaque bullet spam.
+
+<!-- COMBAT-INTEGRITY-V1 -->
+## 2026-11-01 전투·후반 Endless 규칙
+
+- 여러 부위가 단계별로 열리는 보스는 **현재 공격 가능한 부위만** 무기가 조준한다. 예를 들어 무명의 외곽 성좌가 남아 있으면 중앙 핵을 먼저 겨냥하지 않는다. 자동 조준뿐 아니라 수동 조준, 부메랑, 유도탄, 레일, 설치형 조준에도 같은 규칙이 적용된다.
+- 성운 부메랑은 화면에 많이 존재한다는 이유만으로 아직 비행 중인 오래된 부메랑을 강제로 지우지 않는다. 공격 속도가 빨라져도 그 이유로 앞선 공격이 잘려 손해 보지 않는다.
+- 동일 보스를 한 번 처치했을 때 보스 보상은 한 번만 발생한다.
+- 데스크톱 Endless는 오래 생존할수록 15분 이후 적 물량 압력이 더 높아진다. 장기 목표는 일반 적 최대 156체, 전체 안전 상한은 168체이며 모바일/콤팩트 기기는 기존 상한을 유지한다.
+- 추락한 우주선 이벤트의 3번째·6번째·9번째처럼 매 3회차에 등장하는 Dreadnought를 성공적으로 격파하면 **표시되는 우주선 Salvage 3개 전부 + Core Shard 1개**를 받는다.
+

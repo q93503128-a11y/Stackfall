@@ -372,23 +372,20 @@
   `;document.head.appendChild(style);
 
   let liveAchievementPoll=0;
-  const baseAchievementUpdatePlayer=updatePlayer;
-  updatePlayer=function endlessAchievementUpdatePlayer(dt){
-    baseAchievementUpdatePlayer(dt);if(state.mode!=='playing'||!isEndless())return;liveAchievementPoll-=dt;if(liveAchievementPoll>0)return;liveAchievementPoll=.4;
+  registerPlayerUpdateInterceptor('endless-progression.js:endlessAchievementUpdatePlayer',function endlessAchievementUpdatePlayer(next,dt){
+    next(dt);if(state.mode!=='playing'||!isEndless())return;liveAchievementPoll-=dt;if(liveAchievementPoll>0)return;liveAchievementPoll=.4;
     const completed=evaluateAchievements(snapshotRun());if(!completed.length)return;showAchievementToasts(completed);renderAchievementUi();renderEndlessProfile();window.renderStackfallMetaUi?.();
-  };
+  });
 
-  const baseEndGame=endGame;
-  endGame=function endlessProgressionEndGame(){
+  registerEndGameInterceptor('endless-progression.js:endlessProgressionEndGame',function endlessProgressionEndGame(next,...args){
     if(state.mode==='gameover')return;
     const endless=isEndless(),run=snapshotRun();let survivalReward=0,completed=[];
     if(endless){rememberRunBest(run);survivalReward=claimSurvivalMilestones(run.time);completed=evaluateAchievements(run);}
-    baseEndGame();
+    next();
     renderAchievementUnlocks(completed);renderAchievementUi();renderEndlessProfile();
     if(survivalReward>0)window.renderStackfallMetaUi?.();
-  };
-  const baseShowMainMenu=showMainMenu;
-  showMainMenu=function endlessProgressionMainMenu(){baseShowMainMenu();applyStageSeal();finalRenderStarterOptions();renderAchievementUi();renderEndlessProfile();};
+  });
+  registerShowMainMenuInterceptor('endless-progression.js:endlessProgressionMainMenu',function endlessProgressionMainMenu(next,...args){next();applyStageSeal();finalRenderStarterOptions();renderAchievementUi();renderEndlessProfile();});
   const baseApplyLanguage=applyLanguage;
   applyLanguage=function endlessProgressionLanguage(){baseApplyLanguage();applyStageSeal();finalRenderStarterOptions();renderAchievementUi();renderEndlessProfile();window.renderStackfallDifficulty?.();};
   renderStarterOptions=finalRenderStarterOptions;

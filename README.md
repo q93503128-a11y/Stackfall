@@ -319,11 +319,15 @@ node scripts/browser-smoke.mjs --url=https://stackfall.pages.dev --result=test-r
 
 부하 검사의 p95 `50.5ms`, 50ms 이상 프레임 비율 `8%`, 최대 `100ms` 기준은 급격한 회귀를 막는 상한이며 60FPS 보장 기준이 아닙니다. 결과에는 평균 프레임 시간과 그 값으로 계산한 추정 FPS를 함께 기록합니다.
 
-### Run modes and finite stages
+### Current runtime mode and preserved Stage source
 
-`ENDLESS` remains the default infinite mode with random world events, the full enemy family pool, and the 600-second (10-minute) Apex cadence. Finite stages use their own catalog timelines and do not inherit the Endless encounter director.
+As of **2026-10-31**, production gameplay is **Endless-only**. `src/run-modes.js` keeps `ACTIVE_STAGE_RUNTIMES=[]`, `STACKFALL_STAGE_MODE_ENABLED=false`, `stackfallHasStageRuntime()=>false`, and normalizes runtime selection back to Endless. Endless keeps the full enemy-family mixing rules and the 600-second (10-minute) Apex cadence.
 
-Stage 1 now starts at **5 minutes**, and the campaign rises to **15 minutes at Stage 18**. Fixed incidents and the recurring stage gimmick are compressed with the new operation length rather than being cut off. Reaching the listed time only spawns the final boss; the operation ends only when that boss is defeated.
+Active random world events are exactly **Nebula Vault / 성운 보관소 (`vault`)**, **Crashed Starship / 추락한 우주선 (`crash`)**, and **Void Rift / 공허 균열 (`void`)**. The former field-event experiments `distress / meteor / predator / relay / storm` are retired from active Endless runtime; compatibility cleanup may still recognize those IDs only to discard stale state.
+
+The Stage 1–18 tables and production notes below are **preserved authored source, not a currently playable runtime path**. Their files remain in the repository so the work is not lost, but Stage gameplay must not be described as active until the Stage gate is deliberately reopened and revalidated.
+
+In the preserved authored design, Stage 1 starts at **5 minutes** and the campaign rises to **15 minutes at Stage 18**. Reaching the listed time spawns the final boss; authored Stage completion remains boss-death gated.
 
 | Stage | 작전 | 최종보스 등장 |
 |---|---|---:|
@@ -364,13 +368,15 @@ The **in-combat stage fields** also carry those identities independently of Endl
 
 The galaxy map follows the same identity split. Shardway uses straight route links and angular nodes, Abyssal Bloom uses curved organic branches and petal-like nodes, while Silent Array uses right-angle circuit paths and relay nodes. Background patterns change with the page rather than only recoloring one template.
 
-#### Post-roster weapon expansion
+#### Preserved post-roster Stage unlock plan
 
-Stage 11/13/15/17 now unlock four fully implemented equipment families. Vacuum Bloom is a kill-fed delayed collapse network; Phase Minefield turns the player's movement trail into armed territory; Interstellar Missile Pods use visible left/right side ejection, delayed ignition, curved homing, terminal burn, and a full-damage main MIRV warhead; Orbital Gate installs a stationary world-space gate network at enemy lines or the cast-time player position. The event-only Projection Core / 다중 투영 코어 adds primary attack bodies without recursively multiplying child payloads: extra seeds, mines, main missiles, or gate pulses. MIRV children, phantom mines, forced blooms, and gate-crossfeed copies never multiply themselves.
+The following Stage-clear unlock timing is dormant while Stage runtime is sealed. The equipment implementations remain in source, but these Stage-clear routes are not currently active.
 
-#### Galaxy map
+Stage 11/13/15/17 are authored to unlock four fully implemented equipment families. Vacuum Bloom is a kill-fed delayed collapse network; Phase Minefield turns the player's movement trail into armed territory; Interstellar Missile Pods use visible left/right side ejection, delayed ignition, curved homing, terminal burn, and a full-damage main MIRV warhead; Orbital Gate installs a stationary world-space gate network at enemy lines or the cast-time player position. The event-only Projection Core / 다중 투영 코어 adds primary attack bodies without recursively multiplying child payloads: extra seeds, mines, main missiles, or gate pulses. MIRV children, phantom mines, forced blooms, and gate-crossfeed copies never multiply themselves.
 
-Stages are grouped into constellation pages. Only the active constellation is drawn at once; finishing the final stage of a constellation unlocks access to the next constellation page when that page is added to the catalog. Connections are driven by explicit predecessor links rather than cross-page catalog order.
+#### Galaxy map / Stage preview
+
+The galaxy map currently represents preserved Stage planning/preview data: Stage status is gated to `planned`, and runtime selection does not activate a Stage run. The authored map groups stages into constellation pages. Only the active constellation is drawn at once; finishing the final stage of a constellation unlocks access to the next constellation page when that page is added to the catalog. Connections are driven by explicit predecessor links rather than cross-page catalog order.
 
 The main menu is a mode hub: `GALACTIC OPERATIONS`, `ENDLESS`, and `CORE DEVELOPMENT`. The upper-left local pilot card is now interactive and opens detailed local-save stats: clears, runs, kills, equipment capacity, unlocked weapons, Stage 1 best time, and currencies. Core Development keeps the **same shared player-core renderer used in combat** centered inside an orbital upgrade field with floating nodes and is viewport-contained on normal desktop screens; compact/mobile layouts may scroll. Future skins therefore only need to change the shared player renderer to update both combat and the growth preview. Skins themselves are intentionally deferred. Starter weapon and difficulty selection still live in the shared sortie screen. Galaxy-map stage nodes use luminous stellar points with separate number badges.
 
@@ -381,7 +387,7 @@ The main menu is a mode hub: `GALACTIC OPERATIONS`, `ENDLESS`, and `CORE DEVELOP
 ### Stage 1 production vertical slice — 2026-10-09
 
 
-실제 Chromium GPU·Canvas·390×844 모바일에서 등장, 4종 동작, 48% 전환, 격파/보상 결과, 고속 탄환의 외장 적중과 중앙 공백을 검사한다. `scripts/stage-production-browser.mjs --stage=1`의 이미지·JSON은 로컬 `test-results/production-stage-01`에 생성된다.
+이 항목은 Stage runtime이 활성 상태였던 시점의 역사적 QA 기록이다. 당시 Chromium GPU·Canvas·390×844 모바일에서 등장, 4종 동작, 48% 전환, 격파/보상 결과, 고속 탄환의 외장 적중과 중앙 공백을 검사했다. Stage 봉인 이후 전용 `stage-production-*` QA 도구는 제거되었으며 현재 production 검증 경로가 아니다.
 
 
 ### Stage 2 production remake — 2026-10-01
@@ -422,3 +428,25 @@ Stage 5 production 정본: 거대 비선형 자속 띠·철가루 정렬·드문
 | 18 | 거대 기록 장·접힌 주소 층·잃은 행 | 주소 수렴→누락→축 불일치→정적 | 편측 기록 장·비스듬한 등뼈·off-center 실행실 / 기준점 수렴 | 두 L 지형 중심/축 재작성·세 주소 재배정·실행실 압출·장 박리 | 74% 실행실 노출·36% 기록 장 이탈 / 6.2초 시간차 장치 해제·열린 항로 |
 
 개발 보스 진입은 정확히 5초 뒤 정상 등장 트리거를 사용하며 이전 사건/적을 몰아서 실행하지 않는다. x2는 60Hz 물리 스텝 두 번, 고속 공격은 swept/segment, 독립 위험 물체는 최대 6개다. GPU·Canvas·모바일·성능 단계에서 저마다의 authored 외장을 유지한다. 탐험/최종전별 오리지널 WebAudio 장면과 효과음을 사용하고 런 종료 시 음악을 정지한다. 음질/재미는 실제 청취·실플레이로 별도 평가한다.
+
+## Void Rift combat identities — HUNGER / PROPHECY / LOOM / GRAVE / PARADOX
+
+The five active Void Rift bosses share the same dark-cosmic event family but must ask different movement questions instead of reusing one ring/fan/circle cadence.
+
+- **Maw / Abyssal Devourer — HUNGER:** clearly telegraphs a committed feeding lane, consumes a capped number of nearby player projectiles during that visible window, then lunges along the committed line. It never silently rewrites player coordinates.
+- **Oracle / Void Oracle — PROPHECY:** marks projected movement with staggered future seals and crossing prophecy lines. Its dense ring has intentional escape gaps, so changing direction beats prediction rather than raw bullet density.
+- **Weaver / Lightless Weaver — LOOM:** rotates paired thread lanes and a cross-thread to create readable corridors; slow shuttle projectiles travel through the authored weave. The enclosing web is an occasional signature, not the whole rotation.
+- **Grave / Lord of the Star Grave — GRAVE:** occupies territory with three deliberate grave markers, delayed cardinal shard eruptions, and paired burial walls. Void sentinels are capped at three live units and summoned at most two at a time.
+- **Paradox / Paradox Twins — PARADOX:** the α twin coordinates shared crossfire, position swap, and mirrored frame attacks with β so the pair behaves as one encounter. If one twin dies, the survivor falls back to a deterministic solo rift pattern instead of breaking the fight.
+
+Readability rule: Void attacks may be visually intense, but their warning geometry, safe-space logic, and cadence must remain legible against Stackfall's existing cosmic battlefield. Do not turn Void bosses into puzzle intermissions, long invulnerability phases, or full-screen opaque bullet spam.
+
+<!-- COMBAT-INTEGRITY-V1 -->
+## 전투 정합성·Endless 후반 압력 — 2026-11-01
+
+- 다중 부위·다단계 보스는 현재 활성화된 타격 부위만 자동/수동 무기 표적으로 사용한다. 비활성 핵이나 이미 파괴된 외곽 부위는 조준하지 않는다.
+- 성운 부메랑의 실제 공격체는 단순 개수 FIFO 제한으로 조기 삭제하지 않는다. 공격 속도·다중 투영 증가가 기존 비행 중 부메랑을 잘라 실제 화력을 낮추지 않는다.
+- 보스급 처치 보상과 사망 후처리는 살아 있던 적이 사망 상태로 전환되는 1회에만 실행한다. 같은 적에 대한 중복 `killEnemy` 호출은 보상을 반복하지 않는다.
+- 데스크톱 Endless는 15분 이후 후반 압력이 추가로 증가해 일반 적 목표가 최대 156체까지 올라가며, 전체 적 안전 하드캡은 168체다. 콤팩트 기기 상한은 기존 값을 유지한다.
+- 추락한 우주선 이벤트의 3회차마다 등장하는 Dreadnought는 성공 격파 시 표시되는 Salvage 3개를 전부 획득하고, 영구 **Core Shard 1개**도 확정 지급한다. 일반 보스 특수능력 보상은 별도로 중복 지급하지 않는다.
+
