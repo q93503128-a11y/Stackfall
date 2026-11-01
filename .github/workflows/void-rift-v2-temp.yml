@@ -1,0 +1,59 @@
+name: Temp Void Rift v2 validation
+
+on:
+  push:
+    branches:
+      - void-rift-combat-v2-validation
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply Void Rift combat rework
+        run: python3 scripts/temp-void-rework-transform.py
+      - name: Validate source and production contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do node --check "$file"; done < <(find src -type f -name '*.js' -print0 | sort -z)
+          node scripts/void-boss-contract.mjs
+          node scripts/build-fingerprint.mjs
+          git diff --check
+      - name: Run targeted Void Rift browser validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8000 > /tmp/stackfall-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8000/ >/dev/null && break; sleep .2; done
+          STACKFALL_CHROME=/usr/bin/google-chrome node scripts/temp-void-browser.mjs
+      - name: Run full Chromium regression smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          STACKFALL_CHROME=/usr/bin/google-chrome STACKFALL_ALLOW_GPU_SKIP=1 STACKFALL_ALLOW_CONTEXT_SKIP=1 node scripts/browser-smoke.mjs --url=http://127.0.0.1:8000/ --soak-ms=0 --result=test-results/void-v2-full-smoke.json
+      - name: Commit clean validated tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf test-results
+          rm -f scripts/temp-void-rework-transform.py scripts/temp-void-browser.mjs .github/workflows/void-rift-v2-temp.yml
+          git add -A
+          git diff --cached --check
+          test ! -e scripts/temp-void-rework-transform.py
+          test ! -e scripts/temp-void-browser.mjs
+          test ! -e .github/workflows/void-rift-v2-temp.yml
+          git config user.name 'coworkaccount'
+          git config user.email 'cyp1jhh2@gmail.com'
+          git commit -m 'Validate Void Rift combat identity rework'
+          git push origin HEAD:void-rift-combat-v2-validation
