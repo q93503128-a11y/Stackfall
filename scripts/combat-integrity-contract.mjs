@@ -22,6 +22,7 @@ const checks=[
   ['late pressure remains time gated',/time<900/.test(pressure)&&/time<1200/.test(pressure)],
   ['dreadnought keeps normal boss reward suppression',/eventVariant:'dreadnought'/.test(crash)&&/noEliteReward:true/.test(crash)],
   ['dreadnought grants one fixed core shard after successful salvage transition',/stackfallGrantCurrency\?\.\('coreShard',1\)/.test(pressure)&&/state\.mode==='worldEvent'/.test(pressure)],
+  ['dreadnought reward stays idempotent across nested runtime wrappers',/completionReady&&!event\.__dreadnoughtBonusGranted&&state\.mapEventActive!==event/.test(pressure)&&/event\.__dreadnoughtBonusGranted=true;\s*grantDreadnoughtBonus\(\)/.test(pressure)],
 ];
 
 let failed=0;
