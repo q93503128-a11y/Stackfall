@@ -6,7 +6,7 @@
   if(window.stackfallVoidApexAnswer==='v1')return;
   window.stackfallVoidApexAnswer='v1';
   window.STACKFALL_VOID_APEX_ANSWER_PROTOTYPE_ONLY=true;
-  window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v10';
+  window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v13';
 
   const TAU_LOCAL=Math.PI*2;
   const preview={
@@ -190,11 +190,13 @@ function activate(){return beginPreparation();}
   const PHASE_CRACK_COUNT=[3,6,9,13];
 
   function answerFrame(){
-    const width=Math.max(720,Number(vw)||1280),height=Math.max(520,Number(vh)||720);
-    const naturalW=answerBodyImage.naturalWidth||700,naturalH=answerBodyImage.naturalHeight||394,ratio=naturalW/naturalH;
-    const w=Math.max(width*1.12,height*2.18),h=w/ratio,visibleDepth=Math.max(190,Math.min(300,height*.30));
-    return{x:(width-w)*.5,y:visibleDepth-h,w,h,visibleDepth,ratio};
-  }
+  const width=Math.max(720,Number(vw)||1280),height=Math.max(520,Number(vh)||720);
+  // Production crop from the approved 960x540 body asset: x=37..925, y=67..330.
+  // This keeps both fixed galaxies visible while the enormous body remains mostly offscreen above the arena.
+  const ratio=888/263,w=Math.max(width*1.06,height*1.95),h=w/ratio;
+  const visibleDepth=Math.max(300,Math.min(420,height*.42));
+  return{x:(width-w)*.5,y:visibleDepth-h,w,h,visibleDepth,ratio};
+}
   function drawFallbackBody(frame){
     // Fail-safe only: an active encounter must never become visually empty if the raster fails to decode.
     ctx.save();ctx.fillStyle='rgba(0,0,8,.985)';ctx.shadowColor='rgba(215,229,255,.18)';ctx.shadowBlur=18;
@@ -218,7 +220,7 @@ function activate(){return beginPreparation();}
     const phase=Math.max(1,Math.min(4,preview.phase)),death=preview.defeating?clamp01(preview.defeatAge/3.15):0,base=answerFrame();
     const t=performance.now()*.001,bob=Math.sin(t*.34)*1.25,drift=Math.sin(t*.17)*.75,frame={...base,x:base.x+drift,y:base.y+bob};
     if(answerBodyReady){
-      ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowColor='rgba(206,222,255,.14)';ctx.shadowBlur=14;ctx.drawImage(answerBodyImage,frame.x,frame.y,frame.w,frame.h);ctx.restore();
+      ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowColor='rgba(206,222,255,.14)';ctx.shadowBlur=14;ctx.drawImage(answerBodyImage,37,67,888,263,frame.x,frame.y,frame.w,frame.h);ctx.restore();
     }else drawFallbackBody(frame);
     drawAnswerFissures(frame,phase);
     if(death>.12){
