@@ -17,42 +17,30 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: feature/void-apex-answer-v1
-      - name: Inspect answer body alpha and brightness
+      - name: Inspect answer body container
         shell: bash
         run: |
+          set +e
+          echo '--- ls/file ---'
+          ls -l assets/answer/answer_body_base.webp
+          file assets/answer/answer_body_base.webp
+          echo '--- header ---'
+          xxd -l 96 assets/answer/answer_body_base.webp
+          echo '--- ffprobe ---'
+          command -v ffprobe && ffprobe -v error -show_streams -show_format assets/answer/answer_body_base.webp
+          echo '--- imagemagick ---'
+          command -v identify && identify -verbose assets/answer/answer_body_base.webp | head -80
+          echo '--- pillow feature/decode ---'
           python3 -m pip install pillow --quiet
           python3 - <<'PY'
-          from PIL import Image
+          from PIL import Image, features
           p='assets/answer/answer_body_base.webp'
-          im=Image.open(p).convert('RGBA')
-          w,h=im.size
-          px=im.load()
-          print('SIZE',w,h,'MODE',im.mode)
-          for th in [1,2,8,18,32,64,128,192]:
-              pts=[]; lum=[]
-              for y in range(h):
-                  for x in range(w):
-                      r,g,b,a=px[x,y]
-                      if a>=th:
-                          pts.append((x,y));lum.append((r+g+b)/3)
-              if not pts:
-                  print('TH',th,'EMPTY');continue
-              xs=[q[0] for q in pts];ys=[q[1] for q in pts]
-              print('TH',th,'COUNT',len(pts),'COVER',round(len(pts)/(w*h),4),'BBOX',min(xs),min(ys),max(xs),max(ys),'YFRAC',round(min(ys)/h,3),round(max(ys)/h,3),'LUM',round(sum(lum)/len(lum),2))
-          # 70x30 alpha/luminance map; upper-case = bright opaque, lower-case = dark opaque, spaces = transparent
-          sw,sh=70,30
-          small=im.resize((sw,sh),Image.Resampling.BILINEAR)
-          chars=' .:-=+*#%@'
-          print('ASCII_BEGIN')
-          for y in range(sh):
-              row=''
-              for x in range(sw):
-                  r,g,b,a=small.getpixel((x,y))
-                  if a<8: row+=' '
-                  else:
-                      lum=(r+g+b)/3
-                      score=(a/255)*0.58+(lum/255)*0.42
-                      row+=chars[min(len(chars)-1,int(score*(len(chars)-1)))]
-              print(row)
-          print('ASCII_END')
+          print('PIL_WEBP', features.check('webp'))
+          try:
+              im=Image.open(p)
+              print('PIL_OPEN',im.format,im.size,im.mode,getattr(im,'n_frames',1))
+              im=im.convert('RGBA')
+              print('PIL_CONVERT_OK')
+          except Exception as e:
+              print('PIL_FAIL',type(e).__name__,repr(e))
           PY
