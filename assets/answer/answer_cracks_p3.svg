@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="394" viewBox="0 0 100 100" preserveAspectRatio="none">
+<defs><filter id="g" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="0.54"/></filter></defs>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+<g stroke="#fff" stroke-width="0.90" opacity="0.17" filter="url(#g)">
+<path d="M50.5 70 L50 77 L51.2 84 L50.2 91 L51.5 98"/><path d="M50.5 79 L45.5 78 L41 76 L36 74"/><path d="M50.7 84 L55.8 82 L61 79 L66 75"/><path d="M45.5 78 L42 84 L38 89 L33.2 93"/><path d="M55.8 82 L60 87 L64.6 91 L70.6 94"/><path d="M36 74 L30.5 72 L25 70 L19.8 68"/><path d="M66 75 L71.5 72 L77 70 L82.5 68"/><path d="M33.2 93 L28.6 95 L23.6 96"/><path d="M70.6 94 L75.8 95 L81.2 94"/>
+</g>
+<g stroke="#fff" stroke-width="0.22" opacity="1">
+<path d="M50.5 70 L50 77 L51.2 84 L50.2 91 L51.5 98"/><path d="M50.5 79 L45.5 78 L41 76 L36 74"/><path d="M50.7 84 L55.8 82 L61 79 L66 75"/><path d="M45.5 78 L42 84 L38 89 L33.2 93"/><path d="M55.8 82 L60 87 L64.6 91 L70.6 94"/><path d="M36 74 L30.5 72 L25 70 L19.8 68"/><path d="M66 75 L71.5 72 L77 70 L82.5 68"/><path d="M33.2 93 L28.6 95 L23.6 96"/><path d="M70.6 94 L75.8 95 L81.2 94"/>
+</g></g></svg>
