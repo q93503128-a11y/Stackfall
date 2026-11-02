@@ -7,6 +7,11 @@ const fingerprint=read('scripts/build-fingerprint.mjs');
 const catalog=read('src/boss-catalog.js');
 const events=read('src/map-event-expansion.js');
 const bodyAsset='assets/answer/answer_body_base.webp';
+const bodyAssetBytes=fs.existsSync(bodyAsset)?fs.readFileSync(bodyAsset):Buffer.alloc(0);
+const bodyAssetRiffValid=bodyAssetBytes.length>=12
+  &&bodyAssetBytes.subarray(0,4).toString('ascii')==='RIFF'
+  &&bodyAssetBytes.subarray(8,12).toString('ascii')==='WEBP'
+  &&bodyAssetBytes.readUInt32LE(4)+8===bodyAssetBytes.length;
 const parsesAsJavaScript=(()=>{try{new Function(answer);return true;}catch{return false;}})();
 const checks=[
   ['prototype source parses as JavaScript',parsesAsJavaScript],
@@ -16,9 +21,10 @@ const checks=[
   ['fixed arena camera keeps player world coordinates authoritative',answer.includes('cameraOffset()')&&answer.includes('withFixedArenaCamera')&&answer.includes('ctx.translate(offset.x,offset.y)')&&!answer.includes('preview.realX=player.x')],
   ['fixed arena background is rendered from the frozen camera origin',answer.includes('function drawFrozenArenaBackground()')&&answer.includes('player.x=preview.camX')&&answer.includes('player.y=preview.camY')&&answer.includes('player.moveVX=0')&&answer.includes('player.moveVY=0')&&answer.includes('player.moveIntensity=0')&&answer.includes('player.x=snapshot.x')&&answer.includes('player.y=snapshot.y')],
   ['player movement is bounded to the lower combat region',answer.includes('clampPlayerToArena')&&answer.includes('top:height*.40')&&answer.includes('bottom:height*.925')],
-  ['Answer V10 renders the approved raster cosmic body asset directly',answer.includes("STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v10'")&&answer.includes("const ANSWER_BODY_SRC='assets/answer/answer_body_base.webp'")&&answer.includes('ctx.drawImage(answerBodyImage,frame.x,frame.y,frame.w,frame.h)')&&fs.existsSync(bodyAsset)],
+  ['Answer V13 renders the approved raster cosmic body asset crop directly',answer.includes("STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v13'")&&answer.includes("const ANSWER_BODY_SRC='assets/answer/answer_body_base.webp'")&&answer.includes('ctx.drawImage(answerBodyImage,37,67,888,263,frame.x,frame.y,frame.w,frame.h)')&&fs.existsSync(bodyAsset)],
+  ['approved raster WebP container is complete and not truncated',bodyAssetRiffValid],
   ['Answer has a dedicated clean render stage after the realm background and before world objects',render.includes("runDrawStage('drawBackground',drawBackground);")&&render.includes("runDrawStage('drawVoidApexAnswerBackground',window.stackfallDrawVoidApexAnswerBackground)")&&answer.includes('window.stackfallDrawVoidApexAnswerBackground=function drawVoidApexAnswerBackground()')],
-  ['body framing preserves raster aspect ratio and keeps only the lower edge in the upper screen',answer.includes('h=w/ratio')&&answer.includes('visibleDepth=Math.max(190,Math.min(300,height*.30))')&&answer.includes('y:visibleDepth-h')],
+  ['body framing uses the approved galaxy-bearing canopy crop and reserves player space',answer.includes('const ratio=888/263')&&answer.includes('visibleDepth=Math.max(300,Math.min(420,height*.42))')&&answer.includes('y:visibleDepth-h')],
   ['body is phase-invariant and only screen-space fissures escalate across P1-P4',answer.includes('const PHASE_CRACK_COUNT=[3,6,9,13]')&&answer.includes('function drawAnswerFissures(frame,phase)')&&answer.includes('drawAnswerFissures(frame,phase)')&&!answer.includes('buildAnswerBodyLayer(phase)')],
   ['active encounter has a visible fail-safe if the raster is not ready',answer.includes('function drawFallbackBody(frame)')&&answer.includes('if(answerBodyReady)')&&answer.includes('else drawFallbackBody(frame)')],
   ['boss motion remains restrained',answer.includes('bob=Math.sin(t*.34)*1.25')&&answer.includes('drift=Math.sin(t*.17)*.75')],
