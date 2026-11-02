@@ -1,0 +1,95 @@
+name: Answer V14 inline exact asset
+
+on:
+  push:
+    branches:
+      - feature/void-apex-answer-v1
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  inline:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/void-apex-answer-v1
+          fetch-depth: 0
+
+      - name: Verify exact q55 bytes and inline asset
+        shell: python
+        run: |
+          from pathlib import Path
+          import base64, hashlib, re
+
+          expected='cc02c44e16e4f2333277eb538237178ed736efbf2bd0261f154fb2f3ce74553d'
+          b64_path=Path('assets/answer/answer_body_base.b64')
+          b64=''.join(b64_path.read_text(encoding='utf-8').split())
+          raw=base64.b64decode(b64, validate=True)
+          actual=hashlib.sha256(raw).hexdigest()
+          assert len(raw)==13042, len(raw)
+          assert actual==expected, (actual, expected)
+          assert raw[:4]==b'RIFF' and raw[8:12]==b'WEBP'
+          assert int.from_bytes(raw[4:8],'little')+8==len(raw)
+          assert raw[12:16]==b'VP8X'
+          w=1+int.from_bytes(raw[24:27],'little')
+          h=1+int.from_bytes(raw[27:30],'little')
+          assert (w,h)==(960,540),(w,h)
+          print('Verified exact q55:',len(raw),'bytes',w,'x',h,actual)
+
+          source=Path('src/void-apex-answer-v1.js')
+          s=source.read_text(encoding='utf-8')
+          assert "STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v13'" in s
+          assert "const ANSWER_BODY_SRC='assets/answer/answer_body_base.webp';" in s
+          s=s.replace("STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v13'","STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v14'",1)
+          s=s.replace("// V10 visual lock: the approved raster body is drawn directly in a dedicated render stage.","// V14 visual lock: exact approved q55 raster bytes are embedded as a data URI to prevent binary transport corruption.",1)
+          s=s.replace("const ANSWER_BODY_SRC='assets/answer/answer_body_base.webp';",f"const ANSWER_BODY_SRC='data:image/webp;base64,{b64}';",1)
+          source.write_text(s,encoding='utf-8')
+
+          contract=Path('scripts/void-apex-answer-contract.mjs')
+          c=contract.read_text(encoding='utf-8')
+          c=c.replace("import fs from 'node:fs';","import fs from 'node:fs';\nimport {createHash} from 'node:crypto';",1)
+          block=re.compile(r"const bodyAsset='assets/answer/answer_body_base\.webp';\nconst bodyAssetBytes=.*?bodyAssetBytes\.length;\n",re.S)
+          replacement="""const bodyDataMatch=answer.match(/const ANSWER_BODY_SRC='data:image\\/webp;base64,([^']+)'/);\nconst bodyAssetBytes=bodyDataMatch?Buffer.from(bodyDataMatch[1],'base64'):Buffer.alloc(0);\nconst bodyAssetHash=createHash('sha256').update(bodyAssetBytes).digest('hex');\nconst bodyAssetExact=bodyAssetBytes.length===13042\n  &&bodyAssetHash==='cc02c44e16e4f2333277eb538237178ed736efbf2bd0261f154fb2f3ce74553d'\n  &&bodyAssetBytes.subarray(0,4).toString('ascii')==='RIFF'\n  &&bodyAssetBytes.subarray(8,12).toString('ascii')==='WEBP'\n  &&bodyAssetBytes.readUInt32LE(4)+8===bodyAssetBytes.length;\n"""
+          c,n=block.subn(replacement,c,count=1)
+          assert n==1,n
+          old="['Answer V13 renders the approved raster cosmic body asset crop directly',answer.includes(\"STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v13'\")&&answer.includes(\"const ANSWER_BODY_SRC='assets/answer/answer_body_base.webp'\")&&answer.includes('ctx.drawImage(answerBodyImage,37,67,888,263,frame.x,frame.y,frame.w,frame.h)')&&fs.existsSync(bodyAsset)],\n  ['approved raster WebP container is complete and not truncated',bodyAssetRiffValid],"
+          new="['Answer V14 renders the exact approved q55 raster crop from an embedded data URI',answer.includes(\"STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v14'\")&&answer.includes(\"const ANSWER_BODY_SRC='data:image/webp;base64,\")&&answer.includes('ctx.drawImage(answerBodyImage,37,67,888,263,frame.x,frame.y,frame.w,frame.h)')],\n  ['embedded q55 raster bytes are exact and container-complete',bodyAssetExact],"
+          assert old in c
+          c=c.replace(old,new,1)
+          oldfp="['build fingerprint tracks the prototype contract and cosmic body asset',fingerprint.includes(\"'src/void-apex-answer-v1.js'\")&&fingerprint.includes(\"'void-apex-answer-contract.mjs'\")&&fingerprint.includes(\"'assets/answer/answer_body_base.webp'\")]"
+          newfp="['build fingerprint tracks the prototype source and contract without a mutable binary body asset',fingerprint.includes(\"'src/void-apex-answer-v1.js'\")&&fingerprint.includes(\"'void-apex-answer-contract.mjs'\")&&!fingerprint.includes(\"'assets/answer/answer_body_base.webp'\")]"
+          assert oldfp in c
+          c=c.replace(oldfp,newfp,1)
+          contract.write_text(c,encoding='utf-8')
+
+          fp=Path('scripts/build-fingerprint.mjs')
+          f=fp.read_text(encoding='utf-8')
+          old_dyn="'src/combat-integrity-v1.js','src/endless-pressure-rewards-v1.js','src/void-apex-answer-v1.js','assets/answer/answer_body_base.webp'"
+          new_dyn="'src/combat-integrity-v1.js','src/endless-pressure-rewards-v1.js','src/void-apex-answer-v1.js'"
+          assert old_dyn in f
+          f=f.replace(old_dyn,new_dyn,1)
+          fp.write_text(f,encoding='utf-8')
+
+      - name: Remove mutable binary staging files
+        run: git rm assets/answer/answer_body_base.webp assets/answer/answer_body_base.b64
+
+      - name: Validate V14 and all contracts
+        run: |
+          node --check src/void-apex-answer-v1.js
+          node scripts/void-apex-answer-contract.mjs
+          node scripts/build-fingerprint.mjs
+          grep -F "STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v14'" src/void-apex-answer-v1.js
+          grep -F "const ANSWER_BODY_SRC='data:image/webp;base64," src/void-apex-answer-v1.js >/dev/null
+          ! grep -Fq "assets/answer/answer_body_base.webp" scripts/build-fingerprint.mjs
+
+      - name: Commit V14 exact embedded asset
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/void-apex-answer-v1.js scripts/void-apex-answer-contract.mjs scripts/build-fingerprint.mjs src/build-info.js
+          git commit -m 'Embed exact Answer q55 body asset as V14'
+          git push origin HEAD:feature/void-apex-answer-v1
