@@ -1,0 +1,58 @@
+name: Answer Asset Audit
+
+on:
+  push:
+    branches:
+      - feature/void-apex-answer-v1
+    paths:
+      - .github/workflows/answer-asset-audit.yml
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/void-apex-answer-v1
+      - name: Inspect answer body alpha and brightness
+        shell: bash
+        run: |
+          python3 -m pip install pillow --quiet
+          python3 - <<'PY'
+          from PIL import Image
+          p='assets/answer/answer_body_base.webp'
+          im=Image.open(p).convert('RGBA')
+          w,h=im.size
+          px=im.load()
+          print('SIZE',w,h,'MODE',im.mode)
+          for th in [1,2,8,18,32,64,128,192]:
+              pts=[]; lum=[]
+              for y in range(h):
+                  for x in range(w):
+                      r,g,b,a=px[x,y]
+                      if a>=th:
+                          pts.append((x,y));lum.append((r+g+b)/3)
+              if not pts:
+                  print('TH',th,'EMPTY');continue
+              xs=[q[0] for q in pts];ys=[q[1] for q in pts]
+              print('TH',th,'COUNT',len(pts),'COVER',round(len(pts)/(w*h),4),'BBOX',min(xs),min(ys),max(xs),max(ys),'YFRAC',round(min(ys)/h,3),round(max(ys)/h,3),'LUM',round(sum(lum)/len(lum),2))
+          # 70x30 alpha/luminance map; upper-case = bright opaque, lower-case = dark opaque, spaces = transparent
+          sw,sh=70,30
+          small=im.resize((sw,sh),Image.Resampling.BILINEAR)
+          chars=' .:-=+*#%@'
+          print('ASCII_BEGIN')
+          for y in range(sh):
+              row=''
+              for x in range(sw):
+                  r,g,b,a=small.getpixel((x,y))
+                  if a<8: row+=' '
+                  else:
+                      lum=(r+g+b)/3
+                      score=(a/255)*0.58+(lum/255)*0.42
+                      row+=chars[min(len(chars)-1,int(score*(len(chars)-1)))]
+              print(row)
+          print('ASCII_END')
+          PY
