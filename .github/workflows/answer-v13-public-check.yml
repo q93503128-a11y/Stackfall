@@ -1,0 +1,44 @@
+name: Answer V13 public preview check
+
+on:
+  push:
+    branches:
+      - feature/void-apex-answer-v1
+
+permissions:
+  contents: read
+
+jobs:
+  public-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch deployed V13 source and asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://feature-void-apex-answer-v1.stackfall.pages.dev'
+          for i in {1..18}; do
+            if curl -fsSL --max-time 15 "$BASE/src/void-apex-answer-v1.js?sha=${GITHUB_SHA}&try=$i" -o /tmp/answer.js \
+              && grep -Fq "STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v13'" /tmp/answer.js \
+              && grep -Fq 'drawImage(answerBodyImage,37,67,888,263' /tmp/answer.js \
+              && curl -fsSL --max-time 15 "$BASE/assets/answer/answer_body_base.webp?sha=${GITHUB_SHA}&try=$i" -o /tmp/answer.webp; then
+              break
+            fi
+            sleep 5
+          done
+          grep -Fq "STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v13'" /tmp/answer.js
+          grep -Fq 'drawImage(answerBodyImage,37,67,888,263' /tmp/answer.js
+          test -s /tmp/answer.webp
+      - name: Verify deployed WebP bytes
+        shell: python
+        run: |
+          from pathlib import Path
+          b=Path('/tmp/answer.webp').read_bytes()
+          assert len(b)>=30,len(b)
+          assert b[:4]==b'RIFF' and b[8:12]==b'WEBP',b[:12]
+          assert int.from_bytes(b[4:8],'little')+8==len(b),(int.from_bytes(b[4:8],'little')+8,len(b))
+          assert b[12:16]==b'VP8X',b[12:16]
+          w=1+int.from_bytes(b[24:27],'little')
+          h=1+int.from_bytes(b[27:30],'little')
+          assert (w,h)==(960,540),(w,h)
+          print('Public preview Answer asset OK',len(b),'bytes',w,'x',h)
