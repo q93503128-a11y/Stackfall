@@ -5,6 +5,7 @@ const buildInfo=read('src/build-info.js');
 const fingerprint=read('scripts/build-fingerprint.mjs');
 const catalog=read('src/boss-catalog.js');
 const events=read('src/map-event-expansion.js');
+const bodyAsset='assets/answer/answer_body_base.webp';
 const parsesAsJavaScript=(()=>{try{new Function(answer);return true;}catch{return false;}})();
 const checks=[
   ['prototype source parses as JavaScript',parsesAsJavaScript],
@@ -13,11 +14,12 @@ const checks=[
   ['prototype suppresses ordinary spawns and map-event updates during preparation and combat',answer.includes('if(preview.active||preview.preparing)return;return baseUpdateSpawning')&&answer.includes('if(preview.active||preview.preparing)return;return baseUpdateMapEvents')],
   ['fixed arena camera keeps player world coordinates authoritative',answer.includes('cameraOffset()')&&answer.includes('withFixedArenaCamera')&&answer.includes('ctx.translate(offset.x,offset.y)')&&!answer.includes('preview.realX=player.x')],
   ['player movement is bounded to the lower combat region',answer.includes('clampPlayerToArena')&&answer.includes('top:height*.40')&&answer.includes('bottom:height*.925')],
-  ['Answer body is a cached phase-invariant cosmic layer',answer.includes("STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v6'")&&answer.includes('const bodyCache=')&&answer.includes('renderBodyCache()')&&answer.includes('V6 visual lock: the body, stars and galaxies never change between phases')&&!answer.includes('function cosmicGradient(')],
-  ['galaxies and stars are present from P1 and do not phase-gate',answer.includes('drawGalaxy(b,w*.19')&&answer.includes('for(let i=0;i<190;i++')&&!answer.includes('phase===1?42:phase===2')],
-  ['only fissure count and brightness escalate across P1-P4',answer.includes('const PHASE_CRACK_COUNT=[3,6,9,13]')&&answer.includes('drawFissures(w,h,phase,death)')&&answer.includes('phaseCount=PHASE_CRACK_COUNT')],
+  ['Answer V7 renders the approved raster cosmic body asset',answer.includes("STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v7'")&&answer.includes("const ANSWER_BODY_SRC='assets/answer/answer_body_base.webp'")&&answer.includes('const answerBodyImage=new Image()')&&answer.includes('answerBodyImage.src=ANSWER_BODY_SRC')&&answer.includes('drawBodyAsset(frame)')&&fs.existsSync(bodyAsset)],
+  ['body asset is phase-invariant and only fissures escalate across P1-P4',answer.includes('const PHASE_CRACK_COUNT=[3,6,9,13]')&&answer.includes('drawFissures(frame,phase,death)')&&answer.includes('PHASE_CRACK_COUNT[Math.max(0,Math.min(3,phase-1))]')&&!answer.includes('phase===1?42:phase===2')],
+  ['boss motion remains restrained to subtle float and twinkle',answer.includes('bob=Math.sin(t*.34)*2.0')&&answer.includes('drift=Math.sin(t*.17)*1.2')&&answer.includes('drawTwinkles(frame)')],
+  ['asset load state is observable for runtime verification',answer.includes('answerBodyReady')&&answer.includes('answerBodyFailed')&&answer.includes('naturalWidth:answerBodyImage.naturalWidth||0')],
   ['four visual phases are exposed in dev controls',answer.includes("button('P1 · 봉쇄'")&&answer.includes("button('P2 · 노출'")&&answer.includes("button('P3 · 증폭'")&&answer.includes("button('P4 · 응답'")&&answer.includes('Math.min(4')],
-  ['boss motion is restrained to subtle float and twinkle',answer.includes('bob=Math.sin(t*.34)*2.4')&&answer.includes('drift=Math.sin(t*.17)*1.4')&&answer.includes('drawTwinkles(w,h)')],
+  ['developer controls retry after panel initialization',answer.includes('setTimeout(installDevControls,250)')&&answer.includes('setTimeout(installDevControls,1000)')],
   ['Void entry threat presentation supports 25 50 75 and 100 percent bands',answer.includes('data-band="25"')&&answer.includes('data-band="50"')&&answer.includes('data-band="75"')&&answer.includes('data-band="100"')&&answer.includes('setAnswerThreat')],
   ['entry threat changes shell cards and soft light spill, not only a white overlay',answer.includes('.answer-threat-spill')&&answer.includes('world-event-card{filter:saturate(.70)')&&answer.includes('shell.style.background=')],
   ['pre-fight preparation uses the canonical suction magnet path',answer.includes("typeof window.stackfallCollectSuctionMagnet==='function'")&&answer.includes('preview.preflightGemCount')&&answer.includes('preview.preflightXp')],
@@ -26,7 +28,7 @@ const checks=[
   ['defeat sequence leaks white light then leaves brighter aftermath state',answer.includes('startDefeat')&&answer.includes('finishDefeat')&&answer.includes('drawAftermathOverlay')&&answer.includes('state.answerVoidSealed=true')],
   ['developer preview controls are isolated to dev mode',answer.includes("document.querySelector('#stackfallDevPanel')")&&answer.includes('if(!dev?.enabled||!panel')],
   ['dynamic loader includes the prototype',buildInfo.includes('src/void-apex-answer-v1.js')&&buildInfo.includes('data-void-apex-answer-v1')],
-  ['build fingerprint tracks the prototype and its contract',fingerprint.includes("'src/void-apex-answer-v1.js'")&&fingerprint.includes("'void-apex-answer-contract.mjs'")]
+  ['build fingerprint tracks the prototype contract and cosmic body asset',fingerprint.includes("'src/void-apex-answer-v1.js'")&&fingerprint.includes("'void-apex-answer-contract.mjs'")&&fingerprint.includes("'assets/answer/answer_body_base.webp'")]
 ];
 let failed=0;
 for(const [name,ok] of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failed++;}
