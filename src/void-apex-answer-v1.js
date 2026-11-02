@@ -6,13 +6,13 @@
   if(window.stackfallVoidApexAnswer==='v1')return;
   window.stackfallVoidApexAnswer='v1';
   window.STACKFALL_VOID_APEX_ANSWER_PROTOTYPE_ONLY=true;
-  window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v8';
+  window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v9';
 
   const TAU_LOCAL=Math.PI*2;
   const preview={
     active:false,preparing:false,phase:1,hpRatio:1,defeating:false,defeatAge:0,
     camX:0,camY:0,aftermath:false,runSerial:null,threat:0,preflightXp:0,
-    preflightGemCount:0,choiceGateOwned:false
+    preflightGemCount:0,choiceGateOwned:false,prepStage:'idle',prepBlock:'',prepElapsed:0
   };
   const clamp01=v=>Math.max(0,Math.min(1,Number(v)||0));
   const language=()=>GAME_SETTINGS?.language||'ko';
@@ -38,10 +38,25 @@
     };
   }
   function cameraOffset(){return{x:player.x-preview.camX,y:player.y-preview.camY};}
-  function releasePreparationGate(){if(preview.choiceGateOwned){state.choiceLocked=false;preview.choiceGateOwned=false;}}
+  function staleChoiceLock(){
+  const hidden=!ui?.choice||ui.choice.classList.contains('hidden');
+  return state.mode==='playing'&&state.choiceLocked===true&&state.choiceOpening!==true&&hidden;
+}
+function normalizeStaleChoiceLock(){
+  if(!staleChoiceLock())return false;
+  state.choiceLocked=false;
+  return true;
+}
+function acquirePreparationGate(){
+  normalizeStaleChoiceLock();
+  if(state.mode!=='playing'||state.choiceOpening===true||state.choiceLocked===true)return false;
+  state.choiceLocked=true;preview.choiceGateOwned=true;return true;
+}
+function releasePreparationGate(){if(preview.choiceGateOwned){state.choiceLocked=false;preview.choiceGateOwned=false;}}
+function setPrepState(stage,block=''){preview.prepStage=stage;preview.prepBlock=block;syncDevStatus();}
   function clearPreviewState(){
     releasePreparationGate();
-    Object.assign(preview,{active:false,preparing:false,defeating:false,defeatAge:0,aftermath:false,runSerial:null,preflightXp:0,preflightGemCount:0});
+    Object.assign(preview,{active:false,preparing:false,defeating:false,defeatAge:0,aftermath:false,runSerial:null,preflightXp:0,preflightGemCount:0,prepStage:'idle',prepBlock:'',prepElapsed:0});
     state.answerVoidApexPreview=false;state.answerVoidApexPreparing=false;state.answerVoidSealed=false;
     document.documentElement.dataset.answerPreview='0';document.documentElement.dataset.answerPreparing='0';syncBossHud();
   }
@@ -74,46 +89,60 @@
     return true;
   }
   function activatePreparedEncounter(){
-    if(!preview.preparing||state.mode!=='playing'||state.choiceLocked||state.xp>=state.xpNeed)return false;
-    releasePreparationGate();
-    preview.preparing=false;preview.active=true;preview.phase=1;preview.hpRatio=1;preview.defeating=false;preview.defeatAge=0;preview.aftermath=false;
-    state.answerVoidApexPreparing=false;state.answerVoidApexPreview=true;state.answerVoidSealed=false;
-    document.documentElement.dataset.answerPreparing='0';document.documentElement.dataset.answerPreview='1';
-    preview.camX=player.x;preview.camY=player.y-(Number(vh)||720)*.205;
-    player.y=preview.camY+(Number(vh)||720)*.225;player.invuln=Math.max(Number(player.invuln)||0,1.2);
-    clampPlayerToArena();syncBossHud();state.camera.shake=Math.max(Number(state.camera.shake)||0,3.5);state.flash=Math.max(Number(state.flash)||0,.02);
-    try{audio?.tone?.(42,.34,'sawtooth',.022,-8);}catch{}
-    return true;
+  if(!preview.preparing||activeExperienceGems().length||state.choiceOpening===true||state.mode!=='playing'||state.choiceLocked||state.xp>=state.xpNeed)return false;
+  releasePreparationGate();
+  preview.preparing=false;preview.active=true;preview.phase=1;preview.hpRatio=1;preview.defeating=false;preview.defeatAge=0;preview.aftermath=false;
+  preview.prepStage='active';preview.prepBlock='';preview.prepElapsed=0;
+  state.answerVoidApexPreparing=false;state.answerVoidApexPreview=true;state.answerVoidSealed=false;
+  document.documentElement.dataset.answerPreparing='0';document.documentElement.dataset.answerPreview='1';
+  preview.camX=player.x;preview.camY=player.y-(Number(vh)||720)*.205;
+  player.y=preview.camY+(Number(vh)||720)*.225;player.invuln=Math.max(Number(player.invuln)||0,1.2);
+  clampPlayerToArena();syncBossHud();syncDevStatus();state.camera.shake=Math.max(Number(state.camera.shake)||0,3.5);state.flash=Math.max(Number(state.flash)||0,.02);
+  try{audio?.tone?.(42,.34,'sawtooth',.022,-8);}catch{}
+  return true;
+}
+function activeExperienceGems(){
+  const gems=state.entities?.gems||[];
+  return gems.filter(g=>typeof experienceGemActive==='function'?experienceGemActive(g):!!(g&&g.active!==false));
+}
+function advancePreparation(){
+  if(!preview.preparing)return false;
+  const gems=activeExperienceGems();
+  if(gems.length){setPrepState('collecting-xp',`${gems.length} gems`);return false;}
+  releasePreparationGate();
+  if(state.mode==='choice'||state.choiceOpening===true||state.choiceLocked===true){setPrepState('resolving-level-choice','choice-busy');return false;}
+  if(state.mode!=='playing'){setPrepState('waiting-mode',String(state.mode||'unknown'));return false;}
+  if(state.xp>=state.xpNeed){
+    setPrepState('opening-level-choice','xp-ready');
+    try{tryLevelUp();}catch(error){console.error('[Stackfall] Answer preflight level-up failed',error);setPrepState('blocked','level-up-error');return false;}
+    if(state.mode==='playing'&&state.choiceOpening!==true&&state.choiceLocked!==true&&state.xp<state.xpNeed)return activatePreparedEncounter();
+    return false;
   }
-  function activeExperienceGems(){
-    const gems=state.entities?.gems||[];
-    return gems.filter(g=>typeof experienceGemActive==='function'?experienceGemActive(g):!!(g&&g.active!==false));
-  }
-  function prepareLevelChoicesWhenReady(){
-    if(!preview.preparing||activeExperienceGems().length)return false;
-    releasePreparationGate();
-    if(state.mode==='playing'&&state.xp>=state.xpNeed){try{tryLevelUp();}catch{}return false;}
-    if(state.mode!=='playing'||state.choiceLocked||state.xp>=state.xpNeed)return false;
-    return activatePreparedEncounter();
-  }
-  function beginPreparation(){
-    if(state.mode!=='playing'||preview.active||preview.preparing)return false;
-    clearHostileField();
-    Object.assign(preview,{preparing:true,active:false,phase:1,hpRatio:1,defeating:false,defeatAge:0,aftermath:false,runSerial:state.runSerial,preflightXp:0,preflightGemCount:0});
-    state.answerVoidApexPreparing=true;state.answerVoidApexPreview=false;state.answerVoidSealed=false;
-    document.documentElement.dataset.answerPreparing='1';document.documentElement.dataset.answerPreview='0';
-    if(!state.choiceLocked){state.choiceLocked=true;preview.choiceGateOwned=true;}
-    player.invuln=Math.max(Number(player.invuln)||0,5);
-    let pulled={count:0,value:0};
-    try{if(typeof window.stackfallCollectSuctionMagnet==='function')pulled=window.stackfallCollectSuctionMagnet()||pulled;}catch{}
-    preview.preflightGemCount=Math.max(0,Number(pulled.count)||0);preview.preflightXp=Math.max(0,Number(pulled.value)||0);
-    try{shockwave(player.x,player.y,'#ffdf79',105,.42,2.2);spawnParticle(player.x,player.y,'#fff3ba',12,125,2.5);audio?.pickup?.();}catch{}
-    if(preview.preflightGemCount===0)queueMicrotask(prepareLevelChoicesWhenReady);
-    return true;
-  }
-  function activate(){return beginPreparation();}
+  setPrepState('ready','');
+  return activatePreparedEncounter();
+}
+function prepareLevelChoicesWhenReady(){return advancePreparation();}
+function beginPreparation(){
+  if(state.mode!=='playing'||preview.active||preview.preparing)return false;
+  normalizeStaleChoiceLock();
+  if(!acquirePreparationGate()){preview.prepStage='blocked';preview.prepBlock='choice-busy';syncDevStatus();return false;}
+  try{clearHostileField();}catch(error){releasePreparationGate();preview.prepStage='blocked';preview.prepBlock='field-clear-error';syncDevStatus();console.error('[Stackfall] Answer preflight field clear failed',error);return false;}
+  Object.assign(preview,{preparing:true,active:false,phase:1,hpRatio:1,defeating:false,defeatAge:0,aftermath:false,runSerial:state.runSerial,preflightXp:0,preflightGemCount:0,prepStage:'collecting-xp',prepBlock:'',prepElapsed:0});
+  preview.choiceGateOwned=true;
+  state.answerVoidApexPreparing=true;state.answerVoidApexPreview=false;state.answerVoidSealed=false;
+  document.documentElement.dataset.answerPreparing='1';document.documentElement.dataset.answerPreview='0';
+  player.invuln=Math.max(Number(player.invuln)||0,5);
+  let pulled={count:0,value:0};
+  try{if(typeof window.stackfallCollectSuctionMagnet==='function')pulled=window.stackfallCollectSuctionMagnet()||pulled;}catch(error){releasePreparationGate();preview.preparing=false;state.answerVoidApexPreparing=false;preview.prepStage='blocked';preview.prepBlock='xp-magnet-error';syncDevStatus();console.error('[Stackfall] Answer preflight suction failed',error);return false;}
+  preview.preflightGemCount=Math.max(0,Number(pulled.count)||0);preview.preflightXp=Math.max(0,Number(pulled.value)||0);
+  try{shockwave(player.x,player.y,'#ffdf79',105,.42,2.2);spawnParticle(player.x,player.y,'#fff3ba',12,125,2.5);audio?.pickup?.();}catch{}
+  syncDevStatus();
+  if(preview.preflightGemCount===0)queueMicrotask(advancePreparation);
+  return true;
+}
+function activate(){return beginPreparation();}
   function stop(){
-    releasePreparationGate();preview.active=false;preview.preparing=false;preview.defeating=false;preview.defeatAge=0;preview.aftermath=false;
+    releasePreparationGate();preview.active=false;preview.preparing=false;preview.defeating=false;preview.defeatAge=0;preview.aftermath=false;preview.prepStage='idle';preview.prepBlock='';preview.prepElapsed=0;
     state.answerVoidApexPreview=false;state.answerVoidApexPreparing=false;document.documentElement.dataset.answerPreview='0';document.documentElement.dataset.answerPreparing='0';syncBossHud();return true;
   }
   function startDefeat(){
@@ -122,13 +151,13 @@
     state.camera.shake=Math.max(Number(state.camera.shake)||0,5.5);try{audio?.tone?.(52,.52,'sine',.022,18);}catch{}syncBossHud();return true;
   }
   function finishDefeat(){
-    state.answerVoidSealed=true;preview.active=false;preview.defeating=false;preview.aftermath=true;state.answerVoidApexPreview=false;
+    state.answerVoidSealed=true;preview.active=false;preview.defeating=false;preview.aftermath=true;preview.prepStage='aftermath';preview.prepBlock='';state.answerVoidApexPreview=false;
     document.documentElement.dataset.answerPreview='0';state.camera.shake=Math.max(Number(state.camera.shake)||0,12);state.flash=Math.max(Number(state.flash)||0,.26);
     try{audio?.tone?.(36,.48,'sawtooth',.045,-16);audio?.tone?.(92,.26,'sine',.028,-30);}catch{}syncBossHud();
   }
   function updatePrototype(dt){
     ensureRunIdentity();const step=Math.max(0,Number(dt)||0);
-    if(preview.preparing){player.invuln=Math.max(Number(player.invuln)||0,.35);prepareLevelChoicesWhenReady();return;}
+    if(preview.preparing){preview.prepElapsed+=step;player.invuln=Math.max(Number(player.invuln)||0,.35);advancePreparation();syncDevStatus();return;}
     if(!preview.active)return;
     clampPlayerToArena();if(preview.defeating){preview.defeatAge+=step;if(preview.defeatAge>=3.15)finishDefeat();}syncBossHud();
   }
@@ -138,12 +167,12 @@
   const ANSWER_BODY_SRC='assets/answer/answer_body_base.webp';
   const answerBodyImage=new Image();
   const answerBodyLayers=[null,null,null,null];
-  let answerBodyMask=null,answerBodyReady=false,answerBodyFailed=false,answerBodyBounds=null;
+  let answerBodyMask=null,answerBodyReady=false,answerBodyFailed=false,answerBodyBounds=null,answerBodyMaskStats=null;
   answerBodyImage.decoding='async';
   answerBodyImage.addEventListener('load',()=>{
-    try{buildAnswerBodyLayers();answerBodyReady=true;answerBodyFailed=false;}catch(error){answerBodyReady=false;answerBodyFailed=true;console.error('[Stackfall] Answer body preparation failed',error);}
+    try{buildAnswerBodyLayers();answerBodyReady=true;answerBodyFailed=false;syncDevStatus();}catch(error){answerBodyReady=false;answerBodyFailed=true;syncDevStatus();console.error('[Stackfall] Answer body preparation failed',error);}
   });
-  answerBodyImage.addEventListener('error',()=>{answerBodyReady=false;answerBodyFailed=true;});
+  answerBodyImage.addEventListener('error',()=>{answerBodyReady=false;answerBodyFailed=true;syncDevStatus();});
   answerBodyImage.src=ANSWER_BODY_SRC;
 
   const FISSURES=[
@@ -166,21 +195,30 @@
   function makeCanvas(w,h){
     const canvas=typeof OffscreenCanvas==='function'?new OffscreenCanvas(w,h):document.createElement('canvas');canvas.width=w;canvas.height=h;return canvas;
   }
-  function buildAnswerMask(w,h){
-    const canvas=makeCanvas(w,h),g=canvas.getContext('2d',{alpha:true,willReadFrequently:true});
-    g.clearRect(0,0,w,h);g.drawImage(answerBodyImage,0,0,w,h);
-    const image=g.getImageData(0,0,w,h),data=image.data;
-    let minX=w,minY=h,maxX=-1,maxY=-1;
-    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-      const i=(y*w+x)*4,a=data[i+3];
-      const solid=a>=18;
-      data[i]=0;data[i+1]=0;data[i+2]=4;data[i+3]=solid?255:0;
-      if(solid){if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;}
-    }
-    g.putImageData(image,0,0);
-    answerBodyBounds=maxX>=minX&&maxY>=minY?{minX,minY,maxX,maxY,width:maxX-minX+1,height:maxY-minY+1}:null;
-    return canvas;
+  function weightedMaskQuantile(counts,total,ratio){
+  const target=Math.max(1,total*clamp01(ratio));let acc=0;
+  for(let i=0;i<counts.length;i++){acc+=counts[i];if(acc>=target)return i;}
+  return Math.max(0,counts.length-1);
+}
+function buildAnswerMask(w,h){
+  const canvas=makeCanvas(w,h),g=canvas.getContext('2d',{alpha:true,willReadFrequently:true});
+  g.clearRect(0,0,w,h);g.drawImage(answerBodyImage,0,0,w,h);
+  const image=g.getImageData(0,0,w,h),data=image.data,histogram=new Uint32Array(256);
+  for(let i=3;i<data.length;i+=4)histogram[data[i]]++;
+  let strongPixels=0,maxAlpha=0;for(let a=1;a<256;a++){if(histogram[a])maxAlpha=a;if(a>=18)strongPixels+=histogram[a];}
+  const threshold=strongPixels>=w*h*.02?18:2,rows=new Uint32Array(h),cols=new Uint32Array(w);let solidPixels=0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const i=(y*w+x)*4,a=data[i+3],solid=a>=threshold;
+    data[i]=0;data[i+1]=0;data[i+2]=4;data[i+3]=solid?255:0;
+    if(solid){solidPixels++;rows[y]++;cols[x]++;}
   }
+  if(!solidPixels)throw new Error('Answer body alpha mask is empty');
+  g.putImageData(image,0,0);
+  const minX=weightedMaskQuantile(cols,solidPixels,.001),maxX=weightedMaskQuantile(cols,solidPixels,.999),minY=weightedMaskQuantile(rows,solidPixels,.001),maxY=weightedMaskQuantile(rows,solidPixels,.999);
+  answerBodyBounds={minX,minY,maxX,maxY,width:Math.max(1,maxX-minX+1),height:Math.max(1,maxY-minY+1)};
+  answerBodyMaskStats={threshold,solidPixels,coverage:solidPixels/(w*h),maxAlpha};
+  return canvas;
+}
   function strokeLayerFissure(g,points,w,h,width,alpha,blur=0){
     g.save();g.lineCap='round';g.lineJoin='round';g.beginPath();
     points.forEach((p,i)=>{const x=p[0]*w,y=p[1]*h;i?g.lineTo(x,y):g.moveTo(x,y);});
@@ -289,7 +327,7 @@
   }
   if(baseDrawBackground)drawBackground=function drawBackgroundWithAnswerArena(){const result=drawFrozenArenaBackground();if(preview.active)drawPrototypeBackground();return result;};
   const baseDraw=typeof draw==='function'?draw:null;
-  if(baseDraw)draw=function drawWithAnswerAftermath(){ensureRunIdentity();const result=baseDraw();drawAftermathOverlay();return result;};
+  if(baseDraw)draw=function drawWithAnswerAftermath(){ensureRunIdentity();const result=baseDraw();if(preview.active)syncBossHud();syncDevStatus();drawAftermathOverlay();return result;};
 
   function installThreatStyle(){
     if(document.querySelector('#answerThreatStyle'))return;
@@ -341,12 +379,22 @@
   const threatObserver=new MutationObserver(syncThreatPanel),eventOverlay=document.querySelector('#worldEventScreen');
   if(eventOverlay)threatObserver.observe(eventOverlay,{attributes:true,attributeFilter:['class','data-event-type'],subtree:false});syncThreatPanel();
 
-  function installDevControls(){
+  function syncDevStatus(){
+  const el=document.querySelector('#devAnswerStatus');if(!el)return;
+  const assetState=answerBodyFailed?'asset FAIL':answerBodyReady?'asset READY':'asset loading';
+  const coverage=answerBodyMaskStats?`${Math.round(answerBodyMaskStats.coverage*1000)/10}%@a${answerBodyMaskStats.threshold}`:'mask -';
+  const encounter=preview.active?(preview.defeating?'DEFEAT':`ACTIVE P${preview.phase}`):preview.preparing?`PREP ${preview.prepStage}`:preview.aftermath?'AFTERMATH':preview.prepStage==='blocked'?`BLOCKED ${preview.prepBlock}`:'IDLE';
+  const gems=preview.preparing?activeExperienceGems().length:0;
+  const text=`${encounter} · mode ${state.mode} · lock ${state.choiceLocked===true?'ON':'off'} · gems ${gems} · ${assetState} · ${coverage}`;
+  if(el.textContent!==text)el.textContent=text;
+}
+
+function installDevControls(){
     const dev=window.stackfallDeveloperTest,panel=document.querySelector('#stackfallDevPanel');
     if(!dev?.enabled||!panel||document.querySelector('#devAnswerPrototype'))return;
     const label=document.createElement('label');label.textContent='VOID APEX · 응답 디자인';
     const grid=document.createElement('div');grid.className='dev-grid';grid.id='devAnswerPrototype';
-    const button=(text,id,handler,wide=false)=>{const b=document.createElement('button');b.type='button';b.id=id;b.textContent=text;if(wide)b.className='dev-wide';b.addEventListener('click',handler);return b;};
+    const button=(text,id,handler,wide=false)=>{const b=document.createElement('button');b.type='button';b.id=id;b.textContent=text;if(wide)b.className='dev-wide';b.addEventListener('click',()=>{try{handler();}finally{queueMicrotask(syncDevStatus);}});return b;};
     grid.append(
       button('응답 시안 시작','devAnswerStart',()=>activate(),true),
       button('P1 · 봉쇄','devAnswerP1',()=>setPhase(1)),button('P2 · 노출','devAnswerP2',()=>setPhase(2)),
@@ -355,19 +403,19 @@
       button('입장 위협 25%','devAnswerThreat25',()=>setThreat(25)),button('입장 위협 50%','devAnswerThreat50',()=>setThreat(50)),
       button('입장 위협 75%','devAnswerThreat75',()=>setThreat(75)),button('입장 위협 100%','devAnswerThreat100',()=>setThreat(100))
     );
-    panel.append(label,grid);
+    const status=document.createElement('div');status.id='devAnswerStatus';status.className='dev-wide';status.style.cssText='margin:4px 0 14px;padding:8px 10px;border:1px solid rgba(140,174,230,.18);border-radius:9px;background:rgba(9,14,30,.72);color:#92a7cb;font:700 10px/1.45 monospace;word-break:break-word';panel.append(label,grid,status);syncDevStatus();
     Object.assign(dev,{
       startAnswerPrototype:activate,prepareAnswerPrototype:beginPreparation,setAnswerPhase:setPhase,defeatAnswerPrototype:startDefeat,stopAnswerPrototype:stop,setAnswerThreat:setThreat,
-      answerPrototypeSnapshot:()=>({active:preview.active,preparing:preview.preparing,preflightGemCount:preview.preflightGemCount,preflightXp:preview.preflightXp,phase:preview.phase,hpRatio:preview.hpRatio,defeating:preview.defeating,defeatAge:preview.defeatAge,aftermath:preview.aftermath,voidSealed:state.answerVoidSealed===true,threat:preview.threat,camera:{x:preview.camX,y:preview.camY},bounds:preview.active?worldBounds():null})
+      answerPrototypeSnapshot:()=>({active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,preflightGemCount:preview.preflightGemCount,preflightXp:preview.preflightXp,phase:preview.phase,hpRatio:preview.hpRatio,defeating:preview.defeating,defeatAge:preview.defeatAge,aftermath:preview.aftermath,voidSealed:state.answerVoidSealed===true,threat:preview.threat,mode:state.mode,choiceLocked:state.choiceLocked===true,camera:{x:preview.camX,y:preview.camY},bounds:preview.active?worldBounds():null,asset:{ready:answerBodyReady,failed:answerBodyFailed,mask:answerBodyMaskStats}})
     });
   }
   installDevControls();setTimeout(installDevControls,0);setTimeout(installDevControls,250);setTimeout(installDevControls,1000);
   window.stackfallVoidApexAnswerDiagnostics=()=>({
-    version:'v1',visualRevision:'v8',prototypeOnly:true,active:preview.active,preparing:preview.preparing,
+    version:'v1',visualRevision:'v9',prototypeOnly:true,active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,
     preflightGemCount:preview.preflightGemCount,preflightXp:preview.preflightXp,phase:preview.phase,hpRatio:preview.hpRatio,
     defeating:preview.defeating,defeatAge:preview.defeatAge,aftermath:preview.aftermath,voidSealed:state.answerVoidSealed===true,
-    threat:preview.threat,camera:{x:preview.camX,y:preview.camY},geometry:geometry(),
-    asset:{src:ANSWER_BODY_SRC,ready:answerBodyReady,failed:answerBodyFailed,naturalWidth:answerBodyImage.naturalWidth||0,naturalHeight:answerBodyImage.naturalHeight||0,bounds:answerBodyBounds},
+    threat:preview.threat,mode:state.mode,choiceLocked:state.choiceLocked===true,camera:{x:preview.camX,y:preview.camY},geometry:geometry(),
+    asset:{src:ANSWER_BODY_SRC,ready:answerBodyReady,failed:answerBodyFailed,naturalWidth:answerBodyImage.naturalWidth||0,naturalHeight:answerBodyImage.naturalHeight||0,bounds:answerBodyBounds,mask:answerBodyMaskStats},
     frame:answerFrame(),backgroundFrozen:preview.active
   });
 })();
