@@ -1,0 +1,21 @@
+name: Temporary Answer V7 Validation
+
+on:
+  push:
+    branches:
+      - feature/void-apex-answer-v1
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: ${{ !contains(github.event.head_commit.message, '[skip-answer-v7-validation]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Stackfall sources and contracts
+        run: node scripts/build-fingerprint.mjs
