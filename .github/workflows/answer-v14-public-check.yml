@@ -1,0 +1,42 @@
+name: Answer V14 public exact-asset check
+
+on:
+  push:
+    branches:
+      - feature/void-apex-answer-v1
+
+permissions:
+  contents: read
+
+jobs:
+  public:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch deployed V14 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://feature-void-apex-answer-v1.stackfall.pages.dev'
+          for i in {1..24}; do
+            if curl -fsSL --max-time 15 "$BASE/src/void-apex-answer-v1.js?sha=${GITHUB_SHA}&try=$i" -o /tmp/answer.js \
+              && grep -Fq "STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v14'" /tmp/answer.js \
+              && grep -Fq "const ANSWER_BODY_SRC='data:image/webp;base64," /tmp/answer.js; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+      - name: Verify exact embedded q55 from public preview
+        shell: python
+        run: |
+          from pathlib import Path
+          import re,base64,hashlib
+          s=Path('/tmp/answer.js').read_text(encoding='utf-8')
+          m=re.search(r"const ANSWER_BODY_SRC='data:image/webp;base64,([^']+)'",s)
+          assert m
+          raw=base64.b64decode(m.group(1),validate=True)
+          sha=hashlib.sha256(raw).hexdigest()
+          assert len(raw)==13042,len(raw)
+          assert sha=='cc02c44e16e4f2333277eb538237178ed736efbf2bd0261f154fb2f3ce74553d',sha
+          assert raw[:4]==b'RIFF' and raw[8:12]==b'WEBP'
+          print('PUBLIC V14 q55 OK',len(raw),sha)
