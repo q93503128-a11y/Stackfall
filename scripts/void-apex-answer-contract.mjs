@@ -5,7 +5,9 @@ const buildInfo=read('src/build-info.js');
 const fingerprint=read('scripts/build-fingerprint.mjs');
 const catalog=read('src/boss-catalog.js');
 const events=read('src/map-event-expansion.js');
+const parsesAsJavaScript=(()=>{try{new Function(answer);return true;}catch{return false;}})();
 const checks=[
+  ['prototype source parses as JavaScript',parsesAsJavaScript],
   ['prototype is explicitly dormant from live scheduling',answer.includes('STACKFALL_VOID_APEX_ANSWER_PROTOTYPE_ONLY=true')&&!events.includes('void-apex-answer')&&!catalog.includes("'answer'")],
   ['prototype freezes progression and visible game time during preparation and combat',answer.includes('preview.active||preview.preparing||basePause()')&&answer.includes('if(preview.active||preview.preparing)state.time=Math.max(0')],
   ['prototype suppresses ordinary spawns and map-event updates during preparation and combat',answer.includes('if(preview.active||preview.preparing)return;return baseUpdateSpawning')&&answer.includes('if(preview.active||preview.preparing)return;return baseUpdateMapEvents')],
