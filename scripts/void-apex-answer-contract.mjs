@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import {createHash} from 'node:crypto';
 const read=path=>fs.readFileSync(path,'utf8');
 const answer=read('src/void-apex-answer-v1.js');
 const render=read('src/render.js');
@@ -6,9 +7,11 @@ const buildInfo=read('src/build-info.js');
 const fingerprint=read('scripts/build-fingerprint.mjs');
 const catalog=read('src/boss-catalog.js');
 const events=read('src/map-event-expansion.js');
-const bodyAsset='assets/answer/answer_body_base.webp';
-const bodyAssetBytes=fs.existsSync(bodyAsset)?fs.readFileSync(bodyAsset):Buffer.alloc(0);
-const bodyAssetRiffValid=bodyAssetBytes.length>=12
+const bodyDataMatch=answer.match(/const ANSWER_BODY_SRC='data:image\/webp;base64,([^']+)'/);
+const bodyAssetBytes=bodyDataMatch?Buffer.from(bodyDataMatch[1],'base64'):Buffer.alloc(0);
+const bodyAssetHash=createHash('sha256').update(bodyAssetBytes).digest('hex');
+const bodyAssetExact=bodyAssetBytes.length===13042
+  &&bodyAssetHash==='cc02c44e16e4f2333277eb538237178ed736efbf2bd0261f154fb2f3ce74553d'
   &&bodyAssetBytes.subarray(0,4).toString('ascii')==='RIFF'
   &&bodyAssetBytes.subarray(8,12).toString('ascii')==='WEBP'
   &&bodyAssetBytes.readUInt32LE(4)+8===bodyAssetBytes.length;
@@ -21,8 +24,8 @@ const checks=[
   ['fixed arena camera keeps player world coordinates authoritative',answer.includes('cameraOffset()')&&answer.includes('withFixedArenaCamera')&&answer.includes('ctx.translate(offset.x,offset.y)')&&!answer.includes('preview.realX=player.x')],
   ['fixed arena background is rendered from the frozen camera origin',answer.includes('function drawFrozenArenaBackground()')&&answer.includes('player.x=preview.camX')&&answer.includes('player.y=preview.camY')&&answer.includes('player.moveVX=0')&&answer.includes('player.moveVY=0')&&answer.includes('player.moveIntensity=0')&&answer.includes('player.x=snapshot.x')&&answer.includes('player.y=snapshot.y')],
   ['player movement is bounded to the lower combat region',answer.includes('clampPlayerToArena')&&answer.includes('top:height*.40')&&answer.includes('bottom:height*.925')],
-  ['Answer V13 renders the approved raster cosmic body asset crop directly',answer.includes("STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v13'")&&answer.includes("const ANSWER_BODY_SRC='assets/answer/answer_body_base.webp'")&&answer.includes('ctx.drawImage(answerBodyImage,37,67,888,263,frame.x,frame.y,frame.w,frame.h)')&&fs.existsSync(bodyAsset)],
-  ['approved raster WebP container is complete and not truncated',bodyAssetRiffValid],
+  ['Answer V14 renders the exact approved q55 raster crop from an embedded data URI',answer.includes("STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v14'")&&answer.includes("const ANSWER_BODY_SRC='data:image/webp;base64,")&&answer.includes('ctx.drawImage(answerBodyImage,37,67,888,263,frame.x,frame.y,frame.w,frame.h)')],
+  ['embedded q55 raster bytes are exact and container-complete',bodyAssetExact],
   ['Answer has a dedicated clean render stage after the realm background and before world objects',render.includes("runDrawStage('drawBackground',drawBackground);")&&render.includes("runDrawStage('drawVoidApexAnswerBackground',window.stackfallDrawVoidApexAnswerBackground)")&&answer.includes('window.stackfallDrawVoidApexAnswerBackground=function drawVoidApexAnswerBackground()')],
   ['body framing uses the approved galaxy-bearing canopy crop and reserves player space',answer.includes('const ratio=888/263')&&answer.includes('visibleDepth=Math.max(300,Math.min(420,height*.42))')&&answer.includes('y:visibleDepth-h')],
   ['body is phase-invariant and only screen-space fissures escalate across P1-P4',answer.includes('const PHASE_CRACK_COUNT=[3,6,9,13]')&&answer.includes('function drawAnswerFissures(frame,phase)')&&answer.includes('drawAnswerFissures(frame,phase)')&&!answer.includes('buildAnswerBodyLayer(phase)')],
@@ -42,7 +45,7 @@ const checks=[
   ['defeat sequence leaks white light then leaves brighter aftermath state',answer.includes('startDefeat')&&answer.includes('finishDefeat')&&answer.includes('drawAftermathOverlay')&&answer.includes('state.answerVoidSealed=true')],
   ['developer preview controls are isolated to dev mode',answer.includes("document.querySelector('#stackfallDevPanel')")&&answer.includes('if(!dev?.enabled||!panel')],
   ['dynamic loader includes the prototype',buildInfo.includes('src/void-apex-answer-v1.js')&&buildInfo.includes('data-void-apex-answer-v1')],
-  ['build fingerprint tracks the prototype contract and cosmic body asset',fingerprint.includes("'src/void-apex-answer-v1.js'")&&fingerprint.includes("'void-apex-answer-contract.mjs'")&&fingerprint.includes("'assets/answer/answer_body_base.webp'")]
+  ['build fingerprint tracks the prototype source and contract without a mutable binary body asset',fingerprint.includes("'src/void-apex-answer-v1.js'")&&fingerprint.includes("'void-apex-answer-contract.mjs'")&&!fingerprint.includes("'assets/answer/answer_body_base.webp'")]
 ];
 let failed=0;
 for(const [name,ok] of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failed++;}
