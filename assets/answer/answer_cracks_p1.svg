@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="394" viewBox="0 0 100 100" preserveAspectRatio="none">
+<defs><filter id="g" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="0.42"/></filter></defs>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+<g stroke="#fff" stroke-width="0.78" opacity="0.13" filter="url(#g)">
+<path d="M50.5 70 L50 77 L51.2 84 L50.2 91 L51.5 98"/><path d="M50.5 79 L45.5 78 L41 76 L36 74"/><path d="M50.7 84 L55.8 82 L61 79 L66 75"/>
+</g>
+<g stroke="#fff" stroke-width="0.18" opacity="0.98">
+<path d="M50.5 70 L50 77 L51.2 84 L50.2 91 L51.5 98"/><path d="M50.5 79 L45.5 78 L41 76 L36 74"/><path d="M50.7 84 L55.8 82 L61 79 L66 75"/>
+</g></g></svg>
