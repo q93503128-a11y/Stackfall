@@ -6,7 +6,7 @@
   if(window.stackfallVoidApexAnswer==='v1')return;
   window.stackfallVoidApexAnswer='v1';
   window.STACKFALL_VOID_APEX_ANSWER_PROTOTYPE_ONLY=true;
-  window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v9';
+  window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v10';
 
   const TAU_LOCAL=Math.PI*2;
   const preview={
@@ -162,17 +162,14 @@ function activate(){return beginPreparation();}
     clampPlayerToArena();if(preview.defeating){preview.defeatAge+=step;if(preview.defeatAge>=3.15)finishDefeat();}syncBossHud();
   }
 
-  // V8 visual lock: the exact same raster body is used in every phase.
-  // Phase progression only changes the cached pure-white fissure layer.
+  // V10 visual lock: the approved raster body is drawn directly in a dedicated render stage.
+  // P1-P4 keep the exact same body/frame; only the white fissure count/intensity changes.
   const ANSWER_BODY_SRC='assets/answer/answer_body_base.webp';
   const answerBodyImage=new Image();
-  const answerBodyLayers=[null,null,null,null];
-  let answerBodyMask=null,answerBodyReady=false,answerBodyFailed=false,answerBodyBounds=null,answerBodyMaskStats=null;
+  let answerBodyReady=false,answerBodyFailed=false;
   answerBodyImage.decoding='async';
-  answerBodyImage.addEventListener('load',()=>{
-    try{buildAnswerBodyLayers();answerBodyReady=true;answerBodyFailed=false;syncDevStatus();}catch(error){answerBodyReady=false;answerBodyFailed=true;syncDevStatus();console.error('[Stackfall] Answer body preparation failed',error);}
-  });
-  answerBodyImage.addEventListener('error',()=>{answerBodyReady=false;answerBodyFailed=true;syncDevStatus();});
+  answerBodyImage.addEventListener('load',()=>{answerBodyReady=true;answerBodyFailed=false;syncDevStatus();});
+  answerBodyImage.addEventListener('error',()=>{answerBodyReady=false;answerBodyFailed=true;syncDevStatus();console.error('[Stackfall] Answer body asset failed to load',ANSWER_BODY_SRC);});
   answerBodyImage.src=ANSWER_BODY_SRC;
 
   const FISSURES=[
@@ -192,76 +189,38 @@ function activate(){return beginPreparation();}
   ];
   const PHASE_CRACK_COUNT=[3,6,9,13];
 
-  function makeCanvas(w,h){
-    const canvas=typeof OffscreenCanvas==='function'?new OffscreenCanvas(w,h):document.createElement('canvas');canvas.width=w;canvas.height=h;return canvas;
-  }
-  function weightedMaskQuantile(counts,total,ratio){
-  const target=Math.max(1,total*clamp01(ratio));let acc=0;
-  for(let i=0;i<counts.length;i++){acc+=counts[i];if(acc>=target)return i;}
-  return Math.max(0,counts.length-1);
-}
-function buildAnswerMask(w,h){
-  const canvas=makeCanvas(w,h),g=canvas.getContext('2d',{alpha:true,willReadFrequently:true});
-  g.clearRect(0,0,w,h);g.drawImage(answerBodyImage,0,0,w,h);
-  const image=g.getImageData(0,0,w,h),data=image.data,histogram=new Uint32Array(256);
-  for(let i=3;i<data.length;i+=4)histogram[data[i]]++;
-  let strongPixels=0,maxAlpha=0;for(let a=1;a<256;a++){if(histogram[a])maxAlpha=a;if(a>=18)strongPixels+=histogram[a];}
-  const threshold=strongPixels>=w*h*.02?18:2,rows=new Uint32Array(h),cols=new Uint32Array(w);let solidPixels=0;
-  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-    const i=(y*w+x)*4,a=data[i+3],solid=a>=threshold;
-    data[i]=0;data[i+1]=0;data[i+2]=4;data[i+3]=solid?255:0;
-    if(solid){solidPixels++;rows[y]++;cols[x]++;}
-  }
-  if(!solidPixels)throw new Error('Answer body alpha mask is empty');
-  g.putImageData(image,0,0);
-  const minX=weightedMaskQuantile(cols,solidPixels,.001),maxX=weightedMaskQuantile(cols,solidPixels,.999),minY=weightedMaskQuantile(rows,solidPixels,.001),maxY=weightedMaskQuantile(rows,solidPixels,.999);
-  answerBodyBounds={minX,minY,maxX,maxY,width:Math.max(1,maxX-minX+1),height:Math.max(1,maxY-minY+1)};
-  answerBodyMaskStats={threshold,solidPixels,coverage:solidPixels/(w*h),maxAlpha};
-  return canvas;
-}
-  function strokeLayerFissure(g,points,w,h,width,alpha,blur=0){
-    g.save();g.lineCap='round';g.lineJoin='round';g.beginPath();
-    points.forEach((p,i)=>{const x=p[0]*w,y=p[1]*h;i?g.lineTo(x,y):g.moveTo(x,y);});
-    g.globalCompositeOperation='screen';g.strokeStyle=`rgba(255,255,255,${alpha})`;g.lineWidth=width;
-    if(blur>0){g.shadowColor='#ffffff';g.shadowBlur=blur;}g.stroke();g.restore();
-  }
-  function buildAnswerBodyLayer(phase){
-    const w=answerBodyImage.naturalWidth,h=answerBodyImage.naturalHeight,canvas=makeCanvas(w,h),g=canvas.getContext('2d',{alpha:true});
-    g.clearRect(0,0,w,h);
-    // Force the generated body's dark regions to occlude the game's starfield, then restore the approved cosmic texture on top.
-    g.globalAlpha=.985;g.drawImage(answerBodyMask,0,0,w,h);g.globalAlpha=1;g.drawImage(answerBodyImage,0,0,w,h);
-    const count=PHASE_CRACK_COUNT[Math.max(0,Math.min(3,phase-1))],phaseBoost=phase-1;
-    for(let i=0;i<count;i++){
-      const points=FISSURES[i],main=i===0,coreWidth=(main?1.1:.58)+phaseBoost*(main?.18:.09);
-      strokeLayerFissure(g,points,w,h,coreWidth*4.4,.085+phaseBoost*.025,5+phaseBoost*1.2);
-      strokeLayerFissure(g,points,w,h,coreWidth,.80+phaseBoost*.045,main?3.5:2.2);
-      strokeLayerFissure(g,points,w,h,Math.max(.45,coreWidth*.42),Math.min(1,.94+phaseBoost*.018),0);
-    }
-    // Nothing, including cracks, may exist outside the approved body alpha.
-    g.save();g.globalCompositeOperation='destination-in';g.drawImage(answerBodyMask,0,0,w,h);g.restore();
-    return canvas;
-  }
-  function buildAnswerBodyLayers(){
-    const w=answerBodyImage.naturalWidth,h=answerBodyImage.naturalHeight;
-    if(!w||!h)throw new Error('Answer body has no natural dimensions');
-    answerBodyMask=buildAnswerMask(w,h);
-    for(let phase=1;phase<=4;phase++)answerBodyLayers[phase-1]=buildAnswerBodyLayer(phase);
-  }
   function answerFrame(){
     const width=Math.max(720,Number(vw)||1280),height=Math.max(520,Number(vh)||720);
     const naturalW=answerBodyImage.naturalWidth||700,naturalH=answerBodyImage.naturalHeight||394,ratio=naturalW/naturalH;
-    // Preserve the raster's aspect ratio. The entity is much larger than the viewport; only its lower body edge enters from above.
-    const w=Math.max(width*1.10,height*2.15),h=w/ratio,visibleDepth=Math.max(185,Math.min(285,height*.285));
-    const bounds=answerBodyBounds||{minX:0,minY:0,maxX:naturalW-1,maxY:naturalH-1};
-    const bodyCenterX=((bounds.minX+bounds.maxX+1)*.5)/naturalW,bodyBottom=(bounds.maxY+1)/naturalH;
-    return{x:width*.5-bodyCenterX*w,y:visibleDepth-bodyBottom*h,w,h,visibleDepth,ratio};
+    const w=Math.max(width*1.12,height*2.18),h=w/ratio,visibleDepth=Math.max(190,Math.min(300,height*.30));
+    return{x:(width-w)*.5,y:visibleDepth-h,w,h,visibleDepth,ratio};
+  }
+  function drawFallbackBody(frame){
+    // Fail-safe only: an active encounter must never become visually empty if the raster fails to decode.
+    ctx.save();ctx.fillStyle='rgba(0,0,8,.985)';ctx.shadowColor='rgba(215,229,255,.18)';ctx.shadowBlur=18;
+    ctx.beginPath();ctx.moveTo(frame.x+frame.w*.05,frame.y+frame.h*.70);ctx.bezierCurveTo(frame.x+frame.w*.22,frame.y+frame.h*.62,frame.x+frame.w*.40,frame.y+frame.h*.72,frame.x+frame.w*.50,frame.y+frame.h*.98);ctx.bezierCurveTo(frame.x+frame.w*.60,frame.y+frame.h*.72,frame.x+frame.w*.78,frame.y+frame.h*.62,frame.x+frame.w*.95,frame.y+frame.h*.70);ctx.lineTo(frame.x+frame.w*.98,frame.y+frame.h*.48);ctx.lineTo(frame.x+frame.w*.02,frame.y+frame.h*.48);ctx.closePath();ctx.fill();ctx.restore();
+  }
+  function strokeScreenFissure(points,frame,width,alpha,blur=0){
+    ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
+    points.forEach((p,i)=>{const x=frame.x+p[0]*frame.w,y=frame.y+p[1]*frame.h;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.globalCompositeOperation='screen';ctx.strokeStyle=`rgba(255,255,255,${alpha})`;ctx.lineWidth=width;if(blur>0){ctx.shadowColor='#ffffff';ctx.shadowBlur=blur;}ctx.stroke();ctx.restore();
+  }
+  function drawAnswerFissures(frame,phase){
+    const count=PHASE_CRACK_COUNT[Math.max(0,Math.min(3,phase-1))],phaseBoost=phase-1,scale=Math.max(.82,Math.min(1.5,frame.w/1700));
+    for(let i=0;i<count;i++){
+      const points=FISSURES[i],main=i===0,core=(main?1.5:.82)+phaseBoost*(main?.20:.11);
+      strokeScreenFissure(points,frame,core*4.1*scale,.08+phaseBoost*.025,5+phaseBoost*1.1);
+      strokeScreenFissure(points,frame,core*scale,.84+phaseBoost*.04,main?3.2:2.0);
+      strokeScreenFissure(points,frame,Math.max(.55,core*.42)*scale,Math.min(1,.95+phaseBoost*.015),0);
+    }
   }
   function drawAnswerBoss(){
-    if(!answerBodyReady)return;
-    const phase=Math.max(1,Math.min(4,preview.phase)),death=preview.defeating?clamp01(preview.defeatAge/3.15):0,layer=answerBodyLayers[phase-1];
-    if(!layer)return;
-    const base=answerFrame(),t=performance.now()*.001,bob=Math.sin(t*.34)*1.25,drift=Math.sin(t*.17)*.75;
-    ctx.save();ctx.translate(drift,bob);ctx.drawImage(layer,base.x,base.y,base.w,base.h);ctx.restore();
+    const phase=Math.max(1,Math.min(4,preview.phase)),death=preview.defeating?clamp01(preview.defeatAge/3.15):0,base=answerFrame();
+    const t=performance.now()*.001,bob=Math.sin(t*.34)*1.25,drift=Math.sin(t*.17)*.75,frame={...base,x:base.x+drift,y:base.y+bob};
+    if(answerBodyReady){
+      ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.shadowColor='rgba(206,222,255,.14)';ctx.shadowBlur=14;ctx.drawImage(answerBodyImage,frame.x,frame.y,frame.w,frame.h);ctx.restore();
+    }else drawFallbackBody(frame);
+    drawAnswerFissures(frame,phase);
     if(death>.12){
       ctx.save();ctx.globalCompositeOperation='screen';const k=clamp01((death-.12)/.78),x=vw*.5,y=Math.min(base.visibleDepth*.78,vh*.24),r=Math.max(vw,vh)*(.08+k*.30);
       const glow=ctx.createRadialGradient(x,y,0,x,y,r);glow.addColorStop(0,`rgba(255,255,255,${.12+k*.50})`);glow.addColorStop(.30,`rgba(239,246,255,${.05+k*.14})`);glow.addColorStop(1,'rgba(210,224,255,0)');ctx.fillStyle=glow;ctx.fillRect(0,0,vw,Math.max(vh*.55,base.visibleDepth*2));ctx.restore();
@@ -269,15 +228,12 @@ function buildAnswerMask(w,h){
     if(death>.90){ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=clamp01((death-.90)/.07)*.68;ctx.fillStyle='#ffffff';ctx.fillRect(0,0,vw,vh);ctx.restore();}
   }
   function drawPhaseSky(){
-    if(!preview.active)return;
-    ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='rgba(0,0,7,.045)';ctx.fillRect(0,0,vw,vh*.36);ctx.restore();
+    if(!preview.active)return;ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='rgba(0,0,7,.045)';ctx.fillRect(0,0,vw,vh*.36);ctx.restore();
   }
-  function drawPrototypeBackground(){drawPhaseSky();drawAnswerBoss();}
+  function drawPrototypeBackground(){if(!preview.active)return;drawPhaseSky();drawAnswerBoss();}
   function drawAftermathOverlay(){
-    if(!preview.aftermath)return;
-    ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalCompositeOperation='screen';
-    const g=ctx.createRadialGradient(vw*.5,vh*.43,20,vw*.5,vh*.50,Math.max(vw,vh)*.82);g.addColorStop(0,'rgba(216,232,255,.095)');g.addColorStop(.50,'rgba(114,163,255,.045)');g.addColorStop(1,'rgba(255,255,255,.014)');
-    ctx.fillStyle=g;ctx.fillRect(0,0,vw,vh);ctx.restore();
+    if(!preview.aftermath)return;ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalCompositeOperation='screen';
+    const g=ctx.createRadialGradient(vw*.5,vh*.43,20,vw*.5,vh*.50,Math.max(vw,vh)*.82);g.addColorStop(0,'rgba(216,232,255,.095)');g.addColorStop(.50,'rgba(114,163,255,.045)');g.addColorStop(1,'rgba(255,255,255,.014)');ctx.fillStyle=g;ctx.fillRect(0,0,vw,vh);ctx.restore();
   }
 
   function withFixedArenaCamera(base,...args){
@@ -325,7 +281,8 @@ function buildAnswerMask(w,h){
     try{return baseDrawBackground();}
     finally{player.x=snapshot.x;player.y=snapshot.y;player.moveVX=snapshot.moveVX;player.moveVY=snapshot.moveVY;player.moveIntensity=snapshot.moveIntensity;}
   }
-  if(baseDrawBackground)drawBackground=function drawBackgroundWithAnswerArena(){const result=drawFrozenArenaBackground();if(preview.active)drawPrototypeBackground();return result;};
+  if(baseDrawBackground)drawBackground=function drawBackgroundWithAnswerArena(){return drawFrozenArenaBackground();};
+  window.stackfallDrawVoidApexAnswerBackground=function drawVoidApexAnswerBackground(){if(preview.active)drawPrototypeBackground();};
   const baseDraw=typeof draw==='function'?draw:null;
   if(baseDraw)draw=function drawWithAnswerAftermath(){ensureRunIdentity();const result=baseDraw();if(preview.active)syncBossHud();syncDevStatus();drawAftermathOverlay();return result;};
 
@@ -382,10 +339,11 @@ function buildAnswerMask(w,h){
   function syncDevStatus(){
   const el=document.querySelector('#devAnswerStatus');if(!el)return;
   const assetState=answerBodyFailed?'asset FAIL':answerBodyReady?'asset READY':'asset loading';
-  const coverage=answerBodyMaskStats?`${Math.round(answerBodyMaskStats.coverage*1000)/10}%@a${answerBodyMaskStats.threshold}`:'mask -';
+  const dims=answerBodyImage.naturalWidth?`${answerBodyImage.naturalWidth}x${answerBodyImage.naturalHeight}`:'image -';
+  const hook=typeof window.stackfallDrawVoidApexAnswerBackground==='function'?'hook ON':'hook off';
   const encounter=preview.active?(preview.defeating?'DEFEAT':`ACTIVE P${preview.phase}`):preview.preparing?`PREP ${preview.prepStage}`:preview.aftermath?'AFTERMATH':preview.prepStage==='blocked'?`BLOCKED ${preview.prepBlock}`:'IDLE';
   const gems=preview.preparing?activeExperienceGems().length:0;
-  const text=`${encounter} · mode ${state.mode} · lock ${state.choiceLocked===true?'ON':'off'} · gems ${gems} · ${assetState} · ${coverage}`;
+  const text=`${encounter} · mode ${state.mode} · lock ${state.choiceLocked===true?'ON':'off'} · gems ${gems} · ${assetState} · ${dims} · ${hook}`;
   if(el.textContent!==text)el.textContent=text;
 }
 
@@ -406,16 +364,16 @@ function installDevControls(){
     const status=document.createElement('div');status.id='devAnswerStatus';status.className='dev-wide';status.style.cssText='margin:4px 0 14px;padding:8px 10px;border:1px solid rgba(140,174,230,.18);border-radius:9px;background:rgba(9,14,30,.72);color:#92a7cb;font:700 10px/1.45 monospace;word-break:break-word';panel.append(label,grid,status);syncDevStatus();
     Object.assign(dev,{
       startAnswerPrototype:activate,prepareAnswerPrototype:beginPreparation,setAnswerPhase:setPhase,defeatAnswerPrototype:startDefeat,stopAnswerPrototype:stop,setAnswerThreat:setThreat,
-      answerPrototypeSnapshot:()=>({active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,preflightGemCount:preview.preflightGemCount,preflightXp:preview.preflightXp,phase:preview.phase,hpRatio:preview.hpRatio,defeating:preview.defeating,defeatAge:preview.defeatAge,aftermath:preview.aftermath,voidSealed:state.answerVoidSealed===true,threat:preview.threat,mode:state.mode,choiceLocked:state.choiceLocked===true,camera:{x:preview.camX,y:preview.camY},bounds:preview.active?worldBounds():null,asset:{ready:answerBodyReady,failed:answerBodyFailed,mask:answerBodyMaskStats}})
+      answerPrototypeSnapshot:()=>({active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,preflightGemCount:preview.preflightGemCount,preflightXp:preview.preflightXp,phase:preview.phase,hpRatio:preview.hpRatio,defeating:preview.defeating,defeatAge:preview.defeatAge,aftermath:preview.aftermath,voidSealed:state.answerVoidSealed===true,threat:preview.threat,mode:state.mode,choiceLocked:state.choiceLocked===true,camera:{x:preview.camX,y:preview.camY},bounds:preview.active?worldBounds():null,asset:{ready:answerBodyReady,failed:answerBodyFailed,naturalWidth:answerBodyImage.naturalWidth||0,naturalHeight:answerBodyImage.naturalHeight||0,renderHook:typeof window.stackfallDrawVoidApexAnswerBackground==='function'}})
     });
   }
   installDevControls();setTimeout(installDevControls,0);setTimeout(installDevControls,250);setTimeout(installDevControls,1000);
   window.stackfallVoidApexAnswerDiagnostics=()=>({
-    version:'v1',visualRevision:'v9',prototypeOnly:true,active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,
+    version:'v1',visualRevision:'v10',prototypeOnly:true,active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,
     preflightGemCount:preview.preflightGemCount,preflightXp:preview.preflightXp,phase:preview.phase,hpRatio:preview.hpRatio,
     defeating:preview.defeating,defeatAge:preview.defeatAge,aftermath:preview.aftermath,voidSealed:state.answerVoidSealed===true,
     threat:preview.threat,mode:state.mode,choiceLocked:state.choiceLocked===true,camera:{x:preview.camX,y:preview.camY},geometry:geometry(),
-    asset:{src:ANSWER_BODY_SRC,ready:answerBodyReady,failed:answerBodyFailed,naturalWidth:answerBodyImage.naturalWidth||0,naturalHeight:answerBodyImage.naturalHeight||0,bounds:answerBodyBounds,mask:answerBodyMaskStats},
+    asset:{src:ANSWER_BODY_SRC,ready:answerBodyReady,failed:answerBodyFailed,naturalWidth:answerBodyImage.naturalWidth||0,naturalHeight:answerBodyImage.naturalHeight||0,renderHook:typeof window.stackfallDrawVoidApexAnswerBackground==='function'},
     frame:answerFrame(),backgroundFrozen:preview.active
   });
 })();
