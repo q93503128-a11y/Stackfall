@@ -1,0 +1,27 @@
+name: Cleanup Answer V11 temporary files
+
+on:
+  push:
+    branches:
+      - feature/void-apex-answer-v1
+    paths:
+      - .github/workflows/answer-v11-cleanup.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/void-apex-answer-v1
+          fetch-depth: 0
+      - name: Remove temporary patch files
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git rm -f scripts/patch-answer-v11.mjs .github/workflows/answer-v11-patch.yml .github/workflows/answer-v11-cleanup.yml
+          git commit -m "Remove temporary Answer V11 patch tooling"
+          git push origin HEAD:feature/void-apex-answer-v1
