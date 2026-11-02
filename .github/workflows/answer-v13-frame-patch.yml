@@ -1,0 +1,71 @@
+name: Answer V13 frame patch
+
+on:
+  push:
+    branches:
+      - feature/void-apex-answer-v1
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/void-apex-answer-v1
+          fetch-depth: 0
+      - name: Patch approved cosmic asset framing
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('src/void-apex-answer-v1.js')
+          s = p.read_text(encoding='utf-8')
+          old_rev = "window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v10';"
+          if old_rev not in s:
+              raise SystemExit('expected v10 revision marker not found')
+          s = s.replace(old_rev, "window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v13';", 1)
+          old_frame = """  function answerFrame(){
+            const width=Math.max(720,Number(vw)||1280),height=Math.max(520,Number(vh)||720);
+            const naturalW=answerBodyImage.naturalWidth||700,naturalH=answerBodyImage.naturalHeight||394,ratio=naturalW/naturalH;
+            const w=Math.max(width*1.12,height*2.18),h=w/ratio,visibleDepth=Math.max(190,Math.min(300,height*.30));
+            return{x:(width-w)*.5,y:visibleDepth-h,w,h,visibleDepth,ratio};
+          }
+          """
+          new_frame = """  function answerFrame(){
+            const width=Math.max(720,Number(vw)||1280),height=Math.max(520,Number(vh)||720);
+            // Production crop from the approved 960x540 body asset: x=37..925, y=67..330.
+            // This keeps both fixed galaxies visible while the enormous body remains mostly offscreen above the arena.
+            const ratio=888/263,w=Math.max(width*1.06,height*1.95),h=w/ratio;
+            const visibleDepth=Math.max(300,Math.min(420,height*.42));
+            return{x:(width-w)*.5,y:visibleDepth-h,w,h,visibleDepth,ratio};
+          }
+          """
+          if old_frame not in s:
+              raise SystemExit('expected V10 answerFrame block not found')
+          s = s.replace(old_frame, new_frame, 1)
+          old_draw = "ctx.drawImage(answerBodyImage,frame.x,frame.y,frame.w,frame.h);"
+          new_draw = "ctx.drawImage(answerBodyImage,37,67,888,263,frame.x,frame.y,frame.w,frame.h);"
+          if old_draw not in s:
+              raise SystemExit('expected full-image draw call not found')
+          s = s.replace(old_draw, new_draw, 1)
+          p.write_text(s, encoding='utf-8')
+      - name: Validate patched JavaScript
+        run: |
+          node --check src/void-apex-answer-v1.js
+          grep -F "STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v13'" src/void-apex-answer-v1.js
+          grep -F "drawImage(answerBodyImage,37,67,888,263" src/void-apex-answer-v1.js
+      - name: Commit patch
+        run: |
+          if git diff --quiet -- src/void-apex-answer-v1.js; then
+            echo 'No source changes to commit'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/void-apex-answer-v1.js
+          git commit -m 'Apply Answer V13 approved asset framing'
+          git push origin HEAD:feature/void-apex-answer-v1
