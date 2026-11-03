@@ -1,0 +1,58 @@
+name: tmp-answer-combat-integrate
+on:
+  push:
+    branches: [feature/void-apex-answer-v1]
+permissions:
+  contents: write
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/void-apex-answer-v1
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate patch script before touching sources
+        run: python -m py_compile scripts/tmp-answer-combat-integrate.py
+      - name: Apply integrated combat patch
+        run: python scripts/tmp-answer-combat-integrate.py
+      - name: Parse changed JavaScript
+        run: |
+          node --check src/void-apex-answer-v1.js
+          node --check src/void-apex-answer-combat-v1.js
+          node --check src/boss-catalog.js
+          node --check src/build-info.js
+      - name: Run focused contracts
+        run: |
+          node scripts/void-apex-answer-contract.mjs
+          node scripts/apex-encounter-contract.mjs
+          node scripts/endgame-balance-contract.mjs
+          node scripts/level-choice-contract.mjs
+      - name: Run full build validation and refresh fingerprint
+        run: node scripts/build-fingerprint.mjs
+      - name: Verify approved invariants and no stale Apex base values
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -F "enemy.hp*=6.46*escalation.hp;enemy.damage*=1.83*escalation.damage" src/boss-catalog.js
+          ! grep -F "enemy.hp*=7.60*escalation.hp" src/boss-catalog.js
+          ! grep -F "enemy.damage*=2.15*escalation.damage" src/boss-catalog.js
+          grep -F "PHASE_2_HP=.75,PHASE_3_HP=.30" src/void-apex-answer-combat-v1.js
+          grep -F "gravity:'well'" src/void-apex-answer-combat-v1.js
+          grep -F "chrono:'slow'" src/void-apex-answer-combat-v1.js
+          ! grep -F "button('P4 · 응답'" src/void-apex-answer-v1.js
+          ! grep -F "player.maxHp*" src/void-apex-answer-combat-v1.js
+      - name: Commit verified result and remove temporary integration files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm -f scripts/tmp-answer-combat-integrate.py .github/workflows/tmp-answer-combat-integrate.yml .github/workflows/tmp-answer-combat-audit.yml
+          git add -A
+          git diff --cached --check
+          git commit -m 'Build Answer three-phase combat prototype and rebalance Apex stats'
+          git push origin HEAD:feature/void-apex-answer-v1
