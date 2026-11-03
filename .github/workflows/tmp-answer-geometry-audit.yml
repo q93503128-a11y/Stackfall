@@ -1,0 +1,24 @@
+name: tmp-answer-geometry-audit
+on:
+  push:
+    branches: [feature/void-apex-answer-v1]
+permissions:
+  contents: read
+jobs:
+  audit:
+    if: github.event.head_commit.message == 'Audit Answer geometry integration points'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/void-apex-answer-v1
+      - name: Locate enemy geometry and targeting hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '=== overlap definitions ==='
+          grep -RIn --exclude-dir=.git -E 'function (enemyCircleOverlap|enemySegmentOverlap|nearestEnemy|nearestWeaponTarget)|const (enemyCircleOverlap|enemySegmentOverlap|nearestEnemy|nearestWeaponTarget)' src || true
+          echo '=== dealDamage / hit effect definitions ==='
+          grep -RIn --exclude-dir=.git -E 'function dealDamage|dealDamage=function|spawnDamage|damage text|hitPulse|enemy\.hit' src | head -120 || true
+          echo '=== targeting references ==='
+          grep -RIn --exclude-dir=.git -E 'nearestEnemy\(|nearestWeaponTarget\(' src | head -160 || true
