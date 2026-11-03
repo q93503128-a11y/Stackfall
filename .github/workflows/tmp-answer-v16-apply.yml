@@ -1,0 +1,69 @@
+name: tmp-answer-v16-apply
+on:
+  push:
+    branches:
+      - feature/void-apex-answer-v1
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/void-apex-answer-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Replace old Answer body with approved raster
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          src=Path('src/void-apex-answer-v1.js')
+          text=src.read_text()
+          text=text.replace("window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v15';","window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v16';")
+          text=re.sub(r"\n\s*// V14 visual lock:.*?const answerBodyImage=new Image\(\);", "\n\n  // V16 visual lock: approved dark cosmic body + current fissures are one raster.\n  // Until phase-specific art is generated, P1-P4 intentionally share this same body.\n  const ANSWER_BODY_B64_URL='assets/answer/answer_body_v16.b64';\n  const answerBodyImage=new Image();", text, count=1, flags=re.S)
+          text=text.replace("answerBodyImage.addEventListener('error',()=>{answerBodyReady=false;answerBodyFailed=true;syncDevStatus();console.error('[Stackfall] Answer body asset failed to load',ANSWER_BODY_SRC);});\n  answerBodyImage.src=ANSWER_BODY_SRC;",
+                            "answerBodyImage.addEventListener('error',()=>{answerBodyReady=false;answerBodyFailed=true;syncDevStatus();console.error('[Stackfall] Answer body asset failed to load',ANSWER_BODY_B64_URL);});\n  (async()=>{try{const response=await fetch(ANSWER_BODY_B64_URL,{cache:'no-store'});if(!response.ok)throw new Error(`HTTP ${response.status}`);const b64=(await response.text()).trim();answerBodyImage.src=`data:image/webp;base64,${b64}`;}catch(error){answerBodyReady=false;answerBodyFailed=true;syncDevStatus();console.error('[Stackfall] Answer body payload failed to load',error);}})();")
+          text=re.sub(r"\n\s*const FISSURES=\[.*?const PHASE_CRACK_COUNT=\[3,6,9,13\];\n", "\n", text, count=1, flags=re.S)
+          text=re.sub(r"\n\s*function strokeScreenFissure\(.*?\n\s*function drawAnswerBoss\(\)", "\n  function drawAnswerBoss()", text, count=1, flags=re.S)
+          text=text.replace('const ratio=888/263,w=Math.max(width*1.14,height*2.05),h=w/ratio;', 'const ratio=960/280,w=Math.max(width*1.14,height*2.05),h=w/ratio;')
+          text=text.replace("ctx.save();ctx.globalAlpha=.94;ctx.globalCompositeOperation='source-over';ctx.filter='brightness(.56) saturate(.62) contrast(1.04)';ctx.shadowColor='rgba(188,204,255,.09)';ctx.shadowBlur=10;ctx.drawImage(answerBodyImage,37,67,888,263,frame.x,frame.y,frame.w,frame.h);ctx.restore();",
+                            "ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.filter='none';ctx.shadowColor='rgba(188,204,255,.08)';ctx.shadowBlur=8;ctx.drawImage(answerBodyImage,0,0,960,280,frame.x,frame.y,frame.w,frame.h);ctx.restore();")
+          text=text.replace('    drawAnswerFissures(frame,phase);\n','')
+          text=text.replace('asset:{src:ANSWER_BODY_SRC,ready:answerBodyReady,failed:answerBodyFailed,','asset:{src:ANSWER_BODY_B64_URL,ready:answerBodyReady,failed:answerBodyFailed,')
+          text=text.replace("version:'v1',visualRevision:'v10'","version:'v1',visualRevision:'v16'")
+          src.write_text(text)
+
+          contract=Path('scripts/void-apex-answer-contract.mjs')
+          c=contract.read_text()
+          c=re.sub(r"const bodyDataMatch=.*?const parsesAsJavaScript=", "const bodyAssetText=read('assets/answer/answer_body_v16.b64').trim();\nconst bodyAssetBytes=Buffer.from(bodyAssetText,'base64');\nconst bodyAssetHash=createHash('sha256').update(bodyAssetBytes).digest('hex');\nconst bodyAssetExact=bodyAssetBytes.length===30998\n  &&bodyAssetHash==='113ff9e75bfca3776588511334ea40d4a44f3d5ac98737a9f171e85da9094515'\n  &&bodyAssetBytes.subarray(0,4).toString('ascii')==='RIFF'\n  &&bodyAssetBytes.subarray(8,12).toString('ascii')==='WEBP'\n  &&bodyAssetBytes.readUInt32LE(4)+8===bodyAssetBytes.length;\nconst parsesAsJavaScript=", c, count=1, flags=re.S)
+          c=re.sub(r"\['Answer V14 renders.*?\],", "['Answer V16 loads only the approved external raster payload',answer.includes(\"STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v16'\")&&answer.includes(\"const ANSWER_BODY_B64_URL='assets/answer/answer_body_v16.b64'\")&&answer.includes('ctx.drawImage(answerBodyImage,0,0,960,280,frame.x,frame.y,frame.w,frame.h)')&&!answer.includes('ANSWER_BODY_SRC')],", c, count=1)
+          c=c.replace("['embedded q55 raster bytes are exact and container-complete',bodyAssetExact],","['approved V16 raster payload is exact and container-complete',bodyAssetExact],")
+          c=re.sub(r"\['body framing uses.*?\],", "['body framing keeps the approved canopy offscreen and reserves player space',answer.includes('const ratio=960/280')&&answer.includes('visibleDepth=Math.max(245,Math.min(330,height*.34))')&&answer.includes('y:visibleDepth-h')],", c, count=1)
+          c=re.sub(r"\['body is phase-invariant.*?\],", "['temporary phase presentation uses one baked raster with no legacy procedural fissures',!answer.includes('const FISSURES=')&&!answer.includes('drawAnswerFissures')&&!answer.includes('strokeScreenFissure')],", c, count=1)
+          contract.write_text(c)
+
+          fp=Path('scripts/build-fingerprint.mjs')
+          f=fp.read_text()
+          if "'assets/answer/answer_body_v16.b64'" not in f:
+            f=f.replace("'src/void-apex-answer-v1.js',", "'src/void-apex-answer-v1.js',\n  'assets/answer/answer_body_v16.b64',")
+          fp.write_text(f)
+          PY
+      - name: Validate
+        shell: bash
+        run: |
+          node --check src/void-apex-answer-v1.js
+          node scripts/void-apex-answer-contract.mjs
+          node scripts/build-fingerprint.mjs
+      - name: Commit stable result and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/tmp-answer-v16-apply.yml
+          git add src/void-apex-answer-v1.js scripts/void-apex-answer-contract.mjs scripts/build-fingerprint.mjs assets/answer/answer_body_v16.b64
+          git commit -m "Replace Answer prototype with approved dark cosmic body"
+          git push origin HEAD:feature/void-apex-answer-v1
