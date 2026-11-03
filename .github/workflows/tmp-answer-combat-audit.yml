@@ -1,0 +1,23 @@
+name: tmp-answer-combat-audit
+on:
+  push:
+    branches: [feature/void-apex-answer-v1]
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/void-apex-answer-v1
+      - name: Audit combat integration points
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '=== player damage / shield / invulnerability ==='
+          grep -RIn --exclude-dir=.git -E 'damagePlayer|playerDamage|hurtPlayer|takeDamage|player\.hp|player\.shield|invuln' src | head -n 240 || true
+          echo '=== enemy projectile helpers ==='
+          grep -RIn --exclude-dir=.git -E 'spawnEnemyProjectile|enemyProjectiles|updateEnemyProjectiles|telegraph.*damage|addLine\(|addCircle\(' src | head -n 260 || true
+          echo '=== weapon fire / wells / recent player attacks ==='
+          grep -RIn --exclude-dir=.git -E 'fireCore|fireEmber|fireComet|firePrism|fireIon|fireRail|fireSpiral|spawn.*Well|gravity|wellCd|weaponSlots|weaponStacks' src/weapons.js src/systems*.js src/endgame-balance-expansion.js src/core.js | head -n 320 || true
