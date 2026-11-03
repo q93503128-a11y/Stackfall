@@ -1,0 +1,45 @@
+name: tmp-answer-v16-renderfix
+on:
+  push:
+    branches: [feature/void-apex-answer-v1]
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/void-apex-answer-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Patch Answer raster sampling
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/void-apex-answer-v1.js')
+          s=p.read_text()
+          old="ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.filter='none';ctx.shadowColor='rgba(188,204,255,.08)';ctx.shadowBlur=8;ctx.drawImage(answerBodyImage,0,0,960,280,frame.x,frame.y,frame.w,frame.h);ctx.restore();"
+          new="ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.filter='none';ctx.shadowColor='rgba(188,204,255,.08)';ctx.shadowBlur=8;const drawX=Math.round(frame.x),drawY=Math.round(frame.y),drawW=Math.round(frame.w),drawH=Math.round(frame.h);ctx.drawImage(answerBodyImage,0,0,960,280,drawX,drawY,drawW,drawH);ctx.restore();"
+          if old not in s:
+              raise SystemExit('target draw call not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+      - name: Validate
+        shell: bash
+        run: |
+          node --check src/void-apex-answer-v1.js
+          node scripts/void-apex-answer-contract.mjs
+          node scripts/build-fingerprint.mjs
+      - name: Commit verified result
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/tmp-answer-v16-renderfix.yml
+          git add src/void-apex-answer-v1.js
+          git commit -m "Stabilize Answer raster sampling"
+          git push origin HEAD:feature/void-apex-answer-v1
