@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Patch Answer raster sampling
+      - name: Patch Answer raster sampling and contract
         shell: bash
         run: |
           python - <<'PY'
@@ -25,8 +25,15 @@ jobs:
           new="ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.filter='none';ctx.shadowColor='rgba(188,204,255,.08)';ctx.shadowBlur=8;const drawX=Math.round(frame.x),drawY=Math.round(frame.y),drawW=Math.round(frame.w),drawH=Math.round(frame.h);ctx.drawImage(answerBodyImage,0,0,960,280,drawX,drawY,drawW,drawH);ctx.restore();"
           if old not in s:
               raise SystemExit('target draw call not found')
-          s=s.replace(old,new,1)
-          p.write_text(s)
+          p.write_text(s.replace(old,new,1))
+
+          cpath=Path('scripts/void-apex-answer-contract.mjs')
+          c=cpath.read_text()
+          oldcheck="answer.includes('ctx.drawImage(answerBodyImage,0,0,960,280,frame.x,frame.y,frame.w,frame.h)')"
+          newcheck="answer.includes(\"ctx.imageSmoothingQuality='high'\")&&answer.includes('const drawX=Math.round(frame.x),drawY=Math.round(frame.y),drawW=Math.round(frame.w),drawH=Math.round(frame.h)')&&answer.includes('ctx.drawImage(answerBodyImage,0,0,960,280,drawX,drawY,drawW,drawH)')"
+          if oldcheck not in c:
+              raise SystemExit('target contract check not found')
+          cpath.write_text(c.replace(oldcheck,newcheck,1))
           PY
       - name: Validate
         shell: bash
@@ -40,6 +47,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm .github/workflows/tmp-answer-v16-renderfix.yml
-          git add src/void-apex-answer-v1.js
+          git add src/void-apex-answer-v1.js scripts/void-apex-answer-contract.mjs
           git commit -m "Stabilize Answer raster sampling"
           git push origin HEAD:feature/void-apex-answer-v1
