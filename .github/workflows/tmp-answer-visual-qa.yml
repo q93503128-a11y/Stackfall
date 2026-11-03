@@ -33,7 +33,7 @@ jobs:
           async function waitBuild(){
             for(let i=0;i<8;i++){
               await page.goto('https://feature-void-apex-answer-v1.stackfall.pages.dev/?dev=1',{waitUntil:'networkidle',timeout:60000});
-              if(await page.evaluate(()=>window.STACKFALL_BUILD_SHA===expected))return;
+              if(await page.evaluate(e=>window.STACKFALL_BUILD_SHA===e,expected))return;
               await page.waitForTimeout(2500);
             }
             throw new Error('Preview did not reach expected build fingerprint');
