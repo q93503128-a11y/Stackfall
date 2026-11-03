@@ -13,79 +13,59 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: Install Playwright
         run: |
           npm init -y >/dev/null 2>&1
           npm install --no-save playwright@1.56.1
-      - name: Capture isolated Answer runtime patterns
+      - name: Capture Answer hazards at real runtime phases
         run: |
           mkdir -p qa-answer
           cat > qa-answer-run.mjs <<'EOF'
           import { chromium } from 'playwright';
           import fs from 'node:fs';
-          const expected='sha256-507a3530b20f26de1ab801fa72d5538cbbacc371ea669edb347785e15c09df91';
+          const expected='sha256-5d5afc6642b2e81886b3128e51ca4d96148e58beede66280d5c4d1550ab99021';
           const browser=await chromium.launch({channel:'chrome',headless:true});
           const page=await browser.newPage({viewport:{width:1600,height:900},deviceScaleFactor:1});
-          const errors=[];
+          const errors=[],samples=[];
           page.on('pageerror',e=>errors.push('PAGE '+e.message));
           page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE '+m.text());});
-          async function waitBuild(){
-            for(let i=0;i<8;i++){
-              await page.goto('https://feature-void-apex-answer-v1.stackfall.pages.dev/?dev=1',{waitUntil:'networkidle',timeout:60000});
-              if(await page.evaluate(e=>window.STACKFALL_BUILD_SHA===e,expected))return;
-              await page.waitForTimeout(2500);
-            }
-            throw new Error('Preview did not reach expected build fingerprint');
-          }
+          async function waitBuild(){for(let i=0;i<12;i++){await page.goto('https://feature-void-apex-answer-v1.stackfall.pages.dev/?dev=1',{waitUntil:'networkidle',timeout:60000});if(await page.evaluate(e=>window.STACKFALL_BUILD_SHA===e,expected))return;await page.waitForTimeout(2500);}throw new Error('Preview did not reach expected build fingerprint');}
           await waitBuild();
-          await page.waitForFunction(()=>window.stackfallDeveloperTest&&window.stackfallAnswerCombatForcePattern&&window.stackfallVoidApexAnswerDiagnostics,{timeout:30000});
-          const boot=await page.evaluate(()=>{
-            state.mode='playing';state.choiceLocked=false;state.choiceOpening=false;
-            if(state.entities?.enemies)state.entities.enemies.length=0;
-            if(state.entities?.enemyProjectiles)state.entities.enemyProjectiles.length=0;
-            return window.stackfallDeveloperTest.startAnswerPrototype();
-          });
+          await page.waitForFunction(()=>window.stackfallDeveloperTest&&window.stackfallAnswerCombatForcePattern&&window.stackfallAnswerCombatDiagnostics,{timeout:30000});
+          const boot=await page.evaluate(()=>{state.mode='playing';state.choiceLocked=false;state.choiceOpening=false;if(state.entities?.enemies)state.entities.enemies.length=0;if(state.entities?.enemyProjectiles)state.entities.enemyProjectiles.length=0;return window.stackfallDeveloperTest.startAnswerPrototype();});
           await page.waitForFunction(()=>document.documentElement.dataset.answerPreview==='1',{timeout:20000});
-          await page.evaluate(()=>{
-            const menu=document.querySelector('#menu');if(menu)menu.style.display='none';
-            const dev=document.querySelector('#stackfallDevPanel');if(dev)dev.style.display='none';
-            player.invuln=999;
-          });
-          await page.waitForTimeout(350);
-          await page.screenshot({path:'qa-answer/00-active.png'});
-          async function resetPhase(phase){
-            await page.evaluate(p=>{window.stackfallAnswerCombatForcePhase(p);player.invuln=999;},phase);
-            await page.waitForTimeout(180);
-          }
-          async function force(kind,wait,name){
-            await page.evaluate(k=>window.stackfallAnswerCombatForcePattern(k),kind);
-            await page.waitForTimeout(wait);
-            await page.screenshot({path:`qa-answer/${name}.png`});
-          }
-          await resetPhase(1);await force('spike',650,'01-spike-warning');
-          await page.waitForTimeout(900);await page.screenshot({path:'qa-answer/02-spike-active.png'});
-          await resetPhase(1);await force('split',1700,'03-split-warning');
-          await page.waitForTimeout(1900);await page.screenshot({path:'qa-answer/04-split-active.png'});
-          await resetPhase(2);await force('row',1000,'05-row-warning');
-          await page.waitForTimeout(1450);await page.screenshot({path:'qa-answer/06-row-active.png'});
-          await resetPhase(2);await force('beam',900,'07-beam-warning');
-          await page.waitForTimeout(1100);await page.screenshot({path:'qa-answer/08-beam-active.png'});
-          await resetPhase(3);await force('clone',700,'09-clone.png');
-          const diag=await page.evaluate(()=>({
-            build:window.STACKFALL_BUILD_SHA,
-            answer:window.stackfallVoidApexAnswerDiagnostics?.(),
-            combat:window.stackfallAnswerCombatDiagnostics?.(),
-            dev:window.stackfallDeveloperTest?.answerPrototypeSnapshot?.(),
-            mode:state.mode,hp:player.hp,maxHp:player.maxHp
-          }));
-          fs.writeFileSync('qa-answer/report.json',JSON.stringify({boot,diag,errors},null,2));
+          await page.evaluate(()=>{const menu=document.querySelector('#menu');if(menu)menu.style.display='none';const panel=document.querySelector('#stackfallDevPanel');if(panel)panel.style.display='none';for(const el of document.querySelectorAll('button'))if(el.textContent?.trim()==='DEV')el.style.display='none';player.invuln=999;});
+          const snap=async label=>samples.push({label,combat:await page.evaluate(()=>window.stackfallAnswerCombatDiagnostics?.())});
+          async function resetPhase(phase){await page.evaluate(p=>{window.stackfallAnswerCombatForcePhase(p);player.invuln=999;},phase);await page.waitForTimeout(100);}
+          async function shot(path){await page.screenshot({path:`qa-answer/${path}.png`});await snap(path);}
+          await shot('00-active');
+
+          await resetPhase(1);await page.evaluate(()=>window.stackfallAnswerCombatForcePattern('spike'));
+          await page.waitForFunction(()=>{const s=window.stackfallAnswerCombatDiagnostics?.().spikeDetails?.[0];return s&&s.age>.45&&s.age<s.warn;});await shot('01-spike-warning');
+          await page.waitForFunction(()=>{const s=window.stackfallAnswerCombatDiagnostics?.().spikeDetails?.[0];return s&&s.age>s.warn+.04&&s.age<s.warn+s.thrust+s.hold;});await shot('02-spike-active');
+
+          await resetPhase(1);await page.evaluate(()=>window.stackfallAnswerCombatForcePattern('split'));
+          await page.waitForFunction(()=>{const m=window.stackfallAnswerCombatDiagnostics?.().majorDetails;return m?.kind==='split'&&m.age>1&&m.age<m.warn;});await shot('03-split-warning');
+          await page.waitForFunction(()=>{const m=window.stackfallAnswerCombatDiagnostics?.().majorDetails;return m?.kind==='split'&&m.age>m.warn+.15&&m.age<m.warn+m.active;});await shot('04-split-active');
+
+          await resetPhase(2);await page.evaluate(()=>window.stackfallAnswerCombatForcePattern('row'));
+          await page.waitForFunction(()=>{const m=window.stackfallAnswerCombatDiagnostics?.().majorDetails;return m?.kind==='row'&&m.age>.7&&m.age<m.warn;});await shot('05-row-warning');
+          await page.waitForFunction(()=>{const m=window.stackfallAnswerCombatDiagnostics?.().majorDetails;return m?.kind==='row'&&m.age>m.warn+.07&&m.age<m.warn+.16;});await shot('06-row-thrust');
+
+          await resetPhase(2);await page.evaluate(()=>window.stackfallAnswerCombatForcePattern('beam'));
+          await page.waitForFunction(()=>{const m=window.stackfallAnswerCombatDiagnostics?.().majorDetails;return m?.kind==='beam'&&m.age>.7&&m.age<m.warn;});await shot('07-beam-warning');
+          await page.waitForFunction(()=>{const m=window.stackfallAnswerCombatDiagnostics?.().majorDetails;return m?.kind==='beam'&&m.age>m.warn+.08&&m.age<m.warn+m.active;});await shot('08-beam-active');
+
+          await resetPhase(3);await page.evaluate(()=>window.stackfallAnswerCombatForcePattern('clone'));await page.waitForTimeout(280);await shot('09-clone');
+          const diag=await page.evaluate(()=>({build:window.STACKFALL_BUILD_SHA,answer:window.stackfallVoidApexAnswerDiagnostics?.(),combat:window.stackfallAnswerCombatDiagnostics?.(),mode:state.mode,hp:player.hp,maxHp:player.maxHp}));
+          fs.writeFileSync('qa-answer/report.json',JSON.stringify({boot,diag,samples,errors},null,2));
           await browser.close();
           if(errors.length)console.log(errors.join('\n'));
           EOF
           node qa-answer-run.mjs
       - uses: actions/upload-artifact@v4
         with:
-          name: answer-visual-qa-isolated
+          name: answer-visual-qa-final
           path: qa-answer
           retention-days: 1
