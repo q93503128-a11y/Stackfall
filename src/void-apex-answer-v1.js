@@ -348,7 +348,7 @@ function installDevControls(){
   window.stackfallStopAnswerPrototype=stop;
   installDevControls();setTimeout(installDevControls,0);setTimeout(installDevControls,250);setTimeout(installDevControls,1000);
   window.stackfallVoidApexAnswerDiagnostics=()=>({
-    version:'v1',visualRevision:'v17',prototypeOnly:true,active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,
+    version:'v1',visualRevision:'v18',prototypeOnly:true,active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,
     preflightGemCount:preview.preflightGemCount,preflightXp:preview.preflightXp,phase:preview.phase,hpRatio:preview.hpRatio,
     defeating:preview.defeating,defeatAge:preview.defeatAge,aftermath:preview.aftermath,voidSealed:state.answerVoidSealed===true,
     threat:preview.threat,mode:state.mode,choiceLocked:state.choiceLocked===true,camera:{x:preview.camX,y:preview.camY},geometry:geometry(),
