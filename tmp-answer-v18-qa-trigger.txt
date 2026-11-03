@@ -1,1 +1,1 @@
-temporary trigger for V18 second-pass runtime visual QA
+temporary trigger for final V18 presentation polish retry
