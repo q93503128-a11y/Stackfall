@@ -19,7 +19,9 @@ jobs:
         with:
           node-version: '22'
       - name: Apply second-pass patch
-        run: python scripts/tmp-answer-polish2.py
+        run: |
+          python scripts/tmp-answer-polish2.py
+          python scripts/tmp-answer-contract2.py
       - name: Parse JavaScript
         run: node --check src/void-apex-answer-combat-v1.js
       - name: Focused Answer contract
@@ -33,18 +35,20 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           s=Path('src/void-apex-answer-combat-v1.js').read_text()
+          c=Path('scripts/void-apex-answer-contract.mjs').read_text()
           checks={
-            'split no road-like dash flow': "flowT=performance.now()*.00020" in s and "quadraticCurveTo" in s,
+            'split uses organic void wisps': "flowT=performance.now()*.00020" in s and 'quadraticCurveTo' in s and 'lineDashOffset=-flow' not in s,
             'fake spikes translucent': "rgba(235,242,252,.34)" in s,
             'true spikes readable rim': "rgba(148,112,179,.74)" in s,
             'clone bolt has readable trail': "c.r*scale*4.2" in s and "rgba(225,229,238,.86)" in s,
+            'contract migrated with implementation': "flowT=performance.now()*.00020" in c and "!combat.includes('lineDashOffset=-flow')" in c,
           }
           for name,ok in checks.items(): print(('PASS' if ok else 'FAIL'),name)
           if not all(checks.values()): raise SystemExit(1)
           PY
       - name: Commit verified second pass
         run: |
-          rm -f .github/workflows/tmp-answer-polish2.yml scripts/tmp-answer-polish2.py
+          rm -f .github/workflows/tmp-answer-polish2.yml scripts/tmp-answer-polish2.py scripts/tmp-answer-contract2.py
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
