@@ -1,7 +1,9 @@
 from pathlib import Path
 import re
 p=Path('src/void-apex-answer-combat-v1.js')
+contract_path=Path('scripts/void-apex-answer-contract.mjs')
 s=p.read_text()
+contract=contract_path.read_text()
 
 def sub(pattern,repl,label):
     global s
@@ -37,10 +39,15 @@ fissure_edges=r'''  const FISSURE_EDGES=[
   ];'''
 sub(r"  const FISSURE_EDGES=\[.*?\n  \];",fissure_edges,'fissure edges')
 
-# Beam: same exact danger width, but an illuminated column rather than a flat white rectangle.
 beam=r'''  function drawBeam(m){const root=fissureRootScreen(),x=root.x,start=root.y;if(m.age<m.warn){const p=clamp01(m.age/m.warn),pulse=.5+.5*Math.sin(performance.now()*.012);ctx.save();ctx.globalCompositeOperation='screen';ctx.fillStyle=`rgba(238,246,255,${.008+p*.030})`;ctx.fillRect(x-m.width*.5,start,m.width,vh-start);ctx.strokeStyle=`rgba(238,244,255,${.18+p*.46})`;ctx.lineWidth=1;for(const side of[-1,1]){ctx.beginPath();ctx.moveTo(x+side*m.width*.5,start);ctx.lineTo(x+side*m.width*.5,vh);ctx.stroke();}ctx.strokeStyle=`rgba(255,255,255,${.38+p*.62})`;ctx.shadowColor='#ffffff';ctx.shadowBlur=8+p*18;ctx.lineWidth=1.3+p*2.1;ctx.beginPath();ctx.moveTo(x,start);ctx.lineTo(x,vh);ctx.stroke();const r=22+p*36+pulse*4,g=ctx.createRadialGradient(x,start,0,x,start,r);g.addColorStop(0,`rgba(255,255,255,${.38+p*.58})`);g.addColorStop(.32,`rgba(239,247,255,${.09+p*.23})`);g.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=g;ctx.fillRect(x-r,start-r,r*2,r*2);ctx.restore();return;}const e=m.age-m.warn,alpha=e<=m.active?1:1-clamp01((e-m.active)/m.fade);ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=alpha;const gx=ctx.createLinearGradient(x-m.width*.5,0,x+m.width*.5,0);gx.addColorStop(0,'rgba(220,236,255,.18)');gx.addColorStop(.10,'rgba(238,247,255,.72)');gx.addColorStop(.30,'rgba(255,255,255,.97)');gx.addColorStop(.50,'rgba(255,255,255,1)');gx.addColorStop(.70,'rgba(255,255,255,.97)');gx.addColorStop(.90,'rgba(238,247,255,.72)');gx.addColorStop(1,'rgba(220,236,255,.18)');ctx.shadowColor='#ffffff';ctx.shadowBlur=26;ctx.fillStyle=gx;ctx.fillRect(x-m.width*.5,start,m.width,vh-start);ctx.shadowBlur=10;ctx.fillStyle='rgba(255,255,255,1)';ctx.fillRect(x-m.width*.16,start,m.width*.32,vh-start);ctx.shadowBlur=0;ctx.strokeStyle='rgba(255,255,255,.58)';ctx.lineWidth=.9;for(const side of[-1,1]){ctx.beginPath();ctx.moveTo(x+side*m.width*.5,start);ctx.lineTo(x+side*m.width*.5,vh);ctx.stroke();}ctx.restore();}
 '''
 sub(r"  function drawBeam\(m\)\{.*?\n  function drawRow\(m\)",beam+"  function drawRow(m)",'beam renderer')
 
+old="combat.includes('fissureRootScreen()')&&combat.includes(\"ctx.fillStyle='#ffffff'\")&&combat.includes(\"kind==='row'&&runtime.phase>=2\")"
+new="combat.includes('fissureRootScreen()')&&combat.includes('const gx=ctx.createLinearGradient')&&combat.includes(\"ctx.fillStyle='rgba(255,255,255,1)'\")&&combat.includes(\"kind==='row'&&runtime.phase>=2\")"
+if old not in contract: raise SystemExit('beam contract anchor missing')
+contract=contract.replace(old,new)
+
 p.write_text(s)
-print('final V18 visual polish patched')
+contract_path.write_text(contract)
+print('final V18 visual polish and beam contract patched')
