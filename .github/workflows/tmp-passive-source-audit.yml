@@ -1,0 +1,19 @@
+name: tmp-passive-source-audit
+on:
+  push:
+    branches: [feature/void-apex-answer-v1]
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/void-apex-answer-v1
+      - name: Locate multi projection core paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '=== Korean labels ==='
+          grep -RIn --exclude-dir=.git -E '다중 투영 코어|자석 코어|에코 비콘|성운 보관소' . || true
+          echo '=== likely ids / projection ==='
+          grep -RIn --exclude-dir=.git -Ei 'multi.?projection|projection.?core|nebula.?vault|nebula.?storage|echo.?beacon|magnet.?core' src scripts docs || true
