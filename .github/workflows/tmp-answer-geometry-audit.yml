@@ -6,24 +6,26 @@ permissions:
   contents: read
 jobs:
   audit:
-    if: github.event.head_commit.message == 'Audit Answer clean body history'
+    if: github.event.head_commit.message == 'Locate Answer clean body commit'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: feature/void-apex-answer-v1
           fetch-depth: 0
-      - name: Locate prior clean Answer assets
+      - name: Locate clean body blob
         shell: bash
         run: |
           set -euo pipefail
-          echo '=== files in history matching answer body ==='
-          git log --all --name-only --pretty=format: | grep -E 'answer.*(body|v15|v16)|void-apex-answer' | sort -u | head -200 || true
-          echo '=== commits mentioning Answer body revisions ==='
-          git log --all --oneline --decorate --grep='Answer\|응답\|V15\|V16' -i | head -120 || true
-          echo '=== candidate historical asset hashes/sizes ==='
-          for rev in $(git rev-list --all -- assets/answer/answer_body_v16.b64 | head -30); do
-            bytes=$(git show "$rev:assets/answer/answer_body_v16.b64" 2>/dev/null | tr -d '\r\n' | base64 -d 2>/dev/null | wc -c || true)
-            hash=$(git show "$rev:assets/answer/answer_body_v16.b64" 2>/dev/null | tr -d '\r\n' | base64 -d 2>/dev/null | sha256sum | cut -d' ' -f1 || true)
-            echo "$rev bytes=$bytes sha=$hash"
+          echo '=== base b64 history ==='
+          git log --all --format='%H %s' -- assets/answer/answer_body_base.b64 | head -40 || true
+          echo '=== base webp history ==='
+          git log --all --format='%H %s' -- assets/answer/answer_body_base.webp | head -40 || true
+          echo '=== verify each base-b64 revision ==='
+          for rev in $(git rev-list --all -- assets/answer/answer_body_base.b64 | head -20); do
+            printf '%s ' "$rev"
+            git cat-file -e "$rev:assets/answer/answer_body_base.b64" 2>/dev/null && {
+              txt=$(git show "$rev:assets/answer/answer_body_base.b64" | tr -d '\r\n');
+              printf 'text=%s bytes=%s sha=%s\n' "${#txt}" "$(printf '%s' "$txt" | base64 -d | wc -c)" "$(printf '%s' "$txt" | base64 -d | sha256sum | cut -d' ' -f1)";
+            } || echo MISSING
           done
