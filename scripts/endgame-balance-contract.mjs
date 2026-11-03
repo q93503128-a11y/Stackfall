@@ -39,7 +39,7 @@ expect('prism echo respects shared lock',expansion.includes('firePrism=function 
 expect('weapon baseline buff',expansion.includes('amount*=1.08'));
 expect('Multiplicity keeps archive cap two before Stage 18 and raises runtime cap to three after unlock',expansion.includes("max:3,eventOnly:true")&&expansion.includes("multiplicityMax=()=>window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')===true?3:2"));
 expect('projection core copy is concise and effect-only',expansion.includes("ko:['다중 투영 코어','일부 장비의 동시 공격 수 +1.']")&&expansion.includes("['Projection Core','Some equipment gains +1 simultaneous attack.']")&&!expansion.includes('추가 공격체는 원본과 같은 적을 노린다')&&!auditUi.includes('현재 복제 확률')&&!auditUi.includes('추가 흡인 속도')&&!auditUi.includes('sanitizeWorldEventCopy'));
-expect('Multiplicity stays event-only until its Stage 18 normal-pool unlock',expansion.includes("PASSIVES[choice.key]?.eventOnly&&window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')!==true")&&progression.includes("!p.eventOnly||window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')===true"));
+expect('Multiplicity remains event-only after the Stage 18 cap unlock',expansion.includes("PASSIVES[choice.key]?.eventOnly)).filter")&&progression.includes("if(c.kind==='passive'&&source.eventOnly)return null;")&&progression.includes("if(!p.eventOnly&&stat(key)<p.max"));
 expect('four choice keyboard shortcuts',expansion.includes("'Digit1','Digit2','Digit3','Digit4'"));
 expect('overdrive player health wording',expansion.includes('플레이어 체력이 45% 미만'));
 expect('echo typo fixed',expansion.includes('guaranteed=')&&!expansion.includes('guaranted'));

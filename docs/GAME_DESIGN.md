@@ -86,7 +86,7 @@
 | projectileSize | 광자 팽창 | 투사체·광선·공격 판정 크기 +10% |
 | projectileSpeed | 광자 가속 | 투사체 속도 +10%, 공전 장비 회전 속도 증가 |
 | range | 심우주 조준기 | 무기 기본 조준·비행 사거리 +10% |
-| multiplicity | 다중 투영 코어 | 지원되는 공격체 +1, 원본 표적 공유. Stage 18 전 성운 보관소 경로 최대 2중첩, Stage 18 이후 일반 성장 풀 포함 최대 3중첩 |
+| multiplicity | 다중 투영 코어 | 지원되는 공격체 +1, 원본 표적 공유. 성운 보관소 전용. Stage 18 전 최대 2중첩, Stage 18 이후 최대 3중첩 |
 
 ### 자석 코어
 
@@ -877,7 +877,7 @@ These four weapons are implemented and connected to Stage 11/13/15/17 first-clea
 - Identity boundary: Orbital Gate is an **installed arena tool**, not another orbiting weapon. Its tactical cost is positional: a badly placed network can be left behind, while a well-placed network can dominate a boss or choke point for its full lifetime.
 
 #### Projectile-count compatibility — Multiplicity Core / 다중 투영 코어
-- **Multiplicity Core / 다중 투영 코어** is obtainable from the Nebula Vault before Stage 18 and is capped at **2 stacks** in that state. Stage 18 first clear additionally admits it to the ordinary level-up pool and raises the run cap to **3 stacks**. The existing Nebula Vault route remains valid after the unlock.
+- **Multiplicity Core / 다중 투영 코어** is obtainable from the Nebula Vault before Stage 18 and is capped at **2 stacks** in that state. Stage 18 first clear raises the run cap to **3 stacks**, while acquisition remains Nebula Vault-only and never enters the ordinary level-up pool.
 - Each stack grants **+1 real attack body** to compatible equipment. "Attack body" is interpreted by weapon identity instead of blindly cloning every sub-projectile.
 - Extra projected attack bodies follow the weapon's existing target/placement intent. They must not randomly scatter to unrelated targets merely because Multiplicity is present.
 - Submunitions, reflected shots, chained hits, recursive copies, augment-generated children, and other secondary payloads are **not** independently multiplied unless explicitly stated below. This prevents exponential projectile growth.
@@ -928,7 +928,7 @@ These four weapons are implemented and connected to Stage 11/13/15/17 first-clea
 | 15 | Interstellar Missile Pods / 성간 미사일 포드 | 구현 완료 |
 | 16 | 코어 성장 3차 돌파 | 생명 코어와 출력 증폭기만 Lv.12까지 확장하며 세 번째 돌파를 연다. |
 | 17 | Orbital Gate / 궤도 문 | 구현 완료 |
-| 18 | 다중 투영 프로토콜 | 성운 보관소 획득 경로를 유지하면서 일반 레벨업 풀 진입 + 최대 중첩 2→3 |
+| 18 | 다중 투영 프로토콜 | 성운 보관소 전용 획득 유지 + 최대 중첩 2→3 (일반 레벨업 풀 미진입) |
 Implementation status: all four reward keys are connected only after their definitions, stack text, combat runtime, render/audio treatment, augment definitions, multiplicity barriers, progression reconstruction, and regression contracts were added together.
 
 ### World-event cadence
@@ -947,7 +947,7 @@ Implementation status: all four reward keys are connected only after their defin
 - **Stage 12**: 4중 재구성 — 일반 레벨업 선택지 4개. 데스크톱에서는 보스 특수능력 4지선다와 동일하게 **4개를 한 행에 일렬 배치**하고 좁은 화면에서만 반응형 배치를 허용한다.
 - **Stage 14**: `선행 재구성 +3` — 이후 Stage/Endless를 포함한 모든 런에서 시작 직후 일반 레벨업 선택을 3회 연속 수행하고 Lv.4로 전투를 시작한다. 경험치나 전투 시간을 소모하지 않는다. 일시정지 메뉴의 `게임 다시 시작`과 게임오버 `다시 시작`도 클릭 시점의 최신 `resetGame()` 래퍼를 호출하므로 이 보너스를 동일하게 다시 적용한다.
 - **Stage 16**: `코어 성장 3차 돌파` — 생명 코어와 출력 증폭기에만 9~12레벨을 추가한다. 공격 주기·회수 자장·충격 격자·성진 회수기·장착 슬롯에는 3차 돌파를 추가하지 않는다.
-- **Stage 18**: 다중 투영 프로토콜 — 기존 성운 보관소 획득은 유지하고 일반 레벨업 풀에도 추가하며 최대 중첩을 2에서 3으로 늘린다.
+- **Stage 18**: 다중 투영 프로토콜 — 성운 보관소 전용 획득을 유지한 채 최대 중첩만 2에서 3으로 늘린다. 일반 레벨업 풀에는 추가하지 않는다.
 - **설정 > 해금 관리**는 기본 접힘 상태이며, 이미 획득한 **자동 적용형** 해금만 개별 ON/OFF할 수 있다. 현재 대상은 무기 각성, 보스 특수능력, 4중 재구성, 선행 재구성 +3, 다중 투영 프로토콜이다. 코어 성장, Endless, Hard, 코어 성장 3차 돌파처럼 별도 메뉴/선택 행동이 필요한 해금은 토글 목록에서 제외한다.
 - DEV 프로필(`?dev=1`)은 테스트 편의를 위해 획득 조건을 우회한다. 장착 슬롯 V/VI는 기존 Core Development 확장 노드로 유지한다.
 - Boss Rush는 추후 별도 모드로 검토하며 현재 구현하지 않는다.

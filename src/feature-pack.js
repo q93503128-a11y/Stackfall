@@ -88,7 +88,7 @@ registerRollChoicesInterceptor('feature-pack.js:rollChoicesWithBasicCore',functi
     const count=weaponCount(key),has=count>0,slots=state.weaponSlots.length,limit=window.stackfallEquipmentSlotLimit?.()||4;
     if(count<6&&(has||slots<limit))pool.push({kind:'weapon',key,...w,weight:has?1.34:1});
   }
-  for(const [key,p] of Object.entries(PASSIVES))if(stat(key)<p.max&&(!window.stackfallIsPassiveChoiceUnlocked||window.stackfallIsPassiveChoiceUnlocked(key))&&(!p.eventOnly||window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')===true))pool.push({kind:'passive',key,...p,weight:key==='magnet'||key==='echo'?1.3:1.18});
+  for(const [key,p] of Object.entries(PASSIVES))if(stat(key)<p.max&&(!window.stackfallIsPassiveChoiceUnlocked||window.stackfallIsPassiveChoiceUnlocked(key))&&!p.eventOnly)pool.push({kind:'passive',key,...p,weight:key==='magnet'||key==='echo'?1.3:1.18});
   const out=[];
   while(out.length<n&&pool.length){
     let total=pool.reduce((sum,item)=>sum+item.weight,0),r=Math.random()*total,index=0;

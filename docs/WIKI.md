@@ -332,7 +332,7 @@ The three current constellations remain **Shardway**, **Abyssal Bloom**, and **S
 - **Phase Minefield / 위상 기뢰군**: lays mines from movement distance or fallback time, supports chain fuses and tripwires, and gains a triangular constellation deployment at six stacks. Afterimage Mine projects a weaker phantom mine near a priority target.
 - **Interstellar Missile Pods / 성간 미사일 포드**: visible side pods eject missiles outward first, then ignite and curve toward priority targets. MIRV keeps the main warhead at 100% parent damage and adds two 34% side warheads.
 - **Orbital Gate / 궤도 문**: stationary installed gate networks alternate between enemy-side and cast-time-player-side placement. Pulses route through fixed gates; Photon Crossfeed can copy an allied projectile once from the next gate at 55% damage.
-- **Projection Core / 다중 투영 코어** compatibility is bounded: before Stage 18 it remains a Nebula Vault-only reward capped at 2 stacks. Stage 18 first clear also adds it to the ordinary level-up pool and raises the cap to 3. It adds primary seeds, mines, main missiles, or routed gate pulses; secondary MIRV warheads, phantom mines, forced blooms, and gate copies do not recursively multiply.
+- **Projection Core / 다중 투영 코어** compatibility is bounded: before Stage 18 it remains a Nebula Vault-only reward capped at 2 stacks. Stage 18 first clear raises the cap to 3, but it remains a Nebula Vault-only reward and never enters the ordinary level-up pool. It adds primary seeds, mines, main missiles, or routed gate pulses; secondary MIRV warheads, phantom mines, forced blooms, and gate copies do not recursively multiply.
 
 ### Galaxy map / sealed Stage preview
 
@@ -359,7 +359,7 @@ Final Stage Apex는 공용 보스 풀과 별개다. 18종 모두 독립 기술 �
 - Stage 12: 일반 레벨업 4지선다. 데스크톱에서는 4개 카드를 한 줄에 배치한다.
 - Stage 14: **선행 재구성 +3**. 이후 모든 런은 시작 직후 일반 레벨업 선택 3회를 실제로 수행해 Lv.4로 시작한다. 게임 메뉴 재시작과 게임오버 재도전도 동일한 최신 런 초기화 경로를 사용한다.
 - Stage 16: **코어 성장 3차 돌파**. 생명 코어와 출력 증폭기만 12레벨까지 확장하며 Lv.12에 세 번째 돌파를 둔다. 주기·자석·피해 감소·성진 수급은 확장하지 않는다.
-- Stage 18: 다중 투영 코어의 일반 레벨업 풀 진입 + 최대 중첩 2→3. 기존 성운 보관소 획득 경로는 유지한다.
+- Stage 18: 다중 투영 코어 최대 중첩 2→3. 획득 경로는 계속 성운 보관소 전용이며 일반 레벨업 풀에는 들어가지 않는다.
 - 설정의 **해금 관리**는 접기/펼치기가 가능하고, 자동 적용형 해금인 무기 각성·보스 특수능력·4중 재구성·선행 재구성 +3·다중 투영 프로토콜만 ON/OFF한다. 코어 성장·Endless·Hard·3차 돌파처럼 직접 메뉴/난이도를 선택해야 적용되는 해금은 토글하지 않는다.
 - 이벤트는 해금 대상으로 두지 않는다. Boss Rush는 추후 검토한다.
 - Stage는 Endless의 8종 이벤트 런타임을 **작가 배치형 이벤트**로 재사용한다. 완전 랜덤 스케줄러는 꺼 두고 Stage별 계획표가 종류/시점을 정한다.
