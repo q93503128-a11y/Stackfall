@@ -22,7 +22,7 @@ jobs:
       - name: Capture Answer runtime patterns
         run: |
           mkdir -p qa-answer
-          cat > /tmp/qa-answer.mjs <<'EOF'
+          cat > qa-answer-run.mjs <<'EOF'
           import { chromium } from 'playwright';
           import fs from 'node:fs';
           const expected='sha256-507a3530b20f26de1ab801fa72d5538cbbacc371ea669edb347785e15c09df91';
@@ -82,7 +82,7 @@ jobs:
           await browser.close();
           if(errors.length)console.log(errors.join('\n'));
           EOF
-          node /tmp/qa-answer.mjs
+          node qa-answer-run.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: answer-visual-qa
