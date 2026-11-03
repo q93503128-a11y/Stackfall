@@ -11,13 +11,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: feature/void-apex-answer-v1
-      - name: Audit combat integration points
+      - name: Audit Answer integration points
         shell: bash
         run: |
           set -euo pipefail
-          echo '=== player damage / shield / invulnerability ==='
-          grep -RIn --exclude-dir=.git -E 'damagePlayer|playerDamage|hurtPlayer|takeDamage|player\.hp|player\.shield|invuln' src | head -n 240 || true
-          echo '=== enemy projectile helpers ==='
-          grep -RIn --exclude-dir=.git -E 'spawnEnemyProjectile|enemyProjectiles|updateEnemyProjectiles|telegraph.*damage|addLine\(|addCircle\(' src | head -n 260 || true
-          echo '=== weapon fire / wells / recent player attacks ==='
-          grep -RIn --exclude-dir=.git -E 'fireCore|fireEmber|fireComet|firePrism|fireIon|fireRail|fireSpiral|spawn.*Well|gravity|wellCd|weaponSlots|weaponStacks' src/weapons.js src/systems*.js src/endgame-balance-expansion.js src/core.js | head -n 320 || true
+          echo '=== Answer loader ==='
+          grep -RIn --exclude-dir=.git -E 'void-apex-answer|STACKFALL_VOID_APEX_ANSWER|stackfallVoidApexAnswer' . | head -n 220 || true
+          echo '=== apex stat literals/contracts ==='
+          grep -RIn --exclude-dir=.git -E '7\.60|2\.15|6\.46|1\.83' src scripts docs README.md | head -n 220 || true
+          echo '=== damage / shield ==='
+          grep -RIn --exclude-dir=.git -E 'hurtPlayerCore|registerPlayerDamageInterceptor|function hurtPlayer\(' src | head -n 120 || true
