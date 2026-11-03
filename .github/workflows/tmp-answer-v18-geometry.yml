@@ -6,7 +6,7 @@ permissions:
   contents: write
 jobs:
   patch:
-    if: github.event.head_commit.message == 'Run Answer V18 geometry refactor'
+    if: contains(github.event.head_commit.message, 'Answer V18 geometry refactor')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -18,7 +18,18 @@ jobs:
         with:
           node-version: '22'
       - name: Apply geometry refactor
-        run: python scripts/tmp-answer-v18-geometry.py
+        shell: bash
+        run: |
+          python scripts/tmp-answer-v18-geometry.py
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/void-apex-answer-contract.mjs')
+          s=p.read_text()
+          bad="combat.includes('e.stageBodyShapes=[{kind:'polygon',points}]')"
+          good='combat.includes("e.stageBodyShapes=[{kind:\'polygon\',points}]")'
+          if bad not in s: raise SystemExit('contract quote repair anchor missing')
+          p.write_text(s.replace(bad,good))
+          PY
       - name: Parse changed JavaScript
         run: |
           node --check src/void-apex-answer-combat-v1.js
