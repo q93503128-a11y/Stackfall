@@ -1,0 +1,109 @@
+name: tmp-projection-core-vault-only
+on:
+  push:
+    branches: [feature/void-apex-answer-v1]
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/void-apex-answer-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Make Projection Core special-reward-only
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new, count=None):
+              p=Path(path); s=p.read_text()
+              if old not in s:
+                  raise SystemExit(f'missing target in {path}: {old[:120]}')
+              n=s.count(old)
+              if count is not None and n != count:
+                  raise SystemExit(f'unexpected count in {path}: {n} != {count}')
+              p.write_text(s.replace(old,new))
+
+          # Runtime: event-only passives never enter ordinary level/start-bonus pools.
+          replace('src/endgame-balance-expansion.js',
+            "PASSIVES[choice.key]?.eventOnly&&window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')!==true",
+            "PASSIVES[choice.key]?.eventOnly", 1)
+          replace('src/feature-pack.js',
+            "(!p.eventOnly||window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')===true)",
+            "!p.eventOnly", 1)
+          replace('src/progression-expansion.js',
+            "if(c.kind==='passive'&&source.eventOnly&&window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')!==true)return null;",
+            "if(c.kind==='passive'&&source.eventOnly)return null;", 1)
+          replace('src/progression-expansion.js',
+            "if((!p.eventOnly||window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')===true)&&stat(key)<p.max",
+            "if(!p.eventOnly&&stat(key)<p.max", 1)
+          replace('src/endgame-balance-expansion.js',
+            "desc:'일부 장비의 동시 공격 수 +1. 성운 보관소에서는 2중첩, 프로토콜 해금 후 최대 3중첩.'",
+            "desc:'일부 장비의 동시 공격 수 +1. 성운 보관소 전용. 프로토콜 해금 전 2중첩, 후 최대 3중첩.'", 1)
+
+          # Contract: explicitly lock all ordinary choice paths away from event-only passives.
+          replace('scripts/endgame-balance-contract.mjs',
+            "expect('Multiplicity stays event-only until its Stage 18 normal-pool unlock',expansion.includes(\"PASSIVES[choice.key]?.eventOnly&&window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')!==true\")&&progression.includes(\"!p.eventOnly||window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')===true\"));",
+            "expect('Multiplicity remains event-only after the Stage 18 cap unlock',expansion.includes(\"PASSIVES[choice.key]?.eventOnly)).filter\")&&progression.includes(\"if(c.kind==='passive'&&source.eventOnly)return null;\")&&progression.includes(\"if(!p.eventOnly&&stat(key)<p.max\"));", 1)
+          replace('scripts/level-choice-contract.mjs',
+            "['ordinary passive choices no longer carry removed advanced-passive stage gates',!meta.includes('PASSIVE_FEATURE_REQUIREMENTS')&&meta.includes(\"if(key==='multiplicity')return isFeatureUnlocked('multiplicity-protocol')\")&&progression.includes('stackfallIsPassiveChoiceUnlocked')],",
+            "['ordinary passive choices always exclude event-only rewards',!meta.includes('PASSIVE_FEATURE_REQUIREMENTS')&&feature.includes(\"&&!p.eventOnly)pool.push({kind:'passive'\")&&progression.includes(\"if(c.kind==='passive'&&source.eventOnly)return null;\")&&progression.includes(\"if(!p.eventOnly&&stat(key)<p.max\")],", 1)
+          replace('scripts/level-choice-contract.mjs',
+            "['legacy Stage 18 Multiplicity declaration stays preserved while Endless achievement can grant it',catalog.includes(\"type:'feature',key:'multiplicity-protocol'\")&&endless.includes(\"featureReward('multiplicity-protocol')\")&&progression.includes(\"stackfallIsFeatureUnlocked?.('multiplicity-protocol')===true\")],",
+            "['Stage 18 Multiplicity Protocol raises the special-reward cap without ordinary-pool admission',catalog.includes(\"type:'feature',key:'multiplicity-protocol'\")&&endless.includes(\"featureReward('multiplicity-protocol')\")&&!feature.includes(\"!p.eventOnly||window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')===true\")&&!progression.includes(\"source.eventOnly&&window.stackfallIsFeatureUnlocked?.('multiplicity-protocol')!==true\")],", 1)
+
+          # Current canonical docs: Stage 18 is cap-only; acquisition stays Nebula Vault-only.
+          replace('docs/WIKI.md',
+            'Stage 18 first clear also adds it to the ordinary level-up pool and raises the cap to 3.',
+            'Stage 18 first clear raises the cap to 3, but it remains a Nebula Vault-only reward and never enters the ordinary level-up pool.', 1)
+          replace('docs/WIKI.md',
+            '- Stage 18: 다중 투영 코어의 일반 레벨업 풀 진입 + 최대 중첩 2→3. 기존 성운 보관소 획득 경로는 유지한다.',
+            '- Stage 18: 다중 투영 코어 최대 중첩 2→3. 획득 경로는 계속 성운 보관소 전용이며 일반 레벨업 풀에는 들어가지 않는다.', 1)
+          replace('docs/GAME_DESIGN.md',
+            '| multiplicity | 다중 투영 코어 | 지원되는 공격체 +1, 원본 표적 공유. Stage 18 전 성운 보관소 경로 최대 2중첩, Stage 18 이후 일반 성장 풀 포함 최대 3중첩 |',
+            '| multiplicity | 다중 투영 코어 | 지원되는 공격체 +1, 원본 표적 공유. 성운 보관소 전용. Stage 18 전 최대 2중첩, Stage 18 이후 최대 3중첩 |', 1)
+          replace('docs/GAME_DESIGN.md',
+            'Stage 18 first clear additionally admits it to the ordinary level-up pool and raises the run cap to **3 stacks**. The existing Nebula Vault route remains valid after the unlock.',
+            'Stage 18 first clear raises the run cap to **3 stacks**, while acquisition remains Nebula Vault-only and never enters the ordinary level-up pool.', 1)
+          replace('docs/GAME_DESIGN.md',
+            '| 18 | 다중 투영 프로토콜 | 성운 보관소 획득 경로를 유지하면서 일반 레벨업 풀 진입 + 최대 중첩 2→3 |',
+            '| 18 | 다중 투영 프로토콜 | 성운 보관소 전용 획득 유지 + 최대 중첩 2→3 (일반 레벨업 풀 미진입) |', 1)
+          replace('docs/GAME_DESIGN.md',
+            '- **Stage 18**: 다중 투영 프로토콜 — 기존 성운 보관소 획득은 유지하고 일반 레벨업 풀에도 추가하며 최대 중첩을 2에서 3으로 늘린다.',
+            '- **Stage 18**: 다중 투영 프로토콜 — 성운 보관소 전용 획득을 유지한 채 최대 중첩만 2에서 3으로 늘린다. 일반 레벨업 풀에는 추가하지 않는다.', 1)
+          replace('docs/CANONICAL_AUDIT_2026-09-28.md',
+            '- S12 일반 레벨업 4지선다, S18 다중 투영 일반 레벨업 풀 진입 + 최대 중첩 2→3.',
+            '- [과거 설계, 현재 폐기] S12 일반 레벨업 4지선다, S18 다중 투영 일반 레벨업 풀 진입 + 최대 중첩 2→3. 현재는 성운 보관소 전용이며 S18은 최대 중첩 2→3만 해금한다.', 1)
+          PY
+      - name: Validate choice isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check src/endgame-balance-expansion.js
+          node --check src/feature-pack.js
+          node --check src/progression-expansion.js
+          node scripts/level-choice-contract.mjs
+          node scripts/endgame-balance-contract.mjs
+          node scripts/community-feedback-contract.mjs
+          OWNERSHIP_GROUP=targeting node scripts/source-ownership-contract.mjs
+          node scripts/polish-contract-check.mjs
+          node scripts/meta-upgrade-contract.mjs
+          grep -RIn -E "ordinary level-up pool|일반 레벨업 풀" docs/WIKI.md docs/GAME_DESIGN.md || true
+          if grep -RIn -E "!p\.eventOnly\|\|window\.stackfallIsFeatureUnlocked.*multiplicity-protocol|source\.eventOnly&&window\.stackfallIsFeatureUnlocked.*multiplicity-protocol|PASSIVES\[choice\.key\].*eventOnly&&window\.stackfallIsFeatureUnlocked.*multiplicity-protocol" src; then
+            echo 'legacy ordinary-pool admission path still present' >&2
+            exit 1
+          fi
+      - name: Commit verified vault-only behavior
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/tmp-passive-source-audit.yml .github/workflows/tmp-projection-core-vault-only.yml
+          git add src/endgame-balance-expansion.js src/feature-pack.js src/progression-expansion.js scripts/endgame-balance-contract.mjs scripts/level-choice-contract.mjs docs/WIKI.md docs/GAME_DESIGN.md docs/CANONICAL_AUDIT_2026-09-28.md
+          git commit -m "Keep Projection Core out of ordinary level-up choices"
+          git push origin HEAD:feature/void-apex-answer-v1
