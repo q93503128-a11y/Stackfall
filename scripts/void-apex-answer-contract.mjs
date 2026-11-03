@@ -7,11 +7,12 @@ const buildInfo=read('src/build-info.js');
 const fingerprint=read('scripts/build-fingerprint.mjs');
 const catalog=read('src/boss-catalog.js');
 const events=read('src/map-event-expansion.js');
-const bodyDataMatch=answer.match(/const ANSWER_BODY_SRC='data:image\/webp;base64,([^']+)'/);
-const bodyAssetBytes=bodyDataMatch?Buffer.from(bodyDataMatch[1],'base64'):Buffer.alloc(0);
+const bodyAssetText=read('assets/answer/answer_body_v16.b64').trim();
+const bodyAssetBytes=Buffer.from(bodyAssetText,'base64');
 const bodyAssetHash=createHash('sha256').update(bodyAssetBytes).digest('hex');
-const bodyAssetExact=bodyAssetBytes.length===13042
-  &&bodyAssetHash==='cc02c44e16e4f2333277eb538237178ed736efbf2bd0261f154fb2f3ce74553d'
+const bodyAssetExact=bodyAssetText.length===41332
+  &&bodyAssetBytes.length===30998
+  &&bodyAssetHash==='113ff9e75bfca3776588511334ea40d4a44f3d5ac98737a9f171e85da9094515'
   &&bodyAssetBytes.subarray(0,4).toString('ascii')==='RIFF'
   &&bodyAssetBytes.subarray(8,12).toString('ascii')==='WEBP'
   &&bodyAssetBytes.readUInt32LE(4)+8===bodyAssetBytes.length;
@@ -24,11 +25,11 @@ const checks=[
   ['fixed arena camera keeps player world coordinates authoritative',answer.includes('cameraOffset()')&&answer.includes('withFixedArenaCamera')&&answer.includes('ctx.translate(offset.x,offset.y)')&&!answer.includes('preview.realX=player.x')],
   ['fixed arena background is rendered from the frozen camera origin',answer.includes('function drawFrozenArenaBackground()')&&answer.includes('player.x=preview.camX')&&answer.includes('player.y=preview.camY')&&answer.includes('player.moveVX=0')&&answer.includes('player.moveVY=0')&&answer.includes('player.moveIntensity=0')&&answer.includes('player.x=snapshot.x')&&answer.includes('player.y=snapshot.y')],
   ['player movement is bounded to the lower combat region',answer.includes('clampPlayerToArena')&&answer.includes('top:height*.40')&&answer.includes('bottom:height*.925')],
-  ['Answer V15 preserves the approved q55 raster while integrating it into the game palette',answer.includes("STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v15'")&&answer.includes("const ANSWER_BODY_SRC='data:image/webp;base64,")&&answer.includes("ctx.filter='brightness(.56) saturate(.62) contrast(1.04)'")&&answer.includes('ctx.drawImage(answerBodyImage,37,67,888,263,frame.x,frame.y,frame.w,frame.h)')],
-  ['embedded q55 raster bytes are exact and container-complete',bodyAssetExact],
+  ['Answer V16 uses only the approved baked dark-cosmic raster',answer.includes("STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v16'")&&answer.includes("const ANSWER_BODY_B64_URL='assets/answer/answer_body_v16.b64'")&&answer.includes('ctx.drawImage(answerBodyImage,0,0,960,280,frame.x,frame.y,frame.w,frame.h)')&&!answer.includes('ANSWER_BODY_SRC')],
+  ['approved V16 raster payload is exact and container-complete',bodyAssetExact],
   ['Answer has a dedicated clean render stage after the realm background and before world objects',render.includes("runDrawStage('drawBackground',drawBackground);")&&render.includes("runDrawStage('drawVoidApexAnswerBackground',window.stackfallDrawVoidApexAnswerBackground)")&&answer.includes('window.stackfallDrawVoidApexAnswerBackground=function drawVoidApexAnswerBackground()')],
-  ['body framing keeps the upper and side extent unknown while reserving more player space',answer.includes('const ratio=888/263,w=Math.max(width*1.14,height*2.05)')&&answer.includes('visibleDepth=Math.max(245,Math.min(330,height*.34))')&&answer.includes('y:visibleDepth-h')],
-  ['body is phase-invariant and only screen-space fissures escalate across P1-P4',answer.includes('const PHASE_CRACK_COUNT=[3,6,9,13]')&&answer.includes('function drawAnswerFissures(frame,phase)')&&answer.includes('drawAnswerFissures(frame,phase)')&&!answer.includes('buildAnswerBodyLayer(phase)')],
+  ['body framing keeps the upper and side extent unknown while reserving player space',answer.includes('const ratio=960/280')&&answer.includes('visibleDepth=Math.max(245,Math.min(330,height*.34))')&&answer.includes('y:visibleDepth-h')],
+  ['temporary P1-P4 share one baked body with no legacy procedural fissures',!answer.includes('const FISSURES=')&&!answer.includes('drawAnswerFissures')&&!answer.includes('strokeScreenFissure')],
   ['active encounter has a visible fail-safe if the raster is not ready',answer.includes('function drawFallbackBody(frame)')&&answer.includes('if(answerBodyReady)')&&answer.includes('else drawFallbackBody(frame)')],
   ['boss motion remains restrained',answer.includes('bob=Math.sin(t*.34)*1.25')&&answer.includes('drift=Math.sin(t*.17)*.75')],
   ['asset load and dedicated render hook are observable for runtime verification',answer.includes('answerBodyReady')&&answer.includes('answerBodyFailed')&&answer.includes('naturalWidth:answerBodyImage.naturalWidth||0')&&answer.includes('renderHook:typeof window.stackfallDrawVoidApexAnswerBackground')],
