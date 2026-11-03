@@ -13,7 +13,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo '=== Korean labels ==='
-          grep -RIn --exclude-dir=.git -E '다중 투영 코어|자석 코어|에코 비콘|성운 보관소' . || true
-          echo '=== likely ids / projection ==='
-          grep -RIn --exclude-dir=.git -Ei 'multi.?projection|projection.?core|nebula.?vault|nebula.?storage|echo.?beacon|magnet.?core' src scripts docs || true
+          echo '=== multiplicity protocol ==='
+          grep -RIn --exclude-dir=.git -E 'multiplicity-protocol|다중 투영 프로토콜|일반 레벨업 풀|ordinary level-up pool|normal-pool' src scripts docs README.md || true
+          echo '=== eventOnly admission ==='
+          grep -RIn --exclude-dir=.git -E 'eventOnly.*multiplicity|multiplicity.*eventOnly|!p.eventOnly|PASSIVES\[choice.key\].*eventOnly' src scripts || true
