@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 const read=path=>fs.readFileSync(path,'utf8');
 const answer=read('src/void-apex-answer-v1.js');
+const combat=read('src/void-apex-answer-combat-v1.js');
 const render=read('src/render.js');
 const buildInfo=read('src/build-info.js');
 const fingerprint=read('scripts/build-fingerprint.mjs');
@@ -16,7 +17,7 @@ const bodyAssetExact=bodyAssetText.length===41332
   &&bodyAssetBytes.subarray(0,4).toString('ascii')==='RIFF'
   &&bodyAssetBytes.subarray(8,12).toString('ascii')==='WEBP'
   &&bodyAssetBytes.readUInt32LE(4)+8===bodyAssetBytes.length;
-const parsesAsJavaScript=(()=>{try{new Function(answer);return true;}catch{return false;}})();
+const parsesAsJavaScript=(()=>{try{new Function(answer);new Function(combat);return true;}catch{return false;}})();
 const checks=[
   ['prototype source parses as JavaScript',parsesAsJavaScript],
   ['prototype is explicitly dormant from live scheduling',answer.includes('STACKFALL_VOID_APEX_ANSWER_PROTOTYPE_ONLY=true')&&!events.includes('void-apex-answer')&&!catalog.includes("'answer'")],
@@ -25,16 +26,16 @@ const checks=[
   ['fixed arena camera keeps player world coordinates authoritative',answer.includes('cameraOffset()')&&answer.includes('withFixedArenaCamera')&&answer.includes('ctx.translate(offset.x,offset.y)')&&!answer.includes('preview.realX=player.x')],
   ['fixed arena background is rendered from the frozen camera origin',answer.includes('function drawFrozenArenaBackground()')&&answer.includes('player.x=preview.camX')&&answer.includes('player.y=preview.camY')&&answer.includes('player.moveVX=0')&&answer.includes('player.moveVY=0')&&answer.includes('player.moveIntensity=0')&&answer.includes('player.x=snapshot.x')&&answer.includes('player.y=snapshot.y')],
   ['player movement is bounded to the lower combat region',answer.includes('clampPlayerToArena')&&answer.includes('top:height*.40')&&answer.includes('bottom:height*.925')],
-  ['Answer V16 uses only the approved baked dark-cosmic raster',answer.includes("STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v16'")&&answer.includes("const ANSWER_BODY_B64_URL='assets/answer/answer_body_v16.b64'")&&answer.includes("ctx.imageSmoothingQuality='high'")&&answer.includes('const drawX=Math.round(frame.x),drawY=Math.round(frame.y),drawW=Math.round(frame.w),drawH=Math.round(frame.h)')&&answer.includes('ctx.drawImage(answerBodyImage,0,0,960,280,drawX,drawY,drawW,drawH)')&&!answer.includes('ANSWER_BODY_SRC')],
-  ['approved V16 raster payload is exact and container-complete',bodyAssetExact],
+  ['Answer V17 preserves the approved baked dark-cosmic raster',answer.includes("STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v17'")&&answer.includes("const ANSWER_BODY_B64_URL='assets/answer/answer_body_v16.b64'")&&answer.includes("ctx.imageSmoothingQuality='high'")&&answer.includes('const drawX=Math.round(frame.x),drawY=Math.round(frame.y),drawW=Math.round(frame.w),drawH=Math.round(frame.h)')&&answer.includes('ctx.drawImage(answerBodyImage,0,0,960,280,drawX,drawY,drawW,drawH)')&&!answer.includes('ANSWER_BODY_SRC')],
+  ['approved V16 raster payload remains exact and container-complete',bodyAssetExact],
   ['Answer has a dedicated clean render stage after the realm background and before world objects',render.includes("runDrawStage('drawBackground',drawBackground);")&&render.includes("runDrawStage('drawVoidApexAnswerBackground',window.stackfallDrawVoidApexAnswerBackground)")&&answer.includes('window.stackfallDrawVoidApexAnswerBackground=function drawVoidApexAnswerBackground()')],
   ['body framing keeps the upper and side extent unknown while reserving player space',answer.includes('const ratio=960/280')&&answer.includes('visibleDepth=Math.max(245,Math.min(330,height*.34))')&&answer.includes('y:visibleDepth-h')],
-  ['temporary P1-P4 share one baked body with no legacy procedural fissures',!answer.includes('const FISSURES=')&&!answer.includes('drawAnswerFissures')&&!answer.includes('strokeScreenFissure')],
+  ['P1-P3 share one baked body with no legacy procedural fissure owner in the visual shell',!answer.includes('const FISSURES=')&&!answer.includes('drawAnswerFissures')&&!answer.includes('strokeScreenFissure')&&answer.includes('Math.min(3')&&!answer.includes("button('P4 · 응답'")],
   ['active encounter has a visible fail-safe if the raster is not ready',answer.includes('function drawFallbackBody(frame)')&&answer.includes('if(answerBodyReady)')&&answer.includes('else drawFallbackBody(frame)')],
-  ['boss motion remains restrained',answer.includes('bob=Math.sin(t*.34)*1.25')&&answer.includes('drift=Math.sin(t*.17)*.75')],
+  ['body remains fixed while combat layer owns internal-cosmos and fissure motion',answer.includes('const frame=base')&&!answer.includes('bob=Math.sin')&&!answer.includes('drift=Math.sin')&&combat.includes('function drawCosmicMotion()')&&combat.includes('function drawPhaseFissures()')],
   ['asset load and dedicated render hook are observable for runtime verification',answer.includes('answerBodyReady')&&answer.includes('answerBodyFailed')&&answer.includes('naturalWidth:answerBodyImage.naturalWidth||0')&&answer.includes('renderHook:typeof window.stackfallDrawVoidApexAnswerBackground')],
   ['developer diagnostics expose preparation, asset decode and render-hook state',answer.includes("status.id='devAnswerStatus'")&&answer.includes('prepStage:preview.prepStage')&&answer.includes("'hook ON'")],
-  ['four visual phases are exposed in dev controls',answer.includes("button('P1 · 봉쇄'")&&answer.includes("button('P2 · 노출'")&&answer.includes("button('P3 · 증폭'")&&answer.includes("button('P4 · 응답'")&&answer.includes('Math.min(4')],
+  ['exactly three visual/combat phases are exposed in dev controls',answer.includes("button('P1 · 봉쇄'")&&answer.includes("button('P2 · 노출'")&&answer.includes("button('P3 · 증폭'")&&!answer.includes("button('P4 · 응답'")&&answer.includes('Math.min(3')],
   ['developer controls retry after panel initialization',answer.includes('setTimeout(installDevControls,250)')&&answer.includes('setTimeout(installDevControls,1000)')],
   ['Void entry threat presentation supports 25 50 75 and 100 percent bands',answer.includes('data-band="25"')&&answer.includes('data-band="50"')&&answer.includes('data-band="75"')&&answer.includes('data-band="100"')&&answer.includes('setAnswerThreat')],
   ['entry threat changes shell cards and soft light spill, not only a white overlay',answer.includes('.answer-threat-spill')&&answer.includes('world-event-card{filter:saturate(.70)')&&answer.includes('shell.style.background=')],
@@ -45,8 +46,17 @@ const checks=[
   ['encounter begins only after all pending level ups are resolved',answer.includes("state.mode!=='playing'||state.choiceLocked||state.xp>=state.xpNeed")&&answer.includes('activatePreparedEncounter()')],
   ['defeat sequence leaks white light then leaves brighter aftermath state',answer.includes('startDefeat')&&answer.includes('finishDefeat')&&answer.includes('drawAftermathOverlay')&&answer.includes('state.answerVoidSealed=true')],
   ['developer preview controls are isolated to dev mode',answer.includes("document.querySelector('#stackfallDevPanel')")&&answer.includes('if(!dev?.enabled||!panel')],
-  ['dynamic loader includes the prototype',buildInfo.includes('src/void-apex-answer-v1.js')&&buildInfo.includes('data-void-apex-answer-v1')],
-  ['build fingerprint tracks the prototype source and contract without a mutable binary body asset',fingerprint.includes("'src/void-apex-answer-v1.js'")&&fingerprint.includes("'void-apex-answer-contract.mjs'")&&!fingerprint.includes("'assets/answer/answer_body_base.webp'")]
+  ['dynamic loader includes visual shell then combat module',buildInfo.includes('src/void-apex-answer-v1.js')&&buildInfo.includes('data-void-apex-answer-v1')&&buildInfo.includes('src/void-apex-answer-combat-v1.js')&&buildInfo.includes('data-void-apex-answer-combat-v1')&&buildInfo.includes('answerScript.onload=loadVoidApexAnswerCombat')],
+  ['build fingerprint tracks both prototype sources and contract without a mutable binary body asset',fingerprint.includes("'src/void-apex-answer-v1.js'")&&fingerprint.includes("'src/void-apex-answer-combat-v1.js'")&&fingerprint.includes("'void-apex-answer-contract.mjs'")&&!fingerprint.includes("'assets/answer/answer_body_base.webp'")]
+,
+  ['combat uses 75/30 three-phase thresholds and never player max-HP percentage damage',combat.includes('PHASE_2_HP=.75,PHASE_3_HP=.30')&&combat.includes('ANSWER_HP_FORM=2.63,ANSWER_DAMAGE_FORM=1.51')&&combat.includes('hurtPlayer(Math.max(1,bossDamage()*mult)')&&!combat.includes('player.maxHp*')&&!combat.includes('player.maxHp *')],
+  ['targeted black spikes escalate one two three with locked warning',combat.includes('const count=runtime.phase')&&combat.includes('warn:1.4')&&combat.includes('TIMING={spike:5.8')&&combat.includes('offsets=count===1?[0]:count===2?[-105,105]:[-150,0,150]')],
+  ['space split has long warning one-shot cut damage non-damaging barrier and flowing black matter',combat.includes("kind==='split'")&&combat.includes('warn:3.4,active:4.0,fade:.8')&&combat.includes('if(!m.impact&&m.age>=m.warn)')&&combat.includes('applySplitCollision(m)')&&combat.includes("ctx.strokeStyle='#000000'")&&combat.includes('lineDashOffset=-flow')],
+  ['P2 adds pure-white center beam and readable true-fake spike row',combat.includes("kind==='beam'&&runtime.phase>=2")&&combat.includes("ctx.fillStyle='#ffffff'")&&combat.includes("kind==='row'&&runtime.phase>=2")&&combat.includes('const count=runtime.phase>=3?5:4')&&combat.includes('while(fake.length<2)')],
+  ['P3 clones combat-impacting equipment every three seconds including hostile gravity and time-control',combat.includes('clone:3')&&combat.includes("gravity:'well'")&&combat.includes("chrono:'slow'")&&combat.includes("keys.length===1)return keys[0]")&&combat.includes("alt.length&&Math.random()<.78?alt:keys")],
+  ['clone damage is normalized to Answer damage and drone children use canonical hostile projectiles',combat.includes('bossDamage()*DAMAGE.drone')&&combat.includes('spawnEnemyProjectile(c.x,c.y,a,340')&&!combat.includes('runtime.clones.push(p)')],
+  ['major-pattern director prevents simultaneous majors and avoids immediate same-major repetition',combat.includes('if(runtime.major||runtime.transition||runtime.defeating)return false')&&combat.includes('const alternate=due.filter(k=>k!==runtime.lastMajor)')&&combat.includes('cloneCritical()')],
+  ['developer controls can force every approved pattern for playtest',answer.includes("forcePattern('spike')")&&answer.includes("forcePattern('split')")&&answer.includes("forcePattern('beam')")&&answer.includes("forcePattern('row')")&&answer.includes("forcePattern('clone')")],
 ];
 let failed=0;
 for(const [name,ok] of checks){console.log(ok?'PASS':'FAIL',name);if(!ok)failed++;}

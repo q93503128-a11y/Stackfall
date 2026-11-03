@@ -29,7 +29,7 @@ function configureElite(enemy,kind){
   if(category==='apex'){
     const cycle=Math.max(0,Math.floor(state.apexCount||0)),escalation=apexEscalationForCycle(cycle);
     enemy.eventKind='apex';enemy.apexForm=form;enemy.controlImmune=true;enemy.knockbackImmune=true;enemy.timeLock=0;enemy.xp*=6+cycle*2;enemy.apexPhase=1;enemy.apexCycle=cycle+1;enemy.apexEscalation=escalation.pattern;enemy.apexPhaseEntered=0;enemy.signatureCd=4.6;enemy.apexVariantCd=3.5;enemy.apexSetpieceCd=5.2;
-    enemy.hp*=7.60*escalation.hp;enemy.damage*=2.15*escalation.damage;enemy.speed*=1.15*escalation.speed;enemy.skillCd*=.52/escalation.pattern;enemy.burstCd*=.52/escalation.pattern;enemy.pulseCd*=.52/escalation.pattern;
+    enemy.hp*=6.46*escalation.hp;enemy.damage*=1.83*escalation.damage;enemy.speed*=1.15*escalation.speed;enemy.skillCd*=.52/escalation.pattern;enemy.burstCd*=.52/escalation.pattern;enemy.pulseCd*=.52/escalation.pattern;
   }else{
     const isBoss=enemy.type==='boss',f=clamp((t-110)/520,0,1);enemy.hp*=lerp(isBoss?.56:.74,isBoss?.95:.99,f);enemy.damage*=lerp(isBoss?.66:.80,.98,clamp((t-110)/440,0,1));enemy.speed*=lerp(isBoss?.88:.94,1,clamp((t-110)/360,0,1));enemy.skillCd+=(isBoss?1.25:.65)*(1-f);enemy.burstCd+=(isBoss?1.45:.8)*(1-f);
     if(category!=='mini'){enemy.hp*=2;enemy.damage*=1.75;enemy.skillCd*=.82;enemy.burstCd*=.82;enemy.pulseCd*=.82;}

@@ -13,7 +13,7 @@ const checks=[
  ['apex ignores player build strength',!catalog.includes('apexPlayerGrowthScale')&&!catalog.includes('weaponTotal')&&!catalog.includes('passiveTotal')],
  ['apex escalates cumulatively by appearance',catalog.includes('function cumulativeApexFactor')&&catalog.includes('function apexEscalationForCycle')&&catalog.includes('2.40,.34')&&catalog.includes('1.58,.15')&&catalog.includes('state.apexCount||0')],
  ['appearance escalation has no finite appearance cap',!catalog.includes('Math.min(10,cycle)')&&catalog.includes('for(let i=0;i<cycle;i++')&&catalog.includes('if(value>=1e120)return 1e120')],
- ['first apex has extreme fixed base strength',catalog.includes('enemy.hp*=7.60*escalation.hp')&&catalog.includes('enemy.damage*=2.15*escalation.damage')&&catalog.includes('enemy.skillCd*=.52/escalation.pattern')],
+ ['first apex uses the approved fifteen-percent-lower common HP and damage base',catalog.includes('enemy.hp*=6.46*escalation.hp')&&catalog.includes('enemy.damage*=1.83*escalation.damage')&&catalog.includes('enemy.skillCd*=.52/escalation.pattern')],
  ['phase transitions and variants',bosses.includes('function apexPhaseTransition')&&bosses.includes('function apexVariantAttack')&&bosses.includes("showBossNotice(bossName(form)+' · PHASE '+phase")],
  ['chronophage scar chase forces present-position movement',bosses.includes('scarCd')&&bosses.includes('chronophageScar(x,y,r,chase.damage')&&patterns.includes('chronophageScar(now.x,now.y')&&patterns.includes("'temporal-shear'")],
  ['omega is fixed and oversized',catalog.includes("starforge:{color:'#ffb04e',hp:2.48,speed:0")&&catalog.includes('r:2.28')&&bosses.includes("if(form==='starforge'){out.x=0;out.y=0;return out;}")],

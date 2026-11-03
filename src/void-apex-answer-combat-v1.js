@@ -6,8 +6,8 @@
   window.stackfallVoidApexAnswerCombat='v1';
 
   const PHASE_2_HP=.75,PHASE_3_HP=.30;
-  const APEX_HP_MULT=.85*7.60;      // 6.46: global Apex HP nerf, mirrored here for the prototype boss.
-  const APEX_DAMAGE_MULT=.85*2.15;  // 1.8275: global Apex damage nerf.
+  const APEX_HP_MULT=6.46;      // Ordinary Apex common HP multiplier after the approved ~15% nerf.
+  const APEX_DAMAGE_MULT=1.83; // Ordinary Apex common damage multiplier after the approved ~15% nerf.
   const ANSWER_HP_FORM=2.63,ANSWER_DAMAGE_FORM=1.51;
   const DAMAGE={spike:.62,split:.82,beam:.90,row:.72,bolt:.34,heavy:.52,cloneBeam:.60,collapse:.55,mine:.48,orbit:.32,well:.22,drone:.28};
   const TIMING={spike:5.8,split:18,beam:11.5,row:14.5,clone:3};
@@ -144,7 +144,7 @@
       return c.age<c.warn+c.active+c.fade;
     }
     if(family==='orbit'){if(c.age>=c.warn&&c.age<c.warn+c.active){c.angle+=dt*2.8;for(let i=0;i<c.count;i++){const a=c.angle+i*Math.PI*2/c.count,x=c.x+Math.cos(a)*c.radius,y=c.y+Math.sin(a)*c.radius;if(!c.hit&&Math.hypot(player.x-x,player.y-y)<=player.r+13){c.hit=true;hitPlayer(DAMAGE.orbit);}}}return c.age<c.warn+c.active+c.fade;}
-    if(family==='drone'){if(c.age>=c.warn&&c.age<c.warn+c.active){c.shot-=dt;if(c.shot<=0){c.shot=.48;const a=Math.atan2(player.y-c.y,player.x-c.x),p={key:'drone-shot',family:'bolt',age:0,hit:false,x:c.x,y:c.y,vx:Math.cos(a)*340,vy:Math.sin(a)*340,r:5,life:2.6};runtime.clones.push(p);}}return c.age<c.warn+c.active+c.fade;}
+    if(family==='drone'){if(c.age>=c.warn&&c.age<c.warn+c.active){c.shot-=dt;if(c.shot<=0){c.shot=.48;const a=Math.atan2(player.y-c.y,player.x-c.x),p=spawnEnemyProjectile(c.x,c.y,a,340,bossDamage()*DAMAGE.drone,'#050507',5,2.6,'needle');p.answerClone=true;}}return c.age<c.warn+c.active+c.fade;}
     return false;
   }
   function updateClones(dt,before){

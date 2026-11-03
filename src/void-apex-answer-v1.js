@@ -6,7 +6,7 @@
   if(window.stackfallVoidApexAnswer==='v1')return;
   window.stackfallVoidApexAnswer='v1';
   window.STACKFALL_VOID_APEX_ANSWER_PROTOTYPE_ONLY=true;
-  window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v16';
+  window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v17';
 
   const TAU_LOCAL=Math.PI*2;
   const preview={
@@ -17,7 +17,7 @@
   const clamp01=v=>Math.max(0,Math.min(1,Number(v)||0));
   const language=()=>GAME_SETTINGS?.language||'ko';
   const answerName=()=>language()==='ko'?'응답':'THE ANSWER';
-  const phaseRatio=phase=>phase===1?1:phase===2?.76:phase===3?.51:.26;
+  const phaseRatio=phase=>phase===1?1:phase===2?.74:.29;
   const threatBand=value=>value>=100?100:value>=75?75:value>=50?50:value>=25?25:0;
 
   function geometry(){
@@ -81,13 +81,14 @@ function setPrepState(stage,block=''){preview.prepStage=stage;preview.prepBlock=
     if(!preview.active){bar.classList.add('hidden');if(extras)extras.textContent='';return;}
     bar.classList.remove('hidden');if(name)name.textContent=answerName();if(fill)fill.style.width=`${Math.max(0,Math.min(100,preview.hpRatio*100))}%`;if(extras)extras.textContent='';
   }
-  function setPhase(phase){
+  function setPhase(phase,preserveHp=false){
     if(!preview.active)return false;
-    preview.phase=Math.max(1,Math.min(4,Math.floor(Number(phase)||1)));
-    preview.hpRatio=phaseRatio(preview.phase);preview.defeating=false;preview.defeatAge=0;syncBossHud();
+    preview.phase=Math.max(1,Math.min(3,Math.floor(Number(phase)||1)));
+    if(!preserveHp)preview.hpRatio=phaseRatio(preview.phase);preview.defeating=false;preview.defeatAge=0;syncBossHud();
     state.camera.shake=Math.max(Number(state.camera.shake)||0,1.2+preview.phase*.55);
     return true;
   }
+  function setHpRatio(ratio){if(!preview.active)return false;preview.hpRatio=clamp01(ratio);syncBossHud();return true;}
   function activatePreparedEncounter(){
   if(!preview.preparing||activeExperienceGems().length||state.choiceOpening===true||state.mode!=='playing'||state.choiceLocked||state.xp>=state.xpNeed)return false;
   releasePreparationGate();
@@ -163,7 +164,7 @@ function activate(){return beginPreparation();}
   }
 
   // V16 visual lock: approved near-black cosmic body and its current natural fissures are baked together.
-  // Until phase-specific art is available, P1-P4 intentionally share this exact raster.
+  // Until phase-specific art is available, P1-P3 intentionally share this exact raster; phase growth is rendered as additional fissures.
   const ANSWER_BODY_B64_URL='assets/answer/answer_body_v16.b64';
   const answerBodyImage=new Image();
   let answerBodyReady=false,answerBodyFailed=false;
@@ -186,8 +187,9 @@ function activate(){return beginPreparation();}
     ctx.beginPath();ctx.moveTo(frame.x+frame.w*.05,frame.y+frame.h*.70);ctx.bezierCurveTo(frame.x+frame.w*.22,frame.y+frame.h*.62,frame.x+frame.w*.40,frame.y+frame.h*.72,frame.x+frame.w*.50,frame.y+frame.h*.98);ctx.bezierCurveTo(frame.x+frame.w*.60,frame.y+frame.h*.72,frame.x+frame.w*.78,frame.y+frame.h*.62,frame.x+frame.w*.95,frame.y+frame.h*.70);ctx.lineTo(frame.x+frame.w*.98,frame.y+frame.h*.48);ctx.lineTo(frame.x+frame.w*.02,frame.y+frame.h*.48);ctx.closePath();ctx.fill();ctx.restore();
   }
   function drawAnswerBoss(){
-    const phase=Math.max(1,Math.min(4,preview.phase)),death=preview.defeating?clamp01(preview.defeatAge/3.15):0,base=answerFrame();
-    const t=performance.now()*.001,bob=Math.sin(t*.34)*1.25,drift=Math.sin(t*.17)*.75,frame={...base,x:base.x+drift,y:base.y+bob};
+    const phase=Math.max(1,Math.min(3,preview.phase)),death=preview.defeating?clamp01(preview.defeatAge/3.15):0,base=answerFrame();
+    // The body is an immeasurably large fixed presence. Only its internal cosmos/fissures animate in the combat layer.
+    const frame=base;
     if(answerBodyReady){
       ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.filter='none';ctx.shadowColor='rgba(188,204,255,.08)';ctx.shadowBlur=8;const drawX=Math.round(frame.x),drawY=Math.round(frame.y),drawW=Math.round(frame.w),drawH=Math.round(frame.h);ctx.drawImage(answerBodyImage,0,0,960,280,drawX,drawY,drawW,drawH);ctx.restore();
     }else drawFallbackBody(frame);
@@ -323,11 +325,14 @@ function installDevControls(){
     const label=document.createElement('label');label.textContent='VOID APEX · 응답 디자인';
     const grid=document.createElement('div');grid.className='dev-grid';grid.id='devAnswerPrototype';
     const button=(text,id,handler,wide=false)=>{const b=document.createElement('button');b.type='button';b.id=id;b.textContent=text;if(wide)b.className='dev-wide';b.addEventListener('click',()=>{try{handler();}finally{queueMicrotask(syncDevStatus);}});return b;};
+    const forcePhase=phase=>window.stackfallAnswerCombatForcePhase?.(phase)??setPhase(phase);
+    const forcePattern=kind=>window.stackfallAnswerCombatForcePattern?.(kind)??false;
     grid.append(
       button('응답 시안 시작','devAnswerStart',()=>activate(),true),
-      button('P1 · 봉쇄','devAnswerP1',()=>setPhase(1)),button('P2 · 노출','devAnswerP2',()=>setPhase(2)),
-      button('P3 · 증폭','devAnswerP3',()=>setPhase(3)),button('P4 · 응답','devAnswerP4',()=>setPhase(4)),
-      button('격파 연출','devAnswerDefeat',()=>startDefeat()),button('시안 종료','devAnswerStop',()=>stop(),true),
+      button('P1 · 봉쇄','devAnswerP1',()=>forcePhase(1)),button('P2 · 노출','devAnswerP2',()=>forcePhase(2)),button('P3 · 증폭','devAnswerP3',()=>forcePhase(3)),
+      button('가시 강제','devAnswerSpike',()=>forcePattern('spike')),button('공간 양단 강제','devAnswerSplit',()=>forcePattern('split')),
+      button('순백 빔 강제','devAnswerBeam',()=>forcePattern('beam')),button('진짜/가짜 가시 강제','devAnswerRow',()=>forcePattern('row')),button('기술 복제 강제','devAnswerClone',()=>forcePattern('clone')),
+      button('격파 연출','devAnswerDefeat',()=>window.stackfallAnswerCombatDefeat?.()??startDefeat()),button('시안 종료','devAnswerStop',()=>stop(),true),
       button('입장 위협 25%','devAnswerThreat25',()=>setThreat(25)),button('입장 위협 50%','devAnswerThreat50',()=>setThreat(50)),
       button('입장 위협 75%','devAnswerThreat75',()=>setThreat(75)),button('입장 위협 100%','devAnswerThreat100',()=>setThreat(100))
     );
@@ -337,9 +342,13 @@ function installDevControls(){
       answerPrototypeSnapshot:()=>({active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,preflightGemCount:preview.preflightGemCount,preflightXp:preview.preflightXp,phase:preview.phase,hpRatio:preview.hpRatio,defeating:preview.defeating,defeatAge:preview.defeatAge,aftermath:preview.aftermath,voidSealed:state.answerVoidSealed===true,threat:preview.threat,mode:state.mode,choiceLocked:state.choiceLocked===true,camera:{x:preview.camX,y:preview.camY},bounds:preview.active?worldBounds():null,asset:{ready:answerBodyReady,failed:answerBodyFailed,naturalWidth:answerBodyImage.naturalWidth||0,naturalHeight:answerBodyImage.naturalHeight||0,renderHook:typeof window.stackfallDrawVoidApexAnswerBackground==='function'}})
     });
   }
+  window.stackfallSetAnswerPrototypePhase=setPhase;
+  window.stackfallSetAnswerPrototypeHpRatio=setHpRatio;
+  window.stackfallDefeatAnswerPrototype=startDefeat;
+  window.stackfallStopAnswerPrototype=stop;
   installDevControls();setTimeout(installDevControls,0);setTimeout(installDevControls,250);setTimeout(installDevControls,1000);
   window.stackfallVoidApexAnswerDiagnostics=()=>({
-    version:'v1',visualRevision:'v16',prototypeOnly:true,active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,
+    version:'v1',visualRevision:'v17',prototypeOnly:true,active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,
     preflightGemCount:preview.preflightGemCount,preflightXp:preview.preflightXp,phase:preview.phase,hpRatio:preview.hpRatio,
     defeating:preview.defeating,defeatAge:preview.defeatAge,aftermath:preview.aftermath,voidSealed:state.answerVoidSealed===true,
     threat:preview.threat,mode:state.mode,choiceLocked:state.choiceLocked===true,camera:{x:preview.camX,y:preview.camY},geometry:geometry(),
