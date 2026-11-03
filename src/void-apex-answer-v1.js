@@ -189,7 +189,7 @@ function activate(){return beginPreparation();}
     const phase=Math.max(1,Math.min(4,preview.phase)),death=preview.defeating?clamp01(preview.defeatAge/3.15):0,base=answerFrame();
     const t=performance.now()*.001,bob=Math.sin(t*.34)*1.25,drift=Math.sin(t*.17)*.75,frame={...base,x:base.x+drift,y:base.y+bob};
     if(answerBodyReady){
-      ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.filter='none';ctx.shadowColor='rgba(188,204,255,.08)';ctx.shadowBlur=8;ctx.drawImage(answerBodyImage,0,0,960,280,frame.x,frame.y,frame.w,frame.h);ctx.restore();
+      ctx.save();ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.filter='none';ctx.shadowColor='rgba(188,204,255,.08)';ctx.shadowBlur=8;const drawX=Math.round(frame.x),drawY=Math.round(frame.y),drawW=Math.round(frame.w),drawH=Math.round(frame.h);ctx.drawImage(answerBodyImage,0,0,960,280,drawX,drawY,drawW,drawH);ctx.restore();
     }else drawFallbackBody(frame);
     if(death>.12){
       ctx.save();ctx.globalCompositeOperation='screen';const k=clamp01((death-.12)/.78),x=vw*.5,y=Math.min(base.visibleDepth*.78,vh*.24),r=Math.max(vw,vh)*(.08+k*.30);
