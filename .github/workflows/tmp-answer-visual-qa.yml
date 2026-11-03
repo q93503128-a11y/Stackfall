@@ -1,0 +1,90 @@
+name: tmp-answer-visual-qa
+on:
+  push:
+    branches: [feature/void-apex-answer-v1]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright Chromium
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Capture Answer runtime patterns
+        run: |
+          mkdir -p qa-answer
+          cat > /tmp/qa-answer.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs';
+          const expected='sha256-507a3530b20f26de1ab801fa72d5538cbbacc371ea669edb347785e15c09df91';
+          const browser=await chromium.launch({headless:true});
+          const page=await browser.newPage({viewport:{width:1600,height:900},deviceScaleFactor:1});
+          const errors=[];
+          page.on('pageerror',e=>errors.push('PAGE '+e.message));
+          page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE '+m.text());});
+          async function waitBuild(){
+            for(let i=0;i<12;i++){
+              await page.goto('https://feature-void-apex-answer-v1.stackfall.pages.dev/?dev=1',{waitUntil:'networkidle',timeout:60000});
+              const sha=await page.evaluate(()=>window.STACKFALL_BUILD_SHA||null);
+              if(sha===expected)return sha;
+              await page.waitForTimeout(5000);
+            }
+            throw new Error('Preview did not reach expected build fingerprint');
+          }
+          await waitBuild();
+          await page.waitForFunction(()=>window.stackfallDeveloperTest&&window.stackfallAnswerCombatForcePattern&&window.stackfallVoidApexAnswerDiagnostics,{timeout:30000});
+          const boot=await page.evaluate(()=>{
+            state.mode='playing';
+            state.choiceLocked=false;state.choiceOpening=false;
+            if(state.entities?.enemies)state.entities.enemies.length=0;
+            if(state.entities?.enemyProjectiles)state.entities.enemyProjectiles.length=0;
+            return window.stackfallDeveloperTest.startAnswerPrototype();
+          });
+          await page.waitForFunction(()=>document.documentElement.dataset.answerPreview==='1',{timeout:20000});
+          await page.waitForTimeout(500);
+          await page.screenshot({path:'qa-answer/00-active.png'});
+          async function force(kind,wait,name){
+            await page.evaluate(k=>window.stackfallAnswerCombatForcePattern(k),kind);
+            await page.waitForTimeout(wait);
+            await page.screenshot({path:`qa-answer/${name}.png`});
+          }
+          await force('spike',650,'01-spike-warning');
+          await page.waitForTimeout(900); await page.screenshot({path:'qa-answer/02-spike-active.png'});
+          await force('split',1700,'03-split-warning');
+          await page.waitForTimeout(1900); await page.screenshot({path:'qa-answer/04-split-active.png'});
+          await page.evaluate(()=>window.stackfallAnswerCombatForcePhase(2));
+          await page.waitForTimeout(250);
+          await force('row',1000,'05-row-warning');
+          await page.waitForTimeout(1450); await page.screenshot({path:'qa-answer/06-row-active.png'});
+          await force('beam',900,'07-beam-warning');
+          await page.waitForTimeout(1100); await page.screenshot({path:'qa-answer/08-beam-active.png'});
+          await page.evaluate(()=>window.stackfallAnswerCombatForcePhase(3));
+          await page.waitForTimeout(250);
+          await force('clone',700,'09-clone.png');
+          const diag=await page.evaluate(()=>({
+            build:window.STACKFALL_BUILD_SHA,
+            answer:window.stackfallVoidApexAnswerDiagnostics?.(),
+            combat:window.stackfallAnswerCombatDiagnostics?.(),
+            dev:window.stackfallDeveloperTest?.answerPrototypeSnapshot?.(),
+            mode:state.mode,
+            hp:player.hp,maxHp:player.maxHp
+          }));
+          fs.writeFileSync('qa-answer/report.json',JSON.stringify({boot,diag,errors},null,2));
+          await browser.close();
+          if(errors.length)console.log(errors.join('\n'));
+          EOF
+          node /tmp/qa-answer.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: answer-visual-qa
+          path: qa-answer
+          retention-days: 1
