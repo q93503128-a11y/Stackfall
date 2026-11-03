@@ -24,7 +24,7 @@ jobs:
           cat > qa-answer-run.mjs <<'EOF'
           import { chromium } from 'playwright';
           import fs from 'node:fs';
-          const expected='sha256-5d5afc6642b2e81886b3128e51ca4d96148e58beede66280d5c4d1550ab99021';
+          const expected='sha256-019076c4f673ca8809923396126bef7a43a4d92e202bdaf10d5dae45670ebbc2';
           const browser=await chromium.launch({channel:'chrome',headless:true});
           const page=await browser.newPage({viewport:{width:1600,height:900},deviceScaleFactor:1});
           const errors=[],samples=[];
@@ -40,24 +40,19 @@ jobs:
           async function resetPhase(phase){await page.evaluate(p=>{window.stackfallAnswerCombatForcePhase(p);player.invuln=999;},phase);await page.waitForTimeout(100);}
           async function shot(path){await page.screenshot({path:`qa-answer/${path}.png`});await snap(path);}
           await shot('00-active');
-
           await resetPhase(1);await page.evaluate(()=>window.stackfallAnswerCombatForcePattern('spike'));
           await page.waitForFunction(()=>{const s=window.stackfallAnswerCombatDiagnostics?.().spikeDetails?.[0];return s&&s.age>.45&&s.age<s.warn;});await shot('01-spike-warning');
           await page.waitForFunction(()=>{const s=window.stackfallAnswerCombatDiagnostics?.().spikeDetails?.[0];return s&&s.age>s.warn+.04&&s.age<s.warn+s.thrust+s.hold;});await shot('02-spike-active');
-
           await resetPhase(1);await page.evaluate(()=>window.stackfallAnswerCombatForcePattern('split'));
           await page.waitForFunction(()=>{const m=window.stackfallAnswerCombatDiagnostics?.().majorDetails;return m?.kind==='split'&&m.age>1&&m.age<m.warn;});await shot('03-split-warning');
           await page.waitForFunction(()=>{const m=window.stackfallAnswerCombatDiagnostics?.().majorDetails;return m?.kind==='split'&&m.age>m.warn+.15&&m.age<m.warn+m.active;});await shot('04-split-active');
-
           await resetPhase(2);await page.evaluate(()=>window.stackfallAnswerCombatForcePattern('row'));
           await page.waitForFunction(()=>{const m=window.stackfallAnswerCombatDiagnostics?.().majorDetails;return m?.kind==='row'&&m.age>.7&&m.age<m.warn;});await shot('05-row-warning');
           await page.waitForFunction(()=>{const m=window.stackfallAnswerCombatDiagnostics?.().majorDetails;return m?.kind==='row'&&m.age>m.warn+.07&&m.age<m.warn+.16;});await shot('06-row-thrust');
-
           await resetPhase(2);await page.evaluate(()=>window.stackfallAnswerCombatForcePattern('beam'));
           await page.waitForFunction(()=>{const m=window.stackfallAnswerCombatDiagnostics?.().majorDetails;return m?.kind==='beam'&&m.age>.7&&m.age<m.warn;});await shot('07-beam-warning');
           await page.waitForFunction(()=>{const m=window.stackfallAnswerCombatDiagnostics?.().majorDetails;return m?.kind==='beam'&&m.age>m.warn+.08&&m.age<m.warn+m.active;});await shot('08-beam-active');
-
-          await resetPhase(3);await page.evaluate(()=>window.stackfallAnswerCombatForcePattern('clone'));await page.waitForTimeout(280);await shot('09-clone');
+          await resetPhase(3);await page.evaluate(()=>window.stackfallAnswerCombatForcePattern('clone'));await page.waitForTimeout(180);await shot('09-clone');
           const diag=await page.evaluate(()=>({build:window.STACKFALL_BUILD_SHA,answer:window.stackfallVoidApexAnswerDiagnostics?.(),combat:window.stackfallAnswerCombatDiagnostics?.(),mode:state.mode,hp:player.hp,maxHp:player.maxHp}));
           fs.writeFileSync('qa-answer/report.json',JSON.stringify({boot,diag,samples,errors},null,2));
           await browser.close();
@@ -66,6 +61,6 @@ jobs:
           node qa-answer-run.mjs
       - uses: actions/upload-artifact@v4
         with:
-          name: answer-visual-qa-final
+          name: answer-visual-qa-final2
           path: qa-answer
           retention-days: 1
