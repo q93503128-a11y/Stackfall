@@ -6,7 +6,7 @@
   if(window.stackfallVoidApexAnswer==='v1')return;
   window.stackfallVoidApexAnswer='v1';
   window.STACKFALL_VOID_APEX_ANSWER_PROTOTYPE_ONLY=true;
-  window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v17';
+  window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v18';
 
   const TAU_LOCAL=Math.PI*2;
   const preview={
@@ -163,8 +163,8 @@ function activate(){return beginPreparation();}
     clampPlayerToArena();if(preview.defeating){preview.defeatAge+=step;if(preview.defeatAge>=3.15)finishDefeat();}syncBossHud();
   }
 
-  // V16 visual lock: approved near-black cosmic body and its current natural fissures are baked together.
-  // Until phase-specific art is available, P1-P3 intentionally share this exact raster; phase growth is rendered as additional fissures.
+  // V18 visual lock: preserve the approved near-black cosmic body raster.
+  // One combat-layer fissure tree reinforces P1 and owns all P2-P3 growth so phase transitions and beam origin stay coherent.
   const ANSWER_BODY_B64_URL='assets/answer/answer_body_v16.b64';
   const answerBodyImage=new Image();
   let answerBodyReady=false,answerBodyFailed=false;
