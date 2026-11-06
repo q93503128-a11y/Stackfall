@@ -6,22 +6,21 @@
   if(window.stackfallVoidApexAnswer==='v1')return;
   window.stackfallVoidApexAnswer='v1';
   window.STACKFALL_VOID_APEX_ANSWER_PROTOTYPE_ONLY=true;
-  window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v18';
+  window.STACKFALL_VOID_APEX_ANSWER_VISUAL_REVISION='v19';
 
   const TAU_LOCAL=Math.PI*2;
   const preview={
     active:false,preparing:false,phase:1,hpRatio:1,defeating:false,defeatAge:0,
-    camX:0,camY:0,aftermath:false,runSerial:null,threat:0,preflightXp:0,
+    camX:0,camY:0,aftermath:false,runSerial:null,preflightXp:0,
     preflightGemCount:0,choiceGateOwned:false,prepStage:'idle',prepBlock:'',prepElapsed:0
   };
   const clamp01=v=>Math.max(0,Math.min(1,Number(v)||0));
   const language=()=>GAME_SETTINGS?.language||'ko';
   const answerName=()=>language()==='ko'?'응답':'THE ANSWER';
   const phaseRatio=phase=>phase===1?1:phase===2?.74:.29;
-  const threatBand=value=>value>=100?100:value>=75?75:value>=50?50:value>=25?25:0;
 
   function geometry(){
-    const width=Math.max(720,Number(vw)||1280),height=Math.max(520,Number(vh)||720);
+    const width=Math.max(1,Number(vw)||1280),height=Math.max(1,Number(vh)||720);
     return{
       cx:width*.5,bossY:0,bossScale:1,arenaCx:width*.5,arenaCy:height*.705,
       arenaRx:Math.min(width*.455,720),arenaRy:Math.min(height*.285,270),
@@ -174,7 +173,7 @@ function activate(){return beginPreparation();}
   (async()=>{try{const response=await fetch(ANSWER_BODY_B64_URL,{cache:'no-store'});if(!response.ok)throw new Error(`HTTP ${response.status}`);const b64=(await response.text()).trim();answerBodyImage.src=`data:image/webp;base64,${b64}`;}catch(error){answerBodyReady=false;answerBodyFailed=true;syncDevStatus();console.error('[Stackfall] Answer body payload failed to load',error);}})();
 
   function answerFrame(){
-  const width=Math.max(720,Number(vw)||1280),height=Math.max(520,Number(vh)||720);
+  const width=Math.max(1,Number(vw)||1280),height=Math.max(1,Number(vh)||720);
   // V15 integration preview: preserve the approved body, but push the unknown upper/side extent offscreen.
   // The lower cusp sits around 34% of the arena height, leaving materially more player space.
   const ratio=960/280,w=Math.max(width*1.14,height*2.05),h=w/ratio;
@@ -202,7 +201,22 @@ function activate(){return beginPreparation();}
   function drawPhaseSky(){
     if(!preview.active)return;ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='rgba(0,0,7,.045)';ctx.fillRect(0,0,vw,vh*.36);ctx.restore();
   }
-  function drawPrototypeBackground(){if(!preview.active)return;drawPhaseSky();drawAnswerBoss();}
+  let answerBackdropCanvas=null,answerBackdropAt=0;
+  function captureAnswerBackdrop(){
+    const source=ctx?.canvas;if(!source?.width||!source?.height)return;
+    const locked=!!window.stackfallAnswerSplitSnapshotLocked?.(),now=performance.now();
+    if(locked&&answerBackdropCanvas)return;
+    if(!locked&&answerBackdropCanvas&&answerBackdropAt&&now-answerBackdropAt<500)return;
+    try{
+      if(!answerBackdropCanvas||answerBackdropCanvas.width!==source.width||answerBackdropCanvas.height!==source.height){
+        answerBackdropCanvas=typeof OffscreenCanvas==='function'?new OffscreenCanvas(source.width,source.height):document.createElement('canvas');
+        answerBackdropCanvas.width=source.width;answerBackdropCanvas.height=source.height;
+      }
+      const backdrop=answerBackdropCanvas.getContext('2d');backdrop.setTransform(1,0,0,1,0,0);backdrop.globalAlpha=1;backdrop.globalCompositeOperation='copy';backdrop.clearRect(0,0,source.width,source.height);backdrop.drawImage(source,0,0);answerBackdropAt=now;
+    }catch(error){answerBackdropCanvas=null;console.warn('[Stackfall] Answer split backdrop capture unavailable',error);}
+  }
+  window.stackfallAnswerBackgroundSnapshot=()=>answerBackdropCanvas;
+  function drawPrototypeBackground(){if(!preview.active)return;drawPhaseSky();drawAnswerBoss();captureAnswerBackdrop();window.stackfallDrawAnswerSplitBackground?.();}
   function drawAftermathOverlay(){
     if(!preview.aftermath)return;ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalCompositeOperation='screen';
     const g=ctx.createRadialGradient(vw*.5,vh*.43,20,vw*.5,vh*.50,Math.max(vw,vh)*.82);g.addColorStop(0,'rgba(216,232,255,.095)');g.addColorStop(.50,'rgba(114,163,255,.045)');g.addColorStop(1,'rgba(255,255,255,.014)');ctx.fillStyle=g;ctx.fillRect(0,0,vw,vh);ctx.restore();
@@ -258,55 +272,7 @@ function activate(){return beginPreparation();}
   const baseDraw=typeof draw==='function'?draw:null;
   if(baseDraw)draw=function drawWithAnswerAftermath(){ensureRunIdentity();const result=baseDraw();if(preview.active)syncBossHud();syncDevStatus();drawAftermathOverlay();return result;};
 
-  function installThreatStyle(){
-    if(document.querySelector('#answerThreatStyle'))return;
-    const style=document.createElement('style');style.id='answerThreatStyle';style.textContent=`
-      html[data-answer-preview="1"] canvas:not(#game){opacity:0!important;pointer-events:none!important}
-      #worldEventScreen .choice-head,#worldEventScreen #worldEventCards{position:relative;z-index:3}
-      #worldEventScreen[data-answer-threat]{transition:background .34s ease,filter .34s ease}
-      #worldEventScreen[data-answer-threat] .world-event-shell{transition:border-color .34s ease,box-shadow .34s ease,filter .34s ease,background .34s ease}
-      #answerThreatVisual{position:absolute;inset:-15%;z-index:1;pointer-events:none;overflow:visible;opacity:0;mix-blend-mode:screen;transition:opacity .28s ease}
-      #answerThreatVisual .answer-threat-haze{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 20%,rgba(255,255,255,.20) 0,rgba(226,238,255,.08) 20%,rgba(154,126,255,.035) 46%,transparent 70%);filter:blur(14px)}
-      #answerThreatVisual .answer-threat-spill{position:absolute;left:50%;top:-22%;width:46%;height:154%;transform-origin:50% 14%;border-radius:50%;background:radial-gradient(ellipse at 50% 8%,rgba(255,255,255,.34) 0,rgba(237,245,255,.13) 20%,rgba(205,224,255,.038) 48%,transparent 74%);filter:blur(16px)}
-      #answerThreatVisual .s1{transform:translateX(-50%) rotate(2deg)}#answerThreatVisual .s2{left:31%;width:34%;opacity:.62;transform:translateX(-50%) rotate(-19deg)}#answerThreatVisual .s3{left:69%;width:35%;opacity:.58;transform:translateX(-50%) rotate(20deg)}
-      #answerThreatVisual .answer-threat-slit{position:absolute;left:49.72%;top:-2%;width:.58%;height:108%;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(255,255,255,.92) 28%,rgba(238,247,255,.62) 72%,rgba(224,238,255,.12));filter:blur(.8px);box-shadow:0 0 8px #fff,0 0 24px rgba(230,240,255,.60),0 0 48px rgba(194,214,255,.22);clip-path:polygon(25% 0,80% 8%,36% 19%,72% 31%,30% 43%,74% 55%,28% 68%,69% 81%,40% 100%,8% 88%,34% 72%,5% 58%,31% 44%,9% 30%,37% 16%,12% 7%)}
-      #answerThreatVisual .answer-threat-crack{position:absolute;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.86) 34%,rgba(255,255,255,.38) 75%,rgba(255,255,255,0));filter:blur(.25px);box-shadow:0 0 6px rgba(255,255,255,.62);transform-origin:left center}
-      #answerThreatVisual .c1{left:49.5%;top:31%;width:28%;transform:rotate(-11deg)}#answerThreatVisual .c2{left:28%;top:45%;width:23%;transform:rotate(8deg)}#answerThreatVisual .c3{left:50%;top:60%;width:33%;transform:rotate(12deg)}#answerThreatVisual .c4{left:20%;top:67%;width:31%;transform:rotate(-7deg)}
-      #answerThreatVisual[data-band="25"] .s2,#answerThreatVisual[data-band="25"] .s3,#answerThreatVisual[data-band="25"] .c2,#answerThreatVisual[data-band="25"] .c3,#answerThreatVisual[data-band="25"] .c4{opacity:0}
-      #answerThreatVisual[data-band="50"] .s3,#answerThreatVisual[data-band="50"] .c3,#answerThreatVisual[data-band="50"] .c4{opacity:0}
-      #answerThreatVisual[data-band="25"] .answer-threat-slit{opacity:.32}#answerThreatVisual[data-band="50"] .answer-threat-slit{opacity:.56}#answerThreatVisual[data-band="75"] .answer-threat-slit{opacity:.78}#answerThreatVisual[data-band="100"] .answer-threat-slit{opacity:1}
-      #worldEventScreen[data-answer-threat="50"] .world-event-card{filter:saturate(.94)}
-      #worldEventScreen[data-answer-threat="75"] .world-event-card{filter:saturate(.84);box-shadow:0 22px 58px rgba(0,0,0,.48),inset 0 1px rgba(255,255,255,.10),0 0 20px rgba(224,235,255,.04)}
-      #worldEventScreen[data-answer-threat="100"] .world-event-card{filter:saturate(.70) brightness(1.025);border-color:color-mix(in srgb,var(--event-color) 27%,rgba(245,248,255,.58));box-shadow:0 22px 58px rgba(0,0,0,.50),inset 0 1px rgba(255,255,255,.16),0 0 34px rgba(224,235,255,.075)}
-      #worldEventScreen[data-answer-threat="75"] .world-event-card span,#worldEventScreen[data-answer-threat="100"] .world-event-card span{box-shadow:inset 0 0 18px rgba(232,242,255,.08),0 0 16px rgba(231,240,255,.05)}
-      #worldEventScreen[data-answer-threat="75"] #worldEventTitle,#worldEventScreen[data-answer-threat="100"] #worldEventTitle{text-shadow:0 0 24px rgba(255,255,255,.42),0 0 56px rgba(172,145,255,.26)}
-    `;document.head.appendChild(style);
-  }
-  function ensureThreatVisual(){
-    const shell=document.querySelector('#worldEventScreen .world-event-shell');if(!shell)return null;
-    let visual=shell.querySelector('#answerThreatVisual');if(visual)return visual;
-    visual=document.createElement('div');visual.id='answerThreatVisual';visual.setAttribute('aria-hidden','true');
-    visual.innerHTML='<span class="answer-threat-haze"></span><span class="answer-threat-spill s1"></span><span class="answer-threat-spill s2"></span><span class="answer-threat-spill s3"></span><span class="answer-threat-slit"></span><span class="answer-threat-crack c1"></span><span class="answer-threat-crack c2"></span><span class="answer-threat-crack c3"></span><span class="answer-threat-crack c4"></span>';
-    shell.appendChild(visual);return visual;
-  }
-  function resetThreatVisual(overlay,shell,visual){
-    delete overlay.dataset.answerThreat;if(visual){visual.style.opacity='0';visual.dataset.band='0';}
-    overlay.style.removeProperty('background');overlay.style.removeProperty('filter');shell?.style.removeProperty('border-color');shell?.style.removeProperty('box-shadow');shell?.style.removeProperty('filter');shell?.style.removeProperty('background');
-  }
-  function setThreat(value){preview.threat=threatBand(Number(value)||0);state.answerVoidThreat=preview.threat;syncThreatPanel();return preview.threat;}
-  function syncThreatPanel(){
-    const overlay=document.querySelector('#worldEventScreen'),shell=overlay?.querySelector('.world-event-shell'),visual=ensureThreatVisual();if(!overlay||!shell)return;
-    const isVoid=overlay.dataset.eventType==='void',band=threatBand(Number(state.answerVoidThreat)||preview.threat);if(!isVoid||!band){resetThreatVisual(overlay,shell,visual);return;}
-    const p=band/100,opacity={25:.16,50:.34,75:.58,100:.82}[band]||0;overlay.dataset.answerThreat=String(band);visual.dataset.band=String(band);visual.style.opacity=String(opacity);
-    overlay.style.background=`radial-gradient(ellipse at 50% 38%,rgba(224,232,255,${.025+p*.12}),rgba(91,38,150,${.28-p*.08}) 34%,rgba(0,1,8,.988) 73%)`;
-    overlay.style.filter=band>=75?`saturate(${1-p*.12})`:'none';shell.style.borderColor=`rgba(239,243,255,${.16+p*.48})`;
-    shell.style.boxShadow=`0 36px 128px rgba(0,0,0,.78),inset 0 0 ${72+Math.round(p*78)}px rgba(218,229,255,${.025+p*.09}),0 0 ${20+Math.round(p*54)}px rgba(241,246,255,${.02+p*.10})`;
-    shell.style.filter=band>=75?`saturate(${1-p*.18}) brightness(${1+p*.045})`:'none';
-    shell.style.background=`radial-gradient(ellipse at 50% 6%,rgba(232,240,255,${.015+p*.055}),transparent 40%),radial-gradient(circle at 50% 0%,rgba(128,56,186,${.18-p*.05}),transparent 44%),linear-gradient(155deg,rgba(19,5,42,.97),rgba(2,2,13,.99))`;
-  }
-  installThreatStyle();ensureThreatVisual();
-  const threatObserver=new MutationObserver(syncThreatPanel),eventOverlay=document.querySelector('#worldEventScreen');
-  if(eventOverlay)threatObserver.observe(eventOverlay,{attributes:true,attributeFilter:['class','data-event-type'],subtree:false});syncThreatPanel();
+  if(!document.querySelector('#answerPreviewCanvasStyle')){const style=document.createElement('style');style.id='answerPreviewCanvasStyle';style.textContent='html[data-answer-preview="1"] canvas:not(#game){opacity:0!important;pointer-events:none!important}';document.head.appendChild(style);}
 
   function syncDevStatus(){
   const el=document.querySelector('#devAnswerStatus');if(!el)return;
@@ -332,14 +298,12 @@ function installDevControls(){
       button('P1 · 봉쇄','devAnswerP1',()=>forcePhase(1)),button('P2 · 노출','devAnswerP2',()=>forcePhase(2)),button('P3 · 증폭','devAnswerP3',()=>forcePhase(3)),
       button('가시 강제','devAnswerSpike',()=>forcePattern('spike')),button('공간 양단 강제','devAnswerSplit',()=>forcePattern('split')),
       button('순백 빔 강제','devAnswerBeam',()=>forcePattern('beam')),button('진짜/가짜 가시 강제','devAnswerRow',()=>forcePattern('row')),button('기술 복제 강제','devAnswerClone',()=>forcePattern('clone')),
-      button('격파 연출','devAnswerDefeat',()=>window.stackfallAnswerCombatDefeat?.()??startDefeat()),button('시안 종료','devAnswerStop',()=>stop(),true),
-      button('입장 위협 25%','devAnswerThreat25',()=>setThreat(25)),button('입장 위협 50%','devAnswerThreat50',()=>setThreat(50)),
-      button('입장 위협 75%','devAnswerThreat75',()=>setThreat(75)),button('입장 위협 100%','devAnswerThreat100',()=>setThreat(100))
+      button('격파 연출','devAnswerDefeat',()=>window.stackfallAnswerCombatDefeat?.()??startDefeat()),button('시안 종료','devAnswerStop',()=>stop(),true)
     );
     const status=document.createElement('div');status.id='devAnswerStatus';status.className='dev-wide';status.style.cssText='margin:4px 0 14px;padding:8px 10px;border:1px solid rgba(140,174,230,.18);border-radius:9px;background:rgba(9,14,30,.72);color:#92a7cb;font:700 10px/1.45 monospace;word-break:break-word';panel.append(label,grid,status);syncDevStatus();
     Object.assign(dev,{
-      startAnswerPrototype:activate,prepareAnswerPrototype:beginPreparation,setAnswerPhase:setPhase,defeatAnswerPrototype:startDefeat,stopAnswerPrototype:stop,setAnswerThreat:setThreat,
-      answerPrototypeSnapshot:()=>({active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,preflightGemCount:preview.preflightGemCount,preflightXp:preview.preflightXp,phase:preview.phase,hpRatio:preview.hpRatio,defeating:preview.defeating,defeatAge:preview.defeatAge,aftermath:preview.aftermath,voidSealed:state.answerVoidSealed===true,threat:preview.threat,mode:state.mode,choiceLocked:state.choiceLocked===true,camera:{x:preview.camX,y:preview.camY},bounds:preview.active?worldBounds():null,asset:{ready:answerBodyReady,failed:answerBodyFailed,naturalWidth:answerBodyImage.naturalWidth||0,naturalHeight:answerBodyImage.naturalHeight||0,renderHook:typeof window.stackfallDrawVoidApexAnswerBackground==='function'}})
+      startAnswerPrototype:activate,prepareAnswerPrototype:beginPreparation,setAnswerPhase:setPhase,defeatAnswerPrototype:startDefeat,stopAnswerPrototype:stop,
+      answerPrototypeSnapshot:()=>({active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,preflightGemCount:preview.preflightGemCount,preflightXp:preview.preflightXp,phase:preview.phase,hpRatio:preview.hpRatio,defeating:preview.defeating,defeatAge:preview.defeatAge,aftermath:preview.aftermath,voidSealed:state.answerVoidSealed===true,mode:state.mode,choiceLocked:state.choiceLocked===true,camera:{x:preview.camX,y:preview.camY},bounds:preview.active?worldBounds():null,asset:{ready:answerBodyReady,failed:answerBodyFailed,naturalWidth:answerBodyImage.naturalWidth||0,naturalHeight:answerBodyImage.naturalHeight||0,renderHook:typeof window.stackfallDrawVoidApexAnswerBackground==='function'}})
     });
   }
   window.stackfallSetAnswerPrototypePhase=setPhase;
@@ -348,10 +312,10 @@ function installDevControls(){
   window.stackfallStopAnswerPrototype=stop;
   installDevControls();setTimeout(installDevControls,0);setTimeout(installDevControls,250);setTimeout(installDevControls,1000);
   window.stackfallVoidApexAnswerDiagnostics=()=>({
-    version:'v1',visualRevision:'v18',prototypeOnly:true,active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,
+    version:'v1',visualRevision:'v19',prototypeOnly:true,active:preview.active,preparing:preview.preparing,prepStage:preview.prepStage,prepBlock:preview.prepBlock,
     preflightGemCount:preview.preflightGemCount,preflightXp:preview.preflightXp,phase:preview.phase,hpRatio:preview.hpRatio,
     defeating:preview.defeating,defeatAge:preview.defeatAge,aftermath:preview.aftermath,voidSealed:state.answerVoidSealed===true,
-    threat:preview.threat,mode:state.mode,choiceLocked:state.choiceLocked===true,camera:{x:preview.camX,y:preview.camY},geometry:geometry(),
+    mode:state.mode,choiceLocked:state.choiceLocked===true,camera:{x:preview.camX,y:preview.camY},geometry:geometry(),
     asset:{src:ANSWER_BODY_B64_URL,ready:answerBodyReady,failed:answerBodyFailed,naturalWidth:answerBodyImage.naturalWidth||0,naturalHeight:answerBodyImage.naturalHeight||0,renderHook:typeof window.stackfallDrawVoidApexAnswerBackground==='function'},
     frame:answerFrame(),backgroundFrozen:preview.active
   });

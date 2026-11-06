@@ -51,7 +51,7 @@ export function computeBuildFingerprint(projectRoot){
 }
 export function writeBuildInfo(projectRoot){
   const info=computeBuildFingerprint(projectRoot),target=resolve(projectRoot,BUILD_INFO_PATH);
-  const existing=existsSync(target)?readFileSync(target,'utf8'):'';
+  const existing=existsSync(target)?readFileSync(target,'utf8').replace(/\r\n?/g,'\n'):'';
   const tail=existing.replace(/^window\.STACKFALL_BUILD_SHA=.*\nwindow\.STACKFALL_BUILD_ASSETS=.*\n?/,'');
   const header=`window.STACKFALL_BUILD_SHA=${JSON.stringify(info.sha)};\nwindow.STACKFALL_BUILD_ASSETS=${JSON.stringify(info.assets)};\n`;
   writeFileSync(target,header+tail);
