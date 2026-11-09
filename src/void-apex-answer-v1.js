@@ -216,7 +216,15 @@ function activate(){return beginPreparation();}
     }catch(error){answerBackdropCanvas=null;console.warn('[Stackfall] Answer split backdrop capture unavailable',error);}
   }
   window.stackfallAnswerBackgroundSnapshot=()=>answerBackdropCanvas;
-  function drawPrototypeBackground(){if(!preview.active)return;drawPhaseSky();drawAnswerBoss();captureAnswerBackdrop();window.stackfallDrawAnswerSplitBackground?.();}
+  function drawPrototypeBackground(){
+    if(!preview.active)return;
+    drawPhaseSky();
+    // The split owns only the frozen arena/space plate. The Answer is composited after it,
+    // so the tear can displace the realm without slicing the approved body raster.
+    captureAnswerBackdrop();
+    window.stackfallDrawAnswerSplitBackground?.();
+    drawAnswerBoss();
+  }
   function drawAftermathOverlay(){
     if(!preview.aftermath)return;ctx.save();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.globalCompositeOperation='screen';
     const g=ctx.createRadialGradient(vw*.5,vh*.43,20,vw*.5,vh*.50,Math.max(vw,vh)*.82);g.addColorStop(0,'rgba(216,232,255,.095)');g.addColorStop(.50,'rgba(114,163,255,.045)');g.addColorStop(1,'rgba(255,255,255,.014)');ctx.fillStyle=g;ctx.fillRect(0,0,vw,vh);ctx.restore();
@@ -226,7 +234,12 @@ function activate(){return beginPreparation();}
     if(!preview.active||typeof base!=='function')return base?.(...args);
     const offset=cameraOffset();ctx.save();ctx.translate(offset.x,offset.y);try{return base(...args);}finally{ctx.restore();}
   }
-  function wrapWorldDraw(base){return typeof base==='function'?function(...args){return withFixedArenaCamera(base,...args);}:base;}
+  function wrapWorldDraw(base){
+    if(typeof base!=='function')return base;
+    const wrapped=function(...args){return withFixedArenaCamera(base,...args);};
+    try{Object.defineProperty(wrapped,'name',{value:base.name,configurable:true});}catch{}
+    return wrapped;
+  }
   const baseDrawWells=typeof drawWells==='function'?drawWells:null;if(baseDrawWells)drawWells=wrapWorldDraw(baseDrawWells);
   const baseDrawGems=typeof drawGems==='function'?drawGems:null;if(baseDrawGems)drawGems=wrapWorldDraw(baseDrawGems);
   const baseDrawFieldPickups=typeof drawFieldPickups==='function'?drawFieldPickups:null;if(baseDrawFieldPickups)drawFieldPickups=wrapWorldDraw(baseDrawFieldPickups);
@@ -317,6 +330,7 @@ function installDevControls(){
     defeating:preview.defeating,defeatAge:preview.defeatAge,aftermath:preview.aftermath,voidSealed:state.answerVoidSealed===true,
     mode:state.mode,choiceLocked:state.choiceLocked===true,camera:{x:preview.camX,y:preview.camY},geometry:geometry(),
     asset:{src:ANSWER_BODY_B64_URL,ready:answerBodyReady,failed:answerBodyFailed,naturalWidth:answerBodyImage.naturalWidth||0,naturalHeight:answerBodyImage.naturalHeight||0,renderHook:typeof window.stackfallDrawVoidApexAnswerBackground==='function'},
-    frame:answerFrame(),backgroundFrozen:preview.active
+    frame:answerFrame(),backgroundFrozen:preview.active,
+    splitLayers:{snapshot:'space-only',splitComposite:'before-answer-body',bodyComposite:'after-split',playerComposite:'after-answer-stage',hudComposite:'outside-answer-stage'}
   });
 })();
